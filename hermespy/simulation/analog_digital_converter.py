@@ -180,7 +180,7 @@ class AutomaticGainControl(Gain):
         elif self.agc_type == GainControlType.RMS_AMPLITUDE:
             max_amplitude = np.maximum(rms_value(np.real(samples)), rms_value(np.imag(samples))) * self.backoff
 
-        self.gain = 1 / max_amplitude
+        self.gain = 1 / max_amplitude if max_amplitude > 0. else 1.
 
         super().multiply_signal(input_signal)
 
@@ -254,7 +254,10 @@ class AnalogDigitalConverter(Serializable):
     gain: Gain
     __quantizer_type: QuantizerType
 
-    def __init__(self, num_quantization_bits: int = np.inf, gain: Optional[Gain] = None, quantizer_type: QuantizerType = QuantizerType.MID_RISER) -> None:
+    def __init__(self,
+                 num_quantization_bits: int = np.inf,
+                 gain: Optional[Gain] = None,
+                 quantizer_type: QuantizerType = QuantizerType.MID_RISER) -> None:
         """
         Args:
 

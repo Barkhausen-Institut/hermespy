@@ -39,8 +39,8 @@ class Synchronization(Generic[WaveformType], ABC, Serializable):
     """
 
     yaml_tag = "Synchronization"
-    """YAML serialization tag"""
-
+    property_blacklist = {'waveform_generator',}
+    
     # Waveform generator this routine is attached to
     __waveform_generator: Optional[WaveformType]
 
@@ -106,6 +106,7 @@ class ChannelEstimation(Generic[WaveformType], Serializable):
     """Base class for channel estimation routines of waveform generators."""
 
     yaml_tag = "NoChannelEstimation"
+    property_blacklist = {'waveform_generator',}
 
     def __init__(self, waveform_generator: Optional[WaveformType] = None) -> None:
         """
@@ -187,6 +188,7 @@ class ChannelEqualization(Generic[WaveformType], ABC, Serializable):
     """Abstract base class for channel equalization routines of waveform generators."""
 
     yaml_tag = "NoEqualization"
+    property_blacklist = {'waveform_generator',}
 
     def __init__(self, waveform_generator: Optional[WaveformType] = None) -> None:
         """
@@ -266,11 +268,13 @@ class ZeroForcingChannelEqualization(Generic[WaveformType], ChannelEqualization[
         return equalized_symbols
 
 
-class WaveformGenerator(ABC):
+class WaveformGenerator(ABC, Serializable):
     """Implements an abstract waveform generator.
 
     Implementations for specific technologies should inherit from this class.
     """
+
+    property_blacklist = {'modem', }
 
     symbol_type: np.dtype = complex
     """Symbol type."""
@@ -406,7 +410,7 @@ class WaveformGenerator(ABC):
         Returns:
             int: Number of bits
         """
-        ...
+        ...  # pragma no cover
 
     @property
     @abstractmethod
@@ -416,7 +420,7 @@ class WaveformGenerator(ABC):
         Returns:
             int: Number of data symbols
         """
-        ...
+        ...  # pragma no cover
 
     @property
     def frame_duration(self) -> float:

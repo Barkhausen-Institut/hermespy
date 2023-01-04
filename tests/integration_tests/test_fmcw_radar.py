@@ -74,7 +74,7 @@ class FMCWRadarSimulation(TestCase):
             self.radar.transmit()
             tx_signals = self.device.transmit()
             rx_signals, _, _ = self.channel.propagate(tx_signals)
-            self.device.receive(rx_signals)
+            self.device.process_input(rx_signals)
             reception = self.radar.receive()
 
             directive_powers = np.linalg.norm(reception.cube.data, axis=(1, 2))
@@ -84,7 +84,7 @@ class FMCWRadarSimulation(TestCase):
 
         _ = self.radar.transmit()
         rx_signals, _, _ = self.channel.propagate(self.device.transmit())
-        self.device.receive(rx_signals)
+        self.device.process_input(rx_signals)
         reception = self.radar.receive()
 
         expected_velocity_peak = 5

@@ -112,16 +112,16 @@ class TestSignalTransmitter(TestCase):
         
         self.num_samples = 100
         self.sampling_rate = self.device.sampling_rate
-        self.transmitter = SignalTransmitter(self.num_samples, self.sampling_rate)
+        self.signal = Signal(np.ones((1, 10)), sampling_rate=self.device.sampling_rate, carrier_frequency=self.device.carrier_frequency)
+        self.transmitter = SignalTransmitter(self.signal)
         self.device.transmitters.add(self.transmitter)
     
     def test_transmit(self) -> None:
         """Transmit routine should transmit the submitted signal samples"""
         
-        signal = Signal(np.ones((1, 10)), sampling_rate=self.device.sampling_rate, carrier_frequency=self.device.carrier_frequency)
-        transmission = self.transmitter.transmit(signal)
+        transmission = self.transmitter.transmit()
         
-        assert_array_equal(signal.samples, transmission.signal.samples)
+        assert_array_equal(self.signal.samples, transmission.signal.samples)
         
 
 class TestPowerReceiver(TestCase):
@@ -153,13 +153,11 @@ class TestPowerReceiver(TestCase):
         """Reception should correctly estimate the received power"""
         
         power_signal = Signal(np.ones((1, 10)), sampling_rate=self.device.sampling_rate, carrier_frequency=self.device.carrier_frequency)
-        self.device.receive(power_signal)
+        self.device.process_input(power_signal)
         
         power_estimate = self.receiver.receive().signal.power
         
         assert_array_equal(power_signal.power, power_estimate)
-
-
 
 
 class TestSignalReceiver(TestCase):
@@ -182,7 +180,7 @@ class TestSignalReceiver(TestCase):
         """Receiver should receive a signal"""
         
         power_signal = Signal(np.ones((1, 10)), sampling_rate=self.device.sampling_rate, carrier_frequency=self.device.carrier_frequency)
-        self.device.receive(power_signal)
+        self.device.process_input(power_signal)
         
         received_signal = self.receiver.receive().signal
         
@@ -283,47 +281,45 @@ class TestPhysicalDevice(TestCase):
     def test_transmit_no_adpative_sampling(self, _upload: MagicMock) -> None:
         """Test physical device extended transmit routine without adptive sampling"""
         
-        transmitter = SignalTransmitter(10, self.device.sampling_rate)
-        self.device.transmitters.add(transmitter)
-        
         transmitted_signal = Signal(np.zeros((self.device.num_antennas, 10)), self.device.sampling_rate, self.device.carrier_frequency)
-        _ = transmitter.transmit(transmitted_signal)
+        transmitter = SignalTransmitter(transmitted_signal)
+        self.device.transmitters.add(transmitter)
         
         self.device.adaptive_sampling = False
         transmission = self.device.transmit()
         
         _upload.assert_called_once()
-        assert_array_equal(transmitted_signal.samples, transmission.samples)
+        assert_array_equal(transmitted_signal.samples, transmission.mixed_signal.samples)
         
     @patch('hermespy.hardware_loop.physical_device.PhysicalDevice._upload')
     def test_transmit_adpative_sampling(self, _upload: MagicMock) -> None:
         """Test physical device extended transmit routine with adptive sampling"""
-        
-        transmitter_alpha = SignalTransmitter(10, self.device.sampling_rate)
-        transmitter_beta = SignalTransmitter(10, self.device.sampling_rate)
+
+        transmitted_signal = Signal(np.zeros((self.device.num_antennas, 10), dtype=complex), self.device.sampling_rate, self.device.carrier_frequency)
+
+        transmitter_alpha = SignalTransmitter(transmitted_signal)
+        transmitter_beta = SignalTransmitter(transmitted_signal)
         self.device.transmitters.add(transmitter_alpha)
         self.device.transmitters.add(transmitter_beta)
 
-        _ = transmitter_alpha.transmit(Signal(np.zeros((self.device.num_antennas, 10), dtype=complex), self.device.sampling_rate, self.device.carrier_frequency))
-        _ = transmitter_beta.transmit(Signal(np.zeros((self.device.num_antennas, 10), dtype=complex), self.device.sampling_rate, self.device.carrier_frequency))
-
+        self.device.adaptive_sampling = True
         transmission = self.device.transmit()
         
         _upload.assert_called_once()
-        assert_array_equal(np.zeros((self.device.num_antennas, 10), dtype=complex), transmission.samples)
+        assert_array_equal(transmitted_signal.samples, transmission.mixed_signal.samples)
         
     def test_transmit_validation(self) -> None:
         """Phyiscal device extended transmit routine should raise RuntimeErrors on invalid configurations"""
         
         self.device.adaptive_sampling = True
             
-        transmitter_alpha = SignalTransmitter(10, self.device.sampling_rate)
-        transmitter_beta = SignalTransmitter(10, self.device.sampling_rate)
+        signal_alpha = Signal(np.zeros((self.device.num_antennas, 10)), self.device.sampling_rate, self.device.carrier_frequency)
+        transmitter_alpha = SignalTransmitter(signal_alpha)
         self.device.transmitters.add(transmitter_alpha)
-        self.device.transmitters.add(transmitter_beta)
 
-        _ = transmitter_alpha.transmit(Signal(np.zeros((self.device.num_antennas, 10)), self.device.sampling_rate, self.device.carrier_frequency))
-        _ = transmitter_beta.transmit(Signal(np.zeros((self.device.num_antennas, 10)), 1 + self.device.sampling_rate, self.device.carrier_frequency))
+        signal_beta = Signal(np.zeros((self.device.num_antennas, 10)), 1 + self.device.sampling_rate, self.device.carrier_frequency)
+        transmitter_beta = SignalTransmitter(signal_beta)
+        self.device.transmitters.add(transmitter_beta)
 
         with self.assertRaises(RuntimeError):
             _ = self.device.transmit()
@@ -339,13 +335,13 @@ class TestPhysicalDevice(TestCase):
         self.device.lowpass_filter = True
         self.device.receivers.add(receiver)
         
-        _ = self.device.receive()
+        _ = self.device.process_input()
         receiver.cache_reception.assert_called_once()
         
         receiver.reset_mock()
         self.device.lowpass_bandwidth = 1.
         
-        _ = self.device.receive()
+        _ = self.device.process_input()
         receiver.cache_reception.assert_called_once() 
         
     @patch('hermespy.hardware_loop.physical_device.PhysicalDevice._download')
@@ -355,12 +351,12 @@ class TestPhysicalDevice(TestCase):
         with self.assertRaises(ValueError):
             
             _download.return_value = Signal(np.zeros((3, 10)), self.device.sampling_rate, self.device.carrier_frequency)
-            _ = self.device.receive()
+            _ = self.device.process_input()
             
         with self.assertRaises(ValueError):
             
             _download.return_value = Signal(np.zeros((self.device.num_antennas, 10)), self.device.sampling_rate + 1, self.device.carrier_frequency)
-            _ = self.device.receive()
+            _ = self.device.process_input()
             
     def test_download(self) -> None:
         """The download subroutine should raise a NotImplementedError"""

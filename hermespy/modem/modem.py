@@ -200,9 +200,8 @@ from typing import List, Set, Tuple, Type, Optional
 import numpy as np
 from h5py import Group
 
-from hermespy.channel import ChannelStateInformation
 from hermespy.fec import EncoderManager
-from hermespy.core import RandomNode, Transmission, Reception, Serializable, Signal, Device, Transmitter, Receiver, SNRType
+from hermespy.core import ChannelStateInformation, RandomNode, Transmission, Reception, Serializable, Signal, Device, Transmitter, Receiver, SNRType
 from hermespy.precoding import SymbolPrecoding, ReceiveStreamCoding, TransmitStreamCoding
 from .bits_source import BitsSource, RandomBitsSource
 from .symbols import Symbols
@@ -579,7 +578,11 @@ class BaseModem(RandomNode, ABC):
 
         return {"encoding", "precoding", "waveform", "seed"}
 
-    def __init__(self, encoding: Optional[EncoderManager] = None, precoding: Optional[SymbolPrecoding] = None, waveform: Optional[WaveformGenerator] = None, seed: Optional[int] = None) -> None:
+    def __init__(self,
+                 encoding: Optional[EncoderManager] = None,
+                 precoding: Optional[SymbolPrecoding] = None,
+                 waveform: Optional[WaveformGenerator] = None,
+                 seed: Optional[int] = None) -> None:
         """
         Args:
 
@@ -748,7 +751,7 @@ class BaseModem(RandomNode, ABC):
 
         return self.waveform_generator.sampling_rate
 
-    def noise_power(self, strength: float, snr_type: SNRType) -> float:
+    def _noise_power(self, strength: float, snr_type: SNRType) -> float:
 
         # No waveform configured equals no noise required
         if self.waveform_generator is None:
@@ -771,11 +774,10 @@ class BaseModem(RandomNode, ABC):
         return None
 
 
-class TransmittingModem(Serializable, BaseModem, Transmitter):
+class TransmittingModem(BaseModem, Transmitter, Serializable):
     """Representation of a wireless modem exclusively transmitting."""
 
     yaml_tag = "TxModem"
-    """YAML serialization tag"""
 
     # Source configuration of the transmitted bits
     __bits_source: BitsSource
@@ -980,7 +982,7 @@ class TransmittingModem(Serializable, BaseModem, Transmitter):
         return transmission
 
 
-class ReceivingModem(Serializable, BaseModem, Receiver):
+class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
     """Representation of a wireless modem exclusively receiving."""
 
     yaml_tag = "RxModem"
@@ -988,19 +990,18 @@ class ReceivingModem(Serializable, BaseModem, Receiver):
 
     # MIMO stream configuration during signal rececption
     __receive_stream_coding: ReceiveStreamCoding
-    # Cache of recently received information
-    __cached_reception: Optional[CommunicationReception]
-    # Cache of the most recent channel state estimation
-    __cached_channel_state: Optional[ChannelStateInformation]
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self,
+                 device: Optional[Device] = None,
+                 *args, **kwargs) -> None:
 
         self.__receive_stream_coding = ReceiveStreamCoding(modem=self)
-        self.__cached_reception = None
-        self.__cached_channel_state = None
 
         BaseModem.__init__(self, *args, **kwargs)
         Receiver.__init__(self)
+        
+        if device is not None:
+            device.receivers.add(self)
 
     @property
     def transmitting_device(self) -> Optional[Device]:
@@ -1089,17 +1090,12 @@ class ReceivingModem(Serializable, BaseModem, Receiver):
 
         return bits
 
-    def receive(self) -> CommunicationReception:
+    def _receive(self,
+                 signal: Signal,
+                 csi: ChannelStateInformation) -> CommunicationReception:
 
-        # Abort if no reception has been submitted to the operator
-        if self.signal is None:
-
-            reception = CommunicationReception(Signal.empty(self.sampling_rate))
-            self.__cached_reception = reception
-
-            return reception
-
-        signal = self.signal.resample(self.waveform_generator.sampling_rate)
+        # Resample the signal to match the waveform's requirements
+        signal = signal.resample(self.waveform_generator.sampling_rate)
 
         # Synchronize incoming signals
         frame_start_indices, synchronized_signals = self.__synchronize(signal)
@@ -1108,8 +1104,6 @@ class ReceivingModem(Serializable, BaseModem, Receiver):
         if len(synchronized_signals) < 1:
 
             reception = CommunicationReception(signal)
-            self.__cached_reception = reception
-
             return reception
 
         # Infer required parameters
@@ -1128,7 +1122,6 @@ class ReceivingModem(Serializable, BaseModem, Receiver):
 
             # Estimate the channel from each frame demodulation
             stated_symbols, channel_estimate = self.waveform_generator.estimate_channel(symbols)
-            self.__cached_channel_state = stated_symbols.states
 
             # Decode the pre-equalization symbol precoding stage
             decoded_symbols = self.precoding.decode(stated_symbols)
@@ -1147,22 +1140,7 @@ class ReceivingModem(Serializable, BaseModem, Receiver):
 
         # Store the received information of all frames
         reception = CommunicationReception(signal=signal, frames=frames)
-        self.__cached_reception = reception
-
-        # Return reception processing result
         return reception
-
-    @property
-    def reception(self) -> Optional[CommunicationReception]:
-        """The most recently received information.
-
-        Returns:
-
-            A handle to the received information.
-            `None` if no information has been received yet.
-        """
-
-        return self.__cached_reception
 
     @property
     def csi(self) -> Optional[ChannelStateInformation]:

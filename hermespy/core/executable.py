@@ -20,6 +20,8 @@ from typing import ContextManager, List, Optional, Union
 import matplotlib.pyplot as plt
 from rich.console import Console
 
+from .definitions import ConsoleMode
+
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
@@ -46,14 +48,18 @@ class Executable(ABC):
     All executables are required to implement the :meth:`.run` method.
     """
 
-    # Directory in which all execution artifacts will be dropped.
-    __results_dir: Optional[str]
-    # Information output behaviour during execution.
-    __verbosity: Verbosity
-    __style: str = "dark"  # Color scheme
-    __console: Console  # Rich console instance for text output
+    
+    __results_dir: Optional[str]    # Directory in which all execution artifacts will be dropped.
+    __verbosity: Verbosity          # Information output behaviour during execution.
+    __style: str = "dark"           # Plotting color scheme
+    __console: Console              # Rich console instance for text output
+    __console_mode: ConsoleMode     # Output format during execution
 
-    def __init__(self, results_dir: Optional[str] = None, verbosity: Union[Verbosity, str] = Verbosity.INFO, console: Optional[Console] = None) -> None:
+    def __init__(self,
+                 results_dir: Optional[str] = None,
+                 verbosity: Union[Verbosity, str] = Verbosity.INFO,
+                 console: Optional[Console] = None,
+                 console_mode: ConsoleMode = ConsoleMode.INTERACTIVE) -> None:
         """
         Args:
 
@@ -68,10 +74,10 @@ class Executable(ABC):
         """
 
         # Default parameters
-        self.__scenarios = []
         self.results_dir = results_dir
         self.verbosity = verbosity
         self.__console = Console(record=False) if console is None else console
+        self.console_mode = console_mode
 
     def execute(self) -> None:
         """Execute the executable.
@@ -255,3 +261,22 @@ class Executable(ABC):
     def console(self, value: Console) -> None:
 
         self.__console = value
+
+
+    @property
+    def console_mode(self) -> ConsoleMode:
+        """Console mode during runtime.
+        
+        Returms: The current console mode.
+        """
+
+        return self.__console_mode
+
+    @console_mode.setter
+    def console_mode(self, value: Union[ConsoleMode, str]) -> None:
+
+        # Convert string arguments to iterable
+        if isinstance(value, str):
+            value = ConsoleMode[value]
+
+        self.__console_mode = value

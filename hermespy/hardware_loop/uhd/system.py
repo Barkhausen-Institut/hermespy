@@ -21,7 +21,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class UsrpSystem(PhysicalScenario[UsrpDevice]):
+class UsrpSystem(PhysicalScenario[UsrpDevice], Serializable):
     """Scenario of USRPs running the UHD server application."""
 
     yaml_tag = "UsrpSystem"

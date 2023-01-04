@@ -11,7 +11,7 @@ from typing import Optional, Tuple, Union
 import numpy as np
 from scipy.constants import pi, speed_of_light
 
-from .channel import Channel
+from .channel import Channel, ChannelRealization
 from hermespy.tools import db2lin
 from hermespy.core import FloatingError, Serializable
 
@@ -25,7 +25,30 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class RadarChannel(Channel, Serializable):
+class RadarChannelRealization(ChannelRealization):
+    """Realization of a radar channel."""
+
+    __ground_truth: np.ndarray
+
+    def __init__(self,
+                 channel: RadarChannel,
+                 impulse_response: np.ndarray,
+                 ground_truth: np.ndarray) -> None:
+
+        self.__ground_truth = ground_truth
+        ChannelRealization.__init__(self, channel, impulse_response)
+
+    @property
+    def ground_truth(self) -> np.ndarray:
+        """Ground truth of the channel realization.
+
+        Returns: A copy of the ground truth.
+        """
+
+        return self.__ground_truth.copy()
+
+
+class RadarChannel(Channel[RadarChannelRealization], Serializable):
     """Model of a monostatic radar channel in base-band.
 
     The radar channel is currently implemented as a single-point reflector.
@@ -57,7 +80,6 @@ class RadarChannel(Channel, Serializable):
     __losses_db: float
     __target_velocity: float
     attenuate: bool
-    __ground_truth: Optional[np.ndarray]
 
     def __init__(self, target_range: Union[float, Tuple[float, float]], radar_cross_section: float, target_azimuth: float = 0.0, target_zenith: float = 0.0, target_exists: bool = True, losses_db: float = 0, velocity: Union[float, np.ndarray] = 0, attenuate: bool = True, **kwargs) -> None:
         """
@@ -228,7 +250,9 @@ class RadarChannel(Channel, Serializable):
         """
         return self.__losses_db
 
-    def impulse_response(self, num_samples: int, sampling_rate: float) -> np.ndarray:
+    def realize(self,
+                num_samples: int,
+                sampling_rate: float) -> RadarChannelRealization:
 
         if self.transmitter is None:
             raise FloatingError("Radar channel must be anchored to a transmitting device")
@@ -262,7 +286,7 @@ class RadarChannel(Channel, Serializable):
 
         # If no target is present we may abort already
         if not self.target_exists:
-            return impulse_response
+            return RadarChannelRealization(self, impulse_response, np.empty((0, 3), dtype=float))
 
         # The radar target's channel weight is essentially a mix of
         # 1. The phase shift during reflection (uniformly distributed)
@@ -290,21 +314,34 @@ class RadarChannel(Channel, Serializable):
             # since it is only feasible for planar arrays
             impulse_response[idx, ::] = np.tensordot(mimo_response, interpolated_impulse_tap, axes=0)
 
-        self.__ground_truth = np.array([[0.0, 0.0, target_range]])
-        return impulse_response
+        ground_truth = np.array([[0.0, 0.0, target_range]])
+        return RadarChannelRealization(self, impulse_response, ground_truth)
 
-    @property
-    def ground_truth(self) -> np.ndarray:
-        """Set of carthesian points representing ideal point estimates from the most recent impulse response.
+    def null_hypothesis(self,
+                        realization: Optional[RadarChannelRealization] = None) -> RadarChannelRealization:
+        """Generate a channel realization missing the target to be estimated.
 
-        Returns: Numpy array of dimension :math:`N \\times 3` where :math:`N` is the number of detections.
+        Args:
+
+            realization (RadarChannelRealization, optional):
+                Channel realization for which to generated a null hypothesis.
+                By default, the recent channel realization will be assumed.
+
+        Returns: Null hypothesis channel realization.
 
         Raises:
 
-            RuntimeError: If no ground truth is available.
+            RuntimeError: If no `realization` was provided and the channel hasn't been propagated over yet.
         """
 
-        if self.__ground_truth is None:
-            raise RuntimeError("Error trying to acces the ground truth of a channel without impulse response.")
+        # Assume the last channel propagation realization if the realization has not been specified
+        if realization is None:
 
-        return self.__ground_truth
+            realization = self.realization
+            
+            if realization is None:
+                raise RuntimeError("Channel has not been propagated over yet")
+
+        dims = realization.state.shape
+        impulse_response = np.zeros((dims[2], dims[0], dims[1], dims[3]), dtype=complex)
+        return RadarChannelRealization(self, impulse_response, realization.ground_truth)

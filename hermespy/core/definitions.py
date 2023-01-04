@@ -17,6 +17,19 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
+class ConsoleMode(SerializableEnum):
+    """Printing behaviour of the simulation during runtime"""
+
+    INTERACTIVE = 0
+    """Interactive refreshing of the shell information"""
+
+    LINEAR = 1
+    """Linear appending of the shell information"""
+
+    SILENT = 2
+    """No prints exept errors"""
+
+
 class SNRType(SerializableEnum):
     """Supported types of signal-to-noise ratios."""
 
@@ -31,6 +44,9 @@ class SNRType(SerializableEnum):
 
     EN0 = 3
     """Signal energy to noise power ratio."""
+
+    N0 = 4
+    """Noise power."""
 
     CUSTOM = 3
     """Custom snr definition."""

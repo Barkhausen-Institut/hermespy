@@ -1,14 +1,14 @@
 from .antennas import Antenna, IdealAntenna, Dipole, PatchAntenna, AntennaArrayBase, AntennaArray, UniformArray
-from .definitions import SNRType
+from .definitions import ConsoleMode, SNRType
 from .channel_state_information import ChannelStateFormat, ChannelStateInformation
-from .device import Operator, OperatorSlot, DuplexOperator, MixingOperator, TransmitterSlot, ReceiverSlot, Transmitter, Receiver, Device, FloatingError, Transmission, Reception, DeviceReception, DeviceTransmission
+from .device import Operator, OperatorSlot, DuplexOperator, MixingOperator, ProcessedDeviceInput, TransmitterSlot, ReceiverSlot, Transmitter, Receiver, Device, FloatingError, Transmission, Reception, ReceptionType, DeviceReception, DeviceTransmission, DeviceInput, DeviceOutput
 from .executable import Executable, Verbosity
 from .pipeline import Pipeline
 from .factory import Factory, Serializable, SerializableEnum, HDFSerializable
-from .monte_carlo import Artifact, ArtifactTemplate, ConsoleMode, Evaluator, Evaluation, EvaluationResult, EvaluationTemplate, GridDimension, ScalarEvaluationResult, MonteCarlo, MonteCarloActor, MonteCarloResult, MonteCarloSample, dimension
-from .random_node import RandomNode
+from .monte_carlo import Artifact, ArtifactTemplate, Evaluator, Evaluation, EvaluationResult, EvaluationTemplate, GridDimension, ScalarEvaluationResult, MonteCarlo, MonteCarloActor, MonteCarloResult, MonteCarloSample, dimension
+from .random_node import RandomRealization, RandomNode
 from .drop import Drop
-from .scenario import Scenario
+from .scenario import Scenario, ScenarioMode, ScenarioType, ReplayScenario
 from .signal_model import Signal
 
 __author__ = "André Noll Barreto"
@@ -32,8 +32,7 @@ __all__ = [
     "SNRType",
     "ChannelStateFormat",
     "ChannelStateInformation",
-    "Operator",
-    "OperatorSlot",
+    "Operator", "OperatorSlot", 
     "DuplexOperator",
     "MixingOperator",
     "TransmitterSlot",
@@ -44,6 +43,9 @@ __all__ = [
     "FloatingError",
     "Transmission",
     "Reception",
+    "ReceptionType",
+    "DeviceInput",
+    "DeviceOutput",
     "DeviceReception",
     "DeviceTransmission",
     "Executable",
@@ -68,8 +70,9 @@ __all__ = [
     "Serializable",
     "SerializableEnum",
     "HDFSerializable",
-    "RandomNode",
+    "RandomRealization", "RandomNode",
     "Drop",
-    "Scenario",
+    "Scenario", "ScenarioMode", "ScenarioType", "ReplayScenario",
     "Signal",
+    "ProcessedDeviceInput", "DeviceInput",
 ]

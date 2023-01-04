@@ -9,13 +9,13 @@ from __future__ import annotations
 from abc import abstractmethod
 from pickle import dump, load
 from time import sleep
-from typing import List, Optional, TypeVar
+from typing import Iterable, List, TypeVar, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.signal import butter, sosfilt
 
-from hermespy.core import Device, Transmitter, Receiver
+from hermespy.core import Device, DeviceInput, DeviceReception, DeviceTransmission, ChannelStateInformation, ProcessedDeviceInput, Transmitter, Receiver
 from hermespy.core.device import Reception, Transmission
 from hermespy.core.signal_model import Signal
 
@@ -88,9 +88,25 @@ class SilentTransmitter(StaticOperator, Transmitter):
 class SignalTransmitter(StaticOperator, Transmitter):
     """Custom signal transmitter."""
 
-    def transmit(self, signal: Signal) -> Transmission:
+    __signal: Signal
 
-        transmission = Transmission(signal)
+    def __init__(self, signal: Signal) -> None:
+        """
+        Args:
+
+            signal (Signal):
+                Signal to be transmittered by the static operator for each transmission.
+        """
+
+        # Init base class
+        StaticOperator.__init__(self, signal.num_samples, signal.sampling_rate)
+
+        # Init class attributes
+        self.__signal = signal
+
+    def transmit(self, duration: float = 0.) -> Transmission:
+
+        transmission = Transmission(self.__signal)
 
         self.device.transmitters.add_transmission(self, transmission)
         return transmission
@@ -109,16 +125,21 @@ class PowerReceiver(Receiver):
 
         return 0.0
 
-    def receive(self) -> Reception:
+    def _receive(self,
+                 signal: Signal,
+                 _: ChannelStateInformation) -> Reception:
 
         # Fetch noise samples
-        signal = self.signal
         return Reception(signal)
 
     @property
     def frame_duration(self) -> float:
 
         return 0.0
+
+    def _noise_power(self, strength: float, snr_type=...) -> float:
+
+        return strength
 
 
 class SignalReceiver(StaticOperator, Receiver):
@@ -129,10 +150,16 @@ class SignalReceiver(StaticOperator, Receiver):
 
         return 0.0
 
-    def receive(self) -> Reception:
+    def _receive(self,
+                 signal: Signal,
+                 _: ChannelStateInformation) -> Reception:
 
-        received_signal = self.signal.resample(self.sampling_rate)
+        received_signal = signal.resample(self.sampling_rate)
         return Reception(received_signal)
+
+    def _noise_power(self, strength, snr_type=...) -> float:
+        
+        return 0.
 
 
 class PhysicalDevice(Device):
@@ -323,7 +350,7 @@ class PhysicalDevice(Device):
         # The default routine is a stub
         return  # pragma no cover
 
-    def transmit(self, clear_cache: bool = True) -> Signal:
+    def transmit(self, clear_cache: bool = True) -> DeviceTransmission:
 
         # If adaptive sampling is disabled, resort to the default transmission routine
         if not self.adaptive_sampling or self.transmitters.num_operators < 1:
@@ -332,30 +359,29 @@ class PhysicalDevice(Device):
 
         else:
 
-            transmissions = self.transmitters.get_transmissions(clear_cache)
+            # Generate operator transmissions
+            operator_transmissions = self.transmit_operators()
 
-            device_transmission = transmissions[0].signal
-            if device_transmission is None:
-                return None
+            # Superimpose the operator transmissions
+            superimposed_signal = operator_transmissions[0].signal.copy()
+            for transmission in operator_transmissions[1:]:
 
-            for transmission in transmissions[1:]:
-
-                if transmission is None:
-                    continue
-
-                if transmission.signal.sampling_rate != device_transmission.sampling_rate:
+                if transmission.signal.sampling_rate != superimposed_signal.sampling_rate:
                     raise RuntimeError("Adpative sampling does not support operators with differing sampling rates")
 
-                device_transmission.superimpose(transmission.signal, resample=False)
+                superimposed_signal.superimpose(transmission.signal, resample=False)
 
             # Adaptive sampling rate will simply assume the device's sampling rate
-            device_transmission.sampling_rate = self.sampling_rate
-            device_transmission.carrier_frequency = self.carrier_frequency
+            superimposed_signal.sampling_rate = self.sampling_rate
+            superimposed_signal.carrier_frequency = self.carrier_frequency
+
+            # Generate the device transmission
+            device_transmission = DeviceTransmission(operator_transmissions, superimposed_signal)
 
         # Upload the samples
-        self._upload(device_transmission)
+        self._upload(device_transmission.mixed_signal)
 
-        # Return samples
+        # Return transmission
         return device_transmission
 
     def _download(self) -> Signal:
@@ -368,43 +394,50 @@ class PhysicalDevice(Device):
         # This method is a stub by default
         raise NotImplementedError("The default physical device does not support downloads")
 
-    def receive(self, signal: Optional[Signal] = None) -> Signal:
+    def process_input(self,
+                      impinging_signals: Union[None, DeviceInput, Signal, Iterable[Signal]] = None) -> ProcessedDeviceInput:
 
-        if signal is None:
-            signal = self._download()
+        # Physical devices are able to infer their impinging signals by downloading them directly
+        if impinging_signals is None:
 
-        if signal.num_streams != self.num_antennas:
-            raise ValueError("Number of received signal streams does not match number of configured antennas")
+            # Download signal samples 
+            impinging_signals = self._download()
 
-        if signal.sampling_rate != self.sampling_rate:
-            raise ValueError(f"Received signal sampling rate ({signal.sampling_rate}) does not match device sampling rate({self.sampling_rate})")
+            if impinging_signals.num_streams != self.num_antennas:
+                raise ValueError("Number of received signal streams does not match number of configured antennas")
 
-        filtered_signal = signal.copy()
+            if impinging_signals.sampling_rate != self.sampling_rate:
+                raise ValueError(f"Received signal sampling rate ({impinging_signals.sampling_rate}) does not match device sampling rate({self.sampling_rate})")
 
-        if self.lowpass_filter:
+            filtered_signal = impinging_signals.copy()
 
-            if self.lowpass_bandwidth <= 0.0:
-                filter_cutoff = 0.25 * self.sampling_rate
+            # Apply a lowpass filter if the respective physical device flag is enabled
+            if self.lowpass_filter:
 
-            else:
-                filter_cutoff = 0.5 * self.lowpass_bandwidth
+                if self.lowpass_bandwidth <= 0.0:
+                    filter_cutoff = 0.25 * self.sampling_rate
 
-            filter = butter(5, filter_cutoff, output="sos", fs=self.sampling_rate)
-            filtered_signal.samples = sosfilt(filter, filtered_signal.samples, axis=1)
+                else:
+                    filter_cutoff = 0.5 * self.lowpass_bandwidth
 
-        # Cache the reception at all operators
-        for receiver in self.receivers:
+                filter = butter(5, filter_cutoff, output="sos", fs=self.sampling_rate)
+                filtered_signal.samples = sosfilt(filter, filtered_signal.samples, axis=1)
 
-            received_signal = filtered_signal.copy()
-            received_signal.carrier_frequency = 0.0
+        # Defer to the default device input processing routine
+        return Device.process_input(self, impinging_signals)
 
-            # Simply override the sampling rate if adaptive sampling is enabled
-            if self.adaptive_sampling:
-                received_signal.sampling_rate = receiver.sampling_rate
+    def receive(self,
+                impinging_signals: Union[None, DeviceInput, Signal, Iterable[Signal]] = None,
+                cache: bool = True) -> DeviceReception:
+        
+        # Process input
+        processed_input = self.process_input(impinging_signals)
 
-            receiver.cache_reception(received_signal)
+        # Generate receptions
+        operator_receptions = self.receive_operators(processed_input.operator_inputs, cache=cache)
 
-        return filtered_signal
+        # Return reception
+        return DeviceReception.From_ProcessedDeviceInput(processed_input, operator_receptions)
 
     def calibrate(self, max_delay: float, calibration_file: str, num_iterations: int = 10, wait: float = 0.0) -> plt.Figure:
         """Calibrate the hardware.
@@ -448,17 +481,17 @@ class PhysicalDevice(Device):
         if num_samples <= 1:
             raise ValueError("The assumed maximum delay is not resolvable by the configured sampling rate")
 
-        # Register operators
-        calibration_transmitter = SignalTransmitter(num_samples, sampling_rate)
-        self.transmitters.add(calibration_transmitter)
-
-        calibration_receiver = SignalReceiver(num_samples, sampling_rate)
-        self.receivers.add(calibration_receiver)
-
         dirac_index = int(max_delay * sampling_rate)
         waveform = np.zeros((self.num_antennas, num_samples), dtype=complex)
         waveform[:, dirac_index] = 1.0
         calibration_signal = Signal(waveform, sampling_rate, self.carrier_frequency)
+
+        # Register operators
+        calibration_transmitter = SignalTransmitter(calibration_signal)
+        self.transmitters.add(calibration_transmitter)
+
+        calibration_receiver = SignalReceiver(num_samples, sampling_rate)
+        self.receivers.add(calibration_receiver)
 
         propagated_signals: List[Signal] = []
         propagated_dirac_indices = np.empty(num_iterations, dtype=int)
@@ -467,11 +500,11 @@ class PhysicalDevice(Device):
         for _ in range(num_iterations):
 
             # Send and receive calibration waveform
-            calibration_transmitter.transmit(calibration_signal)
+            calibration_transmitter.transmit()
 
             _ = self.transmit()
             self.trigger()
-            _ = self.receive()
+            _ = self.process_input()
 
             propagated_signal = calibration_receiver.receive().signal
 

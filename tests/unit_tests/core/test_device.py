@@ -7,7 +7,7 @@ from unittest.mock import Mock
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
-from hermespy.core.device import Device, MixingOperator,  Operator, OperatorSlot, Receiver, ReceiverSlot, Transmitter,\
+from hermespy.core.device import Device, MixingOperator,  Operator, OperatorSlot, Receiver, ReceiverSlot, Reception, Transmitter,\
     TransmitterSlot
 
 __author__ = "Jan Adler"
@@ -167,7 +167,7 @@ class ReceiverMock(Receiver):
 
         Receiver.__init__(self, *args, **kwargs)
 
-    def receive(self) -> None:
+    def _receive(self) -> Reception:
 
         pass
 
@@ -180,6 +180,10 @@ class ReceiverMock(Receiver):
     def energy(self) -> float:
 
         return 1.0
+
+    def _noise_power(self, strength, snr_type=...) -> float:
+        
+        return strength
 
 
 class TestReceiver(TestCase):
