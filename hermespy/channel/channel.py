@@ -480,7 +480,7 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
         # If the channel is inactive, propagation will result in signal loss
         # This is modeled by returning an zero-length signal and impulse-response (in time-domain) after propagation
         if not self.active:
-            return [], [], ChannelStateInformation.Ideal(self.num_outputs, self.num_inputs, 0)
+            return [Signal.empty(csi_sampling_rate, self.receiver.num_antennas)], [Signal.empty(csi_sampling_rate, self.transmitter.num_antennas)], ChannelStateInformation.Ideal(self.num_outputs, self.num_inputs, 0)
 
         # Generate the channel's impulse response realization
         realization = self.realize(csi_num_samples, csi_sampling_rate) if realization is None else realization

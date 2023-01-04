@@ -127,6 +127,7 @@ from ZODB import DB
 from BTrees.OOBTree import OOBTree
 
 from .executable import Executable
+from .definitions import ConsoleMode
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -161,19 +162,6 @@ EV = TypeVar("EV", bound="Evaluator")
 
 :meta private:
 """
-
-
-class ConsoleMode(Enum):
-    """Printing behaviour of the simulation during runtime"""
-
-    INTERACTIVE = 0
-    """Interactive refreshing of the shell information"""
-
-    LINEAR = 1
-    """Linear appending of the shell information"""
-
-    SILENT = 2
-    """No prints exept errors"""
 
 
 class Artifact(Persistent):
@@ -2163,6 +2151,24 @@ class MonteCarlo(Generic[MO]):
             raise ValueError("Number if CPU cores per actor must be greater or equal to one")
 
         self.__cpus_per_actor = num
+
+    @property
+    def console_mode(self) -> ConsoleMode:
+        """Console mode during simulation runtime.
+        
+        Returms: The current console mode.
+        """
+
+        return self.__console_mode
+
+    @console_mode.setter
+    def console_mode(self, value: Union[ConsoleMode, str]) -> None:
+
+        # Convert string arguments to iterable
+        if isinstance(value, str):
+            value = ConsoleMode[value]
+
+        self.__console_mode = value
 
     @staticmethod
     def _py_modules() -> List[str]:

@@ -563,9 +563,18 @@ class Simulation(Serializable, Pipeline[SimulationScenario], MonteCarlo[Simulati
     dump_results: bool
     """Dump results to files after simulation runs."""
 
-    def __init__(
-        self, scenario: Optional[SimulationScenario] = None, num_drops: int = 100, drop_duration: float = 0.0, plot_results: bool = False, dump_results: bool = True, console_mode: ConsoleMode = ConsoleMode.INTERACTIVE, ray_address: Optional[str] = None, results_dir: Optional[str] = None, verbosity: Union[str, Verbosity] = Verbosity.INFO, seed: Optional[int] = None, num_actors: Optional[int] = None
-    ) -> None:
+    def __init__(self,
+                 scenario: Optional[SimulationScenario] = None,
+                 num_drops: int = 100,
+                 drop_duration: float = 0.0,
+                 plot_results: bool = False,
+                 dump_results: bool = True,
+                 console_mode: ConsoleMode = ConsoleMode.INTERACTIVE,
+                 ray_address: Optional[str] = None,
+                 results_dir: Optional[str] = None,
+                 verbosity: Union[str, Verbosity] = Verbosity.INFO,
+                 seed: Optional[int] = None,
+                 num_actors: Optional[int] = None) -> None:
         """Args:
 
         scenario (SimulationScenario, optional):
@@ -606,8 +615,8 @@ class Simulation(Serializable, Pipeline[SimulationScenario], MonteCarlo[Simulati
         if seed is not None:
             scenario.seed = seed
 
-        Pipeline.__init__(self, scenario, results_dir=results_dir, verbosity=verbosity)
-
+        # Initialize base classes
+        Pipeline.__init__(self, scenario, results_dir=results_dir, verbosity=verbosity, console_mode=console_mode)
         MonteCarlo.__init__(self, self.scenario, num_drops, console=self.console, console_mode=console_mode, ray_address=ray_address, num_actors=num_actors)
 
         self.plot_results = plot_results
@@ -630,9 +639,11 @@ class Simulation(Serializable, Pipeline[SimulationScenario], MonteCarlo[Simulati
     def run(self) -> MonteCarloResult[SimulationScenario]:
 
         # Print indicator that the simulation is starting
-        self.console.print()  # Just an empty line
-        self.console.rule("Simulation Campaign")
-        self.console.print()  # Just an empty line
+        if self.console_mode != ConsoleMode.SILENT:
+            
+            self.console.print()  # Just an empty line
+            self.console.rule("Simulation Campaign")
+            self.console.print()  # Just an empty line
 
         # Generate simulation result
         result = self.simulate(SimulationActor)
