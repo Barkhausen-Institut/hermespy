@@ -2,7 +2,7 @@ from os import path
 
 import matplotlib.pyplot as plt
 
-from hermespy.core import SNRType
+from hermespy.core import ConsoleMode, SNRType
 from hermespy.channel import RadarChannel
 from hermespy.hardware_loop import HardwareLoop, SimulatedPhysicalScenario
 from hermespy.radar import Radar, FMCW, ReceiverOperatingCharacteristic
@@ -19,7 +19,7 @@ system = SimulatedPhysicalScenario()
 system.snr = 1e-13
 system.snr_type = SNRType.N0
 
-hardware_loop = HardwareLoop[SimulatedPhysicalScenario](system)
+hardware_loop = HardwareLoop[SimulatedPhysicalScenario](system, console_mode=ConsoleMode.SILENT)
 hardware_loop.plot_information = False
 hardware_loop.num_drops = 1000
 hardware_loop.results_dir = hardware_loop.default_results_dir()

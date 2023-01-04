@@ -27,7 +27,10 @@ class Pipeline(Executable, Generic[ScenarioType]):
     __scenario: ScenarioType  # The simulated scenario.
     __num_drops: int  # Number of data drops being generated
 
-    def __init__(self, scenario: ScenarioType, num_drops: int = 1, *args, **kwargs) -> None:
+    def __init__(self,
+                 scenario: ScenarioType,
+                 num_drops: int = 1,
+                 *args, **kwargs) -> None:
         """
         Args:
 

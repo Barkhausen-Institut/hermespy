@@ -6,7 +6,7 @@ import numpy as np
 
 from hermespy.core import SNRType
 from hermespy.channel import RadarChannel
-from hermespy.simulation import Simulation, SpecificIsolation
+from hermespy.simulation import AutomaticGainControl, Simulation, SimulatedDevice, SpecificIsolation
 from hermespy.radar import Radar, FMCW, ReceiverOperatingCharacteristic
 from hermespy.tools import db2lin
 
@@ -20,8 +20,10 @@ simulation = Simulation()
 simulation.scenario.snr = 1e-12
 simulation.scenario.snr_type = SNRType.N0
 
-device = simulation.new_device(carrier_frequency=carrier_frequency)
+device: SimulatedDevice = simulation.new_device(carrier_frequency=carrier_frequency)
 device.isolation = SpecificIsolation()
+device.adc.gain = AutomaticGainControl()
+device.adc.num_quantization_bits = 12
 
 # Configure a root-raised-cosine single carrier communication waveform to be transmitted
 radar = Radar()

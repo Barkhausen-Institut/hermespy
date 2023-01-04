@@ -390,6 +390,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         # Init base class
         Device.__init__(self, *args, **kwargs)
 
+        self.__scenario = None
         self.scenario = scenario
         self.rf_chain = RfChain() if rf_chain is None else rf_chain
         self.adc = AnalogDigitalConverter() if adc is None else adc
@@ -432,10 +433,17 @@ class SimulatedDevice(Device, RandomNode, Serializable):
     def scenario(self, scenario: Scenario) -> None:
         """Set the scenario this device is attached to."""
 
-        if hasattr(self, "_SimulatedDevice__scenario") and self.__scenario is not None:
-            raise RuntimeError("Error trying to modify the scenario of an already attached modem")
+        #if hasattr(self, "_SimulatedDevice__scenario") and self.__scenario is not None:
+        #    raise RuntimeError("Error trying to modify the scenario of an already attached modem")
 
-        self.__scenario = scenario
+        if self.__scenario is not scenario:
+
+            # Pop the device from the old scenario
+            if self.__scenario is not None:
+                ...  # ToDo
+
+            self.__scenario = scenario
+            self.random_mother = scenario
 
     @Device.topology.getter
     def topology(self) -> np.ndarray:
@@ -828,6 +836,7 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         baseband_signal = self.rf_chain.receive(coupled_signal)
 
         # Model adc conversion during reception
+        # ToDo: Move ADC after noise addition.
         baseband_signal = self.adc.convert(baseband_signal)
 
         # After rf chain reception, the signal is considered to be converted to base-band
