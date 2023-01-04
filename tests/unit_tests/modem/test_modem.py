@@ -257,12 +257,12 @@ class TestBaseModem(TestCase):
     def test_noise_power(self) -> None:
         """Noise power estiamtor should report the correct noise powers"""
 
-        self.assertEqual(1., self.modem.noise_power(1., SNRType.EBN0))
-        self.assertEqual(1., self.modem.noise_power(1., SNRType.ESN0))
-        self.assertEqual(1., self.modem.noise_power(1., SNRType.PN0))
+        self.assertEqual(1., self.modem._noise_power(1., SNRType.EBN0))
+        self.assertEqual(1., self.modem._noise_power(1., SNRType.ESN0))
+        self.assertEqual(1., self.modem._noise_power(1., SNRType.PN0))
         
         with self.assertRaises(ValueError):
-            _ = self.modem.noise_power(1., SNRType.EN0)
+            _ = self.modem._noise_power(1., SNRType.EN0)
 
 
 class TestTransmittingModem(TestBaseModem):
@@ -338,15 +338,6 @@ class TestReceivingModem(TestBaseModem):
 
         self.assertIs(self.modem, self.modem.receive_stream_coding.modem)
 
-    def test_reception(self) -> None:
-        """Reception property should return the recently received information"""
-
-        # Initially None should be returned
-        self.assertIsNone(self.modem.reception)
-
-        expected_reception = self.modem.receive()
-        self.assertIs(expected_reception, self.modem.reception)
-
 
 class TestDuplexModem(TestBaseModem):
     """Test the simultaneously transmitting and receiving duplex modem"""
@@ -365,62 +356,22 @@ class TestDuplexModem(TestBaseModem):
 
     def test_transmit_receive(self) -> None:
         """Test modem data transmission and subsequent reception"""
+
+        device_transmission = self.device.transmit()
+        modem_transmission = device_transmission.operator_transmissions[0]
+
+        device_reception = self.device.receive(device_transmission)
+        modem_reception = device_reception.operator_receptions[0]
         
-        transmission = self.modem.transmit()
-        
-        device_signals = self.device.transmit()
-        self.device.receive(device_signals)
-        
-        reception = self.modem.receive()
-        
-        assert_array_almost_equal(transmission.bits, reception.bits)
-        self.assertIs(transmission, self.modem.transmission)
-
-    def test_empty_receive(self) -> None:
-        """Test modem data reception over an empty slot"""
-
-        reception = self.modem.receive()
-
-        self.assertEqual(0, reception.signal.num_samples)
-        self.assertIs(reception, self.modem.reception)
-
-    def test_receive_synchronization_fail(self) -> None:
-        """A failed synchronization should result in an empty reception"""
-
-        _ = self.modem.transmit()
-        self.device.receive(self.device.transmit())
-
-        self.waveform.synchronization.synchronize = lambda s: []
-        
-        reception = self.modem.receive()
-        self.assertEqual(0, reception.num_frames)
+        assert_array_almost_equal(modem_transmission.bits, modem_reception.bits)
+        self.assertIs(modem_transmission, self.modem.transmission)
+        self.assertIs(modem_reception, self.modem.reception)
                                                                                                                                                                            
-    def test_receive(self) -> None:
-        """Test modem data reception"""
-        
-        transmission = self.modem.transmit()
-        
-        device_signals = self.device.transmit()
-        self.device.receive(device_signals)
-        
-        reception = self.modem.receive()
-        
-        assert_array_almost_equal(transmission.bits, reception.bits)
-        self.assertIs(transmission, self.modem.transmission)
-
-    def test_empty_receive(self) -> None:
-        """Test modem data reception over an empty slot"""
-
-        reception = self.modem.receive()
-
-        self.assertEqual(0, reception.signal.num_samples)
-        self.assertIs(reception, self.modem.reception)
-
     def test_receive_synchronization_fail(self) -> None:
         """A failed synchronization should result in an empty reception"""
 
         _ = self.modem.transmit()
-        self.device.receive(self.device.transmit())
+        self.device.process_input(self.device.transmit())
 
         self.waveform.synchronization.synchronize = lambda s: []
         

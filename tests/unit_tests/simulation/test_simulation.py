@@ -2,11 +2,16 @@
 """Test HermesPy simulation executable."""
 
 from unittest import TestCase
+from typing import Optional
 from unittest.mock import Mock, patch
 
 import ray
 
+<<<<<<< HEAD
 from hermespy.simulation import SimulatedDevice
+=======
+from hermespy.core import ChannelStateInformation, Transmitter, Transmission, Receiver, Reception, Signal
+>>>>>>> eb7203ea3c9d561345ce3dc036e19d2bbb1bb5a3
 from hermespy.simulation.simulation import Simulation, SimulationActor, SimulationRunner, SimulationScenario, SNRType
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
@@ -26,12 +31,15 @@ class TestSimulationScenario(TestCase):
     def setUp(self) -> None:
 
         self.seed = 0
+<<<<<<< HEAD
         self.device_alpha = SimulatedDevice()
         self.device_beta = SimulatedDevice()
+=======
+>>>>>>> eb7203ea3c9d561345ce3dc036e19d2bbb1bb5a3
 
         self.scenario = SimulationScenario(seed=self.seed)
-        self.scenario.add_device(self.device_alpha)
-        self.scenario.add_device(self.device_beta)
+        self.device_alpha = self.scenario.new_device()
+        self.device_beta = self.scenario.new_device()
 
     def test_new_device(self) -> None:
         """Calling new_device should result in a simulated new device being added."""
@@ -94,7 +102,7 @@ class TestSimulationScenario(TestCase):
 
         self.assertIs(channel, self.scenario.channels[2, 3])
         self.assertIs(channel, self.scenario.channels[3, 2])
-        self.assertIs(self.scenario, channel.random_mother)
+        self.assertIs(self.scenario, channel.scenario)
 
     def test_snr_setget(self) -> None:
         """SNR property getter should return setter argument."""
@@ -131,11 +139,54 @@ class TestSimulationScenario(TestCase):
             # String set
             self.scenario.snr_type = str(snr_type.name)
             self.assertEqual(snr_type, self.scenario.snr_type)
+<<<<<<< HEAD
             
     def test_serialization(self) -> None:
         """Test YAML serialization"""
 
         test_yaml_roundtrip_serialization(self, self.scenario)
+=======
+        
+    def test_drop(self) -> None:
+        """Test the generation of a single drop"""
+        
+        drop = self.scenario.drop()
+>>>>>>> eb7203ea3c9d561345ce3dc036e19d2bbb1bb5a3
+
+
+class MockTransmitter(Transmitter):
+    """Mock transmitter for testing purposes."""
+
+    def transmit(self, duration: float = 0) -> Transmission:
+        
+        signal = Signal.empty(self.sampling_rate, self.device.num_antennas, 1, carrier_frequency=self.carrier_frequency)
+        return Transmission(signal)
+
+    @property
+    def frame_duration(self) -> float:
+        return 1.
+
+    @property
+    def sampling_rate(self) -> float:
+        return 1.
+
+
+class MockReceiver(Receiver):
+    """Mock receiver for testing purposes."""
+
+    def _receive(self, signal: Signal, csi: Optional[ChannelStateInformation] = None, cache: bool = True) -> Reception:
+        return Reception(signal.resample(self.sampling_rate))
+
+    @property
+    def frame_duration(self) -> float:
+        return 1.
+
+    @property
+    def sampling_rate(self) -> float:
+        return 1.
+
+    def _noise_power(self, strength, snr_type=...) -> float:
+        return strength
 
 
 class TestSimulationRunner(TestCase):
@@ -144,78 +195,45 @@ class TestSimulationRunner(TestCase):
     def setUp(self) -> None:
 
         self.seed = 0
-        self.device_alpha = Mock()
-        self.device_alpha.max_frame_duration = 1.
-        self.device_beta = Mock()
-        self.device_beta.max_frame_duration = 1.
-
-        self.transmitter_alpha = Mock()
-        self.transmitter_beta = Mock()
-        self.receiver_alpha = Mock()
-        self.receiver_beta = Mock()
-
-        self.device_alpha.transmitters = [self.transmitter_alpha]
-        self.device_beta.transmitters = [self.transmitter_beta]
-        self.device_alpha.receivers = [self.receiver_alpha]
-        self.device_beta.receivers = [self.receiver_beta]
-
         self.scenario = SimulationScenario(seed=self.seed)
-        self.scenario.add_device(self.device_alpha)
-        self.scenario.add_device(self.device_beta)
-        
-        for m in range(self.scenario.num_devices):
-            for n in range(self.scenario.num_devices):
+        self.device_alpha = self.scenario.new_device()
+        self.device_beta = self.scenario.new_device()
 
-                channel = Mock()
-                channel.propagate.return_value = Mock(), Mock(), Mock()
-                self.scenario.set_channel(m, n, channel)
-                
+        self.transmitter_alpha = MockTransmitter()
+        self.transmitter_beta = MockTransmitter()
+        self.receiver_alpha = MockReceiver()
+        self.receiver_beta = MockReceiver()
+
+        self.device_alpha.transmitters.add(self.transmitter_alpha)
+        self.device_beta.transmitters.add(self.transmitter_beta)
+        self.device_alpha.receivers.add(self.receiver_alpha)
+        self.device_beta.receivers.add(self.receiver_beta)
 
         self.runner = SimulationRunner(self.scenario)
 
-    def test_transmit_operators(self) -> None:
-
-        self.runner.transmit_operators()
-
-        self.assertTrue(self.transmitter_alpha.transmit.called)
-        self.assertTrue(self.transmitter_beta.transmit.called)
-
-    def test_transmit_devices(self) -> None:
-        """Transmit devices should call each device's transmit function."""
-
-        self.runner.transmit_devices()
-
-        for device in self.scenario.devices:
-            self.assertTrue(device.transmit.called)
-
-    def test_propagate(self) -> None:
-        """A single propagation should result in each channel being sampled once."""
-
-        self.runner.transmit_operators()
-        self.runner.transmit_devices()
-        self.runner.propagate()
-
-        for channel in self.scenario.channels.flat:
-            self.assertEqual(1, channel.propagate.call_count)
-
-    def test_receive_devices(self) -> None:
-        """Test receive devices stage callback execution"""
+    def test_stages(self) -> None:
+        """Make sure the stages all execute without exceptions"""
         
-        self.runner.transmit_operators()
-        self.runner.transmit_devices()
-        self.runner.propagate()
-        self.runner.receive_devices()
-        
-        self.device_alpha.receive.assert_called()
-        self.device_beta.receive.assert_called()
-        
-    def test_receiver_operators(self) -> None:
-        """Test receive operators stage callback execution"""
-        
-        self.runner.receive_operators()
-        
-        self.receiver_alpha.receive.assert_called()
-        self.receiver_beta.receive.assert_called()
+        try:
+
+            # Transmit operators
+            self.runner.transmit_operators()
+
+            # Generate device outputs
+            self.runner.generate_outputs()
+
+            # Propagate device outputs
+            self.runner.propagate()
+
+            # Process device inputs
+            self.runner.process_inputs()
+            
+            # Receive operators
+            self.runner.receive_operators()
+
+        except Exception as e:
+            self.fail(str(e))
+
 
 class TestSimulationActor(TestCase):
     """Test the Simulation Actor."""

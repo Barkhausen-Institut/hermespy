@@ -29,12 +29,10 @@ class Drop(HDFSerializable):
     """Drop containing the information transmitted and received by all devices
     within a scenario."""
 
-    # Time at which the drop was generated
-    __timestamp: float
-    # Transmitted device information
-    __device_transmissions: List[DeviceTransmission]
-    # Received device information
-    __device_receptions: List[DeviceReception]
+    
+    __timestamp: float                                  # Time at which the drop was generated
+    __device_transmissions: List[DeviceTransmission]    # Transmitted device information
+    __device_receptions: List[DeviceReception]          # Received device information
 
     def __init__(self, timestamp: float, device_transmissions: List[DeviceTransmission], device_receptions: List[DeviceReception]) -> None:
         """

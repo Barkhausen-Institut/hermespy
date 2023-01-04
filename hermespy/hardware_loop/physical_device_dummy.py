@@ -8,9 +8,8 @@ Implements a physical device dummy for testing and demonstration purposes.
 """
 
 from __future__ import annotations
-from typing import List
 
-from hermespy.core import Signal
+from hermespy.core import DeviceReception, DeviceTransmission, Signal
 from hermespy.simulation import SimulatedDevice
 from .physical_device import PhysicalDevice
 from .scenario import PhysicalScenario
@@ -48,13 +47,17 @@ class PhysicalDeviceDummy(SimulatedDevice, PhysicalDevice):
 
         return self.__cached_signal
 
-    def transmit(self, clear_cache: bool = True) -> List[Signal]:
+    def transmit(self, clear_cache: bool = True) -> DeviceTransmission:
 
         return PhysicalDevice.transmit(self, clear_cache)
 
-    def receive(self, *args) -> Signal:
+    def process_input(self, *args) -> Signal:
 
-        return PhysicalDevice.receive(self, *args)
+        return PhysicalDevice.process_input(self, *args)
+
+    def receive(self, *args, **kwargs) -> DeviceReception:
+
+        return PhysicalDevice.receive(self, *args, **kwargs)
 
     def trigger(self) -> None:
 

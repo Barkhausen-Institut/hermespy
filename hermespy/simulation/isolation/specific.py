@@ -6,7 +6,7 @@ Specific Isolation
 """
 
 from __future__ import annotations
-from typing import Optional, TYPE_CHECKING
+from typing import Optional, Union, TYPE_CHECKING
 
 import numpy as np
 
@@ -33,7 +33,9 @@ class SpecificIsolation(Serializable, Isolation):
 
     __isolation: Optional[np.ndarray]
 
-    def __init__(self, device: Optional[SimulatedDevice] = None, isolation: Optional[np.ndarray] = None) -> None:
+    def __init__(self,
+                 isolation: Union[None, np.ndarray, float, int] = None,
+                 device: Optional[SimulatedDevice] = None) -> None:
 
         Isolation.__init__(self, device=device)
         self.isolation = isolation
@@ -44,12 +46,19 @@ class SpecificIsolation(Serializable, Isolation):
         return self.__isolation
 
     @isolation.setter
-    def isolation(self, value: Optional[np.ndarray]) -> None:
+    def isolation(self, value: Union[None, np.ndarray, float, int]) -> None:
 
         if value is None:
 
             self.__isolation = None
             return
+        
+        if isinstance(value, (float, int)):
+            
+            if self.device is not None and self.device.num_antennas != 1:
+                raise ValueError("Scalar isolation definition is only allowed for devices with a single antenna")
+
+            value = np.array([[value]], dtype=float)
 
         if value.ndim != 2:
             raise ValueError("Isolation specification must be a two dimensional array")

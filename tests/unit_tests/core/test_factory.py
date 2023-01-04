@@ -41,7 +41,7 @@ def test_yaml_roundtrip_serialization(case: TestCase,
     
     # Make sure the object to be tested is serializable
     if not issubclass(type(serializable), Serializable):
-        raise ValueError("The object under test not inherit from the serializable base class")
+        raise ValueError("The object under test does not inherit from the Serializable base class")
     
     # Generate the property blacklist for class serialization
     if property_blacklist:
