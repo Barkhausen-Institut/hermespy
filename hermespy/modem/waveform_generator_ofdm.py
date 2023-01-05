@@ -378,6 +378,7 @@ class FrameSection:
 class FrameSymbolSection(FrameSection, Serializable):
 
     yaml_tag: str = "Symbol"
+    serialized_attributes = {'pattern',}
 
     pattern: List[int]
 
