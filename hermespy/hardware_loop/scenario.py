@@ -40,7 +40,7 @@ class PhysicalScenario(Scenario[PhysicalDeviceType], ABC, Generic[PhysicalDevice
                         cache: bool = True) -> List[DeviceReception]:
         """Receive over all scenario devices.
 
-        Internally calls :meth:`.process_inputs` and :meth:`.receive_devices`.
+        Internally calls :meth:`Scenario.process_inputs` and :meth:`Scenario.receive_devices`.
         
         Args:
 

@@ -180,7 +180,7 @@ class DetectionProbEvaluator(RadarEvaluator, Serializable):
         cloud = self.receiving_radar.reception.cloud
 
         if cloud is None:
-            RuntimeError("Detection evaluation requires a detector to be configured at the radar")
+            raise RuntimeError("Detection evaluation requires a detector to be configured at the radar")
 
         # Verify if a target is detected in any bin
         detection = cloud.num_points > 0

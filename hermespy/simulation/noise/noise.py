@@ -93,7 +93,7 @@ class Noise(RandomNode, Generic[NoiseRealizationType]):
 
             power (float, optional):
                 Power of the added noise.
-                If not specified, the class :meth:`.power` configuration will be applied.
+                If not specified, the class :meth:`Noise.power` configuration will be applied.
 
         Returns: Noise model realization.
         """

@@ -421,7 +421,7 @@ class ReceiveBeamformer(BeamformerBase, ReceiveStreamDecoder, ABC):
         Returns:
 
             The focus points as a three-dimensional numpy array, with the first dimension
-            represnting the probe index, the second dimension the point and the third dimension of magnitude
+            representing the probe index, the second dimension the point and the third dimension of magnitude
             two the point azimuth and zenith, respectively.
 
         Raises:

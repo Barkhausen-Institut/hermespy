@@ -1763,7 +1763,7 @@ class Device(ABC, RandomNode, Serializable):
                 cache: bool = True) -> DeviceReception:
         """Receive over this device.
 
-        Internally calls :meth:`.process_input` and :meth:`.receive_operators`.
+        Internally calls :meth:`Device.process_input` and :meth:`Device.receive_operators`.
 
         Args:
 
