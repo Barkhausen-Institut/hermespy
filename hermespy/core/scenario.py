@@ -811,10 +811,7 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
                     device.transmitters.add_transmission(transmitter, transmission)
 
             # Replay device operator receptions
-            operator_receptions = self.receive_operators(drop.operator_inputs, cache=True)
-
-            # Upate drop w/ new receptions
-            #drop = Drop(drop.timestamp, drop.device_transmissions, device_receptions)
+            _ = self.receive_operators(drop.operator_inputs, cache=True)
 
         else:
 
