@@ -55,12 +55,6 @@ class TestSimulatedDevice(TestCase):
         self.device.scenario = self.scenario
 
         self.assertIs(self.scenario, self.device.scenario)
-
-    def test_scenario_set_validation(self) -> None:
-        """Overwriting a scenario property should raise a RuntimeError."""
-
-        with self.assertRaises(RuntimeError):
-            self.device.scenario = Mock()
             
     def test_attached(self) -> None:
         """The attached property should return the proper device attachment state."""

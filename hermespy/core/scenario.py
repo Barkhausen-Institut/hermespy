@@ -62,6 +62,11 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
     
     yaml_tag = u'Scenario'
     serialized_attributes = {'devices'}
+    
+    @classmethod
+    def _arg_signature(cls: Scenario) -> Set[str]:
+        
+        return {'seed', 'devices'}
 
     __mode: ScenarioMode                # Current scenario operating mode 
     __devices: List[DeviceType]         # Registered devices within this scenario.
@@ -807,11 +812,7 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
                     device.transmitters.add_transmission(transmitter, transmission)
 
             # Replay device operator receptions
-            for device, device_reception in zip(self.devices, drop.device_receptions):
-
-                receiver: Receiver
-                for receiver, input in zip(device.receivers, device_reception.operator_inputs):
-                    receiver.cache_reception(*input)
+            _ = self.receive_devices(drop.device_receptions)
 
         else:
 

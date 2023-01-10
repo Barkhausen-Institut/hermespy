@@ -1730,6 +1730,10 @@ class Device(ABC, RandomNode, Serializable):
         # Refer to the operator caches if no inputs were specified
         if operator_inputs is None:
             operator_inputs = [(o.signal, o.csi) for o in self.receivers]
+            
+        # Convert object oriented input
+        elif isinstance(operator_inputs, ProcessedDeviceInput):
+            operator_inputs = operator_inputs.operator_inputs
 
         if len(operator_inputs) != self.receivers.num_operators:
             raise ValueError(f"Number of operator inputs ({len(operator_inputs)}) does not match the number of receive operators ({self.receivers.num_operators})")

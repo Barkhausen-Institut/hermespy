@@ -17,7 +17,7 @@ from os import path
 from ray import remote
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 
-from hermespy.core import ChannelStateInformation, Drop, Serializable, Pipeline, Verbosity, Operator, ConsoleMode, Evaluator, dimension, MonteCarloActor, MonteCarlo, MonteCarloResult, Scenario, Signal, DeviceOutput, DeviceReception, SNRType
+from hermespy.core import DeviceInput, ChannelStateInformation, Drop, Serializable, Pipeline, Verbosity, Operator, ConsoleMode, Evaluator, dimension, MonteCarloActor, MonteCarlo, MonteCarloResult, Scenario, Signal, DeviceOutput, DeviceReception, SNRType
 from hermespy.channel import QuadrigaInterface, Channel
 from .simulated_device import ProcessedSimulatedDeviceInput, SimulatedDeviceReception, SimulatedDevice, SimulatedDeviceReception
 
@@ -99,14 +99,6 @@ class SimulatedDrop(Drop):
 class SimulationScenario(Scenario[SimulatedDevice]):
     
     yaml_tag = u'SimulationScenario'
-    
-    @classmethod
-    def _arg_signature(cls: SimulationScenario) -> Set[str]:
-        
-        base_signature = Scenario._arg_signature()
-        base_signature.update({'seed', 'devices'})
-        
-        return base_signature
 
     __channels: np.ndarray  # Channel matrix linking devices
     __snr: Optional[float]  # Signal to noise ratio at the receiver-side
@@ -132,6 +124,10 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         self.snr = snr
         self.snr_type = snr_type
         self.__channels = np.ndarray((0, 0), dtype=object)
+        
+    def __del__(self) -> None:
+        
+        self.stop()
 
     def new_device(self, *args, **kwargs) -> SimulatedDevice:
         """Add a new device to the simulation scenario.
@@ -407,13 +403,13 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         return propagation_matrix
 
     def receive_devices(self,
-                        impinging_signals: Union[List[Signal], np.ndarray],
+                        impinging_signals: Union[DeviceInput, List[Signal], np.ndarray],
                         cache: bool = True) -> List[ProcessedSimulatedDeviceInput]:
         """Generate base-band signal models received by devices
         
         Args:
         
-            impinging_signals (Union[List[Signal], np.ndarray]):
+            impinging_signals (Union[DeviceInput, List[Signal], np.ndarray]):
                 Signal models impinging onto the scenario's devices.
                 
             cache (bool, optional):
@@ -422,6 +418,9 @@ class SimulationScenario(Scenario[SimulatedDevice]):
                 
         Returns: List of device inputs.
         """
+
+        if isinstance(impinging_signals, DeviceInput):
+            impinging_signals = impinging_signals.impinging_signals
 
         if len(impinging_signals) != self.num_devices:
             raise ValueError(f"Number of arriving signals ({len(impinging_signals)}) does not match " f"the number of receiving devices ({self.num_devices})")
