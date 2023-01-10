@@ -67,9 +67,9 @@ class TestRocFromMeasurements(TestCase):
             hardware_loop.run(overwrite=False, campaign='h0_measurements')
 
     def tearDown(self) -> None:
-        
+        ...
         # Clear temporary directory
-        self.tempdir.cleanup()
+        #self.tempdir.cleanup()
         
     def test_roc_from_measurements(self) -> None:
         """Test ROC computation from measured datasets"""

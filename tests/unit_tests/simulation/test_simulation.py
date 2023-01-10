@@ -7,11 +7,7 @@ from unittest.mock import Mock, patch
 
 import ray
 
-<<<<<<< HEAD
-from hermespy.simulation import SimulatedDevice
-=======
 from hermespy.core import ChannelStateInformation, Transmitter, Transmission, Receiver, Reception, Signal
->>>>>>> eb7203ea3c9d561345ce3dc036e19d2bbb1bb5a3
 from hermespy.simulation.simulation import Simulation, SimulationActor, SimulationRunner, SimulationScenario, SNRType
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
@@ -31,11 +27,6 @@ class TestSimulationScenario(TestCase):
     def setUp(self) -> None:
 
         self.seed = 0
-<<<<<<< HEAD
-        self.device_alpha = SimulatedDevice()
-        self.device_beta = SimulatedDevice()
-=======
->>>>>>> eb7203ea3c9d561345ce3dc036e19d2bbb1bb5a3
 
         self.scenario = SimulationScenario(seed=self.seed)
         self.device_alpha = self.scenario.new_device()
@@ -139,19 +130,11 @@ class TestSimulationScenario(TestCase):
             # String set
             self.scenario.snr_type = str(snr_type.name)
             self.assertEqual(snr_type, self.scenario.snr_type)
-<<<<<<< HEAD
-            
-    def test_serialization(self) -> None:
-        """Test YAML serialization"""
-
-        test_yaml_roundtrip_serialization(self, self.scenario)
-=======
         
     def test_drop(self) -> None:
         """Test the generation of a single drop"""
         
         drop = self.scenario.drop()
->>>>>>> eb7203ea3c9d561345ce3dc036e19d2bbb1bb5a3
 
 
 class MockTransmitter(Transmitter):

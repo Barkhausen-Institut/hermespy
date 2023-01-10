@@ -29,6 +29,8 @@ class PhysicalScenario(Scenario[PhysicalDeviceType], ABC, Generic[PhysicalDevice
     Managing physical devices by a scenario enables synchronized triggering
     and shared random seed configuration.
     """
+    
+    
 
     @abstractmethod
     def _trigger(self) -> None:

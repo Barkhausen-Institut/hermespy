@@ -515,8 +515,13 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
         h1_scenario = ReplayScenario.Replay(file, h1_campaign)
 
         # Resort to the from scenarios routine for computing the evaluation result
-        return cls.From_Scenarios(h0_scenario=h0_scenario, h1_scenario=h1_scenario)
+        result =  cls.From_Scenarios(h0_scenario=h0_scenario, h1_scenario=h1_scenario)
 
+        # Close the scenarios properly
+        h0_scenario.stop()
+        h1_scenario.stop()
+        
+        return result
 
 class RootMeanSquareArtifact(Artifact):
     """Artifact of a root mean square evaluation"""

@@ -789,6 +789,9 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         
         if isinstance(impinging_signals, SimulatedDeviceOutput):
             impinging_signals = impinging_signals.emerging_signals
+            
+        if isinstance(impinging_signals, DeviceInput):
+            impinging_signals = impinging_signals.impinging_signals
         
         # Transform signal argument to matrix argument
         if isinstance(impinging_signals, Signal):

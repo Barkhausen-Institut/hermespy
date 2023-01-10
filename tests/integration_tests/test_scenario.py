@@ -27,7 +27,6 @@ class TestRecordReplay(TestCase):
 
     def setUp(self) -> None:
 
-
         self.scenario = SimulationScenario()
         self.num_drops = 3
 
@@ -71,50 +70,21 @@ class TestRecordReplay(TestCase):
         # Return generated drops
         return expected_drops
 
-    def test_record_replay(self) -> None:
-        """Test recording and replaying of drops"""
-
-        # Record drops
-        expected_drops = self._record()
-
-        # Replay drops
-        self.scenario.replay(self.file)
-        replayed_drops = [self.scenario.drop() for _ in range(self.num_drops)]
-
-        for expected_drop, replayed_drop in zip(expected_drops, replayed_drops):
-
-            self.assertEqual(expected_drop.timestamp, replayed_drop.timestamp)
-            self.assertEqual(expected_drop.num_device_receptions, replayed_drop.num_device_transmissions)
-
     def test_record_replay_from_dataset(self) -> None:
         """Test recording and replaying datasets directly from the filesystem"""
         
-        self.scenario.record(self.file)
-
-        expected_drops = [self.scenario.drop() for _ in range(self.num_drops)]
+        # Record drops
+        expected_drops = self._record()
         
-        self.scenario.stop()
         self.scenario.replay(self.file)
-        
-        replay_scenario = SimulationScenario.Replay(self.file)
-        replayed_drops = [replay_scenario.drop() for _ in range(self.num_drops)]
+        replayed_drops = [self.scenario.drop() for _ in range(self.num_drops)]
+        self.scenario.stop()
         
         # Compare the expected and replayed drops to make sure the generated information is identical
         for expected_drop, replayed_drop in zip(expected_drops, replayed_drops):
             
             self.assertEqual(expected_drop.timestamp, replayed_drop.timestamp)
             self.assertEqual(expected_drop.num_device_receptions, replayed_drop.num_device_transmissions)
-<<<<<<< HEAD
-            
-            for d in range(2):
-                assert_array_almost_equal(expected_drop.device_transmissions[d].signal.samples,
-                                          replayed_drop.device_transmissions[d].signal.samples)
-                assert_array_almost_equal(expected_drop.device_receptions[d].signal.samples,
-                                          replayed_drop.device_receptions[d].signal.samples)
-
-        self.scenario.stop()
-        replay_scenario.stop()
-=======
 
     def test_record_replay_reinitialize(self) -> None:
         """Test recording and reinitializing a scenario from a savefile"""
@@ -125,9 +95,9 @@ class TestRecordReplay(TestCase):
         # Initialize scenario from recording and replay drops
         replay_scenario = SimulationScenario.Replay(self.file)
         replayed_drops = [replay_scenario.drop() for _ in range(self.num_drops)]
+        replay_scenario.stop()
 
         for expected_drop, replayed_drop in zip(expected_drops, replayed_drops):
 
             self.assertEqual(expected_drop.timestamp, replayed_drop.timestamp)
             self.assertEqual(expected_drop.num_device_receptions, replayed_drop.num_device_transmissions)
->>>>>>> eb7203ea3c9d561345ce3dc036e19d2bbb1bb5a3
