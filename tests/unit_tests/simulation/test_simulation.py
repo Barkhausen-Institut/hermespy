@@ -265,4 +265,4 @@ class TestSimulation(TestCase):
     def test_serialization(self) -> None:
         """Test YAML serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.simulation) 
+        test_yaml_roundtrip_serialization(self, self.simulation)
