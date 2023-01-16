@@ -53,6 +53,13 @@ class TestLibraryExamples(TestCase):
 
         import getting_started_link
         mock_figure.assert_called()
+        
+    @patch('matplotlib.pyplot.figure')
+    def test_getting_started_ofdm_link(self, mock_figure) -> None:
+        """Test getting started library OFDM link example execution"""
+
+        import getting_started_ofdm_link
+        mock_figure.assert_called()
 
     @patch('matplotlib.pyplot.figure')
     @patch('sys.stdout')
