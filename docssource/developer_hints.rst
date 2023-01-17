@@ -53,7 +53,7 @@ It requires some additional dependencies which may be installed from PyPi via
 
 .. code-block:: bash
 
-   pip install -e .[documentation]
+   pip install -e ".[documentation]"
 
 The documentation source files are located under `/docssource/`, however,
 most API information should be directly inserted into the source code files and inserted
