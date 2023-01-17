@@ -352,6 +352,13 @@ class EvaluationResult(ABC):
 
         if len(section_magnitudes) > 1:
             axes.legend()
+            
+    @staticmethod
+    def _plot_empty(figure: plt.Figure) ->None:
+        
+        # Create single axes
+        axes: plt.Axes = figure.add_subplot()
+        axes.text(.5, .5, 'NO DATA AVAILABLE', horizontalalignment='center') 
 
 
 class ProcessedScalarEvaluationResult(EvaluationResult):
@@ -373,52 +380,59 @@ class ProcessedScalarEvaluationResult(EvaluationResult):
 
     def plot(self) -> plt.Figure:
 
+        # Generate figure to be plotted with the configured style context
+        with Executable.style_context():
+
+            figure = plt.figure()
+            figure.suptitle(self.__evaluator.title)
+            
+        # If the grid contains no data, dont plot anything
+        if len(self.__grid) < 1:
+            
+            self._plot_empty(figure)
+            return figure
+            
         # Shuffle grid and respective scalar results so that the selected base dimension is always the first entry
         grid = self.__grid.copy()
         grid.insert(0, grid.pop(self.__base_dimension_index))
         scalars = np.moveaxis(self.__scalar_results, self.__base_dimension_index, 0)
         sample_points = self.__grid[0].sample_points
 
-        with Executable.style_context():
+        # A single axis plot, the simple case
+        if len(grid) < 2:
 
-            figure = plt.figure()
-            figure.suptitle(self.__evaluator.title)
+            # Create single axes
+            axes = figure.add_subplot()
 
-            # A single axis plot, the simple case
-            if len(grid) < 2:
+            # Configure axes labels
+            axes.set_xlabel(grid[0].title)
+            axes.set_ylabel(self.__evaluator.abbreviation)
 
-                # Create single axes
-                axes = figure.add_subplot()
+            # Configure axes scales
+            axes.set_yscale(self.__evaluator.plot_scale)
 
-                # Configure axes labels
-                axes.set_xlabel(grid[0].title)
-                axes.set_ylabel(self.__evaluator.abbreviation)
+            axes.plot(sample_points, scalars)
 
-                # Configure axes scales
-                axes.set_yscale(self.__evaluator.plot_scale)
+        # Two dimensions, with surface plotting enabled
+        elif len(grid) == 2 and self.plot_surface:
 
-                axes.plot(sample_points, scalars)
+            # Create 3D axes
+            axes = figure.add_subplot(projection="3d")
 
-            # Two dimensions, with surface plotting enabled
-            elif len(grid) == 2 and self.plot_surface:
+            # Configure axes labels
+            axes.set_xlabel(grid[0].title)
+            axes.set_ylabel(grid[1].title)
+            axes.set_zlabel(self.__evaluator.abbreviation)
 
-                # Create 3D axes
-                axes = figure.add_subplot(projection="3d")
+            y, x = np.meshgrid(grid[1].sample_points, sample_points)
+            axes.plot_surface(x, y, scalars)
 
-                # Configure axes labels
-                axes.set_xlabel(grid[0].title)
-                axes.set_ylabel(grid[1].title)
-                axes.set_zlabel(self.__evaluator.abbreviation)
+        # Multiple dimensions, resort to legend-based multiplots
+        else:
+            self._plot_multidim(grid, scalars, 0, self.__evaluator.abbreviation, "linear", self.__evaluator.plot_scale, figure)
 
-                y, x = np.meshgrid(grid[1].sample_points, sample_points)
-                axes.plot_surface(x, y, scalars)
-
-            # Multiple dimensions, resort to legend-based multiplots
-            else:
-                self._plot_multidim(grid, scalars, 0, self.__evaluator.abbreviation, "linear", self.__evaluator.plot_scale, figure)
-
-            # Return resulting figure handle
-            return figure
+        # Return resulting figure handle
+        return figure
 
     def to_array(self) -> np.ndarray:
         return self.__scalar_results
