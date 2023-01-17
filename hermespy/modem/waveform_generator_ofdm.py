@@ -647,6 +647,8 @@ class FrameGuardSection(FrameSection, Serializable):
 class OFDMWaveform(PilotWaveformGenerator, Serializable):
     """Generic Orthogonal-Frequency-Division-Multiplexing with a flexible frame configuration.
 
+    The internally applied FFT size is :meth:`OFDMWaveform.num_subcarriers` times :meth:`WaveformGenerator.oversampling_factor`. 
+
     The following features are supported:
         - The modem can transmit or receive custom-defined frames.
           Frames may contain UL/DL data symbols, null carriers, pilot subcarriers,
@@ -660,7 +662,6 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
     """
 
     yaml_tag: str = "OFDM"
-    """YAML serialization tag."""
 
     __subcarrier_spacing: float
     __num_subcarriers: int
@@ -674,22 +675,28 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
 
         return {"modulation_order"}
 
-    def __init__(self, subcarrier_spacing: float = 1e3, num_subcarriers: int = 1200, dc_suppression: bool = True, resources: Optional[List[FrameResource]] = None, structure: Optional[List[FrameSection]] = None, **kwargs: Any) -> None:
-        """Orthogonal-Frequency-Division-Multiplexing Waveform Generator initialization.
-
+    def __init__(self,
+                 subcarrier_spacing: float = 1e3,
+                 num_subcarriers: int = 1024,
+                 dc_suppression: bool = True,
+                 resources: Optional[List[FrameResource]] = None,
+                 structure: Optional[List[FrameSection]] = None,
+                 **kwargs: Any) -> None:
+        """
         Args:
 
             subcarrier_spacing (float, optional):
                 Spacing between individual subcarriers in Hz.
+                :math:`1~\\mathrm{kHz}` by default.
 
             num_subcarriers (int, optional):
-                Maximum number of subcarriers.
-                Also the size of the FFT deployed during modulation,
-                i.e. the difference between the configured number of subcarriers and the maximum number
-                will be zero-padded.
+                Maximum number of assignable subcarriers.
+                Unassigned subcarriers will be assumed to be zero.
+                :math:`1024` by default.
 
             dc_suppression (bool, optional):
                 Suppress the direct current component during waveform generation.
+                Enabled by default.
 
             resources (List[FrameResource], optional):
                 Frequency-domain resource section configurations.
@@ -699,6 +706,7 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
 
             kwargs (Any):
                 Waveform generator base class initialization parameters.
+                Refer to :class:`WaveformGenerator` for details.
         """
 
         # Init base class
