@@ -11,7 +11,7 @@ from numpy.random import default_rng
 from scipy.stats import norm, truncnorm
 
 from hermespy.core.monte_carlo import ActorRunResult, Evaluation, EvaluationTemplate, EvaluationResult, ScalarEvaluationResult, GridSection, MonteCarlo, MonteCarloActor, MonteCarloSample, \
-    Evaluator, ArtifactTemplate, MO, Artifact, GridDimension, RegisteredDimension, dimension
+    Evaluator, ArtifactTemplate, MO, Artifact, GridDimension, RegisteredDimension, dimension, ProcessedScalarEvaluationResult
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -57,6 +57,19 @@ class TestArtifactTemplate(TestCase):
         """Scalar conversion routine should return the represented artifact"""
 
         self.assertEqual(self.artifact_value, self.artifact.to_scalar())
+
+
+class TestProcessedScalarEvaluationResult(TestCase):
+    
+    def test_plot_no_data(self) -> None:
+        """Even without grid dimensions an empty figure should be generated"""
+        
+        with patch('matplotlib.pyplot.figure'):
+        
+            evaluation_result = ProcessedScalarEvaluationResult([], np.empty(0, dtype=object), EvaluatorMock())
+            figure = evaluation_result.plot()
+            self.assertIsInstance(figure, Mock)
+        
 
 class EvaluatorMock(Evaluator):
 
