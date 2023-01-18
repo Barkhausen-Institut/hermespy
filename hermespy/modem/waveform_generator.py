@@ -757,7 +757,10 @@ class ConfigurablePilotWaveform(PilotWaveformGenerator, ABC):
     repeat_pilot_symbol_sequence: bool
     """Allow the repetition of pilot symbol sequences."""
 
-    def __init__(self, symbol_sequence: Optional[PilotSymbolSequence] = None, repeat_symbol_sequence: bool = True) -> None:
+    def __init__(self,
+                 symbol_sequence: Optional[PilotSymbolSequence] = None,
+                 repeat_symbol_sequence: bool = True,
+                 **kwargs) -> None:
         """
         Args:
 
@@ -768,10 +771,16 @@ class ConfigurablePilotWaveform(PilotWaveformGenerator, ABC):
            repeat_symbol_sequence (bool, optional):
                Allow the repetition of pilot symbol sequences.
                Enabled by default.
+               
+           **kwargs:
+               Additional :class:`WaveformGenerator` initialization parameters.
         """
 
         self.pilot_symbol_sequence = UniformPilotSymbolSequence() if symbol_sequence is None else symbol_sequence
         self.repeat_pilot_symbol_sequence = repeat_symbol_sequence
+        
+        # Initialize base class
+        PilotWaveformGenerator.__init__(self, **kwargs)
 
     def pilot_symbols(self, num_symbols: int) -> np.ndarray:
         """Sample a pilot symbol sequence.
