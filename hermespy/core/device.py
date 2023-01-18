@@ -204,7 +204,7 @@ class Operator(Generic[SlotType], Serializable):
     Each operator is attached to a single device instance it operates on.
     """
 
-    property_blacklist = {'slot',}
+    property_blacklist = {'slot', }
 
     __slot: Optional[SlotType]   # Slot within a device this operator 'operates'
 
@@ -1627,7 +1627,7 @@ class Device(ABC, RandomNode, Serializable):
         """
 
         # Generate operator transmissions if None were provided:
-        operator_transmissions =  [o.transmission for o in self.transmitters] if operator_transmissions is None else operator_transmissions
+        operator_transmissions = [o.transmission for o in self.transmitters] if operator_transmissions is None else operator_transmissions
         
         if any([t is None for t in operator_transmissions]):
             raise RuntimeError("Error trying to generate outputs without specifying transmissions, caches are empty")
@@ -1808,7 +1808,6 @@ DeviceType = TypeVar("DeviceType", bound=Device)
 
 class DuplexOperator(Transmitter, Receiver[ReceptionType], Generic[ReceptionType]):
     """Operator binding to both transmit and receive slots of any device."""
-
 
     __device: Optional[Device]
 

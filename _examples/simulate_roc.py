@@ -31,12 +31,12 @@ chirp_duration = 2e-8
 radar.waveform = FMCW(bandwidth=bandwidth, num_chirps=10, chirp_duration=chirp_duration, pulse_rep_interval=1.1*chirp_duration)
 radar.device = device
 
-channel = RadarChannel(target_range=(.75, 1.25), radar_cross_section=1.)
+channel = RadarChannel(target_range=(.75, 1.25), radar_cross_section=1., attenuate=False)
 simulation.scenario.set_channel(device, device, channel)
 
 simulation.add_evaluator(ReceiverOperatingCharacteristic(radar, channel))
-simulation.new_dimension('snr', db2lin(np.array([-120, -130])))
-simulation.new_dimension('isolation', db2lin(np.array([-80, -70])), simulation.scenario.devices[0].isolation)
+simulation.new_dimension('snr', db2lin(np.array([0, -10])))
+simulation.new_dimension('isolation', db2lin(np.array([30, 40])), simulation.scenario.devices[0].isolation)
 simulation.num_samples = 1000
 
 result = simulation.run()
