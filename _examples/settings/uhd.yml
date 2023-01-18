@@ -1,5 +1,9 @@
 # This example configures a set of Universal Software Defined Radios (USRPs)
 # to establish a SISO link exchanging 10 frames of OFDM data.
+#
+# Operating USRP's requires additional dependencies to be installed.
+# Make sure you ran pip install "hermes[uhd]"
+# See https://hermespy.org/installation.html for further details.
 
 !<HardwareLoop>
 

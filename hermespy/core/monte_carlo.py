@@ -106,6 +106,8 @@ from typing import Any, Callable, Generic, List, Optional, Type, TypeVar, Tuple,
 from warnings import catch_warnings, simplefilter
 
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+import matplotlib.axes as axes
 import numpy as np
 import ray
 import transaction
@@ -126,8 +128,10 @@ from ZODB.FileStorage import FileStorage
 from ZODB import DB
 from BTrees.OOBTree import OOBTree
 
-from .executable import Executable
+from hermespy.tools import lin2db
 from .definitions import ConsoleMode
+from .executable import Executable
+from .logarithmic import LogarithmicSequence, ValueType
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -293,6 +297,103 @@ class EvaluationResult(ABC):
         ...  # pragma no cover
 
     @staticmethod
+    def __configure_axis(axis: axes.Axes, tick_format: ValueType = ValueType.LIN) -> None:
+        """Subroutine to configure an axis.
+
+        Args:
+
+            axis:
+                The matplotlib axis to be configured.
+
+            tick_format (ValueType):
+                The tick format.
+        """
+
+        if tick_format is ValueType.DB:
+            axis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"{lin2db(x):.2g}dB"))
+
+    @staticmethod
+    def _plot_linear(grid: List[GridDimension], sample_points: np.ndarray, scalar_data: np.ndarray, evaluator: Evaluator, figure: plt.Figure) -> None:
+        """Visualize result as a linear plot.
+
+        Args:
+
+            grid (List[GridDimension]):
+                Simulation grid.
+
+            sample_points (np.ndarray):
+                Grid coordinates to visualize.
+
+            scalar_data (np.ndarray):
+                Results at the respective coordinates.
+
+            evaluator (Evaluator):
+                The evaluator generating the results.
+
+            figure (plt.Figure):
+                Figure to plot in.
+        """
+
+        # Create single axes
+        axes = figure.add_subplot()
+
+        # Configure axes labels
+        axes.set_xlabel(grid[0].title)
+        axes.set_ylabel(evaluator.abbreviation)
+
+        # Configure axes scales
+        axes.set_xscale(grid[0].plot_scale)
+        axes.set_yscale(evaluator.plot_scale)
+
+        EvaluationResult.__configure_axis(axes.xaxis, grid[0].tick_format)
+        EvaluationResult.__configure_axis(axes.yaxis, evaluator.tick_format)
+
+        # Plot final result
+        axes.plot(sample_points, scalar_data)
+
+    @staticmethod
+    def _plot_surface(grid: List[GridDimension], sample_points: np.ndarray, data: np.ndarray, evaluator: Evaluator, figure: plt.Figure) -> None:
+        """Visualize result as a surface plot.
+
+        Args:
+
+            grid (List[GridDimension]):
+                Simulation grid.
+
+            sample_points (np.ndarray):
+                Grid coordinates to visualize.
+
+            data (np.ndarray):
+                Results at the respective coordinates.
+
+            evaluator (Evaluator):
+                The evaluator generating the results.
+
+            figure (plt.Figure):
+                Figure to plot in.
+        """
+
+        # Create 3D axes
+        axes = figure.add_subplot(projection="3d")
+
+        # Configure axes labels
+        axes.set_xlabel(grid[0].title)
+        axes.set_ylabel(grid[1].title)
+        axes.set_zlabel(evaluator.abbreviation)
+
+        # Configure axes scales
+        axes.set_xscale(grid[0].plot_scale)
+        axes.set_yscale(grid[1].plot_scale)
+        axes.set_zscale(evaluator.plot_scale)
+
+        EvaluationResult.__configure_axis(axes.xaxis, grid[0].tick_format)
+        EvaluationResult.__configure_axis(axes.yaxis, grid[1].tick_format)
+        EvaluationResult.__configure_axis(axes.zaxis, evaluator.tick_format)
+
+        y, x = np.meshgrid(grid[1].sample_points, sample_points)
+        axes.plot_surface(x.astype(float), y.astype(float), data)
+
+    @staticmethod
     def _plot_multidim(grid: List[GridDimension], scalar_data: np.ndarray, x_dimension: int, y_label: str, x_scale: str, y_scale: str, figure: plt.Figure) -> None:
         """Plot multidimensional simulation results into a two-dimensional axes system.
 
@@ -340,6 +441,13 @@ class EvaluationResult(ABC):
 
         if len(section_magnitudes) > 1:
             axes.legend()
+            
+    @staticmethod
+    def _plot_empty(figure: plt.Figure) ->None:
+        
+        # Create single axes
+        axes: plt.Axes = figure.add_subplot()
+        axes.text(.5, .5, 'NO DATA AVAILABLE', horizontalalignment='center') 
 
 
 class ProcessedScalarEvaluationResult(EvaluationResult):
@@ -361,52 +469,38 @@ class ProcessedScalarEvaluationResult(EvaluationResult):
 
     def plot(self) -> plt.Figure:
 
+        # Generate figure to be plotted with the configured style context
+        with Executable.style_context():
+
+            figure = plt.figure()
+            figure.suptitle(self.__evaluator.title)
+            
+        # If the grid contains no data, dont plot anything
+        if len(self.__grid) < 1:
+            
+            self._plot_empty(figure)
+            return figure
+            
         # Shuffle grid and respective scalar results so that the selected base dimension is always the first entry
         grid = self.__grid.copy()
         grid.insert(0, grid.pop(self.__base_dimension_index))
         scalars = np.moveaxis(self.__scalar_results, self.__base_dimension_index, 0)
         sample_points = self.__grid[0].sample_points
 
-        with Executable.style_context():
+        # A single axis plot, the simple case
+        if len(grid) < 2:
+            self._plot_linear(grid, sample_points, scalars, self.__evaluator, figure)
 
-            figure = plt.figure()
-            figure.suptitle(self.__evaluator.title)
+        # Two dimensions, with surface plotting enabled
+        elif len(grid) == 2 and self.plot_surface:
+            self._plot_surface(grid, sample_points, scalars, self.__evaluator, figure)
 
-            # A single axis plot, the simple case
-            if len(grid) < 2:
+        # Multiple dimensions, resort to legend-based multiplots
+        else:
+            self._plot_multidim(grid, scalars, 0, self.__evaluator.abbreviation, grid[0].plot_scale, self.__evaluator.plot_scale, figure)
 
-                # Create single axes
-                axes = figure.add_subplot()
-
-                # Configure axes labels
-                axes.set_xlabel(grid[0].title)
-                axes.set_ylabel(self.__evaluator.abbreviation)
-
-                # Configure axes scales
-                axes.set_yscale(self.__evaluator.plot_scale)
-
-                axes.plot(sample_points, scalars)
-
-            # Two dimensions, with surface plotting enabled
-            elif len(grid) == 2 and self.plot_surface:
-
-                # Create 3D axes
-                axes = figure.add_subplot(projection="3d")
-
-                # Configure axes labels
-                axes.set_xlabel(grid[0].title)
-                axes.set_ylabel(grid[1].title)
-                axes.set_zlabel(self.__evaluator.abbreviation)
-
-                y, x = np.meshgrid(grid[1].sample_points, sample_points)
-                axes.plot_surface(x, y, scalars)
-
-            # Multiple dimensions, resort to legend-based multiplots
-            else:
-                self._plot_multidim(grid, scalars, 0, self.__evaluator.abbreviation, "linear", self.__evaluator.plot_scale, figure)
-
-            # Return resulting figure handle
-            return figure
+        # Return resulting figure handle
+        return figure
 
     def to_array(self) -> np.ndarray:
         return self.__scalar_results
@@ -464,6 +558,7 @@ class Evaluator(ABC):
         self.confidence = 1.0
         self.tolerance = 0.0
         self.plot_scale = "linear"
+        self.tick_format = ValueType.LIN
 
     @abstractmethod
     def evaluate(self) -> Evaluation:
@@ -1257,10 +1352,11 @@ class GridDimension(object):
     __title: Optional[str]
     __setter_lambdas: Tuple[Callable, ...]
     __plot_scale: str
+    __tick_format: ValueType
     __first_impact: Optional[str]
     __last_impact: Optional[str]
 
-    def __init__(self, considered_objects: Union[Any, Tuple[Any, ...]], dimension: str, sample_points: List[Any], title: Optional[str] = None, plot_scale: Optional[str] = None) -> None:
+    def __init__(self, considered_objects: Union[Any, Tuple[Any, ...]], dimension: str, sample_points: List[Any], title: Optional[str] = None, plot_scale: Optional[str] = None, tick_format: Optional[ValueType] = None) -> None:
         """
         Args:
 
@@ -1280,6 +1376,10 @@ class GridDimension(object):
             plot_scale (str, optional):
                 Scale of the axis within plots.
 
+            tick_format (ValueType, optional):
+                Format of the tick labels.
+                Linear by default.
+
         Raises:
 
             ValueError:
@@ -1292,7 +1392,30 @@ class GridDimension(object):
         object_path = property_path[:-1]
         property_name = property_path[-1]
 
-        self.plot_scale = "linear" if plot_scale is None else plot_scale
+        # Infer plot scale of the x-axis
+        if plot_scale is None:
+
+            if isinstance(sample_points, LogarithmicSequence):
+                self.plot_scale = "log"
+
+            else:
+                self.plot_scale = "linear"
+
+        else:
+            self.plot_scale = plot_scale
+
+        # Infer tick format of the x-axis
+        if tick_format is None:
+
+            if isinstance(sample_points, LogarithmicSequence):
+                self.tick_format = ValueType.DB
+
+            else:
+                self.tick_format = ValueType.LIN
+
+        else:
+            self.tick_format = tick_format
+
         self.__setter_lambdas = tuple()
         self.__dimension = dimension
         self.__sample_points = sample_points
@@ -1330,6 +1453,10 @@ class GridDimension(object):
 
                 self.__first_impact = first_impact
                 self.__last_impact = last_impact
+
+                # Updated the depicted title if the dimension offers an option and it wasn't exactly specified
+                if title is None and dimension_property.title is not None:
+                    self.__title = dimension_property.title
 
             self.__considered_objects += (considered_object,)
             self.__setter_lambdas += (self.__create_setter_lambda(considered_object, dimension),)
@@ -1446,6 +1573,20 @@ class GridDimension(object):
 
         self.__plot_scale = value
 
+    @property
+    def tick_format(self) -> ValueType:
+        """Axis tick format of the scalar evaluation plot.
+
+        Returns: The tick format.
+        """
+
+        return self.__tick_format
+
+    @tick_format.setter
+    def tick_format(self, value: ValueType) -> None:
+
+        self.__tick_format = value
+
     @staticmethod
     def __create_setter_lambda(considered_object: Any, dimension: str) -> Callable:
         """Generate a setter lambda callback for a selected grid dimension.
@@ -1485,8 +1626,9 @@ class RegisteredDimension(property):
 
     __first_impact: Optional[str]
     __last_impact: Optional[str]
+    __title: Optional[str]
 
-    def __init__(self, *args, first_impact: Optional[str] = None, last_impact: Optional[str] = None) -> None:
+    def __init__(self, *args, first_impact: Optional[str] = None, last_impact: Optional[str] = None, title: Optional[str] = None) -> None:
         """
         Args:
 
@@ -1502,10 +1644,15 @@ class RegisteredDimension(property):
                 Name of the last simulation stage within the simulation pipeline
                 which is impacted by manipulating this property.
                 If not specified, the final stage is assumed.
+
+            title (str, optional):
+                Displayed title of the dimension.
+                If not specified, the dimension's name will be assumed.
         """
 
         self.__first_impact = first_impact
         self.__last_impact = last_impact
+        self.__title = title
 
         property.__init__(self, *args)
 
@@ -1525,9 +1672,9 @@ class RegisteredDimension(property):
 
         return isinstance(object, cls)
 
-    def setter(self, first_impact: Optional[str] = None, last_impact: Optional[str] = None) -> RegisteredDimension:
+    def setter(self, first_impact: Optional[str] = None, last_impact: Optional[str] = None, title: Optional[str] = None) -> RegisteredDimension:
 
-        return lambda fset: RegisteredDimension(self.fget, fset, self.fdel, first_impact=first_impact, last_impact=last_impact)
+        return lambda fset: RegisteredDimension(self.fget, fset, self.fdel, first_impact=first_impact, last_impact=last_impact, title=title)
 
     def deleter(self, *_) -> RegisteredDimension:
 
@@ -1535,13 +1682,20 @@ class RegisteredDimension(property):
 
     @property
     def first_impact(self) -> Optional[str]:
+        """First impact of the dimension within the simulation pipeline."""
 
         return self.__first_impact
 
     @property
     def last_impact(self) -> Optional[str]:
-
+        """Last impact of the dimension within the simulation pipeline."""
         return self.__last_impact
+
+    @property
+    def title(self) -> Optional[str]:
+        """Displayed title of the dimension."""
+
+        return self.__title
 
 
 def dimension(getter: Callable) -> RegisteredDimension:
@@ -1647,8 +1801,6 @@ class MonteCarlo(Generic[MO]):
 
         self.runtime_env = runtime_env
 
-        self.runtime_env = runtime_env
-
         # Initialize ray if it hasn't been initialized yet. Required to query ideal number of actors
         if not ray.is_initialized():
 
@@ -1675,11 +1827,15 @@ class MonteCarlo(Generic[MO]):
     @staticmethod
     def __sample_point_to_str(sample_point: Any) -> str:
 
-        if isinstance(sample_point, float):
-            return f"{sample_point:.2f}"
-
+        # Check if the sample point has a custom string cast
         if type(sample_point).__str__ is not object.__str__:
             return str(sample_point)
+
+        if isinstance(sample_point, float):
+            return f"{sample_point:.2g}"
+
+        if isinstance(sample_point, int):
+            return f"{sample_point}"
 
         return sample_point.__class__.__name__
 
@@ -1938,7 +2094,7 @@ class MonteCarlo(Generic[MO]):
 
         return self.__investigated_object
 
-    def new_dimension(self, dimension: str, sample_points: List[Any], *args: Tuple[Any]) -> GridDimension:
+    def new_dimension(self, dimension: str, sample_points: List[Any], *args: Tuple[Any], **kwargs) -> GridDimension:
         """Add a dimension to the simulation grid.
 
         Must be a property of the investigated object.
@@ -1953,16 +2109,19 @@ class MonteCarlo(Generic[MO]):
                 The type of points must be identical to the grid arguments / type.
 
             *args (Tuple[Any], optional):
-                References to the object the imension belongs to.
+                References to the object the dimension belongs to.
                 Resolved to the investigated object by default,
                 but may be an attribute or sub-attribute of the investigated object.
+
+            **kwargs:
+                Additional initialization arguments passed to :class:`GridDimension`.
 
         Returns:
             The newly created dimension object.
         """
 
         considered_objects = (self.__investigated_object,) if len(args) < 1 else args
-        dimension = GridDimension(considered_objects, dimension, sample_points)
+        dimension = GridDimension(considered_objects, dimension, sample_points, **kwargs)
         self.add_dimension(dimension)
 
         return dimension
