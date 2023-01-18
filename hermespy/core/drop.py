@@ -7,12 +7,14 @@ Drop
 
 from __future__ import annotations
 
-from typing import List, Type
+from typing import List, Tuple, Type
 
 from h5py import Group
 
+from .channel_state_information import ChannelStateInformation
 from .device import DeviceReception, DeviceTransmission
 from .factory import HDFSerializable
+from .signal_model import Signal
 from .monte_carlo import Artifact
 
 __author__ = "Jan Adler"
@@ -29,7 +31,6 @@ class Drop(HDFSerializable):
     """Drop containing the information transmitted and received by all devices
     within a scenario."""
 
-    
     __timestamp: float                                  # Time at which the drop was generated
     __device_transmissions: List[DeviceTransmission]    # Transmitted device information
     __device_receptions: List[DeviceReception]          # Received device information
@@ -81,6 +82,15 @@ class Drop(HDFSerializable):
         """Number of device receptions within this drop."""
 
         return len(self.__device_receptions)
+
+    @property
+    def operator_inputs(self) -> List[List[Tuple[Signal, ChannelStateInformation]]]:
+        """Signals feeding into device's operators during reception.
+
+        Returns: Operator inputs.
+        """
+
+        return [reception.operator_inputs for reception in self.device_receptions]
 
     @classmethod
     def from_HDF(cls: Type[Drop], group: Group) -> Drop:

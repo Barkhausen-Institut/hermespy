@@ -68,7 +68,7 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
         
         return {'seed', 'devices'}
 
-    __mode: ScenarioMode                # Current scenario operating mode 
+    __mode: ScenarioMode                # Current scenario operating mode
     __devices: List[DeviceType]         # Registered devices within this scenario.
     __drop_duration: float              # Drop duration in seconds.
     __file: Optional[File]              # HDF5 file handle
@@ -481,10 +481,10 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
         self.__file.attrs["drop_duration"] = drop_duration
 
         # Write required groups
-        if not '/campaigns' in self.__file:
+        if '/campaigns' not in self.__file:
             self.__file.create_group('/campaigns')
 
-        if not '/state' in self.__file:
+        if '/state' not in self.__file:
             self.__file.create_group('state')
 
         # Write scenario state to the dataset for easy recollection
@@ -555,7 +555,6 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
                 raise ValueError("A file location must be specified or the scenario most be in record or replay mode")
 
             file = self.__file.filename
-
 
         # If only a file system location was specified, open the file
         if isinstance(file, str):
@@ -733,7 +732,7 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
                         cache: bool = True) -> List[DeviceReception]:
         """Receive over all scenario devices.
 
-        Internally calls :meth:`Scenario.process_inputs` and :meth:`Scenario.receive_devices`.
+        Internally calls :meth:`Scenario.process_inputs` and :meth:`Scenario.receive_operators`.
         
         Args:
 
@@ -752,24 +751,24 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
         """
 
         # Generate inputs
-        device_inputs = [d.process_input(i, cache) for d, i in zip(self.devices, impinging_signals)]
+        processed_inputs = self.process_inputs(impinging_signals, cache)
 
         # Generate operator receptions
-        receptions = self.receive_operators(device_inputs)
+        receptions = self.receive_operators([i.operator_inputs for i in processed_inputs])
 
         # Generate device receptions
-        return [DeviceReception.From_ProcessedDeviceInput(i, r) for i, r in zip(device_inputs, receptions)]
+        return [DeviceReception.From_ProcessedDeviceInput(i, r) for i, r in zip(processed_inputs, receptions)]
     
     @property
     def num_drops(self) -> Optional[int]:
         """Number of drops within the scenario.
-        
-        If the scenario is in replay mode, this property represents the 
+
+        If the scenario is in replay mode, this property represents the
         recorded number of drops
-        
+
         If the scenario is in record mode, this property represnts the
         current number of recorded drops.
-        
+
         Returns: Number of drops. `None` if not applicable.
         """
         
@@ -812,7 +811,7 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
                     device.transmitters.add_transmission(transmitter, transmission)
 
             # Replay device operator receptions
-            _ = self.receive_devices(drop.device_receptions)
+            _ = self.receive_operators(drop.operator_inputs, cache=True)
 
         else:
 

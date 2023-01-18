@@ -376,6 +376,24 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
 
         return self.__receiver.antennas.num_antennas
 
+    @staticmethod
+    def __ensure_list(propagated_signal: Union[DeviceOutput, Signal, List[Signal], None]) -> List[Signal]:
+        """Subroutine of :meth:`Channel.propagate`."""
+
+        if isinstance(propagated_signal, DeviceOutput):
+            return propagated_signal.emerging_signals
+        
+        if isinstance(propagated_signal, Signal):
+            return [propagated_signal]
+            
+        if isinstance(propagated_signal, list):
+            return propagated_signal
+            
+        if propagated_signal is None:
+            return list()
+
+        raise ValueError("Propagated signal is of unsupported type")
+
     def propagate(self,
                   forwards: Union[DeviceOutput, Signal, List[Signal], None] = None,
                   backwards: Union[DeviceOutput, Signal, List[Signal], None] = None,
@@ -427,32 +445,8 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
         """
 
         # Convert forwards and backwards transmissions to lists if required
-        forwards: List[Signal]
-        backwards: List[Signal]
-        
-        if isinstance(forwards, DeviceOutput):
-            forwards = forwards.emerging_signals
-        
-        elif isinstance(forwards, Signal):
-            forwards = [forwards]
-            
-        elif isinstance(forwards, list):
-            forwards = forwards
-            
-        elif forwards is None:
-            forwards = []
-            
-        if isinstance(backwards, DeviceOutput):
-            backwards = backwards.emerging_signals
-        
-        elif isinstance(backwards, Signal):
-            backwards = [backwards]
-            
-        elif isinstance(backwards, list):
-            backwards = backwards
-            
-        elif backwards is None:
-            backwards = []
+        forwards = self.__ensure_list(forwards)
+        backwards = self.__ensure_list(backwards)
 
         # Abort if the channel is considered floating, since physical device properties are required for
         # channel modeling

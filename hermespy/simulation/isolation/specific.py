@@ -31,7 +31,7 @@ class SpecificIsolation(Serializable, Isolation):
 
     yaml_tag = "Specific"
 
-    __isolation: Optional[np.ndarray]
+    __leakage_factors: Optional[np.ndarray]
 
     def __init__(self,
                  isolation: Union[None, np.ndarray, float, int] = None,
@@ -42,6 +42,10 @@ class SpecificIsolation(Serializable, Isolation):
 
     @property
     def isolation(self) -> np.ndarray:
+        """Linear power isolation between transmit and receive chains.
+
+        Returns: Numpy matrix (two-dimensional array).
+        """
 
         return self.__isolation
 
@@ -65,16 +69,19 @@ class SpecificIsolation(Serializable, Isolation):
 
         self.__isolation = value
 
+        # The leaking power is the square root of the inverse isolation
+        self.__leakage_factors = np.power(value, -.5)
+
     def _leak(self, signal: Signal) -> Signal:
 
-        if self.__isolation is None:
+        if self.__leakage_factors is None:
             raise RuntimeError("Error trying to model specific isolaion leakage with undefined isolations")
 
-        if self.__isolation.shape[0] != self.device.antennas.num_receive_antennas:
-            raise RuntimeError("Number of receiving antennas in isolation specifications ({self.__isolation.shape[0]}) " "don't match the antenna array ({self.device.antennas.num_receive_antennas})")
+        if self.__leakage_factors.shape[0] != self.device.antennas.num_receive_antennas:
+            raise RuntimeError("Number of receiving antennas in isolation specifications ({self.__leakage_factors.shape[0]}) " "don't match the antenna array ({self.device.antennas.num_receive_antennas})")
 
-        if self.__isolation.shape[1] != self.device.antennas.num_transmit_antennas:
-            raise RuntimeError("Number of receiving antennas in isolation specifications ({self.__isolation.shape[0]}) " "don't match the antenna array ({self.device.antennas.num_receive_antennas})")
+        if self.__leakage_factors.shape[1] != self.device.antennas.num_transmit_antennas:
+            raise RuntimeError("Number of receiving antennas in isolation specifications ({self.__leakage_factors.shape[0]}) " "don't match the antenna array ({self.device.antennas.num_receive_antennas})")
 
-        leaked_samples = self.isolation @ signal.samples
+        leaked_samples = self.__leakage_factors @ signal.samples
         return Signal(leaked_samples, signal.sampling_rate, signal.carrier_frequency)
