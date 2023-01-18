@@ -31,7 +31,6 @@ class DbConversionType(Enum):
 
     POWER = 0
     AMPLITUDE = 1
-    HILLY = 2
 
 
 @jit

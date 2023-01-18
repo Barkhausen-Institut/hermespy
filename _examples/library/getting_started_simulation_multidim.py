@@ -34,7 +34,7 @@ simulation.add_evaluator(BitErrorEvaluator(transmitter, receiver))
 simulation.add_evaluator(ThroughputEvaluator(transmitter, receiver))
 
 # Configure simulation sweep dimensions
-snr_dimension = simulation.new_dimension('snr', [10, 8, 6, 4, 2, 1, 0.5, 0.25, .125, .0625])
+snr_dimension = simulation.new_dimension('snr', [10, 9, 8, 7, 6, 5, 4, 3, 2, 1])
 rep_dimension = simulation.new_dimension('repetitions', [1, 3, 5, 7, 9], transmitter.encoder_manager[0], receiver.encoder_manager[0])
 snr_dimension.title = 'SNR'
 rep_dimension.title = 'Code Repetitions'
