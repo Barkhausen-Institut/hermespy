@@ -131,7 +131,6 @@ class RadarChannel(Channel[RadarChannelRealization], Serializable):
         self.__losses_db = losses_db
         self.target_velocity = velocity
         self.attenuate = attenuate
-        self.__ground_truth = None
 
     @property
     def target_range(self) -> float:
