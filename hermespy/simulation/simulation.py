@@ -252,9 +252,8 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
         return self.__snr
 
-    @snr.setter(first_impact="receive_devices")
+    @snr.setter(first_impact="receive_devices", title="SNR")
     def snr(self, value: Optional[float]) -> None:
-        """Set ratio of signal energy to noise power at the receiver-side"""
 
         if value is None:
 
