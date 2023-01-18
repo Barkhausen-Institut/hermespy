@@ -18,7 +18,7 @@ from scipy.signal import find_peaks
 
 from hermespy.core import ChannelStateFormat, ChannelStateInformation, Serializable, SerializableEnum, Signal
 from .symbols import StatedSymbols, Symbols
-from .waveform_generator import ChannelEqualization, ChannelEstimation, IdealChannelEstimation, PilotWaveformGenerator, Synchronization, WaveformGenerator, ZeroForcingChannelEqualization
+from .waveform_generator import ChannelEqualization, ChannelEstimation, IdealChannelEstimation, ConfigurablePilotWaveform, Synchronization, WaveformGenerator, ZeroForcingChannelEqualization, MappedPilotSymbolSequence
 from .waveform_correlation_synchronization import CorrelationSynchronization
 from .tools import PskQamMapping
 
@@ -645,8 +645,10 @@ class FrameGuardSection(FrameSection, Serializable):
         return np.empty(0, dtype=complex)
 
 
-class OFDMWaveform(PilotWaveformGenerator, Serializable):
+class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
     """Generic Orthogonal-Frequency-Division-Multiplexing with a flexible frame configuration.
+
+    The internally applied FFT size is :meth:`OFDMWaveform.num_subcarriers` times :meth:`WaveformGenerator.oversampling_factor`. 
 
     The following features are supported:
         - The modem can transmit or receive custom-defined frames.
@@ -661,7 +663,6 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
     """
 
     yaml_tag: str = "OFDM"
-    """YAML serialization tag."""
 
     __subcarrier_spacing: float
     __num_subcarriers: int
@@ -675,22 +676,28 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
 
         return {"modulation_order"}
 
-    def __init__(self, subcarrier_spacing: float = 1e3, num_subcarriers: int = 1200, dc_suppression: bool = True, resources: Optional[List[FrameResource]] = None, structure: Optional[List[FrameSection]] = None, **kwargs: Any) -> None:
-        """Orthogonal-Frequency-Division-Multiplexing Waveform Generator initialization.
-
+    def __init__(self,
+                 subcarrier_spacing: float = 1e3,
+                 num_subcarriers: int = 1024,
+                 dc_suppression: bool = True,
+                 resources: Optional[List[FrameResource]] = None,
+                 structure: Optional[List[FrameSection]] = None,
+                 **kwargs: Any) -> None:
+        """
         Args:
 
             subcarrier_spacing (float, optional):
                 Spacing between individual subcarriers in Hz.
+                :math:`1~\\mathrm{kHz}` by default.
 
             num_subcarriers (int, optional):
-                Maximum number of subcarriers.
-                Also the size of the FFT deployed during modulation,
-                i.e. the difference between the configured number of subcarriers and the maximum number
-                will be zero-padded.
+                Maximum number of assignable subcarriers.
+                Unassigned subcarriers will be assumed to be zero.
+                :math:`1024` by default.
 
             dc_suppression (bool, optional):
                 Suppress the direct current component during waveform generation.
+                Enabled by default.
 
             resources (List[FrameResource], optional):
                 Frequency-domain resource section configurations.
@@ -698,12 +705,10 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
             structure (List[FrameSection], optional):
                 Time-domain frame configuration.
 
-            kwargs (Any):
+            **kwargs (Any):
                 Waveform generator base class initialization parameters.
+                Refer to :class:`WaveformGenerator` for details.
         """
-
-        # Init base class
-        PilotWaveformGenerator.__init__(self, **kwargs)
 
         self.subcarrier_spacing = subcarrier_spacing
         self.num_subcarriers = num_subcarriers
@@ -717,6 +722,10 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
         if structure is not None:
             for section in structure:
                 self.add_section(section)
+                
+        # Initialize  base class
+        ConfigurablePilotWaveform.__init__(self, **kwargs)
+        self.pilot_symbol_sequence = MappedPilotSymbolSequence(self._mapping)
 
     @property
     def resources(self) -> List[FrameResource]:
@@ -895,8 +904,7 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
         data_symbols = self._mapping.get_symbols(data_bits)
 
         # Query reference symbols
-        # ToDo: Support custom reference symbol sequences
-        reference_symbols = np.ones(self._num_reference_symbols, dtype=complex)
+        reference_symbols = self.pilot_symbols(self._num_reference_symbols)
 
         # Generate the symbol sequence for a full OFDM frame
         symbols = Symbols()
@@ -1083,8 +1091,7 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
 
         raise RuntimeError("Unknown OFDM channel estimation routine requested")
 
-    @staticmethod
-    def reference_based_channel_estimation(symbol_grid: np.ndarray, resource_mask: np.ndarray) -> ChannelStateInformation:
+    def reference_based_channel_estimation(self, symbol_grid: np.ndarray, resource_mask: np.ndarray) -> ChannelStateInformation:
         """Perform a reference-symbol based channel estimation over the OFDM frame grid.
 
         This method estimates the channel using reference symbols. Only LS method is currently implemented. The function
@@ -1106,8 +1113,8 @@ class OFDMWaveform(PilotWaveformGenerator, Serializable):
                 The channel state estimate.
         """
 
-        propagated_reference_symbols = symbol_grid.T[resource_mask[ElementType.REFERENCE.value, ::].T]
-        reference_symbols = np.ones(len(propagated_reference_symbols), dtype=complex)
+        propagated_reference_symbols = symbol_grid[resource_mask[ElementType.REFERENCE.value, ::]]
+        reference_symbols = self.pilot_symbols(self._num_reference_symbols)
         reference_channel_estimation = propagated_reference_symbols / reference_symbols
 
         channel_estimation = np.zeros(symbol_grid.shape, dtype=complex)
@@ -1384,22 +1391,19 @@ class SchmidlCoxPilotSection(PilotSection):
     @property
     def num_samples(self) -> int:
 
-        return 2 * self.frame.num_subcarriers * self.frame.oversampling_factor
+        return self.frame.num_subcarriers * self.frame.oversampling_factor
 
     def _pilot(self) -> np.ndarray:
 
         samples_per_symbol = self.frame.num_subcarriers * self.frame.oversampling_factor
-        pilot_sequence = self._pilot_sequence(int(0.5 * self.frame.num_subcarriers) + self.frame.num_subcarriers).raw.flatten()
+        pilot_sequence = self._pilot_sequence(ceil(0.5 * self.frame.num_subcarriers)).raw.flatten()
 
-        pilot_frequencies = np.zeros((samples_per_symbol, 2), dtype=complex)
+        pilot_frequencies = np.zeros(samples_per_symbol, dtype=complex)
 
-        subgrid_start_idx = int(0.5 * (samples_per_symbol - self.frame.num_subcarriers))
-        pilot_frequencies[subgrid_start_idx : subgrid_start_idx + self.frame.num_subcarriers : 2, 0] = pilot_sequence[: int(0.5 * self.frame.num_subcarriers)]
-        pilot_frequencies[subgrid_start_idx : subgrid_start_idx + self.frame.num_subcarriers, 1] = pilot_sequence[int(0.5 * self.frame.num_subcarriers) :]
+        subgrid_start_idx = ceil(0.5 * (samples_per_symbol - self.frame.num_subcarriers))
+        pilot_frequencies[subgrid_start_idx : subgrid_start_idx + self.frame.num_subcarriers : 2] = pilot_sequence
 
-        pilot_symbols_time = ifft(ifftshift(pilot_frequencies, axes=0), axis=0, norm="ortho", n=samples_per_symbol)
-        pilot_samples = np.concatenate(pilot_symbols_time.T, axis=0)
-
+        pilot_samples = ifft(ifftshift(pilot_frequencies), norm="ortho", n=samples_per_symbol)
         return pilot_samples
 
     def demodulate(self, *_: Any) -> Tuple[np.ndarray, ChannelStateInformation]:
@@ -1431,7 +1435,7 @@ class SchmidlCoxSynchronization(OFDMSynchronization):
     yaml_tag = "SchmidlCox"
     """YAML serialization tag"""
 
-    def synchronize(self, signal: np.ndarray, channel_state: ChannelStateInformation) -> List[Tuple[np.ndarray, ChannelStateInformation]]:
+    def synchronize(self, signal: np.ndarray) -> List[int]:
 
         symbol_length = self.waveform_generator.oversampling_factor * self.waveform_generator.num_subcarriers
 
@@ -1441,7 +1445,7 @@ class SchmidlCoxSynchronization(OFDMSynchronization):
 
         half_symbol_length = int(0.5 * symbol_length)
 
-        num_delay_candidates = 1 + signal.shape[-1] - symbol_length
+        num_delay_candidates = 2 + signal.shape[-1] - symbol_length
         delay_powers = np.empty(num_delay_candidates, dtype=float)
         delay_powers[0] = 0.0  # In order to be able to detect a peak on the first sample
         for d in range(0, num_delay_candidates - 1):
@@ -1449,16 +1453,11 @@ class SchmidlCoxSynchronization(OFDMSynchronization):
             delay_powers[1 + d] = np.sum(abs(np.sum(signal[:, d : d + half_symbol_length].conj() * signal[:, d + half_symbol_length : d + 2 * half_symbol_length], axis=1)))
 
         num_samples = self.waveform_generator.samples_in_frame
-        peaks, _ = find_peaks(delay_powers, distance=int(0.8 * num_samples))
-        frame_indices = peaks - 3
+        min_height = 0.75 * np.max(delay_powers)
+        peaks, _ = find_peaks(delay_powers, distance=int(0.9 * num_samples), height=min_height)
+        frame_indices = peaks - 1  # Correct for the first delay bin being prepended
 
-        frames: List[Tuple[np.ndarray, ChannelStateInformation]] = []
-        for frame_idx in frame_indices:
-
-            frame_idx = max(0, frame_idx)
-            frames.append((signal[:, frame_idx : frame_idx + num_samples], channel_state[:, :, frame_idx : frame_idx + num_samples, :]))
-
-        return frames
+        return frame_indices
 
 
 class ReferencePosition(SerializableEnum):
@@ -1509,8 +1508,8 @@ class OFDMLeastSquaresChannelEstimation(ChannelEstimation[OFDMWaveform], Seriali
 
         resource_mask = self.waveform_generator._resource_mask
 
-        propagated_references = symbols.raw[0, resource_mask[ElementType.REFERENCE.value, ::].T]
-        reference_symbols = np.ones(len(propagated_references), dtype=complex)
+        propagated_references = symbols.raw[0, ::].T[resource_mask[ElementType.REFERENCE.value, ::]]
+        reference_symbols = self.waveform_generator.pilot_symbols(len(propagated_references))
         reference_channel_estimation = propagated_references / reference_symbols
 
         channel_estimation = np.zeros(((1, 1, symbols.num_blocks, symbols.num_symbols)), dtype=complex)

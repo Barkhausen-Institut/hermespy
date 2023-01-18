@@ -261,7 +261,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
             raise ValueError("The provided transmitter is not registered with this scenario.")
 
         receiver_index = devices.index(receiver)
-        channels: List[Channel] = self.__channels[receiver_index, ].tolist()
+        channels: List[Channel] = self.__channels[receiver_index,].tolist()
 
         if active_only:
             channels = [channel for channel in channels if channel.active]
@@ -325,9 +325,8 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
         return self.__snr
 
-    @snr.setter(first_impact="receive_devices")
+    @snr.setter(first_impact="receive_devices", title="SNR")
     def snr(self, value: Optional[float]) -> None:
-        """Set ratio of signal energy to noise power at the receiver-side"""
 
         if value is None:
 

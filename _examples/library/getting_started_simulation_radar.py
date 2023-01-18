@@ -3,9 +3,9 @@ This script simulates a monostatic radar detector using FMCW pulses and generate
 """
 
 import matplotlib.pyplot as plt
-import numpy as np
 
 # Import required HermesPy modules
+from hermespy.core import dB
 from hermespy.simulation import Simulation
 from hermespy.radar import Radar, FMCW, ReceiverOperatingCharacteristic, MaxDetector, RootMeanSquareError
 from hermespy.channel import RadarChannel
@@ -64,13 +64,7 @@ simulation.add_evaluator(ReceiverOperatingCharacteristic(receiving_radar=operato
 simulation.add_evaluator(RootMeanSquareError(operator_h1, channel_h1))
 simulation.num_samples = number_of_drops
 
-snr_db = np.asarray([-15, -12, -9, 0])  # SNR in dB
-snr = db2lin(snr_db)
-
-# convert SNR to Ep/N0, which is expected in noise function
-EpN0 = snr * chirp_duration * bandwidth
-
-simulation.new_dimension('snr', snr)
+simulation.new_dimension('snr', dB(-15, -12, -9, 0))
 simulation.num_samples = 10000
 
 # Launch simulation campaign

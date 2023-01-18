@@ -8,7 +8,9 @@ from hermespy.simulation import SimulationScenario
 from hermespy.modem import TransmittingModem, ReceivingModem, BitErrorEvaluator, RootRaisedCosineWaveform, CustomPilotSymbolSequence, \
     SingleCarrierCorrelationSynchronization, SingleCarrierZeroForcingChannelEqualization, SingleCarrierIdealChannelEstimation, \
     ChirpFSKWaveform, ChirpFSKCorrelationSynchronization, \
-    OFDMWaveform, FrameResource, FrameSymbolSection, FrameElement, ElementType, OFDMCorrelationSynchronization, PilotSection, OFDMLeastSquaresChannelEstimation, OFDMZeroForcingChannelEqualization, OFDMIdealChannelEstimation
+    OFDMWaveform, FrameResource, FrameSymbolSection, FrameElement, ElementType, OFDMCorrelationSynchronization, PilotSection, \
+    OFDMLeastSquaresChannelEstimation, OFDMZeroForcingChannelEqualization, OFDMIdealChannelEstimation, SchmidlCoxPilotSection, \
+    SchmidlCoxSynchronization
 from hermespy.precoding import DFT, SpatialMultiplexing
 from hermespy.fec import RepetitionEncoder
 
@@ -197,6 +199,52 @@ class TestSISOLinks(TestCase):
         self.__propagate(MultipathFading5GTDL(transmitter=self.tx_device, receiver=self.rx_device))
         self.assertGreater(.1, self.ber.evaluate().artifact().to_scalar())
     
+    def test_ideal_ofdm_schmidl_cox(self) -> None:
+        """Verify a valid link over an AWGN channel with OFDM modluation,
+        Schmidl-Cox synchronization, least-squares channel estimation and zero-forcing equalization"""
+        
+        resources = [FrameResource(12, prefix_ratio=.01, elements=[FrameElement(ElementType.DATA, 9), FrameElement(ElementType.REFERENCE, 1)])]
+        structure = [FrameSymbolSection(3, [0])]
+        
+        tx_waveform = OFDMWaveform(subcarrier_spacing=1e3, num_subcarriers=120, dc_suppression=True, resources=resources, structure=structure)
+        tx_waveform.pilot_section = SchmidlCoxPilotSection()
+        rx_waveform = OFDMWaveform(subcarrier_spacing=1e3, num_subcarriers=120, dc_suppression=True, resources=resources, structure=structure)
+        rx_waveform.pilot_section = SchmidlCoxPilotSection()
+        rx_waveform.synchronization = SchmidlCoxSynchronization()
+        rx_waveform.channel_estimation = OFDMLeastSquaresChannelEstimation()
+        rx_waveform.channel_equalization = OFDMZeroForcingChannelEqualization()
+        
+        self.tx_operator.waveform_generator = tx_waveform
+        self.rx_operator.waveform_generator = rx_waveform
+        self.tx_operator.precoding.pop_precoder(1)
+        self.rx_operator.precoding.pop_precoder(1)
+        
+        self.__propagate(Channel(transmitter=self.tx_device, receiver=self.rx_device))
+        self.assertGreater(.1, self.ber.evaluate().artifact().to_scalar())
+
+    def test_tdl_ofdm_schmidl_cox(self) -> None:
+        """Verify a valid link over a TDL channel with OFDM modluation,
+        Schmidl-Cox synchronization, least-squares channel estimation and zero-forcing equalization"""
+        
+        resources = [FrameResource(12, prefix_ratio=.01, elements=[FrameElement(ElementType.DATA, 9), FrameElement(ElementType.REFERENCE, 1)])]
+        structure = [FrameSymbolSection(3, [0])]
+        
+        tx_waveform = OFDMWaveform(subcarrier_spacing=15e3, num_subcarriers=120, dc_suppression=True, resources=resources, structure=structure)
+        tx_waveform.pilot_section = SchmidlCoxPilotSection()
+        rx_waveform = OFDMWaveform(subcarrier_spacing=15e3, num_subcarriers=120, dc_suppression=True, resources=resources, structure=structure)
+        rx_waveform.pilot_section = SchmidlCoxPilotSection()
+        rx_waveform.synchronization = SchmidlCoxSynchronization()
+        rx_waveform.channel_estimation = OFDMLeastSquaresChannelEstimation()
+        rx_waveform.channel_equalization = OFDMZeroForcingChannelEqualization()
+        
+        self.tx_operator.waveform_generator = tx_waveform
+        self.rx_operator.waveform_generator = rx_waveform
+        self.tx_operator.precoding.pop_precoder(1)
+        self.rx_operator.precoding.pop_precoder(1)
+        
+        self.__propagate(MultipathFading5GTDL(transmitter=self.tx_device, receiver=self.rx_device))
+        self.assertGreater(.1, self.ber.evaluate().artifact().to_scalar())
+
 
 class TestMIMOLinks(TestCase):
     """Test integration of simulation workflow on the link level"""

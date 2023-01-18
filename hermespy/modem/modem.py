@@ -1048,7 +1048,20 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
         frame_start_indices = self.waveform_generator.synchronization.synchronize(received_signal.samples)
         frame_length = self.waveform_generator.samples_in_frame
 
-        synchronized_signals = [Signal(received_signal.samples[:, i : i + frame_length], received_signal.sampling_rate) for i in frame_start_indices]
+        synchronized_signals = []
+        for frame_start in frame_start_indices:
+
+            frame_stop = frame_start + frame_length
+
+            if frame_stop <= received_signal.num_samples:
+                frame_samples = received_signal.samples[:, frame_start:frame_stop]
+
+            else:
+                frame_samples = np.append(received_signal.samples[:, frame_start:], np.zeros((received_signal.num_streams, frame_stop - received_signal.num_samples), dtype=complex))
+
+            frame_signal = Signal(frame_samples, received_signal.sampling_rate)
+            synchronized_signals.append(frame_signal)
+
         return frame_start_indices, synchronized_signals
 
     def __demodulate(self, frame: Signal) -> Symbols:

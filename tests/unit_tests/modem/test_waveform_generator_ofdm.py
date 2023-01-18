@@ -640,23 +640,27 @@ class TestSchmidlCoxPilotSection(TestCase):
         self.pilot = SchmidlCoxPilotSection(frame=self.frame)
         
     def test_num_samples(self) -> None:
-        """Number of samples property should return two frame symbols worth of samples"""
+        """Modulatibng Schmidl-Cox pilot sections should generate the expected amount of samples"""
         
-        self.assertTrue(2 * self.frame.oversampling_factor * self.frame.num_subcarriers, self.pilot.num_samples)
+        self.assertTrue(self.frame.oversampling_factor * self.frame.num_subcarriers, self.pilot.num_samples)
         
     def test_pilot(self) -> None:
         """A valid pilot section should be generated"""
         
-        pilot = self.pilot.modulate()
-        self.assertEqual(self.pilot.num_samples, len(pilot), "Invalid number of samples generated")
-        self.assertEqual(2 * self.frame.num_subcarriers * self.frame.oversampling_factor, len(pilot))
-
-        synchronization_symbol = pilot[:int(.5 * len(pilot))]
-        half_symbol_length = int(.5 * len(synchronization_symbol))
-        first_half_symbol = synchronization_symbol[:half_symbol_length]
-        second_half_symbol = synchronization_symbol[half_symbol_length:]
+        num_subcarriers_candidates = [120, 121, 1200]
+        for num_subcarriers in num_subcarriers_candidates:
+            
+            self.frame.num_subcarriers = num_subcarriers
         
-        assert_array_almost_equal(first_half_symbol, second_half_symbol, err_msg="Synchronization symbol not symmmetric")
+            pilot = self.pilot.modulate()
+            self.assertEqual(self.pilot.num_samples, len(pilot), "Invalid number of samples generated")
+            self.assertEqual(self.frame.num_subcarriers * self.frame.oversampling_factor, len(pilot))
+
+            half_symbol_length = int(.5 * len(pilot))
+            first_half_symbol = pilot[:half_symbol_length]
+            second_half_symbol = pilot[half_symbol_length:]
+            
+            assert_array_almost_equal(first_half_symbol, second_half_symbol, err_msg="Synchronization symbol not symmmetric")
     
     def test_serialization(self) -> None:
         """Test YAML serialization"""
@@ -713,9 +717,9 @@ class TestSchmidlCoxSynchronization(TestCase):
 
         self.rng = default_rng(90)
 
-        test_resource = FrameResource(repetitions=1, elements=[FrameElement(ElementType.DATA, repetitions=1200)])
-        test_payload = FrameSymbolSection(num_repetitions=3, pattern=[0])
-        self.frame = OFDMWaveform(oversampling_factor=1, resources=[test_resource], structure=[test_payload])
+        test_resource = FrameResource(repetitions=10, prefix_ratio=.01, elements=[FrameElement(ElementType.DATA, repetitions=11), FrameElement(ElementType.REFERENCE, repetitions=1)])
+        test_payload = FrameSymbolSection(num_repetitions=6, pattern=[0])
+        self.frame = OFDMWaveform(oversampling_factor=1, resources=[test_resource], structure=[test_payload], num_subcarriers=120)
         self.frame.pilot_section = SchmidlCoxPilotSection()
         self.frame.dc_suppression = False
 
@@ -724,27 +728,30 @@ class TestSchmidlCoxSynchronization(TestCase):
         self.num_streams = 3
         self.delays_in_samples = [0, 9, 80]
         self.num_frames = [1, 2, 3]
+        self.max_delay_offset = 8
 
     def test_synchronize(self) -> None:
         """Test the proper estimation of delays during Schmidl-Cox synchronization"""
 
         for d, n in product(self.delays_in_samples, self.num_frames):
 
-            symbols = np.exp(2j * pi * self.rng.uniform(0, 1, (n, self.frame.symbols_per_frame)))
-            frames = [np.exp(2j * pi * self.rng.uniform(0, 1, (self.num_streams, 1))) @ self.frame.modulate(Symbols(symbols[f, :])).samples for f in range(n)]
+            symbols = [self.frame.map(self.rng.integers(0, 2, size=self.frame.bits_per_frame)) for _ in range(n)]
+            frames = [np.exp(2j * pi * self.rng.uniform(0, 1, (self.num_streams, 1))) @ self.frame.modulate(symbols[f]).samples for f in range(n)]
             
             signal = np.empty((self.num_streams, 0), dtype=complex)
             for frame in frames:
 
                 signal = np.concatenate((signal, np.zeros((self.num_streams, d), dtype=complex), frame), axis=1)
             
-            channel_state = ChannelStateInformation.Ideal(len(signal), self.num_streams)
-
-            synchronization = self.synchronization.synchronize(signal, channel_state)
-
-            self.assertEqual(n, len(synchronization))
-            for frame, (synchronized_frame, _) in zip(frames, synchronization):
-                assert_array_equal(frame, synchronized_frame)
+            estimated_delays = self.synchronization.synchronize(signal)
+            self.assertEqual(n, len(estimated_delays))
+            
+            for f, estimated_delay in enumerate(estimated_delays):
+                
+                expected_delay = f * self.frame.samples_in_frame + (1 + f) * d
+                
+                if abs(estimated_delay - expected_delay) > self.max_delay_offset:
+                    self.fail(f"Estimated delay {estimated_delay} too far off (should be {expected_delay})")
     
     def test_serialization(self) -> None:
         """Test YAML serialization"""
