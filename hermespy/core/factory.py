@@ -51,7 +51,7 @@ from ruamel.yaml import YAML, SafeConstructor, SafeRepresenter, ScalarNode, Node
 from ruamel.yaml.constructor import ConstructorError
 
 import hermespy
-from ..tools import db2lin
+from .logarithmic import Logarithmic, LogarithmicSequence
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -362,6 +362,7 @@ class Factory:
         # Add custom constructors
         self.__yaml.constructor.add_constructor("complex", Factory.__complex_constructor)
         self.__yaml.constructor.add_constructor("array", Factory.__array_constructor)
+        self.__yaml.constructor.add_constructor("dB", Factory.__logarithmic_constructor)
 
         # Iterate over all modules within the hermespy namespace
         # Scan for serializable classes
@@ -541,6 +542,24 @@ class Factory:
             return constructor.construct_object(node)
 
     @staticmethod
+    def __logarithmic_constructor(constructor: SafeConstructor, node: Union[ScalarNode, SequenceNode]) -> Union[Logarithmic, LogarithmicSequence]:
+        """Construct a logarithmic value or sequence from YAML.
+
+        Args:
+
+            constructor (SafeConstructor): YAML constructor.
+            node (Union[ScalarNode, SequenceNode]): The YAML node representing the array.
+
+        Returns: A logarithmic representation.
+        """
+
+        if isinstance(node, ScalarNode):
+            return Logarithmic(constructor.construct_scalar(node))
+
+        if isinstance(node, SequenceNode):
+            return LogarithmicSequence(constructor.construct_sequence(node))
+
+    @staticmethod
     def __construct_map(constructor: SafeConstructor, node: MappingNode) -> Mapping[MappingNode, Any]:
         """A custom map generator.
 
@@ -564,7 +583,7 @@ class Factory:
 
     @staticmethod
     def __decibel_conversion(match: re.Match) -> str:
-        """Convert linear series to decibel series.
+        """Convert YAML sequences with dB annotations to tagged sequences.
 
         Args:
             match (re.Match): The serialization sequence to be converted.
@@ -573,9 +592,9 @@ class Factory:
             str: The purged sequence.
         """
 
-        linear_values = [db2lin(float(str_rep)) for str_rep in match[1].replace(" ", "").split(",")]
+        linear_values = [float(str_rep) for str_rep in match[1].replace(" ", "").split(",")]
 
-        string_replacement = "["
+        string_replacement = "!<dB> ["
         for linear_value in linear_values:
             string_replacement += str(linear_value) + ", "
 

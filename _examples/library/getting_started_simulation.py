@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 # Import required HermesPy modules
 from hermespy.simulation import Simulation
 from hermespy.modem import DuplexModem, RootRaisedCosineWaveform, BitErrorEvaluator
-
+from hermespy.core import dB
 
 # Create a new HermesPy simulation scenario
 simulation = Simulation(seed=42)
@@ -18,7 +18,7 @@ operator.device = device
 
 # Configure Monte Carlo simulation
 simulation.add_evaluator(BitErrorEvaluator(operator, operator))
-simulation.new_dimension('snr', [10, 4, 2, 1, 0.5])
+simulation.new_dimension('snr', dB(10, 4, 2, 1, 0.5))
 simulation.num_samples = 1000
 
 # Launch simulation campaign

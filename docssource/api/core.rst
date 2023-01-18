@@ -19,6 +19,7 @@ It is split into several interdependent sub-modules:
    core.factory
    core.definitions
    core.device
+   core.logarithmic
    core.pipeline
    core.random_node
    core.scenario

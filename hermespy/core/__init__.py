@@ -1,5 +1,6 @@
 from .antennas import Antenna, IdealAntenna, Dipole, PatchAntenna, AntennaArrayBase, AntennaArray, UniformArray
 from .definitions import SNRType
+from .logarithmic import dB, Logarithmic, LogarithmicSequence, ValueType
 from .channel_state_information import ChannelStateFormat, ChannelStateInformation
 from .device import Operator, OperatorSlot, DuplexOperator, MixingOperator, TransmitterSlot, ReceiverSlot, Transmitter, Receiver, Device, FloatingError, Transmission, Reception, DeviceReception, DeviceTransmission
 from .executable import Executable, Verbosity
@@ -30,6 +31,10 @@ __all__ = [
     "AntennaArray",
     "UniformArray",
     "SNRType",
+    "dB",
+    "Logarithmic",
+    "LogarithmicSequence",
+    "ValueType",
     "ChannelStateFormat",
     "ChannelStateInformation",
     "Operator",
