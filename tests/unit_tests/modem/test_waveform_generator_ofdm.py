@@ -2,11 +2,9 @@
 """Test HermesPy Orthogonal Frequency Division Multiplexing Waveform Generation."""
 
 from itertools import product
-from multiprocessing.sharedctypes import Value
-from signal import signal
 from typing import Tuple
 from unittest import TestCase
-from unittest.mock import Mock
+from unittest.mock import Mock, patch, PropertyMock
 
 import numpy as np
 from numpy.testing import assert_array_almost_equal, assert_array_equal
@@ -17,16 +15,30 @@ from scipy.fft import fft, fftshift
 from hermespy.channel import ChannelStateInformation
 from hermespy.modem.modem import Symbols
 from hermespy.modem import OFDMWaveform, FrameSymbolSection, FrameGuardSection, FrameResource
-from hermespy.modem.waveform_generator_ofdm import FrameElement, ElementType, PrefixType, FrameSection, OFDMCorrelationSynchronization, OFDMIdealChannelEstimation, PilotSection, SchmidlCoxPilotSection, SchmidlCoxSynchronization, ChannelEstimation
+from hermespy.modem.waveform_generator_ofdm import FrameElement, ElementType, PrefixType, FrameSection, OFDMCorrelationSynchronization, OFDMIdealChannelEstimation, PilotSection, SchmidlCoxPilotSection, SchmidlCoxSynchronization, OFDMLeastSquaresChannelEstimation, OFDMChannelEqualization, OFDMZeroForcingChannelEqualization, OFDMMinimumMeanSquareChannelEqualization
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["André Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
+
+
+class TestFrameElement(TestCase):
+    """Test a single OFDM grid element"""
+    
+    def setUp(self) -> None:
+        
+        self.element = FrameElement(ElementType.DATA, repetitions=1)
+
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+
+        test_yaml_roundtrip_serialization(self, self.element)
 
 
 class TestFrameResource(TestCase):
@@ -117,6 +129,11 @@ class TestFrameResource(TestCase):
         expected_mask[2, [3, 4, 5, 9, 10, 11]] = True   # NULL symbol mask
 
         assert_array_equal(expected_mask, self.resource.mask)
+
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+
+        test_yaml_roundtrip_serialization(self, self.resource)
 
 
 class FrameSectionMock(FrameSection):
@@ -276,6 +293,14 @@ class TestFrameSymbolSection(TestCase):
 
         self.assertEqual(modulated_signal.shape[0], expected_num_samples)
 
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+        
+        with patch('hermespy.modem.waveform_generator_ofdm.FrameSymbolSection.frame', new_callable=PropertyMock) as frame:
+        
+            frame.return_value = self.frame
+            test_yaml_roundtrip_serialization(self, self.section)
+
 
 class TestFrameGuardSection(TestCase):
     """Test OFDM frame guard section."""
@@ -335,6 +360,14 @@ class TestFrameGuardSection(TestCase):
         """Demodulation should return an empty tuple."""
 
         _ = self.section.demodulate(np.empty(0, dtype=complex))
+
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+        
+        with patch('hermespy.modem.waveform_generator_ofdm.FrameGuardSection.frame', new_callable=PropertyMock) as frame:
+        
+            frame.return_value = self.frame
+            test_yaml_roundtrip_serialization(self, self.section)
 
 
 class TestOFDMWaveform(TestCase):
@@ -486,6 +519,14 @@ class TestOFDMWaveform(TestCase):
         
         assert_array_equal(expected_bits, bits)
 
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+        
+        with patch('hermespy.modem.waveform_generator_ofdm.OFDMWaveform.modem', new_callable=PropertyMock) as blacklist:
+        
+            blacklist.return_value = {'modem'}
+            test_yaml_roundtrip_serialization(self, self.ofdm, {'modem',})
+
 
 class TestPilotSection(TestCase):
     """Test the general base class for OFDM pilot sections."""
@@ -583,6 +624,11 @@ class TestPilotSection(TestCase):
         pilot_symbols = pilot_symbols[subgrid_start_idx:subgrid_start_idx+self.frame.num_subcarriers]
 
         assert_array_almost_equal(expected_pilot_symbols[0, 0, :], pilot_symbols)
+    
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+        
+        test_yaml_roundtrip_serialization(self, self.pilot_section)
 
 
 class TestSchmidlCoxPilotSection(TestCase):
@@ -594,23 +640,32 @@ class TestSchmidlCoxPilotSection(TestCase):
         self.pilot = SchmidlCoxPilotSection(frame=self.frame)
         
     def test_num_samples(self) -> None:
-        """Number of samples property should return two frame symbols worth of samples"""
+        """Modulatibng Schmidl-Cox pilot sections should generate the expected amount of samples"""
         
-        self.assertTrue(2 * self.frame.oversampling_factor * self.frame.num_subcarriers, self.pilot.num_samples)
+        self.assertTrue(self.frame.oversampling_factor * self.frame.num_subcarriers, self.pilot.num_samples)
         
     def test_pilot(self) -> None:
         """A valid pilot section should be generated"""
         
-        pilot = self.pilot.modulate()
-        self.assertEqual(self.pilot.num_samples, len(pilot), "Invalid number of samples generated")
-        self.assertEqual(2 * self.frame.num_subcarriers * self.frame.oversampling_factor, len(pilot))
-
-        synchronization_symbol = pilot[:int(.5 * len(pilot))]
-        half_symbol_length = int(.5 * len(synchronization_symbol))
-        first_half_symbol = synchronization_symbol[:half_symbol_length]
-        second_half_symbol = synchronization_symbol[half_symbol_length:]
+        num_subcarriers_candidates = [120, 121, 1200]
+        for num_subcarriers in num_subcarriers_candidates:
+            
+            self.frame.num_subcarriers = num_subcarriers
         
-        assert_array_almost_equal(first_half_symbol, second_half_symbol, err_msg="Synchronization symbol not symmmetric")
+            pilot = self.pilot.modulate()
+            self.assertEqual(self.pilot.num_samples, len(pilot), "Invalid number of samples generated")
+            self.assertEqual(self.frame.num_subcarriers * self.frame.oversampling_factor, len(pilot))
+
+            half_symbol_length = int(.5 * len(pilot))
+            first_half_symbol = pilot[:half_symbol_length]
+            second_half_symbol = pilot[half_symbol_length:]
+            
+            assert_array_almost_equal(first_half_symbol, second_half_symbol, err_msg="Synchronization symbol not symmmetric")
+    
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+        
+        test_yaml_roundtrip_serialization(self, self.pilot)
 
 
 class TestCorrelationSynchronization(TestCase):
@@ -648,6 +703,11 @@ class TestCorrelationSynchronization(TestCase):
             frame_delays = self.synchronization.synchronize(signal)
 
             self.assertCountEqual(d + (d + self.frame.samples_in_frame) * np.arange(n), frame_delays)
+    
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+        
+        test_yaml_roundtrip_serialization(self, OFDMCorrelationSynchronization())
 
 
 class TestSchmidlCoxSynchronization(TestCase):
@@ -657,9 +717,9 @@ class TestSchmidlCoxSynchronization(TestCase):
 
         self.rng = default_rng(90)
 
-        test_resource = FrameResource(repetitions=1, elements=[FrameElement(ElementType.DATA, repetitions=1200)])
-        test_payload = FrameSymbolSection(num_repetitions=3, pattern=[0])
-        self.frame = OFDMWaveform(oversampling_factor=1, resources=[test_resource], structure=[test_payload])
+        test_resource = FrameResource(repetitions=10, prefix_ratio=.01, elements=[FrameElement(ElementType.DATA, repetitions=11), FrameElement(ElementType.REFERENCE, repetitions=1)])
+        test_payload = FrameSymbolSection(num_repetitions=6, pattern=[0])
+        self.frame = OFDMWaveform(oversampling_factor=1, resources=[test_resource], structure=[test_payload], num_subcarriers=120)
         self.frame.pilot_section = SchmidlCoxPilotSection()
         self.frame.dc_suppression = False
 
@@ -668,27 +728,35 @@ class TestSchmidlCoxSynchronization(TestCase):
         self.num_streams = 3
         self.delays_in_samples = [0, 9, 80]
         self.num_frames = [1, 2, 3]
+        self.max_delay_offset = 8
 
     def test_synchronize(self) -> None:
         """Test the proper estimation of delays during Schmidl-Cox synchronization"""
 
         for d, n in product(self.delays_in_samples, self.num_frames):
 
-            symbols = np.exp(2j * pi * self.rng.uniform(0, 1, (n, self.frame.symbols_per_frame)))
-            frames = [np.exp(2j * pi * self.rng.uniform(0, 1, (self.num_streams, 1))) @ self.frame.modulate(Symbols(symbols[f, :])).samples for f in range(n)]
+            symbols = [self.frame.map(self.rng.integers(0, 2, size=self.frame.bits_per_frame)) for _ in range(n)]
+            frames = [np.exp(2j * pi * self.rng.uniform(0, 1, (self.num_streams, 1))) @ self.frame.modulate(symbols[f]).samples for f in range(n)]
             
             signal = np.empty((self.num_streams, 0), dtype=complex)
             for frame in frames:
 
                 signal = np.concatenate((signal, np.zeros((self.num_streams, d), dtype=complex), frame), axis=1)
             
-            channel_state = ChannelStateInformation.Ideal(len(signal), self.num_streams)
-
-            synchronization = self.synchronization.synchronize(signal, channel_state)
-
-            self.assertEqual(n, len(synchronization))
-            for frame, (synchronized_frame, _) in zip(frames, synchronization):
-                assert_array_equal(frame, synchronized_frame)
+            estimated_delays = self.synchronization.synchronize(signal)
+            self.assertEqual(n, len(estimated_delays))
+            
+            for f, estimated_delay in enumerate(estimated_delays):
+                
+                expected_delay = f * self.frame.samples_in_frame + (1 + f) * d
+                
+                if abs(estimated_delay - expected_delay) > self.max_delay_offset:
+                    self.fail(f"Estimated delay {estimated_delay} too far off (should be {expected_delay})")
+    
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+        
+        test_yaml_roundtrip_serialization(self, self.synchronization)
 
 
 class TestIdealChannelEstimation(TestCase):
@@ -698,3 +766,56 @@ class TestIdealChannelEstimation(TestCase):
         
         self.waveform = Mock()
         self.channel_estimation = OFDMIdealChannelEstimation()
+    
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+        
+        test_yaml_roundtrip_serialization(self, self.channel_estimation)
+
+
+class TestLeastSquaresChannelEstimation(TestCase):
+    
+    def setUp(self) -> None:
+        
+        self.channel_estimation = OFDMLeastSquaresChannelEstimation()
+    
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+        
+        test_yaml_roundtrip_serialization(self, self.channel_estimation)
+
+
+class TestChannelEqualization(TestCase):
+    
+    def setUp(self) -> None:
+        
+        self.channel_equalization = OFDMChannelEqualization()
+    
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+        
+        test_yaml_roundtrip_serialization(self, self.channel_equalization)
+
+
+class TestZeroForcingChannelEqualization(TestCase):
+    
+    def setUp(self) -> None:
+        
+        self.channel_equalization = OFDMZeroForcingChannelEqualization()
+    
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+        
+        test_yaml_roundtrip_serialization(self, self.channel_equalization)
+
+
+class TestMinimumMeanSquareChannelEqualization(TestCase):
+    
+    def setUp(self) -> None:
+        
+        self.channel_equalization = OFDMMinimumMeanSquareChannelEqualization()
+    
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+        
+        test_yaml_roundtrip_serialization(self, self.channel_equalization)

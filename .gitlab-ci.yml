@@ -3,7 +3,7 @@ image: $CI_REGISTRY/barkhauseninstitut/wicon/hermespy:python-39-linux
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   GIT_SUBMODULE_STRATEGY: recursive
-  HERMES_VERSION: "0.3.0"
+  HERMES_VERSION: "1.0.0"
   HERMES_WHEEL: "hermespy-$HERMES_VERSION-cp39-cp39-linux_x86_64.whl"
 
 stages:

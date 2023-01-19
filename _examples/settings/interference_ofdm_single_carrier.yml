@@ -33,7 +33,7 @@ Operators:
     device: *device_alpha         # Device the modem is operating on
 
     # Waveform configuration
-    Waveform: !<SC-RootRaisedCosine>
+    waveform: !<SC-RootRaisedCosine>
 
       # Symbol settings
       symbol_rate: 1e6            # Rate of symbol repetition in Hz
@@ -55,7 +55,7 @@ Operators:
     # Precoding:
     #   - !<ZF-Time>
 
-    Waveform: !<OFDM>
+    waveform: !<OFDM>
 
       # Symbol modulation settings
       modulation_order: 16
@@ -64,40 +64,52 @@ Operators:
       num_subcarriers: 2048
 
       # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
-      Resources:
+      resources:
 
-        - repetitions: 200
-          prefix_type: CYCLCIC
+        - !<OFDM-Resource>
+          repetitions: 200
+          prefix_type: !<PrefixType> CYCLIC
           prefix_ratio: 0.078125
           elements:
-            - type: REFERENCE
+            - !<FrameElement>
+              type: !<ElementType> REFERENCE
               repetitions: 1
-            - type: DATA
+            - !<FrameElement>
+              type: !<ElementType> DATA
               repetitions: 5
 
-        - repetitions: 1200
-          prefix_type: CYCLIC
+        - !<OFDM-Resource>
+          repetitions: 1200
+          prefix_type: !<PrefixType> CYCLIC
           prefix_ratio: 0.0703125
           elements:
-            - type: DATA
+            - !<FrameElement>
+              type: !<ElementType> DATA
               repetitions: 1
 
-        - repetitions: 100
-          cp_ratio: 0.0703125
+        - !<OFDM-Resource>
+          repetitions: 100
+          prefix_type: !<PrefixType> CYCLIC
+          prefix_ratio: 0.0703125
           elements:
-            - type: DATA
+            - !<FrameElement>
+              type: !<ElementType> DATA
               repetitions: 3
-            - type: REFERENCE
+            - !<FrameElement>
+              type: !<ElementType> REFERENCE
               repetitions: 1
-            - type: DATA
+            - !<FrameElement>
+              type: !<ElementType> DATA
               repetitions: 5
-            - type: REFERENCE
+            - !<FrameElement>
+              type: !<ElementType> REFERENCE
               repetitions: 1
-            - type: DATA
+            - !<FrameElement>
+              type: !<ElementType> DATA
               repetitions: 2
 
       # Frame configuration in time domain, i.e. the x-axis in the OFDM time-frequency grid
-      Structure:
+      structure:
 
         - !<Symbol>
           num_repetitions: 16

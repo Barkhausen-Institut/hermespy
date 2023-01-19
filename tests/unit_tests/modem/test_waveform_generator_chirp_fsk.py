@@ -1,24 +1,22 @@
 # -*- coding: utf-8 -*-
-"""Chirp Frequency Shift Keying rng testing."""
 
 import unittest
 import os
 from math import ceil
-from unittest.mock import Mock
+from unittest.mock import Mock, patch, PropertyMock
 
 import numpy as np
-from numpy.testing import assert_array_equal
 
-from hermespy.channel import ChannelStateInformation
 from hermespy.modem.modem import Symbols
 from hermespy.modem.waveform_generator_chirp_fsk import ChirpFSKWaveform, ChirpFSKSynchronization,\
     ChirpFSKCorrelationSynchronization
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -350,6 +348,14 @@ class TestChirpFSKWaveform(unittest.TestCase):
                 f"{file_name} must be in same folder as this file.")
 
         return np.load(os.path.join(self.parent_dir, file_name))
+            
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+        
+        with patch('hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.modem', new_callable=PropertyMock) as blacklist:
+        
+            blacklist.return_value = {'modem'}
+            test_yaml_roundtrip_serialization(self, self.generator, {'modem',})
 
 
 class TestChirpFskSynchronization(unittest.TestCase):

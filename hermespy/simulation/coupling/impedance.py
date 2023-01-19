@@ -20,7 +20,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -29,7 +29,7 @@ __status__ = "Prototype"
 class ImpedanceCoupling(Serializable, Coupling):
     """Ideal mutual coupling between two antenna arrays."""
 
-    yaml_tag = u'Impedance-Coupling'
+    yaml_tag = "Impedance-Coupling"
 
     __transmit_correlation: Optional[np.ndarray]
     __receive_correlation: Optional[np.ndarray]
@@ -37,13 +37,7 @@ class ImpedanceCoupling(Serializable, Coupling):
     __receive_impedance: Optional[np.ndarray]
     __matching_impedance: Optional[np.ndarray]
 
-    def __init__(self,
-                 device: Optional[SimulatedDevice] = None,
-                 transmit_correlation: Optional[np.ndarray] = None,
-                 receive_correlation: Optional[np.ndarray] = None,
-                 transmit_impedance: Optional[np.ndarray] = None,
-                 receive_impedance: Optional[np.ndarray] = None,
-                 matching_impedance: Optional[np.ndarray] = None) -> None:
+    def __init__(self, device: Optional[SimulatedDevice] = None, transmit_correlation: Optional[np.ndarray] = None, receive_correlation: Optional[np.ndarray] = None, transmit_impedance: Optional[np.ndarray] = None, receive_impedance: Optional[np.ndarray] = None, matching_impedance: Optional[np.ndarray] = None) -> None:
         """
         Args:
 
@@ -72,8 +66,7 @@ class ImpedanceCoupling(Serializable, Coupling):
             return
 
         if value.ndim != 2:
-            raise ValueError(
-                "Transmit correlation must be a two dimensional array")
+            raise ValueError("Transmit correlation must be a two dimensional array")
 
         if value.shape[0] != value.shape[1]:
             raise ValueError("Transmit correlation must be square")
@@ -94,8 +87,7 @@ class ImpedanceCoupling(Serializable, Coupling):
             return
 
         if value.ndim != 2:
-            raise ValueError(
-                "Receive correlation must be a two dimensional array")
+            raise ValueError("Receive correlation must be a two dimensional array")
 
         if value.shape[0] != value.shape[1]:
             raise ValueError("Receive correlation must be square")
@@ -116,8 +108,7 @@ class ImpedanceCoupling(Serializable, Coupling):
             return
 
         if value.ndim != 2:
-            raise ValueError(
-                "Transmit impedance must be a two dimensional array")
+            raise ValueError("Transmit impedance must be a two dimensional array")
 
         if value.shape[0] != value.shape[1]:
             raise ValueError("Transmit impedance must be square")
@@ -138,8 +129,7 @@ class ImpedanceCoupling(Serializable, Coupling):
             return
 
         if value.ndim != 2:
-            raise ValueError(
-                "Receive impedance must be a two dimensional array")
+            raise ValueError("Receive impedance must be a two dimensional array")
 
         if value.shape[0] != value.shape[1]:
             raise ValueError("Receive impedance must be square")
@@ -160,8 +150,7 @@ class ImpedanceCoupling(Serializable, Coupling):
             return
 
         if value.ndim != 2:
-            raise ValueError(
-                "Matching impedances must be a two dimensional array")
+            raise ValueError("Matching impedances must be a two dimensional array")
 
         if value.shape[0] != value.shape[1]:
             raise ValueError("Matching impedances must be square")
@@ -170,27 +159,21 @@ class ImpedanceCoupling(Serializable, Coupling):
 
     def _transmit(self, signal: Signal) -> Signal:
 
-        transmit_impedance = np.eye(
-            self.device.antennas.num_transmit_antennas) if self.transmit_impedance is None else self.transmit_impedance
-        transmit_correlation = np.eye(
-            self.device.antennas.num_transmit_antennas) if self.transmit_correlation is None else self.transmit_correlation
+        transmit_impedance = np.eye(self.device.antennas.num_transmit_antennas) if self.transmit_impedance is None else self.transmit_impedance
+        transmit_correlation = np.eye(self.device.antennas.num_transmit_antennas) if self.transmit_correlation is None else self.transmit_correlation
 
-        transmit_coupling = transmit_impedance.real ** -.5 @ transmit_correlation ** .5
+        transmit_coupling = transmit_impedance.real**-0.5 @ transmit_correlation**0.5
         transmitted_samples = transmit_coupling @ signal.samples
 
         return Signal(transmitted_samples, signal.sampling_rate, signal.carrier_frequency)
 
     def _receive(self, signal: Signal) -> Signal:
 
-        receive_impedance = np.eye(
-            self.device.antennas.num_receive_antennas) if self.receive_impedance is None else self.receive_impedance
-        receive_correlation = np.eye(
-            self.device.antennas.num_receive_antennas) if self.receive_correlation is None else self.receive_correlation
-        matching_impedance = np.eye(
-            self.device.antennas.num_receive_antennas) if self.matching_impedance is None else self.matching_impedance
+        receive_impedance = np.eye(self.device.antennas.num_receive_antennas) if self.receive_impedance is None else self.receive_impedance
+        receive_correlation = np.eye(self.device.antennas.num_receive_antennas) if self.receive_correlation is None else self.receive_correlation
+        matching_impedance = np.eye(self.device.antennas.num_receive_antennas) if self.matching_impedance is None else self.matching_impedance
 
-        receive_coupling = 2 * receive_impedance[0, 0].real * matching_impedance.real ** .5 @ np.linalg.inv(
-            matching_impedance + receive_correlation) @ receive_correlation ** .5
+        receive_coupling = 2 * receive_impedance[0, 0].real * matching_impedance.real**0.5 @ np.linalg.inv(matching_impedance + receive_correlation) @ receive_correlation**0.5
         received_samples = receive_coupling @ signal.samples
 
         return Signal(received_samples, signal.sampling_rate, signal.carrier_frequency)

@@ -20,7 +20,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.2.7"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -29,14 +29,11 @@ __status__ = "Prototype"
 class PointDetection(object):
     """A single radar point detection."""
 
-    __position: np.ndarray      # Cartesian position of the detection in m
-    __velocity: np.ndarray      # Velocity of the detection in m/s
-    __power: float              # Power of the detection
+    __position: np.ndarray  # Cartesian position of the detection in m
+    __velocity: np.ndarray  # Velocity of the detection in m/s
+    __power: float  # Power of the detection
 
-    def __init__(self,
-                 position: np.ndarray,
-                 velocity: np.ndarray,
-                 power: float) -> None:
+    def __init__(self, position: np.ndarray, velocity: np.ndarray, power: float) -> None:
         """
         Args:
 
@@ -62,7 +59,7 @@ class PointDetection(object):
         if velocity.ndim != 1 or len(velocity) != 3:
             raise ValueError("Velocity must be a three-dimensional vector.")
 
-        if power <= 0.:
+        if power <= 0.0:
             raise ValueError("Detected power must be greater than zero")
 
         self.__position = position
@@ -70,12 +67,7 @@ class PointDetection(object):
         self.__power = power
 
     @classmethod
-    def FromSpherical(cls,
-                      zenith: float,
-                      azimuth: float,
-                      velocity: float,
-                      range: float,
-                      power: float) -> PointDetection:
+    def FromSpherical(cls, zenith: float, azimuth: float, velocity: float, range: float, power: float) -> PointDetection:
         """Generate a point detection from radar cube spherical coordinates.
 
         Args:
@@ -96,9 +88,7 @@ class PointDetection(object):
                 Point power indicator.
         """
 
-        normal_vector = np.array([cos(azimuth) * sin(zenith),
-                                  sin(azimuth) * sin(zenith),
-                                  cos(zenith)], dtype=float)
+        normal_vector = np.array([cos(azimuth) * sin(zenith), sin(azimuth) * sin(zenith), cos(zenith)], dtype=float)
 
         position = range * normal_vector
         velocity = velocity * normal_vector
@@ -193,17 +183,16 @@ class RadarDetector(object):
 class ThresholdDetector(RadarDetector, Serializable):
     """Extract points by a power threshold."""
 
-    yaml_tag = u'Threshold'
+    yaml_tag = "Threshold"
     """YAML serialization tag."""
 
-    __min_power: float      # Minmally required point power
+    __min_power: float  # Minmally required point power
 
-    def __init__(self,
-                 min_power: float) -> None:
+    def __init__(self, min_power: float) -> None:
         """Args:
 
-            min_power (float):
-                Minmally required point power.
+        min_power (float):
+            Minmally required point power.
         """
 
         self.min_power = min_power
@@ -226,7 +215,7 @@ class ThresholdDetector(RadarDetector, Serializable):
     @min_power.setter
     def min_power(self, value: float) -> None:
 
-        if value <= 0.:
+        if value <= 0.0:
             raise ValueError("Point power threshold must be greater than zero")
 
         self.__min_power = value
@@ -246,14 +235,13 @@ class ThresholdDetector(RadarDetector, Serializable):
 
             # angles = cube.angle_bins[point_indices[0]]
             # ToDo: Add angular domains
-            zenith = 0.
-            azimuth = 0.
+            zenith = 0.0
+            azimuth = 0.0
             velocity = cube.velocity_bins[point_indices[1]]
             range = cube.range_bins[point_indices[2]]
             power_indicator = cube.data[tuple(point_indices)]
 
-            cloud.add_point(PointDetection.FromSpherical(
-                zenith, azimuth, velocity, range, power_indicator))
+            cloud.add_point(PointDetection.FromSpherical(zenith, azimuth, velocity, range, power_indicator))
 
         return cloud
 
@@ -261,7 +249,7 @@ class ThresholdDetector(RadarDetector, Serializable):
 class MaxDetector(RadarDetector, Serializable):
     """Extracts the maximum point from the radar cube."""
 
-    yaml_tag = u'Max'
+    yaml_tag = "Max"
     """YAML serialization tag."""
 
     def detect(self, cube: RadarCube) -> RadarPointCloud:
@@ -271,7 +259,7 @@ class MaxDetector(RadarDetector, Serializable):
         point_power = cube.data[point_index]
 
         # Return an empty point cloud if no maximum was found
-        if point_power <= 0.:
+        if point_power <= 0.0:
             return RadarPointCloud()
 
         angles_of_arrival = cube.angle_bins[point_index[0], :]
@@ -279,7 +267,6 @@ class MaxDetector(RadarDetector, Serializable):
         range = cube.range_bins[point_index[2]]
 
         cloud = RadarPointCloud()
-        cloud.add_point(PointDetection.FromSpherical(
-            angles_of_arrival[0], angles_of_arrival[1], velocity, range, point_power))
+        cloud.add_point(PointDetection.FromSpherical(angles_of_arrival[0], angles_of_arrival[1], velocity, range, point_power))
 
         return cloud

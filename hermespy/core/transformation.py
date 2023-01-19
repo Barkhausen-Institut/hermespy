@@ -15,14 +15,13 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
 class Transformation(np.ndarray):
-
     @property
     def position(self) -> np.ndarray:
 
@@ -37,7 +36,7 @@ class Transformation(np.ndarray):
         """
 
         roll = atan(self[2, 1] / self[2, 2])
-        pitch = atan(- self[2, 0] * (self[2, 1] + self[2, 2]) ** -.5)
+        pitch = atan(-self[2, 0] * (self[2, 1] + self[2, 2]) ** -0.5)
         yaw = atan(self[1, 0] / self[0, 0])
 
         return roll, pitch, yaw

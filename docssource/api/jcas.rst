@@ -1,6 +1,6 @@
-===========
-JCAS Module
-===========
+====
+JCAS
+====
 
 The joint communication and sensing (JCAS) module provides device operators
 which provide both communication and sensing functionalities.

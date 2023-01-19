@@ -1,6 +1,6 @@
-=================
-Simulation Module
-=================
+==========
+Simulation
+==========
 
 The simulation module provides the basis for all HermesPy simulations,
 including noise and hardware modeling.

@@ -21,7 +21,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -83,11 +83,10 @@ class SymbolPrecoding(Precoding[SymbolPrecoder], Serializable):
     streams into multi-dimensional symbol streams during transmission and subsequently decode during reception.
     """
 
-    yaml_tag = u'SymbolCoding'
+    yaml_tag = "SymbolCoding"
     """YAML serialization tag."""
 
-    def __init__(self,
-                 modem: BaseModem = None) -> None:
+    def __init__(self, modem: BaseModem = None) -> None:
         """Symbol Precoding object initialization.
 
         Args:

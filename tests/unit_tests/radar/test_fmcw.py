@@ -3,12 +3,13 @@
 from unittest import TestCase
 
 from hermespy.radar import FMCW
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -115,3 +116,8 @@ class TestFMCW(TestCase):
         
         pulse = self.fmcw.ping()
         self.assertEqual(self.fmcw.energy, pulse.energy)
+
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+
+        test_yaml_roundtrip_serialization(self, self.fmcw, {'max_velocity',})

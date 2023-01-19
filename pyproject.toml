@@ -8,3 +8,7 @@ requires = [
     "cmake"
 ]
 build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 400
+target-version = ['py39']

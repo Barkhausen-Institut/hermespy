@@ -24,7 +24,7 @@ __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["André Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "André Noll Barreto"
 __email__ = "andre.nollbarreto@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -45,25 +45,9 @@ class PskQamMapping(object):
     mapping_available = [2, 4, 8, 16, 64, 64, 256]
     mapping_available_pam = [2, 4, 8, 16]
 
-    _psk8_map = np.exp(1j *
-                       np.array([0, 1 /
-                                 4, 3 /
-                                 4, 1 /
-                                 2, -
-                                 1 /
-                                 4, -
-                                 1 /
-                                 2, 1, -
-                                 3 /
-                                 4]) *
-                       np.pi)  # gray-coded 8-PSK map
+    _psk8_map = np.exp(1j * np.array([0, 1 / 4, 3 / 4, 1 / 2, -1 / 4, -1 / 2, 1, -3 / 4]) * np.pi)  # gray-coded 8-PSK map
 
-    def __init__(
-            self,
-            modulation_order: int,
-            mapping: np.ndarray = None,
-            soft_output: bool = False,
-            is_complex: bool = True):
+    def __init__(self, modulation_order: int, mapping: np.ndarray = None, soft_output: bool = False, is_complex: bool = True):
         """
         Args:
             modulation_order (int):
@@ -83,21 +67,17 @@ class PskQamMapping(object):
                 if True, then complex modulation is considered (PSK/QAM),
                 if False, then real-valued modulation is considered (PAM)
         """
-        if modulation_order <= 0 or (
-                modulation_order & (modulation_order - 1)) != 0:
-            raise ValueError('modulation_order must be a power of two')
+        if modulation_order <= 0 or (modulation_order & (modulation_order - 1)) != 0:
+            raise ValueError("modulation_order must be a power of two")
 
         if is_complex and modulation_order not in PskQamMapping.mapping_available and mapping is None:
-            raise ValueError(
-                'constellation must be provided for this modulation order')
+            raise ValueError("constellation must be provided for this modulation order")
 
         if not is_complex and modulation_order not in PskQamMapping.mapping_available_pam and mapping is None:
-            raise ValueError(
-                'constellation must be provided for this modulation order')
+            raise ValueError("constellation must be provided for this modulation order")
 
         if mapping is not None and mapping.size != modulation_order:
-            raise ValueError(
-                'mapping must have the same number of elements as the modulation order')
+            raise ValueError("mapping must have the same number of elements as the modulation order")
 
         self.is_complex = is_complex
 
@@ -109,7 +89,7 @@ class PskQamMapping(object):
             self.mapping = PskQamMapping._psk8_map
         elif self.mapping is not None:
             # normalize mapping
-            energy = np.mean(np.abs(self.mapping)**2)
+            energy = np.mean(np.abs(self.mapping) ** 2)
             self.mapping = mapping / np.sqrt(energy)
 
         self.soft_output = soft_output
@@ -132,8 +112,7 @@ class PskQamMapping(object):
 
         number_symbols = int(bits.size / self.bits_per_symbol)
         # bits in rows, symbols in columns
-        bits = np.reshape(
-            bits, (self.bits_per_symbol, number_symbols), order='F')
+        bits = np.reshape(bits, (self.bits_per_symbol, number_symbols), order="F")
 
         if self.mapping is not None:
             # e.g. [8, 4, 2, 1]
@@ -154,12 +133,10 @@ class PskQamMapping(object):
                 symbols = (real_part + 1j * imag_part) / np.sqrt(2)
             elif self.modulation_order == 4 and not self.is_complex:
                 # 4-PAM
-                symbols = self.generate_pam_symbol_3gpp(
-                    4, bits) / np.sqrt(5) + 1j * 0
+                symbols = self.generate_pam_symbol_3gpp(4, bits) / np.sqrt(5) + 1j * 0
             elif self.modulation_order == 8 and not self.is_complex:
                 # 8-PAM
-                symbols = self.generate_pam_symbol_3gpp(
-                    8, bits) / np.sqrt(21) + 1j * 0
+                symbols = self.generate_pam_symbol_3gpp(8, bits) / np.sqrt(21) + 1j * 0
             elif self.modulation_order == 16 and self.is_complex:
                 # 16-QAM
                 real_part = self.generate_pam_symbol_3gpp(4, bits[[0, 2], :])
@@ -167,34 +144,25 @@ class PskQamMapping(object):
                 symbols = (real_part + 1j * imag_part) / np.sqrt(10)
             elif self.modulation_order == 16 and not self.is_complex:
                 # 16-PAM
-                symbols = self.generate_pam_symbol_3gpp(
-                    16, bits) / np.sqrt(85) + 1j * 0
+                symbols = self.generate_pam_symbol_3gpp(16, bits) / np.sqrt(85) + 1j * 0
             elif self.modulation_order == 64 and self.is_complex:
-                real_part = self.generate_pam_symbol_3gpp(
-                    8, bits[[0, 2, 4], :])
-                imag_part = self.generate_pam_symbol_3gpp(
-                    8, bits[[1, 3, 5], :])
+                real_part = self.generate_pam_symbol_3gpp(8, bits[[0, 2, 4], :])
+                imag_part = self.generate_pam_symbol_3gpp(8, bits[[1, 3, 5], :])
                 symbols = (real_part + 1j * imag_part) / np.sqrt(42)
             elif self.modulation_order == 256 and self.is_complex:
-                real_part = self.generate_pam_symbol_3gpp(
-                    16, bits[[0, 2, 4, 6], :])
-                imag_part = self.generate_pam_symbol_3gpp(
-                    16, bits[[1, 3, 5, 7], :])
+                real_part = self.generate_pam_symbol_3gpp(16, bits[[0, 2, 4, 6], :])
+                imag_part = self.generate_pam_symbol_3gpp(16, bits[[1, 3, 5, 7], :])
                 symbols = (real_part + 1j * imag_part) / np.sqrt(170)
             else:
                 if self.is_complex:
-                    modulation_type = 'QAM'
+                    modulation_type = "QAM"
                 else:
-                    modulation_type = 'PAM'
-                raise ValueError(
-                    f"Modulation ({self.modulation_order}-{modulation_type}) not supported")
+                    modulation_type = "PAM"
+                raise ValueError(f"Modulation ({self.modulation_order}-{modulation_type}) not supported")
 
         return np.ravel(symbols)
 
-    def detect_bits(self,
-                    rx_symbols: np.ndarray,
-                    noise_variance: Union[np.ndarray,
-                                          float] = 1) -> np.ndarray:
+    def detect_bits(self, rx_symbols: np.ndarray, noise_variance: Union[np.ndarray, float] = 1) -> np.ndarray:
         """Returns either bits or LLR for the provided symbols.
 
         Args:
@@ -214,11 +182,7 @@ class PskQamMapping(object):
         llr = np.zeros(number_of_bits)
 
         # set starting index of encoded symbol (MSB)
-        bits_idx = np.arange(
-            0,
-            number_of_bits,
-            self.bits_per_symbol,
-            dtype=int)
+        bits_idx = np.arange(0, number_of_bits, self.bits_per_symbol, dtype=int)
 
         if self.mapping is not None:
             if not self.soft_output:
@@ -226,66 +190,50 @@ class PskQamMapping(object):
                 dist = np.abs(rx_symbols - self.mapping.reshape(-1, 1))
                 min_index = np.argmin(dist, axis=0)
 
-                for bit_offset in range(
-                        self.bits_per_symbol):  # iterate from the MSB to the LSB
+                for bit_offset in range(self.bits_per_symbol):  # iterate from the MSB to the LSB
                     # calculate encoded value
-                    power_of_2 = int(
-                        2**(self.bits_per_symbol - bit_offset - 1))
-                    llr[bits_idx +
-                        bit_offset] = np.bitwise_and(min_index, power_of_2) > 0
+                    power_of_2 = int(2 ** (self.bits_per_symbol - bit_offset - 1))
+                    llr[bits_idx + bit_offset] = np.bitwise_and(min_index, power_of_2) > 0
                     llr = llr * 2 - 1
             else:
-                raise ValueError(
-                    "soft output not yet supported for this modulation scheme")
+                raise ValueError("soft output not yet supported for this modulation scheme")
 
         # use 3GPP mapping for BPSK, QPSK, 16-,64- and 256-QAM
         elif self.modulation_order == 2:
             # BPSK
-            llr = self.get_llr_3gpp(2, np.real(
-                rx_symbols), noise_variance, False)
+            llr = self.get_llr_3gpp(2, np.real(rx_symbols), noise_variance, False)
 
         elif self.modulation_order == 4 and self.is_complex:
             # QPSK
-            llr[0::2] = self.get_llr_3gpp(
-                2, np.real(rx_symbols), noise_variance, True)
-            llr[1::2] = self.get_llr_3gpp(
-                2, np.imag(rx_symbols), noise_variance, True)
+            llr[0::2] = self.get_llr_3gpp(2, np.real(rx_symbols), noise_variance, True)
+            llr[1::2] = self.get_llr_3gpp(2, np.imag(rx_symbols), noise_variance, True)
 
         elif self.modulation_order == 4 and not self.is_complex:
             # 4-PAM
-            llr = self.get_llr_3gpp(4, np.real(
-                rx_symbols), noise_variance, False)
+            llr = self.get_llr_3gpp(4, np.real(rx_symbols), noise_variance, False)
 
         elif self.modulation_order == 8 and not self.is_complex:
             # 8-PAM
-            llr = self.get_llr_3gpp(8, np.real(
-                rx_symbols), noise_variance, False)
+            llr = self.get_llr_3gpp(8, np.real(rx_symbols), noise_variance, False)
 
         elif self.modulation_order == 16 and not self.is_complex:
             # 16-PAM
-            llr = self.get_llr_3gpp(16, np.real(
-                rx_symbols), noise_variance, False)
+            llr = self.get_llr_3gpp(16, np.real(rx_symbols), noise_variance, False)
 
         elif self.modulation_order == 16 and self.is_complex:
             # 16-QAM
-            llr[0::2] = self.get_llr_3gpp(
-                4, np.real(rx_symbols), noise_variance, True)
-            llr[1::2] = self.get_llr_3gpp(
-                4, np.imag(rx_symbols), noise_variance, True)
+            llr[0::2] = self.get_llr_3gpp(4, np.real(rx_symbols), noise_variance, True)
+            llr[1::2] = self.get_llr_3gpp(4, np.imag(rx_symbols), noise_variance, True)
 
         elif self.modulation_order == 64 and self.is_complex:
             # 64-QAM
-            llr[0::2] = self.get_llr_3gpp(
-                8, np.real(rx_symbols), noise_variance, True)
-            llr[1::2] = self.get_llr_3gpp(
-                8, np.imag(rx_symbols), noise_variance, True)
+            llr[0::2] = self.get_llr_3gpp(8, np.real(rx_symbols), noise_variance, True)
+            llr[1::2] = self.get_llr_3gpp(8, np.imag(rx_symbols), noise_variance, True)
 
         elif self.modulation_order == 256 and self.is_complex:
             # 256-QAM
-            llr[0::2] = self.get_llr_3gpp(
-                16, np.real(rx_symbols), noise_variance, True)
-            llr[1::2] = self.get_llr_3gpp(
-                16, np.imag(rx_symbols), noise_variance, True)
+            llr[0::2] = self.get_llr_3gpp(16, np.real(rx_symbols), noise_variance, True)
+            llr[1::2] = self.get_llr_3gpp(16, np.imag(rx_symbols), noise_variance, True)
 
         else:
             raise ValueError("Unsupported modulation scheme")
@@ -297,8 +245,7 @@ class PskQamMapping(object):
             return llr
 
     @staticmethod
-    def generate_pam_symbol_3gpp(
-            modulation_order, bits: np.ndarray) -> np.ndarray:
+    def generate_pam_symbol_3gpp(modulation_order, bits: np.ndarray) -> np.ndarray:
         """Returns 1D amplitudes following 3GPP modulation mapping.
 
         3GPP has defined in TS 36.211 mapping tables from bits into complex symbols.
@@ -322,25 +269,16 @@ class PskQamMapping(object):
         elif modulation_order == 4:
             symbols = (1 - 2 * bits[0, :]) * (1 + 2 * bits[1, :])
         elif modulation_order == 8:
-            symbols = (2 * bits[0, :] - 1) * \
-                ((1 - 2 * bits[1, :]) * (1 + 2 * bits[2, :]) - 4)
+            symbols = (2 * bits[0, :] - 1) * ((1 - 2 * bits[1, :]) * (1 + 2 * bits[2, :]) - 4)
         elif modulation_order == 16:
-            symbols = (((((1 - 2 * bits[2,
-                                        :]) * (1 + 2 * bits[3,
-                                                            :]) - 4) * (-1 + 2 * bits[1,
-                                                                                      :]))
-                        - 8)
-                       * (-1 + 2 * bits[0,
-                                        :]))
+            symbols = ((((1 - 2 * bits[2, :]) * (1 + 2 * bits[3, :]) - 4) * (-1 + 2 * bits[1, :])) - 8) * (-1 + 2 * bits[0, :])
         else:
-            raise ValueError(
-                f"unsupported modulation order ({modulation_order})")
+            raise ValueError(f"unsupported modulation order ({modulation_order})")
 
         return symbols
 
     @staticmethod
-    def get_llr_3gpp(modulation_order, rx_symbols: np.ndarray, noise_variance: np.ndarray,
-                     is_complex: bool) -> np.ndarray:
+    def get_llr_3gpp(modulation_order, rx_symbols: np.ndarray, noise_variance: np.ndarray, is_complex: bool) -> np.ndarray:
         """Returns LLR for each bit based on a received symbol, following 1D 3GPP modulation mapping.
 
         3GPP has defined in TS 36.211 mapping tables from bits into complex symbols.
@@ -380,14 +318,9 @@ class PskQamMapping(object):
 
             rx_symbols = rx_symbols * np.sqrt(5)
 
-            llr[0, :] = 2 * ((rx_symbols <= -2) * (-4 * (1 + rx_symbols))
-                             + np.logical_and(rx_symbols > -2, rx_symbols <= 2)
-                             * (-2 * rx_symbols)
-                             + (rx_symbols > 2) * (4 * (1 - rx_symbols))) / noise_variance
+            llr[0, :] = 2 * ((rx_symbols <= -2) * (-4 * (1 + rx_symbols)) + np.logical_and(rx_symbols > -2, rx_symbols <= 2) * (-2 * rx_symbols) + (rx_symbols > 2) * (4 * (1 - rx_symbols))) / noise_variance
 
-            llr[1, :] = 2 * ((rx_symbols <= 0) * (-2 * (2 + rx_symbols)
-                                                  ) + (rx_symbols > 0)
-                             * (-2 * (2 - rx_symbols))) / noise_variance
+            llr[1, :] = 2 * ((rx_symbols <= 0) * (-2 * (2 + rx_symbols)) + (rx_symbols > 0) * (-2 * (2 - rx_symbols))) / noise_variance
 
             llr = llr / 5
 
@@ -396,36 +329,34 @@ class PskQamMapping(object):
 
             rx_symbols = rx_symbols * np.sqrt(21)
 
-            llr[0, :] = 4 * ((rx_symbols <= -6) * (-4 * (3 + rx_symbols)) +
-                             np.bitwise_and(rx_symbols > -6, rx_symbols <= -4)
-                             * (-3 * (2 + rx_symbols)) +
-                             np.bitwise_and(rx_symbols > -4, rx_symbols <= -2)
-                             * (-2 * (1 + rx_symbols)) +
-                             np.bitwise_and(rx_symbols > -2, rx_symbols <= 2)
-                             * (-rx_symbols) +
-                             np.bitwise_and(rx_symbols > 2, rx_symbols <= 4)
-                             * (2 * (1 - rx_symbols)) +
-                             np.bitwise_and(rx_symbols > 4, rx_symbols <= 6)
-                             * (3 * (2 - rx_symbols)) +
-                             (rx_symbols > 6) * (4 * (3 - rx_symbols))) / noise_variance
+            llr[0, :] = (
+                4
+                * (
+                    (rx_symbols <= -6) * (-4 * (3 + rx_symbols))
+                    + np.bitwise_and(rx_symbols > -6, rx_symbols <= -4) * (-3 * (2 + rx_symbols))
+                    + np.bitwise_and(rx_symbols > -4, rx_symbols <= -2) * (-2 * (1 + rx_symbols))
+                    + np.bitwise_and(rx_symbols > -2, rx_symbols <= 2) * (-rx_symbols)
+                    + np.bitwise_and(rx_symbols > 2, rx_symbols <= 4) * (2 * (1 - rx_symbols))
+                    + np.bitwise_and(rx_symbols > 4, rx_symbols <= 6) * (3 * (2 - rx_symbols))
+                    + (rx_symbols > 6) * (4 * (3 - rx_symbols))
+                )
+                / noise_variance
+            )
 
-            llr[1, :] = 4 * ((rx_symbols <= -6) * (-2 * (5 + rx_symbols)) +
-                             np.bitwise_and(rx_symbols > -6, rx_symbols <= -2)
-                             * (-(4 + rx_symbols)) +
-                             np.bitwise_and(rx_symbols > -2, rx_symbols <= 0)
-                             * (-2 * (3 + rx_symbols)) +
-                             np.bitwise_and(rx_symbols > 0, rx_symbols <= 2)
-                             * (-2 * (3 - rx_symbols)) +
-                             np.bitwise_and(rx_symbols > 2, rx_symbols <= 6)
-                             * (-(4 - rx_symbols)) +
-                             (rx_symbols > 6) * (-2 * (5 - rx_symbols))) / noise_variance
+            llr[1, :] = (
+                4
+                * (
+                    (rx_symbols <= -6) * (-2 * (5 + rx_symbols))
+                    + np.bitwise_and(rx_symbols > -6, rx_symbols <= -2) * (-(4 + rx_symbols))
+                    + np.bitwise_and(rx_symbols > -2, rx_symbols <= 0) * (-2 * (3 + rx_symbols))
+                    + np.bitwise_and(rx_symbols > 0, rx_symbols <= 2) * (-2 * (3 - rx_symbols))
+                    + np.bitwise_and(rx_symbols > 2, rx_symbols <= 6) * (-(4 - rx_symbols))
+                    + (rx_symbols > 6) * (-2 * (5 - rx_symbols))
+                )
+                / noise_variance
+            )
 
-            llr[2, :] = 4 * ((rx_symbols <= -4) * (-(6 + rx_symbols)) +
-                             np.bitwise_and(rx_symbols > -4, rx_symbols <= 0)
-                             * (2 + rx_symbols) +
-                             np.bitwise_and(rx_symbols > 0, rx_symbols <= 4)
-                             * (2 - rx_symbols) +
-                             (rx_symbols > 4) * (-(6 - rx_symbols))) / noise_variance
+            llr[2, :] = 4 * ((rx_symbols <= -4) * (-(6 + rx_symbols)) + np.bitwise_and(rx_symbols > -4, rx_symbols <= 0) * (2 + rx_symbols) + np.bitwise_and(rx_symbols > 0, rx_symbols <= 4) * (2 - rx_symbols) + (rx_symbols > 4) * (-(6 - rx_symbols))) / noise_variance
             llr = llr / 21
 
         elif modulation_order == 16:
@@ -433,115 +364,92 @@ class PskQamMapping(object):
 
             rx_symbols = rx_symbols * np.sqrt(85)
 
-            llr[0, :] = 8 * ((rx_symbols <= -14) * (-4 * (7 + rx_symbols)) -
-                             np.bitwise_and(rx_symbols > -14,
-                                            rx_symbols <= -12)
-                             * 3.5 * (6 + rx_symbols) -
-                             np.bitwise_and(rx_symbols > -12,
-                                            rx_symbols <= -10)
-                             * 3 * (5 + rx_symbols) -
-                             np.bitwise_and(rx_symbols > -10, rx_symbols <= -8)
-                             * 2.5 * (4 + rx_symbols) -
-                             np.bitwise_and(rx_symbols > -8, rx_symbols <= -6)
-                             * 2 * (3 + rx_symbols) -
-                             np.bitwise_and(rx_symbols > -6, rx_symbols <= -4)
-                             * 1.5 * (2 + rx_symbols) -
-                             np.bitwise_and(rx_symbols > -4, rx_symbols <= -2)
-                             * (1 + rx_symbols) -
-                             np.bitwise_and(rx_symbols > -2, rx_symbols <= 2)
-                             * 0.5 * rx_symbols +
-                             np.bitwise_and(rx_symbols > 2, rx_symbols <= 4)
-                             * (1 - rx_symbols) +
-                             np.bitwise_and(rx_symbols > 4, rx_symbols <= 6)
-                             * 1.5 * (2 - rx_symbols) +
-                             np.bitwise_and(rx_symbols > 6, rx_symbols <= 8)
-                             * 2 * (3 - rx_symbols) +
-                             np.bitwise_and(rx_symbols > 8, rx_symbols <= 10)
-                             * 2.5 * (4 - rx_symbols) +
-                             np.bitwise_and(rx_symbols > 10, rx_symbols <= 12)
-                             * 3 * (5 - rx_symbols) +
-                             np.bitwise_and(rx_symbols > 12, rx_symbols <= 14)
-                             * 3.5 * (6 - rx_symbols) +
-                             (rx_symbols > 14) * 4 * (7 - rx_symbols)) / noise_variance
+            llr[0, :] = (
+                8
+                * (
+                    (rx_symbols <= -14) * (-4 * (7 + rx_symbols))
+                    - np.bitwise_and(rx_symbols > -14, rx_symbols <= -12) * 3.5 * (6 + rx_symbols)
+                    - np.bitwise_and(rx_symbols > -12, rx_symbols <= -10) * 3 * (5 + rx_symbols)
+                    - np.bitwise_and(rx_symbols > -10, rx_symbols <= -8) * 2.5 * (4 + rx_symbols)
+                    - np.bitwise_and(rx_symbols > -8, rx_symbols <= -6) * 2 * (3 + rx_symbols)
+                    - np.bitwise_and(rx_symbols > -6, rx_symbols <= -4) * 1.5 * (2 + rx_symbols)
+                    - np.bitwise_and(rx_symbols > -4, rx_symbols <= -2) * (1 + rx_symbols)
+                    - np.bitwise_and(rx_symbols > -2, rx_symbols <= 2) * 0.5 * rx_symbols
+                    + np.bitwise_and(rx_symbols > 2, rx_symbols <= 4) * (1 - rx_symbols)
+                    + np.bitwise_and(rx_symbols > 4, rx_symbols <= 6) * 1.5 * (2 - rx_symbols)
+                    + np.bitwise_and(rx_symbols > 6, rx_symbols <= 8) * 2 * (3 - rx_symbols)
+                    + np.bitwise_and(rx_symbols > 8, rx_symbols <= 10) * 2.5 * (4 - rx_symbols)
+                    + np.bitwise_and(rx_symbols > 10, rx_symbols <= 12) * 3 * (5 - rx_symbols)
+                    + np.bitwise_and(rx_symbols > 12, rx_symbols <= 14) * 3.5 * (6 - rx_symbols)
+                    + (rx_symbols > 14) * 4 * (7 - rx_symbols)
+                )
+                / noise_variance
+            )
 
-            llr[1, :] = 8 * ((rx_symbols <= -14) * (-2 * (11 + rx_symbols)) -
-                             np.bitwise_and(rx_symbols > -14,
-                                            rx_symbols <= -12)
-                             * 1.5 * (10 + rx_symbols) -
-                             np.bitwise_and(rx_symbols > -12,
-                                            rx_symbols <= -10)
-                             * (9 + rx_symbols) -
-                             np.bitwise_and(rx_symbols > -10, rx_symbols <= -6)
-                             * 0.5 * (8 + rx_symbols) -
-                             np.bitwise_and(rx_symbols > -6, rx_symbols <= -4)
-                             * (7 + rx_symbols) -
-                             np.bitwise_and(rx_symbols > -4, rx_symbols <= -2)
-                             * 1.5 * (6 + rx_symbols) -
-                             np.bitwise_and(rx_symbols > -2, rx_symbols <= 0)
-                             * 2 * (5 + rx_symbols) -
-                             np.bitwise_and(rx_symbols > 0, rx_symbols <= 2)
-                             * 2 * (5 - rx_symbols) -
-                             np.bitwise_and(rx_symbols > 2, rx_symbols <= 4)
-                             * 1.5 * (6 - rx_symbols) -
-                             np.bitwise_and(rx_symbols > 4, rx_symbols <= 6)
-                             * (7 - rx_symbols) -
-                             np.bitwise_and(rx_symbols > 6, rx_symbols <= 10)
-                             * 0.5 * (8 - rx_symbols) -
-                             np.bitwise_and(rx_symbols > 10, rx_symbols <= 12)
-                             * (9 - rx_symbols) -
-                             np.bitwise_and(rx_symbols > 12, rx_symbols <= 14)
-                             * 1.5 * (10 - rx_symbols) -
-                             (rx_symbols > 14) * 2 * (11 - rx_symbols)) / noise_variance
+            llr[1, :] = (
+                8
+                * (
+                    (rx_symbols <= -14) * (-2 * (11 + rx_symbols))
+                    - np.bitwise_and(rx_symbols > -14, rx_symbols <= -12) * 1.5 * (10 + rx_symbols)
+                    - np.bitwise_and(rx_symbols > -12, rx_symbols <= -10) * (9 + rx_symbols)
+                    - np.bitwise_and(rx_symbols > -10, rx_symbols <= -6) * 0.5 * (8 + rx_symbols)
+                    - np.bitwise_and(rx_symbols > -6, rx_symbols <= -4) * (7 + rx_symbols)
+                    - np.bitwise_and(rx_symbols > -4, rx_symbols <= -2) * 1.5 * (6 + rx_symbols)
+                    - np.bitwise_and(rx_symbols > -2, rx_symbols <= 0) * 2 * (5 + rx_symbols)
+                    - np.bitwise_and(rx_symbols > 0, rx_symbols <= 2) * 2 * (5 - rx_symbols)
+                    - np.bitwise_and(rx_symbols > 2, rx_symbols <= 4) * 1.5 * (6 - rx_symbols)
+                    - np.bitwise_and(rx_symbols > 4, rx_symbols <= 6) * (7 - rx_symbols)
+                    - np.bitwise_and(rx_symbols > 6, rx_symbols <= 10) * 0.5 * (8 - rx_symbols)
+                    - np.bitwise_and(rx_symbols > 10, rx_symbols <= 12) * (9 - rx_symbols)
+                    - np.bitwise_and(rx_symbols > 12, rx_symbols <= 14) * 1.5 * (10 - rx_symbols)
+                    - (rx_symbols > 14) * 2 * (11 - rx_symbols)
+                )
+                / noise_variance
+            )
 
-            llr[2, :] = 8 * ((rx_symbols <= -14) * (-13 - rx_symbols) -
-                             np.bitwise_and(rx_symbols > -14,
-                                            rx_symbols <= -10)
-                             * 0.5 * (12 + rx_symbols) -
-                             np.bitwise_and(rx_symbols > -10, rx_symbols <= -8)
-                             * (11 + rx_symbols) +
-                             np.bitwise_and(rx_symbols > -8, rx_symbols <= -6)
-                             * (5 + rx_symbols) +
-                             np.bitwise_and(rx_symbols > -6, rx_symbols <= -2)
-                             * 0.5 * (4 + rx_symbols) +
-                             np.bitwise_and(rx_symbols > -2, rx_symbols <= 0)
-                             * (3 + rx_symbols) +
-                             np.bitwise_and(rx_symbols > 0, rx_symbols <= 2)
-                             * (3 - rx_symbols) +
-                             np.bitwise_and(rx_symbols > 2, rx_symbols <= 6)
-                             * 0.5 * (4 - rx_symbols) +
-                             np.bitwise_and(rx_symbols > 6, rx_symbols <= 8)
-                             * (5 - rx_symbols) -
-                             np.bitwise_and(rx_symbols > 8, rx_symbols <= 10)
-                             * (11 - rx_symbols) -
-                             np.bitwise_and(rx_symbols > 10, rx_symbols <= 14)
-                             * 0.5 * (12 - rx_symbols) -
-                             (rx_symbols > 14) * (13 - rx_symbols)) / noise_variance
+            llr[2, :] = (
+                8
+                * (
+                    (rx_symbols <= -14) * (-13 - rx_symbols)
+                    - np.bitwise_and(rx_symbols > -14, rx_symbols <= -10) * 0.5 * (12 + rx_symbols)
+                    - np.bitwise_and(rx_symbols > -10, rx_symbols <= -8) * (11 + rx_symbols)
+                    + np.bitwise_and(rx_symbols > -8, rx_symbols <= -6) * (5 + rx_symbols)
+                    + np.bitwise_and(rx_symbols > -6, rx_symbols <= -2) * 0.5 * (4 + rx_symbols)
+                    + np.bitwise_and(rx_symbols > -2, rx_symbols <= 0) * (3 + rx_symbols)
+                    + np.bitwise_and(rx_symbols > 0, rx_symbols <= 2) * (3 - rx_symbols)
+                    + np.bitwise_and(rx_symbols > 2, rx_symbols <= 6) * 0.5 * (4 - rx_symbols)
+                    + np.bitwise_and(rx_symbols > 6, rx_symbols <= 8) * (5 - rx_symbols)
+                    - np.bitwise_and(rx_symbols > 8, rx_symbols <= 10) * (11 - rx_symbols)
+                    - np.bitwise_and(rx_symbols > 10, rx_symbols <= 14) * 0.5 * (12 - rx_symbols)
+                    - (rx_symbols > 14) * (13 - rx_symbols)
+                )
+                / noise_variance
+            )
 
-            llr[3, :] = 8 * ((rx_symbols <= -12) * (-0.5 * (14 + rx_symbols)) +
-                             np.bitwise_and(rx_symbols > -12, rx_symbols <= -8)
-                             * 0.5 * (10 + rx_symbols) -
-                             np.bitwise_and(rx_symbols > -8, rx_symbols <= -4)
-                             * 0.5 * (6 + rx_symbols) +
-                             np.bitwise_and(rx_symbols > -4, rx_symbols <= 0)
-                             * 0.5 * (2 + rx_symbols) +
-                             np.bitwise_and(rx_symbols > 0, rx_symbols <= 4)
-                             * 0.5 * (2 - rx_symbols) -
-                             np.bitwise_and(rx_symbols > 4, rx_symbols <= 8)
-                             * 0.5 * (6 - rx_symbols) +
-                             np.bitwise_and(rx_symbols > 8, rx_symbols <= 12)
-                             * 0.5 * (10 - rx_symbols) -
-                             (rx_symbols > 12) * 0.5 * (14 - rx_symbols)) / noise_variance
+            llr[3, :] = (
+                8
+                * (
+                    (rx_symbols <= -12) * (-0.5 * (14 + rx_symbols))
+                    + np.bitwise_and(rx_symbols > -12, rx_symbols <= -8) * 0.5 * (10 + rx_symbols)
+                    - np.bitwise_and(rx_symbols > -8, rx_symbols <= -4) * 0.5 * (6 + rx_symbols)
+                    + np.bitwise_and(rx_symbols > -4, rx_symbols <= 0) * 0.5 * (2 + rx_symbols)
+                    + np.bitwise_and(rx_symbols > 0, rx_symbols <= 4) * 0.5 * (2 - rx_symbols)
+                    - np.bitwise_and(rx_symbols > 4, rx_symbols <= 8) * 0.5 * (6 - rx_symbols)
+                    + np.bitwise_and(rx_symbols > 8, rx_symbols <= 12) * 0.5 * (10 - rx_symbols)
+                    - (rx_symbols > 12) * 0.5 * (14 - rx_symbols)
+                )
+                / noise_variance
+            )
 
             llr = llr / 85
 
         else:
-            raise ValueError(
-                f"unsupported modulation order ({modulation_order})")
+            raise ValueError(f"unsupported modulation order ({modulation_order})")
 
         if is_complex:
             llr = llr / 2
 
-        return llr.ravel('F')
+        return llr.ravel("F")
 
     def get_mapping(self) -> np.array:
         """Returns current mapping table
@@ -557,10 +465,9 @@ class PskQamMapping(object):
             bits_all = np.zeros(self.modulation_order * self.bits_per_symbol)
             for symbol_idx in range(self.modulation_order):
                 idx = symbol_idx * self.bits_per_symbol
-                bits = np.asarray([1 if symbol_idx & (1 << (
-                    self.bits_per_symbol - 1 - n)) else 0 for n in range(self.bits_per_symbol)])
+                bits = np.asarray([1 if symbol_idx & (1 << (self.bits_per_symbol - 1 - n)) else 0 for n in range(self.bits_per_symbol)])
 
-                bits_all[idx: idx + self.bits_per_symbol] = bits
+                bits_all[idx : idx + self.bits_per_symbol] = bits
 
             mapping = self.get_symbols(bits_all)
 

@@ -23,7 +23,7 @@ __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["André Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -35,7 +35,7 @@ class RfChain(Serializable):
     Only PA is modelled.
     """
 
-    yaml_tag = u'RfChain'
+    yaml_tag = "RfChain"
     __tx_power: float
     __phase_offset: float
     __amplitude_imbalance: float
@@ -43,10 +43,7 @@ class RfChain(Serializable):
     __power_amplifier: Optional[PowerAmplifier]
     __phase_noise: PhaseNoise
 
-    def __init__(self,
-                 tx_power: float = None,
-                 phase_offset: float = None,
-                 amplitude_imbalance: float = None) -> None:
+    def __init__(self, tx_power: float = None, phase_offset: float = None, amplitude_imbalance: float = None) -> None:
 
         self.__tx_power = 1.0
         self.__phase_offset = 0.0
@@ -78,8 +75,7 @@ class RfChain(Serializable):
     @amplitude_imbalance.setter
     def amplitude_imbalance(self, val) -> None:
         if abs(val) >= 1:
-            raise ValueError(
-                "Amplitude imbalance must be within interval (-1, 1).")
+            raise ValueError("Amplitude imbalance must be within interval (-1, 1).")
 
         self.__amplitude_imbalance = val
 
@@ -121,10 +117,10 @@ class RfChain(Serializable):
             state[node.power_amplifier.yaml_tag] = node.__power_amplifier
 
         if node.__amplitude_imbalance != 0.0:
-            state['amplitude_imbalance'] = node.__amplitude_imbalance
+            state["amplitude_imbalance"] = node.__amplitude_imbalance
 
         if node.__phase_offset != 0.0:
-            state['phase_offset'] = node.__phase_offset
+            state["phase_offset"] = node.__phase_offset
 
         if len(state) < 1:
             return representer.represent_none(None)
@@ -140,16 +136,14 @@ class RfChain(Serializable):
         transmitted_signal = input_signal.copy()
 
         # Simulate IQ imbalance
-        transmitted_signal.samples = self.add_iq_imbalance(
-            transmitted_signal.samples)
+        transmitted_signal.samples = self.add_iq_imbalance(transmitted_signal.samples)
 
         # Simulate phase noise
         transmitted_signal = self.phase_noise.add_noise(transmitted_signal)
 
         # Simulate power amplifier
         if self.power_amplifier is not None:
-            transmitted_signal.samples = self.power_amplifier.send(
-                transmitted_signal.samples)
+            transmitted_signal.samples = self.power_amplifier.send(transmitted_signal.samples)
 
         return transmitted_signal
 
@@ -171,8 +165,8 @@ class RfChain(Serializable):
         eps_delta = self.__phase_offset
         eps_a = self.__amplitude_imbalance
 
-        eta_alpha = np.cos(eps_delta/2) + 1j * eps_a * np.sin(eps_delta/2)
-        eta_beta = eps_a * np.cos(eps_delta/2) - 1j * np.sin(eps_delta/2)
+        eta_alpha = np.cos(eps_delta / 2) + 1j * eps_a * np.sin(eps_delta / 2)
+        eta_beta = eps_a * np.cos(eps_delta / 2) - 1j * np.sin(eps_delta / 2)
 
         return eta_alpha * x + eta_beta * np.conj(x)
 

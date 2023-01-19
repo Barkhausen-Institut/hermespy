@@ -16,7 +16,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -49,8 +49,7 @@ class PhysicalScenario(Generic[PhysicalDeviceType], Scenario[PhysicalDeviceType]
         # Generate device transmissions
         operator_transmissions = self.transmit_operators()
         transmitted_device_signals = self.transmit_devices()
-        device_transmissions = [DeviceTransmission(s, i) for s, i in zip(
-            transmitted_device_signals, operator_transmissions)]
+        device_transmissions = [DeviceTransmission(s, i) for s, i in zip(transmitted_device_signals, operator_transmissions)]
 
         # Trigger the full scenario for phyiscal transmission and reception
         timestamp = time()
@@ -58,11 +57,10 @@ class PhysicalScenario(Generic[PhysicalDeviceType], Scenario[PhysicalDeviceType]
 
         received_device_signals = self.receive_devices()
         operator_receptions = self.receive_operators()
-        device_receptions = [DeviceReception(s, None, i) for s, i in zip(
-            received_device_signals, operator_receptions)]
+        device_receptions = [DeviceReception(s, None, i) for s, i in zip(received_device_signals, operator_receptions)]
 
         return Drop(timestamp, device_transmissions, device_receptions)
 
 
-PhysicalScenarioType = TypeVar('PhysicalScenarioType', bound=PhysicalScenario)
+PhysicalScenarioType = TypeVar("PhysicalScenarioType", bound=PhysicalScenario)
 """Type of physical scenario"""

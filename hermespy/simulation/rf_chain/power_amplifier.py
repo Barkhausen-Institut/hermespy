@@ -28,11 +28,10 @@ The following figure visualizes the gain characteristics for the implemented amp
 """
 
 from __future__ import annotations
-from typing import Any, Optional, Tuple, Type
+from typing import Any, Optional, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
-from ruamel.yaml import MappingNode, SafeRepresenter
 from scipy.constants import pi
 
 from hermespy.core import Serializable
@@ -41,7 +40,7 @@ __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -59,8 +58,8 @@ class PowerAmplifier(Serializable):
     which may be overwritten by classes inheriting from this base.
     """
 
-    yaml_tag: str = u'Distortionless'
-    """YAML serialization tag."""
+    yaml_tag: str = "Distortionless"
+    serialized_attributes = {"adjust_power"}
 
     adjust_power: bool
     """Power adjustment flag.
@@ -70,9 +69,7 @@ class PowerAmplifier(Serializable):
 
     __saturation_amplitude: float
 
-    def __init__(self,
-                 saturation_amplitude: float = float('inf'),
-                 adjust_power: bool = False) -> None:
+    def __init__(self, saturation_amplitude: float = float("inf"), adjust_power: bool = False) -> None:
         """
         Args:
 
@@ -108,9 +105,8 @@ class PowerAmplifier(Serializable):
     def saturation_amplitude(self, value: float) -> None:
         """Set the cut-off point for the linear behaviour of the amplification."""
 
-        if value < 0.:
-            raise ValueError(
-                "Power-Amplifier model saturation amplitude must be greater or equal to zero")
+        if value < 0.0:
+            raise ValueError("Power-Amplifier model saturation amplitude must be greater or equal to zero")
 
         self.__saturation_amplitude = value
 
@@ -132,8 +128,7 @@ class PowerAmplifier(Serializable):
 
         # Adjust distorted signal if the respective flag is enabled
         if self.adjust_power:
-            loss = np.linalg.norm(distorted_signal) / \
-                np.linalg.norm(input_signal)
+            loss = np.linalg.norm(distorted_signal) / np.linalg.norm(input_signal)
             distorted_signal /= loss
 
         return distorted_signal
@@ -153,9 +148,7 @@ class PowerAmplifier(Serializable):
         # No modeling in the prototype, just return the non-distorted input signal
         return input_signal
 
-    def plot(self,
-             samples: Optional[np.ndarray] = None,
-             axes: Optional[Tuple[plt.axes, plt.axes]] = None) -> None:
+    def plot(self, samples: Optional[np.ndarray] = None, axes: Optional[Tuple[plt.axes, plt.axes]] = None) -> None:
         """Plot the power amplifier distortion characteristics.
 
         Generates a matplotlib plot depicting the phase/amplitude.
@@ -202,30 +195,6 @@ class PowerAmplifier(Serializable):
         if figure is not None:
             figure.tight_layout()
 
-    @classmethod
-    def to_yaml(cls: Type[PowerAmplifier], representer: SafeRepresenter, node: PowerAmplifier) -> MappingNode:
-        """Serialize a `PowerAmplifier` object to YAML.
-
-        Args:
-            representer (BaseRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
-
-            node (PowerAmplifier):
-                The amplifier instance to be serialized.
-
-        Returns:
-            Node:
-                The serialized YAML node.
-        """
-
-        state = {
-            'saturation_amplitude':  node.__saturation_amplitude,
-            'adjust_power': node.adjust_power,
-        }
-
-        return representer.represent_mapping(cls.yaml_tag, state)
-
 
 class ClippingPowerAmplifier(PowerAmplifier):
     """Model of a clipping power amplifier.
@@ -239,7 +208,7 @@ class ClippingPowerAmplifier(PowerAmplifier):
        s'(t) = \\frac{s(t)}{|s(t)|} \\cdot \\min{(|s(t)|, s_\\mathrm{sat})} \\text{.}
     """
 
-    yaml_tag = u'Clipping'
+    yaml_tag = "Clipping"
     """YAML serialization tag."""
 
     def __init__(self, **kwargs: Any) -> None:
@@ -257,8 +226,7 @@ class ClippingPowerAmplifier(PowerAmplifier):
         output_signal = input_signal.copy()
 
         clip_idx = np.nonzero(np.abs(input_signal) > self.saturation_amplitude)
-        output_signal[clip_idx] = self.saturation_amplitude * \
-            np.exp(1j * np.angle(input_signal[clip_idx]))
+        output_signal[clip_idx] = self.saturation_amplitude * np.exp(1j * np.angle(input_signal[clip_idx]))
 
         return output_signal
 
@@ -279,12 +247,10 @@ class RappPowerAmplifier(PowerAmplifier):
     See :footcite:t:`1991:rapp` for further details.
     """
 
-    yaml_tag = u'Rapp'
+    yaml_tag = "Rapp"
     """YAML serialization tag."""
 
-    def __init__(self,
-                 smoothness_factor: float = 1.,
-                 **kwargs: Any) -> None:
+    def __init__(self, smoothness_factor: float = 1.0, **kwargs: Any) -> None:
         """Clipping Power Amplifier object initialization.
 
         Args:
@@ -320,7 +286,7 @@ class RappPowerAmplifier(PowerAmplifier):
     def smoothness_factor(self, value: float) -> None:
         """Set smoothness factor of the amplification saturation characteristics."""
 
-        if value <= 0.:
+        if value <= 0.0:
             raise ValueError("Smoothness factor must be greater than zero.")
 
         self.__smoothness_factor = value
@@ -328,37 +294,9 @@ class RappPowerAmplifier(PowerAmplifier):
     def model(self, input_signal: np.ndarray) -> np.ndarray:
 
         p = self.smoothness_factor
-        gain = (1 + (np.abs(input_signal) / self.saturation_amplitude)
-                ** (2 * p)) ** (-1 / (2 * p))
+        gain = (1 + (np.abs(input_signal) / self.saturation_amplitude) ** (2 * p)) ** (-1 / (2 * p))
 
         return input_signal * gain
-
-    @classmethod
-    def to_yaml(cls: Type[RappPowerAmplifier], representer: SafeRepresenter, node: RappPowerAmplifier) -> MappingNode:
-        """Serialize a `RappPowerAmplifier` object to YAML.
-
-        Args:
-            representer (BaseRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
-
-            node (RappPowerAmplifier):
-                The amplifier instance to be serialized.
-
-        Returns:
-            Node:
-                The serialized YAML node.
-        """
-
-        state = {
-            'smoothness_factor': node.__smoothness_factor,
-        }
-
-        representation = representer.represent_mapping(cls.yaml_tag, state)
-        representation.value.extend(
-            PowerAmplifier.to_yaml(representer, node).value)
-
-        return representation
 
 
 class SalehPowerAmplifier(PowerAmplifier):
@@ -395,8 +333,8 @@ class SalehPowerAmplifier(PowerAmplifier):
     See :footcite:t:`1981:saleh` for further details.
     """
 
-    yaml_tag = u'Saleh'
-    """YAML serialization tag."""
+    yaml_tag = "Saleh"
+    serialized_attributes = {"adjust_power", "phase_alpha", "phase_beta"}
 
     phase_alpha: float
     """Phase model factor :math:`\\alpha_\\Phi`."""
@@ -404,15 +342,10 @@ class SalehPowerAmplifier(PowerAmplifier):
     phase_beta: float
     """Phase model factor :math:`\\beta_\\Phi`."""
 
-    __amplitude_alpha: float            # Amplitude model factor alpha.
-    __amplitude_beta: float             # Amplitude model factor beta.
+    __amplitude_alpha: float  # Amplitude model factor alpha.
+    __amplitude_beta: float  # Amplitude model factor beta.
 
-    def __init__(self,
-                 amplitude_alpha: float,
-                 amplitude_beta: float,
-                 phase_alpha: float,
-                 phase_beta: float,
-                 **kwargs: Any) -> None:
+    def __init__(self, amplitude_alpha: float, amplitude_beta: float, phase_alpha: float, phase_beta: float, **kwargs: Any) -> None:
         """
         Args:
 
@@ -457,9 +390,8 @@ class SalehPowerAmplifier(PowerAmplifier):
     def amplitude_alpha(self, value: float) -> None:
         """Set the amplitude model factor alpha."""
 
-        if value < 0.:
-            raise ValueError(
-                "Amplitude model factor alpha must be greater or equal to zero")
+        if value < 0.0:
+            raise ValueError("Amplitude model factor alpha must be greater or equal to zero")
 
         self.__amplitude_alpha = value
 
@@ -480,67 +412,31 @@ class SalehPowerAmplifier(PowerAmplifier):
     def amplitude_beta(self, value: float) -> None:
         """Set the amplitude model factor beta."""
 
-        if value < 0.:
-            raise ValueError(
-                "Amplitude model factor beta must be greater or equal to zero")
+        if value < 0.0:
+            raise ValueError("Amplitude model factor beta must be greater or equal to zero")
 
         self.__amplitude_beta = value
 
     def model(self, input_signal: np.ndarray) -> np.ndarray:
 
         amp = np.abs(input_signal) / self.saturation_amplitude
-        gain = self.__amplitude_alpha / (1 + self.__amplitude_beta * amp ** 2)
-        phase_shift = self.phase_alpha * amp ** 2 / \
-            (1 + self.phase_beta * amp ** 2)
+        gain = self.__amplitude_alpha / (1 + self.__amplitude_beta * amp**2)
+        phase_shift = self.phase_alpha * amp**2 / (1 + self.phase_beta * amp**2)
 
         return input_signal * gain * np.exp(1j * phase_shift)
-
-    @classmethod
-    def to_yaml(cls: Type[SalehPowerAmplifier], representer: SafeRepresenter, node: SalehPowerAmplifier) -> MappingNode:
-        """Serialize a `SalehPowerAmplifier` object to YAML.
-
-        Args:
-            representer (BaseRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
-
-            node (SalehPowerAmplifier):
-                The amplifier instance to be serialized.
-
-        Returns:
-            Node:
-                The serialized YAML node.
-        """
-
-        state = {
-            'amplitude_alpha': node.__amplitude_alpha,
-            'amplitude_beta': node.__amplitude_beta,
-            'phase_alpha': node.phase_alpha,
-            'phase_beta': node.phase_beta,
-        }
-
-        representation = representer.represent_mapping(cls.yaml_tag, state)
-        representation.value.extend(
-            PowerAmplifier.to_yaml(representer, node).value)
-
-        return representation
 
 
 class CustomPowerAmplifier(PowerAmplifier):
     """Model of a customized power amplifier."""
 
-    yaml_tag = u'Custom'
-    """YAML serialization tag."""
+    yaml_tag = "Custom"
+    serialized_attributes = {"adjust_power", "input", "gain", "phase"}
 
     __input: np.ndarray
     __gain: np.ndarray
     __phase: np.ndarray
 
-    def __init__(self,
-                 input: np.ndarray,
-                 gain: np.ndarray,
-                 phase: np.ndarray,
-                 **kwargs: Any) -> None:
+    def __init__(self, input: np.ndarray, gain: np.ndarray, phase: np.ndarray, **kwargs: Any) -> None:
         """
         Args:
 
@@ -565,8 +461,7 @@ class CustomPowerAmplifier(PowerAmplifier):
             raise ValueError("Custom power amplifier phase must be a vector")
 
         if len(input) != len(gain) != len(phase):
-            raise ValueError(
-                "Custom power amplifier input, gain and phase vectors must be of identical length")
+            raise ValueError("Custom power amplifier input, gain and phase vectors must be of identical length")
 
         self.__input = input
         self.__gain = gain
@@ -581,3 +476,18 @@ class CustomPowerAmplifier(PowerAmplifier):
         phase_shift = np.interp(amp, self.__input, self.__phase)
 
         return input_signal * gain * np.exp(1j * phase_shift)
+
+    @property
+    def input(self) -> np.ndarray:
+
+        return self.__input.copy()
+
+    @property
+    def gain(self) -> np.ndarray:
+
+        return self.__gain.copy()
+
+    @property
+    def phase(self) -> np.ndarray:
+
+        return self.__phase.copy()
