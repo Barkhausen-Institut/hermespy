@@ -15,7 +15,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -48,7 +48,7 @@ class TestClusterDelayLine(TestCase):
 
         self.channel = RuralMacrocellsLineOfSight()
         self.simulation.scenario.set_channel(self.device_a, self.device_b, self.channel)
-        self.channel.set_seed(123456)
+        self.channel.seed = 123456
 
     def test_cdl(self):
 

@@ -6,12 +6,13 @@ import unittest
 import numpy as np
 
 from hermespy.fec import CyclicRedundancyCheck
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Tobias Kronauer"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -77,3 +78,8 @@ class TestCrcEncoder(unittest.TestCase):
 
         except ValueError:
             self.fail()
+
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+
+        test_yaml_roundtrip_serialization(self, self.encoder)

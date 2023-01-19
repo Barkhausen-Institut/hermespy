@@ -16,14 +16,13 @@ The following figure visualizes the quantizer responses.
 """
 
 from __future__ import annotations
-from enum import Enum
 from typing import Type, Union, Optional
 
 import numpy as np
 from matplotlib import pyplot as plt
 
-from hermespy.core import Serializable, Signal
-from ruamel.yaml import ScalarNode, MappingNode, SafeRepresenter,  SafeConstructor
+from hermespy.core import Serializable, SerializableEnum, Signal
+from ruamel.yaml import ScalarNode, MappingNode, SafeRepresenter, SafeConstructor
 
 from hermespy.tools.math import rms_value
 
@@ -31,14 +30,14 @@ __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["André Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class GainControlType(Enum):
-    """Type of automatig gain control """
+class GainControlType(SerializableEnum):
+    """Type of automatig gain control"""
 
     NONE = 0
     MAX_AMPLITUDE = 1
@@ -48,13 +47,12 @@ class GainControlType(Enum):
 class Gain(Serializable):
     """Base class for analog-to-digital conversion gain modeling."""
 
-    yaml_tag = u'Gain'
+    yaml_tag = "Gain"
     """YAML serialization tag."""
 
     __gain: float
 
-    def __init__(self,
-                 gain=1.0) -> None:
+    def __init__(self, gain=1.0) -> None:
         """
         Args:
             gain (float, optional):
@@ -106,7 +104,7 @@ class Gain(Serializable):
             Node:
                 The serialized YAML node.
         """
-        state = {'gain': node.gain}
+        state = {"gain": node.gain}
 
         return representer.represent_mapping(cls.yaml_tag, state)
 
@@ -114,15 +112,13 @@ class Gain(Serializable):
 class AutomaticGainControl(Gain):
     """Analog-to-digital conversion automatic gain control modeling."""
 
-    yaml_tag = u'AutomaticGainControl'
+    yaml_tag = "AutomaticGainControl"
     """YAML serialization tag."""
 
     __agc_type: GainControlType
     __backoff: float
 
-    def __init__(self,
-                 agc_type=GainControlType.MAX_AMPLITUDE,
-                 backoff=1.0) -> None:
+    def __init__(self, agc_type=GainControlType.MAX_AMPLITUDE, backoff=1.0) -> None:
         """
         Args:
             agc_type (GainControlType, optional):
@@ -132,7 +128,7 @@ class AutomaticGainControl(Gain):
                 this is the ratio between maximum amplitude and the rms value or maximum of input signal,
                 depending on AGC type. Default value is 1.0.
 
-         """
+        """
 
         self.agc_type = agc_type
         self.backoff = backoff
@@ -180,20 +176,16 @@ class AutomaticGainControl(Gain):
     def multiply_signal(self, input_signal: Signal) -> None:
         samples = input_signal.samples
         if self.agc_type == GainControlType.MAX_AMPLITUDE:
-            max_amplitude = np.maximum(np.amax(np.real(samples)),
-                                       np.amax(np.imag(samples))) * self.backoff
+            max_amplitude = np.maximum(np.amax(np.real(samples)), np.amax(np.imag(samples))) * self.backoff
         elif self.agc_type == GainControlType.RMS_AMPLITUDE:
-            max_amplitude = np.maximum(rms_value(np.real(samples)),
-                                       rms_value(np.imag(samples))) * self.backoff
+            max_amplitude = np.maximum(rms_value(np.real(samples)), rms_value(np.imag(samples))) * self.backoff
 
-        self.gain = 1/max_amplitude
+        self.gain = 1 / max_amplitude
 
         super().multiply_signal(input_signal)
 
     @classmethod
-    def from_yaml(cls: Type[AutomaticGainControl],
-                  constructor: SafeConstructor,
-                  node: Union[ScalarNode, MappingNode]) -> AutomaticGainControl:
+    def from_yaml(cls: Type[AutomaticGainControl], constructor: SafeConstructor, node: Union[ScalarNode, MappingNode]) -> AutomaticGainControl:
         """Recall a new `AnalogDigitalConverter` instance from YAML.
 
         Args:
@@ -206,19 +198,17 @@ class AutomaticGainControl(Gain):
         Returns:
             AnalogDigitalConverter:
                 Newly created `AnalogDigitalConverter` instance.
-            """
+        """
 
         if isinstance(node, ScalarNode):
             return cls()
 
-        state = SafeConstructor.construct_mapping(
-            constructor, node, deep=False)
+        state = SafeConstructor.construct_mapping(constructor, node, deep=False)
 
         return cls.InitializationWrapper(state)
 
     @classmethod
-    def to_yaml(cls: Type[AutomaticGainControl],
-                representer: SafeRepresenter, node: AutomaticGainControl) -> MappingNode:
+    def to_yaml(cls: Type[AutomaticGainControl], representer: SafeRepresenter, node: AutomaticGainControl) -> MappingNode:
         """Serialize a `AutomaticGainControl` object to YAML.
 
         Args:
@@ -233,13 +223,14 @@ class AutomaticGainControl(Gain):
             Node:
                 The serialized YAML node.
         """
-        state = {'backoff': node.backoff, 'agc_type': node.agc_type.name}
+        state = {"backoff": node.backoff, "agc_type": node.agc_type.name}
 
         return representer.represent_mapping(cls.yaml_tag, state)
 
 
-class QuantizerType(Enum):
-    """Type of quantizer """
+class QuantizerType(SerializableEnum):
+    """Type of quantizer"""
+
     MID_RISER = 0
     MID_TREAD = 1
 
@@ -256,17 +247,14 @@ class AnalogDigitalConverter(Serializable):
     the same amplitude as the input.
     """
 
-    yaml_tag = u'ADC'
+    yaml_tag = "ADC"
     """YAML serialization tag"""
 
     __num_quantization_bits: Union[int, float]
     gain: Gain
     __quantizer_type: QuantizerType
 
-    def __init__(self,
-                 num_quantization_bits: int = np.inf,
-                 gain: Optional[Gain] = None,
-                 quantizer_type: QuantizerType = QuantizerType.MID_RISER) -> None:
+    def __init__(self, num_quantization_bits: int = np.inf, gain: Optional[Gain] = None, quantizer_type: QuantizerType = QuantizerType.MID_RISER) -> None:
         """
         Args:
 
@@ -278,7 +266,7 @@ class AnalogDigitalConverter(Serializable):
 
             quantizer_type (QuantizerType, optional):
                 Determines quantizer behaviour at zero. Default is QuantizerType.MID_RISER.
-         """
+        """
 
         self.num_quantization_bits = num_quantization_bits
         self.gain = Gain() if gain is None else gain
@@ -316,7 +304,7 @@ class AnalogDigitalConverter(Serializable):
             int: Number of levels
 
         """
-        return 2 ** self.num_quantization_bits
+        return 2**self.num_quantization_bits
 
     @property
     def quantizer_type(self) -> QuantizerType:
@@ -370,23 +358,17 @@ class AnalogDigitalConverter(Serializable):
                 bins = np.arange(-max_amplitude + step, max_amplitude, step)
                 offset = 0
             elif self.quantizer_type == QuantizerType.MID_TREAD:
-                bins = np.arange(-max_amplitude + step/2,
-                                 max_amplitude - step/2, step)
-                offset = -step/2
+                bins = np.arange(-max_amplitude + step / 2, max_amplitude - step / 2, step)
+                offset = -step / 2
 
             quant_idx = np.digitize(np.real(input_signal), bins)
-            quantized_signal += quant_idx * step - \
-                (max_amplitude - step / 2) + offset
+            quantized_signal += quant_idx * step - (max_amplitude - step / 2) + offset
             quant_idx = np.digitize(np.imag(input_signal), bins)
-            quantized_signal += 1j * \
-                (quant_idx * step - (max_amplitude - step / 2) + offset)
+            quantized_signal += 1j * (quant_idx * step - (max_amplitude - step / 2) + offset)
 
         return quantized_signal
 
-    def plot_quantizer(self,
-                       input_samples: Optional[np.ndarray] = None,
-                       label: str = "",
-                       fig_axes: Optional[plt.axes] = None) -> None:
+    def plot_quantizer(self, input_samples: Optional[np.ndarray] = None, label: str = "", fig_axes: Optional[plt.axes] = None) -> None:
         """Plot the quantizer characteristics.
 
         Generates a matplotlib plot depicting the staircase amplitude response.
@@ -407,7 +389,7 @@ class AnalogDigitalConverter(Serializable):
         """
 
         if input_samples is None:
-            input_samples = np.arange(-1, 1, .01) + 1j*np.arange(1, -1, -.01)
+            input_samples = np.arange(-1, 1, 0.01) + 1j * np.arange(1, -1, -0.01)
 
         input_samples = input_samples.flatten()
 
@@ -422,61 +404,10 @@ class AnalogDigitalConverter(Serializable):
         else:
             quant_axes = fig_axes
 
-        output_samples = self.convert(
-            Signal(input_samples, 1.)).samples.flatten()
+        output_samples = self.convert(Signal(input_samples, 1.0)).samples.flatten()
         quant_axes.plot(np.real(input_samples), np.real(output_samples))
 
         quant_axes.axhline(0)
         quant_axes.axvline(0)
 
         quant_axes.set_title(self.__class__.__name__ + " - " + label)
-
-    @classmethod
-    def from_yaml(cls: Type[AnalogDigitalConverter],
-                  constructor: SafeConstructor,
-                  node: Union[ScalarNode, MappingNode]) -> AnalogDigitalConverter:
-        """Recall a new `AnalogDigitalConverter` instance from YAML.
-
-        Args:
-            constructor (RoundTripConstructor):
-                A handle to the constructor extracting the YAML information.
-
-            node (Union[ScalarNode, MappingNode]):
-                YAML node representing the `AnalogDigitalConverter` serialization.
-
-        Returns:
-            AnalogDigitalConverter:
-                Newly created `AnalogDigitalConverter` instance.
-            """
-
-        if isinstance(node, ScalarNode):
-            return cls()
-
-        state = SafeConstructor.construct_mapping(constructor, node)
-        return cls.InitializationWrapper(state)
-
-    @classmethod
-    def to_yaml(cls: Type[AnalogDigitalConverter], representer: SafeRepresenter, node: AnalogDigitalConverter) -> MappingNode:
-        """Serialize a `AnalogDigitalConverter` object to YAML.
-
-        Args:
-            representer (BaseRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
-
-            node (AnalogDigitalConverter):
-                The ADC instance to be serialized.
-
-        Returns:
-            Node:
-                The serialized YAML node.
-        """
-        state = {
-            'num_quantization_bits': node.num_quantization_bits,
-        }
-
-        if not node.num_quantization_bits == np.inf:
-            state['quantizer_type'] = node.quantizer_type.name
-            state['gain_control'] = node.gain
-
-        return representer.represent_mapping(cls.yaml_tag, state)

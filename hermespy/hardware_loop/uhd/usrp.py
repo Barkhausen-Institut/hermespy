@@ -21,7 +21,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -29,8 +29,10 @@ __status__ = "Prototype"
 
 class UsrpDevice(PhysicalDevice, Serializable):
 
-    yaml_tag = u'USRP'
+    yaml_tag = "USRP"
     """YAML serialization tag"""
+
+    property_blacklist = {"topology", "wavelength", "velocity"}
 
     __ip: str
     __port: int
@@ -38,13 +40,7 @@ class UsrpDevice(PhysicalDevice, Serializable):
     __num_rpc_retries = 10
     __collection_enabled: bool
 
-    def __init__(self,
-                 ip: str,
-                 port: Optional[int] = 5555,
-                 carrier_frequency: float = 7e8,
-                 tx_gain: float = 0.,
-                 rx_gain: float = 0.,
-                 *args, **kwargs) -> None:
+    def __init__(self, ip: str, port: Optional[int] = 5555, carrier_frequency: float = 7e8, tx_gain: float = 0.0, rx_gain: float = 0.0, *args, **kwargs) -> None:
 
         rpc_client = Client()
         rpc_client.connect(f"tcp://{ip}:{port}")
@@ -59,8 +55,7 @@ class UsrpDevice(PhysicalDevice, Serializable):
         self.carrier_frequency = carrier_frequency
         self.tx_gain = tx_gain
         self.rx_gain = rx_gain
-        self.__current_configuration = self.__rpc_call_wrapper(
-            self.__usrp_client.getRfConfig)
+        self.__current_configuration = self.__rpc_call_wrapper(self.__usrp_client.getRfConfig)
         self.__collection_enabled = False
 
     def __rpc_call_wrapper(self, call: Callable, *args, **kwargs) -> Any:
@@ -82,11 +77,9 @@ class UsrpDevice(PhysicalDevice, Serializable):
                 continue
 
             except RemoteError as e:
-                raise RuntimeError(
-                    f"Remote exception occured at '{self.ip}:{self.port}': {e.msg}")
+                raise RuntimeError(f"Remote exception occured at '{self.ip}:{self.port}': {e.msg}")
 
-        raise RuntimeError(
-            f"Lost connection to  the remote '{self.ip}:{self.port}'")
+        raise RuntimeError(f"Lost connection to  the remote '{self.ip}:{self.port}'")
 
     def _configure_device(self) -> None:
 
@@ -100,30 +93,22 @@ class UsrpDevice(PhysicalDevice, Serializable):
         rx_gain = self.rx_gain
 
         # Check if a frontend reconfiguration is required
-        if any([
-            tx_filter_bandwidth != self.__current_configuration.txAnalogFilterBw,
-            rx_filter_bandwidth != self.__current_configuration.rxAnalogFilterBw,
-            tx_sampling_rate != self.__current_configuration.txSamplingRate,
-            rx_sampling_rate != self.__current_configuration.rxSamplingRate,
-            tx_carrier_frequency != self.__current_configuration.txCarrierFrequency,
-            rx_carrier_frequency != self.__current_configuration.rxCarrierFrequency,
-            tx_gain != self.__current_configuration.txGain,
-            rx_gain != self.__current_configuration.rxGain,
-        ]):
+        if any(
+            [
+                tx_filter_bandwidth != self.__current_configuration.txAnalogFilterBw,
+                rx_filter_bandwidth != self.__current_configuration.rxAnalogFilterBw,
+                tx_sampling_rate != self.__current_configuration.txSamplingRate,
+                rx_sampling_rate != self.__current_configuration.rxSamplingRate,
+                tx_carrier_frequency != self.__current_configuration.txCarrierFrequency,
+                rx_carrier_frequency != self.__current_configuration.rxCarrierFrequency,
+                tx_gain != self.__current_configuration.txGain,
+                rx_gain != self.__current_configuration.rxGain,
+            ]
+        ):
 
-            config = RfConfig(
-                txAnalogFilterBw=tx_filter_bandwidth,
-                rxAnalogFilterBw=rx_filter_bandwidth,
-                txSamplingRate=tx_sampling_rate,
-                rxSamplingRate=rx_sampling_rate,
-                txCarrierFrequency=tx_carrier_frequency,
-                rxCarrierFrequency=rx_carrier_frequency,
-                txGain=tx_gain,
-                rxGain=rx_gain,
-            )
+            config = RfConfig(txAnalogFilterBw=tx_filter_bandwidth, rxAnalogFilterBw=rx_filter_bandwidth, txSamplingRate=tx_sampling_rate, rxSamplingRate=rx_sampling_rate, txCarrierFrequency=tx_carrier_frequency, rxCarrierFrequency=rx_carrier_frequency, txGain=tx_gain, rxGain=rx_gain)
 
-            self.__rpc_call_wrapper(
-                self.__usrp_client.configureRfConfig, config)
+            self.__rpc_call_wrapper(self.__usrp_client.configureRfConfig, config)
             self.__current_configuration = config
 
     def _upload(self, baseband_signal: Signal) -> None:
@@ -140,31 +125,25 @@ class UsrpDevice(PhysicalDevice, Serializable):
 
         # Hack: Append some zeros to account for the premature transmission stop
         hack_num_samples = 200
-        baseband_signal.samples = np.concatenate((np.zeros((baseband_signal.num_streams, hack_num_samples), dtype=complex),
-                                                  baseband_signal.samples, np.zeros((baseband_signal.num_streams, hack_num_samples), dtype=complex)),
-                                                 axis=1)
+        baseband_signal.samples = np.concatenate((np.zeros((baseband_signal.num_streams, hack_num_samples), dtype=complex), baseband_signal.samples, np.zeros((baseband_signal.num_streams, hack_num_samples), dtype=complex)), axis=1)
 
         if baseband_signal.num_samples % 2 != 0:
-            baseband_signal.samples = np.append(baseband_signal.samples, np.zeros(
-                (baseband_signal.num_streams, 1), dtype=complex), axis=1)
+            baseband_signal.samples = np.append(baseband_signal.samples, np.zeros((baseband_signal.num_streams, 1), dtype=complex), axis=1)
 
         mimo_signal = MimoSignal(list(baseband_signal.samples))
-        tx_config = TxStreamingConfig(
-            max(0., -self.calibration_delay), mimo_signal)
+        tx_config = TxStreamingConfig(max(0.0, -self.calibration_delay), mimo_signal)
         self.__rpc_call_wrapper(self.__usrp_client.configureTx, tx_config)
 
         # Configure reception
         duration = self.receivers.min_frame_duration
 
-        if duration >= 0.:
+        if duration >= 0.0:
 
-            num_receive_samples = int(
-                (duration + self.max_receive_delay) * self.sampling_rate)
+            num_receive_samples = int((duration + self.max_receive_delay) * self.sampling_rate)
             # Workaround for the uneven sample bug
             num_receive_samples += num_receive_samples % 2
 
-            rx_config = RxStreamingConfig(
-                max(0., self.calibration_delay), num_receive_samples)
+            rx_config = RxStreamingConfig(max(0.0, self.calibration_delay), num_receive_samples)
             self.__rpc_call_wrapper(self.__usrp_client.configureRx, rx_config)
 
             self.__collection_enabled = True
@@ -175,8 +154,7 @@ class UsrpDevice(PhysicalDevice, Serializable):
     def trigger(self) -> None:
 
         # Queue execution command
-        self.__usrp_client.execute(
-            self.__usrp_client.getCurrentFpgaTime() + .2)
+        self.__usrp_client.execute(self.__usrp_client.getCurrentFpgaTime() + 0.2)
 
     def _download(self) -> Signal:
 
@@ -185,14 +163,12 @@ class UsrpDevice(PhysicalDevice, Serializable):
             return Signal.empty(self.sampling_rate, self.antennas.num_antennas)
 
         mimo_signals = self.__usrp_client.collect()
-        signal_model = Signal.empty(
-            self.sampling_rate, self.antennas.num_antennas, carrier_frequency=self.carrier_frequency)
+        signal_model = Signal.empty(self.sampling_rate, self.antennas.num_antennas, carrier_frequency=self.carrier_frequency)
 
         for mimo_signal in mimo_signals:
 
             streams = np.array(mimo_signal.signals)
-            signal_model.samples = np.append(
-                signal_model.samples, streams, axis=1)
+            signal_model.samples = np.append(signal_model.samples, streams, axis=1)
 
         return signal_model
 
@@ -251,8 +227,7 @@ class UsrpDevice(PhysicalDevice, Serializable):
     def sampling_rate(self) -> float:
 
         ideal_sampling_rate = self.transmitters.max_sampling_rate if self.transmitters.num_operators > 0 else self.receivers.max_sampling_rate
-        selected_sampling_rate = min(
-            self.__supported_sampling_rates, key=lambda x: abs(x - ideal_sampling_rate))
+        selected_sampling_rate = min(self.__supported_sampling_rates, key=lambda x: abs(x - ideal_sampling_rate))
 
         return selected_sampling_rate
 

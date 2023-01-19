@@ -19,15 +19,6 @@ Devices:
       amplitude_imbalance: 1e-3          # I/Q amplitude imbalance
       phase_offset: 1e-2                 # I/Q phase imbalance
       power_amplifier: !<Rapp>           # Power amplifier model
-      
-      #phase_noise: !<PowerLaw>           # Phase noise model
-
-      #  flicker_scale: 1e-8
-      #  white_fm_scale: 1e-4
-      #  flicker_fm_scale: 1e-2
-      #  random_walk_fm_scale: 1.
-      #  gauss_cutoff: 0.
-      #  vicinity: 1e-4
 
     # AD-Conversion hardware model
     adc: !<ADC> 
@@ -44,7 +35,7 @@ Operators:
     device: *device_alpha           # Device the modem is operating on
 
     # Waveform configuration
-    Waveform: !<SC-RootRaisedCosine>
+    waveform: !<SC-RootRaisedCosine>
 
         # Symbol settings
         symbol_rate: 100e6

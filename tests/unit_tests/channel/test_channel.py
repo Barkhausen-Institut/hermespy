@@ -2,7 +2,7 @@
 """Test channel model for wireless transmission links."""
 
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch, PropertyMock
 
 import numpy as np
 from numpy.testing import assert_array_equal
@@ -10,12 +10,14 @@ from numpy.random import default_rng
 
 from hermespy.channel import Channel
 from hermespy.core.signal_model import Signal
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+
 
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -32,7 +34,6 @@ class TestChannel(unittest.TestCase):
         self.gain = 1.0
         self.random_node = Mock()
         self.random_node._rng = default_rng(42)
-        self.scenario = Mock()
         self.sampling_rate = 1e3
         self.sync_offset_low = 0.
         self.sync_offset_high = 0.
@@ -406,10 +407,15 @@ class TestChannel(unittest.TestCase):
                 assert_array_equal(instant_channel.state, offset_channel.state)
                 self.assertEqual(signal_delay + offset, offset_signal[0].delay)
 
-    def test_to_yaml(self) -> None:
-        """Test YAML serialization dump validity."""
-        pass
-
-    def test_from_yaml(self) -> None:
-        """Test YAML serialization recall validity."""
-        pass
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+        
+        with patch('hermespy.channel.Channel.transmitter', new_callable=PropertyMock) as transmitter_mock, \
+             patch('hermespy.channel.Channel.receiver', new_callable=PropertyMock) as receiver_mock, \
+             patch('hermespy.channel.Channel.random_mother', new_callable=PropertyMock) as random_mock:
+            
+            transmitter_mock.return_value = None
+            receiver_mock.return_value = None
+            random_mock.return_value = None
+            
+            test_yaml_roundtrip_serialization(self, self.channel)

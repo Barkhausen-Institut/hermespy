@@ -9,12 +9,13 @@ from uhd_wrapper.utils.config import MimoSignal
 
 from hermespy.core import Signal
 from hermespy.hardware_loop.uhd import UsrpDevice
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -117,3 +118,8 @@ class TestUsrpDevice(TestCase):
         """Max sampling rate property should return the correct sampling rate"""
 
         self.assertEqual(4., self.usrp.max_sampling_rate)
+
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+
+        test_yaml_roundtrip_serialization(self, self.usrp, {'antenna_positions'})
