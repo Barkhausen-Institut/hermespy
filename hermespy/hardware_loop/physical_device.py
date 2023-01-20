@@ -99,6 +99,30 @@ class SignalTransmitter(StaticOperator, Transmitter):
 class PowerReceiver(Receiver):
     """Noise power receiver for the device noise floor estimation routine."""
 
+    __num_samples: int
+
+    def __init__(self, num_samples: int) -> None:
+        """
+        Args:
+        
+            num_samples (int):
+                Number of samples required for power estimation.
+        """
+        
+        if num_samples <= 1:
+            raise ValueError("Number of required samples must be greater or equal to one")
+        
+        self.__num_samples = num_samples
+        
+    @property
+    def num_samples(self) -> int:
+        """Number of samples required for power estimation.
+        
+        Returns: Number of samples.
+        """
+        
+        return self.__num_samples
+
     @property
     def sampling_rate(self) -> float:
 
@@ -118,7 +142,7 @@ class PowerReceiver(Receiver):
     @property
     def frame_duration(self) -> float:
 
-        return 0.0
+        return self.num_samples * self.sampling_rate
 
 
 class SignalReceiver(StaticOperator, Receiver):
@@ -301,12 +325,16 @@ class PhysicalDevice(Device):
         self.transmitters.add(silent_transmitter)
 
         # Register a new virtual receiver for the purpose of receiving the hardware noise
-        power_receiver = PowerReceiver()
+        power_receiver = PowerReceiver(num_samples)
         self.receivers.add(power_receiver)
 
         # Receive noise floor
         _ = silent_transmitter.transmit()
+
+        self.transmit()
         self.trigger()
+        self.receive()
+
         reception = power_receiver.receive()
 
         return reception.signal.power
