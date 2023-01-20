@@ -142,7 +142,7 @@ class PowerReceiver(Receiver):
     @property
     def frame_duration(self) -> float:
 
-        return self.num_samples * self.sampling_rate
+        return self.num_samples / self.sampling_rate
 
 
 class SignalReceiver(StaticOperator, Receiver):

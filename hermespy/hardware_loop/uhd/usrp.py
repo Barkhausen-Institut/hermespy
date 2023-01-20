@@ -120,8 +120,10 @@ class UsrpDevice(PhysicalDevice, Serializable):
         self.__rpc_call_wrapper(self.__usrp_client.resetStreamingConfigs)
 
         # Scale signal to a maximum absolute vlaue of zero to full exploit the DAC range
-        if baseband_signal.num_samples > 0:
-            baseband_signal.samples /= np.abs(baseband_signal.samples).max()
+
+        maxAmp = np.abs(baseband_signal.samples).max()
+        if baseband_signal.num_samples > 0 and maxAmp != 0:
+            baseband_signal.samples /= maxAmp
 
         # Hack: Append some zeros to account for the premature transmission stop
         hack_num_samples = 200
