@@ -159,7 +159,7 @@ class TestPowerReceiver(TestCase):
     def test_frame_duration(self) -> None:
         """Power receiver should report a zero frame duration"""
         
-        self.assertEqual(100 * self.device.sampling_rate, self.receiver.frame_duration)
+        self.assertEqual(self.num_samples / self.device.sampling_rate, self.receiver.frame_duration)
 
     def test_receive(self) -> None:
         """Reception should correctly estimate the received power"""
