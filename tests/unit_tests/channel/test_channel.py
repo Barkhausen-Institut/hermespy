@@ -5,7 +5,7 @@ import unittest
 from unittest.mock import Mock, patch, PropertyMock
 
 import numpy as np
-from numpy.testing import assert_array_equal
+from numpy.testing import assert_array_equal, assert_array_almost_equal
 from numpy.random import default_rng
 
 from hermespy.channel import Channel
@@ -193,11 +193,11 @@ class TestChannel(unittest.TestCase):
 
                 self.channel.gain = gain
 
-                expected_propagated_samples = gain * samples
+                expected_propagated_samples = np.sqrt(gain) * samples
                 forwards_signal, backwards_signal, _ = self.channel.propagate(signal, signal)
 
-                assert_array_equal(expected_propagated_samples, forwards_signal[0].samples)
-                assert_array_equal(expected_propagated_samples, backwards_signal[0].samples)
+                assert_array_almost_equal(expected_propagated_samples, forwards_signal[0].samples)
+                assert_array_almost_equal(expected_propagated_samples, backwards_signal[0].samples)
 
     def test_propagate_SIMO(self) -> None:
         """Test valid propagation for the Single-Input-Multiple-Output channel."""
@@ -216,13 +216,13 @@ class TestChannel(unittest.TestCase):
 
                 self.channel.gain = gain
 
-                expected_forwards_samples = gain * np.repeat(forwards_samples, 3, axis=0)
-                expected_backwards_samples = gain * np.sum(backwards_samples, axis=0, keepdims=True)
+                expected_forwards_samples = np.sqrt(gain) *  np.repeat(forwards_samples, 3, axis=0)
+                expected_backwards_samples = np.sqrt(gain) *  np.sum(backwards_samples, axis=0, keepdims=True)
 
                 forwards_signal, backwards_signal,  _ = self.channel.propagate(forwards_input, backwards_input)
 
-                assert_array_equal(expected_forwards_samples, forwards_signal[0].samples)
-                assert_array_equal(expected_backwards_samples, backwards_signal[0].samples)
+                assert_array_almost_equal(expected_forwards_samples, forwards_signal[0].samples)
+                assert_array_almost_equal(expected_backwards_samples, backwards_signal[0].samples)
 
     def test_propagate_MISO(self) -> None:
         """Test valid propagation for the Multiple-Input-Single-Output channel."""
@@ -242,13 +242,13 @@ class TestChannel(unittest.TestCase):
 
                 self.channel.gain = gain
 
-                expected_forwards_samples = gain * np.sum(forwards_samples, axis=0, keepdims=True)
-                expected_backwards_samples = gain * np.repeat(backwards_samples, num_transmit_antennas, axis=0)
+                expected_forwards_samples = np.sqrt(gain) * np.sum(forwards_samples, axis=0, keepdims=True)
+                expected_backwards_samples = np.sqrt(gain) * np.repeat(backwards_samples, num_transmit_antennas, axis=0)
 
                 forwards_signal, backwards_signal,  _ = self.channel.propagate(forwards_input, backwards_input)
 
-                assert_array_equal(expected_forwards_samples, forwards_signal[0].samples)
-                assert_array_equal(expected_backwards_samples, backwards_signal[0].samples)
+                assert_array_almost_equal(expected_forwards_samples, forwards_signal[0].samples)
+                assert_array_almost_equal(expected_backwards_samples, backwards_signal[0].samples)
 
     def test_propagate_MIMO(self) -> None:
         """Test valid propagation for the Multiple-Input-Multiple-Output channel."""
@@ -266,11 +266,11 @@ class TestChannel(unittest.TestCase):
 
                 self.channel.gain = gain
 
-                expected_propagated_samples = gain * samples
+                expected_propagated_samples = np.sqrt(gain) * samples
                 forwards_signal, backwards_signal,  _ = self.channel.propagate(signal, signal)
 
-                assert_array_equal(expected_propagated_samples, forwards_signal[0].samples)
-                assert_array_equal(expected_propagated_samples, backwards_signal[0].samples)
+                assert_array_almost_equal(expected_propagated_samples, forwards_signal[0].samples)
+                assert_array_almost_equal(expected_propagated_samples, backwards_signal[0].samples)
 
     def test_propagate_validation(self) -> None:
         """Propagation routine must raise errors in case of unsupported scenarios."""
@@ -298,7 +298,7 @@ class TestChannel(unittest.TestCase):
             for gain in self.impulse_response_gains:
 
                 self.channel.gain = gain
-                expected_impulse_response = gain * np.ones((response_length, 1, 1, 1), dtype=float)
+                expected_impulse_response = np.sqrt(gain) * np.ones((response_length, 1, 1, 1), dtype=float)
 
                 impulse_response = self.channel.impulse_response(response_length, self.impulse_response_sampling_rate)
                 assert_array_equal(expected_impulse_response, impulse_response)
@@ -314,7 +314,7 @@ class TestChannel(unittest.TestCase):
 
                 self.channel.gain = gain
                 expected_impulse_response = np.zeros((response_length, 3, 1, 1), dtype=complex)
-                expected_impulse_response[:, :, 0, :] = gain
+                expected_impulse_response[:, :, 0, :] = np.sqrt(gain)
 
                 impulse_response = self.channel.impulse_response(response_length, self.impulse_response_sampling_rate)
                 assert_array_equal(expected_impulse_response, impulse_response)
@@ -330,7 +330,7 @@ class TestChannel(unittest.TestCase):
 
                 self.channel.gain = gain
                 expected_impulse_response = np.zeros((response_length, 1, 3, 1), dtype=complex)
-                expected_impulse_response[:, 0, :, :] = gain
+                expected_impulse_response[:, 0, :, :] = np.sqrt(gain)
 
                 impulse_response = self.channel.impulse_response(response_length, self.impulse_response_sampling_rate)
                 assert_array_equal(expected_impulse_response, impulse_response)
@@ -346,7 +346,7 @@ class TestChannel(unittest.TestCase):
             for gain in self.impulse_response_gains:
 
                 self.channel.gain = gain
-                expected_impulse_response = gain * np.tile(np.eye(num_antennas, num_antennas, dtype=complex),
+                expected_impulse_response = np.sqrt(gain) * np.tile(np.eye(num_antennas, num_antennas, dtype=complex),
                                                            (response_length, 1, 1))
                 expected_impulse_response = np.expand_dims(expected_impulse_response, axis=-1)
 

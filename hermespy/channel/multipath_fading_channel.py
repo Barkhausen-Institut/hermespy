@@ -488,7 +488,7 @@ class MultipathFadingChannel(Channel, Serializable):
             beta_covariance = self.beta_correlation.covariance
             impulse_response = np.tensordot(beta_covariance, impulse_response, (0, 1)).transpose((1, 0, 2, 3))
 
-        return self.gain * impulse_response
+        return np.sqrt(self.gain) * impulse_response
 
     def __tap(self, timestamps: np.ndarray, los_gain: complex, nlos_gain: complex) -> np.ndarray:
         """Generate a single fading sequence tap.
