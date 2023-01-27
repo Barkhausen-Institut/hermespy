@@ -92,7 +92,8 @@ class QuadrigaChannel(Channel):
                 for delay_idx, delay_in_samples in enumerate(time_delay_in_samples_vec):
 
                     impulse_response[:, rx_antenna, tx_antenna, delay_in_samples] += cir_txa_rxa[delay_idx]
-        return impulse_response
+        
+        return np.sqrt(self.gain) * impulse_response
 
     @classmethod
     def to_yaml(cls: Type[QuadrigaChannel], representer: SafeRepresenter, node: QuadrigaChannel) -> MappingNode:

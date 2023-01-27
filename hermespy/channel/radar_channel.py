@@ -291,7 +291,7 @@ class RadarChannel(Channel, Serializable):
             impulse_response[idx, ::] = np.tensordot(mimo_response, interpolated_impulse_tap, axes=0)
 
         self.__ground_truth = np.array([[0.0, 0.0, target_range]])
-        return impulse_response
+        return np.sqrt(self.gain) * impulse_response
 
     @property
     def ground_truth(self) -> np.ndarray:
