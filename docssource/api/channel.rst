@@ -32,5 +32,6 @@ The following spatial channel models are currently supported:
    channel.cluster_delay_line_rural_macrocells
    channel.cluster_delay_line_street_canyon
    channel.cluster_delay_line_urban_macrocells
+   channel.delay
    channel.radar_channel
    channel.quadriga
