@@ -527,7 +527,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
         channel_gain.random_generator = np.random.default_rng(42)   # Reset random number rng
         signal_out_gain, _, _ = channel_gain.propagate(tx_signal)
 
-        assert_array_almost_equal(signal_out_gain[0].samples, signal_out_no_gain[0].samples * gain)
+        assert_array_almost_equal(signal_out_gain[0].samples, signal_out_no_gain[0].samples * np.sqrt(gain))
 
         timestamps = np.array([0, 100, 500]) / self.sampling_rate
 
@@ -537,7 +537,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
         channel_gain.random_generator = np.random.default_rng(50)   # Reset random number rng
         realization_gain = channel_gain.realize(len(timestamps), self.sampling_rate)
 
-        npt.assert_array_almost_equal(realization_gain.state, realization_no_gain.state * gain)
+        npt.assert_array_almost_equal(realization_gain.state, realization_no_gain.state * np.sqrt(gain))
 
     def test_antenna_correlation(self) -> None:
         """Test channel simulation with antenna correlation modeling"""

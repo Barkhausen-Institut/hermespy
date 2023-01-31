@@ -5,6 +5,7 @@ from .cluster_delay_line_rural_macrocells import RuralMacrocellsLineOfSight, Rur
 from .cluster_delay_line_street_canyon import StreetCanyonLineOfSight, StreetCanyonNoLineOfSight, StreetCanyonOutsideToInside
 from .cluster_delay_line_urban_macrocells import UrbanMacrocellsLineOfSight, UrbanMacrocellsNoLineOfSight, UrbanMacrocellsOutsideToInside
 from .cluster_delay_lines import ClusterDelayLine, DelayNormalization
+from .delay import DelayChannelBase, SpatialDelayChannel, RandomDelayChannel
 from .multipath_fading_channel import MultipathFadingChannel, AntennaCorrelation, CustomAntennaCorrelation
 from .multipath_fading_templates import MultipathFadingCost256, Cost256Type, MultipathFading5GTDL, TDLType, MultipathFadingExponential, StandardAntennaCorrelation, DeviceType, CorrelationType
 from .radar_channel import RadarChannel
@@ -36,6 +37,7 @@ __all__ = [
     "ChannelStateDimension",
     "ChannelStateFormat",
     "Channel", "ChannelRealization", "ChannelRealizationType",
+    "DelayChannelBase", "SpatialDelayChannel", "RandomDelayChannel",
     "IndoorFactoryLineOfSight",
     "IndoorFactoryNoLineOfSight",
     "IndoorOfficeLineOfSight",

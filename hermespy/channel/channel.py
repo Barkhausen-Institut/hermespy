@@ -120,8 +120,8 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
                 Activated by default.
 
             gain (float, optional):
-                Channel power gain.
-                1.0 by default.
+                Linear channel power gain factor.
+                `1.0` by default.
 
             sync_offset_low (float, optional):
                 Minimum synchronization error in seconds.
@@ -309,29 +309,31 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
 
     @property
     def gain(self) -> float:
-        """Access the channel gain.
+        """Linear channel power gain factor.
 
         The default channel gain is 1.
         Realistic physical channels should have a gain less than one.
+        
+        For configuring logarithmic gains, set the attribute using the dB shorthand:
+        
+        .. code-block:: python
+        
+           from hermespy.core import dB
+        
+           # Configure a 10 dB gain
+           channel.gain = dB(10)
 
-        Returns:
-            float:
-                The channel gain.
+        Returns: The channel gain.
+        
+        Raises:
+        
+            ValueError: For gains smaller than zero.
         """
 
         return self.__gain
 
     @gain.setter
     def gain(self, value: float) -> None:
-        """Modify the channel gain.
-
-        Args:
-            value (float):
-                The new channel gain.
-
-        Raises:
-            ValueError: If gain is smaller than zero.
-        """
 
         if value < 0.0:
             raise ValueError("Channel gain must be greater or equal to zero")
@@ -571,7 +573,7 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
             spatial_response = np.eye(self.receiver.antennas.num_antennas, self.transmitter.antennas.num_antennas, dtype=complex)
 
         # Scale by channel gain and add dimension for delay response
-        impulse_response = self.gain * np.expand_dims(np.repeat(spatial_response[:, :, np.newaxis], num_samples, 2), axis=3)
+        impulse_response = np.sqrt(self.gain) * np.expand_dims(np.repeat(spatial_response[:, :, np.newaxis], num_samples, 2), axis=3)
 
         # Save newly generated response as most recent impulse response
         self.recent_response = impulse_response
