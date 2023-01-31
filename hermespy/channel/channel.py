@@ -55,7 +55,7 @@ class ChannelRealization(ChannelStateInformation):
             raise ValueError("Channel impulse response must be four-dimensional numpy tensor")
 
         self.__channel = channel
-        ChannelStateInformation.__init__(self, ChannelStateFormat.IMPULSE_RESPONSE, impulse_response.transpose((1, 2, 0, 3)))
+        ChannelStateInformation.__init__(self, ChannelStateFormat.IMPULSE_RESPONSE, impulse_response)
 
     @property
     def channel(self) -> Channel:
@@ -68,7 +68,7 @@ class ChannelRealization(ChannelStateInformation):
     
     def reciprocal(self) -> ChannelRealization:
         
-        return ChannelRealization(self.channel, ChannelStateInformation.reciprocal(self).state.transpose((2, 0, 1, 3)))
+        return ChannelRealization(self.channel, ChannelStateInformation.reciprocal(self).state)
 
 
 ChannelRealizationType = TypeVar('ChannelRealizationType', bound=ChannelRealization)
@@ -516,22 +516,16 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
         Returns: Propagated signal model.
         """
 
-        channel_state = realization.state if direction is PropagationDirection.FORWARDS else realization.state.transpose((1, 0, 2, 3))
-
-        # The maximum delay in samples is modeled by the last impulse response dimension
-        num_signal_samples = signal.num_samples
-        num_delay_samples = channel_state.shape[3] - 1
-        num_tx_streams = channel_state.shape[1]
-        num_rx_streams = channel_state.shape[0]
+        realization = realization if direction is PropagationDirection.FORWARDS else realization.reciprocal()
 
         # Propagate the signal
-        propagated_samples = np.zeros((num_rx_streams, signal.num_samples + num_delay_samples), dtype=complex)
+        propagated_samples = np.zeros((realization.num_receive_streams, signal.num_samples + realization.num_delay_taps - 1), dtype=complex)
 
-        for delay_index in range(num_delay_samples + 1):
-            for tx_idx, rx_idx in product(range(num_tx_streams), range(num_rx_streams)):
+        for delay_index in range(realization.num_delay_taps):
+            for tx_idx, rx_idx in product(range(realization.num_transmit_streams), range(realization.num_receive_streams)):
 
-                delayed_signal = channel_state[rx_idx, tx_idx, :num_signal_samples, delay_index] * signal.samples[tx_idx, :]
-                propagated_samples[rx_idx, delay_index : delay_index + num_signal_samples] += delayed_signal
+                delayed_signal = realization.state[rx_idx, tx_idx, :signal.num_samples, delay_index] * signal.samples[tx_idx, :]
+                propagated_samples[rx_idx, delay_index : delay_index + signal.num_samples] += delayed_signal
 
         return Signal(propagated_samples, sampling_rate=signal.sampling_rate, carrier_frequency=signal.carrier_frequency, delay=signal.delay + delay)
 
@@ -540,22 +534,25 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
                 sampling_rate: float) -> ChannelRealization:
         """Generate a new channel impulse response.
 
-        Note that this is the core routine from which `propagate` will create the channel state.
+        Note that this is the core routine from which :meth:`.propagate` will create the channel state.
 
         Args:
 
             num_samples (int):
-                Number of samples within the impulse response.
+                Number of samples :math:`N` within the impulse response.
 
             sampling_rate (float):
                 The rate at which the delay taps will be sampled, i.e. the delay resolution.
 
         Returns:
-            np.ndarray:
-                Impulse response in all `number_rx_antennas` x `number_tx_antennas`.
-                4-dimensional array of size `T x number_rx_antennas x number_tx_antennas x (L+1)`
-                where `L` is the maximum path delay (in samples). For the ideal
-                channel in the base class, `L = 0`.
+        
+                Numpy aray representing the impulse response for all propagation paths between antennas.
+                4-dimensional tensor of size :math:`M_\\mathrm{Rx} \\times M_\\mathrm{Tx} \\times N \\times (L+1)` where
+                :math:`M_\\mathrm{Rx}` is the number of receiving antennas,
+                :math:`M_\\mathrm{Tx}` is the number of transmitting antennas,
+                :math:`N` is the number of propagated samples and
+                :math:`L` is the maximum path delay (in samples).
+                For the ideal  channel in the base class :math:`L = 0`.
         """
 
         if self.transmitter is None or self.receiver is None:
@@ -563,24 +560,24 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
 
         # MISO case
         if self.receiver.antennas.num_antennas == 1:
-            impulse_responses = np.tile(np.ones((1, self.transmitter.antennas.num_antennas), dtype=complex), (num_samples, 1, 1))
+            spatial_response = np.ones((1, self.transmitter.antennas.num_antennas), dtype=complex)
 
         # SIMO case
         elif self.transmitter.antennas.num_antennas == 1:
-            impulse_responses = np.tile(np.ones((self.receiver.antennas.num_antennas, 1), dtype=complex), (num_samples, 1, 1))
+            spatial_response = np.ones((self.receiver.antennas.num_antennas, 1), dtype=complex)
 
         # MIMO case
         else:
-            impulse_responses = np.tile(np.eye(self.receiver.antennas.num_antennas, self.transmitter.antennas.num_antennas, dtype=complex), (num_samples, 1, 1))
+            spatial_response = np.eye(self.receiver.antennas.num_antennas, self.transmitter.antennas.num_antennas, dtype=complex)
 
         # Scale by channel gain and add dimension for delay response
-        impulse_responses = self.gain * np.expand_dims(impulse_responses, axis=3)
+        impulse_response = self.gain * np.expand_dims(np.repeat(spatial_response[:, :, np.newaxis], num_samples, 2), axis=3)
 
         # Save newly generated response as most recent impulse response
-        self.recent_response = impulse_responses
+        self.recent_response = impulse_response
 
         # Return resulting impulse response
-        return ChannelRealization(self, impulse_responses)
+        return ChannelRealization(self, impulse_response)
 
     @property
     def realization(self) -> Optional[ChannelRealizationType]:

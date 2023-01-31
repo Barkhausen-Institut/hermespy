@@ -234,8 +234,7 @@ class TestChannel(unittest.TestCase):
         for num_samples in self.propagate_signal_lengths:
             for gain in self.propagate_signal_gains:
 
-                forwards_samples = (np.random.rand(num_transmit_antennas, num_samples)
-                                    + 1j * np.random.rand(num_transmit_antennas, num_samples))
+                forwards_samples = (np.random.rand(num_transmit_antennas, num_samples) + 1j * np.random.rand(num_transmit_antennas, num_samples))
                 backwards_samples = np.random.rand(1, num_samples) + 1j * np.random.rand(1, num_samples)
                 forwards_input = Signal(forwards_samples, self.sampling_rate)
                 backwards_input = Signal(backwards_samples, self.sampling_rate)

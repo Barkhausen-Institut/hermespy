@@ -538,7 +538,7 @@ class ChannelStateInformation(HDFSerializable):
         Returns: The reciprocal channel state information.
         """
 
-        reciprocal_state = self.__state.transpose((1, 0, 2, 3)).conj()
+        reciprocal_state = self.__state.transpose((1, 0, 2, 3))
         return ChannelStateInformation(self.__state_format, reciprocal_state, self.num_delay_taps, self.__num_frequency_bins)
 
     @classmethod
