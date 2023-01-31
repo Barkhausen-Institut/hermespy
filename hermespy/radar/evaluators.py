@@ -78,8 +78,8 @@ __status__ = "Prototype"
 class RadarEvaluator(Evaluator, ABC):
     """Base class for evaluating sensing performance."""
 
-    __receiving_radar: Radar  # Handle to the radar receiver
-    __radar_channel: RadarChannel  # Handle to the radar channel
+    __receiving_radar: Radar        # Handle to the radar receiver
+    __radar_channel: RadarChannel   # Handle to the radar channel
 
     def __init__(self, receiving_radar: Radar, radar_channel: Optional[RadarChannel] = None) -> None:
         """
@@ -475,10 +475,7 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
             _ = h0_scenario.drop()
             _ = h1_scenario.drop()
             
-            h0_reception = h0_operator.receive()
-            h1_reception = h1_operator.receive()
-            
-            evaluation = cls.__evaluation_from_receptions(h0_reception, h1_reception)
+            evaluation = cls.__evaluation_from_receptions(h0_operator.reception, h1_operator.reception)
             artifacts[0].append(evaluation.artifact())
             
         # Generate results

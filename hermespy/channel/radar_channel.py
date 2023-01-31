@@ -281,7 +281,7 @@ class RadarChannel(Channel[RadarChannelRealization], Serializable):
         max_delay = delay + 2 * self.target_velocity * timestamps[-1] / speed_of_light
         max_delay_in_samples = int(np.ceil(max_delay * self.transmitter.sampling_rate))
 
-        impulse_response = np.zeros((num_samples, self.num_outputs, self.num_inputs, max_delay_in_samples), dtype=complex)
+        impulse_response = np.zeros((self.num_outputs, self.num_inputs, num_samples, max_delay_in_samples), dtype=complex)
 
         # If no target is present we may abort already
         if not self.target_exists:
@@ -311,7 +311,7 @@ class RadarChannel(Channel[RadarChannelRealization], Serializable):
 
             # Note that this impulse response selection is technically incorrect,
             # since it is only feasible for planar arrays
-            impulse_response[idx, ::] = np.tensordot(mimo_response, interpolated_impulse_tap, axes=0)
+            impulse_response[:, :, idx, :] = np.tensordot(mimo_response, interpolated_impulse_tap, axes=0)
 
         ground_truth = np.array([[0.0, 0.0, target_range]])
         return RadarChannelRealization(self, impulse_response, ground_truth)

@@ -80,7 +80,7 @@ class QuadrigaChannel(Channel):
 
         max_delay_in_samples = np.around(np.max(path_delays) * sampling_rate).astype(int)
 
-        impulse_response = np.zeros((num_samples, self.receiver.num_antennas, self.transmitter.num_antennas, max_delay_in_samples + 1), dtype=complex)
+        impulse_response = np.zeros((self.receiver.num_antennas, self.transmitter.num_antennas, num_samples, max_delay_in_samples + 1), dtype=complex)
 
         for tx_antenna in range(self.transmitter.num_antennas):
             for rx_antenna in range(self.receiver.num_antennas):
@@ -93,7 +93,7 @@ class QuadrigaChannel(Channel):
 
                 for delay_idx, delay_in_samples in enumerate(time_delay_in_samples_vec):
 
-                    impulse_response[:, rx_antenna, tx_antenna, delay_in_samples] += cir_txa_rxa[delay_idx]
+                    impulse_response[rx_antenna, tx_antenna, :, delay_in_samples] += cir_txa_rxa[delay_idx]
 
         return ChannelRealization(self, impulse_response)
 

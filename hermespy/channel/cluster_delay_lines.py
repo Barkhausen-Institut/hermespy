@@ -758,14 +758,14 @@ class ClusterDelayLineBase(Channel):
 
         # Initialize channel matrices
         num_delay_samples = 1 + ceil(cluster_delays.max() * sampling_rate)
-        impulse_response = np.zeros((num_samples, self.receiver.antennas.num_antennas, self.transmitter.antennas.num_antennas, num_delay_samples), dtype=complex)
+        impulse_response = np.zeros((self.receiver.antennas.num_antennas, self.transmitter.antennas.num_antennas, num_samples, num_delay_samples), dtype=complex)
 
         # Compute the number of clusters, considering the first two clusters get split into 3 partitions
         num_split_clusters = min(2, num_clusters)
         virtual_num_clusters = 3 * num_split_clusters + max(0, num_clusters - 2)
 
         # Prepare the channel coefficient storage
-        nlos_coefficients = np.zeros((virtual_num_clusters, num_samples, self.receiver.antennas.num_antennas, self.transmitter.antennas.num_antennas), dtype=complex)
+        nlos_coefficients = np.zeros((virtual_num_clusters, self.receiver.antennas.num_antennas, self.transmitter.antennas.num_antennas, num_samples), dtype=complex)
 
         # Prepare the cluster delays, equation 7.5-26
         subcluster_delays = np.repeat(cluster_delays[:num_split_clusters, None], 3, axis=1) + self.cluster_delay_spread * np.array([1.0, 1.28, 2.56])
@@ -799,7 +799,7 @@ class ClusterDelayLineBase(Channel):
                 impulse = np.exp(np.inner(wave_vector, relative_velocity) * fast_fading * 2j * pi)
 
                 # Save the resulting channel coefficients for this ray
-                nlos_coefficients[subcluster_idx, :, :, :] = impulse[:, None, None] * channel[None, :, :]
+                nlos_coefficients[subcluster_idx, :, :, :] = np.einsum('ab,c->abc', channel, impulse)
 
         # In the case of line-of-sight, scale the coefficients and append another set according to equation 7.5-30
         if self.line_of_sight:
@@ -828,11 +828,9 @@ class ClusterDelayLineBase(Channel):
             channel = (rx_response[:, None] * rx_polarization) @ (tx_polarization * tx_response[:, None]).T
             impulse = np.exp(-2j * pi * los_distance * wavelength_factor) * np.exp(np.inner(rx_wave_vector, relative_velocity) * fast_fading * 2j * pi)
 
-            los_coefficients = impulse[:, None, None] * channel[None, :, :]
-
             # Second summand of equation 7.5-30
             resampling_matrix = delay_resampling_matrix(sampling_rate, 1, cluster_delays[0], num_delay_samples).flatten()
-            impulse_response += (rice_factor_lin / 1 + rice_factor_lin) ** 0.5 * np.multiply.outer(los_coefficients, resampling_matrix)
+            impulse_response += (rice_factor_lin / 1 + rice_factor_lin) * np.einsum('ab,c,r->abcr', channel, impulse, resampling_matrix)
 
         # Finally, generate the impulse response for all non-line of sight components
         for coefficients, delay in zip(nlos_coefficients, virtual_cluster_delays):
