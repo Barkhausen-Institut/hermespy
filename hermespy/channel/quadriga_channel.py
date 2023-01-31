@@ -95,7 +95,7 @@ class QuadrigaChannel(Channel):
 
                     impulse_response[rx_antenna, tx_antenna, :, delay_in_samples] += cir_txa_rxa[delay_idx]
 
-        return ChannelRealization(self, impulse_response)
+        return ChannelRealization(self, np.sqrt(self.gain) * impulse_response)
 
     @classmethod
     def to_yaml(cls: Type[QuadrigaChannel], representer: SafeRepresenter, node: QuadrigaChannel) -> MappingNode:

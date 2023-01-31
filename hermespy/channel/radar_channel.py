@@ -321,7 +321,7 @@ class RadarChannel(Channel[RadarChannelRealization], Serializable):
         """Generate a channel realization missing the target to be estimated.
 
         Args:
-
+    
             realization (RadarChannelRealization, optional):
                 Channel realization for which to generated a null hypothesis.
                 By default, the recent channel realization will be assumed.
@@ -341,6 +341,5 @@ class RadarChannel(Channel[RadarChannelRealization], Serializable):
             if realization is None:
                 raise RuntimeError("Channel has not been propagated over yet")
 
-        dims = realization.state.shape
-        impulse_response = np.zeros((dims[2], dims[0], dims[1], dims[3]), dtype=complex)
+        impulse_response = np.zeros(realization.state.shape, dtype=complex)
         return RadarChannelRealization(self, impulse_response, realization.ground_truth)

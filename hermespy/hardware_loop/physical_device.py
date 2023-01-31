@@ -159,7 +159,7 @@ class PowerReceiver(Receiver):
     @property
     def frame_duration(self) -> float:
 
-        return self.num_samples * self.sampling_rate
+        return self.num_samples / self.sampling_rate
 
     def _noise_power(self, strength: float, snr_type=...) -> float:
 
