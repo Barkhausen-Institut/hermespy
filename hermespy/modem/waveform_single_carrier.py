@@ -55,7 +55,17 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
     _data_symbol_idx: Optional[np.ndarray]
     _pulse_correlation_matrix: Optional[np.ndarray]
 
-    def __init__(self, symbol_rate: float, num_preamble_symbols: int, num_data_symbols: int, num_postamble_symbols: int = 0, pilot_rate: int = 0, guard_interval: float = 0.0, oversampling_factor: int = 4, pilot_symbol_sequence: Optional[PilotSymbolSequence] = None, repeat_pilot_symbol_sequence: bool = True, **kwargs: Any) -> None:
+    def __init__(self,
+                 symbol_rate: float,
+                 num_preamble_symbols: int,
+                 num_data_symbols: int,
+                 num_postamble_symbols: int = 0,
+                 pilot_rate: int = 0,
+                 guard_interval: float = 0.0,
+                 oversampling_factor: int = 4,
+                 pilot_symbol_sequence: Optional[PilotSymbolSequence] = None,
+                 repeat_pilot_symbol_sequence: bool = True,
+                 **kwargs: Any) -> None:
         """Waveform Generator PSK-QAM initialization.
 
         Args:
@@ -95,17 +105,16 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
                 Waveform generator base class initialization parameters.
         """
 
+        # Init base class
+        ConfigurablePilotWaveform.__init__(self, repeat_symbol_sequence=repeat_pilot_symbol_sequence, oversampling_factor=oversampling_factor, **kwargs)
+
         self.symbol_rate = symbol_rate
         self.num_preamble_symbols = num_preamble_symbols
         self.num_data_symbols = num_data_symbols
         self.num_postamble_symbols = num_postamble_symbols
         self.pilot_rate = pilot_rate
         self.guard_interval = guard_interval
-
-        WaveformGenerator.__init__(self, oversampling_factor=oversampling_factor, **kwargs)
-
-        pilot_symbol_sequence = MappedPilotSymbolSequence(self.__mapping) if pilot_symbol_sequence is None else pilot_symbol_sequence
-        ConfigurablePilotWaveform.__init__(self, symbol_sequence=pilot_symbol_sequence, repeat_symbol_sequence=repeat_pilot_symbol_sequence)
+        self.pilot_symbol_sequence = MappedPilotSymbolSequence(self.__mapping) if pilot_symbol_sequence is None else pilot_symbol_sequence
 
     @abstractmethod
     def _transmit_filter(self) -> np.ndarray:
