@@ -131,8 +131,20 @@ class TestPowerReceiver(TestCase):
         self.rng = default_rng(42)
         self.device = PhysicalDeviceMock(1.)
         
-        self.receiver = PowerReceiver()
+        self.num_samples = 100
+        self.receiver = PowerReceiver(self.num_samples)
         self.device.receivers.add(self.receiver)
+        
+    def test_init_assert(self) -> None:
+        """Invalid initialization arguments should raise ValueErrors"""
+        
+        with self.assertRaises(ValueError):
+            _ = PowerReceiver(0)
+            
+    def test_num_samples(self) -> None:
+        """Number of samples property should report the correct count"""
+        
+        self.assertEqual(self.num_samples, self.receiver.num_samples)
         
     def test_sampling_rate(self) -> None:
         """Sampling rate should be identical to the device's sampling rate"""
@@ -147,7 +159,7 @@ class TestPowerReceiver(TestCase):
     def test_frame_duration(self) -> None:
         """Power receiver should report a zero frame duration"""
         
-        self.assertEqual(0, self.receiver.frame_duration)
+        self.assertEqual(100 * self.device.sampling_rate, self.receiver.frame_duration)
 
     def test_receive(self) -> None:
         """Reception should correctly estimate the received power"""
@@ -263,8 +275,8 @@ class TestPhysicalDevice(TestCase):
         with self.assertRaises(NotImplementedError):
             _ = self.device.velocity
 
-    @patch.object(PhysicalDeviceMock, 'trigger')
-    def test_estimate_noise_power(self, mock_trigger) -> None:
+    @patch.object(PhysicalDeviceMock, '_download')
+    def test_estimate_noise_power(self, patch_download) -> None:
         """Noise power estimation should return the correct power estimate."""
 
         num_samples = 10000
@@ -272,7 +284,7 @@ class TestPhysicalDevice(TestCase):
         samples = 2 ** -.5 * (self.rng.normal(size=num_samples, scale=expected_noise_power ** .5) + 1j *
                               self.rng.normal(size=num_samples, scale=expected_noise_power ** .5))
         signal = Signal(samples, sampling_rate=self.sampling_rate)
-        mock_trigger.side_effect = lambda: [receiver.cache_reception(signal) for receiver in self.device.receivers]
+        patch_download.side_effect = lambda: signal
 
         noise_power = self.device.estimate_noise_power(num_samples)
         self.assertAlmostEqual(expected_noise_power, noise_power[0], places=2)
