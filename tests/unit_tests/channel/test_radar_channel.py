@@ -272,6 +272,17 @@ class TestRadarChannel(unittest.TestCase):
 
         assert_array_almost_equal(output[0].samples, np.zeros(output[0].samples.shape))
 
+    def test_no_attenuation(self) -> None:
+        """Make sure the signal power is preserved when the attenuate flag is disabled"""
+
+        self.channel.attenuate = False
+        self.channel.target_range = 0.
+
+        input_signal = Signal(self._create_impulse_train(500, 15), self.transmitter.sampling_rate)
+        output, _, _ = self.channel.propagate(input_signal)
+
+        assert_array_almost_equal(input_signal.power, output[0].power)
+
     def test_serialization(self) -> None:
         """Test YAML serialization"""
         
