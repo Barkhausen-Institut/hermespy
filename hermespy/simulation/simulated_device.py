@@ -822,10 +822,6 @@ class SimulatedDevice(Device, RandomNode, Serializable):
         # Model radio-frequency chain during reception
         baseband_signal = self.rf_chain.receive(coupled_signal)
 
-        # Model adc conversion during reception
-        # ToDo: Move ADC after noise addition.
-        baseband_signal = self.adc.convert(baseband_signal)
-
         # After rf chain reception, the signal is considered to be converted to base-band
         # However, for now, carrier frequency information will remain to enable beamforming
 
@@ -859,12 +855,16 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
             # Add noise to the received signal
             noisy_signal = self.__noise.add(receiver_signal, noise_realization)
+
+            # Model adc conversion during reception
+            # ToDo: Move ADC after noise addition.
+            quantized_signal = self.adc.convert(noisy_signal)
             
             # Cache reception
             if cache:
-                receiver.cache_reception(noisy_signal, reference_csi)
+                receiver.cache_reception(quantized_signal, reference_csi)
                 
-            operator_inputs.append((noisy_signal, reference_csi))
+            operator_inputs.append((quantized_signal, reference_csi))
 
         # Generate output information
         stored_impinging_signals = [s[0][0] for s in impinging_signals]  # Hack, ToDo: Find better solution
