@@ -174,11 +174,17 @@ class AutomaticGainControl(Gain):
         self.__backoff = value
 
     def multiply_signal(self, input_signal: Signal) -> None:
+
         samples = input_signal.samples
+        
         if self.agc_type == GainControlType.MAX_AMPLITUDE:
             max_amplitude = np.maximum(np.amax(np.real(samples)), np.amax(np.imag(samples))) * self.backoff
+       
         elif self.agc_type == GainControlType.RMS_AMPLITUDE:
             max_amplitude = np.maximum(rms_value(np.real(samples)), rms_value(np.imag(samples))) * self.backoff
+
+        else:
+            raise RuntimeError("Unsupported gain control type")
 
         self.gain = 1 / max_amplitude if max_amplitude > 0. else 1.
 

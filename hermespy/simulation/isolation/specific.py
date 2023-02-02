@@ -37,7 +37,11 @@ class SpecificIsolation(Serializable, Isolation):
                  isolation: Union[None, np.ndarray, float, int] = None,
                  device: Optional[SimulatedDevice] = None) -> None:
 
+        # Initialize base class
         Isolation.__init__(self, device=device)
+
+        # Initialize class attributes
+        self.__leakage_factors = None
         self.isolation = isolation
 
     @property
