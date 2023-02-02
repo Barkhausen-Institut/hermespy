@@ -281,7 +281,7 @@ class RadarChannel(Channel[RadarChannelRealization], Serializable):
         max_delay = delay + 2 * self.target_velocity * timestamps[-1] / speed_of_light
         max_delay_in_samples = int(np.ceil(max_delay * self.transmitter.sampling_rate))
 
-        impulse_response = np.zeros((self.num_outputs, self.num_inputs, num_samples, max_delay_in_samples), dtype=complex)
+        impulse_response = np.zeros((self.num_outputs, self.num_inputs, num_samples, 1 + max_delay_in_samples), dtype=complex)
 
         # If no target is present we may abort already
         if not self.target_exists:
@@ -296,7 +296,7 @@ class RadarChannel(Channel[RadarChannelRealization], Serializable):
         if self.attenuate:
             power_factor = wavelength**2 * self.__radar_cross_section / (4 * pi) ** 3 / target_range**4 * db2lin(self.__losses_db)
 
-        delay_taps = np.arange(max_delay_in_samples) / sampling_rate
+        delay_taps = np.arange(1 + max_delay_in_samples) / sampling_rate
 
         array_response = self.transmitter.antennas.spherical_response(self.transmitter.carrier_frequency, self.target_azimuth, self.target_zenith)
         mimo_response = np.outer(array_response.conj(), array_response)
@@ -304,7 +304,7 @@ class RadarChannel(Channel[RadarChannelRealization], Serializable):
         for idx, timestamp in enumerate(timestamps):
 
             echo_delay = delay + 2 * self.target_velocity * timestamp / speed_of_light
-            time = timestamp + np.arange(max_delay_in_samples) / sampling_rate
+            time = timestamp + delay_taps
             echo_weights = power_factor * np.exp(2j * pi * (doppler_frequency * time + reflection_phase))
 
             interpolated_impulse_tap = np.sinc(sampling_rate * (delay_taps - echo_delay)) * echo_weights
