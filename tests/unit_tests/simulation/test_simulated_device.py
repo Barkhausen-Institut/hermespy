@@ -55,12 +55,6 @@ class TestSimulatedDevice(TestCase):
         self.device.scenario = self.scenario
 
         self.assertIs(self.scenario, self.device.scenario)
-
-    def test_scenario_set_validation(self) -> None:
-        """Overwriting a scenario property should raise a RuntimeError."""
-
-        with self.assertRaises(RuntimeError):
-            self.device.scenario = Mock()
             
     def test_attached(self) -> None:
         """The attached property should return the proper device attachment state."""
@@ -79,7 +73,7 @@ class TestSimulatedDevice(TestCase):
     def test_sampling_rate_inference(self) -> None:
         """Sampling rate property should attempt to infer the sampling rate from all possible sources."""
 
-        self.assertIsNone(self.device.sampling_rate)
+        self.assertEqual(1.0, self.device.sampling_rate)
 
         receiver = Mock()
         receiver.sampling_rate = 1.23

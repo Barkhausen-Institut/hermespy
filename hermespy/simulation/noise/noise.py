@@ -7,9 +7,9 @@ Noise Modeling
 
 from __future__ import annotations
 from abc import abstractmethod
-from typing import Optional
+from typing import Generic, Optional, TypeVar
 
-from hermespy.core import RandomNode, Serializable, Signal
+from hermespy.core import RandomNode, RandomRealization, Serializable, Signal
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -21,7 +21,54 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class Noise(RandomNode):
+class NoiseRealization(RandomRealization):
+    """Realization of a noise model"""
+
+    __power: float
+
+    def __init__(self,
+                 noise: Noise,
+                 power: float) -> None:
+        """
+        Args:
+
+            noise (Noise): Noise model to be realized.
+            power (power): Power indicator of the noise model.
+        """
+
+        self.__power = power
+        RandomRealization.__init__(self, noise)
+
+    @property
+    def power(self) -> float:
+        """Power of the noise realization.
+
+        Returns: Power in Watt.
+        """
+
+        return self.__power
+    
+    @abstractmethod
+    def add_to(self, signal: Signal) -> Signal:
+        """
+        Args:
+            signal (Signal):
+                The signal to which the noise should be added.
+
+            realization (NoiseRealizationType):
+                Realization of the noise model to be added to `signal`.
+
+            power (float, optional)
+                Power of the added noise.
+        """
+        ...  # pragma no cover
+
+
+NoiseRealizationType = TypeVar('NoiseRealizationType', bound=NoiseRealization)
+"""Type of noise realization"""
+
+
+class Noise(RandomNode, Generic[NoiseRealizationType]):
     """Noise modeling base class."""
 
     __power: float  # Power of the added noise
@@ -38,7 +85,23 @@ class Noise(RandomNode):
         RandomNode.__init__(self, seed=seed)
 
     @abstractmethod
-    def add(self, signal: Signal, power: Optional[float] = None) -> None:
+    def realize(self,
+                power: Optional[float] = None) -> NoiseRealizationType:
+        """Realize the noise model.
+
+        Args:
+
+            power (float, optional):
+                Power of the added noise.
+                If not specified, the class :meth:`Noise.power` configuration will be applied.
+
+        Returns: Noise model realization.
+        """
+        ...  # pragma no cover
+
+    def add(self,
+            signal: Signal,
+            realization: Optional[NoiseRealizationType] = None) -> Signal:
         """Add noise to a signal model.
 
         Args:
@@ -46,10 +109,14 @@ class Noise(RandomNode):
             signal (Signal):
                 The signal to which the noise should be added.
 
-            power (float, optional)
-                Power of the added noise.
+            realization (NoiseRealizationType):
+                Realization of the noise model to be added to `signal`.
+
+        Returns: Signal model with added noise.
         """
-        ...  # pragma no cover
+
+        realization = self.realize() if realization is None else realization
+        return realization.add_to(signal)
 
     @property
     def power(self) -> float:
@@ -77,7 +144,24 @@ class Noise(RandomNode):
         self.__power = value
 
 
-class AWGN(Serializable, Noise):
+class AWGNRealization(NoiseRealization):
+    """Realization of additive white Gaussian noise"""
+
+    def add_to(self, signal: Signal) -> Signal:
+
+        # Create random number generator
+        rng = self.generator()
+
+        noise_samples = (rng.normal(0, self.power**0.5, signal.samples.shape) + 1j * rng.normal(0, self.power**0.5, signal.samples.shape)) / 2**0.5
+
+        noisy_signal = signal.copy()
+        noisy_signal.samples += noise_samples
+        noisy_signal.noise_power = self.power
+        
+        return noisy_signal
+
+
+class AWGN(Serializable, Noise[AWGNRealization]):
     """Additive White Gaussian Noise."""
 
     yaml_tag = "AWGN"
@@ -93,9 +177,8 @@ class AWGN(Serializable, Noise):
 
         Noise.__init__(self, power=power, seed=seed)
 
-    def add(self, signal: Signal, power: Optional[float] = None) -> None:
+    def realize(self,
+                power: Optional[float] = None) -> AWGNRealization:
 
         power = self.power if power is None else power
-
-        signal.samples += (self._rng.normal(0, power**0.5, signal.samples.shape) + 1j * self._rng.normal(0, power**0.5, signal.samples.shape)) / 2**0.5
-        signal.noise_power += power
+        return AWGNRealization(self, power)

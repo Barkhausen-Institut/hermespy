@@ -17,7 +17,7 @@ from scipy.constants import pi
 from hermespy.core import Serializable
 from hermespy.core.device import Device
 from hermespy.tools import delay_resampling_matrix
-from .channel import Channel
+from .channel import Channel, ChannelRealization
 
 if TYPE_CHECKING:
     from hermespy.simulation import SimulatedDevice  # pragma no cover
@@ -453,12 +453,14 @@ class MultipathFadingChannel(Channel, Serializable):
 
         self.__los_angle = angle
 
-    def impulse_response(self, num_samples: int, sampling_rate: float) -> np.ndarray:
+    def realize(self,
+                num_samples: int,
+                sampling_rate: float) -> ChannelRealization:
 
         max_delay_in_samples = int(self.__delays[-1] * sampling_rate)
         timestamps = np.arange(num_samples) / sampling_rate
 
-        impulse_response = np.zeros((num_samples, self.receiver.antennas.num_antennas, self.transmitter.antennas.num_antennas, max_delay_in_samples + 1), dtype=complex)
+        impulse_response = np.zeros((self.receiver.antennas.num_antennas, self.transmitter.antennas.num_antennas, num_samples, max_delay_in_samples + 1), dtype=complex)
 
         interpolation_filter: Optional[np.ndarray] = None
         if self.impulse_response_interpolation:
@@ -470,25 +472,25 @@ class MultipathFadingChannel(Channel, Serializable):
                 signal_weights = power**0.5 * self.__tap(timestamps, los_gain, nlos_gain)
 
                 if interpolation_filter is not None:
-                    impulse_response[:, rx_idx, tx_idx, :] += np.outer(signal_weights, interpolation_filter[path_idx, :])
+                    impulse_response[rx_idx, tx_idx, :, :] += np.outer(signal_weights, interpolation_filter[path_idx, :])
 
                 else:
                     delay_idx = int(self.__delays[path_idx] * sampling_rate)
-                    impulse_response[:, rx_idx, tx_idx, delay_idx] += signal_weights
+                    impulse_response[rx_idx, tx_idx, :, delay_idx] += signal_weights
 
         # Force a signal covariance at the transmitter if configured
         if self.alpha_correlation is not None:
 
             alpha_covariance = self.alpha_correlation.covariance
-            impulse_response = np.tensordot(alpha_covariance, impulse_response, (0, 2)).transpose((1, 2, 0, 3))
+            impulse_response = np.tensordot(alpha_covariance, impulse_response, (0, 1)).transpose((1, 0, 2, 3))
 
         # Force a signal covariance at the receiver if configured
         if self.beta_correlation is not None:
 
             beta_covariance = self.beta_correlation.covariance
-            impulse_response = np.tensordot(beta_covariance, impulse_response, (0, 1)).transpose((1, 0, 2, 3))
+            impulse_response = np.tensordot(beta_covariance, impulse_response, (0, 0))
 
-        return np.sqrt(self.gain) * impulse_response
+        return ChannelRealization(self, np.sqrt(self.gain) * impulse_response)
 
     def __tap(self, timestamps: np.ndarray, los_gain: complex, nlos_gain: complex) -> np.ndarray:
         """Generate a single fading sequence tap.

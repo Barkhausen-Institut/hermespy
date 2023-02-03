@@ -53,15 +53,13 @@ class TestSCMatchedFilterJcas(TestCase):
         for _ in range(5):
             
             # Generate transmitted signal
-            transmission = self.operator.transmit()
-            rf_signals = self.device.transmit()
+            transmission = self.device.transmit()
             
             # Propagate signal over the radar channel
-            propagetd_signals, _, _ = self.channel.propagate(rf_signals)
-            self.device.receive(propagetd_signals)
+            propagetd_signals, _, _ = self.channel.propagate(transmission)
             
             # Receive signal
-            reception = self.operator.receive()
+            self.device.receive(propagetd_signals)
             
             # The bits should be recovered correctly
-            assert_array_equal(transmission.bits, reception.bits)
+            assert_array_equal(self.operator.transmission.bits, self.operator.reception.bits)

@@ -85,7 +85,7 @@ class Serializable(object):
         Returns: Additional arguments not inferable from the init signature.
         """
 
-        return {}
+        return set()
 
     @classmethod
     def _serializable_attributes(cls: Type[Serializable], blacklist: Optional[Set[str]] = None) -> Set[str]:
@@ -818,7 +818,7 @@ class Factory:
 
 
 class HDFSerializable(metaclass=ABCMeta):
-    """Base class for object serializble to the HDF5 format.
+    """Base class for object serializable to the HDF5 format.
 
     Structures are serialized to HDF5 files by the :meth:`.to_HDF` routine and
     de-serialized by the :meth:`.from_HDF` method, respectively.

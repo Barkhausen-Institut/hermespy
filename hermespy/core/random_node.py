@@ -6,6 +6,7 @@ Random Graph
 """
 
 from __future__ import annotations
+from sys import maxsize
 from typing import Optional
 
 from numpy.random import default_rng, Generator
@@ -18,6 +19,38 @@ __version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
+
+
+class RandomRealization(object):
+    """Realization of a random node."""
+    
+    __seed: int
+
+    def __init__(self, random_node: RandomNode) -> None:
+        """
+        Args:
+            random_node (RandomNode): Random node from which to generate a realization.
+        """
+        
+        # Draw a random signed integer from the node's random number generator
+        self.__seed = random_node._rng.integers(0, maxsize)
+        
+    @property
+    def seed(self) -> int:
+        """Seed of the random realization.
+        
+        Returns: A signed integer representing the random seed.
+        """
+        
+        return self.__seed
+    
+    def generator(self) -> Generator:
+        """Initialize a new generator from the realized random seed.
+        
+        Returns: A new numpy generator object.
+        """
+        
+        return default_rng(self.__seed)
 
 
 class RandomNode(object):
@@ -84,7 +117,7 @@ class RandomNode(object):
         return self.__seed
 
     @seed.setter
-    def seed(self, value: Optional[int]) -> None:
+    def seed(self, value: int) -> None:
 
         self.__seed = value
         self.__generator = default_rng(value)
