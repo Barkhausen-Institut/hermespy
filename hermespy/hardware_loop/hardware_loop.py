@@ -6,6 +6,7 @@ Hardware Loop
 """
 
 from __future__ import annotations
+from contextlib import nullcontext
 from os import path
 from typing import Any, Dict, Generic, List, Tuple, Type
 
@@ -16,7 +17,7 @@ from rich.prompt import Confirm
 from rich.table import Table
 from ruamel.yaml import SafeConstructor, MappingNode
 
-from hermespy.core import Drop, Evaluation, Evaluator, MonteCarloResult, Pipeline, Serializable
+from hermespy.core import ConsoleMode, Drop, Evaluation, Evaluator, MonteCarloResult, Pipeline, Serializable
 from hermespy.core.monte_carlo import GridDimension, SampleGrid, GridSection, MonteCarloSample
 from hermespy.tools import tile_figures
 from .physical_device import PhysicalDevice
@@ -49,7 +50,11 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType], Pipeline[Physica
     # Evaluators further processing drop information
     __evaluators: List[Evaluator]
 
-    def __init__(self, system: PhysicalScenarioType, manual_triggering: bool = False, plot_information: bool = True, **kwargs) -> None:
+    def __init__(self,
+                 system: PhysicalScenarioType,
+                 manual_triggering: bool = False,
+                 plot_information: bool = True,
+                 **kwargs) -> None:
         """
         Args:
 
@@ -146,8 +151,8 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType], Pipeline[Physica
             figure[1][0].clear()
             figure[1][1].clear()
 
-            device_tx.signal.plot(axes=figure[1][0], space="time", legend=False)
-            device_rx.signal.plot(axes=figure[1][1], space="time", legend=False)
+            device_tx.mixed_signal.plot(axes=figure[1][0], space="time", legend=False)
+            device_rx.impinging_signals[0].plot(axes=figure[1][1], space="time", legend=False)
 
             figure[0].canvas.draw()
             figure[0].canvas.flush_events()
@@ -160,12 +165,24 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType], Pipeline[Physica
             figure[0].canvas.draw()
             figure[0].canvas.flush_events()
 
-    def run(self) -> None:
+    def run(self,
+            overwrite = True,
+            campaign: str = 'default') -> None:
+        """Run the hardware loop configuration.
+        
+        Args:
+
+            overwrite (bool, optional):
+                Allow the replacement of an already existing savefile.
+
+            campaing (str, optional):
+                Name of the measurement campaign.
+        """
 
         # Prepare the results file
         if self.results_dir:
             file_location = path.join(self.results_dir, "drops.h5")
-            self.scenario.record(file_location, override=True)
+            self.scenario.record(file_location, overwrite=overwrite, campaign=campaign)
 
         # Run internally
         self.__run()
@@ -225,9 +242,11 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType], Pipeline[Physica
         samples = SampleGrid(self.__dimensions, self.__evaluators)
 
         # Print indicator that the simulation is starting
-        self.console.print()  # Just an empty line
-        self.console.rule("Hardware Loop")
-        self.console.print()  # Just an empty line
+        if self.console_mode != ConsoleMode.SILENT:
+
+            self.console.print()  # Just an empty line
+            self.console.rule("Hardware Loop")
+            self.console.print()  # Just an empty line
 
         # Prepare the console
         progress = Progress(SpinnerColumn(), *Progress.get_default_columns(), TimeElapsedColumn(), transient=True, console=self.console)
@@ -243,7 +262,7 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType], Pipeline[Physica
         loop_drop_progress = progress.add_task("[green]Drops", total=self.num_drops)
         total_progress = progress.add_task("[red]Progress", total=num_total_drops)
 
-        with progress:
+        with progress if self.console_mode == ConsoleMode.INTERACTIVE else nullcontext():
 
             # Start counting the total number of completed drops
             total = 0
@@ -287,7 +306,7 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType], Pipeline[Physica
                         self.__plot_drop(drop, evaluations, device_figures, evaluator_figures)
 
                     # Update the results table
-                    progress.log((str(total), str(indices[0]), *[str(d.sample_points[i]) for d, i in zip(self.__dimensions, indices[1:])], *[str(a) for a in artifacts]))
+                    # progress.log((str(total), str(indices[0]), *[str(d.sample_points[i]) for d, i in zip(self.__dimensions, indices[1:])], *[str(a) for a in artifacts]))
 
                     # Render results table
                     results_table = Table(min_width=self.console.measure(progress).minimum)

@@ -1,5 +1,4 @@
-from hermespy.core.channel_state_information import ChannelStateDimension, ChannelStateFormat, ChannelStateInformation
-from .channel import Channel
+from .channel import Channel, ChannelRealization, ChannelRealizationType
 from .cluster_delay_line_indoor_factory import IndoorFactoryLineOfSight, IndoorFactoryNoLineOfSight
 from .cluster_delay_line_indoor_office import IndoorOfficeLineOfSight, IndoorOfficeNoLineOfSight
 from .cluster_delay_line_rural_macrocells import RuralMacrocellsLineOfSight, RuralMacrocellsNoLineOfSight, RuralMacrocellsOutsideToInside
@@ -37,8 +36,7 @@ from .quadriga_channel import QuadrigaChannel
 __all__ = [
     "ChannelStateDimension",
     "ChannelStateFormat",
-    "ChannelStateInformation",
-    "Channel",
+    "Channel", "ChannelRealization", "ChannelRealizationType",
     "DelayChannelBase", "SpatialDelayChannel", "RandomDelayChannel",
     "IndoorFactoryLineOfSight",
     "IndoorFactoryNoLineOfSight",

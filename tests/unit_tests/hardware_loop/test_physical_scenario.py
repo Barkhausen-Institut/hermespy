@@ -37,16 +37,10 @@ class TestPhysicalScenario(TestCase):
         
         receptions = self.scenario.receive_devices()
         
-        self.device.receive.assert_called_once()
+        self.device.process_input.assert_called_once()
+        self.device.receive_operators.assert_called_once()
         self.assertEqual(1, len(receptions))
-        
-        self.device.reset_mock()
-        
-        expected_reception = Mock()
-        receptions = self.scenario.receive_devices([expected_reception])
-        
-        self.device.receive.assert_called_once()
-        self.assertEqual(1, len(receptions))
+
         
     @patch.object(PhysicalScenarioMock, '_trigger')
     def test_drop(self, _trigger: MagicMock) -> None:
@@ -55,5 +49,6 @@ class TestPhysicalScenario(TestCase):
         _ = self.scenario._drop()
         
         self.device.transmit.assert_called_once()
-        self.device.receive.assert_called_once()
+        self.device.process_input.assert_called_once()
+        self.device.receive_operators.assert_called_once()
         _trigger.assert_called_once()
