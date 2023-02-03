@@ -196,18 +196,18 @@ class TestClusterDelayLine(TestCase):
         except ValueError:
             self.fail()
 
-    def test_impulse_response_nlos(self):
+    def test_realization_nlos(self):
 
         self.channel.line_of_sight = False
         num_samples = 100
         sampling_rate = 1e5
 
-        impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
+        realization = self.channel.realize(num_samples, sampling_rate)
 
-        self.assertFalse(np.any(np.isnan(impulse_response)))
-        self.assertEqual(num_samples, impulse_response.shape[0])
-        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[1])
-        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[2])
+        self.assertFalse(np.any(np.isnan(realization.state)))
+        self.assertEqual(num_samples, realization.num_samples)
+        self.assertEqual(self.antennas.num_antennas, realization.num_transmit_streams)
+        self.assertEqual(self.antennas.num_antennas, realization.num_receive_streams)
 
     def test_doppler_shift(self) -> None:
         """A signal being propagated over the channel should be frequency shifted according to the doppler effect"""
@@ -236,29 +236,29 @@ class TestClusterDelayLine(TestCase):
         
         self.channel.delay_normalization = DelayNormalization.ZERO
         self.channel.seed = 1
-        zero_delay_response = self.channel.impulse_response(10, sampling_rate)
+        zero_delay_realization = self.channel.realize(10, sampling_rate)
 
         self.channel.delay_normalization = DelayNormalization.TOF
         self.channel.seed = 1
-        tof_delay_response = self.channel.impulse_response(10, sampling_rate)
+        tof_delay_realization = self.channel.realize(10, sampling_rate)
 
         expected_num_tof_samples = int(np.linalg.norm(self.transmitter.position - self.receiver.position, 2) / speed_of_light * sampling_rate)
-        num_tof_samples = tof_delay_response.shape[3] - zero_delay_response.shape[3]
+        num_tof_samples = tof_delay_realization.num_delay_taps - zero_delay_realization.num_delay_taps
 
         self.assertEqual(expected_num_tof_samples, num_tof_samples)
 
-    def test_impulse_response_los(self):
+    def test_realization_los(self):
 
         self.channel.line_of_sight = True
         num_samples = 100
         sampling_rate = 1e5
 
-        impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
+        realization = self.channel.realize(num_samples, sampling_rate)
 
-        self.assertFalse(np.any(np.isnan(impulse_response)))
-        self.assertEqual(num_samples, impulse_response.shape[0])
-        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[1])
-        self.assertEqual(self.antennas.num_antennas, impulse_response.shape[2])
+        self.assertFalse(np.any(np.isnan(realization.state)))
+        self.assertEqual(num_samples, realization.num_samples)
+        self.assertEqual(self.antennas.num_antennas, realization.num_receive_streams)
+        self.assertEqual(self.antennas.num_antennas, realization.num_transmit_streams)
 
     def test_pseudo_randomness(self) -> None:
         """Setting the random seed should result in identical impulse responses."""
@@ -268,17 +268,17 @@ class TestClusterDelayLine(TestCase):
         
         # Generate first impulse response
         self.channel.seed = 1
-        first_impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
+        first_realization = self.channel.realize(num_samples, sampling_rate)
         first_number = self.channel._rng.normal()
 
         # Generate second impulse response with identical initial seed
         self.channel.seed = 1
-        second_impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
+        second_realization = self.channel.realize(num_samples, sampling_rate)
         second_number = self.channel._rng.normal()
 
         # Both should be identical
         self.assertEqual(first_number, second_number)
-        assert_array_equal(first_impulse_response, second_impulse_response)
+        assert_array_equal(first_realization.state, second_realization.state)
         
     def test_spatial_properties(self) -> None:
         """Direction of arrival estimation should result in the correct angle estimation of impinging devices"""

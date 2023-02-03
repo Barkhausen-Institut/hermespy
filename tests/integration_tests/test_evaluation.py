@@ -54,7 +54,7 @@ class TestEvaluators(TestCase):
         """Generate a result from a given evaluator and test its plotting routine."""
         
         transmission = self.modem.transmit()
-        self.device.receive(transmission.signal)
+        self.device.process_input(transmission.signal)
         _ = self.modem.receive()
         
         try:

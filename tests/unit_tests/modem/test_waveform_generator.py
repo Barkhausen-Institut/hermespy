@@ -10,9 +10,8 @@ from numpy.testing import assert_array_equal
 from scipy.constants import pi
 from math import floor
 
-from hermespy.channel import ChannelStateFormat, ChannelStateInformation
 from hermespy.modem import ChannelEstimation, WaveformGenerator, UniformPilotSymbolSequence, Synchronization, Symbols
-from hermespy.core import Signal
+from hermespy.core import ChannelStateFormat, ChannelStateInformation, Signal
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"

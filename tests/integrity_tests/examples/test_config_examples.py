@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from unittest import TestCase
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import patch
+from sys import gettrace
 from tempfile import TemporaryDirectory
 from typing import Any, List, Optional
-from warnings import catch_warnings, simplefilter
 
 import ray as ray
 
@@ -67,7 +67,7 @@ class TestConfigurationExamples(TestCase):
     @classmethod
     def tearDownClass(cls) -> None:
 
-        # Shut down ray 
+        # Shut down ray
         ray.shutdown()
 
     def __run_yaml(self, path: str) -> None:
@@ -79,9 +79,15 @@ class TestConfigurationExamples(TestCase):
                 Path to the yaml configuration file.
         """
 
-        with patch('sys.stdout'), patch.object(MonteCarlo, '__init__', new=init_mock), patch.object(MonteCarlo, 'new_dimension', new=new_dimension_mock), patch('matplotlib.pyplot.figure'):
+        # Make sure we're not in debug mode
+        if gettrace() is None:
+            with patch('sys.stdout'), patch.object(MonteCarlo, '__init__', new=init_mock), patch.object(MonteCarlo, 'new_dimension', new=new_dimension_mock), patch('matplotlib.pyplot.figure'):
 
-            hermes([path, '-o', self.tempdir.name])
+                hermes([path, '-o', self.tempdir.name])
+                
+        else:
+            with patch.object(MonteCarlo, '__init__', new=init_mock):
+                hermes([path, '-o', self.tempdir.name])
     
     def test_chirp_fsk_lora(self) -> None:
         """Test example settings for chirp FSK modulation"""
