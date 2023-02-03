@@ -389,9 +389,9 @@ class TestRaisedCosineWaveform(TestCase):
         expected_symbols = Symbols(np.exp(2j * pi * self.rng.uniform(0, 1, self.waveform.symbols_per_frame)))
 
         waveform = self.waveform.modulate(expected_symbols)
-        symboles = self.waveform.demodulate(waveform.samples[0, :])
+        symbols = self.waveform.demodulate(waveform.samples[0, :])
 
-        assert_array_almost_equal(expected_symbols.raw, symboles.raw, decimal=1)
+        assert_array_almost_equal(expected_symbols.raw, symbols.raw, decimal=1)
             
     def test_serialization(self) -> None:
         """Test YAML serialization"""
@@ -426,9 +426,9 @@ class TestRectangularWaveform(TestCase):
         expected_symbols = Symbols(np.exp(2j * pi * self.rng.uniform(0, 1, (1, self.waveform.symbols_per_frame, 1))))
 
         waveform = self.waveform.modulate(expected_symbols)
-        symboles = self.waveform.demodulate(waveform.samples[0, :])
+        symbols = self.waveform.demodulate(waveform.samples[0, :])
 
-        assert_array_almost_equal(expected_symbols.raw, symboles.raw, decimal=1)
+        assert_array_almost_equal(expected_symbols.raw, symbols.raw, decimal=1)
             
     def test_serialization(self) -> None:
         """Test YAML serialization"""
@@ -463,9 +463,9 @@ class TestFMCWWaveform(TestCase):
         expected_symbols = Symbols(np.exp(2j * pi * self.rng.uniform(0, 1, (1, self.waveform.symbols_per_frame, 1))))
 
         waveform = self.waveform.modulate(expected_symbols)
-        symboles = self.waveform.demodulate(waveform.samples[0, :])
+        symbols = self.waveform.demodulate(waveform.samples[0, :])
 
-        assert_array_almost_equal(expected_symbols.raw, symboles.raw, decimal=1)
+        assert_array_almost_equal(expected_symbols.raw, symbols.raw, decimal=1)
             
     def test_serialization(self) -> None:
         """Test YAML serialization"""

@@ -12,7 +12,7 @@ from numpy.random import default_rng
 from scipy.constants import pi
 from scipy.fft import fft, fftshift
 
-from hermespy.channel import ChannelStateInformation
+from hermespy.core import ChannelStateInformation
 from hermespy.modem.modem import Symbols
 from hermespy.modem import OFDMWaveform, FrameSymbolSection, FrameGuardSection, FrameResource
 from hermespy.modem.waveform_generator_ofdm import FrameElement, ElementType, PrefixType, FrameSection, OFDMCorrelationSynchronization, OFDMIdealChannelEstimation, PilotSection, SchmidlCoxPilotSection, SchmidlCoxSynchronization, OFDMLeastSquaresChannelEstimation, OFDMChannelEqualization, OFDMZeroForcingChannelEqualization, OFDMMinimumMeanSquareChannelEqualization

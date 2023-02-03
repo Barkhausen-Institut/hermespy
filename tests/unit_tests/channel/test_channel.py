@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Test channel model for wireless transmission links."""
+"""Test channel model for wireless transmission links"""
 
 import unittest
 from unittest.mock import Mock, patch, PropertyMock
@@ -24,7 +24,7 @@ __status__ = "Prototype"
 
 
 class TestChannel(unittest.TestCase):
-    """Test the channel model base class."""
+    """Test the channel model base class"""
 
     def setUp(self) -> None:
 
@@ -50,13 +50,13 @@ class TestChannel(unittest.TestCase):
         self.propagate_signal_lengths = [1, 10, 100, 1000]
         self.propagate_signal_gains = [1.0, 0.5]
 
-        # Number of discrete-time timestamps generated for impulse response testing
+        # Number of discrete-time timestamps generated for realization testing
         self.impulse_response_sampling_rate = self.sampling_rate
         self.impulse_response_lengths = [1, 10, 100, 1000]  # ToDo: Add 0
         self.impulse_response_gains = [1.0, 0.5]
 
     def test_init(self) -> None:
-        """Test that the init properly stores all parameters."""
+        """Test that the init properly stores all parameters"""
 
         self.assertIs(self.transmitter, self.channel.transmitter, "Unexpected transmitter parameter initialization")
         self.assertIs(self.receiver, self.channel.receiver, "Unexpected receiver parameter initialization")
@@ -66,7 +66,7 @@ class TestChannel(unittest.TestCase):
         self.assertEqual(self.sync_offset_high, self.channel.sync_offset_high)
 
     def test_active_setget(self) -> None:
-        """Active property getter must return setter parameter."""
+        """Active property getter must return setter parameter"""
 
         active = not self.active
         self.channel.active = active
@@ -74,7 +74,7 @@ class TestChannel(unittest.TestCase):
         self.assertEqual(active, self.channel.active, "Active property set/get produced unexpected result")
 
     def test_transmitter_setget(self) -> None:
-        """Transmitter property getter must return setter parameter."""
+        """Transmitter property getter must return setter parameter"""
 
         channel = Channel()
         channel.transmitter = self.transmitter
@@ -82,7 +82,7 @@ class TestChannel(unittest.TestCase):
         self.assertIs(self.transmitter, channel.transmitter, "Transmitter property set/get produced unexpected result")
 
     def test_receiver_setget(self) -> None:
-        """Receiver property getter must return setter parameter."""
+        """Receiver property getter must return setter parameter"""
 
         channel = Channel()
         channel.receiver = self.receiver
@@ -90,7 +90,7 @@ class TestChannel(unittest.TestCase):
         self.assertIs(self.receiver, channel.receiver, "Receiver property set/get produced unexpected result")
 
     def test_sync_offset_low_setget(self) -> None:
-        """Synchronization offset lower bound property getter should return setter argument."""
+        """Synchronization offset lower bound property getter should return setter argument"""
 
         expected_sync_offset = 1.2345
         self.channel.sync_offset_low = expected_sync_offset
@@ -98,7 +98,7 @@ class TestChannel(unittest.TestCase):
         self.assertEqual(expected_sync_offset, self.channel.sync_offset_low)
 
     def test_sync_offset_low_validation(self) -> None:
-        """Synchronization offset lower bound property setter should raise ValueError on negative arguments."""
+        """Synchronization offset lower bound property setter should raise ValueError on negative arguments"""
 
         with self.assertRaises(ValueError):
             self.channel.sync_offset_low = -1.0
@@ -110,7 +110,7 @@ class TestChannel(unittest.TestCase):
             self.fail()
 
     def test_sync_offset_high_setget(self) -> None:
-        """Synchronization offset upper bound property getter should return setter argument."""
+        """Synchronization offset upper bound property getter should return setter argument"""
 
         expected_sync_offset = 1.2345
         self.channel.sync_offset_high = expected_sync_offset
@@ -118,7 +118,7 @@ class TestChannel(unittest.TestCase):
         self.assertEqual(expected_sync_offset, self.channel.sync_offset_high)
 
     def test_sync_offset_high_validation(self) -> None:
-        """Synchronization offset upper bound property setter should raise ValueError on negative arguments."""
+        """Synchronization offset upper bound property setter should raise ValueError on negative arguments"""
 
         with self.assertRaises(ValueError):
             self.channel.sync_offset_high = -1.0
@@ -130,7 +130,7 @@ class TestChannel(unittest.TestCase):
             self.fail()
 
     def test_gain_setget(self) -> None:
-        """Gain property getter must return setter parameter."""
+        """Gain property getter must return setter parameter"""
 
         gain = 5.0
         self.channel.gain = 5.0
@@ -138,7 +138,7 @@ class TestChannel(unittest.TestCase):
         self.assertIs(gain, self.channel.gain, "Gain property set/get produced unexpected result")
 
     def test_gain_validation(self) -> None:
-        """Gain property setter must raise exception on arguments smaller than zero."""
+        """Gain property setter must raise exception on arguments smaller than zero"""
 
         with self.assertRaises(ValueError):
             self.channel.gain = -1.0
@@ -150,7 +150,7 @@ class TestChannel(unittest.TestCase):
             self.fail("Gain property set to zero raised unexpected exception")
 
     def test_num_inputs_get(self) -> None:
-        """Number of inputs property must return number of transmitting antennas."""
+        """Number of inputs property must return number of transmitting antennas"""
 
         num_inputs = 5
         self.transmitter.antennas.num_antennas = num_inputs
@@ -158,14 +158,14 @@ class TestChannel(unittest.TestCase):
         self.assertEqual(num_inputs, self.channel.num_inputs, "Number of inputs property returned unexpected result")
 
     def test_num_inputs_validation(self) -> None:
-        """Number of inputs property must raise RuntimeError if the channel is currently floating."""
+        """Number of inputs property must raise RuntimeError if the channel is currently floating"""
 
         floating_channel = Channel()
         with self.assertRaises(RuntimeError):
             _ = floating_channel.num_inputs
 
     def test_num_outputs_get(self) -> None:
-        """Number of outputs property must return number of receiving antennas."""
+        """Number of outputs property must return number of receiving antennas"""
 
         num_outputs = 5
         self.receiver.antennas.num_antennas = num_outputs
@@ -173,14 +173,14 @@ class TestChannel(unittest.TestCase):
         self.assertEqual(num_outputs, self.channel.num_outputs, "Number of outputs property returned unexpected result")
 
     def test_num_outputs_validation(self) -> None:
-        """Number of outputs property must raise RuntimeError if the channel is currently floating."""
+        """Number of outputs property must raise RuntimeError if the channel is currently floating"""
 
         floating_channel = Channel()
         with self.assertRaises(RuntimeError):
             _ = floating_channel.num_outputs
 
     def test_propagate_SISO(self) -> None:
-        """Test valid propagation for the Single-Input-Single-Output channel."""
+        """Test valid propagation for the Single-Input-Single-Output channel"""
 
         self.transmitter.antennas.num_antennas = 1
         self.receiver.antennas.num_antennas = 1
@@ -200,7 +200,7 @@ class TestChannel(unittest.TestCase):
                 assert_array_almost_equal(expected_propagated_samples, backwards_signal[0].samples)
 
     def test_propagate_SIMO(self) -> None:
-        """Test valid propagation for the Single-Input-Multiple-Output channel."""
+        """Test valid propagation for the Single-Input-Multiple-Output channel"""
 
         self.transmitter.antennas.num_antennas = 1
         self.receiver.antennas.num_antennas = 3
@@ -225,7 +225,7 @@ class TestChannel(unittest.TestCase):
                 assert_array_almost_equal(expected_backwards_samples, backwards_signal[0].samples)
 
     def test_propagate_MISO(self) -> None:
-        """Test valid propagation for the Multiple-Input-Single-Output channel."""
+        """Test valid propagation for the Multiple-Input-Single-Output channel"""
 
         num_transmit_antennas = 3
         self.transmitter.antennas.num_antennas = num_transmit_antennas
@@ -234,8 +234,7 @@ class TestChannel(unittest.TestCase):
         for num_samples in self.propagate_signal_lengths:
             for gain in self.propagate_signal_gains:
 
-                forwards_samples = (np.random.rand(num_transmit_antennas, num_samples)
-                                    + 1j * np.random.rand(num_transmit_antennas, num_samples))
+                forwards_samples = (np.random.rand(num_transmit_antennas, num_samples) + 1j * np.random.rand(num_transmit_antennas, num_samples))
                 backwards_samples = np.random.rand(1, num_samples) + 1j * np.random.rand(1, num_samples)
                 forwards_input = Signal(forwards_samples, self.sampling_rate)
                 backwards_input = Signal(backwards_samples, self.sampling_rate)
@@ -251,7 +250,7 @@ class TestChannel(unittest.TestCase):
                 assert_array_almost_equal(expected_backwards_samples, backwards_signal[0].samples)
 
     def test_propagate_MIMO(self) -> None:
-        """Test valid propagation for the Multiple-Input-Multiple-Output channel."""
+        """Test valid propagation for the Multiple-Input-Multiple-Output channel"""
 
         num_antennas = 3
         self.transmitter.antennas.num_antennas = num_antennas
@@ -273,7 +272,7 @@ class TestChannel(unittest.TestCase):
                 assert_array_almost_equal(expected_propagated_samples, backwards_signal[0].samples)
 
     def test_propagate_validation(self) -> None:
-        """Propagation routine must raise errors in case of unsupported scenarios."""
+        """Propagation routine must raise errors in case of unsupported scenarios"""
 
         with self.assertRaises(ValueError):
             _ = self.channel.propagate(Signal(np.array([1, 2, 3]), self.sampling_rate))
@@ -288,8 +287,8 @@ class TestChannel(unittest.TestCase):
             floating_channel = Channel()
             _ = floating_channel.propagate(Signal(np.array([[1, 2, 3]]), self.sampling_rate))
 
-    def test_impulse_response_SISO(self) -> None:
-        """Test the impulse response generation for the Single-Input-Single-Output case."""
+    def test_realize_SISO(self) -> None:
+        """Test the realization generation for the Single-Input-Single-Output case"""
 
         self.transmitter.antennas.num_antennas = 1
         self.receiver.antennas.num_antennas = 1
@@ -298,13 +297,13 @@ class TestChannel(unittest.TestCase):
             for gain in self.impulse_response_gains:
 
                 self.channel.gain = gain
-                expected_impulse_response = np.sqrt(gain) * np.ones((response_length, 1, 1, 1), dtype=float)
+                expected_state = np.sqrt(gain) * np.ones((1, 1, response_length, 1), dtype=float)
 
-                impulse_response = self.channel.impulse_response(response_length, self.impulse_response_sampling_rate)
-                assert_array_equal(expected_impulse_response, impulse_response)
+                realization = self.channel.realize(response_length, self.impulse_response_sampling_rate)
+                assert_array_equal(expected_state, realization.state)
 
-    def test_impulse_response_SIMO(self) -> None:
-        """Test the impulse response generation for the Single-Input-Multiple-Output case."""
+    def test_realize_SIMO(self) -> None:
+        """Test the realization generation for the Single-Input-Multiple-Output case"""
 
         self.transmitter.antennas.num_antennas = 1
         self.receiver.antennas.num_antennas = 3
@@ -313,14 +312,14 @@ class TestChannel(unittest.TestCase):
             for gain in self.impulse_response_gains:
 
                 self.channel.gain = gain
-                expected_impulse_response = np.zeros((response_length, 3, 1, 1), dtype=complex)
-                expected_impulse_response[:, :, 0, :] = np.sqrt(gain)
+                expected_state = np.zeros((3, 1, response_length, 1), dtype=complex)
+                expected_state[:, 0, :, 0] = np.sqrt(gain)
 
-                impulse_response = self.channel.impulse_response(response_length, self.impulse_response_sampling_rate)
-                assert_array_equal(expected_impulse_response, impulse_response)
+                realization = self.channel.realize(response_length, self.impulse_response_sampling_rate)
+                assert_array_equal(expected_state, realization.state)
 
-    def test_impulse_response_MISO(self) -> None:
-        """Test the impulse response generation for the Multiple-Input-Single-Output case."""
+    def test_realize_MISO(self) -> None:
+        """Test the realization generation for the Multiple-Input-Single-Output case"""
 
         self.transmitter.antennas.num_antennas = 3
         self.receiver.antennas.num_antennas = 1
@@ -329,14 +328,14 @@ class TestChannel(unittest.TestCase):
             for gain in self.impulse_response_gains:
 
                 self.channel.gain = gain
-                expected_impulse_response = np.zeros((response_length, 1, 3, 1), dtype=complex)
-                expected_impulse_response[:, 0, :, :] = np.sqrt(gain)
+                expected_state = np.zeros((1, 3, response_length, 1), dtype=complex)
+                expected_state[0, :, :, 0] = np.sqrt(gain)
 
-                impulse_response = self.channel.impulse_response(response_length, self.impulse_response_sampling_rate)
-                assert_array_equal(expected_impulse_response, impulse_response)
+                realization = self.channel.realize(response_length, self.impulse_response_sampling_rate)
+                assert_array_equal(expected_state, realization.state)
 
-    def test_impulse_response_MIMO(self) -> None:
-        """Test the impulse response generation for the Multiple-Input-Multiple-Output case."""
+    def test_realize_MIMO(self) -> None:
+        """Test the realization generation for the Multiple-Input-Multiple-Output case"""
 
         num_antennas = 3
         self.transmitter.antennas.num_antennas = num_antennas
@@ -346,23 +345,22 @@ class TestChannel(unittest.TestCase):
             for gain in self.impulse_response_gains:
 
                 self.channel.gain = gain
-                expected_impulse_response = np.sqrt(gain) * np.tile(np.eye(num_antennas, num_antennas, dtype=complex),
-                                                           (response_length, 1, 1))
-                expected_impulse_response = np.expand_dims(expected_impulse_response, axis=-1)
+                expected_state = np.sqrt(gain) * np.tile(np.eye(num_antennas, num_antennas, dtype=complex)[:, :, None, None],
+                                                         (1, 1, response_length, 1))
 
-                impulse_response = self.channel.impulse_response(response_length, self.impulse_response_sampling_rate)
-                assert_array_equal(expected_impulse_response, impulse_response)
+                realization = self.channel.realize(response_length, self.impulse_response_sampling_rate)
+                assert_array_equal(expected_state, realization.state)
 
-    def test_impulse_response_validation(self) -> None:
-        """Impulse response routine must raise errors in case of unsupported scenarios."""
+    def test_realize_validation(self) -> None:
+        """realization routine must raise errors in case of unsupported scenarios"""
 
         with self.assertRaises(RuntimeError):
 
             floating_channel = Channel()
-            floating_channel.impulse_response(np.empty(0, dtype=complex), self.impulse_response_sampling_rate)
+            floating_channel.realize(np.empty(0, dtype=complex), self.impulse_response_sampling_rate)
 
     def test_channel_state_information(self) -> None:
-        """Propagating over the linear channel state model should return identical results."""
+        """Propagating over the linear channel state model should return identical results"""
 
         self.transmitter.antennas.num_antennas = 1
         self.receiver.antennas.num_antennas = 1
@@ -381,7 +379,7 @@ class TestChannel(unittest.TestCase):
                 assert_array_equal(backwards[0].samples, expected_csi_signal.T)
 
     def test_synchronization_offset(self) -> None:
-        """The synchronization offset should be applied properly by adding a delay to the propgated signal."""
+        """The synchronization offset should be applied properly by adding a delay to the propgated signal"""
 
         self.transmitter.antennas.num_antennas = 1
         self.receiver.antennas.num_antennas = 1

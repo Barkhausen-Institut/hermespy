@@ -18,6 +18,8 @@ HermesPy `repository`_ or directly access them via Google `Colabs`_ and run them
    notebooks/beamformer.ipynb
    notebooks/waveform.ipynb
    notebooks/precoding.ipynb
+   notebooks/roc.ipynb
+   notebooks/datasets.ipynb
    notebooks/audio.ipynb
    notebooks/evaluator.ipynb
 

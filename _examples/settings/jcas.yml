@@ -16,6 +16,10 @@ Devices:
   - &base_station !<SimulatedDevice>
     carrier_frequency: 1e9    # 1GHz assumed carrier frequency
 
+    # Assume a transmit-receive leakage
+    isolation: !<Specific>
+      isolation: 1e-6
+
   - &terminal !<SimulatedDevice>
     carrier_frequency: 1e9    # 1GHz assumed carrier frequency
 
@@ -26,7 +30,7 @@ Channels:
   # Single target radar channel
   - &radar_channel !<RadarChannel>
     devices: [*base_station, *base_station]
-    target_range: 1         # The target is located within a distance of 1m of the base station
+    target_range: [1, 2]    # The target is located within a distance between 1m and 2m to the base station
     radar_cross_section: 5  # The target has a cross section of 5m2
 
   # 5G TDL communication channel model
@@ -39,6 +43,7 @@ Channels:
     devices: [*terminal, *terminal]
     gain: 0.
 
+
 # Operators transmitting or receiving signals over the devices
 Operators:
 
@@ -49,7 +54,7 @@ Operators:
     max_range: 10         # Maximal detectable range of the range estimation in m
 
     # Waveform configuration
-    waveform_generator: !<SC-FMCW>
+    waveform_generator: !<SC-Rectangular>
 
       # Symbol settings
       symbol_rate: 100e6
@@ -57,10 +62,9 @@ Operators:
       oversampling_factor: 4
 
       # Frame settings
-      bandwidth: 100e6
       num_preamble_symbols: 16
       num_data_symbols: 100
-      pilot_rate: 1e6
+      pilot_rate: 2e6
       guard_interval: 1e-6
 
     # Radar detection configuration
@@ -68,13 +72,13 @@ Operators:
       min_power: 2e-2
 
   # The terminal is operated by a communication modem
-  - &terminal_operator !<Modem>
+  - &terminal_operator !<RxModem>
 
     device: *terminal         # Operator controls the terminal device
     reference: *base_station
 
     # Waveform configuration
-    waveform_generator: !<SC-FMCW>
+    waveform_generator: !<SC-Rectangular>
 
       channel_estimation: !<SC-LS>
       channel_equalization: !<SC-ZF>
@@ -85,10 +89,9 @@ Operators:
       oversampling_factor: 4
 
       # Frame settings
-      bandwidth: 100e6
       num_preamble_symbols: 16
       num_data_symbols: 100
-      pilot_rate: 10
+      pilot_rate: 2e6
       guard_interval: 1e-6
 
 
@@ -104,9 +107,15 @@ Evaluators:
     tolerance: .01
     plot_scale: log
 
+  # Evaluate the radar detector operating characteristics
+  - !<ROC>
+
+    radar: *base_station_operator
+    radar_channel: *radar_channel
+
 
 # Simulation parameters
-num_samples: 100                   # Number of samples per simulation grid section
+num_samples: 1000                  # Number of samples per simulation grid section
 min_num_samples: 10                # Minimum number of samples per simulation grid section before premature stopping
 snr_type: EBN0                     # SNR is defined as the ratio between bit energy and noise power
 plot_results: True                 # Visualize the evaluations after the simulation has finished
@@ -115,4 +124,4 @@ plot_results: True                 # Visualize the evaluations after the simulat
 # Scenario parameters over which the Monte-Carlo simulation sweeps
 Dimensions:
 
-  snr: [20, 10, 2, 0] dB
+  snr: [10, 8, ..., -10] dB

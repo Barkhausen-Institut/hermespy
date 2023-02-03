@@ -19,7 +19,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class AudioScenario(Serializable, PhysicalScenario[AudioDevice]):
+class AudioScenario(PhysicalScenario[AudioDevice]):
     """Scenario of phyical device bindings to sound cards."""
 
     yaml_tag = "AudioSystem"

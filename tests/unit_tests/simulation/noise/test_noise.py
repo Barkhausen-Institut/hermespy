@@ -6,6 +6,7 @@ from unittest.mock import Mock
 
 import numpy as np
 import numpy.random as rnd
+from numpy.testing import assert_array_almost_equal
 
 from hermespy.core.signal_model import Signal
 from hermespy.simulation.noise import AWGN
@@ -40,11 +41,27 @@ class TestAWGN(unittest.TestCase):
 
         for expected_noise_power in powers:
 
-            noisy_signal = Signal(signal, sampling_rate=1.)
-            self.noise.add(noisy_signal, expected_noise_power)
-            noise_power = np.var(noisy_signal.samples)
+            self.noise.power = expected_noise_power
+            noisy_signal = self.noise.add(Signal(signal, sampling_rate=1.))
+            noisy_signal_power = np.var(noisy_signal.samples)
 
-            self.assertTrue(abs(noise_power - expected_noise_power) <= (0.001 * expected_noise_power))
+            self.assertTrue(abs(noisy_signal_power - expected_noise_power) <= (0.001 * expected_noise_power))
+
+    def test_add_noise_from_realization(self) -> None:
+        """Adding noise from realizations should result in reproducable noises"""
+
+        signal = Signal(np.zeros(1000000, dtype=complex), sampling_rate=1.)
+        powers = np.array([0, 1, 100, 1000])
+
+        for expected_noise_power in powers:
+
+            self.noise.power = expected_noise_power
+            realization = self.noise.realize()
+
+            noisy_signal_alpha = self.noise.add(signal, realization)
+            noisy_signal_beta = self.noise.add(signal, realization)
+
+            assert_array_almost_equal(noisy_signal_alpha.samples, noisy_signal_beta.samples)
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""
