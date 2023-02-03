@@ -10,7 +10,7 @@ from typing import Optional, Union, TYPE_CHECKING
 
 import numpy as np
 
-from hermespy.core import Serializable, Signal
+from hermespy.core import dimension, Serializable, Signal
 from .isolation import Isolation
 
 if TYPE_CHECKING:
@@ -44,7 +44,7 @@ class SpecificIsolation(Serializable, Isolation):
         self.__leakage_factors = None
         self.isolation = isolation
 
-    @property
+    @dimension
     def isolation(self) -> np.ndarray:
         """Linear power isolation between transmit and receive chains.
 
@@ -53,7 +53,7 @@ class SpecificIsolation(Serializable, Isolation):
 
         return self.__isolation
 
-    @isolation.setter
+    @isolation.setter(title='Isolation')
     def isolation(self, value: Union[None, np.ndarray, float, int]) -> None:
 
         if value is None:
