@@ -17,6 +17,8 @@
       ip: '192.168.189.132'
       port: 5555
       carrier_frequency: 1e9
+      tx_gain: 20.
+      rx_gain: 20.
 
 
   # Operators transmitting or receiving signals over the devices
@@ -43,32 +45,26 @@
         resources:
 
           - !<OFDM-Resource>
-            repetitions: 1
+            repetitions: 100
             prefix_ratio: 0.0703125
             elements:
               - !<FrameElement>
-                type: NULL
-                repetitions: 600
+                type: !<ElementType> REFERENCE
+                repetitions: 1
               - !<FrameElement>
                 type: !<ElementType> DATA
-                repetitions: 2100
-              - !<FrameElement>
-                type: !<ElementType> NULL
-                repetitions: 600
+                repetitions: 20
 
           - !<OFDM-Resource>
-            repetitions: 1
+            repetitions: 100
             prefix_ratio: 0.078125
             elements:
               - !<FrameElement>
-                type: !<ElementType> NULL
-                repetitions: 600
+                type: !<ElementType> REFERENCE
+                repetitions: 1
               - !<FrameElement>
                 type: !<ElementType> DATA
-                repetitions: 2100
-              - !<FrameElement>
-                type: !<ElementType> NULL
-                repetitions: 600
+                repetitions: 20
 
         # Frame configuration in time domain, i.e. the x-axis in the OFDM time-frequency grid
         structure:
