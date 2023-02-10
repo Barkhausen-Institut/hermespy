@@ -5,10 +5,10 @@ from unittest import TestCase
 from unittest.mock import Mock, patch, PropertyMock
 
 import numpy as np
-from numpy.testing import assert_array_equal
+from numpy.testing import assert_array_equal, assert_array_almost_equal
 
-from hermespy.core.device import FloatingError
-from hermespy.simulation.simulated_device import SimulatedDevice
+from hermespy.core import dB, Signal, IdealAntenna, UniformArray
+from hermespy.simulation import SimulatedDevice, SpecificIsolation
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
@@ -33,7 +33,7 @@ class TestSimulatedDevice(TestCase):
         self.scenario = Mock()
         self.position = np.zeros(3)
         self.orientation = np.zeros(3)
-        self.antennas = Mock()
+        self.antennas = UniformArray(IdealAntenna(), 1., (1, 1, 1))
 
         self.device = SimulatedDevice(scenario=self.scenario, antennas=self.antennas, position=self.position, orientation=self.orientation)
 
@@ -118,6 +118,46 @@ class TestSimulatedDevice(TestCase):
         except RuntimeError:
 
             self.fail()
+            
+    def test_simulate_input_perfect(self) -> None:
+        """Test input modeling without imperfections"""
+        
+        mixed_signal = Signal(self.random_generator.normal(size=(self.device.num_antennas, 10)) + 1j * self.random_generator.normal(size=(self.device.num_antennas, 10)), self.device.sampling_rate, self.device.carrier_frequency)
+
+        perfect_input, _ = self.device._simulate_input(mixed_signal)
+        assert_array_almost_equal(mixed_signal.samples, perfect_input.samples)
+
+    def test_simulate_input_leakage(self) -> None:
+        """Test leakage input modeling"""
+         
+        self.device.isolation = SpecificIsolation(dB(0))
+        
+        mixed_signal = Signal(self.random_generator.normal(size=(self.device.num_antennas, 10)) + 1j * self.random_generator.normal(size=(self.device.num_antennas, 10)), self.device.sampling_rate, self.device.carrier_frequency)
+        leaking_signal = Signal(self.random_generator.normal(size=(self.device.num_antennas, 10)) + 1j * self.random_generator.normal(size=(self.device.num_antennas, 10)), self.device.sampling_rate, self.device.carrier_frequency)
+        
+        expected_leaking_input = Signal(mixed_signal.samples + leaking_signal.samples, self.device.sampling_rate, self.device.carrier_frequency)
+        leaking_input, _ = self.device._simulate_input(mixed_signal, leaking_signal)
+        
+        assert_array_almost_equal(expected_leaking_input.samples, leaking_input.samples)
+
+    def test_simulate_input_rf_modeling(self) -> None:
+        """Test rf impairments input modeling"""
+        
+        phase_offset = .5 * np.pi
+        self.device.rf_chain.phase_offset = phase_offset
+        
+        mixed_signal = Signal(self.random_generator.normal(size=(self.device.num_antennas, 10)) + 1j * self.random_generator.normal(size=(self.device.num_antennas, 10)), self.device.sampling_rate, self.device.carrier_frequency)
+
+        expected_impaired_input = self.device.rf_chain.receive(mixed_signal)
+        impaired_input, _ = self.device._simulate_input(mixed_signal)
+
+        assert_array_almost_equal(expected_impaired_input.samples, impaired_input.samples)
+
+    def test_process_from_realization(self) -> None:
+        """Test process from realization subroutine"""
+        
+        
+
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""

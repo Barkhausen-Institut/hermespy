@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Test HermesPy serialization factory"""
 
-from inspect import getmembers
+from collections.abc import Sequence
 from typing import Optional, List, Set
 from unittest import TestCase
 
@@ -58,12 +58,17 @@ def test_yaml_roundtrip_serialization(case: TestCase,
     serialization = factory.to_str(serializable)
 
     # De-serialize the serializable object configuration from text
-    deserialization_list: List[Serializable] = factory.from_str(serialization)
+    deserialization_list = factory.from_str(serialization)
 
-    if len(deserialization_list) != 1:
-        case.fail(f"Deserialization of {serializable.__name__} resulted in incorrect amount of objects ({len(deserialization_list)})")
+    if isinstance(deserialization_list, Sequence) and not isinstance(serializable, Sequence):
+    
+        if len(deserialization_list) != 1:
+            case.fail(f"Deserialization of {serializable.__name__} resulted in incorrect amount of objects ({len(deserialization_list)})")
 
-    deserialization = deserialization_list[0]
+        deserialization = deserialization_list[0]
+        
+    else:
+        deserialization = deserialization_list
 
     # Assert property equality
     for attribute_key in attributes:
@@ -197,7 +202,7 @@ class TestFactory(TestCase):
         expected_number = 1 + 2j
         
         serialized_number = self.factory.to_str(expected_number)
-        deserialized_number = self.factory.from_str(serialized_number)[0]
+        deserialized_number = self.factory.from_str(serialized_number)
         
         self.assertEqual(expected_number, deserialized_number)
         

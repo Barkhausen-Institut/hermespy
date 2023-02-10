@@ -8,7 +8,7 @@ Radar Detection
 from __future__ import annotations
 from abc import abstractmethod
 from math import cos, sin
-from typing import List
+from typing import List, Type
 
 import numpy as np
 from scipy.ndimage.filters import maximum_filter
@@ -67,7 +67,7 @@ class PointDetection(object):
         self.__power = power
 
     @classmethod
-    def FromSpherical(cls, zenith: float, azimuth: float, velocity: float, range: float, power: float) -> PointDetection:
+    def FromSpherical(cls: Type[PointDetection], zenith: float, azimuth: float, velocity: float, range: float, power: float) -> PointDetection:
         """Generate a point detection from radar cube spherical coordinates.
 
         Args:
@@ -91,9 +91,9 @@ class PointDetection(object):
         normal_vector = np.array([cos(azimuth) * sin(zenith), sin(azimuth) * sin(zenith), cos(zenith)], dtype=float)
 
         position = range * normal_vector
-        velocity = velocity * normal_vector
+        velocity_vector = velocity * normal_vector
 
-        return cls(position=position, velocity=velocity, power=power)
+        return cls(position=position, velocity=velocity_vector, power=power)
 
     @property
     def position(self) -> np.ndarray:

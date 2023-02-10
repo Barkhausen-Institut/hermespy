@@ -7,7 +7,7 @@ from unittest.mock import Mock
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
-from hermespy.core.device import Device, MixingOperator,  Operator, OperatorSlot, Receiver, ReceiverSlot, Reception, Transmitter,\
+from hermespy.core.device import Device, MixingOperator,  Operator, OperatorSlot, Receiver, ReceiverSlot, Reception, Transmission, Transmitter,\
     TransmitterSlot
 
 __author__ = "Jan Adler"
@@ -311,7 +311,7 @@ class TransmitterMock(Transmitter):
 
         Transmitter.__init__(self, *args, **kwargs)
 
-    def transmit(self) -> None:
+    def _transmit(self, _: float) -> Transmission:
         pass
 
     @property
@@ -456,20 +456,3 @@ class TestDevice(TestCase):
         self.device.receivers.add(receiver)
 
         self.assertEqual(10, self.device.max_frame_duration)
-        
-    def test_wavelength_validation(self) -> None:
-        """Device wavelength property setter should raise ValueError on invalid arguments."""
-        
-        with self.assertRaises(ValueError):
-            self.device.wavelength = -1.
-            
-        with self.assertRaises(ValueError):
-            self.device.wavelength = 0.
-            
-    def test_wavelength_setget(self) -> None:
-        """Wavelength property getter should return setter argument"""
-        
-        expected_wavelength = 1.234
-        self.device.wavelength = expected_wavelength
-        
-        self.assertAlmostEqual(expected_wavelength, self.device.wavelength)

@@ -6,7 +6,7 @@ Logarithmics
 """
 
 from __future__ import annotations
-from collections.abc import Iterable
+from collections.abc import Sequence
 from enum import Enum
 from math import isclose
 from typing import Any, overload, List, Optional, Sequence, Tuple, Type, Union
@@ -107,7 +107,7 @@ class Logarithmic(float):
         self.__value_db = value_db
         self.__conversion = conversion
 
-    def __new__(cls: Type[Logarithmic], value: Union[float, int], value_type: ValueType = ValueType.DB, conversion: DbConversionType = DbConversionType.POWER) -> float:
+    def __new__(cls: Type[Logarithmic], value: Union[float, int], value_type: ValueType = ValueType.DB, conversion: DbConversionType = DbConversionType.POWER) -> Logarithmic:
         """
         Args:
 
@@ -262,7 +262,7 @@ class LogarithmicSequence(np.ndarray):
     __values_db: List[float]
     __conversion: DbConversionType
 
-    def __new__(cls: Type[LogarithmicSequence], values: Optional[Sequence[Union[float, int]]] = None, value_type: ValueType = ValueType.DB, conversion: DbConversionType = DbConversionType.POWER) -> np.ndarray:
+    def __new__(cls: Type[LogarithmicSequence], values: Optional[Sequence[Union[float, int]]] = None, value_type: ValueType = ValueType.DB, conversion: DbConversionType = DbConversionType.POWER) -> LogarithmicSequence:
         """
         Args:
 
@@ -292,7 +292,7 @@ class LogarithmicSequence(np.ndarray):
             raise ValueError("Unknown value type")
 
         cast = np.asarray(scalar_values, dtype=float).view(cls)
-        cast._conversion = conversion
+        cast.__conversion = conversion
 
         return cast
 
@@ -313,7 +313,7 @@ class LogarithmicSequence(np.ndarray):
             return
 
         # Recover initialization attributes
-        conversion = getattr(instance, "_conversion", DbConversionType.POWER)
+        conversion = getattr(instance, "conversion", DbConversionType.POWER)
 
         # Configure class atributes
         self.__conversion = conversion
@@ -336,7 +336,7 @@ class LogarithmicSequence(np.ndarray):
 
         return [Logarithmic.From_Tuple(lin, log, self.conversion) for lin, log in zip(self.view(np.ndarray), self.__values_db)]
 
-    def __getitem__(self, i: Union[int, slice, Iterable]) -> Union[Logarithmic, np.ndarray]:
+    def __getitem__(self, i: Any) -> Union[Logarithmic, np.ndarray]:  # type: ignore
 
         if isinstance(i, (int, np.integer)):
             return Logarithmic.From_Tuple(np.ndarray.__getitem__(self, i), self.__values_db[i], self.conversion)
@@ -356,7 +356,7 @@ class LogarithmicSequence(np.ndarray):
             np.ndarray.__setitem__(self, i, item)
             self.__values_db[i] = lin2db(item, self.conversion)
 
-    def __reduce__(self) -> Tuple[Any]:
+    def __reduce__(self) -> Tuple[Type[LogarithmicSequence], Tuple[np.ndarray, ValueType, DbConversionType]]:
         """Serialization callback for the Ray framework."""
 
         deserializer = LogarithmicSequence
@@ -366,21 +366,16 @@ class LogarithmicSequence(np.ndarray):
 
 
 @overload
-def dB(values: Union[int, float], conversion: DbConversionType = DbConversionType.POWER) -> Logarithmic:
+def dB(*values: Sequence[Union[int, float]], conversion: DbConversionType = DbConversionType.POWER) -> LogarithmicSequence:
     ...  # pragma no cover
 
 
 @overload
-def dB(values: Sequence[Union[int, float]], conversion: DbConversionType = DbConversionType.POWER) -> LogarithmicSequence:
+def dB(*values: Union[int, float], conversion: DbConversionType = DbConversionType.POWER) -> Union[Logarithmic, LogarithmicSequence]:
     ...  # pragma no cover
 
 
-@overload
-def dB(*values: Tuple[Union[int, float]], conversion: DbConversionType = DbConversionType.POWER) -> LogarithmicSequence:
-    ...  # pragma no cover
-
-
-def dB(*values: Tuple[Union[int, float]], conversion: DbConversionType = DbConversionType.POWER) -> Union[Logarithmic, LogarithmicSequence]:
+def dB(*values: Union[int, float, Sequence[Union[int, float]]], conversion: DbConversionType = DbConversionType.POWER) -> Union[Logarithmic, LogarithmicSequence]:
     """Represent scalar value as logarithmic number.
 
     Args:
@@ -395,11 +390,13 @@ def dB(*values: Tuple[Union[int, float]], conversion: DbConversionType = DbConve
     Returns: The logarithmic representation of `*values`.
     """
 
+    if isinstance(values[0], Sequence):
+        return LogarithmicSequence(values[0], value_type=ValueType.DB, conversion=conversion)
+
+    if any(isinstance(value, Sequence) for value in values):
+        raise ValueError("Only the first argument may be a sequence")
+
     if len(values) == 1:
-
-        if isinstance(values[0], list):
-            return LogarithmicSequence(values[0], value_type=ValueType.DB, conversion=conversion)
-
         return Logarithmic(values[0], value_type=ValueType.DB, conversion=conversion)
 
-    return LogarithmicSequence(values, value_type=ValueType.DB, conversion=conversion)
+    return LogarithmicSequence(values, value_type=ValueType.DB, conversion=conversion)  # type: ignore

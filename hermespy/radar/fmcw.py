@@ -80,8 +80,8 @@ class FMCW(RadarWaveform, Serializable):
     def estimate(self, input_signal: Signal) -> np.ndarray:
 
         pulse_len = int(self.pulse_rep_interval * self.sampling_rate)
-        input_signal = input_signal.resample(self.sampling_rate).samples[0, : pulse_len * self.num_chirps]
-        chirp_stack = np.reshape(input_signal, (-1, pulse_len))
+        input_samples = input_signal.resample(self.sampling_rate).samples[0, : pulse_len * self.num_chirps]
+        chirp_stack = np.reshape(input_samples, (-1, pulse_len))
 
         chirp_prototype = self.__chirp_prototype()
         chirp_stack = chirp_stack[:, : len(chirp_prototype)]

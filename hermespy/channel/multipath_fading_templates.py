@@ -59,7 +59,7 @@ class StandardAntennaCorrelation(Serializable, AntennaCorrelation):
     __device_type: DeviceType  # The assumed device
     __correlation: CorrelationType  # The assumed correlation
 
-    def __init__(self, device_type: Union[DeviceType, int, str], correlation: Union[CorrelationType, str], **kwargs) -> None:
+    def __init__(self, device_type: DeviceType | int | str, correlation: Union[CorrelationType, str], **kwargs) -> None:
         """
         Args:
 
@@ -70,8 +70,8 @@ class StandardAntennaCorrelation(Serializable, AntennaCorrelation):
                 The assumed correlation.
         """
 
-        self.device_type = device_type
-        self.correlation = correlation
+        self.device_type = DeviceType.from_parameters(device_type)
+        self.correlation = CorrelationType.from_parameters(correlation)
 
         AntennaCorrelation.__init__(self, **kwargs)
 
@@ -89,19 +89,9 @@ class StandardAntennaCorrelation(Serializable, AntennaCorrelation):
         return self.__device_type
 
     @device_type.setter
-    def device_type(self, value: Union[DeviceType, int, str]) -> None:
+    def device_type(self, value: DeviceType) -> None:
 
-        if isinstance(value, DeviceType):
-            self.__device_type = value
-
-        elif isinstance(value, int):
-            self.__device_type = DeviceType(value)
-
-        elif isinstance(value, str):
-            self.__device_type = DeviceType[value]
-
-        else:
-            raise ValueError("Unknown device_type type")
+        self.__device_type = value
 
     @property
     def correlation(self) -> CorrelationType:
@@ -117,16 +107,9 @@ class StandardAntennaCorrelation(Serializable, AntennaCorrelation):
         return self.__correlation
 
     @correlation.setter
-    def correlation(self, value: Union[CorrelationType, str]) -> None:
+    def correlation(self, value: CorrelationType) -> None:
 
-        if isinstance(value, CorrelationType):
-            self.__correlation = value
-
-        elif isinstance(value, str):
-            self.__correlation = CorrelationType[value]
-
-        else:
-            raise ValueError("Unsupported correlation type conversion")
+        self.__correlation = value
 
     @property
     def covariance(self) -> np.ndarray:

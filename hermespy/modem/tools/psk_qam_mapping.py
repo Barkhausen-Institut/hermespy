@@ -166,8 +166,10 @@ class PskQamMapping(object):
         """Returns either bits or LLR for the provided symbols.
 
         Args:
+
             rx_symbols(np.ndarray):
                 Vector of N received symbols, for which the bits/LLR will be estimated
+
             noise_variance (float or np.ndarray, optional):
                 vector with the noise variance in each received symbol. If a
                 scalar is given, then the same variance is assumed for all symbols.
@@ -180,6 +182,8 @@ class PskQamMapping(object):
         """
         number_of_bits = rx_symbols.size * self.bits_per_symbol
         llr = np.zeros(number_of_bits)
+
+        noise_variance = noise_variance * np.ones(rx_symbols.shape) if isinstance(noise_variance, float) else noise_variance
 
         # set starting index of encoded symbol (MSB)
         bits_idx = np.arange(0, number_of_bits, self.bits_per_symbol, dtype=int)
@@ -278,7 +282,7 @@ class PskQamMapping(object):
         return symbols
 
     @staticmethod
-    def get_llr_3gpp(modulation_order, rx_symbols: np.ndarray, noise_variance: np.ndarray, is_complex: bool) -> np.ndarray:
+    def get_llr_3gpp(modulation_order: int, rx_symbols: np.ndarray, noise_variance: np.ndarray, is_complex: bool) -> np.ndarray:
         """Returns LLR for each bit based on a received symbol, following 1D 3GPP modulation mapping.
 
         3GPP has defined in TS 36.211 mapping tables from bits into complex symbols.
@@ -451,7 +455,7 @@ class PskQamMapping(object):
 
         return llr.ravel("F")
 
-    def get_mapping(self) -> np.array:
+    def get_mapping(self) -> np.ndarray:
         """Returns current mapping table
 
         Returns:

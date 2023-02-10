@@ -572,7 +572,7 @@ class EncoderManager(RandomNode, Serializable):
 
             repetitions = int(encoder.bit_block_size / num_bits)
             block_size *= repetitions
-            num_bits *= repetitions / encoder.rate
+            num_bits *= int(repetitions / encoder.rate)
 
         return block_size
 

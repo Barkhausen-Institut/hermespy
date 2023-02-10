@@ -26,9 +26,7 @@ class NoiseRealization(RandomRealization):
 
     __power: float
 
-    def __init__(self,
-                 noise: Noise,
-                 power: float) -> None:
+    def __init__(self, noise: Noise, power: float) -> None:
         """
         Args:
 
@@ -47,7 +45,7 @@ class NoiseRealization(RandomRealization):
         """
 
         return self.__power
-    
+
     @abstractmethod
     def add_to(self, signal: Signal) -> Signal:
         """
@@ -64,7 +62,7 @@ class NoiseRealization(RandomRealization):
         ...  # pragma no cover
 
 
-NoiseRealizationType = TypeVar('NoiseRealizationType', bound=NoiseRealization)
+NoiseRealizationType = TypeVar("NoiseRealizationType", bound=NoiseRealization)
 """Type of noise realization"""
 
 
@@ -85,8 +83,7 @@ class Noise(RandomNode, Generic[NoiseRealizationType]):
         RandomNode.__init__(self, seed=seed)
 
     @abstractmethod
-    def realize(self,
-                power: Optional[float] = None) -> NoiseRealizationType:
+    def realize(self, power: Optional[float] = None) -> NoiseRealizationType:
         """Realize the noise model.
 
         Args:
@@ -99,9 +96,7 @@ class Noise(RandomNode, Generic[NoiseRealizationType]):
         """
         ...  # pragma no cover
 
-    def add(self,
-            signal: Signal,
-            realization: Optional[NoiseRealizationType] = None) -> Signal:
+    def add(self, signal: Signal, realization: Optional[NoiseRealizationType] = None) -> Signal:
         """Add noise to a signal model.
 
         Args:
@@ -157,7 +152,7 @@ class AWGNRealization(NoiseRealization):
         noisy_signal = signal.copy()
         noisy_signal.samples += noise_samples
         noisy_signal.noise_power = self.power
-        
+
         return noisy_signal
 
 
@@ -177,8 +172,7 @@ class AWGN(Serializable, Noise[AWGNRealization]):
 
         Noise.__init__(self, power=power, seed=seed)
 
-    def realize(self,
-                power: Optional[float] = None) -> AWGNRealization:
+    def realize(self, power: Optional[float] = None) -> AWGNRealization:
 
         power = self.power if power is None else power
         return AWGNRealization(self, power)

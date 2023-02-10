@@ -49,6 +49,7 @@ Configuring :class:`RadarEvaluators<.RadarEvaluator>` to evaluate the radar dete
 
 from __future__ import annotations
 from abc import ABC
+from collections.abc import Sequence
 from itertools import product
 from typing import List, Optional, Type, Union
 
@@ -78,8 +79,8 @@ __status__ = "Prototype"
 class RadarEvaluator(Evaluator, ABC):
     """Base class for evaluating sensing performance."""
 
-    __receiving_radar: Radar        # Handle to the radar receiver
-    __radar_channel: RadarChannel   # Handle to the radar channel
+    __receiving_radar: Radar  # Handle to the radar receiver
+    __radar_channel: RadarChannel  # Handle to the radar channel
 
     def __init__(self, receiving_radar: Radar, radar_channel: Optional[RadarChannel] = None) -> None:
         """
@@ -89,13 +90,13 @@ class RadarEvaluator(Evaluator, ABC):
             radar_channel (RadarChannel): Radar channel modeling a desired target.
 
         Raises:
-        
+
             ValueError: If the receiving radar is not an operator of the radar_channel receiver.
         """
-        
+
         if radar_channel is not None and receiving_radar not in radar_channel.receiver.receivers:
             raise ValueError("The radar operator is not a receiver within the radar channel receiving device")
-            
+
         self.__receiving_radar = receiving_radar
         self.__radar_channel = radar_channel
 
@@ -122,7 +123,7 @@ class RadarEvaluator(Evaluator, ABC):
 
         return self.__radar_channel
 
-    def generate_result(self, grid: List[GridDimension], artifacts: np.ndarray) -> EvaluationResult:
+    def generate_result(self, grid: Sequence[GridDimension], artifacts: np.ndarray) -> EvaluationResult:
 
         return ScalarEvaluationResult(grid, artifacts, self)
 
@@ -130,9 +131,7 @@ class RadarEvaluator(Evaluator, ABC):
 class DetectionProbArtifact(ArtifactTemplate[bool]):
     """Artifact of a detection probability evaluation for a radar detector."""
 
-    def to_scalar(self) -> float:
-
-        return float(self.artifact)
+    ...  # pragma: no cover
 
 
 class DetectionProbabilityEvaluation(EvaluationTemplate[bool]):
@@ -170,11 +169,11 @@ class DetectionProbEvaluator(RadarEvaluator, Serializable):
     def _scalar_cdf(scalar: float) -> float:
         return uniform.cdf(scalar)
 
-    def generate_result(self, grid: List[GridDimension], artifacts: np.ndarray) -> ScalarEvaluationResult:
+    def generate_result(self, grid: Sequence[GridDimension], artifacts: np.ndarray) -> ScalarEvaluationResult:
 
         return ScalarEvaluationResult(grid, artifacts, self)
 
-    def evaluate(self) -> DetectionProbArtifact:
+    def evaluate(self) -> DetectionProbabilityEvaluation:
 
         # Retrieve transmitted and received bits
         cloud = self.receiving_radar.reception.cloud
@@ -242,15 +241,11 @@ class RocEvaluation(Evaluation):
 class RocEvaluationResult(EvaluationResult):
     """Final result of an receive operating characteristcs evaluation."""
 
-    __grid: List[GridDimension]
+    __grid: Sequence[GridDimension]
     __detection_probabilities: np.ndarray
     __false_alarm_probabilities: np.ndarray
 
-    def __init__(self,
-                 grid: List[GridDimension],
-                 detection_probabilities: np.ndarray,
-                 false_alarm_probabilities: np.ndarray,
-                 title: str = 'Receiver Operating Characteristics') -> None:
+    def __init__(self, grid: Sequence[GridDimension], detection_probabilities: np.ndarray, false_alarm_probabilities: np.ndarray, title: str = "Receiver Operating Characteristics") -> None:
 
         self.__grid = grid
         self.__detection_probabilities = detection_probabilities
@@ -311,10 +306,7 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
 
     __num_thresholds: int
 
-    def __init__(self,
-                 radar: Radar,
-                 radar_channel: Optional[RadarChannel] = None,
-                 num_thresholds=101) -> None:
+    def __init__(self, radar: Radar, radar_channel: RadarChannel | None = None, num_thresholds=101) -> None:
         """
         Args:
 
@@ -338,10 +330,9 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
         self.__num_thresholds = num_thresholds
 
     @staticmethod
-    def __evaluation_from_receptions(h0_reception: RadarReception,
-                                     h1_reception: RadarReception) -> RocEvaluation:
+    def __evaluation_from_receptions(h0_reception: RadarReception, h1_reception: RadarReception) -> RocEvaluation:
         """Subroutine to generate an evaluation given two hypothesis radar receptions.
-        
+
         Args:
 
             h0_reception (RadarReception):
@@ -371,7 +362,7 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
         # Collect required information from the simulation
         device_output = self.radar_channel.transmitter.output
         device_input = self.radar_channel.receiver.input
-        device_index = self.radar_channel.scenario.device_index(self.receiving_radar.device)
+        device_index = self.radar_channel.scenario.device_index(self.radar_channel.transmitter)
         operator_index = self.receiving_radar.device.receivers.operator_index(self.receiving_radar)
 
         if device_output is None or device_input is None:
@@ -379,11 +370,11 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
 
         # Propagate again over the radar channel
         null_hypothesis_propagation = self.radar_channel.Propagate(device_output.mixed_signal, null_hypothesis_channel_realization)
-        
+
         # Exchange the respective propagated signal
-        impinging_signals = device_input.impinging_signals.copy()
+        impinging_signals = list(device_input.impinging_signals).copy()
         impinging_signals[device_index] = null_hypothesis_propagation
-        
+
         # Receive again
         null_hypothesis_device_reception = self.radar_channel.receiver.process_from_realization(impinging_signals, device_input, device_input.leaking_signal, False, channel_state=null_hypothesis_channel_realization)
         null_hypothesis_radar_reception = self.receiving_radar.receive(null_hypothesis_device_reception.operator_inputs[operator_index][0], None, False)
@@ -399,9 +390,7 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
     def title(self) -> str:
         return "Operating Characteristics"  # pragma no cover
 
-    def generate_result(self,
-                        grid: List[GridDimension],
-                        artifacts: np.ndarray) -> EvaluationResult:
+    def generate_result(self, grid: Sequence[GridDimension], artifacts: np.ndarray) -> RocEvaluationResult:
 
         # Prepare result containers
         dimensions = tuple(g.num_sample_points for g in grid)
@@ -423,73 +412,74 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
         return RocEvaluationResult(grid, detection_probabilities, false_alarm_probabilities, self.title)
 
     @classmethod
-    def From_Scenarios(cls: Type[ReceiverOperatingCharacteristic],
-                       h0_scenario: Scenario,
-                       h1_scenario: Scenario,
-                       h0_operator: Optional[Radar] = None,
-                       h1_operator: Optional[Radar] = None) -> RocEvaluationResult:
-        
+    def From_Scenarios(cls: Type[ReceiverOperatingCharacteristic], h0_scenario: Scenario, h1_scenario: Scenario, h0_operator: Optional[Radar] = None, h1_operator: Optional[Radar] = None) -> RocEvaluationResult:
+
         # Assert that both scenarios are in replay mode
         if h0_scenario.mode != ScenarioMode.REPLAY:
             raise ValueError("Null hypothesis scenario is not in replay mode")
-        
+
         if h1_scenario.mode != ScenarioMode.REPLAY:
             raise ValueError("One hypothesis scenario is not in replay mode")
-        
+
         # Assert that both scenarios have at least a single drop recorded
         if h0_scenario.num_drops < 1:
             raise ValueError("Null hypothesis scenario has no recorded drops")
-        
+
         if h1_scenario.num_drops < 1:
             raise ValueError("One hypothesis scenario has no recorded drops")
-        
+
         # Select operators if none were provided
         if h0_operator:
             if h0_operator not in h0_scenario.operators:
                 raise ValueError("Null hypthesis radar not an operator within the null hypothesis scenario")
-            
+
         else:
             if h0_scenario.num_operators < 1:
                 raise ValueError("Null hypothesis radar has no registered operators")
-            
-            h0_operator = list(h0_scenario.operators)[0]
-            
+
+            inferred_h0_operator = list(h0_scenario.operators)[0]
+            if not isinstance(inferred_h0_operator, Radar):
+                raise ValueError("Could not infer radar operator from list of operators")
+
+            h0_operator = inferred_h0_operator
+
         if h1_operator:
             if h1_operator not in h1_scenario.operators:
                 raise ValueError("One hypthesis radar not an operator within the null hypothesis scenario")
-            
+
         else:
             if h1_scenario.num_operators < 1:
                 raise ValueError("One hypothesis radar has no registered operators")
-            
-            h1_operator = list(h1_scenario.operators)[0]
-            
+
+            inferred_h1_operator = list(h1_scenario.operators)[0]
+            if not isinstance(inferred_h1_operator, Radar):
+                raise ValueError("Could not infer radar operator from list of operators")
+
+            h1_operator = inferred_h1_operator
+
         # The overall number of considered drops is bounded by the H1 hypothesis
         num_drops = h1_scenario.num_drops
         artifacts = np.empty(1, dtype=object)
         artifacts[0] = []
-        
+
         # Collect artifacts
         for _ in range(num_drops):
-        
+
             _ = h0_scenario.drop()
             _ = h1_scenario.drop()
-            
+
             evaluation = cls.__evaluation_from_receptions(h0_operator.reception, h1_operator.reception)
             artifacts[0].append(evaluation.artifact())
-            
+
         # Generate results
-        grid = [GridDimension(h1_scenario, 'num_drops', [0.])]
+        grid = [GridDimension(h1_scenario, "num_drops", [0.0])]
         result = cls(h1_operator).generate_result(grid, artifacts)
         return result
 
     @classmethod
-    def From_HDF(cls: Type[ReceiverOperatingCharacteristic],
-                 file: Union[str, File],
-                 h0_campaign = 'h0_measurements',
-                 h1_campaign = 'h1_measurements') -> RocEvaluationResult:
+    def From_HDF(cls: Type[ReceiverOperatingCharacteristic], file: Union[str, File], h0_campaign="h0_measurements", h1_campaign="h1_measurements") -> RocEvaluationResult:
         """Compute an ROC evaluation result from a savefile.
-        
+
         Args:
 
             file (Union[str, File]):
@@ -506,19 +496,20 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
 
         Returns: The ROC evaluation result.
         """
-        
+
         # Load scenarios with the respective campaigns from the specified savefile
         h0_scenario = ReplayScenario.Replay(file, h0_campaign)
         h1_scenario = ReplayScenario.Replay(file, h1_campaign)
 
         # Resort to the from scenarios routine for computing the evaluation result
-        result =  cls.From_Scenarios(h0_scenario=h0_scenario, h1_scenario=h1_scenario)
+        result = cls.From_Scenarios(h0_scenario=h0_scenario, h1_scenario=h1_scenario)
 
         # Close the scenarios properly
         h0_scenario.stop()
         h1_scenario.stop()
-        
+
         return result
+
 
 class RootMeanSquareArtifact(Artifact):
     """Artifact of a root mean square evaluation"""
@@ -565,13 +556,14 @@ class RootMeanSquareEvaluation(Evaluation):
         cummulative_square_error = 0.0
 
         for point, truth in product(self.__pcl.points, self.__ground_truth):
-            cummulative_square_error += np.linalg.norm(point.position - truth) ** 2
+            cummulative_square_error += float(np.linalg.norm(point.position - truth)) ** 2
 
         return RootMeanSquareArtifact(num_errors, cummulative_square_error)
 
 
 class RootMeanSquareErrorResult(ProcessedScalarEvaluationResult):
     """Result of a root mean square error evaluation."""
+
     ...  # pragma no cover
 
 
@@ -593,7 +585,7 @@ class RootMeanSquareError(RadarEvaluator):
     def abbreviation(self) -> str:
         return "RMSE"
 
-    def generate_result(self, grid: List[GridDimension], artifacts: np.ndarray) -> RootMeanSquareErrorResult:
+    def generate_result(self, grid: Sequence[GridDimension], artifacts: np.ndarray) -> RootMeanSquareErrorResult:
 
         rmse_section_artifacts = np.empty(artifacts.shape, dtype=float)
         for coordinates, section_artifacts in np.ndenumerate(artifacts):

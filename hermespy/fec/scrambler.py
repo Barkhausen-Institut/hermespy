@@ -185,7 +185,7 @@ class Scrambler80211a(Encoder, Serializable):
 
     yaml_tag: str = "SCRAMBLER_80211A"
 
-    __seed: np.array
+    __seed: np.ndarray
     __queue: deque
     __default_seed: np.ndarray = np.array([0, 1, 0, 1, 1, 0, 1], dtype=int)
 

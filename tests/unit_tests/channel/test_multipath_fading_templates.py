@@ -37,18 +37,7 @@ class TestStandardAntennaCorrelation(unittest.TestCase):
         
         self.correlation.device_type = DeviceType.BASE_STATION
         self.assertIs(DeviceType.BASE_STATION, self.correlation.device_type)
-        
-        self.correlation.device_type = 1
-        self.assertIs(DeviceType.TERMINAL, self.correlation.device_type)
-        
-        self.correlation.device_type = "BASE_STATION"
-        self.assertIs(DeviceType.BASE_STATION, self.correlation.device_type)
-        
-    def test_device_type_validation(self) -> None:
-        """Device type property setter should raise ValueErrors on invalid argument types"""
-        
-        with self.assertRaises(ValueError):
-            self.correlation.device_type = Mock()
+
     
     def test_correlation_setget(self) -> None:
         """Correlation type property getter should return setter argument"""
@@ -56,14 +45,8 @@ class TestStandardAntennaCorrelation(unittest.TestCase):
         self.correlation.correlation = CorrelationType.HIGH
         self.assertIs(CorrelationType.HIGH, self.correlation.correlation)
         
-        self.correlation.correlation = "MEDIUM"
+        self.correlation.correlation = CorrelationType.MEDIUM
         self.assertIs(CorrelationType.MEDIUM, self.correlation.correlation)
-        
-    def test_correlation_validation(self) -> None:
-        """Correlation type property setter should raise ValueErrors on invalid argument types"""
-        
-        with self.assertRaises(ValueError):
-            self.correlation.correlation = Mock()
     
     def test_covariance(self) -> None:
         """Test covariance matrix generation"""

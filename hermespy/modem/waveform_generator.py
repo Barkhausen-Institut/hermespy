@@ -39,8 +39,8 @@ class Synchronization(Generic[WaveformType], ABC, Serializable):
     """
 
     yaml_tag = "Synchronization"
-    property_blacklist = {'waveform_generator',}
-    
+    property_blacklist = {"waveform_generator"}
+
     # Waveform generator this routine is attached to
     __waveform_generator: Optional[WaveformType]
 
@@ -106,7 +106,7 @@ class ChannelEstimation(Generic[WaveformType], Serializable):
     """Base class for channel estimation routines of waveform generators."""
 
     yaml_tag = "NoChannelEstimation"
-    property_blacklist = {'waveform_generator',}
+    property_blacklist = {"waveform_generator"}
 
     def __init__(self, waveform_generator: Optional[WaveformType] = None) -> None:
         """
@@ -188,7 +188,7 @@ class ChannelEqualization(Generic[WaveformType], ABC, Serializable):
     """Abstract base class for channel equalization routines of waveform generators."""
 
     yaml_tag = "NoEqualization"
-    property_blacklist = {'waveform_generator',}
+    property_blacklist = {"waveform_generator"}
 
     def __init__(self, waveform_generator: Optional[WaveformType] = None) -> None:
         """
@@ -245,8 +245,7 @@ class ZeroForcingChannelEqualization(Generic[WaveformType], ChannelEqualization[
 
         return Symbols(equalized_raw_symbols)
 
-    # @staticmethod
-    # @jit(nopython=True, parallel=True)
+    @staticmethod
     def __equalize_channel(symbols: np.ndarray, states: np.ndarray) -> np.ndarray:
 
         # If no information about transmitted streams is available, assume orthogonal channels
@@ -274,9 +273,9 @@ class WaveformGenerator(ABC, Serializable):
     Implementations for specific technologies should inherit from this class.
     """
 
-    property_blacklist = {'modem', }
+    property_blacklist = {"modem"}
 
-    symbol_type: np.dtype = complex
+    symbol_type: type = np.complex_
     """Symbol type."""
 
     # Modem this waveform generator is attached to
@@ -722,7 +721,7 @@ class CustomPilotSymbolSequence(PilotSymbolSequence):
     The user may freely chose the pilot symbols from samples within the complex plane.
     """
 
-    __pilot_symbols: complex  # The configured pilot symbols
+    __pilot_symbols: np.ndarray  # The configured pilot symbols
 
     def __init__(self, pilot_symbols: np.ndarray) -> None:
         """
@@ -761,10 +760,7 @@ class ConfigurablePilotWaveform(PilotWaveformGenerator, ABC):
     repeat_pilot_symbol_sequence: bool
     """Allow the repetition of pilot symbol sequences."""
 
-    def __init__(self,
-                 symbol_sequence: Optional[PilotSymbolSequence] = None,
-                 repeat_symbol_sequence: bool = True,
-                 **kwargs) -> None:
+    def __init__(self, symbol_sequence: Optional[PilotSymbolSequence] = None, repeat_symbol_sequence: bool = True, **kwargs) -> None:
         """
         Args:
 
@@ -775,14 +771,14 @@ class ConfigurablePilotWaveform(PilotWaveformGenerator, ABC):
            repeat_symbol_sequence (bool, optional):
                Allow the repetition of pilot symbol sequences.
                Enabled by default.
-               
+
            **kwargs:
                Additional :class:`WaveformGenerator` initialization parameters.
         """
 
         self.pilot_symbol_sequence = UniformPilotSymbolSequence() if symbol_sequence is None else symbol_sequence
         self.repeat_pilot_symbol_sequence = repeat_symbol_sequence
-        
+
         # Initialize base class
         PilotWaveformGenerator.__init__(self, **kwargs)
 

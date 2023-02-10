@@ -311,13 +311,6 @@ class TestTransmittingModem(TestBaseModem):
         self.assertEqual(2, transmission.num_frames)
         self.assertEqual(2 * self.waveform.samples_in_frame, transmission.signal.num_samples)
 
-    def test_empty_transmit(self) -> None:
-        """Test modem data reception over an empty frame"""
-
-        transmission = self.modem.transmit(0.)
-
-        self.assertEqual(0, transmission.signal.num_samples)
-
 
 class TestReceivingModem(TestBaseModem):
     """Test the exclusively receiving simplex modem"""

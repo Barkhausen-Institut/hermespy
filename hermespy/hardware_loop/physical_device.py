@@ -7,6 +7,7 @@ Physical Devices
 
 from __future__ import annotations
 from abc import abstractmethod
+from collections.abc import Sequence
 from pickle import dump, load
 from time import sleep
 from typing import Iterable, List, TypeVar, Union
@@ -69,10 +70,25 @@ class StaticOperator(object):
         return self.__num_samples / self.sampling_rate
 
 
-class SilentTransmitter(StaticOperator, Transmitter):
+class SilentTransmitter(StaticOperator, Transmitter[Transmission]):
     """Silent transmitter mock."""
 
-    def transmit(self, duration: float = 0.0) -> Transmission:
+    def __init__(self, num_samples: int, sampling_rate: float, *args, **kwargs) -> None:
+        """
+        Args:
+
+            num_samples (int):
+                Number of samples per transmission.
+
+            sampling_rate (float):
+                Sampling rate of transmission.
+        """
+
+        # Init base classes
+        StaticOperator.__init__(self, num_samples, sampling_rate)
+        Transmitter.__init__(self, *args, **kwargs)
+
+    def _transmit(self, duration: float = 0.0) -> Transmission:
 
         # Compute the number of samples to be transmitted
         num_samples = self.num_samples if duration <= 0.0 else int(duration * self.sampling_rate)
@@ -85,12 +101,12 @@ class SilentTransmitter(StaticOperator, Transmitter):
         return transmission
 
 
-class SignalTransmitter(StaticOperator, Transmitter):
+class SignalTransmitter(StaticOperator, Transmitter[Transmission]):
     """Custom signal transmitter."""
 
     __signal: Signal
 
-    def __init__(self, signal: Signal) -> None:
+    def __init__(self, signal: Signal, *args, **kwargs) -> None:
         """
         Args:
 
@@ -98,13 +114,14 @@ class SignalTransmitter(StaticOperator, Transmitter):
                 Signal to be transmittered by the static operator for each transmission.
         """
 
-        # Init base class
+        # Init base classes
         StaticOperator.__init__(self, signal.num_samples, signal.sampling_rate)
+        Transmitter.__init__(self, *args, **kwargs)
 
         # Init class attributes
         self.__signal = signal
 
-    def transmit(self, duration: float = 0.) -> Transmission:
+    def _transmit(self, duration: float = 0.0) -> Transmission:
 
         transmission = Transmission(self.__signal)
 
@@ -112,31 +129,34 @@ class SignalTransmitter(StaticOperator, Transmitter):
         return transmission
 
 
-class PowerReceiver(Receiver):
+class PowerReceiver(Receiver[Reception]):
     """Noise power receiver for the device noise floor estimation routine."""
 
     __num_samples: int
 
-    def __init__(self, num_samples: int) -> None:
+    def __init__(self, num_samples: int, *args, **kwargs) -> None:
         """
         Args:
-        
+
             num_samples (int):
                 Number of samples required for power estimation.
         """
-        
+
         if num_samples <= 1:
             raise ValueError("Number of required samples must be greater or equal to one")
-        
+
         self.__num_samples = num_samples
-        
+
+        # Initialize base class
+        Receiver.__init__(self, *args, **kwargs)
+
     @property
     def num_samples(self) -> int:
         """Number of samples required for power estimation.
-        
+
         Returns: Number of samples.
         """
-        
+
         return self.__num_samples
 
     @property
@@ -149,9 +169,7 @@ class PowerReceiver(Receiver):
 
         return 0.0
 
-    def _receive(self,
-                 signal: Signal,
-                 _: ChannelStateInformation) -> Reception:
+    def _receive(self, signal: Signal, _: ChannelStateInformation) -> Reception:
 
         # Fetch noise samples
         return Reception(signal)
@@ -166,24 +184,28 @@ class PowerReceiver(Receiver):
         return strength
 
 
-class SignalReceiver(StaticOperator, Receiver):
+class SignalReceiver(StaticOperator, Receiver[Reception]):
     """Custom signal receiver."""
+
+    def __init__(self, num_samples: int, sampling_rate: float, *args, **kwargs) -> None:
+
+        # Initialize base classes
+        StaticOperator.__init__(self, num_samples, sampling_rate)
+        Receiver.__init__(self, *args, **kwargs)
 
     @property
     def energy(self) -> float:
 
         return 0.0
 
-    def _receive(self,
-                 signal: Signal,
-                 _: ChannelStateInformation) -> Reception:
+    def _receive(self, signal: Signal, _: ChannelStateInformation) -> Reception:
 
         received_signal = signal.resample(self.sampling_rate)
         return Reception(received_signal)
 
     def _noise_power(self, strength, snr_type=...) -> float:
-        
-        return 0.
+
+        return 0.0
 
 
 class PhysicalDevice(Device):
@@ -422,13 +444,12 @@ class PhysicalDevice(Device):
         # This method is a stub by default
         raise NotImplementedError("The default physical device does not support downloads")
 
-    def process_input(self,
-                      impinging_signals: Union[None, DeviceInput, Signal, Iterable[Signal]] = None) -> ProcessedDeviceInput:
+    def process_input(self, impinging_signals: DeviceInput | Signal | Sequence[Signal] | None = None, cache: bool = True) -> ProcessedDeviceInput:
 
         # Physical devices are able to infer their impinging signals by downloading them directly
         if impinging_signals is None:
 
-            # Download signal samples 
+            # Download signal samples
             impinging_signals = self._download()
 
             if impinging_signals.num_streams != self.num_antennas:
@@ -452,12 +473,10 @@ class PhysicalDevice(Device):
                 filtered_signal.samples = sosfilt(filter, filtered_signal.samples, axis=1)
 
         # Defer to the default device input processing routine
-        return Device.process_input(self, impinging_signals)
+        return Device.process_input(self, impinging_signals, cache)
 
-    def receive(self,
-                impinging_signals: Union[None, DeviceInput, Signal, Iterable[Signal]] = None,
-                cache: bool = True) -> DeviceReception:
-        
+    def receive(self, impinging_signals: DeviceInput | Signal | Sequence[Signal] | None = None, cache: bool = True) -> DeviceReception:
+
         # Process input
         processed_input = self.process_input(impinging_signals)
 
@@ -525,7 +544,7 @@ class PhysicalDevice(Device):
         propagated_dirac_indices = np.empty(num_iterations, dtype=int)
 
         # Make multiple iteration calls for calibration
-        for _ in range(num_iterations):
+        for n in range(num_iterations):
 
             # Send and receive calibration waveform
             calibration_transmitter.transmit()
@@ -538,7 +557,7 @@ class PhysicalDevice(Device):
 
             # Infer the implicit delay by estimating the sample index of the propagated dirac
             propagated_signals.append(propagated_signal)
-            propagated_dirac_indices = np.argmax(abs(propagated_signal.samples[0, :]))
+            propagated_dirac_indices[n] = np.argmax(np.abs(propagated_signal.samples[0, :]))
 
             # Wait the configured amount of time between iterations
             sleep(wait)
@@ -580,5 +599,5 @@ class PhysicalDevice(Device):
             self.__calibration_delay = load(file_stream)
 
 
-PhysicalDeviceType = TypeVar("PhysicalDeviceType", bound=PhysicalDevice)
+PhysicalDeviceType = TypeVar("PhysicalDeviceType", bound="PhysicalDevice")
 """Type of phyiscal device."""

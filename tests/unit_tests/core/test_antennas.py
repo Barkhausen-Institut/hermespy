@@ -7,7 +7,7 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.constants import pi, speed_of_light
 
 from hermespy.core import AntennaArray, Dipole, IdealAntenna, PatchAntenna, UniformArray
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from .test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"

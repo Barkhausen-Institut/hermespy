@@ -40,7 +40,7 @@ setup(
         '': ['3rdparty', 'tests'],
     },
     extras_require={
-        "test": ['pytest', 'coverage'],
+        "test": ['pytest', 'coverage', 'mypy'],
         "quadriga": ["oct2py"],
         "documentation": [
             'sphinx-autodoc-typehints',
@@ -66,6 +66,7 @@ setup(
             "wheel",
             "black",
             "flake8",
+            "mypy",
         ]
     },
     zip_safe=False,
