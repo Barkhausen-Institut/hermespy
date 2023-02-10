@@ -6,7 +6,7 @@ import numpy as np
 
 from hermespy.modem import DuplexModem, RootRaisedCosineWaveform, BitErrorEvaluator, BlockErrorEvaluator, FrameErrorEvaluator, ThroughputEvaluator
 from hermespy.simulation import SimulatedDevice
-from hermespy.core.monte_carlo import EvaluationResult, Evaluator, GridDimension, dimension
+from hermespy.core.monte_carlo import Evaluator, GridDimension, register
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"

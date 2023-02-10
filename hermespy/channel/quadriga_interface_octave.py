@@ -51,7 +51,7 @@ class QuadrigaOctaveInterface(QuadrigaInterface):
         # Add launch script folder to octave loopkup paths
         self.__octave.addpath(self.path_launch_script)
 
-    def _run_quadriga(self, **parameters) -> List[Any]:
+    def _run_quadriga(self, **parameters) -> np.ndarray:
 
         # Push parameters to quadriga
         for key, value in parameters.items():

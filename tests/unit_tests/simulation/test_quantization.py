@@ -50,7 +50,7 @@ class TestQuantization(unittest.TestCase):
 
         number_bits = 0
         self.quantizer.num_quantization_bits = number_bits
-        self.assertEqual(np.inf, self.quantizer.num_quantization_bits)
+        self.assertEqual(None, self.quantizer.num_quantization_bits)
 
     def test_num_quantization_bits_validation(self) -> None:
         """Quantization bits property setter should raise ValueError on arguments smaller than zero or non-integer."""
@@ -252,3 +252,4 @@ class TestQuantization(unittest.TestCase):
         """Test YAML serialization"""
 
         test_yaml_roundtrip_serialization(self, self.quantizer)
+ 

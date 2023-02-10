@@ -7,7 +7,7 @@ from .audio import AudioDevice, AudioScenario
 try:
     from .uhd import UsrpDevice, UsrpSystem
 except ImportError:
-    UsrpDevice, UsrpSystem = None, None
+    UsrpDevice, UsrpSystem = None, None  # type: ignore
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"

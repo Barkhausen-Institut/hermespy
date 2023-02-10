@@ -7,14 +7,15 @@ Antenna Configuration
 
 from __future__ import annotations
 from abc import abstractmethod
+from collections.abc import Sequence
 from math import cos, sin, exp, sqrt
-from typing import List, Optional, Tuple, Type
+from typing import List, Optional, Tuple, Type, Union
 
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 import numpy as np
-from ruamel.yaml import SafeRepresenter, SafeConstructor, MappingNode
+from ruamel.yaml import SafeRepresenter, SafeConstructor, Node, MappingNode
 from scipy.constants import pi, speed_of_light
 
 from .executable import Executable
@@ -86,7 +87,7 @@ class Antenna(Serializable):
         if self.__array is None:
             raise RuntimeError("Error trying to access the position of a floating antenna")
 
-        return self.__array.antenna_position(self)
+        return self.__array.get_antenna_position(self)
 
     @pos.setter
     def pos(self, value: np.ndarray) -> None:
@@ -94,7 +95,7 @@ class Antenna(Serializable):
         if self.__array is None:
             raise RuntimeError("Error trying to access the position of a floating antenna")
 
-        self.__array.set_antenna_position(self)
+        self.__array.set_antenna_position(self, value)
 
     def transmit(self, signal: Signal) -> Signal:
         """Transmit a signal over this antenna.
@@ -406,7 +407,6 @@ class AntennaArrayBase(object):
             np.ndarray:
                 math:`M \\times 3` topology matrix, where :math:`M` is the number of antenna elements.
         """
-
         ...  # pragma no cover
 
     @abstractmethod
@@ -427,7 +427,6 @@ class AntennaArrayBase(object):
             np.ndarray:
                 math:`M \\times 2` topology matrix, where :math:`M` is the number of antenna elements.
         """
-
         ...  # pragma no cover
 
     def plot_topology(self) -> plt.Figure:
@@ -634,7 +633,7 @@ class UniformArray(AntennaArrayBase, Serializable):
     # Number of antennas in x-, y-, and z-direction
     __dimensions: Tuple[int, int, int]
 
-    def __init__(self, antenna: Antenna, spacing: float, dimensions: Tuple[int, ...]) -> None:
+    def __init__(self, antenna: Antenna, spacing: float, dimensions: Sequence[int]) -> None:
         """
         Args:
 
@@ -644,13 +643,13 @@ class UniformArray(AntennaArrayBase, Serializable):
             spacing (float):
                 Spacing between the antenna elements in m.
 
-            dimensions (Tuple[int, ...  # pragma no cover]):
+            dimensions (Sequence[int]):
                 The number of antennas in x-, y-, and z-dimension.
         """
 
         self.__antenna = antenna
         self.spacing = spacing
-        self.dimensions = tuple(dimensions)
+        self.dimensions = dimensions  # type: ignore
 
     @property
     def spacing(self) -> float:
@@ -691,10 +690,13 @@ class UniformArray(AntennaArrayBase, Serializable):
         return self.__dimensions
 
     @dimensions.setter
-    def dimensions(self, value: Tuple[int, int, int]) -> None:
+    def dimensions(self, value: Union[Sequence[int], int]) -> None:
 
         if isinstance(value, int):
             value = (value,)
+
+        else:
+            value = tuple(value)
 
         if len(value) == 1:
             value += 1, 1
@@ -708,7 +710,7 @@ class UniformArray(AntennaArrayBase, Serializable):
         if any([num < 1 for num in value]):
             raise ValueError("Number of antenna elements must be greater than zero in every dimension")
 
-        self.__dimensions = value
+        self.__dimensions = value  # type: ignore
 
     @property
     def topology(self) -> np.ndarray:
@@ -875,6 +877,36 @@ class AntennaArray(AntennaArrayBase, Serializable):
 
         return np.array(self.__positions, dtype=float)
 
+    def get_antenna_position(self, antenna: Antenna) -> np.ndarray:
+        """Retrieve the position of a single antenna within the array.
+
+        Args:
+
+            antenna (Antenna): The antenna of interest.
+
+        Returns: Local cartesian antenna coordinates.
+        """
+
+        antenna_idx = self.__antennas.index(antenna)
+        antenna_pos = self.__positions[antenna_idx]
+
+        return antenna_pos
+
+    def set_antenna_position(self, antenna: Antenna, position: np.ndarray) -> None:
+        """Set the position of a single antenna within the array.
+
+        Args:
+
+            antenna (Antenna):
+                The antenna of interest.
+
+            position (np.ndarray):
+                Cartesian numpy vector representing the local antenna position.
+        """
+
+        antenna_idx = self.__antennas.index(antenna)
+        self.__positions[antenna_idx] = position
+
     def polarization(self, azimuth: float, elevation: float) -> np.ndarray:
 
         return np.array([ant.polarization(azimuth, elevation) for ant in self.__antennas], dtype=float)
@@ -900,7 +932,7 @@ class AntennaArray(AntennaArrayBase, Serializable):
         return node._mapping_serialization_wrapper(representer, additional_fields=additional_fields)
 
     @classmethod
-    def from_yaml(cls: Type[AntennaArray], constructor: SafeConstructor, node: MappingNode) -> AntennaArray:
+    def from_yaml(cls: Type[AntennaArray], constructor: SafeConstructor, node: Node) -> AntennaArray:
         """Recall a new serializable class instance from YAML.
 
         Args:

@@ -33,8 +33,9 @@ class AudioScenario(PhysicalScenario[AudioDevice]):
 
         Args:
 
-            Device initialization parameters.
-            Refer to :class:.AudioDevice for further details.
+            *args, **kwargs:
+                Device initialization parameters.
+                Refer to :class:`AudioDevice` for further details.
 
         Returns: A handle to the initialized device.
         """

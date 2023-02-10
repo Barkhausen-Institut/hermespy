@@ -6,7 +6,7 @@ Drop
 """
 
 from __future__ import annotations
-
+from collections.abc import Sequence
 from typing import List, Tuple, Type
 
 from h5py import Group
@@ -31,21 +31,21 @@ class Drop(HDFSerializable):
     """Drop containing the information transmitted and received by all devices
     within a scenario."""
 
-    __timestamp: float                                  # Time at which the drop was generated
-    __device_transmissions: List[DeviceTransmission]    # Transmitted device information
-    __device_receptions: List[DeviceReception]          # Received device information
+    __timestamp: float  # Time at which the drop was generated
+    __device_transmissions: Sequence[DeviceTransmission]  # Transmitted device information
+    __device_receptions: Sequence[DeviceReception]  # Received device information
 
-    def __init__(self, timestamp: float, device_transmissions: List[DeviceTransmission], device_receptions: List[DeviceReception]) -> None:
+    def __init__(self, timestamp: float, device_transmissions: Sequence[DeviceTransmission], device_receptions: Sequence[DeviceReception]) -> None:
         """
         Args:
 
             timestamp (float):
                 Time at which the drop was generated.
 
-            device_transmissions (List[DeviceTransmission]):
+            device_transmissions (Sequence[DeviceTransmission]):
                 Transmitted device information.
 
-            device_receptions (List[DeviceReception]):
+            device_receptions (Sequence[DeviceReception]):
                 Received device information.
         """
 
@@ -60,13 +60,13 @@ class Drop(HDFSerializable):
         return self.__timestamp
 
     @property
-    def device_transmissions(self) -> List[DeviceTransmission]:
+    def device_transmissions(self) -> Sequence[DeviceTransmission]:
         """Transmitted device information within this drop."""
 
         return self.__device_transmissions
 
     @property
-    def device_receptions(self) -> List[DeviceReception]:
+    def device_receptions(self) -> Sequence[DeviceReception]:
         """Received device information within this drop."""
 
         return self.__device_receptions
@@ -84,7 +84,7 @@ class Drop(HDFSerializable):
         return len(self.__device_receptions)
 
     @property
-    def operator_inputs(self) -> List[List[Tuple[Signal, ChannelStateInformation]]]:
+    def operator_inputs(self) -> Sequence[Sequence[Tuple[Signal, ChannelStateInformation | None]]]:
         """Signals feeding into device's operators during reception.
 
         Returns: Operator inputs.
@@ -126,22 +126,22 @@ class EvaluatedDrop(Drop):
     within a scenario as well as their evaluations."""
 
     # Evaluation artifacts generated for this drop.
-    __artifacts: List[Artifact]
+    __artifacts: Sequence[Artifact]
 
-    def __init__(self, timestamp: float, device_transmissions: List[DeviceTransmission], device_receptions: List[DeviceReception], artifacts: List[Artifact]) -> None:
+    def __init__(self, timestamp: float, device_transmissions: Sequence[DeviceTransmission], device_receptions: Sequence[DeviceReception], artifacts: Sequence[Artifact]) -> None:
         """
         Args:
 
             timestamp (float):
                 Time at which the drop was generated.
 
-            device_transmissions (List[DeviceTransmission]):
+            device_transmissions (Sequence[DeviceTransmission]):
                 Transmitted device information.
 
-            device_receptions (List[DeviceReception]):
+            device_receptions (Sequence[DeviceReception]):
                 Received device information.
 
-            artifacts (List[Artifact]):
+            artifacts (Sequence[Artifact]):
                 Evaluation artifacts generated for this scenario drop.
         """
 
@@ -158,7 +158,7 @@ class EvaluatedDrop(Drop):
         return len(self.__artifacts)
 
     @property
-    def artifacts(self) -> List[Artifact]:
+    def artifacts(self) -> Sequence[Artifact]:
         """Evaluation artifacts generated from the drop's data.
 
         Returns: List of artifacts.

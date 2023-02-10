@@ -10,7 +10,7 @@ from typing import Optional, Union, TYPE_CHECKING
 
 import numpy as np
 
-from hermespy.core import dimension, Serializable, Signal
+from hermespy.core import register, Serializable, Signal
 from .isolation import Isolation
 
 if TYPE_CHECKING:
@@ -33,9 +33,7 @@ class SpecificIsolation(Serializable, Isolation):
 
     __leakage_factors: Optional[np.ndarray]
 
-    def __init__(self,
-                 isolation: Union[None, np.ndarray, float, int] = None,
-                 device: Optional[SimulatedDevice] = None) -> None:
+    def __init__(self, isolation: Union[None, np.ndarray, float, int] = None, device: Optional[SimulatedDevice] = None) -> None:
 
         # Initialize base class
         Isolation.__init__(self, device=device)
@@ -44,7 +42,8 @@ class SpecificIsolation(Serializable, Isolation):
         self.__leakage_factors = None
         self.isolation = isolation
 
-    @dimension
+    @register(title="Isolation")  # type: ignore
+    @property
     def isolation(self) -> np.ndarray:
         """Linear power isolation between transmit and receive chains.
 
@@ -53,16 +52,16 @@ class SpecificIsolation(Serializable, Isolation):
 
         return self.__isolation
 
-    @isolation.setter(title='Isolation')
+    @isolation.setter
     def isolation(self, value: Union[None, np.ndarray, float, int]) -> None:
 
         if value is None:
 
             self.__isolation = None
             return
-        
+
         if isinstance(value, (float, int)):
-            
+
             if self.device is not None and self.device.num_antennas != 1:
                 raise ValueError("Scalar isolation definition is only allowed for devices with a single antenna")
 
@@ -74,7 +73,7 @@ class SpecificIsolation(Serializable, Isolation):
         self.__isolation = value
 
         # The leaking power is the square root of the inverse isolation
-        self.__leakage_factors = np.power(value, -.5)
+        self.__leakage_factors = np.power(value, -0.5)
 
     def _leak(self, signal: Signal) -> Signal:
 

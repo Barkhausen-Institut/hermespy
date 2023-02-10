@@ -61,6 +61,14 @@ PEP8 Testing:
   script:
     - flake8 hermespy/
 
+Type Checking:
+  stage: lint
+  before_script:
+    - pip install dist/$HERMES_WHEEL\[test,quadriga,uhd,audio\]
+    - pip install mypy
+  script:
+    - mypy
+
 pages:
   stage: deploy
   only:

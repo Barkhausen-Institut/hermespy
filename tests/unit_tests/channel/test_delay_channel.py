@@ -39,16 +39,16 @@ class TestDelayChannelBase(TestCase):
 
         self.channel = MockDelayChannel()
 
-    def test_impulse_response(self) -> None:
+    def test_realize(self) -> None:
         """Test impulse response generation"""
 
         num_samples = 10
         sampling_rate = 1.234
-        impulse_response = self.channel.impulse_response(num_samples, sampling_rate)
+        realization = self.channel.realize(num_samples, sampling_rate)
 
-        self.assertSequenceEqual((10, 1, 2, 2), impulse_response.shape)
-        self.assertAlmostEqual(10., np.sum(impulse_response))
-        assert_array_equal(np.eye(1, 2), impulse_response[0, :, :, -1])
+        self.assertSequenceEqual((1, 2, 10, 2), realization.state.shape)
+        self.assertAlmostEqual(10., np.sum(realization.state))
+        assert_array_equal(np.eye(1, 2), realization.state[:, :, 0, -1])
 
 
 class TestSpatialDelayChannel(TestCase):

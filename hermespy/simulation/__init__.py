@@ -1,5 +1,5 @@
 from .simulation import Simulation, SimulationScenario
-from .simulated_device import ProcessedSimulatedDeviceInput, SimulatedDevice, SimulatedDeviceOutput, SimulatedDeviceReceiveRealization, SimulatedDeviceReception
+from .simulated_device import ProcessedSimulatedDeviceInput, SimulatedDevice, SimulatedDeviceOutput, SimulatedDeviceReceiveRealization, SimulatedDeviceTransmission, SimulatedDeviceReception
 from .rf_chain import RfChain, PowerAmplifier, SalehPowerAmplifier, RappPowerAmplifier, ClippingPowerAmplifier, CustomPowerAmplifier, PhaseNoise, NoPhaseNoise
 from .analog_digital_converter import AnalogDigitalConverter, Gain, AutomaticGainControl, QuantizerType
 from .isolation import Isolation, SpecificIsolation, PerfectIsolation
@@ -19,7 +19,12 @@ __status__ = "Prototype"
 __all__ = [
     "Simulation",
     "SimulationScenario",
-    "ProcessedSimulatedDeviceInput", "SimulatedDevice", "SimulatedDeviceOutput", "SimulatedDeviceReceiveRealization", "SimulatedDeviceReception",
+    "ProcessedSimulatedDeviceInput",
+    "SimulatedDevice",
+    "SimulatedDeviceOutput",
+    "SimulatedDeviceReceiveRealization",
+    "SimulatedDeviceTransmission",
+    "SimulatedDeviceReception",
     "RfChain",
     "PowerAmplifier",
     "SalehPowerAmplifier",

@@ -32,10 +32,10 @@ class QuadrigaMatlabInterface(QuadrigaInterface):
         # Start the matlab engine
         self.__engine = start_matlab()
 
-    def _run_quadriga(self, **parameters) -> List[Any]:
+    def _run_quadriga(self, **parameters) -> np.ndarray:
 
         # Create the Matlab workspace from the given parameters
-        for key, value in parameters:
+        for key, value in parameters.items():
 
             if isinstance(value, np.ndarray):
 

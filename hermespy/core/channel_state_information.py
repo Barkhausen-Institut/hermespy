@@ -6,14 +6,14 @@ Channel State Information Model
 """
 
 from __future__ import annotations
-from typing import Generator, Optional, List, Union, Type
+from typing import Generator, Optional, List, overload, Union, SupportsIndex, Tuple, Type
 from enum import Enum
 
 import numpy as np
 import matplotlib.pyplot as plt
 from h5py import Group
 from scipy.fft import fft, ifft
-from sparse import COO, diagonal
+from sparse import COO, diagonal  # type: ignore
 
 from .factory import HDFSerializable
 
@@ -283,6 +283,8 @@ class ChannelStateInformation(HDFSerializable):
         if self.__state_format == ChannelStateFormat.FREQUENCY_SELECTIVITY:
             return self.__state.shape[2] * self.__state.shape[3]
 
+        raise RuntimeError("Unknown channel state format")
+
     @property
     def num_delay_taps(self) -> int:
         """Number of taps within the delay response of the channel state.
@@ -398,7 +400,7 @@ class ChannelStateInformation(HDFSerializable):
     def __from_frequency_selectivity(state: np.ndarray, transformation: Union[COO, np.ndarray]) -> None:
 
         diagonal_elements = diagonal(transformation, axis1=2, axis2=3)
-        state[:, :, : diagonal_elements.shape[2], :].flat = diagonal_elements.todense()
+        state[:, :, : diagonal_elements.shape[2], :].flat = diagonal_elements.todense()  # type: ignore
 
     @staticmethod
     def Ideal(num_samples: int, num_receive_streams: int = 1, num_transmit_streams: int = 1) -> ChannelStateInformation:
@@ -447,7 +449,7 @@ class ChannelStateInformation(HDFSerializable):
         for sample_idx in range(self.num_samples):
             yield ChannelStateInformation(self.__state_format, self.__state[:, :, [sample_idx], :], self.__num_delay_taps, self.__num_frequency_bins)
 
-    def __getitem__(self, section: slice) -> ChannelStateInformation:
+    def __getitem__(self, section: SupportsIndex | Tuple[SupportsIndex | slice, ...] | slice) -> ChannelStateInformation:
         """Slice the channel state information.
 
         Args:
@@ -464,7 +466,7 @@ class ChannelStateInformation(HDFSerializable):
 
         return ChannelStateInformation(self.__state_format, state_section, num_delay_taps)
 
-    def __setitem__(self, key: slice, value: ChannelStateInformation) -> None:
+    def __setitem__(self, key: SupportsIndex | slice | Tuple[SupportsIndex | slice, ...], value: ChannelStateInformation) -> None:
         """Update the channel state information.
 
         Args:

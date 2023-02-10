@@ -11,7 +11,7 @@ from math import ceil
 from typing import List, Tuple, Optional, Type, Union, Any, Set
 
 import numpy as np
-from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
+from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, Node
 from scipy.fft import fft, fftshift, ifft, ifftshift
 from scipy.interpolate import griddata
 from scipy.signal import find_peaks
@@ -349,7 +349,7 @@ class FrameSection:
         return data_symbols, reference_symbols
 
     @abstractmethod
-    def modulate(self, symbols) -> np.ndarray:
+    def modulate(self, symbols: np.ndarray) -> np.ndarray:
         """Modulate this section into a complex base-band signal.
 
         Args:
@@ -378,7 +378,7 @@ class FrameSection:
 class FrameSymbolSection(FrameSection, Serializable):
 
     yaml_tag: str = "Symbol"
-    serialized_attributes = {'pattern',}
+    serialized_attributes = {"pattern"}
 
     pattern: List[int]
 
@@ -648,7 +648,7 @@ class FrameGuardSection(FrameSection, Serializable):
 class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
     """Generic Orthogonal-Frequency-Division-Multiplexing with a flexible frame configuration.
 
-    The internally applied FFT size is :meth:`OFDMWaveform.num_subcarriers` times :meth:`WaveformGenerator.oversampling_factor`. 
+    The internally applied FFT size is :meth:`OFDMWaveform.num_subcarriers` times :meth:`WaveformGenerator.oversampling_factor`.
 
     The following features are supported:
         - The modem can transmit or receive custom-defined frames.
@@ -666,7 +666,7 @@ class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
 
     __subcarrier_spacing: float
     __num_subcarriers: int
-    __pilot_section: Optional[FrameSection]
+    __pilot_section: PilotSection | None
     dc_suppression: bool
     __resources: List[FrameResource]
     __structure: List[FrameSection]
@@ -676,13 +676,7 @@ class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
 
         return {"modulation_order"}
 
-    def __init__(self,
-                 subcarrier_spacing: float = 1e3,
-                 num_subcarriers: int = 1024,
-                 dc_suppression: bool = True,
-                 resources: Optional[List[FrameResource]] = None,
-                 structure: Optional[List[FrameSection]] = None,
-                 **kwargs: Any) -> None:
+    def __init__(self, subcarrier_spacing: float = 1e3, num_subcarriers: int = 1024, dc_suppression: bool = True, resources: Optional[List[FrameResource]] = None, structure: Optional[List[FrameSection]] = None, **kwargs: Any) -> None:
         """
         Args:
 
@@ -722,7 +716,7 @@ class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
         if structure is not None:
             for section in structure:
                 self.add_section(section)
-                
+
         # Initialize  base class
         ConfigurablePilotWaveform.__init__(self, **kwargs)
         self.pilot_symbol_sequence = MappedPilotSymbolSequence(self._mapping)
@@ -737,7 +731,7 @@ class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
         return self.__resources
 
     @property
-    def structure(self) -> List[FrameElement]:
+    def structure(self) -> List[FrameSection]:
         """OFDM frame configuration in time domain.
 
         Returns: List of frame elements.
@@ -745,10 +739,10 @@ class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
 
         return self.__structure
 
-    @WaveformGenerator.modulation_order.setter
+    @WaveformGenerator.modulation_order.setter  # type: ignore
     def modulation_order(self, value: int) -> None:
 
-        WaveformGenerator.modulation_order.fset(self, value)
+        WaveformGenerator.modulation_order.fset(self, value)  # type: ignore
         self._mapping = PskQamMapping(value)
 
     def add_resource(self, resource: FrameResource) -> None:
@@ -774,7 +768,7 @@ class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
         section.frame = self
 
     @property
-    def pilot_section(self) -> Optional[FrameSection]:
+    def pilot_section(self) -> PilotSection | None:
         """Static pilot section transmitted at the beginning of each OFDM frame.
 
         Required for time-domain synchronization and equalization of carrier frequency offsets.
@@ -786,7 +780,7 @@ class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
         return self.__pilot_section
 
     @pilot_section.setter
-    def pilot_section(self, value: Optional[FrameSection]) -> None:
+    def pilot_section(self, value: PilotSection | None) -> None:
 
         if value is None:
             self.__pilot_section = None
@@ -931,12 +925,12 @@ class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
 
     def unmap(self, symbols: Symbols) -> np.ndarray:
 
-        symbols = symbols.raw[0, :, :].T
+        raw_symbols = symbols.raw[0, :, :].T
         data_symbols = Symbols()
         block_idx = 0
         for section in self.structure:
 
-            section_data_symbols, _ = section.pick_symbols(symbols[:, block_idx : block_idx + section.num_words])
+            section_data_symbols, _ = section.pick_symbols(raw_symbols[:, block_idx : block_idx + section.num_words])
 
             data_symbols.append_symbols(section_data_symbols)
             block_idx += section.num_words
@@ -1027,69 +1021,69 @@ class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
         b = self.num_subcarriers * self.subcarrier_spacing
         return b
 
-    def __channel_estimation(self, symbol_grid: np.ndarray, channel_state: ChannelStateInformation, resource_mask: np.ndarray) -> ChannelStateInformation:
-        """Performs channel estimation over the OFDM grid.
-
-        This methods estimates the frequency response of the channel for all OFDM symbols in a frame. The estimation
-        algorithm is defined in the parameter variable `self.param`.
-
-        With ideal channel estimation, the channel state information is obtained directly from the ideal channel state.
-        The CSI can be considered to be known only at the beginning/middle/end of the frame
-        (estimation_type='IDEAL_PREAMBLE'/'IDEAL_MIDAMBLE'/ 'IDEAL_POSTAMBLE'), or at every OFDM symbol ('IDEAL').
-
-        With reference-based estimation, the specified reference subcarriers are employed for channel estimation.
-
-        Args:
-
-            symbol_grid (numpy.ndarray):
-                Frequency-domain samples of the received signal over the whole frame.
-
-            channel_state (ChannelStateInformation):
-                Perfect channel state from which to simulate the channel state estimation.
-
-            resource_mask (np.ndarray):
-                Boolean mask for OFDM resource allocation.
-                Required to distinguish between data, reference and null symbols within `symbol_grid`.
-
-        Returns:
-            ChannelStateInformation:
-                The channel state estimate resulting from the selected method.
-        """
-
-        # Ideally, the channel is estimated perfectly at each received symbol slot
-        if self.channel_estimation_algorithm == ChannelEstimation.IDEAL:
-            return channel_state
-
-        # Number of modulation symbols per ofdm word
-        num_symbols = symbol_grid.shape[0]
-        num_words = symbol_grid.shape[1]
-
-        # An ideal pre-amble estimates the channel at the first sample position
-        if self.channel_estimation_algorithm == ChannelEstimation.IDEAL_PREAMBLE:
-
-            estimate = channel_state.state[:, :, :num_symbols, :]
-            channel_state.state = np.tile(estimate, (1, 1, num_words, 1))
-            return channel_state
-
-        # An ideal mid-amble estimates the channel at the central symbol position
-        if self.channel_estimation_algorithm == ChannelEstimation.IDEAL_MIDAMBLE:
-
-            word_idx = int(0.5 * num_words)
-            estimate = channel_state.state[:, :, word_idx * num_symbols : (1 + word_idx) * num_symbols, :]
-            channel_state.state = np.tile(estimate, (1, 1, num_words, 1))
-            return channel_state
-
-        # An ideal post-amble estimates the channel at the last sample position
-        if self.channel_estimation_algorithm == ChannelEstimation.IDEAL_POSTAMBLE:
-
-            estimate = channel_state.state[:, :, -num_symbols:, :]
-            channel_state.state = np.tile(estimate, (1, 1, num_words, 1))
-            return channel_state
-
-        if self.channel_estimation_algorithm == ChannelEstimation.REFERENCE:
-            return self.reference_based_channel_estimation(symbol_grid, resource_mask)
-
-        raise RuntimeError("Unknown OFDM channel estimation routine requested")
+    #    def __channel_estimation(self, symbol_grid: np.ndarray, channel_state: ChannelStateInformation, resource_mask: np.ndarray) -> ChannelStateInformation:
+    #        """Performs channel estimation over the OFDM grid.
+    #
+    #        This methods estimates the frequency response of the channel for all OFDM symbols in a frame. The estimation
+    #        algorithm is defined in the parameter variable `self.param`.
+    #
+    #        With ideal channel estimation, the channel state information is obtained directly from the ideal channel state.
+    #        The CSI can be considered to be known only at the beginning/middle/end of the frame
+    #        (estimation_type='IDEAL_PREAMBLE'/'IDEAL_MIDAMBLE'/ 'IDEAL_POSTAMBLE'), or at every OFDM symbol ('IDEAL').
+    #
+    #        With reference-based estimation, the specified reference subcarriers are employed for channel estimation.
+    #
+    #        Args:
+    #
+    #            symbol_grid (numpy.ndarray):
+    #                Frequency-domain samples of the received signal over the whole frame.
+    #
+    #            channel_state (ChannelStateInformation):
+    #                Perfect channel state from which to simulate the channel state estimation.
+    #
+    #            resource_mask (np.ndarray):
+    #                Boolean mask for OFDM resource allocation.
+    #                Required to distinguish between data, reference and null symbols within `symbol_grid`.
+    #
+    #        Returns:
+    #            ChannelStateInformation:
+    #                The channel state estimate resulting from the selected method.
+    #        """
+    #
+    #        # Ideally, the channel is estimated perfectly at each received symbol slot
+    #        if self.channel_estimation_algorithm == ChannelEstimation.IDEAL:
+    #            return channel_state
+    #
+    #        # Number of modulation symbols per ofdm word
+    #        num_symbols = symbol_grid.shape[0]
+    #        num_words = symbol_grid.shape[1]
+    #
+    #        # An ideal pre-amble estimates the channel at the first sample position
+    #        if self.channel_estimation_algorithm == ChannelEstimation.IDEAL_PREAMBLE:
+    #
+    #            estimate = channel_state.state[:, :, :num_symbols, :]
+    #            channel_state.state = np.tile(estimate, (1, 1, num_words, 1))
+    #            return channel_state
+    #
+    #        # An ideal mid-amble estimates the channel at the central symbol position
+    #        if self.channel_estimation_algorithm == ChannelEstimation.IDEAL_MIDAMBLE:
+    #
+    #            word_idx = int(0.5 * num_words)
+    #            estimate = channel_state.state[:, :, word_idx * num_symbols : (1 + word_idx) * num_symbols, :]
+    #            channel_state.state = np.tile(estimate, (1, 1, num_words, 1))
+    #            return channel_state
+    #
+    #        # An ideal post-amble estimates the channel at the last sample position
+    #        if self.channel_estimation_algorithm == ChannelEstimation.IDEAL_POSTAMBLE:
+    #
+    #            estimate = channel_state.state[:, :, -num_symbols:, :]
+    #            channel_state.state = np.tile(estimate, (1, 1, num_words, 1))
+    #            return channel_state
+    #
+    #        if self.channel_estimation_algorithm == ChannelEstimation.REFERENCE:
+    #            return self.reference_based_channel_estimation(symbol_grid, resource_mask)
+    #
+    #        raise RuntimeError("Unknown OFDM channel estimation routine requested")
 
     def reference_based_channel_estimation(self, symbol_grid: np.ndarray, resource_mask: np.ndarray) -> ChannelStateInformation:
         """Perform a reference-symbol based channel estimation over the OFDM frame grid.
@@ -1285,7 +1279,7 @@ class PilotSection(FrameSection, Serializable):
 
         return Symbols(subsymbols[:, :, :num_symbols])
 
-    def modulate(self, *_: Any) -> np.ndarray:
+    def modulate(self, _: Any | None = None) -> np.ndarray:
 
         # Return the cached pilot signal if available and the relevant frame parameters haven't changed
         if self.__cached_pilot is not None and self.__cached_num_subcarriers == self.frame.num_subcarriers and self.__cached_oversampling_factor == self.frame.oversampling_factor:
@@ -1296,9 +1290,9 @@ class PilotSection(FrameSection, Serializable):
 
         return pilot
 
-    def demodulate(self, *_: Any) -> Tuple[np.ndarray, np.ndarray]:
+    def demodulate(self, _: np.ndarray) -> np.ndarray:
 
-        return np.empty(0, dtype=complex), np.empty(0, dtype=complex)
+        return np.empty(0, dtype=complex)
 
     def _pilot(self) -> np.ndarray:
         """Generate the samples for a pilot section in time domain.
@@ -1354,7 +1348,7 @@ class PilotSection(FrameSection, Serializable):
         return node._mapping_serialization_wrapper(representer, blacklist={"pilot_elements"}, additional_fields=additional_fields)
 
     @classmethod
-    def from_yaml(cls: Type[PilotSection], constructor: SafeConstructor, node: MappingNode) -> PilotSection:
+    def from_yaml(cls: Type[PilotSection], constructor: SafeConstructor, node: Node) -> PilotSection:
         """Recall a new serializable class instance from YAML.
 
         Args:
@@ -1368,7 +1362,7 @@ class PilotSection(FrameSection, Serializable):
         Returns: The de-serialized object.
         """
 
-        state = constructor.construct_mapping(node, deep=True)
+        state: dict = constructor.construct_mapping(node, deep=True)
         pilot_elements = state.pop("pilot_elements", None)
 
         if pilot_elements is not None:
@@ -1406,9 +1400,9 @@ class SchmidlCoxPilotSection(PilotSection):
         pilot_samples = ifft(ifftshift(pilot_frequencies), norm="ortho", n=samples_per_symbol)
         return pilot_samples
 
-    def demodulate(self, *_: Any) -> Tuple[np.ndarray, ChannelStateInformation]:
+    def demodulate(self, _: np.ndarray) -> np.ndarray:
 
-        return np.empty(0, dtype=complex), ChannelStateInformation(ChannelStateFormat.FREQUENCY_SELECTIVITY)
+        return np.empty(0, dtype=complex)
 
 
 class OFDMSynchronization(Synchronization[OFDMWaveform]):
@@ -1487,7 +1481,7 @@ class OFDMIdealChannelEstimation(IdealChannelEstimation[OFDMWaveform], Serializa
         """
 
         self.reference_position = reference_position
-        IdealChannelEstimation.__init__(self, *args, **kwargs)
+        IdealChannelEstimation.__init__(self, *args, **kwargs)  # type: ignore
 
     def estimate_channel(self, symbols: Symbols) -> Tuple[StatedSymbols, ChannelStateInformation]:
 
@@ -1501,7 +1495,7 @@ class OFDMLeastSquaresChannelEstimation(ChannelEstimation[OFDMWaveform], Seriali
     yaml_tag = "OFDM-LS"
     """YAML serializtion tag"""
 
-    def estimate_channel(self, symbols: Symbols) -> ChannelStateInformation:
+    def estimate_channel(self, symbols: Symbols) -> Tuple[StatedSymbols, ChannelStateInformation]:
 
         if symbols.num_streams != 1:
             raise NotImplementedError("Least-Squares channel estimation is only implemented for SISO links")
@@ -1563,9 +1557,8 @@ class OFDMMinimumMeanSquareChannelEqualization(OFDMChannelEqualization, ABC):
 
         OFDMChannelEqualization.__init__(self, waveform_generator)
 
-    def equalize_channel(self, signal: Signal, csi: ChannelStateInformation, snr: float = float("inf")) -> Signal:
+    def equalize_channel(self, symbols: StatedSymbols, snr: float = float("inf")) -> Symbols:
 
-        signal = signal.copy()
-        signal.samples /= csi.state[0, 0, : signal.num_samples, 0] + 1 / snr
+        equalized_symbols = symbols.raw / symbols.states[0, 0, : symbols.num_symbols, 0] + 1 / snr
 
-        return signal
+        return Symbols(equalized_symbols)

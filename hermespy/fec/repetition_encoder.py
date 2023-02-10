@@ -12,7 +12,7 @@ from __future__ import annotations
 from typing import Type
 
 import numpy as np
-from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
+from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, Node
 
 from hermespy.core import Serializable
 from .coding import Encoder
@@ -172,7 +172,7 @@ class RepetitionEncoder(Encoder, Serializable):
         return representer.represent_mapping(cls.yaml_tag, state)
 
     @classmethod
-    def from_yaml(cls: Type[RepetitionEncoder], constructor: SafeConstructor, node: MappingNode) -> RepetitionEncoder:
+    def from_yaml(cls: Type[RepetitionEncoder], constructor: SafeConstructor, node: Node) -> RepetitionEncoder:
         """Recall a new `RepetitionEncoder` from YAML.
 
         Args:

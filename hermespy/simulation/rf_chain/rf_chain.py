@@ -93,40 +93,6 @@ class RfChain(Serializable):
 
         self.__phase_offset = value
 
-    @classmethod
-    def to_yaml(cls: Type[RfChain], representer: SafeRepresenter, node: RfChain) -> Node:
-        """Serialize an RfChain object to YAML.
-
-        Args:
-            representer (SafeRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
-
-            node (RfChain):
-                The `RfChain` instance to be serialized.
-
-        Returns:
-            Node:
-                The serialized YAML node.
-                None if the object state is default.
-        """
-
-        state = {}
-
-        if node.__power_amplifier is not None:
-            state[node.power_amplifier.yaml_tag] = node.__power_amplifier
-
-        if node.__amplitude_imbalance != 0.0:
-            state["amplitude_imbalance"] = node.__amplitude_imbalance
-
-        if node.__phase_offset != 0.0:
-            state["phase_offset"] = node.__phase_offset
-
-        if len(state) < 1:
-            return representer.represent_none(None)
-
-        return representer.represent_mapping(cls.yaml_tag, state)
-
     def transmit(self, input_signal: Signal) -> Signal:
         """Returns the distorted version of signal in "input_signal".
 

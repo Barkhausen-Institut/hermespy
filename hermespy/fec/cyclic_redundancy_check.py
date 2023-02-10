@@ -13,7 +13,7 @@ from __future__ import annotations
 from typing import Type
 
 import numpy as np
-from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
+from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, Node
 
 from hermespy.core import Serializable
 from .coding import Encoder
@@ -62,7 +62,7 @@ class CyclicRedundancyCheck(Encoder, Serializable):
 
     def encode(self, data: np.ndarray) -> np.ndarray:
 
-        return data.append(self.manager.modem._rng.randint(2, self.__check_block_size))
+        return np.append(data, self.manager.modem._rng.integers(0, 2, self.__check_block_size))
 
     def decode(self, code: np.ndarray) -> np.ndarray:
 
@@ -130,7 +130,7 @@ class CyclicRedundancyCheck(Encoder, Serializable):
         return representer.represent_mapping(cls.yaml_tag, state)
 
     @classmethod
-    def from_yaml(cls: Type[CyclicRedundancyCheck], constructor: SafeConstructor, node: MappingNode) -> CyclicRedundancyCheck:
+    def from_yaml(cls: Type[CyclicRedundancyCheck], constructor: SafeConstructor, node: Node) -> CyclicRedundancyCheck:
         """Recall a new `CyclicRedundancyCheck` from YAML.
 
         Args:
