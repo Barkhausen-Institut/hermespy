@@ -8,7 +8,7 @@ Filtered Single Carrier Waveforms
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Any, Optional, Set
+from typing import Any, Optional, Set, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -55,17 +55,7 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
     _data_symbol_idx: Optional[np.ndarray]
     _pulse_correlation_matrix: Optional[np.ndarray]
 
-    def __init__(self,
-                 symbol_rate: float,
-                 num_preamble_symbols: int,
-                 num_data_symbols: int,
-                 num_postamble_symbols: int = 0,
-                 pilot_rate: int = 0,
-                 guard_interval: float = 0.0,
-                 oversampling_factor: int = 4,
-                 pilot_symbol_sequence: Optional[PilotSymbolSequence] = None,
-                 repeat_pilot_symbol_sequence: bool = True,
-                 **kwargs: Any) -> None:
+    def __init__(self, symbol_rate: float, num_preamble_symbols: int, num_data_symbols: int, num_postamble_symbols: int = 0, pilot_rate: int = 0, guard_interval: float = 0.0, oversampling_factor: int = 4, pilot_symbol_sequence: Optional[PilotSymbolSequence] = None, repeat_pilot_symbol_sequence: bool = True, **kwargs: Any) -> None:
         """Waveform Generator PSK-QAM initialization.
 
         Args:
@@ -216,11 +206,11 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
 
         self.__num_postamble_symbols = value
 
-    @WaveformGenerator.modulation_order.setter
+    @WaveformGenerator.modulation_order.setter  # type: ignore
     def modulation_order(self, value: int) -> None:
 
         self.__mapping = PskQamMapping(value, soft_output=False)
-        WaveformGenerator.modulation_order.fset(self, value)
+        WaveformGenerator.modulation_order.fset(self, value)  # type: ignore
 
     @property
     def pilot_signal(self) -> Signal:
@@ -284,43 +274,43 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
 
         return Symbols(symbols[np.newaxis, :, np.newaxis])
 
-    def _equalizer(self, data_symbols: np.ndarray, channel: np.ndarray, noise_var) -> np.ndarray:
-        """Equalize the received data symbols
-
-        This method applies a linear block equalizer to the received data symbols to compensate for intersymbol
-        interference in case of non-orthogonal transmission pulses.
-        The equalizer can be either NONE, ZF or MMSE, depending on parameter `self.param.equalizer`
-
-        Note that currently  this is not a channel equalization, but it equalizes only the ISI in an AWGN channel.
-        Only the amplitude and phase of the first path of the propagation channel is compensated.
-
-        Args:
-            data_symbols(np.ndarray): received data symbols after matched filtering
-            channel(np.ndarray): one-path complex channel gain at the sampling instants of the data symbols
-            noise_var(float): noise variance (for MMSE equalizer)
-
-        Returns:
-            equalized_signal(np.ndarray): data symbols after ISI equalization and channel compensation
-        """
-
-        if self._pulse_correlation_matrix:
-            snr_factor = 0  # ZF
-            h_matrix = self._pulse_correlation_matrix
-            h_matrix_hermitian = h_matrix.conjugate().T
-
-            if self.equalization == FilteredSingleCarrierWaveform.Equalization.MMSE:
-                snr_factor = noise_var * h_matrix
-
-            isi_equalizer = np.matmul(h_matrix_hermitian, np.linalg.inv(np.matmul(h_matrix_hermitian, h_matrix) + snr_factor))
-
-            equalized_symbols = np.matmul(isi_equalizer, data_symbols[:, np.newaxis]).flatten()
-        else:
-            equalized_symbols = data_symbols
-
-        # compensate channel phase and amplitude
-        equalized_symbols = equalized_symbols / channel
-
-        return equalized_symbols
+    #    def _equalizer(self, data_symbols: np.ndarray, channel: np.ndarray, noise_var) -> np.ndarray:
+    #        """Equalize the received data symbols
+    #
+    #        This method applies a linear block equalizer to the received data symbols to compensate for intersymbol
+    #        interference in case of non-orthogonal transmission pulses.
+    #        The equalizer can be either NONE, ZF or MMSE, depending on parameter `self.param.equalizer`
+    #
+    #        Note that currently  this is not a channel equalization, but it equalizes only the ISI in an AWGN channel.
+    #        Only the amplitude and phase of the first path of the propagation channel is compensated.
+    #
+    #        Args:
+    #            data_symbols(np.ndarray): received data symbols after matched filtering
+    #            channel(np.ndarray): one-path complex channel gain at the sampling instants of the data symbols
+    #            noise_var(float): noise variance (for MMSE equalizer)
+    #
+    #        Returns:
+    #            equalized_signal(np.ndarray): data symbols after ISI equalization and channel compensation
+    #        """
+    #
+    #        if self._pulse_correlation_matrix:
+    #            snr_factor = 0  # ZF
+    #            h_matrix = self._pulse_correlation_matrix
+    #            h_matrix_hermitian = h_matrix.conjugate().T
+    #
+    #            if self.equalization == FilteredSingleCarrierWaveform.Equalization.MMSE:
+    #                snr_factor = noise_var * h_matrix
+    #
+    #            isi_equalizer = np.matmul(h_matrix_hermitian, np.linalg.inv(np.matmul(h_matrix_hermitian, h_matrix) + snr_factor))
+    #
+    #            equalized_symbols = np.matmul(isi_equalizer, data_symbols[:, np.newaxis]).flatten()
+    #        else:
+    #            equalized_symbols = data_symbols
+    #
+    #        # compensate channel phase and amplitude
+    #        equalized_symbols = equalized_symbols / channel
+    #
+    #        return equalized_symbols
 
     @property
     def num_pilot_samples(self) -> int:
@@ -599,7 +589,7 @@ class SingleCarrierIdealChannelEstimation(IdealChannelEstimation[FilteredSingleC
     yaml_tag = "SC-Ideal"
     """YAML serialization tag"""
 
-    def estimate_channel(self, symbols: Symbols) -> StatedSymbols:
+    def estimate_channel(self, symbols: Symbols) -> Tuple[StatedSymbols, ChannelStateInformation]:
 
         filter_characteristics = self.waveform_generator._transmit_filter() * self.waveform_generator._receive_filter()
         csi = self._csi().state[:, :, :, [0]]
@@ -626,7 +616,7 @@ class SingleCarrierLeastSquaresChannelEstimation(SingleCarrierChannelEstimation)
 
         SingleCarrierChannelEstimation.__init__(self, waveform_generator)
 
-    def estimate_channel(self, symbols: Symbols) -> StatedSymbols:
+    def estimate_channel(self, symbols: Symbols) -> Tuple[StatedSymbols, ChannelStateInformation]:
 
         if self.waveform_generator is None:
             raise FloatingError("Error trying to fetch the pilot section of a floating channel estimator")
@@ -704,18 +694,17 @@ class SingleCarrierMinimumMeanSquareChannelEqualization(SingleCarrierChannelEqua
         # If no information about transmitted streams is available, assume orthogonal channels
         if csi.num_transmit_streams < 2:
 
-            equalized_symbols = Symbols(frame.raw / (csi.state[:, 0, : frame.num_symbols, 0] + 1 / snr))
-            return equalized_symbols
+            return Symbols(frame.raw / (csi.state[:, 0, : frame.num_symbols, 0] + 1 / snr))
 
         # Default behaviour for mimo systems is to use the pseudo-inverse for equalization
-        equalized_symbols = np.empty(frame.raw.shape, dtype=complex)
+        raw_equalized_symbols = np.empty(frame.raw.shape, dtype=complex)
         for s, (symbols, state) in enumerate(zip(frame.raw.T, csi.state[:, :, : frame.num_symbols, 0].transpose((2, 0, 1)))):
 
             # ToDo: Introduce noise term here
             equalization = np.linalg.pinv(state)
-            equalized_symbols[:, s] = equalization @ symbols
+            raw_equalized_symbols[:, s] = equalization @ symbols
 
-        return Symbols(equalized_symbols)
+        return Symbols(raw_equalized_symbols)
 
 
 class RolledOffSingleCarrierWaveform(FilteredSingleCarrierWaveform):

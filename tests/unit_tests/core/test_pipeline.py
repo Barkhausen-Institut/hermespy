@@ -15,7 +15,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class MockPipeline(Pipeline[Mock]):
+class MockPipeline(Pipeline[Mock, Mock]):
     """Mock pipeline for testing only."""
     
     def run(self) -> None:

@@ -172,7 +172,7 @@ class RadarReception(Reception, RadarCube):
         self.cloud = cloud
 
 
-class Radar(DuplexOperator[RadarReception], Serializable):
+class Radar(DuplexOperator[RadarTransmission, RadarReception], Serializable):
     """HermesPy representation of a mono-static radar sensing its environment."""
 
     yaml_tag = "Radar"
@@ -300,7 +300,7 @@ class Radar(DuplexOperator[RadarReception], Serializable):
 
         self.__detector = value
 
-    def transmit(self, duration: float = 0.0) -> RadarTransmission:
+    def _transmit(self, duration: float = 0.0) -> RadarTransmission:
 
         if not self.__waveform:
             raise RuntimeError("Radar waveform not specified")
@@ -333,14 +333,9 @@ class Radar(DuplexOperator[RadarReception], Serializable):
         signal.carrier_frequency = self.carrier_frequency
         transmission = RadarTransmission(signal)
 
-        if self.attached:
-            self.device.transmitters.add_transmission(self, transmission)
-
         return transmission
 
-    def _receive(self,
-                 signal: Signal,
-                 _: ChannelStateInformation) -> RadarReception:
+    def _receive(self, signal: Signal, _: ChannelStateInformation) -> RadarReception:
 
         if not self.waveform:
             raise RuntimeError("Radar waveform not specified")

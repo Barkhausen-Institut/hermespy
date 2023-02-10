@@ -6,13 +6,13 @@ Delay Channel
 """
 
 from __future__ import annotations
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import Tuple
 
 import numpy as np
 from scipy.constants import speed_of_light
 
-from hermespy.channel import Channel
+from hermespy.channel import Channel, ChannelRealization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -24,10 +24,19 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class DelayChannelBase(ABC, Channel):
+class DelayChannelRealization(ChannelRealization):
+    ...  # pragma: no cover
+
+
+class DelayChannelBase(Channel[DelayChannelRealization]):
     """Base of delay channel models."""
-    
-    yaml_tag = u'DelayChannelBase'
+
+    yaml_tag = "DelayChannelBase"
+
+    def __init__(self, *args, **kwargs) -> None:
+
+        # Initialize base class
+        Channel.__init__(self, *args, **kwargs)
 
     @abstractmethod
     def _realize_delay(self) -> float:
@@ -45,9 +54,7 @@ class DelayChannelBase(ABC, Channel):
         """
         ...  # pragma no cover
 
-    def impulse_response(self,
-                         num_samples: int,
-                         sampling_rate: float) -> np.ndarray:
+    def realize(self, num_samples: int, sampling_rate: float) -> DelayChannelRealization:
 
         delay = self._realize_delay()
         delay_samples = int(delay * sampling_rate)
@@ -57,19 +64,21 @@ class DelayChannelBase(ABC, Channel):
         time_response = np.zeros((num_samples, 1 + delay_samples), dtype=complex)
         time_response[:, -1] = np.sqrt(self.gain)
 
-        # The impulse response is an elment-wise matrix multiplication 
+        # The impulse response is an elment-wise matrix multiplication
         # exploding two two-dimensional matrices into a four-dimensional tensor
-        impulse = np.einsum('ab,cd->abcd', spatial_response, time_response)
-        return impulse.transpose((2, 0, 1, 3,))
+        channel_impulse_response = np.einsum("ab,cd->abcd", spatial_response, time_response)
+
+        realization = DelayChannelRealization(self, channel_impulse_response)
+        return realization
 
 
 class SpatialDelayChannel(DelayChannelBase):
     """Delay channel based on spatial dimensions.
-    
+
     The spatial delay channel requires both linked devices to specify their assumed positions.
     """
-    
-    yaml_tag: str = u'SpatialDelay'
+
+    yaml_tag: str = "SpatialDelay"
 
     def _realize_delay(self) -> float:
 
@@ -83,24 +92,20 @@ class SpatialDelayChannel(DelayChannelBase):
 
     def _realize_response(self) -> np.ndarray:
 
-        transmit_response = self.transmitter.antennas.cartesian_response(self.transmitter.carrier_frequency,
-                                                                         self.receiver.position - self.transmitter.position)
-        receive_response = self.receiver.antennas.cartesian_response(self.receiver.carrier_frequency,
-                                                                     self.transmitter.position - self.receiver.position)
+        transmit_response = self.transmitter.antennas.cartesian_response(self.transmitter.carrier_frequency, self.receiver.position - self.transmitter.position)
+        receive_response = self.receiver.antennas.cartesian_response(self.receiver.carrier_frequency, self.transmitter.position - self.receiver.position)
 
         return np.outer(receive_response, transmit_response)
-                                            
+
 
 class RandomDelayChannel(DelayChannelBase):
     """Delay channel based on random delays."""
 
-    yaml_tag: str = u'RandomDelay'
+    yaml_tag: str = "RandomDelay"
 
     __delay: float | Tuple[float, float]
 
-    def __init__(self,
-                 delay: float | Tuple[float, float],
-                 *args, **kwargs) -> None:
+    def __init__(self, delay: float | Tuple[float, float], *args, **kwargs) -> None:
         """
         Args:
 
@@ -111,7 +116,7 @@ class RandomDelayChannel(DelayChannelBase):
 
             *args:
                 :class:`.Channel` base class initialization parameters.
-            
+
             **kwargs:
                 :class:`.Channel` base class initialization parameters.
         """
@@ -133,7 +138,7 @@ class RandomDelayChannel(DelayChannelBase):
 
         if isinstance(value, float):
 
-            if value < 0.:
+            if value < 0.0:
                 raise ValueError(f"Delay must be greater or equal to zero (not {value})")
 
         elif isinstance(value, tuple):
@@ -141,7 +146,7 @@ class RandomDelayChannel(DelayChannelBase):
             if len(value) != 2:
                 raise ValueError("Delay limit tuple must contain two entries")
 
-            if any(v < 0. for v in value):
+            if any(v < 0.0 for v in value):
                 raise ValueError(f"Delay must be greater or equal to zero (not {value[0]} and {value[1]})")
 
             if value[0] > value[1]:

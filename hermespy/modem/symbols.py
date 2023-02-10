@@ -332,7 +332,7 @@ class StatedSymbols(Symbols):
 
     __states: np.ndarray  # Symbol states, four-dimensional array
 
-    def __init__(self, symbols: Optional[Union[Iterable, np.ndarray]], states: Optional[np.ndarray]) -> None:
+    def __init__(self, symbols: Iterable | np.ndarray, states: np.ndarray) -> None:
         """
         Args:
 

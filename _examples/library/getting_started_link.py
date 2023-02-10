@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 # Import required HermesPy modules
-from hermespy.channel import Channel
+from hermespy.channel import IdealChannel
 from hermespy.simulation import SimulatedDevice
 from hermespy.modem import TransmittingModem, ReceivingModem, RootRaisedCosineWaveform, BitErrorEvaluator
 
@@ -20,7 +20,7 @@ rx_operator.waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e6, num_p
 rx_device.receivers.add(rx_operator)
 
 # Simulate a channel between the two devices
-channel = Channel(tx_device, rx_device)
+channel = IdealChannel(tx_device, rx_device)
 
 # Simulate the signal transmission over the channel
 transmission = tx_operator.transmit()

@@ -132,7 +132,7 @@ class RuralMacrocellsLineOfSight(ClusterDelayLineBase, Serializable):
 
     @property
     def _center_frequency(self) -> float:
-        return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))
+        return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))  # type: ignore
 
 
 class RuralMacrocellsNoLineOfSight(ClusterDelayLineBase, Serializable):
@@ -246,7 +246,7 @@ class RuralMacrocellsNoLineOfSight(ClusterDelayLineBase, Serializable):
 
     @property
     def _center_frequency(self) -> float:
-        return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))
+        return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))  # type: ignore
 
 
 class RuralMacrocellsOutsideToInside(ClusterDelayLineBase, Serializable):
@@ -360,4 +360,4 @@ class RuralMacrocellsOutsideToInside(ClusterDelayLineBase, Serializable):
 
     @property
     def _center_frequency(self) -> float:
-        return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))
+        return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))  # type: ignore

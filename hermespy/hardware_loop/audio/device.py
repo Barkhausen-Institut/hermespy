@@ -46,6 +46,15 @@ class AudioDeviceAntennas(AntennaArrayBase):
 
         return len(self.__device.playback_channels)
 
+    @property
+    def topology(self) -> np.ndarray:
+
+        return np.zeros((len(self.__device.playback_channels), 3))
+
+    def polarization(self, azimuth: float, elevation: float) -> np.ndarray:
+
+        return np.sqrt(2) * np.ones((len(self.__device.playback_channels), 3))
+
 
 class AudioDevice(PhysicalDevice, Serializable):
     """HermesPy binding to an arbitrary audio device. Let's rock!"""
@@ -53,14 +62,10 @@ class AudioDevice(PhysicalDevice, Serializable):
     yaml_tag = "AudioDevice"
     property_blacklist = {"topology", "wavelength", "velocity", "orientation", "position", "random_mother"}
 
-    # Device over which audio streams are to be transmtited
-    __playback_device: int
-    # Device over which audio streams are to be received
-    __record_device: int
-    # List of audio channel for signal transmission
-    __playback_channels: List[int]
-    # List of audio channel for signal reception
-    __record_channels: List[int]
+    __playback_device: int  # Device over which audio streams are to be transmitted
+    __record_device: int  # Device over which audio streams are to be received
+    __playback_channels: List[int]  # List of audio channel for signal transmission
+    __record_channels: List[int]  # List of audio channel for signal reception
     __sampling_rate: float  # Configured sampling rate
     __transmission: Optional[np.ndarray]  # Configured transmission samples
 
@@ -151,12 +156,13 @@ class AudioDevice(PhysicalDevice, Serializable):
         return self.__playback_channels
 
     @playback_channels.setter
-    def playback_channels(self, value: Union[np.ndarray, List]):
+    def playback_channels(self, value: Union[np.ndarray, List[int]]):
 
         if isinstance(value, np.ndarray):
-            value = value.tolist()
+            self.__playback_channels = value.tolist()
 
-        self.__playback_channels = value
+        else:
+            self.__playback_channels = value
 
     @property
     def record_channels(self) -> List[int]:
@@ -171,12 +177,13 @@ class AudioDevice(PhysicalDevice, Serializable):
         return self.__record_channels
 
     @record_channels.setter
-    def record_channels(self, value: Union[np.ndarray, List]):
+    def record_channels(self, value: Union[np.ndarray, List[int]]):
 
         if isinstance(value, np.ndarray):
-            value = value.tolist()
+            self.__record_channels = value.tolist()
 
-        self.__record_channels = value
+        else:
+            self.__record_channels = value
 
     @property
     def carrier_frequency(self) -> float:

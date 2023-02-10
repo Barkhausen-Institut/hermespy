@@ -8,9 +8,11 @@ Implements a physical device dummy for testing and demonstration purposes.
 """
 
 from __future__ import annotations
+from collections.abc import Sequence
+from typing import Tuple
 
-from hermespy.core import DeviceReception, DeviceTransmission, Signal
-from hermespy.simulation import SimulatedDevice
+from hermespy.core import ChannelStateInformation, DeviceInput, DeviceReception, Signal, SNRType
+from hermespy.simulation import ProcessedSimulatedDeviceInput, SimulatedDevice, SimulatedDeviceOutput, SimulatedDeviceTransmission
 from .physical_device import PhysicalDevice
 from .scenario import PhysicalScenario
 
@@ -47,13 +49,17 @@ class PhysicalDeviceDummy(SimulatedDevice, PhysicalDevice):
 
         return self.__cached_signal
 
-    def transmit(self, clear_cache: bool = True) -> DeviceTransmission:
+    def transmit(self, clear_cache: bool = True) -> SimulatedDeviceTransmission:
 
-        return PhysicalDevice.transmit(self, clear_cache)
+        physical_transmission = PhysicalDevice.transmit(self, clear_cache)
+        simulated_transmission = SimulatedDeviceTransmission(physical_transmission.operator_transmissions, physical_transmission.mixed_signal, physical_transmission.sampling_rate, physical_transmission.num_antennas, physical_transmission.carrier_frequency)
 
-    def process_input(self, *args) -> Signal:
+        return simulated_transmission
 
-        return PhysicalDevice.process_input(self, *args)
+    def process_input(self, impinging_signals: DeviceInput | Signal | Sequence[Signal] | Sequence[Tuple[Sequence[Signal], ChannelStateInformation | None]] | SimulatedDeviceOutput | None = None, cache: bool = True, snr: float = float("inf"), snr_type: SNRType = SNRType.PN0, leaking_signal: Signal | None = None, channel_state: ChannelStateInformation | None = None) -> ProcessedSimulatedDeviceInput:
+
+        _impinging_signals = self.__cached_signal if impinging_signals is None else impinging_signals
+        return SimulatedDevice.process_input(self, _impinging_signals, cache, snr, snr_type, leaking_signal, channel_state)
 
     def receive(self, *args, **kwargs) -> DeviceReception:
 

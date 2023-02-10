@@ -196,7 +196,7 @@ class IndoorFactoryLineOfSight(IndoorFactoryBase, Serializable):
 
     @property
     def _center_frequency(self) -> float:
-        return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))
+        return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))  # type: ignore
 
 
 class IndoorFactoryNoLineOfSight(IndoorFactoryBase, Serializable):
@@ -303,4 +303,4 @@ class IndoorFactoryNoLineOfSight(IndoorFactoryBase, Serializable):
 
     @property
     def _center_frequency(self) -> float:
-        return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))
+        return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))  # type: ignore

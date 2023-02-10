@@ -21,16 +21,13 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class Pipeline(Executable, Generic[ScenarioType]):
+class Pipeline(Executable, Generic[ScenarioType, DeviceType]):
     """Base class of HermesPy simulation pipelines."""
 
     __scenario: ScenarioType  # The simulated scenario.
     __num_drops: int  # Number of data drops being generated
 
-    def __init__(self,
-                 scenario: ScenarioType,
-                 num_drops: int = 1,
-                 *args, **kwargs) -> None:
+    def __init__(self, scenario: ScenarioType, num_drops: int = 1, *args, **kwargs) -> None:
         """
         Args:
 

@@ -12,7 +12,7 @@ import numpy as np
 from scipy.constants import speed_of_light
 from scipy.signal import correlate, correlation_lags
 
-from hermespy.core import ChannelStateInformation, Receiver, Signal, Serializable
+from hermespy.core import ChannelStateInformation, Receiver, Signal, Serializable, Transmitter
 from hermespy.modem import DuplexModem, CommunicationTransmission, CommunicationReception
 from hermespy.radar import Radar, RadarTransmission, RadarReception, RadarCube
 
@@ -44,7 +44,7 @@ class JCASReception(CommunicationReception, RadarReception):
         RadarReception.__init__(self, radar.signal, radar.cube, radar.cloud)
 
 
-class MatchedFilterJcas(Radar, DuplexModem, Receiver[JCASReception], Serializable):
+class MatchedFilterJcas(Radar, DuplexModem, Transmitter[JCASTransmission], Receiver[JCASReception], Serializable):
     """Joint Communication and Sensing Operator.
 
     A combination of communication and sensing operations.
@@ -72,15 +72,13 @@ class MatchedFilterJcas(Radar, DuplexModem, Receiver[JCASReception], Serializabl
         DuplexModem.__init__(self, **kwargs)
         Radar.__init__(self)
 
-    def transmit(self, duration: float = -1.0) -> JCASTransmission:
+    def _transmit(self, duration: float = -1.0) -> JCASTransmission:
 
         # Cache the recently transmitted waveform for correlation during reception
-        transmission = JCASTransmission(DuplexModem.transmit(self, duration))
+        transmission = JCASTransmission(DuplexModem._transmit(self, duration))  # type: ignore
         return transmission
 
-    def _receive(self,
-                 signal: Signal,
-                 csi: ChannelStateInformation) -> JCASReception:
+    def _receive(self, signal: Signal, csi: ChannelStateInformation) -> JCASReception:
 
         # There must be a recent transmission being cached in order to correlate
         if self.transmission is None:

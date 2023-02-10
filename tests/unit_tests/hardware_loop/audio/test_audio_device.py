@@ -33,14 +33,12 @@ class SineOperator(DuplexOperator):
         
         DuplexOperator.__init__(self)
         
-    def transmit(self, duration: float = 0.) -> Transmission:
+    def _transmit(self, duration: float = 0.) -> Transmission:
         
         sine = np.exp(2j * np.pi * np.arange(int(self.__duration * self.sampling_rate)) / self.sampling_rate * self.__frequency)
         signal = Signal(sine[np.newaxis, :], self.sampling_rate, self.device.carrier_frequency)
         
         transmission = Transmission(signal=signal)
-        
-        self.device.transmitters.add_transmission(self, transmission)
         return transmission
 
     def _receive(self, *args) -> Reception:

@@ -2,7 +2,7 @@ from unittest import TestCase
 
 import numpy as np
 
-from hermespy.channel import Channel, MultipathFading5GTDL
+from hermespy.channel import Channel, IdealChannel, MultipathFading5GTDL
 from hermespy.core import IdealAntenna, UniformArray
 from hermespy.simulation import SimulationScenario
 from hermespy.modem import TransmittingModem, ReceivingModem, BitErrorEvaluator, RootRaisedCosineWaveform, CustomPilotSymbolSequence, \
@@ -67,7 +67,7 @@ class TestSISOLinks(TestCase):
         transmission = self.tx_operator.transmit()
         tx_signals = self.tx_device.transmit()
         rx_signals, _, channel_state = channel.propagate(tx_signals)
-        self.rx_device.process_input(np.array([[rx_signals, channel_state]], dtype=object))
+        self.rx_device.process_input([(rx_signals, channel_state)])
         reception = self.rx_operator.receive()
         
         return
@@ -85,7 +85,7 @@ class TestSISOLinks(TestCase):
         self.tx_operator.waveform_generator = tx_waveform
         self.rx_operator.waveform_generator = rx_waveform
         
-        self.__propagate(Channel(self.tx_device, self.rx_device))
+        self.__propagate(IdealChannel(self.tx_device, self.rx_device))
         self.assertGreater(.1, self.ber.evaluate().artifact().to_scalar())
         
     def test_tdl_channel_single_carrier(self) -> None:
@@ -116,7 +116,7 @@ class TestSISOLinks(TestCase):
         self.tx_operator.precoding.pop_precoder(1)
         self.rx_operator.precoding.pop_precoder(1)
         
-        self.__propagate(Channel(self.tx_device, self.rx_device))
+        self.__propagate(IdealChannel(self.tx_device, self.rx_device))
         self.assertGreater(.1, self.ber.evaluate().artifact().to_scalar())
         
     def test_tdl_channel_chirp_fsk(self) -> None:
@@ -150,7 +150,7 @@ class TestSISOLinks(TestCase):
         self.tx_operator.waveform_generator = tx_waveform
         self.rx_operator.waveform_generator = rx_waveform
         
-        self.__propagate(Channel(transmitter=self.tx_device, receiver=self.rx_device))
+        self.__propagate(IdealChannel(transmitter=self.tx_device, receiver=self.rx_device))
         self.assertGreater(.1, self.ber.evaluate().artifact().to_scalar())
         
     def test_ideal_ofdm_ls_zf(self) -> None:
@@ -173,7 +173,7 @@ class TestSISOLinks(TestCase):
         self.tx_operator.precoding.pop_precoder(1)
         self.rx_operator.precoding.pop_precoder(1)
         
-        self.__propagate(Channel(transmitter=self.tx_device, receiver=self.rx_device))
+        self.__propagate(IdealChannel(transmitter=self.tx_device, receiver=self.rx_device))
         self.assertGreater(.1, self.ber.evaluate().artifact().to_scalar()) 
                
     def test_tdl_ofdm_ls_zf(self) -> None:
@@ -203,7 +203,7 @@ class TestSISOLinks(TestCase):
         """Verify a valid link over an AWGN channel with OFDM modluation,
         Schmidl-Cox synchronization, least-squares channel estimation and zero-forcing equalization"""
         
-        resources = [FrameResource(12, prefix_ratio=.01, elements=[FrameElement(ElementType.DATA, 9), FrameElement(ElementType.REFERENCE, 1)])]
+        resources = [FrameResource(12, prefix_ratio=.1, elements=[FrameElement(ElementType.DATA, 9), FrameElement(ElementType.REFERENCE, 1)])]
         structure = [FrameSymbolSection(3, [0])]
         
         tx_waveform = OFDMWaveform(subcarrier_spacing=1e3, num_subcarriers=120, dc_suppression=True, resources=resources, structure=structure)
@@ -219,14 +219,14 @@ class TestSISOLinks(TestCase):
         self.tx_operator.precoding.pop_precoder(1)
         self.rx_operator.precoding.pop_precoder(1)
         
-        self.__propagate(Channel(transmitter=self.tx_device, receiver=self.rx_device))
+        self.__propagate(IdealChannel(transmitter=self.tx_device, receiver=self.rx_device))
         self.assertGreater(.1, self.ber.evaluate().artifact().to_scalar())
 
     def test_tdl_ofdm_schmidl_cox(self) -> None:
         """Verify a valid link over a TDL channel with OFDM modluation,
         Schmidl-Cox synchronization, least-squares channel estimation and zero-forcing equalization"""
         
-        resources = [FrameResource(12, prefix_ratio=.01, elements=[FrameElement(ElementType.DATA, 9), FrameElement(ElementType.REFERENCE, 1)])]
+        resources = [FrameResource(12, prefix_ratio=.1, elements=[FrameElement(ElementType.DATA, 9), FrameElement(ElementType.REFERENCE, 1)])]
         structure = [FrameSymbolSection(3, [0])]
         
         tx_waveform = OFDMWaveform(subcarrier_spacing=15e3, num_subcarriers=120, dc_suppression=True, resources=resources, structure=structure)
@@ -273,12 +273,12 @@ class TestMIMOLinks(TestCase):
         
         self.ber = BitErrorEvaluator(self.tx_operator, self.rx_operator)
 
-    def __propagate(self, channel: Channel) -> None:
+    def __propagate(self, channel: IdealChannel) -> None:
         """Helper function to propagate a signal from transmitter to receiver.
         
         Args:
 
-            channel (Channel):
+            channel (IdealChannel):
                 The channel over which to propagate the signal from transmitter to receiver.
         """
         
@@ -289,7 +289,7 @@ class TestMIMOLinks(TestCase):
         transmission = self.tx_operator.transmit()
         tx_signals = self.tx_device.transmit()
         rx_signals, _, channel_state = channel.propagate(tx_signals)
-        self.rx_device.process_input(np.array([[rx_signals, channel_state]], dtype=object))
+        self.rx_device.process_input([(rx_signals, channel_state)])
         reception = self.rx_operator.receive()
         
         return
@@ -310,7 +310,7 @@ class TestMIMOLinks(TestCase):
         self.tx_operator.waveform_generator = tx_waveform
         self.rx_operator.waveform_generator = rx_waveform
         
-        self.__propagate(Channel(self.tx_device, self.rx_device))
+        self.__propagate(IdealChannel(self.tx_device, self.rx_device))
         self.assertGreater(.1, self.ber.evaluate().artifact().to_scalar())
         
     def test_tdl_channel_single_carrier(self) -> None:
@@ -346,7 +346,7 @@ class TestMIMOLinks(TestCase):
         self.tx_operator.waveform_generator = tx_waveform
         self.rx_operator.waveform_generator = rx_waveform
         
-        self.__propagate(Channel(transmitter=self.tx_device, receiver=self.rx_device))
+        self.__propagate(IdealChannel(transmitter=self.tx_device, receiver=self.rx_device))
         self.assertGreater(.1, self.ber.evaluate().artifact().to_scalar())
         
     def test_tdl_channel_ofdm(self) -> None:

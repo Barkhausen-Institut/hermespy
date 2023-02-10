@@ -114,7 +114,7 @@ class SpaceTimeBlockCoding(MaximumRatioCombining, Serializable):
         Returns:
             (np.ndarray, np.ndarray):
                 output: Decoded data with size 1 x N.
-                channel_estimation_out: updated channel estimation with size 1 x N.
+                symbols.states_out: updated channel estimation with size 1 x N.
         """
 
         if symbols.num_blocks % 2 != 0:
@@ -138,7 +138,7 @@ class SpaceTimeBlockCoding(MaximumRatioCombining, Serializable):
 
         return StatedSymbols(decoded_symbols[np.newaxis, :, :], np.ones((1, 1, symbols.num_blocks, symbols.num_symbols), dtype=complex))
 
-    def __decode_stbc_4_rx_antennas(self, input_data: np.ndarray, channel_estimation: np.ndarray, noise_var) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def __decode_stbc_4_rx_antennas(self, symbols: StatedSymbols) -> StatedSymbols:
         """Decode data for STBC with 4 transmit antennas.
 
         Received signal with equal noise power is assumed, the decoded signal has same noise
@@ -146,76 +146,73 @@ class SpaceTimeBlockCoding(MaximumRatioCombining, Serializable):
 
         Args:
             input_data(np.ndarray): Input signal with N symbols.
-            channel_estimation(np.ndarray): Input signal with N_rx x N_tx x N symbols.
+            symbols.states(np.ndarray): Input signal with N_rx x N_tx x N symbols.
 
         Returns:
             (np.ndarray, np.ndarray):
                 output (np.ndarray): Decoded data with size 1 x N
-                channel_estimation_out (np.ndarray): Updated channel estimation.
+                symbols.states_out (np.ndarray): Updated channel estimation.
         """
 
-        number_of_rx_antennas = input_data.shape[0]
-        number_of_symbols = input_data.shape[1]
-
-        tx0_idx = np.arange(0, number_of_symbols, 4)
+        tx0_idx = np.arange(0, symbols.num_symbols, 4)
         tx1_idx = tx0_idx + 1
         tx2_idx = tx0_idx + 2
         tx3_idx = tx0_idx + 3
 
         # antenna 0 and 2
-        input_stbc_tx_antennas_0_2 = np.zeros((number_of_rx_antennas, len(tx0_idx) + len(tx1_idx)), dtype=complex)
-        input_stbc_tx_antennas_0_2[:, ::2] = input_data[:, tx0_idx]
-        input_stbc_tx_antennas_0_2[:, 1::2] = input_data[:, tx1_idx]
+        input_stbc_tx_antennas_0_2 = np.zeros((symbols.num_transmit_streams, len(tx0_idx) + len(tx1_idx)), dtype=complex)
+        input_stbc_tx_antennas_0_2[:, ::2] = symbols.raw[:, tx0_idx]
+        input_stbc_tx_antennas_0_2[:, 1::2] = symbols.raw[:, tx1_idx]
 
-        noise_var_0_2 = np.zeros(input_stbc_tx_antennas_0_2.shape)
-        noise_var_0_2[:, ::2] = noise_var[:, tx0_idx]
-        noise_var_0_2[:, 1::2] = noise_var[:, tx1_idx]
+        # noise_var_0_2 = np.zeros(input_stbc_tx_antennas_0_2.shape)
+        # noise_var_0_2[:, ::2] = noise_var[:, tx0_idx]
+        # noise_var_0_2[:, 1::2] = noise_var[:, tx1_idx]
 
         ce_0_2 = np.zeros((2, (len(tx0_idx) + len(tx1_idx))), dtype=complex)
-        ce_0_2[0, ::2] = channel_estimation[0, tx0_idx]
-        ce_0_2[0, 1::2] = channel_estimation[0, tx1_idx]
-        ce_0_2[1, ::2] = channel_estimation[2, tx0_idx]
-        ce_0_2[1, 1::2] = channel_estimation[2, tx1_idx]
+        ce_0_2[0, ::2] = symbols.states[0, tx0_idx]
+        ce_0_2[0, 1::2] = symbols.states[0, tx1_idx]
+        ce_0_2[1, ::2] = symbols.states[2, tx0_idx]
+        ce_0_2[1, 1::2] = symbols.states[2, tx1_idx]
 
-        out_tx_0_2, ce_0_2, noise_var_0_2 = self.__decode_stbc_2_rx_antennas(input_stbc_tx_antennas_0_2, ce_0_2, noise_var_0_2)
+        decode_0_2 = self.__decode_stbc_2_rx_antennas(StatedSymbols(input_stbc_tx_antennas_0_2, ce_0_2))
 
         # reshape, so that we can concatenate t and t+1 accordingly
-        out_tx_0_2 = np.reshape(out_tx_0_2, (-1, 2))
-        ce_0_2 = np.reshape(ce_0_2, (-1, 2))
-        noise_var_0_2 = np.reshape(noise_var_0_2, (-1, 2))
+        out_tx_0_2 = np.reshape(decode_0_2.raw, (-1, 2))
+        ce_0_2 = np.reshape(decode_0_2.states, (-1, 2))
+        # noise_var_0_2 = np.reshape(noise_var_0_2, (-1, 2))
 
         # antenna 1 and 3
-        input_stbc_tx_antennas_1_3 = np.zeros((number_of_rx_antennas, len(tx2_idx) + len(tx3_idx)), dtype=complex)
-        input_stbc_tx_antennas_1_3[:, ::2] = input_data[:, tx2_idx]
-        input_stbc_tx_antennas_1_3[:, 1::2] = input_data[:, tx3_idx]
+        input_stbc_tx_antennas_1_3 = np.zeros((symbols.num_transmit_streams, len(tx2_idx) + len(tx3_idx)), dtype=complex)
+        input_stbc_tx_antennas_1_3[:, ::2] = symbols.raw[:, tx2_idx]
+        input_stbc_tx_antennas_1_3[:, 1::2] = symbols.raw[:, tx3_idx]
 
-        noise_var_1_3 = np.zeros(input_stbc_tx_antennas_0_2.shape)
-        noise_var_1_3[:, ::2] = noise_var[:, tx2_idx]
-        noise_var_1_3[:, 1::2] = noise_var[:, tx3_idx]
+        # noise_var_1_3 = np.zeros(input_stbc_tx_antennas_0_2.shape)
+        # noise_var_1_3[:, ::2] = noise_var[:, tx2_idx]
+        # noise_var_1_3[:, 1::2] = noise_var[:, tx3_idx]
 
-        ce_1_3 = np.zeros((number_of_rx_antennas, (len(tx2_idx) + len(tx3_idx))), dtype=complex)
-        ce_1_3[0, ::2] = channel_estimation[1, tx2_idx]
-        ce_1_3[0, 1::2] = channel_estimation[1, tx3_idx]
-        ce_1_3[1, ::2] = channel_estimation[3, tx2_idx]
-        ce_1_3[1, 1::2] = channel_estimation[3, tx3_idx]
+        ce_1_3 = np.zeros((symbols.num_transmit_streams, (len(tx2_idx) + len(tx3_idx))), dtype=complex)
+        ce_1_3[0, ::2] = symbols.states[1, tx2_idx]
+        ce_1_3[0, 1::2] = symbols.states[1, tx3_idx]
+        ce_1_3[1, ::2] = symbols.states[3, tx2_idx]
+        ce_1_3[1, 1::2] = symbols.states[3, tx3_idx]
 
-        out_tx_1_3, ce_1_3, noise_var_1_3 = self.__decode_stbc_2_rx_antennas(input_stbc_tx_antennas_1_3, ce_1_3, noise_var_1_3)
+        decode_1_3 = self.__decode_stbc_2_rx_antennas(StatedSymbols(input_stbc_tx_antennas_1_3, ce_1_3))
 
         # reshape so that we can concatenate t and t+1 accordingly
-        out_tx_1_3 = np.reshape(out_tx_1_3, (-1, 2))
-        ce_1_3 = np.reshape(ce_1_3, (-1, 2))
-        noise_var_1_3 = np.reshape(noise_var_1_3, (-1, 2))
+        out_tx_1_3 = np.reshape(decode_1_3.raw, (-1, 2))
+        ce_1_3 = np.reshape(decode_1_3.states, (-1, 2))
+        # noise_var_1_3 = np.reshape(noise_var_1_3, (-1, 2))
 
         output = np.hstack((out_tx_0_2, out_tx_1_3))
         output = np.reshape(output, (1, -1))
 
-        channel_estimation_out = np.hstack((ce_0_2, ce_1_3))
-        channel_estimation_out = np.reshape(channel_estimation_out, (1, -1))
+        output_state = np.hstack((ce_0_2, ce_1_3))
+        output_state = np.reshape(output_state, (1, -1))
 
-        noise_var = np.hstack((noise_var_0_2, noise_var_1_3))
-        noise_var = np.reshape(noise_var, (1, -1))
+        # noise_var = np.hstack((noise_var_0_2, noise_var_1_3))
+        # noise_var = np.reshape(noise_var, (1, -1))
 
-        return output, channel_estimation_out, noise_var
+        return StatedSymbols(output, output_state)
 
     @property
     def num_input_streams(self) -> int:

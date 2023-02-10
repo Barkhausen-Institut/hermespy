@@ -6,6 +6,8 @@ Channel Modeling
 """
 
 from __future__ import annotations
+from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from enum import Enum
 from typing import Generic, List, Optional, Tuple, TypeVar, Union, TYPE_CHECKING
 from itertools import chain, product
@@ -41,9 +43,7 @@ class ChannelRealization(ChannelStateInformation):
 
     __channel: Channel
 
-    def __init__(self,
-                 channel: Channel,
-                 impulse_response: np.ndarray) -> None:
+    def __init__(self, channel: Channel, impulse_response: np.ndarray) -> None:
         """
         Args:
 
@@ -65,31 +65,19 @@ class ChannelRealization(ChannelStateInformation):
         """
 
         return self.__channel
-    
+
     def reciprocal(self) -> ChannelRealization:
-        
+
         return ChannelRealization(self.channel, ChannelStateInformation.reciprocal(self).state)
 
 
-ChannelRealizationType = TypeVar('ChannelRealizationType', bound=ChannelRealization)
+ChannelRealizationType = TypeVar("ChannelRealizationType", bound=ChannelRealization)
 """Type of channel realization"""
 
 
-class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
-    """An ideal distortion-less channel.
+class Channel(ABC, RandomNode, Serializable, Generic[ChannelRealizationType]):
+    """Base class of all channel models."""
 
-    It also serves as a base class for all other channel models.
-
-    For MIMO systems, the received signal is the addition of the signal transmitted at all
-    antennas.
-    The channel will provide `number_rx_antennas` outputs to a signal
-    consisting of `number_tx_antennas` inputs. Depending on the channel model,
-    a random number generator, given by `rnd` may be needed. The sampling rate is
-    the same at both input and output of the channel, and is given by `sampling_rate`
-    samples/second.
-    """
-
-    yaml_tag: str = "Channel"
     serialized_attributes = {"impulse_response_interpolation"}
 
     __active: bool
@@ -313,20 +301,20 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
 
         The default channel gain is 1.
         Realistic physical channels should have a gain less than one.
-        
+
         For configuring logarithmic gains, set the attribute using the dB shorthand:
-        
+
         .. code-block:: python
-        
+
            from hermespy.core import dB
-        
+
            # Configure a 10 dB gain
            channel.gain = dB(10)
 
         Returns: The channel gain.
-        
+
         Raises:
-        
+
             ValueError: For gains smaller than zero.
         """
 
@@ -379,27 +367,24 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
         return self.__receiver.antennas.num_antennas
 
     @staticmethod
-    def __ensure_list(propagated_signal: Union[DeviceOutput, Signal, List[Signal], None]) -> List[Signal]:
+    def __ensure_sequence(propagated_signal: Union[DeviceOutput, Signal, Sequence[Signal], None]) -> Sequence[Signal]:
         """Subroutine of :meth:`Channel.propagate`."""
 
         if isinstance(propagated_signal, DeviceOutput):
             return propagated_signal.emerging_signals
-        
+
         if isinstance(propagated_signal, Signal):
             return [propagated_signal]
-            
+
         if isinstance(propagated_signal, list):
             return propagated_signal
-            
+
         if propagated_signal is None:
             return list()
 
         raise ValueError("Propagated signal is of unsupported type")
 
-    def propagate(self,
-                  forwards: Union[DeviceOutput, Signal, List[Signal], None] = None,
-                  backwards: Union[DeviceOutput, Signal, List[Signal], None] = None,
-                  realization: Optional[ChannelRealizationType] = None) -> Tuple[List[Signal], List[Signal], ChannelRealizationType]:
+    def propagate(self, forwards: Union[DeviceOutput, Signal, Sequence[Signal], None] = None, backwards: Union[DeviceOutput, Signal, Sequence[Signal], None] = None, realization: Optional[ChannelRealizationType] = None) -> Tuple[List[Signal], List[Signal], ChannelRealizationType]:
         """Propagate radio-frequency band signals over a channel instance.
 
         For the ideal channel in the base class, the MIMO channel is modeled as a matrix of ones.
@@ -407,10 +392,10 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
 
         Args:
 
-            forwards (Union[DeviceOutput, Signal, List[Signal]], optional):
+            forwards (Union[DeviceOutput, Signal, Sequence[Signal]], optional):
                 Signal models emitted by `device_alpha` associated with this wireless channel model.
 
-            backwards (Union[Signal, List[Signal]], optional):
+            backwards (Union[Signal, Sequence[Signal]], optional):
                 Signal models emitted by `device_beta` associated with this wireless channel model.
 
             realization (ChannelRealizationType, optional):
@@ -447,8 +432,8 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
         """
 
         # Convert forwards and backwards transmissions to lists if required
-        forwards = self.__ensure_list(forwards)
-        backwards = self.__ensure_list(backwards)
+        forwards = self.__ensure_sequence(forwards)
+        backwards = self.__ensure_sequence(backwards)
 
         # Abort if the channel is considered floating, since physical device properties are required for
         # channel modeling
@@ -476,27 +461,24 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
         # If the channel is inactive, propagation will result in signal loss
         # This is modeled by returning an zero-length signal and impulse-response (in time-domain) after propagation
         if not self.active:
-            return [Signal.empty(csi_sampling_rate, self.receiver.num_antennas)], [Signal.empty(csi_sampling_rate, self.transmitter.num_antennas)], ChannelStateInformation.Ideal(self.num_outputs, self.num_inputs, 0)
+            return [Signal.empty(csi_sampling_rate, self.receiver.num_antennas)], [Signal.empty(csi_sampling_rate, self.transmitter.num_antennas)], self.realize(0, csi_sampling_rate)
 
         # Generate the channel's impulse response realization
-        realization = self.realize(csi_num_samples, csi_sampling_rate) if realization is None else realization
+        _realization: ChannelRealizationType = self.realize(csi_num_samples, csi_sampling_rate) if realization is None else realization
 
         # Consider the a random synchronization offset between transmitter and receiver
         sync_offset: float = self._rng.uniform(low=self.__sync_offset_low, high=self.__sync_offset_high)
 
         # Compute the propgated signal samples for both channel directions
-        forwards_receptions = [self.Propagate(signal.resample(csi_sampling_rate), realization, PropagationDirection.FORWARDS, sync_offset) for signal in forwards]
-        backwards_receptions = [self.Propagate(signal.resample(csi_sampling_rate), realization, PropagationDirection.BACKWARDS, sync_offset) for signal in backwards]
+        forwards_receptions = [self.Propagate(signal.resample(csi_sampling_rate), _realization, PropagationDirection.FORWARDS, sync_offset) for signal in forwards]
+        backwards_receptions = [self.Propagate(signal.resample(csi_sampling_rate), _realization, PropagationDirection.BACKWARDS, sync_offset) for signal in backwards]
 
         # Cache the realization and return results
-        self.__last_realization = realization
-        return forwards_receptions, backwards_receptions, realization
+        self.__last_realization = _realization
+        return forwards_receptions, backwards_receptions, _realization
 
     @staticmethod
-    def Propagate(signal: Signal,
-                  realization: ChannelRealization,
-                  direction: PropagationDirection = PropagationDirection.FORWARDS,
-                  delay: float = 0.) -> Signal:
+    def Propagate(signal: Signal, realization: ChannelRealization, direction: PropagationDirection = PropagationDirection.FORWARDS, delay: float = 0.0) -> Signal:
         """Propagate a single signal model given a specific channel realzation.
 
         Args:
@@ -526,17 +508,16 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
         for delay_index in range(realization.num_delay_taps):
             for tx_idx, rx_idx in product(range(realization.num_transmit_streams), range(realization.num_receive_streams)):
 
-                delayed_signal = realization.state[rx_idx, tx_idx, :signal.num_samples, delay_index] * signal.samples[tx_idx, :]
+                delayed_signal = realization.state[rx_idx, tx_idx, : signal.num_samples, delay_index] * signal.samples[tx_idx, :]
                 propagated_samples[rx_idx, delay_index : delay_index + signal.num_samples] += delayed_signal
 
         return Signal(propagated_samples, sampling_rate=signal.sampling_rate, carrier_frequency=signal.carrier_frequency, delay=signal.delay + delay)
 
-    def realize(self,
-                num_samples: int,
-                sampling_rate: float) -> ChannelRealization:
+    @abstractmethod
+    def realize(self, num_samples: int, sampling_rate: float) -> ChannelRealizationType:
         """Generate a new channel impulse response.
 
-        Note that this is the core routine from which :meth:`.propagate` will create the channel state.
+        Note that this is the core routine from which :meth:`Channel.propagate` will create the channel state.
 
         Args:
 
@@ -547,7 +528,7 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
                 The rate at which the delay taps will be sampled, i.e. the delay resolution.
 
         Returns:
-        
+
                 Numpy aray representing the impulse response for all propagation paths between antennas.
                 4-dimensional tensor of size :math:`M_\\mathrm{Rx} \\times M_\\mathrm{Tx} \\times N \\times (L+1)` where
                 :math:`M_\\mathrm{Rx}` is the number of receiving antennas,
@@ -556,40 +537,17 @@ class Channel(RandomNode, Serializable, Generic[ChannelRealizationType]):
                 :math:`L` is the maximum path delay (in samples).
                 For the ideal  channel in the base class :math:`L = 0`.
         """
-
-        if self.transmitter is None or self.receiver is None:
-            raise RuntimeError("Channel is floating, making impulse response simulation impossible")
-
-        # MISO case
-        if self.receiver.antennas.num_antennas == 1:
-            spatial_response = np.ones((1, self.transmitter.antennas.num_antennas), dtype=complex)
-
-        # SIMO case
-        elif self.transmitter.antennas.num_antennas == 1:
-            spatial_response = np.ones((self.receiver.antennas.num_antennas, 1), dtype=complex)
-
-        # MIMO case
-        else:
-            spatial_response = np.eye(self.receiver.antennas.num_antennas, self.transmitter.antennas.num_antennas, dtype=complex)
-
-        # Scale by channel gain and add dimension for delay response
-        impulse_response = np.sqrt(self.gain) * np.expand_dims(np.repeat(spatial_response[:, :, np.newaxis], num_samples, 2), axis=3)
-
-        # Save newly generated response as most recent impulse response
-        self.recent_response = impulse_response
-
-        # Return resulting impulse response
-        return ChannelRealization(self, impulse_response)
+        ...  # pragma: no cover
 
     @property
     def realization(self) -> Optional[ChannelRealizationType]:
         """The last realization used for channel propagation.
 
-        Updated every time :meth:`.propagate` is called.
+        Updated every time :meth:`Channel.propagate` is called.
 
         Returns:
             The channel realization.
-            `None` if :meth:`.propagate` has not been called yet.
+            `None` if :meth:`Channel.propagate` has not been called yet.
         """
 
         return self.__last_realization

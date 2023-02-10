@@ -30,10 +30,7 @@ class RadarChannelRealization(ChannelRealization):
 
     __ground_truth: np.ndarray
 
-    def __init__(self,
-                 channel: RadarChannel,
-                 impulse_response: np.ndarray,
-                 ground_truth: np.ndarray) -> None:
+    def __init__(self, channel: RadarChannel, impulse_response: np.ndarray, ground_truth: np.ndarray) -> None:
 
         self.__ground_truth = ground_truth
         ChannelRealization.__init__(self, channel, impulse_response)
@@ -72,20 +69,20 @@ class RadarChannel(Channel[RadarChannelRealization], Serializable):
     yaml_tag = "RadarChannel"
     serialized_attributes = {"impulse_response_interpolation", "target_exists", "attenuate"}
 
-    __target_range: float
+    __target_range: float | Tuple[float, float]
     __radar_cross_section: float
     __target_azimuth: float
     __target_zenith: float
     target_exists: bool
     __losses_db: float
-    __target_velocity: float
+    __target_velocity: float | np.ndarray
     attenuate: bool
 
-    def __init__(self, target_range: Union[float, Tuple[float, float]], radar_cross_section: float, target_azimuth: float = 0.0, target_zenith: float = 0.0, target_exists: bool = True, losses_db: float = 0, velocity: Union[float, np.ndarray] = 0, attenuate: bool = True, **kwargs) -> None:
+    def __init__(self, target_range: float | Tuple[float, float], radar_cross_section: float, target_azimuth: float = 0.0, target_zenith: float = 0.0, target_exists: bool = True, losses_db: float = 0, velocity: float | np.ndarray = 0, attenuate: bool = True, **kwargs) -> None:
         """
         Args:
 
-            target_range (Union[float, Tuple[float, float]]):
+            target_range (float | Tuple[float, float]):
                 Absolute distance of target and radar sensor in meters.
                 Either a specific distance or a range of minimal and maximal target distance.
 
@@ -106,7 +103,7 @@ class RadarChannel(Channel[RadarChannelRealization], Serializable):
             losses_db (float, optional):
                 Any additional atmospheric and/or cable losses, in dB (default = 0)
 
-            velocity (Union[float, np.ndarray], optional):
+            velocity (float | np.ndarray , optional):
                 Velocity as a 3D vector (or as a float), in m/s (default = 0)
 
             attenuate (bool, optional):
@@ -133,7 +130,7 @@ class RadarChannel(Channel[RadarChannelRealization], Serializable):
         self.attenuate = attenuate
 
     @property
-    def target_range(self) -> float:
+    def target_range(self) -> float | Tuple[float, float]:
         """Absolute distance of target and radar sensor.
 
         Returns: Target range in meters.
@@ -146,7 +143,7 @@ class RadarChannel(Channel[RadarChannelRealization], Serializable):
         return self.__target_range
 
     @target_range.setter
-    def target_range(self, value: Union[float, Tuple[float, float]]) -> None:
+    def target_range(self, value: float | Tuple[float, float]) -> None:
 
         if isinstance(value, (float, int)):
 
@@ -170,7 +167,7 @@ class RadarChannel(Channel[RadarChannelRealization], Serializable):
         self.__target_range = value
 
     @property
-    def target_velocity(self) -> np.ndarray:
+    def target_velocity(self) -> float | np.ndarray:
         """Perceived target velocity.
 
         Returns: Velocity in m/s.
@@ -179,7 +176,7 @@ class RadarChannel(Channel[RadarChannelRealization], Serializable):
         return self.__target_velocity
 
     @target_velocity.setter
-    def target_velocity(self, value: float) -> None:
+    def target_velocity(self, value: float | np.ndarray) -> None:
 
         self.__target_velocity = value
 
@@ -249,9 +246,7 @@ class RadarChannel(Channel[RadarChannelRealization], Serializable):
         """
         return self.__losses_db
 
-    def realize(self,
-                num_samples: int,
-                sampling_rate: float) -> RadarChannelRealization:
+    def realize(self, num_samples: int, sampling_rate: float) -> RadarChannelRealization:
 
         if self.transmitter is None:
             raise FloatingError("Radar channel must be anchored to a transmitting device")
@@ -316,12 +311,11 @@ class RadarChannel(Channel[RadarChannelRealization], Serializable):
         ground_truth = np.array([[0.0, 0.0, target_range]])
         return RadarChannelRealization(self, impulse_response, ground_truth)
 
-    def null_hypothesis(self,
-                        realization: Optional[RadarChannelRealization] = None) -> RadarChannelRealization:
+    def null_hypothesis(self, realization: Optional[RadarChannelRealization] = None) -> RadarChannelRealization:
         """Generate a channel realization missing the target to be estimated.
 
         Args:
-    
+
             realization (RadarChannelRealization, optional):
                 Channel realization for which to generated a null hypothesis.
                 By default, the recent channel realization will be assumed.
@@ -337,7 +331,7 @@ class RadarChannel(Channel[RadarChannelRealization], Serializable):
         if realization is None:
 
             realization = self.realization
-            
+
             if realization is None:
                 raise RuntimeError("Channel has not been propagated over yet")
 

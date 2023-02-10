@@ -19,6 +19,7 @@ The following statistical channel models are currently supported:
 
 .. toctree::
 
+   channel.ideal
    channel.multipath_fading_channel
    channel.multipath_fading_templates
 

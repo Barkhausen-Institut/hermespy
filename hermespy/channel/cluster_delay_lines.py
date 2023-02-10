@@ -572,26 +572,26 @@ class ClusterDelayLineBase(Channel):
         # Draw azimuth angle spread from the distribution
         spread = 10 ** self._rng.normal(self.aoa_spread_mean, self.aoa_spread_std, size=size)
 
-        angles = 2 * (spread / 1.4) * np.sqrt(-np.log(cluster_powers / cluster_powers.max())) / angle_scale
+        angles: np.ndarray = 2 * (spread / 1.4) * np.sqrt(-np.log(cluster_powers / cluster_powers.max())) / angle_scale
 
         # Assign positive / negative integers and add some noise
         angle_variation = self._rng.normal(0.0, (spread / 7) ** 2, size=size)
         angle_spread_sign = self._rng.choice([-1.0, 1.0], size=size)
-        angles: np.ndarray = angle_spread_sign * angles + angle_variation
+        spread_angles = angle_spread_sign * angles + angle_variation
 
         # Add the actual line of sight term
         if self.line_of_sight:
 
             # The first angle within the list is exactly the line of sight component
-            angles += los_azimuth - angles[0]
+            spread_angles += los_azimuth - spread_angles[0]
 
         else:
 
-            angles += los_azimuth
+            spread_angles += los_azimuth
 
         # Spread the angles
         ray_offsets = self.cluster_aoa_spread * self.__ray_offset_angles
-        ray_angles = np.tile(angles[:, None], len(ray_offsets)) + ray_offsets
+        ray_angles = np.tile(spread_angles[:, None], len(ray_offsets)) + ray_offsets
 
         return ray_angles
 
@@ -628,13 +628,13 @@ class ClusterDelayLineBase(Channel):
         zenith_spread = 10 ** self._rng.normal(self.zoa_spread_mean, self.zoa_spread_std, size=size)
 
         # Generate angle starting point
-        cluster_zenith = -zenith_spread * np.log(cluster_powers / cluster_powers.max()) / zenith_scale
+        zenith_centroids: np.ndarray = -zenith_spread * np.log(cluster_powers / cluster_powers.max()) / zenith_scale
 
         cluster_variation = self._rng.normal(0.0, (zenith_spread / 7) ** 2, size=size)
         cluster_sign = self._rng.choice([-1.0, 1.0], size=size)
 
         # ToDo: Treat the BST-UT case!!!! (los_zenith = 90°)
-        cluster_zenith: np.ndarray = cluster_sign * cluster_zenith + cluster_variation
+        cluster_zenith = cluster_sign * zenith_centroids + cluster_variation
 
         if self.line_of_sight:
             cluster_zenith += los_zenith - cluster_zenith[0]
@@ -681,14 +681,14 @@ class ClusterDelayLineBase(Channel):
         zenith_spread = 10 ** self._rng.normal(self.zoa_spread_mean, self.zoa_spread_std, size=size)
 
         # Generate angle starting point
-        cluster_zenith = -zenith_spread * np.log(cluster_powers / cluster_powers.max()) / zenith_scale
+        zenith_centroids: np.ndarray = -zenith_spread * np.log(cluster_powers / cluster_powers.max()) / zenith_scale
 
         cluster_variation = self._rng.normal(0.0, (zenith_spread / 7) ** 2, size=size)
         cluster_sign = self._rng.choice([-1.0, 1.0], size=size)
 
         # ToDo: Treat the BST-UT case!!!! (los_zenith = 90°)
         # Equation 7.5-19
-        cluster_zenith: np.ndarray = cluster_sign * cluster_zenith + cluster_variation + self.zod_offset
+        cluster_zenith = cluster_sign * zenith_centroids + cluster_variation + self.zod_offset
 
         if self.line_of_sight:
             cluster_zenith += los_zenith - cluster_zenith[0]
@@ -703,9 +703,7 @@ class ClusterDelayLineBase(Channel):
 
         return ray_zenith
 
-    def realize(self,
-                num_samples: int,
-                sampling_rate: float) -> ChannelRealization:
+    def realize(self, num_samples: int, sampling_rate: float) -> ChannelRealization:
 
         center_frequency = self.transmitter.carrier_frequency
 
@@ -746,7 +744,8 @@ class ClusterDelayLineBase(Channel):
         # Couple cluster angles randomly (step 8)
         # This is equivalent to shuffeling the angles within each cluster set
         for ray_angles in (ray_aod, ray_aoa, ray_zod, ray_zoa):
-            [self._rng.shuffle(a) for a in ray_angles]
+            for a in ray_angles:
+                self._rng.shuffle(a)
 
         # Generate cross-polarization power ratios (step 9)
         xpr = 10 ** (0.1 * self._rng.normal(self.cross_polarization_power_mean, self.cross_polarization_power_std, size=(num_clusters, num_rays)))
@@ -799,7 +798,7 @@ class ClusterDelayLineBase(Channel):
                 impulse = np.exp(np.inner(wave_vector, relative_velocity) * fast_fading * 2j * pi)
 
                 # Save the resulting channel coefficients for this ray
-                nlos_coefficients[subcluster_idx, :, :, :] = np.einsum('ab,c->abc', channel, impulse)
+                nlos_coefficients[subcluster_idx, :, :, :] = np.einsum("ab,c->abc", channel, impulse)
 
         # In the case of line-of-sight, scale the coefficients and append another set according to equation 7.5-30
         if self.line_of_sight:
@@ -830,7 +829,7 @@ class ClusterDelayLineBase(Channel):
 
             # Second summand of equation 7.5-30
             resampling_matrix = delay_resampling_matrix(sampling_rate, 1, cluster_delays[0], num_delay_samples).flatten()
-            impulse_response += (rice_factor_lin / 1 + rice_factor_lin) * np.einsum('ab,c,r->abcr', channel, impulse, resampling_matrix)
+            impulse_response += (rice_factor_lin / 1 + rice_factor_lin) * np.einsum("ab,c,r->abcr", channel, impulse, resampling_matrix)
 
         # Finally, generate the impulse response for all non-line of sight components
         for coefficients, delay in zip(nlos_coefficients, virtual_cluster_delays):
