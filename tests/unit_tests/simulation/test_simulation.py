@@ -135,12 +135,15 @@ class TestSimulationScenario(TestCase):
         """Test the generation of a single drop"""
         
         drop = self.scenario.drop()
+        
+        self.assertEqual(self.scenario.num_devices, drop.num_device_transmissions)
+        self.assertEqual(self.scenario.num_devices, drop.num_device_receptions)
 
 
 class MockTransmitter(Transmitter):
     """Mock transmitter for testing purposes."""
 
-    def transmit(self, duration: float = 0) -> Transmission:
+    def _transmit(self, _: float = 0) -> Transmission:
         
         signal = Signal.empty(self.sampling_rate, self.device.num_antennas, 1, carrier_frequency=self.carrier_frequency)
         return Transmission(signal)

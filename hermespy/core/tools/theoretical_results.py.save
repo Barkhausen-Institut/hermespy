@@ -2,7 +2,7 @@
 """HermesPy theoretical scenario performance."""
 
 from __future__ import annotations
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Type
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -47,8 +47,8 @@ class TheoreticalResults:
             Supported channel types
     """
 
-    __waveform_generators: List[type(WaveformGenerator)]
-    __channels: List[type(Channel)]
+    __waveform_generators: List[Type[WaveformGenerator]]
+    __channels: List[Type[Channel]]
     __theory_grid: np.ndarray
 
     def __init__(self) -> None:

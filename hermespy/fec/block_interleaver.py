@@ -13,7 +13,7 @@ i.e. the code rate is :math:`R = 1`.
 
 from __future__ import annotations
 from typing import Type
-from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
+from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, Node
 import numpy as np
 
 from hermespy.core import Serializable
@@ -108,7 +108,7 @@ class BlockInterleaver(Encoder, Serializable):
         return representer.represent_mapping(cls.yaml_tag, state)
 
     @classmethod
-    def from_yaml(cls: Type[BlockInterleaver], constructor: SafeConstructor, node: MappingNode) -> BlockInterleaver:
+    def from_yaml(cls: Type[BlockInterleaver], constructor: SafeConstructor, node: Node) -> BlockInterleaver:
         """Recall a new `Interleaver` encoder from YAML.
 
         Args:

@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 # Import required HermesPy modules
-from hermespy.channel import Channel
+from hermespy.channel import IdealChannel
 from hermespy.simulation import SimulatedDevice
 from hermespy.modem import SimplexLink, BitErrorEvaluator, OFDMWaveform, FrameResource, FrameElement, ElementType, FrameSymbolSection, FrameGuardSection, PrefixType
 
@@ -42,7 +42,7 @@ link.waveform_generator = OFDMWaveform(subcarrier_spacing=subcarrier_spacing, mo
 
 
 # Simulate a channel between the two devices
-channel = Channel(tx_device, rx_device)
+channel = IdealChannel(tx_device, rx_device)
 
 # Simulate the signal transmission over the channel
 transmission = link.transmit()

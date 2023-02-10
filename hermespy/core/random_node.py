@@ -23,7 +23,7 @@ __status__ = "Prototype"
 
 class RandomRealization(object):
     """Realization of a random node."""
-    
+
     __seed: int
 
     def __init__(self, random_node: RandomNode) -> None:
@@ -31,25 +31,25 @@ class RandomRealization(object):
         Args:
             random_node (RandomNode): Random node from which to generate a realization.
         """
-        
+
         # Draw a random signed integer from the node's random number generator
         self.__seed = random_node._rng.integers(0, maxsize)
-        
+
     @property
     def seed(self) -> int:
         """Seed of the random realization.
-        
+
         Returns: A signed integer representing the random seed.
         """
-        
+
         return self.__seed
-    
+
     def generator(self) -> Generator:
         """Initialize a new generator from the realized random seed.
-        
+
         Returns: A new numpy generator object.
         """
-        
+
         return default_rng(self.__seed)
 
 

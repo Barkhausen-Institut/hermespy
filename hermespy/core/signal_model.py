@@ -245,7 +245,7 @@ class Signal(HDFSerializable):
         """
 
         if self.num_samples < 1:
-            return 0.0
+            return np.zeros(self.num_streams)
 
         stream_power = np.sum(self.__samples.real**2 + self.__samples.imag**2, axis=1) / self.num_samples
         return stream_power
@@ -689,5 +689,5 @@ class Signal(HDFSerializable):
         group.attrs["noise_power"] = self.noise_power
 
         # Serialize samples
-        group.create_dataset("samples", data=self.samples)
-        group.create_dataset("timestamps", data=self.timestamps)
+        self._write_dataset(group, "samples", self.samples)
+        self._write_dataset(group, "timestamps", self.timestamps)

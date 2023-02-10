@@ -15,7 +15,7 @@ from contextlib import contextmanager
 from enum import Enum
 from glob import glob
 from os import getcwd, mkdir
-from typing import ContextManager, List, Optional, Union
+from typing import Any, Generator, List, Optional, Union
 
 import matplotlib.pyplot as plt
 from rich.console import Console
@@ -33,13 +33,22 @@ __status__ = "Prototype"
 
 
 class Verbosity(Enum):
-    """Information output behaviour configuration of an executable."""
+    """Information output behaviour configuration of an executable"""
 
-    ALL = 0  # Print absolutely everything
-    INFO = 1  # Information
-    WARNING = 2  # Warnings only
-    ERROR = 3  # Errors only
-    NONE = 4  # Print absolutely nothing
+    ALL = 0
+    """Print absolutely everything"""
+
+    INFO = 1
+    """Print general information"""
+
+    WARNING = 2
+    """Print only warnings and errors"""
+
+    ERROR = 3
+    """Print only errors"""
+
+    NONE = 4
+    """Print absolutely nothing"""
 
 
 class Executable(ABC):
@@ -48,18 +57,13 @@ class Executable(ABC):
     All executables are required to implement the :meth:`.run` method.
     """
 
-    
-    __results_dir: Optional[str]    # Directory in which all execution artifacts will be dropped.
-    __verbosity: Verbosity          # Information output behaviour during execution.
-    __style: str = "dark"           # Plotting color scheme
-    __console: Console              # Rich console instance for text output
-    __console_mode: ConsoleMode     # Output format during execution
+    __results_dir: Optional[str]  # Directory in which all execution artifacts will be dropped.
+    __verbosity: Verbosity  # Information output behaviour during execution.
+    __style: str = "dark"  # Plotting color scheme
+    __console: Console  # Rich console instance for text output
+    __console_mode: ConsoleMode  # Output format during execution
 
-    def __init__(self,
-                 results_dir: Optional[str] = None,
-                 verbosity: Union[Verbosity, str] = Verbosity.INFO,
-                 console: Optional[Console] = None,
-                 console_mode: ConsoleMode = ConsoleMode.INTERACTIVE) -> None:
+    def __init__(self, results_dir: Optional[str] = None, verbosity: Union[Verbosity, str] = Verbosity.INFO, console: Optional[Console] = None, console_mode: ConsoleMode = ConsoleMode.INTERACTIVE) -> None:
         """
         Args:
 
@@ -71,11 +75,15 @@ class Executable(ABC):
 
             console (Console, optional):
                 The console instance the executable will operate on.
+
+            console_mode (ConsoleMode, optional):
+                Output behaviour of the information printed to the console.
+                :class:`ConsoleMode.Interactive: by default.
         """
 
         # Default parameters
         self.results_dir = results_dir
-        self.verbosity = verbosity
+        self.verbosity = verbosity if isinstance(verbosity, Verbosity) else Verbosity[verbosity]
         self.__console = Console(record=False) if console is None else console
         self.console_mode = console_mode
 
@@ -86,11 +94,14 @@ class Executable(ABC):
         """
 
         with self.style_context():
-            self.run()
+            _ = self.run()
 
     @abstractmethod
-    def run(self) -> None:
-        """Execute the configuration."""
+    def run(self) -> Any:
+        """Execute the configuration.
+
+        Returns: The result of the run.
+        """
         ...  # pragma no cover
 
     @property
@@ -223,12 +234,10 @@ class Executable(ABC):
 
     @staticmethod
     @contextmanager
-    def style_context() -> ContextManager:
+    def style_context() -> Generator:
         """Context for the configured style.
 
-        Returns:
-            ContextManager:
-                Style context manager.
+        Returns:  Style context manager generator.
         """
 
         if Executable.__style in Executable.__hermes_styles():
@@ -262,11 +271,10 @@ class Executable(ABC):
 
         self.__console = value
 
-
     @property
     def console_mode(self) -> ConsoleMode:
         """Console mode during runtime.
-        
+
         Returms: The current console mode.
         """
 

@@ -36,7 +36,7 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
     yaml_tag = "ChirpFsk"
 
     # Modulation parameters
-    symbol_type: np.dtype = int
+    symbol_type = np.int_
     synchronization: ChirpFSKSynchronization
     __chirp_duration: float  # Duraiton of a single chirp in seconds
     __chirp_bandwidth: float  # Frequency range over which a single chirp sweeps
@@ -432,11 +432,11 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
     def power(self) -> float:
         return self.symbol_energy / self.samples_in_chirp
 
-    @WaveformGenerator.modulation_order.setter
+    @WaveformGenerator.modulation_order.setter  # type: ignore
     def modulation_order(self, value: int) -> None:
 
         self._prototypes.cache_clear()
-        WaveformGenerator.modulation_order.fset(self, value)
+        WaveformGenerator.modulation_order.fset(self, value)  # type: ignore
 
     @property
     def symbol_precoding_support(self) -> bool:
@@ -444,7 +444,7 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
         return False
 
     @lru_cache(maxsize=1, typed=True)
-    def _prototypes(self) -> Tuple[np.array, float]:
+    def _prototypes(self) -> Tuple[np.ndarray, float]:
         """Generate chirp prototypes.
 
         This method generates the prototype chirps for all possible modulation symbols, that will be correlated with the

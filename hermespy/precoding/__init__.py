@@ -1,3 +1,4 @@
+from .precoding import Precoding, PrecoderType, Precoder
 from .symbol_precoding import SymbolPrecoder, SymbolPrecoding
 from .single_carrier import SingleCarrier
 from .spatial_multiplexing import SpatialMultiplexing
@@ -15,4 +16,4 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-__all__ = ["SymbolPrecoding", "SymbolPrecoder", "DFT", "SingleCarrier", "SpatialMultiplexing", "TransmitStreamCoding", "ReceiveStreamCoding", "TransmitStreamEncoder", "ReceiveStreamDecoder", "SpaceTimeBlockCoding"]
+__all__ = ["Precoding", "PrecoderType", "Precoder", "SymbolPrecoding", "SymbolPrecoder", "SingleCarrier", "SpatialMultiplexing", "DFT", "TransmitStreamCoding", "ReceiveStreamCoding", "TransmitStreamEncoder", "ReceiveStreamDecoder", "SpaceTimeBlockCoding"]

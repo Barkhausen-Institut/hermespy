@@ -8,10 +8,9 @@ from unittest.mock import Mock, patch
 import ray
 import numpy as np
 from numpy.random import default_rng
-from scipy.stats import norm, truncnorm
 
 from hermespy.core.monte_carlo import ActorRunResult, Evaluation, EvaluationTemplate, EvaluationResult, ScalarEvaluationResult, GridSection, MonteCarlo, MonteCarloActor, MonteCarloSample, \
-    Evaluator, ArtifactTemplate, MO, Artifact, GridDimension, RegisteredDimension, dimension, ProcessedScalarEvaluationResult
+    Evaluator, ArtifactTemplate, GridDimension, register, RegisteredDimension, ProcessedScalarEvaluationResult
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -242,11 +241,11 @@ class TestObjectMock(object):
         self.property_b = 0
         self.property_c = 0
 
-    @dimension
+    @property
     def property_a(self):
         return self.__property_a
 
-    @property_a.setter(first_impact='init_stage', last_impact='exit_stage')
+    @property_a.setter  # (first_impact='init_stage', last_impact='exit_stage')
     def property_a(self, value) -> None:
         self.__property_a = value
 
@@ -549,6 +548,14 @@ class TestGridDimension(TestCase):
 class TestRegisteredDimension(TestCase):
     """Test the registered dimension"""
     
+    def test_decoration_mechanic(self) -> None:
+        
+        x = property(lambda: 10)
+        
+        return
+        
+        
+    
     def test_decoration(self) -> None:
         """The decorator should return a property registered within the simulation registry"""
         
@@ -563,11 +570,12 @@ class TestRegisteredDimension(TestCase):
             def __init__(self) -> None:
                 self.__value_a = 1.2345
             
-            @dimension
+            @register(first_impact=expected_first_impact_a, last_impact=expected_last_impact_a)
+            @property
             def test_dimension(self) -> float:
                 return self.__value_a
             
-            @test_dimension.setter(first_impact=expected_first_impact_a, last_impact=expected_last_impact_a)
+            @test_dimension.setter
             def test_dimension(self, value: float) -> None:
                 self.__value_a = value
                 
@@ -576,11 +584,12 @@ class TestRegisteredDimension(TestCase):
             def __init__(self) -> None:
                 self.test_dimension = 6.789
                 
-            @dimension
+            @register(first_impact=expected_first_impact_b, last_impact=expected_last_impact_b)
+            @property
             def test_dimension(self) -> float:
                 return self.__value_b
             
-            @test_dimension.setter(first_impact=expected_first_impact_b, last_impact=expected_last_impact_b)
+            @test_dimension.setter
             def test_dimension(self, value: float) -> None:
                 self.__value_b = value
             

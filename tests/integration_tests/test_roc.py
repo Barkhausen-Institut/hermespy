@@ -38,7 +38,7 @@ class TestRocFromMeasurements(TestCase):
         system.snr = 1e-13
         system.snr_type = SNRType.N0
 
-        hardware_loop = HardwareLoop[SimulatedPhysicalScenario](system)
+        hardware_loop = HardwareLoop(system)
         hardware_loop.num_drops = 1
         hardware_loop.results_dir = self.tempdir.name
 

@@ -9,7 +9,7 @@ from __future__ import annotations
 from typing import Type, Optional
 
 import numpy as np
-from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode
+from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode, Node
 
 from hermespy.channel import Channel, ChannelRealization, QuadrigaInterface
 
@@ -69,11 +69,9 @@ class QuadrigaChannel(Channel):
             QuadrigaInterface: Global Quadriga interface.
         """
 
-        return QuadrigaInterface.GlobalInstance() if self.__interface is None else self.__interface
+        return QuadrigaInterface.GlobalInstance() if self.__interface is None else self.__interface  # type: ignore
 
-    def realize(self,
-                num_samples: int,
-                sampling_rate: float) -> ChannelRealization:
+    def realize(self, num_samples: int, sampling_rate: float) -> ChannelRealization:
 
         # Query the quadriga interface for a new impulse response
         path_gains, path_delays = self.__quadriga_interface.get_impulse_response(self)
@@ -119,7 +117,7 @@ class QuadrigaChannel(Channel):
         return representer.represent_mapping(cls.yaml_tag, state)
 
     @classmethod
-    def from_yaml(cls: Type[QuadrigaChannel], constructor: SafeConstructor, node: MappingNode) -> QuadrigaChannel:
+    def from_yaml(cls: Type[QuadrigaChannel], constructor: SafeConstructor, node: Node) -> QuadrigaChannel:
         """Recall a new `QuadrigaChannel` instance from YAML.
 
         Args:

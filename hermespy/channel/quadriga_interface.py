@@ -11,8 +11,8 @@ from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 
 if TYPE_CHECKING:
 
-    from hermespy.modem import Transmitter, Receiver
     from hermespy.channel import QuadrigaChannel
+    from hermespy.simulation import SimulatedDevice
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -274,8 +274,8 @@ class QuadrigaInterface:
         self.__fetched_channels.append(channel)
 
         channel_indices = self.__channel_indices[self.__channels.index(channel), :]
-        channel = self.__cirs[channel_indices[0], channel_indices[1]]
-        return channel.path_impulse_responses, channel.tau
+        channel_path = self.__cirs[channel_indices[0], channel_indices[1]]  # type: ignore
+        return channel_path.path_impulse_responses, channel_path.tau
 
     def __launch_quadriga(self) -> None:
         """Launches quadriga channel simulator.
@@ -289,8 +289,8 @@ class QuadrigaInterface:
         if len(self.__channels) < 1:
             raise RuntimeError("Attempting to launch Quadriga simulation without registered channels")
 
-        transmitters: List[Transmitter] = []
-        receivers: List[Receiver] = []
+        transmitters: List[SimulatedDevice] = []
+        receivers: List[SimulatedDevice] = []
 
         self.__channel_indices = np.empty((len(self.__channels), 2), dtype=int)
         receiver_index = 0
@@ -363,7 +363,7 @@ class QuadrigaInterface:
         cirs = self._run_quadriga(**parameters)
         self.__cirs = cirs
 
-    def _run_quadriga(self, **parameters) -> List[Any]:
+    def _run_quadriga(self, **parameters) -> np.ndarray:
         """Run the quadriga model.
 
         Must be realised by interface implementations.

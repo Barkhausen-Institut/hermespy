@@ -15,12 +15,12 @@ import numpy as np
 from rich.progress import Progress, SpinnerColumn, TimeElapsedColumn
 from rich.prompt import Confirm
 from rich.table import Table
-from ruamel.yaml import SafeConstructor, MappingNode
+from ruamel.yaml import SafeConstructor, Node
 
 from hermespy.core import ConsoleMode, Drop, Evaluation, Evaluator, MonteCarloResult, Pipeline, Serializable
 from hermespy.core.monte_carlo import GridDimension, SampleGrid, GridSection, MonteCarloSample
 from hermespy.tools import tile_figures
-from .physical_device import PhysicalDevice
+from .physical_device import PhysicalDevice, PhysicalDeviceType
 from .scenario import PhysicalScenarioType
 
 __author__ = "Jan Adler"
@@ -33,7 +33,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class HardwareLoop(Serializable, Generic[PhysicalScenarioType], Pipeline[PhysicalScenarioType]):
+class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PhysicalDeviceType], Pipeline[PhysicalScenarioType, PhysicalDeviceType]):
     """Hermespy hardware loop configuration."""
 
     yaml_tag = "HardwareLoop"
@@ -45,16 +45,10 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType], Pipeline[Physica
     plot_information: bool
     """Plot information during loop runtime"""
 
-    # Parameter dimension over which a run sweeps
-    __dimensions: List[GridDimension]
-    # Evaluators further processing drop information
-    __evaluators: List[Evaluator]
+    __dimensions: List[GridDimension]  # Parameter dimension over which a run sweeps
+    __evaluators: List[Evaluator]  # Evaluators further processing drop information
 
-    def __init__(self,
-                 system: PhysicalScenarioType,
-                 manual_triggering: bool = False,
-                 plot_information: bool = True,
-                 **kwargs) -> None:
+    def __init__(self, system: PhysicalScenarioType, manual_triggering: bool = False, plot_information: bool = True, **kwargs) -> None:
         """
         Args:
 
@@ -74,8 +68,8 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType], Pipeline[Physica
 
         self.manual_triggering = manual_triggering
         self.plot_information = plot_information
-        self.__dimensions: List[GridDimension] = []
-        self.__evaluators: List[Evaluator] = []
+        self.__dimensions = []
+        self.__evaluators = []
 
     def new_dimension(self, dimension: str, sample_points: List[Any], *args: Tuple[Any]) -> GridDimension:
         """Add a dimension to the sweep grid.
@@ -100,10 +94,10 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType], Pipeline[Physica
         """
 
         considered_objects = (self.__scenario) if len(args) < 1 else args
-        dimension = GridDimension(considered_objects, dimension, sample_points)
-        self.add_dimension(dimension)
+        grid_dimension = GridDimension(considered_objects, dimension, sample_points)
+        self.add_dimension(grid_dimension)
 
-        return dimension
+        return grid_dimension
 
     def add_dimension(self, dimension: GridDimension) -> None:
         """Add a new dimension to the simulation grid.
@@ -165,11 +159,9 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType], Pipeline[Physica
             figure[0].canvas.draw()
             figure[0].canvas.flush_events()
 
-    def run(self,
-            overwrite = True,
-            campaign: str = 'default') -> None:
+    def run(self, overwrite=True, campaign: str = "default") -> None:
         """Run the hardware loop configuration.
-        
+
         Args:
 
             overwrite (bool, optional):
@@ -208,7 +200,7 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType], Pipeline[Physica
         # Stop the scenario replay
         self.scenario.stop()
 
-    def __run(self) -> np.ndarray:
+    def __run(self) -> None:
         """Internal run method executing drops"""
 
         # Prepare figures if plotting is enabled.
@@ -221,10 +213,10 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType], Pipeline[Physica
 
             with self.style_context():
 
-                for d in range(self.scenario.num_devices):
+                for device_idx in range(self.scenario.num_devices):
 
                     sub = plt.subplots(1, 2)
-                    sub[0].suptitle(f"Device #{d}")
+                    sub[0].suptitle(f"Device #{device_idx}")
 
                     device_figures.append(sub)
 
@@ -254,15 +246,16 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType], Pipeline[Physica
 
         num_total_drops = self.num_drops
         grid_tasks = []
-        for d in self.__dimensions:
 
-            grid_tasks.append(progress.add_task("[cyan]" + d.title, total=d.num_sample_points))
-            num_total_drops *= d.num_sample_points
+        for grid_dimension in self.__dimensions:
+
+            grid_tasks.append(progress.add_task("[cyan]" + grid_dimension.title, total=grid_dimension.num_sample_points))
+            num_total_drops *= grid_dimension.num_sample_points
 
         loop_drop_progress = progress.add_task("[green]Drops", total=self.num_drops)
         total_progress = progress.add_task("[red]Progress", total=num_total_drops)
 
-        with progress if self.console_mode == ConsoleMode.INTERACTIVE else nullcontext():
+        with progress if self.console_mode == ConsoleMode.INTERACTIVE else nullcontext():  # type: ignore
 
             # Start counting the total number of completed drops
             total = 0
@@ -314,8 +307,8 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType], Pipeline[Physica
                     results_table.add_column("#", style="red")
                     results_table.add_column("Drop", style="green")
 
-                    for dimension in self.__dimensions:
-                        results_table.add_column(dimension.title, style="cyan")
+                    for grid_dimension in self.__dimensions:
+                        results_table.add_column(grid_dimension.title, style="cyan")
 
                     for evaluator in self.__evaluators:
                         results_table.add_column(evaluator.abbreviation, style="purple")
@@ -336,7 +329,7 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType], Pipeline[Physica
                 plt.ioff()
 
         # Compute the evaluation results
-        result = MonteCarloResult(self.__dimensions, self.__evaluators, samples, 0.0)
+        result: MonteCarloResult = MonteCarloResult(self.__dimensions, self.__evaluators, samples, 0.0)
 
         # Plot results if the respective flag is enabled
         if self.plot_information:
@@ -349,7 +342,7 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType], Pipeline[Physica
             result.save_to_matlab(path.join(self.results_dir, "results.mat"))
 
     @classmethod
-    def from_yaml(cls: Type[HardwareLoop], constructor: SafeConstructor, node: MappingNode) -> HardwareLoop:
+    def from_yaml(cls: Type[HardwareLoop], constructor: SafeConstructor, node: Node) -> HardwareLoop:
 
         state = constructor.construct_mapping(node, deep=True)
 

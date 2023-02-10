@@ -35,10 +35,10 @@ __status__ = "Prototype"
 class AntennaCorrelation(ABC):
     """Base class for statistical modeling of antenna array correlations."""
 
-    __channel: Optional[MultipathFadingChannel]
-    __device: Optional[SimulatedDevice]
+    __channel: Channel | None
+    __device: SimulatedDevice | None
 
-    def __init__(self, channel: Optional[Channel] = None, device: Optional[Device] = None) -> None:
+    def __init__(self, channel: Channel | None = None, device: SimulatedDevice | None = None) -> None:
 
         self.channel = channel
         self.device = device
@@ -53,7 +53,7 @@ class AntennaCorrelation(ABC):
         ...  # pragma no cover
 
     @property
-    def channel(self) -> Optional[MultipathFadingChannel]:
+    def channel(self) -> Channel | None:
         """The channel this correlation model configures.
 
         Returns:
@@ -64,12 +64,12 @@ class AntennaCorrelation(ABC):
         return self.__channel
 
     @channel.setter
-    def channel(self, value: Optional[MultipathFadingChannel]) -> None:
+    def channel(self, value: Channel | None) -> None:
 
         self.__channel = value
 
     @property
-    def device(self) -> Optional[SimulatedDevice]:
+    def device(self) -> SimulatedDevice | None:
         """The device this correlation model is based upon.
 
         Returns:
@@ -80,7 +80,7 @@ class AntennaCorrelation(ABC):
         return self.__device
 
     @device.setter
-    def device(self, value: Optional[SimulatedDevice]) -> None:
+    def device(self, value: SimulatedDevice | None) -> None:
 
         self.__device = value
 
@@ -187,7 +187,7 @@ class MultipathFadingChannel(Channel, Serializable):
         delays: Union[np.ndarray, List[float]],
         power_profile: Union[np.ndarray, List[float]],
         rice_factors: Union[np.ndarray, List[float]],
-        num_sinusoids: Optional[float] = None,
+        num_sinusoids: Optional[int] = None,
         los_angle: Optional[float] = None,
         doppler_frequency: Optional[float] = None,
         los_doppler_frequency: Optional[float] = None,
@@ -453,9 +453,7 @@ class MultipathFadingChannel(Channel, Serializable):
 
         self.__los_angle = angle
 
-    def realize(self,
-                num_samples: int,
-                sampling_rate: float) -> ChannelRealization:
+    def realize(self, num_samples: int, sampling_rate: float) -> ChannelRealization:
 
         max_delay_in_samples = int(self.__delays[-1] * sampling_rate)
         timestamps = np.arange(num_samples) / sampling_rate
@@ -598,19 +596,19 @@ class MultipathFadingChannel(Channel, Serializable):
 
         self.__beta_correlation = value
 
-    @Channel.transmitter.setter
+    @Channel.transmitter.setter  # type: ignore
     def transmitter(self, value: SimulatedDevice) -> None:
 
-        Channel.transmitter.fset(self, value)
+        Channel.transmitter.fset(self, value)  # type: ignore
 
         # Register new device at correlation model
         if self.alpha_correlation is not None:
             self.alpha_correlation.device = value
 
-    @Channel.receiver.setter
+    @Channel.receiver.setter  # type: ignore
     def receiver(self, value: SimulatedDevice) -> None:
 
-        Channel.receiver.fset(self, value)
+        Channel.receiver.fset(self, value)  # type: ignore
 
         # Register new device at correlation model
         if self.beta_correlation is not None:

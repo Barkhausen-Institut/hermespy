@@ -6,11 +6,12 @@ from .device import Operator, OperatorSlot, DuplexOperator, MixingOperator, Proc
 from .executable import Executable, Verbosity
 from .pipeline import Pipeline
 from .factory import Factory, Serializable, SerializableEnum, HDFSerializable
-from .monte_carlo import Artifact, ArtifactTemplate, Evaluator, Evaluation, EvaluationResult, EvaluationTemplate, GridDimension, ScalarEvaluationResult, MonteCarlo, MonteCarloActor, MonteCarloResult, MonteCarloSample, dimension
+from .monte_carlo import Artifact, ArtifactTemplate, Evaluator, Evaluation, EvaluationResult, EvaluationTemplate, GridDimension, ScalarEvaluationResult, MonteCarlo, MonteCarloActor, MonteCarloResult, MonteCarloSample, register
 from .random_node import RandomRealization, RandomNode
 from .drop import Drop
 from .scenario import Scenario, ScenarioMode, ScenarioType, ReplayScenario
 from .signal_model import Signal
+from .visualize import Visualizable
 
 __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -37,7 +38,8 @@ __all__ = [
     "ValueType",
     "ChannelStateFormat",
     "ChannelStateInformation",
-    "Operator", "OperatorSlot", 
+    "Operator",
+    "OperatorSlot",
     "DuplexOperator",
     "MixingOperator",
     "TransmitterSlot",
@@ -70,14 +72,20 @@ __all__ = [
     "MonteCarloActor",
     "MonteCarloResult",
     "MonteCarloSample",
-    "dimension",
+    "register",
     "Factory",
     "Serializable",
     "SerializableEnum",
     "HDFSerializable",
-    "RandomRealization", "RandomNode",
+    "RandomRealization",
+    "RandomNode",
     "Drop",
-    "Scenario", "ScenarioMode", "ScenarioType", "ReplayScenario",
+    "Scenario",
+    "ScenarioMode",
+    "ScenarioType",
+    "ReplayScenario",
     "Signal",
-    "ProcessedDeviceInput", "DeviceInput",
+    "ProcessedDeviceInput",
+    "DeviceInput",
+    "Visualizable",
 ]

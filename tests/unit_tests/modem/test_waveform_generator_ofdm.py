@@ -604,7 +604,7 @@ class TestPilotSection(TestCase):
     def test_demodulate(self) -> None:
         """Demodulation should always return an empty tuple"""
         
-        symbols, csi = self.pilot_section.demodulate()
+        symbols = self.pilot_section.demodulate(np.empty(0))
         
         self.assertEqual(0, len(symbols))
         

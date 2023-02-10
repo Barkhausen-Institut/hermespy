@@ -6,7 +6,7 @@ Discrete Fourier Transform Precoding
 """
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import Literal, TYPE_CHECKING
 
 import numpy as np
 
@@ -30,9 +30,9 @@ class DFT(SymbolPrecoder, Serializable):
     """A precoder applying the Discrete Fourier Transform to each data stream."""
 
     yaml_tag = "DFT"
-    __fft_norm: str
+    __fft_norm: Literal["backward", "ortho", "forward"]
 
-    def __init__(self, fft_norm: str = None) -> None:
+    def __init__(self, fft_norm: Literal["backward", "ortho", "forward"] = "ortho") -> None:
         """Object initialization.
 
         Args:
@@ -41,12 +41,11 @@ class DFT(SymbolPrecoder, Serializable):
                 See also numpy.fft.fft for details
         """
 
-        self.__fft_norm = "ortho"
-
-        if fft_norm is not None:
-            self.__fft_norm = fft_norm
-
+        # Initialize base class
         SymbolPrecoder.__init__(self)
+
+        # Initialize attributes
+        self.__fft_norm = fft_norm
 
     def encode(self, symbols: StatedSymbols) -> StatedSymbols:
 

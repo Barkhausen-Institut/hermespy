@@ -6,6 +6,7 @@ from .cluster_delay_line_street_canyon import StreetCanyonLineOfSight, StreetCan
 from .cluster_delay_line_urban_macrocells import UrbanMacrocellsLineOfSight, UrbanMacrocellsNoLineOfSight, UrbanMacrocellsOutsideToInside
 from .cluster_delay_lines import ClusterDelayLine, DelayNormalization
 from .delay import DelayChannelBase, SpatialDelayChannel, RandomDelayChannel
+from .ideal import IdealChannel, IdealChannelRealization
 from .multipath_fading_channel import MultipathFadingChannel, AntennaCorrelation, CustomAntennaCorrelation
 from .multipath_fading_templates import MultipathFadingCost256, Cost256Type, MultipathFading5GTDL, TDLType, MultipathFadingExponential, StandardAntennaCorrelation, DeviceType, CorrelationType
 from .radar_channel import RadarChannel
@@ -26,18 +27,22 @@ try:
 except ImportError:
     try:
 
-        from .quadriga_interface_octave import QuadrigaOctaveInterface as QuadrigaInterface
+        from .quadriga_interface_octave import QuadrigaOctaveInterface as QuadrigaInterface  # type: ignore
 
     except ImportError:
-        from .quadriga_interface import QuadrigaInterface
+        from .quadriga_interface import QuadrigaInterface  # type: ignore
 
 from .quadriga_channel import QuadrigaChannel
 
 __all__ = [
     "ChannelStateDimension",
     "ChannelStateFormat",
-    "Channel", "ChannelRealization", "ChannelRealizationType",
-    "DelayChannelBase", "SpatialDelayChannel", "RandomDelayChannel",
+    "Channel",
+    "ChannelRealization",
+    "ChannelRealizationType",
+    "DelayChannelBase",
+    "SpatialDelayChannel",
+    "RandomDelayChannel",
     "IndoorFactoryLineOfSight",
     "IndoorFactoryNoLineOfSight",
     "IndoorOfficeLineOfSight",
@@ -53,6 +58,8 @@ __all__ = [
     "UrbanMacrocellsOutsideToInside",
     "ClusterDelayLine",
     "DelayNormalization",
+    "IdealChannel",
+    "IdealChannelRealization",
     "MultipathFadingChannel",
     "AntennaCorrelation",
     "CustomAntennaCorrelation",

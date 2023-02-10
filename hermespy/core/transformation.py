@@ -81,11 +81,6 @@ class Transformable(object):
         self.__position = value
 
     @property
-    def orientation_rpy(self) -> Tuple[float, float, float]:
-
-        return self.__orientation
-
-    @property
     def reference(self) -> Optional[Transformable]:
         """Reference frame to this coordinate frame.
 

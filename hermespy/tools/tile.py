@@ -24,7 +24,7 @@ __status__ = "Prototype"
 
 def screen_geometry(monitor=0):
     try:
-        from screeninfo import get_monitors
+        from screeninfo import get_monitors  # type: ignore
 
         sizes = [(s.x, s.y, s.width, s.height) for s in get_monitors()]
         return sizes[monitor]

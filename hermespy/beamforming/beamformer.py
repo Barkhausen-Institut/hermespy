@@ -12,8 +12,9 @@ Should a beamformer be applicable during both transmission and reception both pr
 An example for such an implementation is the :class:`Conventional <.conventional.ConventionalBeamformer>` beamformer.
 """
 
+from __future__ import annotations
 from abc import ABC, abstractmethod, abstractproperty
-from typing import Optional, Tuple, Union
+from typing import Generic, Optional, Tuple, TypeVar, Union
 
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
@@ -52,16 +53,20 @@ class FocusMode(SerializableEnum):
     """Focus points considering peer devices."""
 
 
-class BeamformerBase(ABC):
+OT = TypeVar("OT", bound=Operator)
+"""Type of operator."""
+
+
+class BeamformerBase(ABC, Generic[OT]):
     """Base class for all beam steering precodings."""
 
     # Reference to the operator the beamformer is attached to
-    __operator: Optional[Operator]
+    __operator: OT | None
 
-    def __init__(self, operator: Optional[Operator] = None) -> None:
+    def __init__(self, operator: OT | None = None) -> None:
         """Args:
 
-        operator (Operator, optional):
+        operator (OT, optional):
             The operator this beamformer is attached to.
             By default, the beamformer is considered floating.
         """
@@ -69,7 +74,7 @@ class BeamformerBase(ABC):
         self.operator = operator
 
     @property
-    def operator(self) -> Optional[Operator]:
+    def operator(self) -> OT | None:
         """The operator this beamformer is assigned to.
 
         Returns:
@@ -81,18 +86,18 @@ class BeamformerBase(ABC):
         return self.__operator
 
     @operator.setter
-    def operator(self, value: Optional[Operator]) -> None:
+    def operator(self, value: OT | None) -> None:
 
         self.__operator = value
 
 
-class TransmitBeamformer(BeamformerBase, TransmitStreamEncoder, ABC):
+class TransmitBeamformer(BeamformerBase[Transmitter], TransmitStreamEncoder, ABC):
     """Base class for beam steering precodings during signal transmissions."""
 
     __focus_points: np.ndarray
     __focus_mode: FocusMode
 
-    def __init__(self, operator: Optional[Transmitter] = None) -> None:
+    def __init__(self, operator: Transmitter | None = None) -> None:
         """Args:
 
         operator (Transmitter, optional):
@@ -142,11 +147,11 @@ class TransmitBeamformer(BeamformerBase, TransmitStreamEncoder, ABC):
 
         return self.transmit(streams)
 
-    @TransmitStreamEncoder.precoding.setter
+    @TransmitStreamEncoder.precoding.setter  # type: ignore
     def precoding(self, precoding: Precoding) -> None:
 
-        self.operator = precoding.modem
-        TransmitStreamEncoder.precoding.fset(self, precoding)
+        self.operator = precoding.modem  # type: ignore
+        TransmitStreamEncoder.precoding.fset(self, precoding)  # type: ignore
 
     @abstractmethod
     def _encode(self, samples: np.ndarray, carrier_frequency: float, focus_angles: np.ndarray) -> np.ndarray:
@@ -185,7 +190,7 @@ class TransmitBeamformer(BeamformerBase, TransmitStreamEncoder, ABC):
 
         return self.__focus_points, self.__focus_mode
 
-    @transmit_focus.setter
+    @transmit_focus.setter  # type: ignore
     def transmit_focus(self, value: Union[np.ndarray, Tuple[np.ndarray, FocusMode]]) -> None:
 
         if not isinstance(value, (tuple, list)):
@@ -233,7 +238,7 @@ class TransmitBeamformer(BeamformerBase, TransmitStreamEncoder, ABC):
         return Signal(steered_samples, sampling_rate=signal.sampling_rate, carrier_frequency=signal.carrier_frequency)
 
 
-class ReceiveBeamformer(BeamformerBase, ReceiveStreamDecoder, ABC):
+class ReceiveBeamformer(BeamformerBase[Receiver], ReceiveStreamDecoder, ABC):
     """Base class for beam steering precodings during signal receptions.
 
     The beamformer is characterised by its required number of input streams :math:`N`,
@@ -252,7 +257,7 @@ class ReceiveBeamformer(BeamformerBase, ReceiveStreamDecoder, ABC):
     __focus_points: np.ndarray
     __focus_mode: FocusMode
 
-    def __init__(self, operator: Optional[Receiver] = None) -> None:
+    def __init__(self, operator: Receiver | None = None) -> None:
         """Args:
 
         operator (Receiver, optional):
@@ -310,11 +315,11 @@ class ReceiveBeamformer(BeamformerBase, ReceiveStreamDecoder, ABC):
 
         return self.receive(streams)
 
-    @ReceiveStreamDecoder.precoding.setter
+    @ReceiveStreamDecoder.precoding.setter  # type: ignore
     def precoding(self, precoding: Precoding) -> None:
 
-        self.operator = precoding.modem
-        ReceiveStreamDecoder.precoding.fset(self, precoding)
+        self.operator = precoding.modem  # type: ignore
+        ReceiveStreamDecoder.precoding.fset(self, precoding)  # type: ignore
 
     @abstractmethod
     def _decode(self, samples: np.ndarray, carrier_frequency: float, angles: np.ndarray) -> np.ndarray:
@@ -547,18 +552,23 @@ class ReceiveBeamformer(BeamformerBase, ReceiveStreamDecoder, ABC):
         device.carrier_frequency = 1e9
         device.antennas = UniformArray(IdealAntenna(), 0.5 * device.wavelength, (8, 8))
 
-        class ReceiverMock(Receiver, ABC):
+        class ReceiverMock(Receiver[Reception], ABC):
+            def _receive(self, *args, **kwargs) -> Reception:
+                raise NotImplementedError()  # pragma: no cover
 
-            def _receive(self) -> Reception:
-                raise NotImplementedError()  # pragma no cover
-
+            @property
             def energy(self) -> float:
                 return 1.0  # pragma no cover
 
+            @property
             def sampling_rate(self) -> float:
                 return 1.0  # pragma no cover
 
-            def _noise_power(self, strength, snr_type) -> float:
+            @property
+            def frame_duration(self) -> float:
+                return 1.0
+
+            def _noise_power(self, strength: float, _) -> float:
                 return strength
 
         operator = ReceiverMock()

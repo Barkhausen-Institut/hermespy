@@ -7,7 +7,8 @@ Precoding Configuration
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Optional, List, Type, TYPE_CHECKING, TypeVar, Generic
+from collections.abc import Sequence
+from typing import Optional, overload, List, Type, TYPE_CHECKING, TypeVar, Generic
 from fractions import Fraction
 
 from ruamel.yaml import SafeRepresenter, SafeConstructor, Node
@@ -138,7 +139,7 @@ PrecoderType = TypeVar("PrecoderType", bound=Precoder)
 """Type of precoder."""
 
 
-class Precoding(Generic[PrecoderType], Serializable):
+class Precoding(Generic[PrecoderType], Serializable, Sequence):
     """Channel Precoding configuration for wireless transmission of modulated data symbols.
 
     Symbol precoding may occur as an intermediate step between bit-mapping and base-band symbol modulations.
@@ -330,11 +331,19 @@ class Precoding(Generic[PrecoderType], Serializable):
 
         return self.__precoders[-1].num_output_streams
 
+    @overload
     def __getitem__(self, index: int) -> PrecoderType:
+        ...  # pragma: no cover
+
+    @overload
+    def __getitem__(self, index: slice) -> List[PrecoderType]:
+        ...  # pragma: no cover
+
+    def __getitem__(self, index: int | slice) -> PrecoderType | List[PrecoderType]:
         """Access a precoder at a given index.
 
         Args:
-            index (int):
+            index (int | slice):
                 Precoder index.
 
         Raises:

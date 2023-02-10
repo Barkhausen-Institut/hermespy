@@ -6,19 +6,20 @@ Simulation
 """
 
 from __future__ import annotations
+from collections.abc import Sequence
 from sys import maxsize
 from time import time
-from typing import Any, Callable, Dict, List, Set, Type, Optional, Union
+from typing import Any, Callable, Dict, List, Optional, overload, Tuple, Type, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
 from h5py import Group
 from os import path
 from ray import remote
-from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
+from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, Node
 
-from hermespy.core import DeviceInput, ChannelStateInformation, Drop, Serializable, Pipeline, Verbosity, Operator, ConsoleMode, Evaluator, dimension, MonteCarloActor, MonteCarlo, MonteCarloResult, Scenario, Signal, DeviceOutput, DeviceReception, SNRType
-from hermespy.channel import QuadrigaInterface, Channel
+from hermespy.core import DeviceInput, DeviceTransmission, ChannelStateInformation, Drop, Serializable, Pipeline, Verbosity, Operator, ConsoleMode, Evaluator, register, MonteCarloActor, MonteCarlo, MonteCarloResult, Scenario, Signal, DeviceOutput, DeviceReception, SNRType
+from hermespy.channel import Channel, ChannelRealization, QuadrigaInterface, IdealChannel
 from .simulated_device import ProcessedSimulatedDeviceInput, SimulatedDeviceReception, SimulatedDevice, SimulatedDeviceReception
 
 __author__ = "Jan Adler"
@@ -33,43 +34,39 @@ __status__ = "Prototype"
 
 class SimulatedDrop(Drop):
     """Drop containing all information generated during a simulated wireless scenario transmission,
-       channel propagation and reception."""
-       
-    __channel_realizations: List[ChannelStateInformation]
-       
-    def __init__(self,
-                 timestamp: float,
-                 device_outputs: List[DeviceOutput],
-                 channel_realizations: List[ChannelStateInformation],
-                 device_receptions: List[SimulatedDeviceReception]) -> None:
+    channel propagation and reception."""
+
+    __channel_realizations: Sequence[Sequence[ChannelRealization]]
+
+    def __init__(self, timestamp: float, device_outputs: Sequence[DeviceTransmission], channel_realizations: Sequence[Sequence[ChannelRealization]], device_receptions: Sequence[SimulatedDeviceReception]) -> None:
         """
         Args:
 
             timestamp (float):
                 Time at which the drop was generated.
 
-            device_outputs (List[DeviceOutput]):
+            device_outputs (Sequence[DeviceTransmission]):
                 Transmitted device information.
-                
-            channel_realizations (List[ChannelStateInformation]):
+
+            channel_realizations (Sequence[Sequence[ChannelRealization]]):
                 Realizations of the wireless channels over which the simualation propagated device transmissions.
 
-            device_receptions (List[ProcessedSimulatedDeviceReception]):
+            device_receptions (Sequence[ProcessedSimulatedDeviceReception]):
                 Received device information.
         """
-        
+
         self.__channel_realizations = channel_realizations
         Drop.__init__(self, timestamp, device_outputs, device_receptions)
-    
+
     @property
-    def channel_realizations(self) -> np.ndarray:
+    def channel_realizations(self) -> Sequence[Sequence[ChannelRealization]]:
         """Channel realizations over which signals were propagated.
-        
+
         Returns: Two-dimensional numpy matrix with each entry corresponding to the respective device link's channel.
         """
 
         return self.__channel_realizations
-    
+
     @classmethod
     def from_HDF(cls: Type[SimulatedDrop], group: Group) -> SimulatedDrop:
 
@@ -78,36 +75,33 @@ class SimulatedDrop(Drop):
         num_transmissions = group.attrs.get("num_transmissions", 0)
         num_receptions = group.attrs.get("num_receptions", 0)
         num_devices = group.attrs.get("num_devices", 1)
-        
+
         # Recall groups
-        transmissions = [DeviceOutput.from_HDF(group[f"transmission_{t:02d}"]) for t in range(num_transmissions)]
+        transmissions = [DeviceTransmission.from_HDF(group[f"transmission_{t:02d}"]) for t in range(num_transmissions)]
         receptions = [SimulatedDeviceReception.from_HDF(group[f"reception_{r:02d}"]) for r in range(num_receptions)]
-        
+
         channel_realizations = np.empty((num_devices, num_devices), dtype=object)
         for d_out in range(num_devices):
-            for d_in in range(d_out+1):
-                
+            for d_in in range(d_out + 1):
+
                 realization = ChannelStateInformation.from_HDF(group[f"channel_realization_{d_out:02d}_{d_in:02d}_"])
-                
+
                 channel_realizations[d_out, d_in] = realization
                 if d_out != d_in:
-                    channel_realizations[d_in, d_out] =  realization.reciprocal()
-                    
-        return SimulatedDrop(timestamp, transmissions, channel_realizations, receptions)
-    
-    
+                    channel_realizations[d_in, d_out] = realization.reciprocal()
+
+        return SimulatedDrop(timestamp, transmissions, channel_realizations.tolist(), receptions)
+
+
 class SimulationScenario(Scenario[SimulatedDevice]):
-    
-    yaml_tag = u'SimulationScenario'
+
+    yaml_tag = "SimulationScenario"
 
     __channels: np.ndarray  # Channel matrix linking devices
     __snr: Optional[float]  # Signal to noise ratio at the receiver-side
     __snr_type: SNRType  # Global global type of signal to noise ratio.
 
-    def __init__(self,
-                 snr: float = float("inf"),
-                 snr_type: Union[str, SNRType] = SNRType.PN0,
-                 *args, **kwargs) -> None:
+    def __init__(self, snr: float = float("inf"), snr_type: Union[str, SNRType] = SNRType.PN0, *args, **kwargs) -> None:
         """
         Args:
 
@@ -124,9 +118,9 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         self.snr = snr
         self.snr_type = snr_type
         self.__channels = np.ndarray((0, 0), dtype=object)
-        
+
     def __del__(self) -> None:
-        
+
         self.stop()
 
     def new_device(self, *args, **kwargs) -> SimulatedDevice:
@@ -145,15 +139,16 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
         # Add the device to the scenario
         Scenario.add_device(self, device)
+        device.scenario = self
 
         if self.num_devices == 1:
 
-            self.__channels = np.array([[Channel(device, device)]], dtype=object)
+            self.__channels = np.array([[IdealChannel(device, device)]], dtype=object)
 
         else:
 
             # Create new channels from each existing device to the newly added device
-            new_channels = np.array([[Channel(device, rx)] for rx in self.devices])
+            new_channels = np.array([[IdealChannel(device, rx)] for rx in self.devices])
 
             # Complete channel matrix by the newly created channels
             self.__channels = np.append(self.__channels, new_channels[:-1], axis=1)
@@ -310,7 +305,8 @@ class SimulationScenario(Scenario[SimulatedDevice]):
             channel.receiver = self.devices[receiver]
             channel.scenario = self
 
-    @dimension
+    @register(first_impact="receive_devices", title="SNR")  # type: ignore
+    @property
     def snr(self) -> Optional[float]:
         """Ratio of signal energy to noise power at the receiver-side.
 
@@ -325,7 +321,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
         return self.__snr
 
-    @snr.setter(first_impact="receive_devices", title="SNR")
+    @snr.setter
     def snr(self, value: Optional[float]) -> None:
 
         if value is None:
@@ -339,7 +335,8 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
             self.__snr = value
 
-    @dimension
+    @register(first_impact="receive_devices", title="SNR Type")  # type: ignore
+    @property
     def snr_type(self) -> SNRType:
         """Type of signal-to-noise ratio.
 
@@ -349,7 +346,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
         return self.__snr_type
 
-    @snr_type.setter(first_impact="receive_devices")
+    @snr_type.setter
     def snr_type(self, snr_type: Union[str, int, SNRType]) -> None:
         """Modify the type of signal-to-noise ratio.
 
@@ -366,15 +363,16 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
         self.__snr_type = snr_type
 
-    def propagate(self, transmissions: List[DeviceOutput]) -> np.ndarray:
+    def propagate(self, transmissions: Sequence[DeviceOutput]) -> List[List[Tuple[Signal, ChannelRealization]]]:
         """Propagate device transmissions over the scenario's channel instances.
-        
+
         Args:
-        
-            transmissions (List[DeviceOutput]): List of device transmissisons.
-            
+
+            transmissions (Sequence[DeviceOutput])
+                Sequence of device transmissisons.
+
         Returns: Propagation matrix.
-        
+
         Raises:
 
             ValueError: If the length of `transmissions` does not match the number of registered devices.
@@ -399,35 +397,99 @@ class SimulationScenario(Scenario[SimulatedDevice]):
                 propagation_matrix[device_alpha_idx, device_beta_idx] = (alpha_receptions, csi.reciprocal())
                 propagation_matrix[device_beta_idx, device_alpha_idx] = (beta_receptions, csi)
 
-        return propagation_matrix
+        return propagation_matrix.tolist()
 
-    def receive_devices(self,
-                        impinging_signals: Union[DeviceInput, List[Signal], np.ndarray],
-                        cache: bool = True) -> List[ProcessedSimulatedDeviceInput]:
-        """Generate base-band signal models received by devices
-        
+    @overload
+    def process_inputs(self, impinging_signals: Sequence[DeviceInput], cache: bool = True) -> List[ProcessedSimulatedDeviceInput]:
+        ...  # pragma: no cover
+
+    @overload
+    def process_inputs(self, impinging_signals: Sequence[Signal], cache: bool = True) -> List[ProcessedSimulatedDeviceInput]:
+        ...  # pragma: no cover
+
+    @overload
+    def process_inputs(self, impinging_signals: Sequence[Sequence[Signal]], cache: bool = True) -> List[ProcessedSimulatedDeviceInput]:
+        ...  # pragma: no cover
+
+    @overload
+    def process_inputs(self, impinging_signals: Sequence[Sequence[Tuple[Signal, ChannelStateInformation | None]]], cache: bool = True) -> List[ProcessedSimulatedDeviceInput]:
+        ...  # pragma: no cover
+
+    def process_inputs(self, impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]] | Sequence[Sequence[Tuple[Signal, ChannelStateInformation | None]]], cache: bool = True) -> List[ProcessedSimulatedDeviceInput]:
+        """Process input signals impinging onto the scenario's devices.
+
         Args:
-        
-            impinging_signals (Union[DeviceInput, List[Signal], np.ndarray]):
-                Signal models impinging onto the scenario's devices.
-                
+
+            impinging_signals (Sequence[DeviceInput | Signal | Sequence[Signal]]):
+                List of signals impinging onto the devices.
+
             cache (bool, optional):
-                Cache the receptions at the devices.
+                Cache the operator inputs at the registered receive operators for further processing.
                 Enabled by default.
-                
-        Returns: List of device inputs.
+
+        Returns: List of the processed device input information.
+
+        Raises:
+
+            ValueError: If the number of `impinging_signals` does not match the number of registered devices.
         """
 
-        if isinstance(impinging_signals, DeviceInput):
-            impinging_signals = impinging_signals.impinging_signals
-
         if len(impinging_signals) != self.num_devices:
-            raise ValueError(f"Number of arriving signals ({len(impinging_signals)}) does not match " f"the number of receiving devices ({self.num_devices})")
+            raise ValueError(f"Number of impinging signals ({len(impinging_signals)}) does not match the number if registered devices ({self.num_devices}) within this scenario")
 
-        device_inputs = [d.process_input(s, self.snr, self.snr_type, cache=cache) for d, s in zip(self.devices, impinging_signals)]
-        return device_inputs
+        # Call the process input method for each device
+        processed_inputs = [d.process_input(i, cache) for d, i in zip(self.devices, impinging_signals)]  # type: ignore
 
-    def _drop(self) -> Drop:
+        return processed_inputs
+
+    @overload
+    def receive_devices(self, impinging_signals: Sequence[DeviceInput], cache: bool = True) -> Sequence[SimulatedDeviceReception]:
+        ...  # pragma: no cover
+
+    @overload
+    def receive_devices(self, impinging_signals: Sequence[Signal], cache: bool = True) -> Sequence[SimulatedDeviceReception]:
+        ...  # pragma: no cover
+
+    @overload
+    def receive_devices(self, impinging_signals: Sequence[Sequence[Signal]], cache: bool = True) -> Sequence[SimulatedDeviceReception]:
+        ...  # pragma: no cover
+
+    @overload
+    def receive_devices(self, impinging_signals: Sequence[Sequence[Tuple[Signal, ChannelStateInformation | None]]], cache: bool = True) -> Sequence[SimulatedDeviceReception]:
+        ...  # pragma: no cover
+
+    def receive_devices(self, impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]] | Sequence[Sequence[Tuple[Signal, ChannelStateInformation | None]]], cache: bool = True) -> Sequence[SimulatedDeviceReception]:
+        """Receive over all simulated scenario devices.
+
+        Internally calls :meth:`SimulationScenario.process_inputs` and :meth:`Scenario.receive_operators`.
+
+        Args:
+
+            impinging_signals (List[Union[DeviceInput, Signal, Iterable[Signal]]]):
+                List of signals impinging onto the devices.
+
+            cache (bool, optional):
+                Cache the operator inputs at the registered receive operators for further processing.
+                Enabled by default.
+
+        Returns: List of the processed device input information.
+
+        Raises:
+
+            ValueError: If the number of `impinging_signals` does not match the number of registered devices.
+        """
+
+        # Generate inputs
+        processed_inputs = self.process_inputs(impinging_signals, cache)
+
+        # Generate operator receptions
+        operator_receptions = self.receive_operators([i.operator_inputs for i in processed_inputs])
+
+        # Generate device receptions
+        device_receptions = [SimulatedDeviceReception.From_ProcessedSimulatedDeviceInput(i, r) for i, r in zip(processed_inputs, operator_receptions)]  # type: ignore
+        return device_receptions
+
+    def _drop(self) -> SimulatedDrop:
 
         # Generate drop timestamp
         timestamp = time()
@@ -438,20 +500,21 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
         # Simulate channel propagation
         propagation_matrix = self.propagate(device_outputs)
+        csi = [[tx[1] for tx in rx] for rx in propagation_matrix]
 
         # Process receptions
         device_inputs = self.receive_devices(propagation_matrix)
         operator_receptions = self.receive_operators()
-        device_receptions = [SimulatedDeviceReception.From_DeviceInput(i, r) for i, r in zip(device_inputs, operator_receptions)]
+        device_receptions = [SimulatedDeviceReception.From_ProcessedSimulatedDeviceInput(i, r) for i, r in zip(device_inputs, operator_receptions)]  # type: ignore
 
         # Return finished drop
-        return SimulatedDrop(timestamp, device_outputs, propagation_matrix, device_receptions)
+        return SimulatedDrop(timestamp, device_outputs, csi, device_receptions)
 
 
 class SimulationRunner(object):
 
     __scenario: SimulationScenario  # Scenario to be run
-    __propagation: Optional[np.ndarray] = None
+    __propagation: Sequence[Sequence[Tuple[Sequence[Signal], ChannelStateInformation]]] | None
 
     def __init__(self, scenario: SimulationScenario) -> None:
         """
@@ -469,7 +532,6 @@ class SimulationRunner(object):
 
         # Resolve to the scenario transmit operators routine
         _ = self.__scenario.transmit_operators()
-
 
     def generate_outputs(self) -> None:
         """Generate radio-frequency band signal models emitted by devices."""
@@ -510,7 +572,7 @@ class SimulationRunner(object):
                 propagation_matrix[forwards_device_idx, backwards_device_idx] = (alpha_receptions, realization.reciprocal())
                 propagation_matrix[backwards_device_idx, forwards_device_idx] = (beta_receptions, realization)
 
-        self.__propagation = propagation_matrix
+        self.__propagation = propagation_matrix.tolist()
 
     def process_inputs(self) -> None:
         """Process device inputs after channel propgation."""
@@ -559,7 +621,7 @@ class SimulationActor(MonteCarloActor[SimulationScenario], SimulationRunner):
         return [self.transmit_operators, self.generate_outputs, self.propagate, self.process_inputs, self.receive_operators]
 
 
-class Simulation(Serializable, Pipeline[SimulationScenario], MonteCarlo[SimulationScenario]):
+class Simulation(Serializable, Pipeline[SimulationScenario, SimulatedDevice], MonteCarlo[SimulationScenario]):
     """HermesPy simulation configuration."""
 
     yaml_tag = "Simulation"
@@ -571,18 +633,9 @@ class Simulation(Serializable, Pipeline[SimulationScenario], MonteCarlo[Simulati
     dump_results: bool
     """Dump results to files after simulation runs."""
 
-    def __init__(self,
-                 scenario: Optional[SimulationScenario] = None,
-                 num_drops: int = 100,
-                 drop_duration: float = 0.0,
-                 plot_results: bool = False,
-                 dump_results: bool = True,
-                 console_mode: ConsoleMode = ConsoleMode.INTERACTIVE,
-                 ray_address: Optional[str] = None,
-                 results_dir: Optional[str] = None,
-                 verbosity: Union[str, Verbosity] = Verbosity.INFO,
-                 seed: Optional[int] = None,
-                 num_actors: Optional[int] = None) -> None:
+    def __init__(
+        self, scenario: Optional[SimulationScenario] = None, num_drops: int = 100, drop_duration: float = 0.0, plot_results: bool = False, dump_results: bool = True, console_mode: ConsoleMode = ConsoleMode.INTERACTIVE, ray_address: Optional[str] = None, results_dir: Optional[str] = None, verbosity: Union[str, Verbosity] = Verbosity.INFO, seed: Optional[int] = None, num_actors: Optional[int] = None
+    ) -> None:
         """Args:
 
         scenario (SimulationScenario, optional):
@@ -632,23 +685,23 @@ class Simulation(Serializable, Pipeline[SimulationScenario], MonteCarlo[Simulati
         self.drop_duration = drop_duration
         self.num_drops = num_drops
 
-    @Pipeline.num_drops.setter
+    @Pipeline.num_drops.setter  # type: ignore
     def num_drops(self, value: int) -> int:
 
-        Pipeline.num_drops.fset(self, value)
-        MonteCarlo.num_samples.fset(self, value)
+        Pipeline.num_drops.fset(self, value)  # type: ignore
+        MonteCarlo.num_samples.fset(self, value)  # type: ignore
 
-    @MonteCarlo.num_samples.setter
+    @MonteCarlo.num_samples.setter  # type: ignore
     def num_samples(self, value: int) -> int:
 
-        Pipeline.num_drops.fset(self, value)
-        MonteCarlo.num_samples.fset(self, value)
+        Pipeline.num_drops.fset(self, value)  # type: ignore
+        MonteCarlo.num_samples.fset(self, value)  # type: ignore
 
     def run(self) -> MonteCarloResult[SimulationScenario]:
 
         # Print indicator that the simulation is starting
         if self.console_mode != ConsoleMode.SILENT:
-            
+
             self.console.print()  # Just an empty line
             self.console.rule("Simulation Campaign")
             self.console.print()  # Just an empty line
@@ -702,7 +755,7 @@ class Simulation(Serializable, Pipeline[SimulationScenario], MonteCarlo[Simulati
         return representer.represent_mapping(cls.yaml_tag, state)
 
     @classmethod
-    def from_yaml(cls: Type[Simulation], constructor: SafeConstructor, node: MappingNode) -> Simulation:
+    def from_yaml(cls: Type[Simulation], constructor: SafeConstructor, node: Node) -> Simulation:
         """Recall a new `Simulation` instance from YAML.
 
         Args:
@@ -717,7 +770,7 @@ class Simulation(Serializable, Pipeline[SimulationScenario], MonteCarlo[Simulati
                 Newly created `Simulation` instance.
         """
 
-        state = constructor.construct_mapping(node, deep=True)
+        state: dict = constructor.construct_mapping(node, deep=True)
 
         # Launch a global quadriga instance
         quadriga_interface: Optional[QuadrigaInterface] = state.pop(QuadrigaInterface.yaml_tag, None)

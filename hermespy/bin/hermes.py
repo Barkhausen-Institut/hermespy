@@ -63,6 +63,7 @@ import shutil
 import sys
 import argparse
 from typing import List, Optional
+from collections.abc import Sequence
 
 from ruamel.yaml.constructor import ConstructorError
 from rich.console import Console
@@ -136,10 +137,10 @@ def hermes(args: Optional[List[str]] = None) -> None:
         try:
 
             # Load serializable objects from configuration files
-            serializables: List[Serializable] = factory.load(arguments.config)
+            serializables: Sequence[Serializable] = factory.from_path(arguments.config)
 
             # Filter out non-executables from the serialization list
-            executables: List[Executable] = [s for s in serializables if isinstance(s, Executable)]
+            executables: Sequence[Executable] = [s for s in serializables if isinstance(s, Executable)]
 
             # Abort execution if no executable was found
             if len(executables) < 1:
