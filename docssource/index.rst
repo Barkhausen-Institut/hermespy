@@ -49,6 +49,10 @@ in both simulations and hardware testbeds.
 
       Signal modulations and their respective waveforms
 
+   .. figure:: images/eye.png
+
+      Signal modulations and their eye diagrams
+
    .. figure:: images/index_beamforming.png
 
       Beamforming
