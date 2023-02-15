@@ -99,7 +99,6 @@ import logging
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from contextlib import nullcontext
-from enum import Enum
 from functools import reduce
 from math import exp, sqrt
 from time import perf_counter

@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 """Test the HermesPy Signal Model."""
 
-import unittest
+from contextlib import nullcontext
+from sys import gettrace
 from tempfile import TemporaryDirectory
+from unittest import TestCase
+from unittest.mock import patch
 
 import numpy as np
 from h5py import File
@@ -10,7 +13,7 @@ from os import path
 from numpy.random import default_rng
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.constants import pi
-from scipy.fft import fft, fftshift, ifft, ifftshift
+from scipy.fft import ifft, ifftshift
 
 from hermespy.core.signal_model import Signal
 
@@ -24,7 +27,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class TestSignal(unittest.TestCase):
+class TestSignal(TestCase):
     """Test the signal model base class."""
 
     def setUp(self) -> None:
@@ -247,7 +250,49 @@ class TestSignal(unittest.TestCase):
 
     def test_plot(self) -> None:
         """The plot routine should not raise any exceptions"""
-        pass
+        
+        with patch('matplotlib.pyplot.figure') if gettrace() is None else nullcontext():
+            
+            try:
+                
+                _ = self.signal.plot(space='time')
+                _ = self.signal.plot(space='frequency')
+                _ = self.signal.plot(space='both')
+                
+            except Exception as e:
+                self.fail(e)
+                
+        return
+    
+    def test_plot_eye(self) -> None:
+        """Visualizing eye diagrams in time-dime domain should yield a plot"""
+        
+        with patch('matplotlib.pyplot.figure') if gettrace() is None else nullcontext():
+            
+            try:
+                
+                _ = self.signal.plot_eye(1e-3, domain='time')    
+                _ = self.signal.plot_eye(1e-3, domain='complex')
+                
+            except Exception as e:
+                self.fail(e)
+                
+        return
+
+    def test_plot_eye_validation(self) -> None:
+        """The eye plotting routine should raise ValueErrors on invalid arguments"""
+
+        with self.assertRaises(ValueError):
+            _ = self.signal.plot_eye(-1.)
+
+        with self.assertRaises(ValueError):
+            _ = self.signal.plot_eye(1e-3, domain='blablabla')
+
+        with self.assertRaises(ValueError):
+            _ = self.signal.plot_eye(1e-3, linewidth=0.)
+
+        with self.assertRaises(ValueError):
+            _ = self.signal.plot_eye(1e-3, symbol_cutoff=2.)
 
     def test_append_samples(self) -> None:
         """Appending a signal model should yield the proper result"""

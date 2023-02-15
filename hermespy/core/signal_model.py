@@ -7,9 +7,11 @@ Signal Modeling
 
 from __future__ import annotations
 from copy import deepcopy
+from math import floor
 from typing import Literal, Optional, Type, Union
 
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 import numpy as np
 from h5py import Group
 from numba import jit, complex128
@@ -20,6 +22,7 @@ from scipy.signal import butter, sosfilt, firwin
 
 from .executable import Executable
 from .factory import HDFSerializable
+from .visualize import Visualizable
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -31,7 +34,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class Signal(HDFSerializable):
+class Signal(HDFSerializable, Visualizable):
     """Base class of signal models in HermesPy.
 
     Attributes:
@@ -82,11 +85,21 @@ class Signal(HDFSerializable):
                 Zero by default.
         """
 
+        # Initialize base classes
+        HDFSerializable.__init__(self)
+        Visualizable.__init__(self)
+
+        # Initialize class attributes
         self.samples = samples.astype(complex).copy()
         self.sampling_rate = sampling_rate
         self.carrier_frequency = carrier_frequency
         self.delay = delay
         self.noise_power = noise_power
+
+    @property
+    def title(self) -> str:
+
+        return "Signal Model"
 
     @classmethod
     def empty(cls, sampling_rate: float, num_streams: int = 0, num_samples: int = 0, **kwargs) -> Signal:
@@ -431,10 +444,28 @@ class Signal(HDFSerializable):
 
         return fftfreq(self.num_samples, 1 / self.sampling_rate)
 
-    def plot(self, title: Optional[str] = None, angle: bool = False, axes: Optional[np.ndarray] = None, space: Union[Literal["time"], Literal["frequency"], Literal["both"]] = "both", legend: bool = True) -> Optional[plt.figure]:
+    def plot(self, axes: np.ndarray | None = None, *, title: Optional[str] = None, angle: bool = False, space: Literal["time", "frequency", "both"] = "both", legend: bool = True) -> None | plt.Figure:
         """Plot the current signal in time- and frequency-domain.
 
+        .. plot::
+
+            import matplotlib.pyplot as plt
+            import numpy as np
+
+            from hermespy.core import Signal
+
+            sampling_rate = 100
+            timestamps = np.arange(100) / sampling_rate
+            signal = Signal(np.exp(-.25j * np.pi * timestamps * sampling_rate), sampling_rate)
+
+            signal.plot()
+            plt.show()
+
         Args:
+
+            axes (Optional[np.ndarray], optional):
+                Axes to which the graphs should be plotted to.
+                If none are provided, the routine will create a new figure.
 
             title (str, optional):
                 Figure title.
@@ -442,19 +473,17 @@ class Signal(HDFSerializable):
             angle (bool, optional):
                 Plot the angle of complex frequency bins.
 
-            axes (Optional[np.ndarray], optional):
-                Axes to which the graphs should be plotted to.
-                If none are provided, the routine will create a new figure.
-
-            space (Union['time', 'frequency', 'both'], optional):
+            space (Literal["time", "frequency", "both"], optional):
                 Signal space to be plotted.
                 By default, both spaces are visualized.
 
-        Returns:
+            legend (bool, optional):
+                Add a legend to the plots.
+                Enabled by default.
 
-            Optional[plt.figure]:
-                The created matplotlib figure.
-                `None`, if axes were provided.
+        Returns:
+            The created matplotlib figure.
+            `None`, if axes were provided.
         """
 
         title = "Signal Model" if title is None else title
@@ -506,6 +535,126 @@ class Signal(HDFSerializable):
                         phase.plot(frequencies, np.angle(bins))
                         phase.set_ylabel("Angle [Rad]")
 
+        return figure
+
+    def plot_eye(self, symbol_duration: float, axes: plt.Axes | None = None, *, title: str | None = None, domain: Literal["time", "complex"] = "time", legend: bool = True, linewidth: float = .75, symbol_cutoff: float = .1) -> None | plt.Figure:
+        """Plot the signal model's eye diagram.
+
+        Depending on the `domain` flag the eye diagram will either be rendered with the time-domain on the plot's x-axis
+
+        .. plot::
+
+            import matplotlib.pyplot as plt
+
+            from hermespy.modem import TransmittingModem, RaisedCosineWaveform
+
+            transmitter = TransmittingModem()
+            waveform = RaisedCosineWaveform(modulation_order=16, oversampling_factor=16, num_preamble_symbols=0, symbol_rate=1e8, num_data_symbols=1000, roll_off=.9)
+            transmitter.waveform_generator = waveform
+
+            transmitter.transmit().signal.plot_eye(1 / waveform.symbol_rate, domain='complex')
+            plt.show()
+
+
+        or on the complex plane
+
+        .. plot::
+
+            import matplotlib.pyplot as plt
+
+            from hermespy.modem import TransmittingModem, RaisedCosineWaveform
+
+            transmitter = TransmittingModem()
+            waveform = RaisedCosineWaveform(modulation_order=16, oversampling_factor=16, num_preamble_symbols=0, symbol_rate=1e8, num_data_symbols=1000, roll_off=.9)
+            transmitter.waveform_generator = waveform
+
+            transmitter.transmit().signal.plot_eye(1 / waveform.symbol_rate, domain='time')
+            plt.show()
+
+
+        Args:
+
+            symbol_duration (float):
+                Assumed symbol repetition interval in seconds.
+                Will be rounded to match the signal model's sampling rate.
+
+            line_width (float, optional):
+                Line width of a single plot line.
+
+            title (str, optional):
+                Title of the plotted figure.
+                `Eye Diagram` by default.
+
+            domain (Literal["time", "complex"]):
+                Plotting behaviour of the eye diagram.
+                `time` by default.
+                See above examples for rendered results.
+
+            legend (bool, optional):
+                Display a plot legend.
+                Enabled by default.
+                Only considered when in `time` domain plotting mode.
+
+            linewidth (float, optional):
+                Line width of the eye plot.
+                :math:`.75` by default.
+
+            symbol_cutoff (float, optional):
+                Relative amount of symbols ignored during plotting.
+                :math:`0.1` by default.
+                This is required to properly visualize intersymbol interferences within the communication frame,
+                since special effects may occur at the start and end.
+        """
+
+        if symbol_duration <= 0.0:
+            raise ValueError("Symbol duration must be greater than zero")
+
+        if linewidth <= 0.:
+            raise ValueError(f"Plot line width must be greater than zero (not {linewidth})")
+
+        if symbol_cutoff < 0. or symbol_cutoff > 1.:
+            raise ValueError(f"Symbol cutoff must be in the interval [0, 1] (not {symbol_cutoff})")
+
+        figure, axes = self._prepare_axes(axes, "Eye Diagram" if title is None else title)
+
+        symbol_num_samples = int(symbol_duration * self.sampling_rate)
+        num_symbols = int(self.num_samples / symbol_num_samples)
+        num_cutoff_symbols = int(num_symbols * symbol_cutoff)
+        
+        colors = self._get_color_cycle()
+
+        if domain == "time":
+            
+            timestamps = np.linspace(-symbol_duration, symbol_duration, 1 + 2 * symbol_num_samples, endpoint=True)
+            
+            for n in range(num_cutoff_symbols, num_symbols - num_cutoff_symbols):
+
+                stream_slice = self.__samples[0, symbol_num_samples * n : symbol_num_samples * (2 + n) + 1]
+                axes.plot(timestamps[:len(stream_slice)], stream_slice.real, color=colors[0], linewidth=linewidth)
+                axes.plot(timestamps[:len(stream_slice)], stream_slice.imag, color=colors[1], linewidth=linewidth)
+
+            axes.set_xlabel("Time-Domain [s]")
+            axes.set_ylabel("Amplitude")
+
+            if legend:
+                legend_elements = [Line2D([0], [0], color=colors[0], label="Real"), Line2D([0], [0], color=colors[1], label="Imag")]
+                axes.legend(handles=legend_elements, loc="upper left", fancybox=True, shadow=True)
+
+        elif domain == "complex":
+
+            symbol_num_samples = floor(symbol_duration * self.sampling_rate)
+            num_cutoff_samples = num_cutoff_symbols * symbol_num_samples
+
+            stream_slice = self.__samples[0, num_cutoff_samples:-num_cutoff_samples]
+            axes.plot(stream_slice.real, stream_slice.imag, color=colors[0], linewidth=linewidth)
+
+            axes.set_xlabel("Real")
+            axes.set_ylabel("Imag")
+
+        else:
+            raise ValueError(f"Unsupported plotting domain '{domain}'")
+
+        # Return resulting figure
         return figure
 
     @staticmethod
