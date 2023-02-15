@@ -90,7 +90,7 @@ class RandomNode(object):
         if self.is_random_root:
             return self.__generator
 
-        return self.__mother_node._rng
+        return self.random_mother._rng
 
     @_rng.setter
     def _rng(self, value: Generator) -> None:
@@ -140,5 +140,5 @@ class RandomNode(object):
     def random_mother(self, value: RandomNode) -> None:
         """Set the mother node of this random number generator."""
 
-        self.__generator = None
+        self.__generator = default_rng(self.seed) if value is None else None
         self.__mother_node = value
