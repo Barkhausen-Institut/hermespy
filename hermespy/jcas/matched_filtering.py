@@ -88,7 +88,7 @@ class MatchedFilterJcas(Radar, DuplexModem, Transmitter[JCASTransmission], Recei
         communication_reception = DuplexModem._receive(self, signal, csi)
 
         # Re-sample communication waveform
-        signal = self.signal.resample(self.sampling_rate)
+        signal = signal.resample(self.sampling_rate)
 
         resolution = self.range_resolution
         num_propagated_samples = int(2 * self.max_range / resolution)
