@@ -704,6 +704,7 @@ class BaseModem(RandomNode, ABC):
 
         if value is not None:
             value.modem = self
+            value.random_mother = self
 
     @property
     def precoding(self) -> SymbolPrecoding:

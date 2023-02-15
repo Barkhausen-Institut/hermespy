@@ -6,7 +6,7 @@ Visualization
 """
 
 from __future__ import annotations
-from typing import overload
+from typing import overload, Sequence, Tuple
 
 import matplotlib.pyplot as plt
 
@@ -34,15 +34,16 @@ class Visualizable(object):
 
         return self.__class__.__name__
 
-    @overload
-    def plot(self, axes: plt.Axes) -> None:
-        ...  # pragma: no cover
+    def _get_color_cycle(self) -> Sequence[str]:
+        """Style color rotation.
 
-    @overload
-    def plot(self) -> plt.Figure:
-        ...  # pragma: no cover
+        Returns: Sequence of color codes.
+        """
 
-    def plot(self, axes: plt.Axes | None = None) -> None | plt.Figure:
+        with Executable.style_context():
+            return plt.rcParams["axes.prop_cycle"].by_key()["color"]
+
+    def _prepare_axes(self, axes: plt.Axes | None = None, title: str | None = None) -> Tuple[None | plt.Figure, plt.Axes]:
 
         figure: plt.Figure | None
 
@@ -51,10 +52,40 @@ class Visualizable(object):
             with Executable.style_context():
                 figure, axes = plt.subplots()
 
-            figure.suptitle(self.title)
+            figure.suptitle(self.title if title is None else title)
 
         else:
             figure, axes = None, axes
+
+        return figure, axes
+
+    @overload
+    def plot(self, axes: plt.Axes) -> None:
+        ...  # pragma: no cover
+
+    @overload
+    def plot(self) -> plt.Figure:
+        ...  # pragma: no cover
+
+    def plot(self, axes: plt.Axes | None = None, *, title: str | None = None) -> None | plt.Figure:
+        """Plot a visualizable.
+
+        Args:
+
+            axes (plt.Axes | None, optional):
+                The axis object into which the information should be plotted.
+                If not specified, the routine will generate and return a new figure.
+
+            title (str, optional):
+                Title of the generated plot.
+
+        Returns:
+
+            The newly generated matplotlib figure.
+            `None` if `axes` were provided.
+        """
+
+        figure, axes = self._prepare_axes(axes, title)
 
         # Visualize the content into the supplied _axes
         self._plot(axes)
