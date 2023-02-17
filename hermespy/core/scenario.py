@@ -648,7 +648,8 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
         Returns: List of generated information transmitted by each device.
         """
 
-        transmissions = [device.transmit(False) for device in self.devices]
+        # Note that devices are required to cache so that the leaking signal is available during reception
+        transmissions = [device.transmit() for device in self.devices]
         return transmissions
 
     @overload
