@@ -62,6 +62,7 @@ class TestSingleAntennaPolarization(TestCase):
 
     def test_rotation(self) -> None:
         
+        self.device_alpha.position = np.array([-100, 0, -100])
         self.device_beta.position = np.array([100, 0, 100])
         test_signal = Signal(np.ones(100), 1, carrier_frequency=1e9)
         
