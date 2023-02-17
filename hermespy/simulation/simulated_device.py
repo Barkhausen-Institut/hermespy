@@ -780,10 +780,8 @@ class SimulatedDevice(Device, RandomNode, Serializable):
             leaking_signal = self.output.mixed_signal
 
         # Simulate signal transmit-receive isolation leakage
-        if leaking_signal is not None:
-
-            modeled_leakage = self.__isolation.leak(leaking_signal)
-            coupled_signal.superimpose(modeled_leakage)
+        modeled_leakage = self.__isolation.leak(leaking_signal)
+        coupled_signal.superimpose(modeled_leakage)
 
         # Model radio-frequency chain during reception
         baseband_signal = self.rf_chain.receive(coupled_signal)
