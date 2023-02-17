@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 from itertools import product
 from unittest import TestCase
 
@@ -67,7 +67,7 @@ class TestClusterDelayLine(TestCase):
         dictionary = np.empty((self.antennas.num_antennas, num_angle_candidates ** 2), dtype=complex)
         for i, (aoa, zoa) in enumerate(product(azimuth_angles, zenith_angles)):
 
-            dictionary[:, i] = self.device_a.antennas.spherical_response(self.frequency, aoa, zoa)
+            dictionary[:, i] = self.device_a.antennas.spherical_phase_response(self.frequency, aoa, zoa)
 
         beamformer = np.linalg.norm(dictionary.T @ samples, axis=1, keepdims=False).reshape((num_angle_candidates, num_angle_candidates))
         return

@@ -537,7 +537,7 @@ class Signal(HDFSerializable, Visualizable):
 
         return figure
 
-    def plot_eye(self, symbol_duration: float, axes: plt.Axes | None = None, *, title: str | None = None, domain: Literal["time", "complex"] = "time", legend: bool = True, linewidth: float = .75, symbol_cutoff: float = .1) -> None | plt.Figure:
+    def plot_eye(self, symbol_duration: float, axes: plt.Axes | None = None, *, title: str | None = None, domain: Literal["time", "complex"] = "time", legend: bool = True, linewidth: float = 0.75, symbol_cutoff: float = 0.1) -> None | plt.Figure:
         """Plot the signal model's eye diagram.
 
         Depending on the `domain` flag the eye diagram will either be rendered with the time-domain on the plot's x-axis
@@ -609,10 +609,10 @@ class Signal(HDFSerializable, Visualizable):
         if symbol_duration <= 0.0:
             raise ValueError("Symbol duration must be greater than zero")
 
-        if linewidth <= 0.:
+        if linewidth <= 0.0:
             raise ValueError(f"Plot line width must be greater than zero (not {linewidth})")
 
-        if symbol_cutoff < 0. or symbol_cutoff > 1.:
+        if symbol_cutoff < 0.0 or symbol_cutoff > 1.0:
             raise ValueError(f"Symbol cutoff must be in the interval [0, 1] (not {symbol_cutoff})")
 
         figure, axes = self._prepare_axes(axes, "Eye Diagram" if title is None else title)
@@ -620,18 +620,18 @@ class Signal(HDFSerializable, Visualizable):
         symbol_num_samples = int(symbol_duration * self.sampling_rate)
         num_symbols = int(self.num_samples / symbol_num_samples)
         num_cutoff_symbols = int(num_symbols * symbol_cutoff)
-        
+
         colors = self._get_color_cycle()
 
         if domain == "time":
-            
+
             timestamps = np.linspace(-symbol_duration, symbol_duration, 1 + 2 * symbol_num_samples, endpoint=True)
-            
+
             for n in range(num_cutoff_symbols, num_symbols - num_cutoff_symbols):
 
                 stream_slice = self.__samples[0, symbol_num_samples * n : symbol_num_samples * (2 + n) + 1]
-                axes.plot(timestamps[:len(stream_slice)], stream_slice.real, color=colors[0], linewidth=linewidth)
-                axes.plot(timestamps[:len(stream_slice)], stream_slice.imag, color=colors[1], linewidth=linewidth)
+                axes.plot(timestamps[: len(stream_slice)], stream_slice.real, color=colors[0], linewidth=linewidth)
+                axes.plot(timestamps[: len(stream_slice)], stream_slice.imag, color=colors[1], linewidth=linewidth)
 
             axes.set_xlabel("Time-Domain [s]")
             axes.set_ylabel("Amplitude")

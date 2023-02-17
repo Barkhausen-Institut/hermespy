@@ -19,17 +19,25 @@ from typing import List, Optional, Union
 import numpy as np
 from scipy.fft import fft, ifft
 
-from hermespy.core import Serializable, Signal, AntennaArrayBase
+from hermespy.core import Serializable, Signal, Antenna, AntennaArrayBase
 from ..physical_device import PhysicalDevice
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
+
+
+class AudioAntenna(Antenna):
+    """Antenna model for audio devices."""
+
+    def characteristics(self, azimuth: float, elevation) -> np.ndarray:
+
+        return np.array([2**0.5, 2**0.5], dtype=float)
 
 
 class AudioDeviceAntennas(AntennaArrayBase):
@@ -39,6 +47,10 @@ class AudioDeviceAntennas(AntennaArrayBase):
 
     def __init__(self, device: AudioDevice) -> None:
 
+        # Initialize base class
+        AntennaArrayBase.__init__(self)
+
+        # Save attributes
         self.__device = device
 
     @property
@@ -47,20 +59,16 @@ class AudioDeviceAntennas(AntennaArrayBase):
         return len(self.__device.playback_channels)
 
     @property
-    def topology(self) -> np.ndarray:
+    def antennas(self) -> List[Antenna]:
 
-        return np.zeros((len(self.__device.playback_channels), 3))
-
-    def polarization(self, azimuth: float, elevation: float) -> np.ndarray:
-
-        return np.sqrt(2) * np.ones((len(self.__device.playback_channels), 3))
+        return [AudioAntenna() for _ in range(self.num_antennas)]
 
 
 class AudioDevice(PhysicalDevice, Serializable):
     """HermesPy binding to an arbitrary audio device. Let's rock!"""
 
     yaml_tag = "AudioDevice"
-    property_blacklist = {"topology", "wavelength", "velocity", "orientation", "position", "random_mother"}
+    property_blacklist = {"topology", "wavelength", "velocity", "orientation", "position", "random_mother", "antennas"}
 
     __playback_device: int  # Device over which audio streams are to be transmitted
     __record_device: int  # Device over which audio streams are to be received

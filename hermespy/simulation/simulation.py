@@ -101,7 +101,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
     __snr: Optional[float]  # Signal to noise ratio at the receiver-side
     __snr_type: SNRType  # Global global type of signal to noise ratio.
 
-    def __init__(self, snr: float = float("inf"), snr_type: Union[str, SNRType] = SNRType.PN0, *args, **kwargs) -> None:
+    def __init__(self, snr: float = float("inf"), snr_type: str | SNRType = SNRType.PN0, *args, **kwargs) -> None:
         """
         Args:
 

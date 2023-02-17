@@ -115,7 +115,7 @@ class CaponBeamformer(Serializable, ReceiveBeamformer):
         dictionary = np.empty((self.num_receive_input_streams, angles.shape[0]), dtype=complex)
         for d, focus in enumerate(angles):
 
-            array_response = self.operator.device.antennas.spherical_response(carrier_frequency, focus[0, 0], focus[0, 1])
+            array_response = self.operator.device.antennas.spherical_phase_response(carrier_frequency, focus[0, 0], focus[0, 1])
             dictionary[:, d] = sample_covariance @ array_response / (array_response.T.conj() @ sample_covariance @ array_response)
 
         beamformed_samples = dictionary.T.conj() @ samples

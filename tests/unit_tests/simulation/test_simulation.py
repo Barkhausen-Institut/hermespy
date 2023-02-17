@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 """Test HermesPy simulation executable."""
 
+from __future__ import annotations
 from unittest import TestCase
-from typing import Optional
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import ray
 
 from hermespy.core import ChannelStateInformation, Transmitter, Transmission, Receiver, Reception, Signal
-from hermespy.simulation.simulation import Simulation, SimulationActor, SimulationRunner, SimulationScenario, SNRType
+from hermespy.simulation.simulation import SimulatedDevice, Simulation, SimulationActor, SimulationRunner, SimulationScenario, SNRType
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
@@ -27,6 +27,8 @@ class TestSimulationScenario(TestCase):
     def setUp(self) -> None:
 
         self.seed = 0
+        self.device_alpha = SimulatedDevice()
+        self.device_beta = SimulatedDevice()
 
         self.scenario = SimulationScenario(seed=self.seed)
         self.device_alpha = self.scenario.new_device()
@@ -160,7 +162,7 @@ class MockTransmitter(Transmitter):
 class MockReceiver(Receiver):
     """Mock receiver for testing purposes."""
 
-    def _receive(self, signal: Signal, csi: Optional[ChannelStateInformation] = None, cache: bool = True) -> Reception:
+    def _receive(self, signal: Signal, csi: ChannelStateInformation | None = None, cache: bool = True) -> Reception:
         return Reception(signal.resample(self.sampling_rate))
 
     @property
@@ -227,8 +229,8 @@ class TestSimulationActor(TestCase):
     def setUp(self) -> None:
 
         self.seed = 0
-        self.device_alpha = Mock()
-        self.device_beta = Mock()
+        self.device_alpha = SimulatedDevice()
+        self.device_beta = SimulatedDevice()
 
         self.scenario = SimulationScenario(seed=self.seed)
         self.scenario.add_device(self.device_alpha)

@@ -39,9 +39,8 @@ from typing import Any, List, Tuple
 import numpy as np
 from scipy.constants import pi, speed_of_light
 
-from hermespy.core.factory import Serializable
-from hermespy.tools.math import db2lin, rotation_matrix
-from hermespy.tools.resampling import delay_resampling_matrix
+from hermespy.core import Serializable
+from hermespy.tools import db2lin, delay_resampling_matrix
 from .channel import Channel, ChannelRealization
 
 __author__ = "Jan Adler"
@@ -710,36 +709,27 @@ class ClusterDelayLineBase(Channel):
         delay_spread = 10 ** self._rng.normal(self.delay_spread_mean, self.delay_spread_std)
         rice_factor = self._rng.normal(loc=self.rice_factor_mean, scale=self.rice_factor_std)
 
-        # Query device positions and orientations
-        tx_position = self.transmitter.position
-        rx_position = self.receiver.position
-        tx_orientation = self.transmitter.orientation  # Orientation in RPY
-        rx_orientation = self.receiver.orientation  # Orientation in RPY
+        # Compute line of sight directions in local coordinates for both devices
+        tx_los_direction = self.transmitter.backwards_transformation.transform_direction(self.receiver.global_position, True)
+        rx_los_direction = self.receiver.backwards_transformation.transform_direction(self.transmitter.global_position, True)
 
-        # Positions may not be unspecified
-        if tx_position is None or rx_position is None:
-            raise ValueError("Cluster delay line models require specified transmitter and receiver positions")
+        # Extract directive angles in spherical coordinates
+        tx_los_angles = tx_los_direction.to_spherical()
+        rx_los_angles = rx_los_direction.to_spherical()
 
-        # Compute the respective angles of arrival and departure
-        tx_los_vector = rotation_matrix(-tx_orientation) @ (rx_position - tx_position)
-        rx_los_vector = rotation_matrix(-rx_orientation) @ (tx_position - rx_position)
-
-        los_aoa = atan(rx_los_vector[1] / rx_los_vector[0]) if rx_los_vector[1] != 0.0 and rx_los_vector[0] != 0.0 else 0.0
-        los_aod = atan(tx_los_vector[1] / tx_los_vector[0]) if tx_los_vector[1] != 0.0 and tx_los_vector[0] != 0.0 else 0
-        los_zoa = atan(sqrt(rx_los_vector[0] ** 2 + rx_los_vector[1] ** 2) / rx_los_vector[2]) if rx_los_vector[2] != 0.0 else 0.5 * pi
-        los_zod = atan(sqrt(tx_los_vector[0] ** 2 + tx_los_vector[1] ** 2) / tx_los_vector[2]) if tx_los_vector[2] != 0.0 else 0.5 * pi
-
+        # Compute cluster delays and powers
         num_clusters = self.num_clusters
         num_rays = 20
 
         raw_cluster_delays, cluster_delays = self._cluster_delays(delay_spread, rice_factor)
         cluster_powers = self._cluster_powers(delay_spread, raw_cluster_delays, rice_factor)
 
-        ray_aod = pi / 180 * self._ray_azimuth_angles(cluster_powers, rice_factor, 180 * los_aod / pi)
-        ray_aoa = pi / 180 * self._ray_azimuth_angles(cluster_powers, rice_factor, 180 * los_aoa / pi)
+        # Compute cluster angles
+        ray_aod = pi / 180 * self._ray_azimuth_angles(cluster_powers, rice_factor, 180 * tx_los_angles[0] / pi)
+        ray_aoa = pi / 180 * self._ray_azimuth_angles(cluster_powers, rice_factor, 180 * rx_los_angles[0] / pi)
         # ToDo: Zenith departure modeling
-        ray_zod = pi / 180 * self._ray_zod(cluster_powers, rice_factor, 180 * los_zod / pi)
-        ray_zoa = pi / 180 * self._ray_zoa(cluster_powers, rice_factor, 180 * los_zoa / pi)
+        ray_zod = pi / 180 * self._ray_zod(cluster_powers, rice_factor, 180 * tx_los_angles[1] / pi)
+        ray_zoa = pi / 180 * self._ray_zoa(cluster_powers, rice_factor, 180 * rx_los_angles[1] / pi)
 
         # Couple cluster angles randomly (step 8)
         # This is equivalent to shuffeling the angles within each cluster set
@@ -783,14 +773,14 @@ class ClusterDelayLineBase(Channel):
             for aoa, zoa, aod, zod, jones in zip(ray_aoa[cluster_idx, ray_indices], ray_zoa[cluster_idx, ray_indices], ray_aod[cluster_idx, ray_indices], ray_zod[cluster_idx, ray_indices], jones_matrix[:, :, cluster_idx, ray_indices].transpose(2, 0, 1)):
 
                 # Equation 7.5-23
-                rx_response = self.receiver.antennas.spherical_response(center_frequency, aoa, zoa)
+                rx_response = self.receiver.antennas.spherical_phase_response(center_frequency, aoa, zoa)
 
                 # Equation 7.5-24
-                tx_response = self.transmitter.antennas.spherical_response(center_frequency, aod, zod).conj()
+                tx_response = self.transmitter.antennas.spherical_phase_response(center_frequency, aod, zod).conj()
 
                 # Equation 7.5-28
-                rx_polarization = self.receiver.antennas.polarization(aoa, zoa)
-                tx_polarization = self.transmitter.antennas.polarization(aod, zod)
+                rx_polarization = self.receiver.antennas.characteristics(aoa, zoa)
+                tx_polarization = self.transmitter.antennas.characteristics(aod, zod)
 
                 channel = (rx_response[:, None] * rx_polarization) @ jones @ (tx_polarization * tx_response[:, None]).T * sqrt(cluster_powers[cluster_idx] / num_clusters)
 
@@ -819,10 +809,10 @@ class ClusterDelayLineBase(Channel):
             nlos_coefficients *= (1 + rice_factor_lin) ** -0.5
 
             # Equation 7.5-29
-            rx_response = self.receiver.antennas.spherical_response(center_frequency, los_aoa, los_zoa)
-            tx_response = self.transmitter.antennas.spherical_response(center_frequency, los_aod, los_zod).conj()
-            rx_polarization = self.receiver.antennas.polarization(los_aoa, los_zoa)
-            tx_polarization = self.transmitter.antennas.polarization(los_aod, los_zod)
+            rx_response = self.receiver.antennas.spherical_phase_response(center_frequency, *rx_los_angles)
+            tx_response = self.transmitter.antennas.spherical_phase_response(center_frequency, *tx_los_angles).conj()
+            rx_polarization = self.receiver.antennas.characteristics(*rx_los_angles)
+            tx_polarization = self.transmitter.antennas.characteristics(*tx_los_angles)
 
             channel = (rx_response[:, None] * rx_polarization) @ (tx_polarization * tx_response[:, None]).T
             impulse = np.exp(-2j * pi * los_distance * wavelength_factor) * np.exp(np.inner(rx_wave_vector, relative_velocity) * fast_fading * 2j * pi)
