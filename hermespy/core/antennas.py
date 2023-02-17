@@ -469,7 +469,7 @@ class AntennaArrayBase(Transformable):
         for a, antenna in enumerate(self.antennas):
 
             # Compute the local angle of interest for each antenna element
-            local_antenna_direction = antenna.backwards_transformation.transform_direction(global_direction)
+            local_antenna_direction = antenna.backwards_transformation.transform_direction(global_direction, normalize=True)
 
             # Query polarization vector for a-th antenna given local azimuth and zenith angles of interest
             local_antenna_character = antenna.characteristics(*local_antenna_direction.to_spherical())
