@@ -8,6 +8,15 @@ from hermespy.core import Signal
 from hermespy.simulation import SimulatedDevice, SpecificIsolation
 from hermespy.tools import db2lin, lin2db
 
+__author__ = "Jan Adler"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__credits__ = ["Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "1.0.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
+
 
 class TestSpecificIsolation(TestCase):
 
