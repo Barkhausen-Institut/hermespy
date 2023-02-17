@@ -138,6 +138,7 @@ class PowerReceiver(Receiver[Reception]):
         """
         Args:
 
+
             num_samples (int):
                 Number of samples required for power estimation.
         """
@@ -153,6 +154,7 @@ class PowerReceiver(Receiver[Reception]):
     @property
     def num_samples(self) -> int:
         """Number of samples required for power estimation.
+
 
         Returns: Number of samples.
         """

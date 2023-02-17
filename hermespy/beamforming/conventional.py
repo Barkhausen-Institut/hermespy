@@ -125,7 +125,7 @@ class ConventionalBeamformer(Serializable, TransmitBeamformer, ReceiveBeamformer
 
         book = np.empty((angles.shape[0], self.operator.device.antennas.num_antennas), dtype=complex)
         for n, (azimuth, zenith) in enumerate(angles):
-            book[n, :] = self.operator.device.antennas.spherical_response(carrier_frequency, azimuth, zenith).conj()
+            book[n, :] = self.operator.device.antennas.spherical_phase_response(carrier_frequency, azimuth, zenith).conj()
 
         return book / self.operator.device.antennas.num_antennas
 
@@ -134,7 +134,7 @@ class ConventionalBeamformer(Serializable, TransmitBeamformer, ReceiveBeamformer
         azimuth, zenith = focus_angles[0, :]
 
         # Compute conventional beamformer weights
-        weights = self.operator.device.antennas.spherical_response(carrier_frequency, azimuth, zenith).conj()
+        weights = self.operator.device.antennas.spherical_phase_response(carrier_frequency, azimuth, zenith).conj()
 
         # Weight the streams accordingly
         samples = weights[:, np.newaxis] @ samples

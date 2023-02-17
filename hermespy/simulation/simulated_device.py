@@ -354,7 +354,7 @@ class SimulatedDeviceReception(ProcessedSimulatedDeviceInput, DeviceReception):
         return cls.From_ProcessedDeviceInput(device_input, device_reception.operator_receptions)
 
 
-class SimulatedDevice(Device, RandomNode, Serializable):
+class SimulatedDevice(Device, Serializable):
     """Representation of a device simulating hardware.
 
     Simulated devices are required to attach to a scenario in order to simulate proper channel propagation.
@@ -469,23 +469,6 @@ class SimulatedDevice(Device, RandomNode, Serializable):
 
             self.__scenario = scenario
             self.random_mother = scenario
-
-    @Device.orientation.getter  # type: ignore
-    def orientation(self) -> np.ndarray:
-
-        angles: Optional[np.ndarray] = Device.orientation.fget(self)  # type: ignore
-
-        # Return the fixed angle configuration if it is specified
-        if angles is not None:
-            return angles
-
-        # Draw a random orientation if the angle configuration was not specified
-        return self._rng.uniform(0, 2 * pi, 3)
-
-    @Device.topology.getter  # type: ignore
-    def topology(self) -> np.ndarray:
-
-        return self.antennas.topology
 
     @property
     def attached(self) -> bool:

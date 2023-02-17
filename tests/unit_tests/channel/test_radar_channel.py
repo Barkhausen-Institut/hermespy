@@ -11,6 +11,7 @@ from scipy.constants import pi, speed_of_light
 
 from hermespy.channel import RadarChannel
 from hermespy.core import FloatingError, Signal
+from hermespy.simulation import SimulatedDevice
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 
@@ -35,12 +36,7 @@ class TestRadarChannel(unittest.TestCase):
         self.random_node = Mock()
         self.random_node._rng = self.random_generator
 
-        self.transmitter = Mock()
-        self.transmitter.carrier_frequency = 1e9
-        self.transmitter.sampling_rate = 1e6
-        self.transmitter.antennas.num_antennas = 1
-        self.transmitter.antennas.spherical_response.return_value = np.array([1.], dtype=complex)
-        self.transmitter.velocity = np.zeros(3, dtype=float)
+        self.transmitter = SimulatedDevice(carrier_frequency=1e9, sampling_rate=1e6)
         self.receiver = self.transmitter
 
         self.target_exists = True

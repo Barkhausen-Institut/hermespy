@@ -293,7 +293,7 @@ class RadarChannel(Channel[RadarChannelRealization], Serializable):
 
         delay_taps = np.arange(1 + max_delay_in_samples) / sampling_rate
 
-        array_response = self.transmitter.antennas.spherical_response(self.transmitter.carrier_frequency, self.target_azimuth, self.target_zenith)
+        array_response = self.transmitter.antennas.spherical_phase_response(self.transmitter.carrier_frequency, self.target_azimuth, self.target_zenith)
         mimo_response = np.outer(array_response.conj(), array_response)
 
         for idx, timestamp in enumerate(timestamps):

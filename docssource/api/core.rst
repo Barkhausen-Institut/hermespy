@@ -26,3 +26,4 @@ It is split into several interdependent sub-modules:
    core.signal_model
    core.channel_state_information
    core.antennas
+   core.transformation

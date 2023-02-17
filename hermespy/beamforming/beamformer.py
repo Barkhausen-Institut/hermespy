@@ -503,7 +503,7 @@ class ReceiveBeamformer(BeamformerBase[Receiver], ReceiveStreamDecoder, ABC):
 
         if signal is None:
 
-            samples = self.operator.device.antennas.spherical_response(self.operator.device.carrier_frequency, 0.0, 0.0)
+            samples = self.operator.device.antennas.spherical_phase_response(self.operator.device.carrier_frequency, 0.0, 0.0)
             signal = Signal(samples[:, np.newaxis], 1.0, self.operator.device.carrier_frequency)
 
         zenith_angles = np.linspace(0, 0.5 * pi, 31)

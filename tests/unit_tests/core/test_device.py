@@ -5,8 +5,9 @@ from unittest import TestCase
 from unittest.mock import Mock
 
 import numpy as np
-from numpy.testing import assert_array_equal, assert_array_almost_equal
+from numpy.testing import assert_array_equal
 
+from hermespy.core import Transformation
 from hermespy.core.device import Device, MixingOperator,  Operator, OperatorSlot, Receiver, ReceiverSlot, Reception, Transmission, Transmitter,\
     TransmitterSlot
 
@@ -364,7 +365,8 @@ class TestDevice(TestCase):
         self.orientation = np.zeros(3)
         self.antennas = Mock()
 
-        self.device = DeviceMock(power=self.power, position=self.position, orientation=self.orientation,
+        self.device = DeviceMock(power=self.power,
+                                 pose=Transformation.From_RPY(rpy=self.orientation, pos=self.position),
                                  antennas=self.antennas)
 
     def test_init(self) -> None:
@@ -395,55 +397,6 @@ class TestDevice(TestCase):
         except ValueError:
             self.fail()
 
-    def test_position_setget(self) -> None:
-        """Position property getter should return setter argument."""
-
-        position = np.arange(3)
-        self.device.position = position
-
-        assert_array_equal(position, self.device.position)
-
-    def test_position_validation(self) -> None:
-        """Position property setter should raise ValueError on invalid arguments."""
-
-        with self.assertRaises(ValueError):
-            self.device.position = np.arange(4)
-
-        with self.assertRaises(ValueError):
-            self.device.position = np.array([[1, 2, 3]])
-
-        try:
-            self.device.position = np.arange(1)
-
-        except ValueError:
-            self.fail()
-
-    def test_position_expansion(self) -> None:
-        """Position property setter should expand vector dimensions if required."""
-
-        position = np.array([1.0])
-        expected_position = np.array([1.0, 0.0, 0.0])
-        self.device.position = position
-
-        assert_array_almost_equal(expected_position, self.device.position)
-
-    def test_orientation_setget(self) -> None:
-        """Device orientation property getter should return setter argument."""
-
-        orientation = np.arange(3)
-        self.device.orientation = orientation
-
-        assert_array_equal(orientation, self.device.orientation)
-
-    def test_orientation_validation(self) -> None:
-        """Device orientation property setter should raise ValueError on invalid arguments."""
-
-        with self.assertRaises(ValueError):
-            self.device.orientation = np.array([[1, 2, 3], [4, 5, 6]])
-
-        with self.assertRaises(ValueError):
-            self.device.orientation = np.array([1, 2])
-
     def test_max_frame_duration(self) -> None:
         """Maximum frame duration property should compute the correct duration."""
 
@@ -456,3 +409,11 @@ class TestDevice(TestCase):
         self.device.receivers.add(receiver)
 
         self.assertEqual(10, self.device.max_frame_duration)
+
+    def test_num_antennas(self) -> None:
+        """Number of antennas property should return the proper antenna count"""
+        
+        expected_num_antenans = 15
+        self.antennas.num_antennas = expected_num_antenans
+        
+        self.assertEqual(expected_num_antenans, self.device.num_antennas)
