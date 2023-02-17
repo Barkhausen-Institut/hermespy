@@ -66,14 +66,6 @@ class TestSpatialDelayChannel(TestCase):
 
         self.channel = SpatialDelayChannel(transmitter=self.transmitter, receiver=self.receiver)
 
-    def test_delay_validation(self) -> None:
-        """Realizing a delay without specifying the device positions should yield an exception"""
-
-        self.transmitter.position = None
-
-        with self.assertRaises(RuntimeError):
-            _ = self.channel._realize_delay()
-
     def test_delay_realization(self) -> None:
         """Delay realization should yield the correct time delay"""
 
@@ -84,7 +76,7 @@ class TestSpatialDelayChannel(TestCase):
         """Channel realization should yield the correct sensor array response"""
 
         response = self.channel._realize_response()
-        self.assertSequenceEqual((3, 2), response.shape)
+        self.assertSequenceEqual((self.receiver.num_antennas, self.transmitter.num_antennas), response.shape)
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""

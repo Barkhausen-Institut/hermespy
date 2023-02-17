@@ -74,7 +74,7 @@ class TestCaponBeamformer(TestCase):
         
         for f, focus_angle in enumerate(focus_angles):
             
-            response = self.operator.device.antennas.spherical_response(carrier_frequency, focus_angle[0], focus_angle[1])
+            response = self.operator.device.antennas.spherical_phase_response(carrier_frequency, focus_angle[0], focus_angle[1])
             noiseless_spatial_samples = response[:, np.newaxis] @ expected_samples[np.newaxis, :]
             noisy_spatial_samples = noiseless_spatial_samples  + noise
 

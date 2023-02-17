@@ -106,8 +106,8 @@ def test_yaml_roundtrip_serialization(case: TestCase,
                                           err_msg=f"Roundtrip serialization of {serializable.__class__.__name__}.{attribute_key}  failed for attribute {attribute_key}")
 
         elif serialized_type is float:
-            case.assertAlmostEquals(serialized_value, deserialized_value,
-                                    f"Roundtrip serialization of {serializable.__class__.__name__}.{attribute_key}  failed for attribute {attribute_key}")
+            case.assertAlmostEqual(serialized_value, deserialized_value,
+                                   f"Roundtrip serialization of {serializable.__class__.__name__}.{attribute_key}  failed for attribute {attribute_key}")
 
 
 class SerializableMock(Serializable):

@@ -85,17 +85,17 @@ class SpatialDelayChannel(DelayChannelBase):
         if self.transmitter.position is None or self.receiver.position is None:
             raise RuntimeError("The spatial delay channel requires the linked devices positions to be specified")
 
-        distance = float(np.linalg.norm(self.transmitter.position - self.receiver.position))
+        distance = float(np.linalg.norm(self.transmitter.global_position - self.receiver.global_position))
         delay = distance / speed_of_light
 
         return delay
 
     def _realize_response(self) -> np.ndarray:
 
-        transmit_response = self.transmitter.antennas.cartesian_response(self.transmitter.carrier_frequency, self.receiver.position - self.transmitter.position)
-        receive_response = self.receiver.antennas.cartesian_response(self.receiver.carrier_frequency, self.transmitter.position - self.receiver.position)
+        transmit_response = self.transmitter.antennas.cartesian_array_response(self.transmitter.carrier_frequency, self.receiver.global_position, "global")
+        receive_response = self.receiver.antennas.cartesian_array_response(self.receiver.carrier_frequency, self.transmitter.global_position, "global")
 
-        return np.outer(receive_response, transmit_response)
+        return receive_response @ transmit_response.T
 
 
 class RandomDelayChannel(DelayChannelBase):

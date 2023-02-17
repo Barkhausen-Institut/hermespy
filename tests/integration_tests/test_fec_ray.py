@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from os import path
 from unittest import TestCase
 from unittest.mock import patch, Mock

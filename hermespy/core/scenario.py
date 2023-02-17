@@ -21,6 +21,7 @@ from .drop import Drop
 from .factory import Factory
 from .random_node import RandomNode
 from .signal_model import Signal
+from .transformation import TransformableBase
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -54,7 +55,7 @@ class ScenarioMode(IntEnum):
     """
 
 
-class Scenario(ABC, RandomNode, Generic[DeviceType]):
+class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
     """A wireless scenario.
 
     Scenarios consist of several devices transmitting and receiving electromagnetic signals.
@@ -88,7 +89,11 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
 
         """
 
+        # Initialize base classes
         RandomNode.__init__(self, seed=seed)
+        TransformableBase.__init__(self)
+
+        # Initialize attributes
         self.__mode = ScenarioMode.DEFAULT
         self.__devices = []
         self.drop_duration = 0.0
@@ -141,6 +146,9 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
 
         # Register scenario at the device
         device.random_mother = self
+
+        # Assign the scenario as the device's coordinate system base
+        device.set_base(self)
 
     def new_device(self, *args, **kwargs) -> DeviceType:
         """Add a new device to the scenario.
