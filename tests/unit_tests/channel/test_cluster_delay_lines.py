@@ -13,7 +13,8 @@ import numpy as np
 from numpy.testing import assert_array_equal
 from scipy.constants import pi, speed_of_light
 
-from hermespy.core import Signal, IdealAntenna, UniformArray
+from hermespy.core import Direction, Signal, IdealAntenna, Transformation, UniformArray
+from hermespy.simulation import SimulatedDevice
 from hermespy.channel.cluster_delay_lines import ClusterDelayLine, DelayNormalization
 
 __author__ = "Jan Adler"
@@ -39,25 +40,13 @@ class TestClusterDelayLine(TestCase):
         self.delay_scaling = 3.8
         self.carrier_frequency = 1e9
 
-        self.antennas = UniformArray(IdealAntenna(), .5 * speed_of_light / self.carrier_frequency, (2, 2))
-
-        self.receiver = Mock()
-        self.receiver.num_antennas = self.antennas.num_antennas
-        self.receiver.antennas = self.antennas
-        self.receiver.position = np.array([100., 0., 0.])
-        self.receiver.orientation = np.array([0., 0., 0.])
-        self.receiver.antenna_positions = np.array([[100., 0., 0.]], dtype=float)
-        self.receiver.velocity = np.zeros(3, dtype=float)
-        self.receiver.carrier_frequency = self.carrier_frequency
-
-        self.transmitter = Mock()
-        self.transmitter.num_antennas = self.antennas.num_antennas
-        self.transmitter.antennas = self.antennas
-        self.transmitter.position = np.array([-100., 0., 0.])
-        self.transmitter.orientation = np.array([0., 0., pi])
-        self.transmitter.antenna_positions = np.array([[-100., 0., 0.]], dtype=float)
-        self.transmitter.velocity = np.array([0., 0., 0.], dtype=float)
-        self.transmitter.carrier_frequency = self.carrier_frequency
+        self.transmitter = SimulatedDevice(antennas=UniformArray(IdealAntenna, .5 * speed_of_light / self.carrier_frequency, (2, 2)),
+                                           pose=Transformation.From_RPY(pos=np.array([0., 0., 0.]), rpy=np.array([0., 0., 0.])),
+                                           carrier_frequency=self.carrier_frequency)
+        
+        self.receiver = SimulatedDevice(antennas=UniformArray(IdealAntenna, .5 * speed_of_light / self.carrier_frequency, (2, 2)),
+                                        pose=Transformation.From_RPY(pos=np.array([100., 0., 0.]), rpy=np.array([0., 0., 0.])),
+                                        carrier_frequency=self.carrier_frequency)
 
         self.channel = ClusterDelayLine(delay_spread_mean=self.delay_spread_mean,
                                         delay_spread_std=self.delay_spread_std,
@@ -206,8 +195,8 @@ class TestClusterDelayLine(TestCase):
 
         self.assertFalse(np.any(np.isnan(realization.state)))
         self.assertEqual(num_samples, realization.num_samples)
-        self.assertEqual(self.antennas.num_antennas, realization.num_transmit_streams)
-        self.assertEqual(self.antennas.num_antennas, realization.num_receive_streams)
+        self.assertEqual(self.receiver.num_antennas, realization.num_transmit_streams)
+        self.assertEqual(self.transmitter.num_antennas, realization.num_receive_streams)
 
     def test_doppler_shift(self) -> None:
         """A signal being propagated over the channel should be frequency shifted according to the doppler effect"""
@@ -215,12 +204,13 @@ class TestClusterDelayLine(TestCase):
         self.channel.num_clusters = 1
         self.receiver.velocity = np.array([10., 0., 0.])
 
-        sampling_rate = 1e2
-        signal_frequency = .25 * sampling_rate
-        signal = np.outer(np.ones(4, dtype=complex), np.exp(2j * pi * .25 * np.arange(200)))
+        sampling_rate = 1e3
+        num_samples = 400
+        signal = np.outer(np.ones(4, dtype=complex), np.exp(2j * pi * .2 * np.arange(num_samples)))
 
-        expected_doppler_shift = np.linalg.norm(self.receiver.velocity - self.transmitter.velocity) * self.transmitter.carrier_frequency / speed_of_light
-        frequency_resolution = sampling_rate / 200
+        radial_velocity = (self.transmitter.velocity - self.receiver.velocity) @ Direction.From_Cartesian(self.receiver.global_position - self.transmitter.global_position, True)
+        expected_doppler_shift = radial_velocity * self.transmitter.carrier_frequency / speed_of_light
+        frequency_resolution = sampling_rate / num_samples
 
         shifted_signal, _, _ = self.channel.propagate(Signal(signal, sampling_rate))
 
@@ -257,8 +247,8 @@ class TestClusterDelayLine(TestCase):
 
         self.assertFalse(np.any(np.isnan(realization.state)))
         self.assertEqual(num_samples, realization.num_samples)
-        self.assertEqual(self.antennas.num_antennas, realization.num_receive_streams)
-        self.assertEqual(self.antennas.num_antennas, realization.num_transmit_streams)
+        self.assertEqual(self.receiver.num_antennas, realization.num_receive_streams)
+        self.assertEqual(self.transmitter.num_antennas, realization.num_transmit_streams)
 
     def test_pseudo_randomness(self) -> None:
         """Setting the random seed should result in identical impulse responses."""
@@ -285,10 +275,11 @@ class TestClusterDelayLine(TestCase):
 
         self.channel.num_clusters = 1
 
-        self.transmitter.antennas = UniformArray(IdealAntenna(), .5 * speed_of_light / self.carrier_frequency, (1,))
+        self.transmitter.antennas = UniformArray(IdealAntenna, .5 * speed_of_light / self.carrier_frequency, (1,))
         self.transmitter.orientation = np.zeros(3, dtype=float)
         self.receiver.position = np.zeros(3, dtype=float)
-        self.receiver.antennas = UniformArray(IdealAntenna(), .5 * speed_of_light / self.carrier_frequency, (8,8))
+        self.receiver.orientation = np.zeros(3, dtype=float)
+        self.receiver.antennas = UniformArray(IdealAntenna, .5 * speed_of_light / self.carrier_frequency, (8,8))
 
         angle_candidates = [(.25 * pi, 0),
                             (.25 * pi, .25 * pi), 
@@ -301,7 +292,7 @@ class TestClusterDelayLine(TestCase):
       
         steering_codebook = np.empty((8**2, len(angle_candidates)), dtype=complex)
         for a, (zenith, azimuth) in enumerate(angle_candidates):
-            steering_codebook[:, a] = self.receiver.antennas.spherical_response(self.carrier_frequency, azimuth, zenith)
+            steering_codebook[:, a] = self.receiver.antennas.spherical_phase_response(self.carrier_frequency, azimuth, zenith)
 
 
         probing_signal = Signal(np.exp(2j * pi * .25 * np.arange(100)), sampling_rate=1e3, carrier_frequency=self.carrier_frequency)

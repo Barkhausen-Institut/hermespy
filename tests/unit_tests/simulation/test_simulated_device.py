@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch, PropertyMock
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
-from hermespy.core import dB, Signal, IdealAntenna, UniformArray
+from hermespy.core import dB, Signal, IdealAntenna, Transformation, UniformArray
 from hermespy.simulation import SimulatedDevice, SpecificIsolation
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
@@ -35,7 +35,7 @@ class TestSimulatedDevice(TestCase):
         self.orientation = np.zeros(3)
         self.antennas = UniformArray(IdealAntenna(), 1., (1, 1, 1))
 
-        self.device = SimulatedDevice(scenario=self.scenario, antennas=self.antennas, position=self.position, orientation=self.orientation)
+        self.device = SimulatedDevice(scenario=self.scenario, antennas=self.antennas, pose=Transformation.From_RPY(self.orientation, self.position))
 
     def test_init(self) -> None:
         """Initialization parameters should be properly stored as class attributes."""
@@ -164,8 +164,9 @@ class TestSimulatedDevice(TestCase):
 
         default_blacklist = self.device.property_blacklist
         default_blacklist.add('scenario')
+        default_blacklist.add('antennas')
         
         with patch('hermespy.simulation.simulated_device.SimulatedDevice.property_blacklist', new_callable=PropertyMock) as blacklist:
 
             blacklist.return_value = default_blacklist
-            test_yaml_roundtrip_serialization(self, self.device, {'sampling_rate', 'scenario', 'antenna_positions', 'attached'})
+            test_yaml_roundtrip_serialization(self, self.device, {'sampling_rate', 'scenario', 'antennas', 'attached'})

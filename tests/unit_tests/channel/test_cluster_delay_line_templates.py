@@ -5,19 +5,20 @@
 =====================================
 """
 
+from typing import Type
 from unittest import TestCase
 from unittest.mock import Mock
 
 import numpy as np
 from numpy.random import default_rng
-from scipy.constants import pi
 
-from hermespy.core import IdealAntenna, UniformArray
+from hermespy.core import IdealAntenna, Transformation, UniformArray
 from hermespy.channel import StreetCanyonLineOfSight, StreetCanyonNoLineOfSight,\
     StreetCanyonOutsideToInside, UrbanMacrocellsLineOfSight, UrbanMacrocellsNoLineOfSight, \
     UrbanMacrocellsOutsideToInside, RuralMacrocellsLineOfSight, RuralMacrocellsNoLineOfSight, \
     RuralMacrocellsOutsideToInside, IndoorOfficeLineOfSight, IndoorOfficeNoLineOfSight, IndoorFactoryNoLineOfSight, \
-    IndoorFactoryLineOfSight
+    IndoorFactoryLineOfSight, ClusterDelayLine, ChannelRealization
+from hermespy.simulation import SimulatedDevice
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -29,556 +30,201 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class TestStreetCanyonLOS(TestCase):
-    """Test the 3GPP Cluster Delay Line Model Implementation."""
-
-    def setUp(self) -> None:
-
-        self.rng = default_rng(42)
-        self.random_node = Mock()
-        self.random_node._rng = self.rng
-
-        self.carrier_frequency = 1e9
-        self.antennas = UniformArray(IdealAntenna(), 1, (1,))
-
-        self.receiver = Mock()
-        self.receiver.position = np.array([100., 0., 0.])
-        self.receiver.orientation = np.array([0, 0, pi])
-        self.receiver.antennas = self.antennas
-        self.receiver.velocity = np.array([0., 0., 0.], dtype=float)
-        self.receiver.carrier_frequency = self.carrier_frequency
-
-        self.transmitter = Mock()
-        self.transmitter.position = np.array([-100., 0., 0.])
-        self.transmitter.orientation = np.array([0, 0, 0])
-        self.transmitter.antennas = self.antennas
-        self.transmitter.velocity = np.array([0., 0., 0.], dtype=float)
-        self.transmitter.carrier_frequency = 1e9
-
-        self.channel = StreetCanyonLineOfSight(receiver=self.receiver,
-                                               transmitter=self.transmitter)
-        self.channel.random_mother = self.random_node
-
-    def test_realization(self):
-
-        num_samples = 5000
-        sampling_rate = 1e5
-
-        realization = self.channel.realize(num_samples, sampling_rate)
-
-        self.assertEqual(num_samples, realization.num_samples)
-        self.assertEqual(self.antennas.num_antennas, realization.num_transmit_streams)
-        self.assertEqual(self.antennas.num_antennas, realization.num_receive_streams)
-
-
-class TestStreetCanyonNLOS(TestCase):
-    """Test the 3GPP Cluster Delay Line Model Implementation."""
-
-    def setUp(self) -> None:
+class __TestClusterDelayLineTemplate(TestCase):
+    
+    def _init(self, channel: Type[ClusterDelayLine], **kwargs) -> None:
 
         self.rng = default_rng(42)
         self.random_node = Mock()
         self.random_node._rng = self.rng
 
+        self.num_samples = 5000
+        self.sampling_rate = 1e5
         self.carrier_frequency = 1e9
-        self.antennas = UniformArray(IdealAntenna(), 1, (1,))
 
-        self.receiver = Mock()
-        self.receiver.position = np.array([100., 0., 0.])
-        self.receiver.antennas = self.antennas
-        self.receiver.orientation = np.array([0, 0, 0])
-        self.receiver.velocity = np.array([0., 0., 0.], dtype=float)
-        self.receiver.carrier_frequency = self.carrier_frequency
-
-        self.transmitter = Mock()
-        self.transmitter.position = np.array([-100., 0., 0.])
-        self.transmitter.orientation = np.array([0, 0, 0])
-        self.transmitter.antennas = self.antennas
-        self.transmitter.velocity = np.array([0., 0., 0.], dtype=float)
-        self.transmitter.carrier_frequency = 1e9
-
-        self.channel = StreetCanyonNoLineOfSight(receiver=self.receiver,
-                                                 transmitter=self.transmitter)
-        self.channel.random_mother = self.random_node
-
-    def test_realization(self):
-
-        num_samples = 5000
-        sampling_rate = 1e5
-
-        realization = self.channel.realize(num_samples, sampling_rate)
-
-        self.assertEqual(num_samples, realization.num_samples)
-        self.assertEqual(self.antennas.num_antennas, realization.num_transmit_streams)
-        self.assertEqual(self.antennas.num_antennas, realization.num_receive_streams)
-
-
-class TestStreetCanyonO2I(TestCase):
-    """Test the 3GPP Cluster Delay Line Model Implementation."""
-
-    def setUp(self) -> None:
-
-        self.rng = default_rng(42)
-        self.random_node = Mock()
-        self.random_node._rng = self.rng
-
-        self.carrier_frequency = 1e9
-        self.antennas = UniformArray(IdealAntenna(), 1, (1,))
-
-        self.receiver = Mock()
-        self.receiver.position = np.array([100., 0., 0.])
-        self.receiver.antennas = self.antennas
-        self.receiver.orientation = np.array([0, 0, 0])
-        self.receiver.velocity = np.array([0., 0., 0.], dtype=float)
-        self.receiver.carrier_frequency = self.carrier_frequency
-
-        self.transmitter = Mock()
-        self.transmitter.position = np.array([-100., 0., 0.])
-        self.transmitter.orientation = np.array([0, 0, 0])
-        self.transmitter.antennas = self.antennas
-        self.transmitter.velocity = np.array([0., 0., 0.], dtype=float)
-        self.transmitter.carrier_frequency = 1e9
-
-        self.channel = StreetCanyonOutsideToInside(receiver=self.receiver,
-                                                   transmitter=self.transmitter)
-        self.channel.random_mother = self.random_node
-
-    def test_realization(self):
-
-        num_samples = 5000
-        sampling_rate = 1e5
-
-        realization = self.channel.realize(num_samples, sampling_rate)
-
-        self.assertEqual(num_samples, realization.num_samples)
-        self.assertEqual(self.antennas.num_antennas, realization.num_transmit_streams)
-        self.assertEqual(self.antennas.num_antennas, realization.num_receive_streams)
-
-
-class TestUrbanMacrocellsLOS(TestCase):
-    """Test the 3GPP Cluster Delay Line Model Implementation."""
-
-    def setUp(self) -> None:
-
-        self.rng = default_rng(42)
-        self.random_node = Mock()
-        self.random_node._rng = self.rng
-
-        self.carrier_frequency = 1e9
-        self.antennas = UniformArray(IdealAntenna(), 1, (1,))
-
-        self.receiver = Mock()
-        self.receiver.position = np.array([100., 0., 0.])
-        self.receiver.orientation = np.array([0, 0, 0])
-        self.receiver.antennas = self.antennas
-        self.receiver.velocity = np.array([0., 0., 0.], dtype=float)
-        self.receiver.carrier_frequency = self.carrier_frequency
-
-        self.transmitter = Mock()
-        self.transmitter.position = np.array([-100., 0., 0.])
-        self.transmitter.orientation = np.array([0, 0, 0])
-        self.transmitter.antennas = self.antennas
-        self.transmitter.velocity = np.array([0., 0., 0.], dtype=float)
-        self.transmitter.carrier_frequency = 1e9
-
-        self.channel = UrbanMacrocellsLineOfSight(receiver=self.receiver,
-                                                  transmitter=self.transmitter)
-        self.channel.random_mother = self.random_node
-
-    def test_realization(self):
-
-        num_samples = 5000
-        sampling_rate = 1e5
-
-        realization = self.channel.realize(num_samples, sampling_rate)
-
-        self.assertEqual(num_samples, realization.num_samples)
-        self.assertEqual(self.antennas.num_antennas, realization.num_transmit_streams)
-        self.assertEqual(self.antennas.num_antennas, realization.num_receive_streams)
-
-
-class TestUrbanMacrocellsNLOS(TestCase):
-    """Test the 3GPP Cluster Delay Line Model Implementation."""
-
-    def setUp(self) -> None:
-
-        self.rng = default_rng(42)
-        self.random_node = Mock()
-        self.random_node._rng = self.rng
-
-        self.carrier_frequency = 1e9
-        self.antennas = UniformArray(IdealAntenna(), 1, (1,))
-
-        self.receiver = Mock()
-        self.receiver.position = np.array([100., 0., 0.])
-        self.receiver.orientation = np.array([0, 0, 0])
-        self.receiver.antennas = self.antennas
-        self.receiver.velocity = np.array([0., 0., 0.], dtype=float)
-        self.receiver.carrier_frequency = self.carrier_frequency
-
-        self.transmitter = Mock()
-        self.transmitter.position = np.array([-100., 0., 0.])
-        self.transmitter.orientation = np.array([0, 0, 0])
-        self.transmitter.antennas = self.antennas
-        self.transmitter.velocity = np.array([0., 0., 0.], dtype=float)
-        self.transmitter.carrier_frequency = 1e9
-
-        self.channel = UrbanMacrocellsNoLineOfSight(receiver=self.receiver,
-                                                    transmitter=self.transmitter)
-        self.channel.random_mother = self.random_node
-
-    def test_realization(self):
-
-        num_samples = 5000
-        sampling_rate = 1e5
-
-        realization = self.channel.realize(num_samples, sampling_rate)
-
-        self.assertEqual(num_samples, realization.num_samples)
-        self.assertEqual(self.antennas.num_antennas, realization.num_transmit_streams)
-        self.assertEqual(self.antennas.num_antennas, realization.num_receive_streams)
-
-
-class TestUrbanMacrocellsO2I(TestCase):
-    """Test the 3GPP Cluster Delay Line Model Implementation."""
-
-    def setUp(self) -> None:
-
-        self.rng = default_rng(42)
-        self.random_node = Mock()
-        self.random_node._rng = self.rng
-
-        self.carrier_frequency = 1e9
-        self.antennas = UniformArray(IdealAntenna(), 1, (1,))
-
-        self.receiver = Mock()
-        self.receiver.position = np.array([100., 0., 0.])
-        self.receiver.orientation = np.array([0, 0, 0])
-        self.receiver.antennas = self.antennas
-        self.receiver.velocity = np.array([0., 0., 0.], dtype=float)
-        self.receiver.carrier_frequency = self.carrier_frequency
-
-        self.transmitter = Mock()
-        self.transmitter.position = np.array([-100., 0., 0.])
-        self.transmitter.orientation = np.array([0, 0, 0])
-        self.transmitter.antennas = self.antennas
-        self.transmitter.velocity = np.array([0., 0., 0.], dtype=float)
-        self.transmitter.carrier_frequency = 1e9
-
-        self.channel = UrbanMacrocellsOutsideToInside(receiver=self.receiver,
-                                                      transmitter=self.transmitter)
-        self.channel.random_mother = self.random_node
-
-    def test_realization(self):
-
-        num_samples = 5000
-        sampling_rate = 1e5
-
-        realization = self.channel.realize(num_samples, sampling_rate)
-
-        self.assertEqual(num_samples, realization.num_samples)
-        self.assertEqual(self.antennas.num_antennas, realization.num_transmit_streams)
-        self.assertEqual(self.antennas.num_antennas, realization.num_receive_streams)
-
-
-class TestRuralMacrocellsLOS(TestCase):
-    """Test the 3GPP Cluster Delay Line Model Implementation."""
-
-    def setUp(self) -> None:
-
-        self.rng = default_rng(42)
-        self.random_node = Mock()
-        self.random_node._rng = self.rng
-
-        self.carrier_frequency = 1e9
-        self.antennas = UniformArray(IdealAntenna(), 1, (1,))
-
-        self.receiver = Mock()
-        self.receiver.position = np.array([100., 0., 0.])
-        self.receiver.orientation = np.array([0, 0, 0])
-        self.receiver.antennas = self.antennas
-        self.receiver.velocity = np.array([0., 0., 0.], dtype=float)
-        self.receiver.carrier_frequency = self.carrier_frequency
-
-        self.transmitter = Mock()
-        self.transmitter.position = np.array([-100., 0., 0.])
-        self.transmitter.orientation = np.array([0, 0, 0])
-        self.transmitter.antennas = self.antennas
-        self.transmitter.velocity = np.array([0., 0., 0.], dtype=float)
-        self.transmitter.carrier_frequency = 1e9
-
-        self.channel = RuralMacrocellsLineOfSight(receiver=self.receiver,
-                                                  transmitter=self.transmitter)
-        self.channel.random_mother = self.random_node
-
-    def test_realization(self):
-
-        num_samples = 5000
-        sampling_rate = 1e5
-
-        realization = self.channel.realize(num_samples, sampling_rate)
-
-        self.assertEqual(num_samples, realization.num_samples)
-        self.assertEqual(self.antennas.num_antennas, realization.num_transmit_streams)
-        self.assertEqual(self.antennas.num_antennas, realization.num_receive_streams)
-
-
-class TestRuralMacrocellsNLOS(TestCase):
-    """Test the 3GPP Cluster Delay Line Model Implementation."""
-
-    def setUp(self) -> None:
-
-        self.rng = default_rng(42)
-        self.random_node = Mock()
-        self.random_node._rng = self.rng
-
-        self.carrier_frequency = 1e9
-        self.antennas = UniformArray(IdealAntenna(), 1, (1,))
-
-        self.receiver = Mock()
-        self.receiver.position = np.array([100., 0., 0.])
-        self.receiver.orientation = np.array([0, 0, 0])
-        self.receiver.antennas = self.antennas
-        self.receiver.velocity = np.array([0., 0., 0.], dtype=float)
-        self.receiver.carrier_frequency = self.carrier_frequency
-
-        self.transmitter = Mock()
-        self.transmitter.position = np.array([-100., 0., 0.])
-        self.transmitter.orientation = np.array([0, 0, 0])
-        self.transmitter.antennas = self.antennas
-        self.transmitter.velocity = np.array([0., 0., 0.], dtype=float)
-        self.transmitter.carrier_frequency = 1e9
-
-        self.channel = RuralMacrocellsNoLineOfSight(receiver=self.receiver,
-                                                    transmitter=self.transmitter)
-        self.channel.random_mother = self.random_node
-
-    def test_realization(self):
-
-        num_samples = 5000
-        sampling_rate = 1e5
-
-        realization = self.channel.realize(num_samples, sampling_rate)
-
-        self.assertEqual(num_samples, realization.num_samples)
-        self.assertEqual(self.antennas.num_antennas, realization.num_transmit_streams)
-        self.assertEqual(self.antennas.num_antennas, realization.num_receive_streams)
-
-
-class TestRuralMacrocellsO2I(TestCase):
-    """Test the 3GPP Cluster Delay Line Model Implementation."""
-
-    def setUp(self) -> None:
-
-        self.rng = default_rng(42)
-        self.random_node = Mock()
-        self.random_node._rng = self.rng
-
-        self.carrier_frequency = 1e9
-        self.antennas = UniformArray(IdealAntenna(), 1, (1,))
-
-        self.receiver = Mock()
-        self.receiver.position = np.array([100., 0., 0.])
-        self.receiver.orientation = np.array([0, 0, 0])
-        self.receiver.antennas = self.antennas
-        self.receiver.velocity = np.array([0., 0., 0.], dtype=float)
-        self.receiver.carrier_frequency = self.carrier_frequency
-
-        self.transmitter = Mock()
-        self.transmitter.position = np.array([-100., 0., 0.])
-        self.transmitter.orientation = np.array([0, 0, 0])
-        self.transmitter.antennas = self.antennas
-        self.transmitter.velocity = np.array([0., 0., 0.], dtype=float)
-        self.transmitter.carrier_frequency = 1e9
-
-        self.channel = RuralMacrocellsOutsideToInside(receiver=self.receiver,
-                                                      transmitter=self.transmitter)
-        self.channel.random_mother = self.random_node
-
-    def test_realization(self):
-
-        num_samples = 5000
-        sampling_rate = 1e5
-
-        realization = self.channel.realize(num_samples, sampling_rate)
-
-        self.assertEqual(num_samples, realization.num_samples)
-        self.assertEqual(self.antennas.num_antennas, realization.num_transmit_streams)
-        self.assertEqual(self.antennas.num_antennas, realization.num_receive_streams)
-
-
-class TestIndoorOfficeLOS(TestCase):
-    """Test the 3GPP Cluster Delay Line Model Implementation."""
-
-    def setUp(self) -> None:
-
-        self.rng = default_rng(42)
-        self.random_node = Mock()
-        self.random_node._rng = self.rng
-
-        self.carrier_frequency = 1e9
-        self.antennas = UniformArray(IdealAntenna(), 1, (1,))
-
-        self.receiver = Mock()
-        self.receiver.position = np.array([100., 0., 0.])
-        self.receiver.orientation = np.array([0, 0, 0])
-        self.receiver.antennas = self.antennas
-        self.receiver.velocity = np.array([0., 0., 0.], dtype=float)
-        self.receiver.carrier_frequency = self.carrier_frequency
-
-        self.transmitter = Mock()
-        self.transmitter.position = np.array([-100., 0., 0.])
-        self.transmitter.orientation = np.array([0, 0, 0])
-        self.transmitter.antennas = self.antennas
-        self.transmitter.velocity = np.array([0., 0., 0.], dtype=float)
-        self.transmitter.carrier_frequency = 1e9
-
-        self.channel = IndoorOfficeLineOfSight(receiver=self.receiver,
-                                               transmitter=self.transmitter)
-        self.channel.random_mother = self.random_node
-
-    def test_realization(self):
-
-        num_samples = 5000
-        sampling_rate = 1e5
-
-        realization = self.channel.realize(num_samples, sampling_rate)
-
-        self.assertEqual(num_samples, realization.num_samples)
-        self.assertEqual(self.antennas.num_antennas, realization.num_transmit_streams)
-        self.assertEqual(self.antennas.num_antennas, realization.num_receive_streams)
-
-
-class TestIndoorOfficeNLOS(TestCase):
-    """Test the 3GPP Cluster Delay Line Model Implementation."""
-
-    def setUp(self) -> None:
-
-        self.rng = default_rng(42)
-        self.random_node = Mock()
-        self.random_node._rng = self.rng
-
-        self.carrier_frequency = 1e9
-        self.antennas = UniformArray(IdealAntenna(), 1, (1,))
-
-        self.receiver = Mock()
-        self.receiver.position = np.array([100., 0., 0.])
-        self.receiver.orientation = np.array([0, 0, 0])
-        self.receiver.antennas = self.antennas
-        self.receiver.velocity = np.array([0., 0., 0.], dtype=float)
-        self.receiver.carrier_frequency = self.carrier_frequency
-
-        self.transmitter = Mock()
-        self.transmitter.position = np.array([-100., 0., 0.])
-        self.transmitter.orientation = np.array([0, 0, 0])
-        self.transmitter.antennas = self.antennas
-        self.transmitter.velocity = np.array([0., 0., 0.], dtype=float)
-        self.transmitter.carrier_frequency = 1e9
-
-        self.channel = IndoorOfficeNoLineOfSight(receiver=self.receiver,
-                                                 transmitter=self.transmitter)
-        self.channel.random_mother = self.random_node
-
-    def test_realization(self):
-
-        num_samples = 5000
-        sampling_rate = 1e5
-
-        realization = self.channel.realize(num_samples, sampling_rate)
-
-        self.assertEqual(num_samples, realization.num_samples)
-        self.assertEqual(self.antennas.num_antennas, realization.num_transmit_streams)
-        self.assertEqual(self.antennas.num_antennas, realization.num_receive_streams)
-
-
-class TestIndoorFactoryLOS(TestCase):
-    """Test the 3GPP Cluster Delay Line Model Implementation."""
-
-    def setUp(self) -> None:
-
-        self.rng = default_rng(42)
-        self.random_node = Mock()
-        self.random_node._rng = self.rng
-
-        self.carrier_frequency = 1e9
-        self.antennas = UniformArray(IdealAntenna(), 1, (1,))
-
-        self.receiver = Mock()
-        self.receiver.position = np.array([100., 0., 0.])
-        self.receiver.orientation = np.array([0, 0, 0])
-        self.receiver.antennas = self.antennas
-        self.receiver.velocity = np.array([0., 0., 0.], dtype=float)
-        self.receiver.carrier_frequency = self.carrier_frequency
-
-        self.transmitter = Mock()
-        self.transmitter.position = np.array([-100., 0., 0.])
-        self.transmitter.orientation = np.array([0, 0, 0])
-        self.transmitter.antennas = self.antennas
-        self.transmitter.velocity = np.array([0., 0., 0.], dtype=float)
-        self.transmitter.carrier_frequency = 1e9
-
-        self.volume = 1e5
-        self.surface = 1e6
-
-        self.channel = IndoorFactoryLineOfSight(volume=self.volume,
-                                                surface=self.surface,
-                                                receiver=self.receiver,
-                                                transmitter=self.transmitter)
-        self.channel.random_mother = self.random_node
-
-    def test_realization(self):
-
-        num_samples = 5000
-        sampling_rate = 1e5
-
-        realization = self.channel.realize(num_samples, sampling_rate)
-
-        self.assertEqual(num_samples, realization.num_samples)
-        self.assertEqual(self.antennas.num_antennas, realization.num_transmit_streams)
-        self.assertEqual(self.antennas.num_antennas, realization.num_receive_streams)
-
-
-class TestIndoorFactoryNLOS(TestCase):
-    """Test the 3GPP Cluster Delay Line Model Implementation."""
-
-    def setUp(self) -> None:
-        self.rng = default_rng(42)
-        self.random_node = Mock()
-        self.random_node._rng = self.rng
-
-        self.carrier_frequency = 1e9
-        self.antennas = UniformArray(IdealAntenna(), 1, (1,))
-
-        self.receiver = Mock()
-        self.receiver.position = np.array([100., 0., 0.])
-        self.receiver.orientation = np.array([0, 0, 0])
-        self.receiver.antennas = self.antennas
-        self.receiver.velocity = np.array([0., 0., 0.], dtype=float)
-        self.receiver.carrier_frequency = self.carrier_frequency
-
-        self.transmitter = Mock()
-        self.transmitter.position = np.array([-100., 0., 0.])
-        self.transmitter.orientation = np.array([0, 0, 0])
-        self.transmitter.antennas = self.antennas
-        self.transmitter.velocity = np.array([0., 0., 0.], dtype=float)
-        self.transmitter.carrier_frequency = 1e9
-
-        self.volume = 1e5
-        self.surface = 1e6
-
-        self.channel = IndoorFactoryNoLineOfSight(volume=self.volume,
-                                                  surface=self.surface,
-                                                  receiver=self.receiver,
-                                                  transmitter=self.transmitter)
-        self.channel.random_mother = self.random_node
-
-    def test_realization(self):
+        self.transmitter = SimulatedDevice(antennas=UniformArray(IdealAntenna, 1, (1,)),
+                                           pose=Transformation.No(),
+                                           carrier_frequency=self.carrier_frequency)
         
-        num_samples = 5000
-        sampling_rate = 1e5
+        self.receiver = SimulatedDevice(antennas=UniformArray(IdealAntenna, 1, (1,)),
+                                        pose=Transformation.From_RPY(pos=np.array([100., 0., 0.]), rpy=np.array([0., 0., 0.])),
+                                        carrier_frequency=self.carrier_frequency)
 
-        realization = self.channel.realize(num_samples, sampling_rate)
+        self.channel = channel(transmitter=self.transmitter, receiver=self.receiver, **kwargs)
+        self.channel.random_mother = self.random_node
+        
 
-        self.assertEqual(num_samples, realization.num_samples)
-        self.assertEqual(self.antennas.num_antennas, realization.num_transmit_streams)
-        self.assertEqual(self.antennas.num_antennas, realization.num_receive_streams)
+    def _assert_realization(self, realization: ChannelRealization) -> None:
+
+        self.assertEqual(self.num_samples, realization.num_samples)
+        self.assertEqual(self.receiver.num_antennas, realization.num_receive_streams)
+        self.assertEqual(self.transmitter.num_antennas, realization.num_transmit_streams)
+
+
+class TestStreetCanyonLOS(__TestClusterDelayLineTemplate):
+    """Test the 3GPP Cluster Delay Line Model Implementation."""
+
+    def setUp(self) -> None:
+
+        self._init(StreetCanyonLineOfSight)
+
+    def test_realization(self):
+
+        realization = self.channel.realize(self.num_samples, self.sampling_rate)
+        self._assert_realization(realization)
+
+
+class TestStreetCanyonNLOS(__TestClusterDelayLineTemplate):
+    """Test the 3GPP Cluster Delay Line Model Implementation."""
+
+    def setUp(self) -> None:
+
+        self._init(StreetCanyonNoLineOfSight)
+
+    def test_realization(self):
+
+        realization = self.channel.realize(self.num_samples, self.sampling_rate)
+        self._assert_realization(realization)
+
+
+class TestStreetCanyonO2I(__TestClusterDelayLineTemplate):
+    """Test the 3GPP Cluster Delay Line Model Implementation."""
+
+    def setUp(self) -> None:
+
+        self._init(StreetCanyonOutsideToInside)
+
+    def test_realization(self):
+
+        realization = self.channel.realize(self.num_samples, self.sampling_rate)
+        self._assert_realization(realization)
+
+
+class TestUrbanMacrocellsLOS(__TestClusterDelayLineTemplate):
+    """Test the 3GPP Cluster Delay Line Model Implementation."""
+
+    def setUp(self) -> None:
+
+        self._init(UrbanMacrocellsLineOfSight)
+
+    def test_realization(self):
+
+        realization = self.channel.realize(self.num_samples, self.sampling_rate)
+        self._assert_realization(realization)
+
+
+class TestUrbanMacrocellsNLOS(__TestClusterDelayLineTemplate):
+    """Test the 3GPP Cluster Delay Line Model Implementation."""
+
+    def setUp(self) -> None:
+
+        self._init(UrbanMacrocellsNoLineOfSight)
+
+    def test_realization(self):
+
+        realization = self.channel.realize(self.num_samples, self.sampling_rate)
+        self._assert_realization(realization)
+
+
+class TestUrbanMacrocellsO2I(__TestClusterDelayLineTemplate):
+    """Test the 3GPP Cluster Delay Line Model Implementation."""
+
+    def setUp(self) -> None:
+        
+        self._init(UrbanMacrocellsOutsideToInside)
+
+    def test_realization(self):
+
+        realization = self.channel.realize(self.num_samples, self.sampling_rate)
+        self._assert_realization(realization)
+
+
+class TestRuralMacrocellsLOS(__TestClusterDelayLineTemplate):
+    """Test the 3GPP Cluster Delay Line Model Implementation."""
+
+    def setUp(self) -> None:
+
+        self._init(RuralMacrocellsLineOfSight)
+
+    def test_realization(self):
+
+        realization = self.channel.realize(self.num_samples, self.sampling_rate)
+        self._assert_realization(realization)
+
+
+class TestRuralMacrocellsNLOS(__TestClusterDelayLineTemplate):
+    """Test the 3GPP Cluster Delay Line Model Implementation."""
+
+    def setUp(self) -> None:
+
+        self._init(RuralMacrocellsNoLineOfSight)
+
+    def test_realization(self):
+
+        realization = self.channel.realize(self.num_samples, self.sampling_rate)
+        self._assert_realization(realization)
+
+
+class TestRuralMacrocellsO2I(__TestClusterDelayLineTemplate):
+    """Test the 3GPP Cluster Delay Line Model Implementation."""
+
+    def setUp(self) -> None:
+
+        self._init(RuralMacrocellsOutsideToInside)
+
+    def test_realization(self):
+
+        realization = self.channel.realize(self.num_samples, self.sampling_rate)
+        self._assert_realization(realization)
+
+
+class TestIndoorOfficeLOS(__TestClusterDelayLineTemplate):
+    """Test the 3GPP Cluster Delay Line Model Implementation."""
+
+    def setUp(self) -> None:
+
+        self._init(IndoorOfficeLineOfSight)
+
+    def test_realization(self):
+
+        realization = self.channel.realize(self.num_samples, self.sampling_rate)
+        self._assert_realization(realization)
+
+
+class TestIndoorOfficeNLOS(__TestClusterDelayLineTemplate):
+    """Test the 3GPP Cluster Delay Line Model Implementation."""
+
+    def setUp(self) -> None:
+
+        self._init(IndoorOfficeNoLineOfSight)
+
+    def test_realization(self):
+
+        realization = self.channel.realize(self.num_samples, self.sampling_rate)
+        self._assert_realization(realization)
+
+
+class TestIndoorFactoryLOS(__TestClusterDelayLineTemplate):
+    """Test the 3GPP Cluster Delay Line Model Implementation."""
+
+    def setUp(self) -> None:
+
+        self._init(IndoorFactoryLineOfSight, volume=1e5, surface=1e6)
+
+    def test_realization(self):
+
+        realization = self.channel.realize(self.num_samples, self.sampling_rate)
+        self._assert_realization(realization)
+
+
+class TestIndoorFactoryNLOS(__TestClusterDelayLineTemplate):
+    """Test the 3GPP Cluster Delay Line Model Implementation."""
+
+    def setUp(self) -> None:
+
+        self._init(IndoorFactoryNoLineOfSight, volume=1e5, surface=1e6)
+
+    def test_realization(self):
+
+        realization = self.channel.realize(self.num_samples, self.sampling_rate)
+        self._assert_realization(realization)

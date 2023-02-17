@@ -132,6 +132,9 @@ from .channel_state_information import ChannelStateInformation
 from .factory import HDFSerializable, Serializable
 from .signal_model import Signal
 from .random_node import RandomNode
+from .signal_model import Signal
+from .transformation import Transformable, Transformation
+
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -1344,14 +1347,11 @@ class UnsupportedSlot(OperatorSlot):
         raise RuntimeError("Slot not supported by this device")
 
 
-class Device(ABC, RandomNode, Serializable):
+class Device(ABC, Transformable, RandomNode, Serializable):
     """Physical device representation within HermesPy.
 
     It acts as the basis for all transmissions and receptions of sampled electromagnetic signals.
     """
-
-    antennas: AntennaArrayBase
-    """Model of the device's antenna array."""
 
     transmitters: TransmitterSlot
     """Transmitters broadcasting signals over this device."""
@@ -1359,13 +1359,11 @@ class Device(ABC, RandomNode, Serializable):
     receivers: ReceiverSlot
     """Receivers capturing signals from this device"""
 
+    __antennas: AntennaArrayBase  # Model of the device's antenna array.
     __power: float  # Average power of the transmitted signals
-    __position: Optional[np.ndarray]  # Position of the device within its scenario in cartesian coordinates
-    __orientation: Optional[np.ndarray]  # Orientation of the device within its scenario as a quaternion
-    __topology: np.ndarray  # Antenna array topology of the device
     __received_signal: Optional[Signal]  # Recently received signal
 
-    def __init__(self, antennas: Optional[AntennaArrayBase] = None, power: float = 1.0, position: Optional[np.ndarray] = None, orientation: Optional[np.ndarray] = None, topology: Optional[np.ndarray] = None, seed: Optional[int] = None) -> None:
+    def __init__(self, antennas: Optional[AntennaArrayBase] = None, power: float = 1.0, pose: Transformation | None = None, seed: Optional[int] = None) -> None:
         """
         Args:
 
@@ -1377,33 +1375,40 @@ class Device(ABC, RandomNode, Serializable):
                 Average power of the transmitted signals in Watts.
                 1.0 Watt by default.
 
-            position (np.ndarray, optional):
-                Position of the device within its scenario in cartesian coordinates.
-                By default, the device position is considered to be unknown (`None`).
-
-            orientation (np.ndarray, optional):
-                Orientation of the device within its scenario as a quaternion.
-                By default, the device orientation is considered to be unknown (`None`).
-
-            topology (np.ndarray, optional):
-                Antenna array topology of the device.
-                By default, a single ideal omnidirectional antenna is assumed.
+            pose (Transformation, optional):
+                Pose of the device with respect to its scenario coordinate system origin.
 
             seed (int, optional):
                 Random seed used to initialize the pseudo-random number generator.
         """
 
         RandomNode.__init__(self, seed=seed)
+        Transformable.__init__(self, pose=pose)
 
         self.antennas = UniformArray(IdealAntenna(), 5e-3, (1,)) if antennas is None else antennas
         self.transmitters = TransmitterSlot(self)
         self.receivers = ReceiverSlot(self)
 
         self.power = power
-        self.position = position
-        self.orientation = orientation
-        self.topology = topology
         self.__received_signal = None
+
+    @property
+    def antennas(self) -> AntennaArrayBase:
+        """Model of the device's antenna array.
+
+        Returns: The antenna array.
+        """
+
+        return self.__antennas
+
+    @antennas.setter
+    def antennas(self, value: AntennaArrayBase) -> None:
+
+        # Update the internal antenna array reference
+        self.__antennas = value
+
+        # Register the device as the antenna array's reference frame
+        self.__antennas.set_base(self)
 
     @property
     def power(self) -> float:
@@ -1438,120 +1443,6 @@ class Device(ABC, RandomNode, Serializable):
         return float("inf")
 
     @property
-    def position(self) -> Optional[np.ndarray]:
-        """Position of the device within its scenario in cartesian coordinates.
-
-        Returns:
-            position (Optional[np.ndarray]):
-                The device's position.
-                `None` if the position is considered to be unknown.
-
-        Raises:
-            ValueError: If the `position` is not a valid cartesian vector.
-        """
-
-        return self.__position
-
-    @position.setter
-    def position(self, value: Optional[np.ndarray]) -> None:
-        """Set position of the device within its scenario in cartesian coordinates."""
-
-        if value is None:
-            self.__position = None
-            return
-
-        if value.ndim != 1:
-            raise ValueError("Modem position must be a vector")
-
-        if len(value) > 3:
-            raise ValueError("Modem position may have at most three dimensions")
-
-        # Make vector 3D if less dimensions have been supplied
-        if len(value) < 3:
-            value = np.append(value, np.zeros(3 - len(value), dtype=float))
-
-        self.__position = value
-
-    @property
-    def orientation(self) -> Optional[np.ndarray]:
-        """Orientation of the device within its scenario as a quaternion.
-
-        Returns:
-            orientation (Optional[np.array]):
-                The modem orientation as a normalized quaternion.
-                `None` if the position is considered to be unknown.
-
-        Raises:
-            ValueError: If `orientation` is not a valid quaternion.
-        """
-
-        return self.__orientation
-
-    @orientation.setter
-    def orientation(self, value: Optional[np.ndarray]) -> None:
-        """Set the orientation of the device within its scenario as a quaternion."""
-
-        if value is None:
-            self.__orientation = None
-            return
-
-        if value.ndim != 1 or len(value) != 3:
-            raise ValueError("Modem orientation must be a three-dimensional vector")
-
-        self.__orientation = value
-
-    @property
-    def topology(self) -> np.ndarray:
-        """Antenna array topology.
-
-        The topology is represented by an `Mx3` numpy array,
-        where the first dimension M is the number of antennas and the second dimension their cartesian position
-        within the device's local coordinate system.
-
-        Returns:
-            topology (np.ndarray):
-                A matrix of `Mx3` entries describing the sensor array topology.
-
-        Raises:
-            ValueError:
-                If the first dimension `topology` is smaller than 1 or its second dimension is larger than 3.
-        """
-
-        return self.__topology
-
-    @topology.setter
-    def topology(self, value: Optional[np.ndarray]) -> None:
-        """Set the antenna array topology."""
-
-        # Default value
-        if value is None:
-            value = np.zeros((1, 3), dtype=float)
-
-        if value.ndim > 2:
-            raise ValueError("The topology array must be of dimension 2")
-
-        # If the topology is one-dimensional, we assume a ULA and therefore simply expand the second dimension
-        if value.ndim == 1:
-            value = value.T[:, np.newaxis]
-
-        if value.shape[0] < 1:
-            raise ValueError("The topology must contain at least one sensor")
-
-        if value.shape[1] > 3:
-            raise ValueError("Second topology dimension may contain at most 3 fields (xyz)")
-
-        # The second dimension may have less than 3 entries, in this case we expand by zeros
-        if value.shape[1] < 3:
-            value = np.append(value, np.zeros((value.shape[0], 3 - value.shape[1]), dtype=float), axis=1)
-
-        self.__topology = value
-
-        # Automatically detect linearity in default configurations, where all sensor elements
-        # are oriented along the local x-axis.
-        # axis_sums = np.sum(self.__topology, axis=0)
-        # self.__linear_topology = ((axis_sums[1] + axis_sums[2]) < 1e-10)
-
-    @property
     def num_antennas(self) -> int:
         """Number of antennas within this device's topology.
 
@@ -1559,26 +1450,7 @@ class Device(ABC, RandomNode, Serializable):
             int: Number of antennas, greater or equal to one.
         """
 
-        return self.topology.shape[0]
-
-    @property
-    def antenna_positions(self) -> np.ndarray:
-        """Global positions of the antenna array elements.
-
-        Returns: Matrix of dimension `num_antennas x 3`
-
-        Raises:
-
-            RuntimeError: If the positions can't be computed.
-        """
-
-        position = self.position
-        orientation = self.orientation
-
-        if not position or not orientation:
-            raise RuntimeError("Error attempting to compute the global antenna positions with unknown transformations")
-
-        return transform_coordinates(self.topology, self.position, self.orientation)
+        return self.__antennas.num_antennas
 
     @property
     def max_frame_duration(self) -> float:
