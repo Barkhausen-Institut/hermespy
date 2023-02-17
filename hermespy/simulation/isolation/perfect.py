@@ -5,7 +5,9 @@ Perfect Isolation
 =================
 """
 
-from hermespy.core import Serializable, Signal
+from __future__ import annotations
+
+from hermespy.core import FloatingError, Serializable, Signal
 from .isolation import Isolation
 
 __author__ = "Jan Adler"
@@ -23,7 +25,23 @@ class PerfectIsolation(Serializable, Isolation):
 
     yaml_tag = "PerfectIsolation"
 
-    def _leak(self, signal: Signal) -> Signal:
+    def leak(self, signal: Signal | None) -> Signal:
 
-        # No leakage at all, therefore an empty signal is sufficient
-        return Signal.empty(signal.sampling_rate, self.device.antennas.num_receive_antennas, carrier_frequency=signal.carrier_frequency)
+        if self.device is None:
+            raise FloatingError("Error trying to simulate leakage of a floating model")
+
+        if signal is None:
+            return self._leak(None)
+
+        if self.device.antennas.num_transmit_antennas != signal.num_streams:
+            raise ValueError("Number of signal streams ({signal.num_streams}) does not match the number of transmitting antennas ({self.device.antennas.num_transmit_antennas})")
+
+        return self._leak(signal)
+
+    def _leak(self, signal: Signal | None) -> Signal:
+
+        if signal is None:
+            return Signal.empty(self.device.sampling_rate, self.device.antennas.num_receive_antennas, carrier_frequency=self.device.carrier_frequency)
+
+        else:
+            return Signal.empty(signal.sampling_rate, self.device.antennas.num_receive_antennas, carrier_frequency=signal.carrier_frequency)
