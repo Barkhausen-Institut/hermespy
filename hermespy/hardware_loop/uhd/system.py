@@ -5,7 +5,7 @@ UHD System
 ==========
 """
 
-from usrp_client.system import System as _UsrpSystem, LabeledUsrp as _LabeledUsrp
+from usrp_client import System as _UsrpSystem
 
 from hermespy.core import Serializable
 from .usrp import UsrpDevice
@@ -34,7 +34,7 @@ class UsrpSystem(Serializable, PhysicalScenario[UsrpDevice]):
         # Hacked USRP system (hidden)
         self.__system = _UsrpSystem()
 
-    def new_device(self, *args, **kwargs) -> UsrpDevice:
+    def new_device(self, ip: str, port: int = 5555, *args, **kwargs) -> UsrpDevice:
         """Create a new UHD device managed by the system.
 
         Args:
@@ -44,10 +44,9 @@ class UsrpSystem(Serializable, PhysicalScenario[UsrpDevice]):
 
         Returns: A handle to the initialized device.
         """
+        device = UsrpDevice(ip, port, *args, **kwargs)
 
-        device = UsrpDevice(*args, **kwargs)
         self.add_device(device)
-
         return device
 
     def add_device(self, device: UsrpDevice) -> None:
@@ -59,10 +58,8 @@ class UsrpSystem(Serializable, PhysicalScenario[UsrpDevice]):
                 The device to be added.
         """
 
-        usrp_uid = str(self.num_devices)
-        self.__system._System__usrpClients[usrp_uid] = _LabeledUsrp(usrp_uid, device.ip, device._client)
+        self.__system.addUsrp(usrpName=str(self.num_devices), client=device._client)
         PhysicalScenario.add_device(self, device)
 
     def _trigger(self) -> None:
-
         self.__system.execute()

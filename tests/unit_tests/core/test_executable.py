@@ -3,9 +3,10 @@
 
 import unittest
 import tempfile
-from contextlib import _GeneratorContextManager
+from contextlib import _GeneratorContextManager, nullcontext
+from sys import gettrace
 from typing import Type
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from ruamel.yaml import SafeRepresenter, Node, ScalarNode
 
@@ -114,3 +115,20 @@ class TestExecutable(unittest.TestCase):
         """Style context should return PyPlot style context."""
 
         self.assertTrue(isinstance(self.executable.style_context(), _GeneratorContextManager))
+
+    def test_handle_exception(self) -> None:
+        """Test the exception handling subroutine"""
+        
+        self.executable.verbosity = Verbosity.ERROR
+        
+        with patch('rich.prompt.Confirm.ask') as confirm_patch, patch('sys.stdout') if gettrace() is None else nullcontext():
+            
+            confirm_patch.return_value = False
+            
+            with self.assertRaises(SystemExit):
+                
+                try:
+                    raise Exception("ExampleException")
+                
+                except Exception:
+                    self.executable._handle_exception()

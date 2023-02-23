@@ -6,13 +6,11 @@ UHD Device
 """
 
 from functools import cached_property
-from typing import Any, List, Optional, Callable
+from typing import Any, List, Callable
 
 import numpy as np
-from zerorpc import Client
 from zerorpc.exceptions import LostRemote, RemoteError
-from usrp_client.rpc_client import UsrpClient
-from uhd_wrapper.utils.config import MimoSignal, TxStreamingConfig, RxStreamingConfig, RfConfig
+from usrp_client import UsrpClient, MimoSignal, TxStreamingConfig, RxStreamingConfig, RfConfig
 
 from hermespy.core import Serializable, Signal
 from ..physical_device import PhysicalDevice
@@ -34,21 +32,13 @@ class UsrpDevice(PhysicalDevice, Serializable):
 
     property_blacklist = {"topology", "wavelength", "velocity"}
 
-    __ip: str
-    __port: int
     __usrp_client: UsrpClient
     __num_rpc_retries = 10
     __collection_enabled: bool
 
-    def __init__(self, ip: str, port: Optional[int] = 5555, carrier_frequency: float = 7e8, tx_gain: float = 0.0, rx_gain: float = 0.0, *args, **kwargs) -> None:
+    def __init__(self, ip: str, port: int = 5555, carrier_frequency: float = 7e8, tx_gain: float = 0.0, rx_gain: float = 0.0, *args, **kwargs) -> None:
 
-        rpc_client = Client()
-        rpc_client.connect(f"tcp://{ip}:{port}")
-
-        self.__ip = ip
-        self.__port = port
-
-        self.__usrp_client = UsrpClient(rpc_client)
+        self.__usrp_client = UsrpClient.create(ip, port)
 
         PhysicalDevice.__init__(self, *args, **kwargs)
 
@@ -56,6 +46,7 @@ class UsrpDevice(PhysicalDevice, Serializable):
         self.tx_gain = tx_gain
         self.rx_gain = rx_gain
         self.__current_configuration = self.__rpc_call_wrapper(self.__usrp_client.getRfConfig)
+        self._configure_device()
         self.__collection_enabled = False
 
     def __rpc_call_wrapper(self, call: Callable, *args, **kwargs) -> Any:
@@ -120,10 +111,10 @@ class UsrpDevice(PhysicalDevice, Serializable):
         self.__rpc_call_wrapper(self.__usrp_client.resetStreamingConfigs)
 
         # Scale signal to a maximum absolute vlaue of zero to full exploit the DAC range
-
-        maxAmp = np.abs(baseband_signal.samples).max()
-        if baseband_signal.num_samples > 0 and maxAmp != 0:
-            baseband_signal.samples /= maxAmp
+        if baseband_signal.num_samples > 0:
+            maxAmp = np.abs(baseband_signal.samples).max()
+            if maxAmp != 0:
+                baseband_signal.samples /= maxAmp
 
         # Hack: Append some zeros to account for the premature transmission stop
         hack_num_samples = 200
@@ -154,9 +145,8 @@ class UsrpDevice(PhysicalDevice, Serializable):
             self.__collection_enabled = False
 
     def trigger(self) -> None:
-
         # Queue execution command
-        self.__usrp_client.execute(self.__usrp_client.getCurrentFpgaTime() + 0.2)
+        self.__usrp_client.executeImmediately()
 
     def _download(self) -> Signal:
 
@@ -192,7 +182,7 @@ class UsrpDevice(PhysicalDevice, Serializable):
             IP adress.
         """
 
-        return self.__ip
+        return self.__usrp_client.ip
 
     @property
     def port(self) -> int:
@@ -203,7 +193,7 @@ class UsrpDevice(PhysicalDevice, Serializable):
             Port.
         """
 
-        return self.__port
+        return self.__usrp_client.port
 
     @property
     def tx_gain(self) -> float:
