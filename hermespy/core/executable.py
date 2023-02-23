@@ -15,10 +15,12 @@ from contextlib import contextmanager
 from enum import Enum
 from glob import glob
 from os import getcwd, mkdir
+from sys import exit
 from typing import Any, Generator, List, Optional, Union
 
 import matplotlib.pyplot as plt
 from rich.console import Console
+from rich.prompt import Confirm
 
 from .definitions import ConsoleMode
 
@@ -288,3 +290,24 @@ class Executable(ABC):
             value = ConsoleMode[value]
 
         self.__console_mode = value
+
+    def _handle_exception(self, force: bool = False, show_locals: bool = True, confirm: bool = True) -> None:
+        """Print an exception traceback if Verbosity is ALL or higher.
+
+        Args:
+
+            force (bool): If True, print the traceback regardless of Verbosity level
+            show_locals (bool): Output the local variables.
+            confirm (bool): Confirm for continuing execution.
+        """
+
+        # Check if the exception should be ignored
+        if (self.verbosity.value < Verbosity.NONE.value and self.console_mode != ConsoleMode.SILENT) or force:
+
+            # Resort to rich's exception tracing
+            self.console.print_exception(show_locals=show_locals)
+
+            # If the confirmation flag is enabled, ask to conntinue excetion and abort script if not confirmed
+            if confirm:
+                if not Confirm.ask("Continue execution?", console=self.console, choices=["y", "n"]):
+                    exit(0)
