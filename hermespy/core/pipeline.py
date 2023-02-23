@@ -84,7 +84,7 @@ class Pipeline(Executable, Generic[ScenarioType, DeviceType]):
 
         Args:
 
-            device (DeviceType):
+            device:
                 New device to be added to the scenario.
 
         Raises:

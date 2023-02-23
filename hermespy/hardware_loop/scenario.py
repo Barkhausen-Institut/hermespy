@@ -9,7 +9,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Sequence
 from time import time
-from typing import Generic, List, Optional, overload, Tuple, TypeVar
+from typing import Generic, Optional, Tuple, TypeVar
 
 from hermespy.core import ChannelStateInformation, DeviceInput, DeviceReception, Scenario, Drop, Signal
 from hermespy.simulation import SimulatedDeviceReception, SimulationScenario
