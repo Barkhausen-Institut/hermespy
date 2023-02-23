@@ -24,6 +24,7 @@ tutorials and a full API documentation, please consult the official
 * [Andre Noll Barreto](https://gitlab.com/anollba)
 * [Tobias Kronauer](https://github.com/tokr-bit)
 * [Jan Adler](https://github.com/adlerjan)
+* [Maximilian Matthé](https://github.com/mmatthebi)
 
 ## Copyright
 Copyright (C) 2022 Barkhausen Institut gGmbH

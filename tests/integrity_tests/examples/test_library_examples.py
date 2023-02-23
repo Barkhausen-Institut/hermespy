@@ -1,18 +1,15 @@
 # -*- coding: utf-8 -*-
 
-from io import StringIO
 from os import path as os_path
 from sys import path as sys_path
 from unittest import TestCase
-from unittest.mock import Mock, patch, PropertyMock
+from unittest.mock import patch, PropertyMock
 from warnings import catch_warnings, simplefilter
 
 import ray as ray
 
-from hermespy.core import MonteCarlo
-
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.0.0"
@@ -91,3 +88,15 @@ class TestLibraryExamples(TestCase):
 
         import getting_started
         mock_figure.assert_called()
+
+    @patch('sys.stdout')
+    def test_usrp_loop(self, _) -> None:
+        """Test USRP loop example execution"""
+        
+        from hermespy.hardware_loop import PhysicalDeviceDummy
+
+        with patch('hermespy.hardware_loop.uhd.system.UsrpSystem.new_device') as new_device_patch, \
+            patch('hermespy.hardware_loop.hardware_loop.HardwareLoop.new_dimension'):
+            
+                new_device_patch.side_effect = lambda *args, **kwargs: PhysicalDeviceDummy()
+                import usrp_loop

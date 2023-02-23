@@ -14,10 +14,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 from rich.progress import Progress, SpinnerColumn, TimeElapsedColumn
 from rich.prompt import Confirm
-from rich.table import Table
 from ruamel.yaml import SafeConstructor, Node
 
-from hermespy.core import ConsoleMode, Drop, Evaluation, Evaluator, MonteCarloResult, Pipeline, Serializable
+from hermespy.core import ConsoleMode, Drop, Evaluation, Evaluator, MonteCarloResult, Pipeline, Serializable, Verbosity
 from hermespy.core.monte_carlo import GridDimension, SampleGrid, GridSection, MonteCarloSample
 from hermespy.tools import tile_figures
 from .physical_device import PhysicalDevice, PhysicalDeviceType
@@ -298,23 +297,25 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PhysicalDeviceTyp
                     if self.plot_information:
                         self.__plot_drop(drop, evaluations, device_figures, evaluator_figures)
 
-                    # Update the results table
-                    # progress.log((str(total), str(indices[0]), *[str(d.sample_points[i]) for d, i in zip(self.__dimensions, indices[1:])], *[str(a) for a in artifacts]))
+                    # Print results
+                    if self.console is not ConsoleMode.SILENT and self.verbosity.value <= Verbosity.INFO.value:
 
-                    # Render results table
-                    results_table = Table(min_width=self.console.measure(progress).minimum)
+                        result_str = f"# {total:<5}"
 
-                    results_table.add_column("#", style="red")
-                    results_table.add_column("Drop", style="green")
+                        for dimesion, i in zip(self.__dimensions, indices[1:]):
+                            result_str += f" {dimesion.title[-20:]} = {dimesion.sample_points[i]:<5}"
 
-                    for grid_dimension in self.__dimensions:
-                        results_table.add_column(grid_dimension.title, style="cyan")
+                        for evaluator, artifact in zip(self.__evaluators, artifacts):
+                            result_str += f" {evaluator.abbreviation}: {str(artifact):5}"
 
-                    for evaluator in self.__evaluators:
-                        results_table.add_column(evaluator.abbreviation, style="purple")
+                        if self.console_mode == ConsoleMode.INTERACTIVE:
+                            progress.log(result_str)
 
-                except Exception as e:
-                    progress.log(str(e))
+                        else:
+                            self.console.log(result_str)
+
+                except Exception:
+                    self._handle_exception()
 
                 # Update progress
                 total += 1
@@ -331,15 +332,18 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PhysicalDeviceTyp
         # Compute the evaluation results
         result: MonteCarloResult = MonteCarloResult(self.__dimensions, self.__evaluators, samples, 0.0)
 
-        # Plot results if the respective flag is enabled
-        if self.plot_information:
-
-            result.plot()
-            plt.show()
+        # Generate result plots
+        result_figures = result.plot()
 
         # Save results if a directory was provided
         if self.results_dir:
+
             result.save_to_matlab(path.join(self.results_dir, "results.mat"))
+
+            for idx, (figure, evaluator) in enumerate(zip(result_figures, self.__evaluators)):
+                figure.savefig(path.join(self.results_dir, f"result_{idx}_{evaluator.abbreviation}.png"), format="png")
+
+        plt.show()
 
     @classmethod
     def from_yaml(cls: Type[HardwareLoop], constructor: SafeConstructor, node: Node) -> HardwareLoop:

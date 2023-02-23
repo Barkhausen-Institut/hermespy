@@ -84,7 +84,7 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
             seed (int, optional):
                 Random seed used to initialize the pseudo-random number generator.
 
-            devices (List[DeviceType], optional):
+            devices (List[Device], optional):
                 Devices to be added to the scenario during initialization.
 
         """
@@ -126,7 +126,7 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
 
         Args:
 
-            device (DeviceType):
+            device (Device):
                 New device to be added to the scenario.
 
         Raises:
@@ -170,7 +170,7 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
         """Check if an device is registered in this scenario.
 
         Args:
-            device (DeviceType): The device to be checked.
+            device (Device): The device to be checked.
 
         Returns:
             bool: The device's registration status.
@@ -183,7 +183,7 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
 
         Args:
 
-            device (DeviceType): Device for which to lookup the index.
+            device (Device): Device for which to lookup the index.
 
         Returns: The device index.
 
@@ -201,8 +201,7 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
     def devices(self) -> List[DeviceType]:
         """Devices registered in this scenario.
 
-        Returns:
-            List[DeviceType]: List of devices.
+        Returns: List of devices.
         """
 
         return self.__devices.copy()
