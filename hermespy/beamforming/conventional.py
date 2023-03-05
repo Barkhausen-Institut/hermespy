@@ -61,44 +61,37 @@ class ConventionalBeamformer(Serializable, TransmitBeamformer, ReceiveBeamformer
     """YAML serialization tag."""
 
     def __init__(self, operator: Optional[DuplexOperator] = None) -> None:
-
         TransmitBeamformer.__init__(self, operator=operator)
         ReceiveBeamformer.__init__(self, operator=operator)
 
     @property
     def num_receive_focus_angles(self) -> int:
-
         # The conventional beamformer focuses a single angle
         return 1
 
     @property
     def num_receive_input_streams(self) -> int:
-
         # The conventional beamformer will allways consider all antennas streams
         return self.operator.device.antennas.num_antennas
 
     @property
     def num_receive_output_streams(self) -> int:
-
         # The convetional beamformer will always return a single stream,
         # combining all antenna signals into one
         return 1
 
     @property
     def num_transmit_focus_angles(self) -> int:
-
         # The conventional beamformer focuses a single angle
         return 1
 
     @property
     def num_transmit_output_streams(self) -> int:
-
         # The conventional beamformer will allways consider all antennas streams
         return self.operator.device.antennas.num_antennas
 
     @property
     def num_transmit_input_streams(self) -> int:
-
         # The convetional beamformer will always return a single stream,
         # combining all antenna signals into one
         return 1
@@ -130,7 +123,6 @@ class ConventionalBeamformer(Serializable, TransmitBeamformer, ReceiveBeamformer
         return book / self.operator.device.antennas.num_antennas
 
     def _encode(self, samples: np.ndarray, carrier_frequency: float, focus_angles: np.ndarray) -> np.ndarray:
-
         azimuth, zenith = focus_angles[0, :]
 
         # Compute conventional beamformer weights
@@ -145,7 +137,6 @@ class ConventionalBeamformer(Serializable, TransmitBeamformer, ReceiveBeamformer
     @staticmethod
     @jit(nopython=True)
     def _beamform(codebook: np.ndarray, samples: np.ndarray, conjugate: bool = False) -> np.ndarray:  # pragma: no cover
-
         if conjugate:
             return codebook.conj() @ samples
 
@@ -153,7 +144,6 @@ class ConventionalBeamformer(Serializable, TransmitBeamformer, ReceiveBeamformer
             return codebook @ samples
 
     def _decode(self, samples: np.ndarray, carrier_frequency: float, angles: np.ndarray) -> np.ndarray:
-
         codebook = self._codebook(carrier_frequency, angles[:, 0, :])
         beamformed_samples = self._beamform(codebook, samples, True)
 

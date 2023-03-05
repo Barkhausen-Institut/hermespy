@@ -104,9 +104,6 @@ class Encoder(ABC, Serializable):
     yaml_tag: Optional[str] = "Encoder"
     """YAML serialization tag."""
 
-    enabled: bool
-    """Enable flag for the encoding within its managed pipeline."""
-
     # Coding pipeline configuration this encoder is registered to
     __manager: Optional[EncoderManager]
 
@@ -136,9 +133,18 @@ class Encoder(ABC, Serializable):
 
     @manager.setter
     def manager(self, value: EncoderManager) -> None:
-
         if self.__manager is not value:
             self.__manager = value
+
+    @property
+    def enabled(self) -> bool:
+        """Is the encoding currently enabled within its chain?"""
+
+        return self.__enabled
+
+    @enabled.setter
+    def enabled(self, value: bool) -> None:
+        self.__enabled = value
 
     @abstractmethod
     def encode(self, bits: np.ndarray) -> np.ndarray:
@@ -351,7 +357,6 @@ class EncoderManager(RandomNode, Serializable):
 
     @modem.setter
     def modem(self, modem: BaseModem) -> None:
-
         if self.__modem is not modem:
             self.__modem = modem
 
@@ -415,7 +420,6 @@ class EncoderManager(RandomNode, Serializable):
 
         # Loop through the encoders and encode the data, using the output of the last encoder as input to the next
         for encoder in self._encoders:
-
             # Skip if the respective encoder is disabled
             if not encoder.enabled:
                 continue
@@ -432,7 +436,6 @@ class EncoderManager(RandomNode, Serializable):
 
             required_num_data_bits = num_blocks * data_block_size
             if len(data_state) < required_num_data_bits:
-
                 if not self.allow_padding:
                     raise RuntimeError("Encoding would require padding, but padding is not allowed")
 
@@ -441,7 +444,6 @@ class EncoderManager(RandomNode, Serializable):
 
             # Encode all blocks sequentially
             for block_idx in range(num_blocks):
-
                 encoded_block = encoder.encode(data_state[block_idx * data_block_size : (1 + block_idx) * data_block_size])
                 code_state[block_idx * code_block_size : (1 + block_idx) * code_block_size] = encoded_block
 
@@ -449,7 +451,6 @@ class EncoderManager(RandomNode, Serializable):
             raise RuntimeError("Too many input bits provided for encoding, truncating would destroy information")
 
         if num_code_bits and len(code_state) < num_code_bits:
-
             if not self.allow_padding:
                 raise RuntimeError("Encoding would require padding, but padding is not allowed")
 
@@ -498,7 +499,6 @@ class EncoderManager(RandomNode, Serializable):
         num_blocks = int(encoded_bits.shape[0] / self.code_block_size)
 
         if num_data_bits is not None:
-
             num_data_bits_full = num_blocks * bit_block_size
 
             if num_data_bits > num_data_bits_full:
@@ -514,7 +514,6 @@ class EncoderManager(RandomNode, Serializable):
 
         # Loop through the encoders decode the code using the output of the last encoder as input to the next
         for encoder in reversed(self._encoders):
-
             # Skip if the respective encoder is disabled
             if not encoder.enabled:
                 continue
@@ -558,15 +557,12 @@ class EncoderManager(RandomNode, Serializable):
         num_bits = 1
 
         for encoder_index, encoder in enumerate(self._encoders):
-
             if encoder.enabled:
-
                 block_size = encoder.bit_block_size
                 num_bits = encoder.code_block_size
                 break
 
         for encoder in self._encoders[encoder_index + 1 :]:
-
             if not encoder.enabled:
                 continue
 
@@ -591,7 +587,6 @@ class EncoderManager(RandomNode, Serializable):
         """
 
         for encoder in reversed(self.encoders):
-
             if encoder.enabled:
                 return encoder.code_block_size
 
@@ -626,7 +621,6 @@ class EncoderManager(RandomNode, Serializable):
 
         code_rate = 1.0
         for encoder in self._encoders:
-
             if encoder.enabled:
                 code_rate *= encoder.rate
 

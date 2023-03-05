@@ -43,6 +43,5 @@ class NoPhaseNoise(PhaseNoise, Serializable):
     """YAML serialization tag"""
 
     def add_noise(self, signal: Signal) -> Signal:
-
         # It's just a stub
         return signal

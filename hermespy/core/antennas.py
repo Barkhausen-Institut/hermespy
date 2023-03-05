@@ -70,7 +70,6 @@ class Antenna(Transformable, Serializable):
 
     @array.setter
     def array(self, value: Optional[AntennaArray]) -> None:
-
         # Do nothing if the state does not change
         if self.__array == value:
             return
@@ -176,7 +175,6 @@ class Antenna(Transformable, Serializable):
         """
 
         with Executable.style_context():
-
             figure, axes = plt.subplots(1, 2, subplot_kw={"projection": "3d"})
             figure.suptitle("Antenna Polarization")
 
@@ -190,7 +188,6 @@ class Antenna(Transformable, Serializable):
             h_magnitudes = np.empty(len(azimuth_angles) * len(elevation_angles), dtype=float)
 
             for i, (azimuth, elevation) in enumerate(zip(azimuth_samples.flat, elevation_samples.flat)):
-
                 e_magnitude, h_magnitude = self.characteristics(azimuth, elevation)
 
                 e_magnitudes[i] = e_magnitude
@@ -240,7 +237,6 @@ class Antenna(Transformable, Serializable):
         """
 
         with Executable.style_context():
-
             figure, axes = plt.subplots(subplot_kw={"projection": "3d"})
             figure.suptitle("Antenna Gain")
 
@@ -252,7 +248,6 @@ class Antenna(Transformable, Serializable):
             magnitudes = np.empty(len(azimuth_angles) * len(elevation_angles), dtype=float)
 
             for i, (azimuth, elevation) in enumerate(zip(azimuth_samples.flat, elevation_samples.flat)):
-
                 e_magnitude, h_magnitude = self.characteristics(azimuth, elevation)
                 magnitude = sqrt(e_magnitude**2 + h_magnitude**2)
                 magnitudes[i] = magnitude
@@ -299,7 +294,6 @@ class IdealAntenna(Antenna):
     """YAML serialization tag"""
 
     def characteristics(self, azimuth: float, elevation: float) -> np.ndarray:
-
         return np.array([2**-0.5, 2**-0.5], dtype=float)
 
 
@@ -320,7 +314,6 @@ class PatchAntenna(Antenna):
     """YAML serialization tag"""
 
     def characteristics(self, azimuth: float, elevation: float) -> np.ndarray:
-
         vertical_azimuth = 0.1 + 0.9 * exp(-1.315 * azimuth**2)
         vertical_elevation = cos(elevation) ** 2
 
@@ -350,7 +343,6 @@ class Dipole(Antenna):
     """YAML serialization tag"""
 
     def characteristics(self, azimuth: float, elevation: float) -> np.ndarray:
-
         vertical_polarization = 0.0 if elevation == 0.0 else cos(0.5 * pi * cos(elevation)) / sin(elevation)
         return np.array([vertical_polarization, 0.0], dtype=float)
 
@@ -452,13 +444,11 @@ class AntennaArrayBase(Transformable):
         ...  # pragma: no cover
 
     def characteristics(self, arg_0: np.ndarray | Direction, frame: Literal["global", "local"] = "local") -> np.ndarray:  # type: ignore
-
         # Direction of interest with respect to the array's local coordinate system
         global_direction: Direction
 
         # Handle spherical parameters of function overload
         if not isinstance(arg_0, Direction):
-
             global_direction = Direction.From_Cartesian(arg_0 - self.global_position if frame == "global" else arg_0, True)
 
         # Handle cartesian vector parameters of function overload
@@ -467,7 +457,6 @@ class AntennaArrayBase(Transformable):
 
         antenna_characteristics = np.empty((self.num_antennas, 2), dtype=float)
         for a, antenna in enumerate(self.antennas):
-
             # Compute the local angle of interest for each antenna element
             local_antenna_direction = antenna.backwards_transformation.transform_direction(global_direction, normalize=True)
 
@@ -494,7 +483,6 @@ class AntennaArrayBase(Transformable):
         topology = self.topology
 
         with Executable.style_context():
-
             figure = plt.figure()
             figure.suptitle("Antenna Array Topology")
 
@@ -799,7 +787,6 @@ class UniformArray(AntennaArrayBase, Serializable):
 
     @spacing.setter
     def spacing(self, value: float) -> None:
-
         if value <= 0.0:
             raise ValueError("Spacing must be greater than zero")
 
@@ -808,7 +795,6 @@ class UniformArray(AntennaArrayBase, Serializable):
 
     @property
     def num_antennas(self) -> int:
-
         return self.__dimensions[0] * self.__dimensions[1] * self.__dimensions[2]
 
     @property
@@ -822,7 +808,6 @@ class UniformArray(AntennaArrayBase, Serializable):
 
     @dimensions.setter
     def dimensions(self, value: Sequence[int] | int) -> None:
-
         if isinstance(value, int):
             value = (value,)
 
@@ -846,7 +831,6 @@ class UniformArray(AntennaArrayBase, Serializable):
 
     @property
     def antennas(self) -> List[Antenna]:
-
         return self.__antennas
 
     @property

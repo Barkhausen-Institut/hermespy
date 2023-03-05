@@ -84,12 +84,10 @@ class RepetitionEncoder(Encoder, Serializable):
         self.repetitions = repetitions
 
     def encode(self, bits: np.ndarray) -> np.ndarray:
-
         code = np.tile(bits, self.repetitions)
         return code
 
     def decode(self, encoded_bits: np.ndarray) -> np.ndarray:
-
         if self.repetitions == 1:
             return encoded_bits
 
@@ -101,12 +99,10 @@ class RepetitionEncoder(Encoder, Serializable):
 
     @property
     def bit_block_size(self) -> int:
-
         return self.__bit_block_size
 
     @bit_block_size.setter
     def bit_block_size(self, num_bits: int) -> None:
-
         if num_bits < 1:
             raise ValueError("Number data bits must be greater or equal to one")
 
@@ -114,7 +110,6 @@ class RepetitionEncoder(Encoder, Serializable):
 
     @property
     def code_block_size(self) -> int:
-
         return self.__repetitions * self.__bit_block_size
 
     @property
@@ -137,7 +132,6 @@ class RepetitionEncoder(Encoder, Serializable):
 
     @repetitions.setter
     def repetitions(self, num: int) -> None:
-
         if num < 1:
             raise ValueError("The number of data bit repetitions must be at least one")
 
@@ -145,52 +139,3 @@ class RepetitionEncoder(Encoder, Serializable):
             raise ValueError("Repetitions must be an uneven integer")
 
         self.__repetitions = num
-
-    @classmethod
-    def to_yaml(cls: Type[RepetitionEncoder], representer: SafeRepresenter, node: RepetitionEncoder) -> MappingNode:
-        """Serialize a `RepetitionEncoder` to YAML.
-
-        Args:
-
-            representer (SafeRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
-
-            node (RepetitionEncoder):
-                The `RepetitionEncoder` instance to be serialized.
-
-        Returns:
-
-            Node:
-                The serialized YAML node.
-
-        :meta private:
-        """
-
-        state = {"bit_block_size": node.bit_block_size, "repetitions": node.repetitions}
-
-        return representer.represent_mapping(cls.yaml_tag, state)
-
-    @classmethod
-    def from_yaml(cls: Type[RepetitionEncoder], constructor: SafeConstructor, node: Node) -> RepetitionEncoder:
-        """Recall a new `RepetitionEncoder` from YAML.
-
-        Args:
-
-            constructor (SafeConstructor):
-                A handle to the constructor extracting the YAML information.
-
-            node (Node):
-                YAML node representing the `RepetitionEncoder` serialization.
-
-        Returns:
-            RepetitionEncoder:
-                Newly created `RepetitionEncoder` instance.
-
-        Note that the created instance is floating by default.
-
-        :meta private:
-        """
-
-        state = constructor.construct_mapping(node)
-        return cls(**state)

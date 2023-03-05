@@ -57,7 +57,6 @@ class Coupling(ABC):
 
     @device.setter
     def device(self, value: Optional[SimulatedDevice]) -> None:
-
         self.__device = value
 
     def transmit(self, signal: Signal) -> Signal:

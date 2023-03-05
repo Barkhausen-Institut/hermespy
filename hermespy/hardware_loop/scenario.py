@@ -33,7 +33,6 @@ class PhysicalScenario(Scenario[PhysicalDeviceType], Generic[PhysicalDeviceType]
     """
 
     def __init__(self, seed: Optional[int] = None, devices: Optional[Sequence[PhysicalDeviceType]] = None) -> None:
-
         Scenario.__init__(self, seed, devices)
 
     @abstractmethod
@@ -75,7 +74,6 @@ class PhysicalScenario(Scenario[PhysicalDeviceType], Generic[PhysicalDeviceType]
         return [DeviceReception.From_ProcessedDeviceInput(i, r) for i, r in zip(device_inputs, receptions)]
 
     def _drop(self) -> Drop:
-
         # Generate device transmissions
         device_transmissions = self.transmit_devices()
 
@@ -89,7 +87,6 @@ class PhysicalScenario(Scenario[PhysicalDeviceType], Generic[PhysicalDeviceType]
         return Drop(timestamp, device_transmissions, device_receptions)
 
     def add_device(self, device: PhysicalDeviceType) -> None:
-
         Scenario.add_device(self, device)
 
 
@@ -101,12 +98,10 @@ class SimulatedPhysicalScenario(SimulationScenario, PhysicalScenario):
     """Simulated physical scenario for testing purposes."""
 
     def _trigger(self) -> None:
-
         # Triggering does nothing
         pass
 
     def receive_devices(self, impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]] | Sequence[Sequence[Tuple[Signal, ChannelStateInformation | None]]] | None = None, cache: bool = True) -> Sequence[SimulatedDeviceReception]:
-
         if impinging_signals is None:
             device_receptions = PhysicalScenario.receive_devices(self, None, cache)
             return [SimulatedDeviceReception(r.impinging_signals, Signal.empty(0.0, 0, 0), False, r.operator_inputs, [], r.operator_receptions) for r in device_receptions]

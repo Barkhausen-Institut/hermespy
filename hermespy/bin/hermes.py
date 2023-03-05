@@ -129,13 +129,11 @@ def hermes(args: Optional[List[str]] = None) -> None:
     console.print(f"Configuration will be read from '{arguments.config}'")
 
     with console.status("Initializing Environment...", spinner="dots"):
-
         ##################
         # Import executable from YAML config dump
         factory = Factory()
 
         try:
-
             # Load serializable objects from configuration files
             serializables: Sequence[Serializable] = factory.from_path(arguments.config)
 
@@ -144,7 +142,6 @@ def hermes(args: Optional[List[str]] = None) -> None:
 
             # Abort execution if no executable was found
             if len(executables) < 1:
-
                 console.log("No executable routine was detected, aborting execution", style="red")
                 exit(-1)
 
@@ -153,7 +150,6 @@ def hermes(args: Optional[List[str]] = None) -> None:
             executable.results_dir = Executable.default_results_dir() if arguments.o is None else arguments.o
 
         except ConstructorError as error:
-
             console.log(f"YAML import failed during parsing of line {error.problem_mark.line} in file '{error.problem_mark.name}':\n\t{error.problem}", style="red")
             exit(-1)
 
@@ -185,7 +181,6 @@ def hermes(args: Optional[List[str]] = None) -> None:
 
 
 if __name__ == "__main__":
-
     ################################################################
     # read command line parameters and initialize simulation folders
     hermes()

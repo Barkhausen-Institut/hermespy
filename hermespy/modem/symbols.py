@@ -154,11 +154,9 @@ class Symbols(HDFSerializable):
             raise ValueError("Symbols must be matrix (an array of dimension two)")
 
         if self.num_symbols < 1 and self.num_streams <= 1:
-
             self.__symbols = symbols
 
         else:
-
             if self.num_symbols != symbols.shape[2]:
                 raise ValueError("Symbol models to be concatenated do not match in time-domain")
 
@@ -195,11 +193,9 @@ class Symbols(HDFSerializable):
             raise ValueError("Symbols must contain three dimensions")
 
         if self.num_symbols < 1 and self.num_streams <= 1:
-
             self.__symbols = symbols
 
         else:
-
             if self.num_streams != symbols.shape[0]:
                 raise ValueError("Symbol models to be concatenated do not match in stream-domain")
 
@@ -217,7 +213,6 @@ class Symbols(HDFSerializable):
 
     @raw.setter
     def raw(self, value: np.ndarray) -> None:
-
         if value.ndim != 3:
             raise ValueError("Raw symbols must be a three-dimensionall array")
 
@@ -258,11 +253,9 @@ class Symbols(HDFSerializable):
         """
 
         if isinstance(value, Symbols):
-
             self.__symbols[slice] = value.__symbols
 
         else:
-
             self.__symbols[slice] = value
 
     def plot_constellation(self, axes: Optional[plt.axes.Axes] = None, title: str = "Symbol Constellation") -> Optional[plt.Figure]:
@@ -292,9 +285,7 @@ class Symbols(HDFSerializable):
 
         # Create a new figure and the respective axes if none were provided
         if axes is None:
-
             with Executable.style_context():
-
                 figure, axes = plt.subplots()
                 figure.suptitle(title)
 
@@ -309,7 +300,6 @@ class Symbols(HDFSerializable):
 
     @classmethod
     def from_HDF(cls: Type[Symbols], group: Group) -> Symbols:
-
         # Recall datasets
         symbols = np.array(group["symbols"], dtype=complex)
 
@@ -317,7 +307,6 @@ class Symbols(HDFSerializable):
         return cls(symbols=symbols)
 
     def to_HDF(self, group: Group) -> None:
-
         # Serialize datasets
         group.create_dataset("symbols", data=self.__symbols)
 
@@ -369,7 +358,6 @@ class StatedSymbols(Symbols):
 
     @states.setter
     def states(self, value: np.ndarray) -> None:
-
         if value.ndim != 4:
             raise ValueError("State must be a four-dimensional numpy array")
 
@@ -394,12 +382,10 @@ class StatedSymbols(Symbols):
         return self.__states.shape[1]
 
     def copy(self) -> StatedSymbols:
-
         return StatedSymbols(self.raw.copy(), self.states.copy())
 
     @classmethod
     def from_HDF(cls: Type[StatedSymbols], group: Group) -> StatedSymbols:
-
         # Recall datasets
         symbols = np.array(group["symbols"], dtype=complex)
         states = np.array(group["states"], dtype=complex)
@@ -408,7 +394,6 @@ class StatedSymbols(Symbols):
         return cls(symbols=symbols, states=states)
 
     def to_HDF(self, group: Group) -> None:
-
         # Serialize base class
         Symbols.to_HDF(self, group)
 

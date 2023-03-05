@@ -26,7 +26,6 @@ __status__ = "Prototype"
 
 
 class ValueType(Enum):
-
     LIN = 0
     """Linear number."""
 
@@ -133,7 +132,6 @@ class Logarithmic(float):
 
     @classmethod
     def From_Tuple(cls: Type[Logarithmic], linear: float, logarithmic: float, conversion: DbConversionType = DbConversionType.POWER) -> Logarithmic:
-
         instance = cls.__new__(cls, linear, ValueType.LIN)
         cls.__init__(instance, logarithmic, ValueType.DB, conversion)
 
@@ -169,7 +167,6 @@ class Logarithmic(float):
         """
 
         if isinstance(value, Logarithmic):
-
             sum = float(self) + float(value)
             return Logarithmic(sum, ValueType.LIN, self.conversion)
 
@@ -188,7 +185,6 @@ class Logarithmic(float):
         """
 
         if isinstance(value, Logarithmic):
-
             sum = float(self) - float(value)
             return Logarithmic(sum, ValueType.LIN, self.conversion)
 
@@ -207,7 +203,6 @@ class Logarithmic(float):
         """
 
         if isinstance(value, Logarithmic):
-
             product = float(self) * float(value)
             return Logarithmic(product, ValueType.LIN, self.conversion)
 
@@ -226,7 +221,6 @@ class Logarithmic(float):
         """
 
         if isinstance(value, Logarithmic):
-
             division = float(self) / float(value)
             return Logarithmic(division, ValueType.LIN, self.conversion)
 
@@ -297,7 +291,6 @@ class LogarithmicSequence(np.ndarray):
         return cast
 
     def __array_finalize__(self, instance: Union[np.ndarray, None]) -> None:
-
         # Do nothing if the view is on None
         if instance is None:
             return
@@ -308,7 +301,6 @@ class LogarithmicSequence(np.ndarray):
         # Abort if a numpy boolean array is represented
         # This is required to work around a strange bug in assert_array_almost_equal
         if not issubclass(view.dtype.type, np.floating) or self.ndim < 1:
-
             np.ndarray.__array_finalize__(self, instance)
             return
 
@@ -337,22 +329,18 @@ class LogarithmicSequence(np.ndarray):
         return [Logarithmic.From_Tuple(lin, log, self.conversion) for lin, log in zip(self.view(np.ndarray), self.__values_db)]
 
     def __getitem__(self, i: Any) -> Union[Logarithmic, np.ndarray]:  # type: ignore
-
         if isinstance(i, (int, np.integer)):
             return Logarithmic.From_Tuple(np.ndarray.__getitem__(self, i), self.__values_db[i], self.conversion)
 
         return np.ndarray.__getitem__(self, i)
 
     def __setitem__(self, i: int, item: Union[Logarithmic, float, int]) -> None:
-
         # Convert non-logarithmic items to logarithmic
         if isinstance(item, Logarithmic):
-
             np.ndarray.__setitem__(self, i, float(item))
             self.__values_db[i] = item.value_db
 
         else:
-
             np.ndarray.__setitem__(self, i, item)
             self.__values_db[i] = lin2db(item, self.conversion)
 

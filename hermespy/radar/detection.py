@@ -132,7 +132,6 @@ class RadarPointCloud(object):
     points: List[PointDetection]
 
     def __init__(self) -> None:
-
         self.points = []
 
     @property
@@ -214,14 +213,12 @@ class ThresholdDetector(RadarDetector, Serializable):
 
     @min_power.setter
     def min_power(self, value: float) -> None:
-
         if value <= 0.0:
             raise ValueError("Point power threshold must be greater than zero")
 
         self.__min_power = value
 
     def detect(self, cube: RadarCube) -> RadarPointCloud:
-
         # Filter the raw cube data for peaks
         footprint = np.array([1, 1, 10])
         filtered_image = maximum_filter(cube.data, footprint)
@@ -232,7 +229,6 @@ class ThresholdDetector(RadarDetector, Serializable):
         # Transform the detections to a point cloud
         cloud = RadarPointCloud()
         for point_indices in detection_point_indices:
-
             # angles = cube.angle_bins[point_indices[0]]
             # ToDo: Add angular domains
             zenith = 0.0
@@ -253,7 +249,6 @@ class MaxDetector(RadarDetector, Serializable):
     """YAML serialization tag."""
 
     def detect(self, cube: RadarCube) -> RadarPointCloud:
-
         # Find the maximum point
         point_index = np.unravel_index(np.argmax(cube.data), cube.data.shape)
         point_power = cube.data[point_index]

@@ -10,7 +10,6 @@ from os import path
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 
 if TYPE_CHECKING:
-
     from hermespy.channel import QuadrigaChannel
     from hermespy.simulation import SimulatedDevice
 
@@ -121,7 +120,6 @@ class QuadrigaInterface:
         """
 
         if QuadrigaInterface.__instance is not None:
-
             for channel in QuadrigaInterface.__instance.__channels:
                 new_instance.register_channel(channel)
 
@@ -266,7 +264,6 @@ class QuadrigaInterface:
 
         # Launch the simulator if the specific channel has already been fetched
         elif channel in self.__fetched_channels:
-
             self.__launch_quadriga()
             self.__fetched_channels = []
 
@@ -297,16 +294,13 @@ class QuadrigaInterface:
         transmitter_index = 0
 
         for channel_idx, channel in enumerate(self.__channels):
-
             self.__channel_indices[channel_idx, :] = (receiver_index, transmitter_index)
 
             if channel.transmitter not in transmitters:
-
                 transmitters.append(channel.transmitter)
                 transmitter_index += 1
 
             if channel.receiver not in receivers:
-
                 receivers.append(channel.receiver)
                 receiver_index += 1
 
@@ -318,7 +312,6 @@ class QuadrigaInterface:
         sampling_rates = np.empty(len(transmitters), dtype=float)
 
         for t, transmitter in enumerate(transmitters):
-
             position = transmitter.position
             if position is None:
                 raise RuntimeError("Quadriga channel model requires transmitter position definitions")
@@ -332,7 +325,6 @@ class QuadrigaInterface:
             tx_num_antennas[t] = transmitter.num_antennas
 
         for r, receiver in enumerate(receivers):
-
             position = receiver.position
             if position is None:
                 raise RuntimeError("Quadriga channel model requires receiver position definitions")

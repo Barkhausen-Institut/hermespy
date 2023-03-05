@@ -202,7 +202,6 @@ class ChannelStateInformation(HDFSerializable):
         """
 
         if self.__state_format == ChannelStateFormat.FREQUENCY_SELECTIVITY:
-
             self.__state = ifft(self.__state, axis=3)
             self.__state_format = ChannelStateFormat.IMPULSE_RESPONSE
 
@@ -226,7 +225,6 @@ class ChannelStateInformation(HDFSerializable):
         """
 
         if self.__state_format == ChannelStateFormat.IMPULSE_RESPONSE:
-
             if num_bins is None:
                 num_bins = self.__num_frequency_bins
 
@@ -390,15 +388,12 @@ class ChannelStateInformation(HDFSerializable):
 
     @staticmethod
     def __from_impulse_response(state: np.ndarray, transformation: Union[COO, np.ndarray], num_taps: int) -> None:
-
         for delay_idx in range(num_taps):
-
             diagonal_elements = diagonal(transformation, axis1=3, axis2=2, offset=delay_idx)
             state[:, :, : diagonal_elements.shape[2], delay_idx] = diagonal_elements.todense()
 
     @staticmethod
     def __from_frequency_selectivity(state: np.ndarray, transformation: Union[COO, np.ndarray]) -> None:
-
         diagonal_elements = diagonal(transformation, axis1=2, axis2=3)
         state[:, :, : diagonal_elements.shape[2], :].flat = diagonal_elements.todense()  # type: ignore
 
@@ -433,7 +428,6 @@ class ChannelStateInformation(HDFSerializable):
         """
 
         for stream_idx, received_stream in enumerate(self.__state):
-
             updated_stream = yield ChannelStateInformation(self.__state_format, received_stream[np.newaxis, ...])
 
             if updated_stream is not None:
@@ -488,7 +482,6 @@ class ChannelStateInformation(HDFSerializable):
 
     @staticmethod
     def concatenate(elements: List[ChannelStateInformation], dimension: ChannelStateDimension) -> ChannelStateInformation:
-
         states = [element.__state for element in elements]
         stack = np.concatenate(states, axis=dimension.value)
 
@@ -507,7 +500,6 @@ class ChannelStateInformation(HDFSerializable):
         fig, axes = plt.subplots(self.__state.shape[0], self.__state.shape[1], squeeze=False)
         for rx_id, receive_states in enumerate(self.__state):
             for tx_id, transmit_states in enumerate(receive_states):
-
                 axes[rx_id, tx_id].imshow(abs(transmit_states))
 
     def append(self, state: ChannelStateInformation, axis: int) -> None:
@@ -545,7 +537,6 @@ class ChannelStateInformation(HDFSerializable):
 
     @classmethod
     def from_HDF(cls: Type[ChannelStateInformation], group: Group) -> ChannelStateInformation:
-
         # Recall datasets
         state = np.array(group["state"], dtype=complex)
 
@@ -556,7 +547,6 @@ class ChannelStateInformation(HDFSerializable):
         return cls(state=state, state_format=format)
 
     def to_HDF(self, group: Group) -> None:
-
         # Serialize datasets
         group.create_dataset("state", data=self.state)
 

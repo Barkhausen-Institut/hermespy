@@ -36,7 +36,6 @@ class AudioAntenna(Antenna):
     """Antenna model for audio devices."""
 
     def characteristics(self, azimuth: float, elevation) -> np.ndarray:
-
         return np.array([2**0.5, 2**0.5], dtype=float)
 
 
@@ -46,7 +45,6 @@ class AudioDeviceAntennas(AntennaArrayBase):
     __device: AudioDevice
 
     def __init__(self, device: AudioDevice) -> None:
-
         # Initialize base class
         AntennaArrayBase.__init__(self)
 
@@ -55,12 +53,10 @@ class AudioDeviceAntennas(AntennaArrayBase):
 
     @property
     def num_antennas(self) -> int:
-
         return len(self.__device.playback_channels)
 
     @property
     def antennas(self) -> List[Antenna]:
-
         return [AudioAntenna() for _ in range(self.num_antennas)]
 
 
@@ -125,7 +121,6 @@ class AudioDevice(PhysicalDevice, Serializable):
 
     @playback_device.setter
     def playback_device(self, value: int) -> None:
-
         if value < 0:
             raise ValueError("Playback device identifier must be greater or equal to zero")
 
@@ -145,7 +140,6 @@ class AudioDevice(PhysicalDevice, Serializable):
 
     @record_device.setter
     def record_device(self, value: int) -> None:
-
         if value < 0:
             raise ValueError("Record device identifier must be greater or equal to zero")
 
@@ -165,7 +159,6 @@ class AudioDevice(PhysicalDevice, Serializable):
 
     @playback_channels.setter
     def playback_channels(self, value: Union[np.ndarray, List[int]]):
-
         if isinstance(value, np.ndarray):
             self.__playback_channels = value.tolist()
 
@@ -186,7 +179,6 @@ class AudioDevice(PhysicalDevice, Serializable):
 
     @record_channels.setter
     def record_channels(self, value: Union[np.ndarray, List[int]]):
-
         if isinstance(value, np.ndarray):
             self.__record_channels = value.tolist()
 
@@ -199,12 +191,10 @@ class AudioDevice(PhysicalDevice, Serializable):
 
     @property
     def sampling_rate(self) -> float:
-
         return self.__sampling_rate
 
     @sampling_rate.setter
     def sampling_rate(self, value: float) -> None:
-
         if value <= 0.0:
             raise ValueError("Sampling rate must be greater than zero")
 
@@ -212,11 +202,9 @@ class AudioDevice(PhysicalDevice, Serializable):
 
     @property
     def max_sampling_rate(self) -> float:
-
         return self.sampling_rate
 
     def _upload(self, signal: Signal) -> None:
-
         # Infer parameters
         delay_samples = int(self.max_receive_delay * self.sampling_rate)
 
@@ -231,7 +219,6 @@ class AudioDevice(PhysicalDevice, Serializable):
         self.__reception = np.empty((self.__transmission.shape[0], len(self.__record_channels)), dtype=float)
 
     def trigger(self) -> None:
-
         # Import sounddevice
         sd = self.__import_sd()
 
@@ -239,7 +226,6 @@ class AudioDevice(PhysicalDevice, Serializable):
         sd.playrec(self.__transmission, self.sampling_rate, out=self.__reception, input_mapping=self.__record_channels, output_mapping=self.__playback_channels, device=(self.__record_device, self.__playback_device), blocking=False)
 
     def _download(self) -> Signal:
-
         # Import sounddevice
         sd = self.__import_sd()
 

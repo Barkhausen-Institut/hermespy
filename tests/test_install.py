@@ -23,7 +23,7 @@ if __name__ == '__main__':
     
     # Run all tests as usual
     test_loader = TestLoader()
-    test_runner = TextTestRunner(verbosity=2, failfast=True)
+    test_runner = TextTestRunner(verbosity=2, failfast=False)
     
     if len(argv) < 2:
         start_dir = '.'

@@ -62,7 +62,6 @@ class IndoorFactoryBase(ClusterDelayLineBase, metaclass=ABCMeta):
 
     @volume.setter
     def volume(self, value: float) -> None:
-
         if value <= 0.0:
             raise ValueError("Hall volume must be greater than zero")
 
@@ -85,7 +84,6 @@ class IndoorFactoryBase(ClusterDelayLineBase, metaclass=ABCMeta):
 
     @surface.setter
     def surface(self, value: float) -> None:
-
         if value <= 0.0:
             raise ValueError("Hall surface area must be greater than zero")
 

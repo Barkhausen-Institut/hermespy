@@ -125,12 +125,10 @@ class Transformation(np.ndarray, Serializable):
 
     @property
     def translation(self) -> np.ndarray:
-
         return self[:3, 3].view(np.ndarray)
 
     @translation.setter
     def translation(self, value: np.ndarray) -> None:
-
         value = value.flatten()
         if len(value) != 3:
             raise ValueError("Translations must be three-dimensional cartesian vectors")
@@ -150,12 +148,10 @@ class Transformation(np.ndarray, Serializable):
 
     @rotation_rpy.setter
     def rotation_rpy(self, value: np.ndarray) -> None:
-
         self[:3, :3] = self._rotation_from_rpy(value)
 
     @classmethod
     def No(cls: Type[Transformation]) -> Transformation:
-
         return np.eye(4, 4, dtype=float).view(cls)
 
     @staticmethod
@@ -182,7 +178,6 @@ class Transformation(np.ndarray, Serializable):
 
     @classmethod
     def From_RPY(cls: Type[Transformation], rpy: np.ndarray, pos: np.ndarray) -> Transformation:
-
         # Generate empty transformation matrix
         transformation = np.empty((4, 4), dtype=float)
 
@@ -200,7 +195,6 @@ class Transformation(np.ndarray, Serializable):
 
     @classmethod
     def From_Translation(cls: Type[Transformation], translation: np.ndarray) -> Transformation:
-
         translation = translation.flatten()
         ndim = len(translation)
 
@@ -285,14 +279,12 @@ class Transformation(np.ndarray, Serializable):
 
     @classmethod
     def to_yaml(cls: Type[Transformation], representer: SafeRepresenter, node: Transformation) -> MappingNode:
-
         state = {"translation": node.translation, "rotation": node.rotation_rpy}
 
         return representer.represent_mapping(cls.yaml_tag, state)
 
     @classmethod
     def from_yaml(cls: Type[Transformation], constructor: SafeConstructor, node: Node) -> Transformation:
-
         state = constructor.construct_mapping(node, deep=False)
         return cls.From_RPY(state.get("rotation", None), state.get("translation", None))
 
@@ -303,7 +295,6 @@ class TransformableLink(metaclass=ABCMeta):
     __linked_frames: Set[TransformableLink]
 
     def __init__(self) -> None:
-
         self.__linked_frames = set()
 
     @property
@@ -336,7 +327,6 @@ class TransformableLink(metaclass=ABCMeta):
 
     @property
     def linked_frames(self) -> Set[TransformableLink]:
-
         return self.__linked_frames
 
     def add_link(self, link: Transformable) -> None:
@@ -369,7 +359,6 @@ class TransformableLink(metaclass=ABCMeta):
         """
 
         if link not in self.__linked_frames:
-
             if force_removal:
                 raise RuntimeError("Transformable link not registered")
 
@@ -385,15 +374,12 @@ class TransformableBase(TransformableLink):
 
     @cached_property
     def forwards_transformation(self) -> Transformation:
-
         return Transformation.No()
 
     def _kinematics_updated(self) -> None:
-
         raise RuntimeError("Called base updated routine of a base, this should not be possibel")
 
     def set_base(self, base: TransformableLink | None) -> None:
-
         if base is not None:
             raise RuntimeError("A base link may not be assigned another link as base")
 
@@ -439,7 +425,6 @@ class Transformable(Serializable, TransformableLink):
 
     @position.setter
     def position(self, value: np.ndarray) -> None:
-
         if value.ndim != 1:
             raise ValueError("Position must be a vector")
 
@@ -468,7 +453,6 @@ class Transformable(Serializable, TransformableLink):
 
     @orientation.setter
     def orientation(self, value: np.ndarray) -> None:
-
         if value.ndim != 1 or len(value) != 3:
             raise ValueError("Orientation must be a three-dimensional vector")
 
@@ -476,7 +460,6 @@ class Transformable(Serializable, TransformableLink):
         self._kinematics_updated()
 
     def set_base(self, base: TransformableLink | None) -> None:
-
         if self.__base == base:
             return
 
@@ -527,13 +510,11 @@ class Transformable(Serializable, TransformableLink):
 
     @pose.setter
     def pose(self, value: Transformation) -> None:
-
         self.__pose = value.copy()
         self._kinematics_updated()
 
     @cached_property
     def forwards_transformation(self) -> Transformation:
-
         if self.is_base:
             return self.pose
 
@@ -564,16 +545,13 @@ class Transformable(Serializable, TransformableLink):
         ...  # pragma no cover
 
     def to_local_coordinates(self, arg_0: Transformable | Transformation | np.ndarray, arg_1: np.ndarray | None = None) -> Transformation:  # type: ignore
-
         if isinstance(arg_0, Transformable):
-
             arg_0 = arg_0.forwards_transformation
 
         elif isinstance(arg_0, Transformation):
             ...  # pragma no cover
 
         elif isinstance(arg_0, np.ndarray):
-
             arg_1 = np.zeros(3, dtype=float) if arg_1 is None else arg_1
             arg_0 = Transformation.From_RPY(arg_1, arg_0)
 
@@ -584,7 +562,6 @@ class Transformable(Serializable, TransformableLink):
         return local_transformation.view(Transformation)
 
     def _kinematics_updated(self) -> None:
-
         # Clear the cached forwards transformation if the base has been updated
         if "forwards_transformation" in self.__dict__:
             del self.forwards_transformation

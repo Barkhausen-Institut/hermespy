@@ -26,7 +26,6 @@ class PerfectIsolation(Serializable, Isolation):
     yaml_tag = "PerfectIsolation"
 
     def leak(self, signal: Signal | None) -> Signal:
-
         if self.device is None:
             raise FloatingError("Error trying to simulate leakage of a floating model")
 
@@ -39,7 +38,6 @@ class PerfectIsolation(Serializable, Isolation):
         return self._leak(signal)
 
     def _leak(self, signal: Signal | None) -> Signal:
-
         if signal is None:
             return Signal.empty(self.device.sampling_rate, self.device.antennas.num_receive_antennas, carrier_frequency=self.device.carrier_frequency)
 

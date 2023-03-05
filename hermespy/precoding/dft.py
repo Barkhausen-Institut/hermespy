@@ -48,14 +48,12 @@ class DFT(SymbolPrecoder, Serializable):
         self.__fft_norm = fft_norm
 
     def encode(self, symbols: StatedSymbols) -> StatedSymbols:
-
         encoded_symbols = symbols.copy()
         encoded_symbols.raw = np.fft.fft(symbols.raw, axis=2, norm=self.__fft_norm)
 
         return encoded_symbols
 
     def decode(self, symbols: StatedSymbols) -> StatedSymbols:
-
         decoded_symbols = symbols.copy()
         decoded_symbols.raw = np.fft.ifft(symbols.raw, axis=2, norm=self.__fft_norm)
         # decoded_symbols.states = np.fft.ifft(symbols.states, axis=3, norm=self.__fft_norm)
@@ -64,12 +62,10 @@ class DFT(SymbolPrecoder, Serializable):
 
     @property
     def num_input_streams(self) -> int:
-
         # DFT precoding does not alter the number of symbol streams
         return self.precoding.required_outputs(self)
 
     @property
     def num_output_streams(self) -> int:
-
         # DFT precoding does not alter the number of symbol streams
         return self.precoding.required_outputs(self)
