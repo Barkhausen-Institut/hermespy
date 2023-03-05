@@ -34,7 +34,6 @@ class DelayChannelBase(Channel[DelayChannelRealization]):
     yaml_tag = "DelayChannelBase"
 
     def __init__(self, *args, **kwargs) -> None:
-
         # Initialize base class
         Channel.__init__(self, *args, **kwargs)
 
@@ -55,7 +54,6 @@ class DelayChannelBase(Channel[DelayChannelRealization]):
         ...  # pragma no cover
 
     def realize(self, num_samples: int, sampling_rate: float) -> DelayChannelRealization:
-
         delay = self._realize_delay()
         delay_samples = int(delay * sampling_rate)
 
@@ -81,7 +79,6 @@ class SpatialDelayChannel(DelayChannelBase):
     yaml_tag: str = "SpatialDelay"
 
     def _realize_delay(self) -> float:
-
         if self.transmitter.position is None or self.receiver.position is None:
             raise RuntimeError("The spatial delay channel requires the linked devices positions to be specified")
 
@@ -91,7 +88,6 @@ class SpatialDelayChannel(DelayChannelBase):
         return delay
 
     def _realize_response(self) -> np.ndarray:
-
         transmit_response = self.transmitter.antennas.cartesian_array_response(self.transmitter.carrier_frequency, self.receiver.global_position, "global")
         receive_response = self.receiver.antennas.cartesian_array_response(self.receiver.carrier_frequency, self.transmitter.global_position, "global")
 
@@ -135,14 +131,11 @@ class RandomDelayChannel(DelayChannelBase):
 
     @delay.setter
     def delay(self, value: float | Tuple[float, float]) -> None:
-
         if isinstance(value, float):
-
             if value < 0.0:
                 raise ValueError(f"Delay must be greater or equal to zero (not {value})")
 
         elif isinstance(value, tuple):
-
             if len(value) != 2:
                 raise ValueError("Delay limit tuple must contain two entries")
 
@@ -158,7 +151,6 @@ class RandomDelayChannel(DelayChannelBase):
         self.__delay = value
 
     def _realize_delay(self) -> float:
-
         if isinstance(self.delay, float):
             return self.delay
 
@@ -168,5 +160,4 @@ class RandomDelayChannel(DelayChannelBase):
         raise RuntimeError("Unsupported type of delay")
 
     def _realize_response(self) -> np.ndarray:
-
         return np.eye(self.receiver.num_antennas, self.transmitter.num_antennas, dtype=complex)

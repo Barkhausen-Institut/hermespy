@@ -62,7 +62,6 @@ class SimulatedDeviceOutput(DeviceOutput):
 
         # Assert emerging signal's validity and superimpose the signals
         for signal in _emerging_signals:
-
             if signal.sampling_rate != sampling_rate:
                 raise ValueError(f"Emerging signal has unexpected sampling rate ({signal.sampling_rate} instad of {sampling_rate})")
 
@@ -105,12 +104,10 @@ class SimulatedDeviceOutput(DeviceOutput):
 
     @property
     def emerging_signals(self) -> Sequence[Signal]:
-
         return self.__emerging_signals
 
     @classmethod
     def from_HDF(cls: Type[SimulatedDeviceOutput], group: Group) -> SimulatedDeviceOutput:
-
         # Recall base class
         device_output = DeviceOutput.from_HDF(group)
 
@@ -122,7 +119,6 @@ class SimulatedDeviceOutput(DeviceOutput):
         return cls.From_DeviceOutput(device_output, emerging_signals)
 
     def to_HDF(self, group: Group) -> None:
-
         # Serialize base class
         DeviceOutput.to_HDF(self, group)
 
@@ -167,12 +163,10 @@ class SimulatedDeviceTransmission(DeviceTransmission, SimulatedDeviceOutput):
 
     @classmethod
     def From_SimulatedDeviceOutput(cls: Type[SimulatedDeviceTransmission], output: SimulatedDeviceOutput, operator_transmissions: Sequence[Transmission]) -> SimulatedDeviceTransmission:
-
         return cls(operator_transmissions, output.emerging_signals, output.sampling_rate, output.num_antennas, output.carrier_frequency)
 
     @classmethod
     def from_HDF(cls: Type[SimulatedDeviceTransmission], group: Group) -> SimulatedDeviceTransmission:
-
         # Recover base classes
         device_transmission = DeviceTransmission.from_HDF(group)
         devic_output = SimulatedDeviceOutput.from_HDF(group)
@@ -181,7 +175,6 @@ class SimulatedDeviceTransmission(DeviceTransmission, SimulatedDeviceOutput):
         return cls.From_SimulatedDeviceOutput(devic_output, device_transmission.operator_transmissions)
 
     def to_HDF(self, group: Group) -> None:
-
         DeviceTransmission.to_HDF(self, group)
         SimulatedDeviceOutput.to_HDF(self, group)
 
@@ -243,11 +236,8 @@ class ProcessedSimulatedDeviceInput(SimulatedDeviceReceiveRealization, Processed
 
         _impinging_signals: List[Signal] = []
         if len(impinging_signals) > 0:
-
             if operator_separation and isinstance(impinging_signals[0], Sequence):  # type: ignore
-
                 for signal_sequence in impinging_signals:
-
                     superposition = signal_sequence[0] if len(signal_sequence) > 0 else Signal.empty(1.0, 1)  # type: ignore
                     for subsignal in signal_sequence[1:]:  # type: ignore
                         superposition.superimpose(subsignal)
@@ -290,7 +280,6 @@ class ProcessedSimulatedDeviceInput(SimulatedDeviceReceiveRealization, Processed
 
     @classmethod
     def from_HDF(cls: Type[ProcessedSimulatedDeviceInput], group: Group) -> ProcessedSimulatedDeviceInput:
-
         device_input = ProcessedDeviceInput.from_HDF(group)
         operator_separation = group.attrs.get("operator_separation", False)
         leaking_signal = Signal.from_HDF(group["leaking_signal"])
@@ -347,7 +336,6 @@ class SimulatedDeviceReception(ProcessedSimulatedDeviceInput, DeviceReception):
 
     @classmethod
     def from_HDF(cls: Type[SimulatedDeviceReception], group: Group) -> SimulatedDeviceReception:
-
         device_input = ProcessedSimulatedDeviceInput.from_HDF(group)
         device_reception = DeviceReception.from_HDF(group)
 
@@ -462,7 +450,6 @@ class SimulatedDevice(Device, Serializable):
         """Set the scenario this device is attached to."""
 
         if self.__scenario is not scenario:
-
             # Pop the device from the old scenario
             if self.__scenario is not None:
                 ...  # ToDo
@@ -508,7 +495,6 @@ class SimulatedDevice(Device, Serializable):
 
     @isolation.setter
     def isolation(self, value: Isolation) -> None:
-
         self.__isolation = value
         value.device = self
 
@@ -523,7 +509,6 @@ class SimulatedDevice(Device, Serializable):
 
     @coupling.setter
     def coupling(self, value: Coupling) -> None:
-
         self.__coupling = value
         value.device = self
 
@@ -566,12 +551,10 @@ class SimulatedDevice(Device, Serializable):
 
     @property
     def carrier_frequency(self) -> float:
-
         return self.__carrier_frequency
 
     @carrier_frequency.setter
     def carrier_frequency(self, value: float) -> None:
-
         if value < 0.0:
             raise ValueError("Carrier frequency must be greater or equal to zero")
 
@@ -579,12 +562,10 @@ class SimulatedDevice(Device, Serializable):
 
     @property
     def velocity(self) -> np.ndarray:
-
         return self.__velocity
 
     @velocity.setter
     def velocity(self, value: np.ndarray) -> None:
-
         value = value.flatten()
 
         if len(value) != 3:
@@ -605,7 +586,6 @@ class SimulatedDevice(Device, Serializable):
 
     @operator_separation.setter
     def operator_separation(self, value: bool) -> None:
-
         self.__operator_separation = value
 
     def _simulate_output(self, signal: Signal) -> Signal:
@@ -628,7 +608,6 @@ class SimulatedDevice(Device, Serializable):
         return coupled_signal
 
     def generate_output(self, operator_transmissions: Optional[List[Transmission]] = None, cache: bool = True) -> SimulatedDeviceOutput:
-
         operator_transmissions = self.transmit_operators() if operator_transmissions is None else operator_transmissions
 
         if len(operator_transmissions) != self.transmitters.num_operators:
@@ -643,7 +622,6 @@ class SimulatedDevice(Device, Serializable):
 
         # If operator separation is disable, the transmissions are superimposed to a single signal model
         else:
-
             superimposed_signal = Signal.empty(self.sampling_rate, self.num_antennas, carrier_frequency=self.carrier_frequency)
 
             for transmission in operator_transmissions:
@@ -662,7 +640,6 @@ class SimulatedDevice(Device, Serializable):
         return output
 
     def transmit(self, cache: bool = True) -> SimulatedDeviceTransmission:
-
         # Generate operator transmissions
         transmissions = self.transmit_operators()
 
@@ -687,7 +664,6 @@ class SimulatedDevice(Device, Serializable):
 
     @snr.setter
     def snr(self, value: float) -> None:
-
         if value <= 0:
             raise ValueError("The linear signal to noise ratio must be greater than zero")
 
@@ -747,6 +723,9 @@ class SimulatedDevice(Device, Serializable):
         Returns: The generated realization.
         """
 
+        if snr == float("inf"):
+            snr = self.snr
+
         # Generate noise realizations for each registered receive operator
         noise_realizations = [self.noise.realize(r.noise_power(snr, snr_type)) for r in self.receivers]
 
@@ -754,7 +733,6 @@ class SimulatedDevice(Device, Serializable):
         return SimulatedDeviceReceiveRealization(noise_realizations)
 
     def _simulate_input(self, mixed_signal: Signal, leaking_signal: Signal | None = None) -> Tuple[Signal, Signal]:
-
         # Model mutual coupling behaviour
         coupled_signal = self.coupling.receive(mixed_signal)
 
@@ -772,10 +750,8 @@ class SimulatedDevice(Device, Serializable):
         return baseband_signal, leaking_signal
 
     def _generate_receiver_input(self, receiver: Receiver, baseband_signal: Signal, noise_realization: NoiseRealization, impinging_signals: DeviceInput | Signal | Sequence[Signal] | Sequence[Tuple[Sequence[Signal], ChannelStateInformation | None]] | SimulatedDeviceOutput, cache: bool, channel_state: ChannelStateInformation | None) -> Tuple[Signal, ChannelStateInformation | None]:
-
         # Select the proper channel state information for the respective receiving operator
         if channel_state is None and isinstance(impinging_signals, Sequence) and len(impinging_signals) > 0 and isinstance(impinging_signals[0], tuple):
-
             # The reference device index for which to fetch the channel state is either specified by the receiver
             # or assumed to be this device's index (i.e. the self-interference channel will be selected)
             reference_device_idx = self.scenario.device_index(self if receiver.reference is None else receiver.reference)
@@ -833,24 +809,19 @@ class SimulatedDevice(Device, Serializable):
         mixed_signal = Signal.empty(sampling_rate=self.sampling_rate, num_streams=self.num_antennas, num_samples=0, carrier_frequency=self.carrier_frequency)
 
         if isinstance(impinging_signals, DeviceInput):
-
             for i in impinging_signals.impinging_signals:
                 mixed_signal.superimpose(i)
 
             _impinging_signals = impinging_signals.impinging_signals
 
         elif isinstance(impinging_signals, Signal):
-
             mixed_signal.superimpose(impinging_signals)
             _impinging_signals = [impinging_signals]
 
         elif isinstance(impinging_signals, Sequence):
             if len(impinging_signals) > 0:
-
                 if isinstance(impinging_signals[0], tuple):
-
                     for device_impinging in impinging_signals:
-
                         mixed_device_impinging = Signal.empty(sampling_rate=self.sampling_rate, num_streams=self.num_antennas, num_samples=0, carrier_frequency=self.carrier_frequency)
                         for operator_impinging in device_impinging[0]:  # type: ignore
                             mixed_device_impinging.superimpose(operator_impinging)
@@ -859,7 +830,6 @@ class SimulatedDevice(Device, Serializable):
                         mixed_signal.superimpose(mixed_device_impinging)
 
                 elif isinstance(impinging_signals[0], Signal):
-
                     for device_impinging in impinging_signals:
                         mixed_signal.superimpose(device_impinging)  # type: ignore
 
@@ -869,7 +839,6 @@ class SimulatedDevice(Device, Serializable):
                     raise ValueError("Unsupported type of impinging signals")
 
         elif isinstance(impinging_signals, SimulatedDeviceOutput):
-
             mixed_signal = impinging_signals.mixed_signal
             _impinging_signals = impinging_signals.emerging_signals
 
@@ -933,7 +902,6 @@ class SimulatedDevice(Device, Serializable):
         return processed_input
 
     def receive(self, impinging_signals: DeviceInput | Signal | Sequence[Signal], cache: bool = True, channel_state: ChannelStateInformation | None = None) -> DeviceReception:
-
         # Process input
         processed_input = self.process_input(impinging_signals, cache=cache, channel_state=channel_state)
 

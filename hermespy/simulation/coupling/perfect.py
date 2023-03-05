@@ -26,9 +26,7 @@ class PerfectCoupling(Serializable, Coupling):
     yaml_tag = "Perfect-Coupling"
 
     def _transmit(self, signal: Signal) -> Signal:
-
         return signal
 
     def _receive(self, signal: Signal) -> Signal:
-
         return signal

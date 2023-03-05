@@ -115,7 +115,6 @@ class Serializable(object):
         # Query serializable properties
         attributes = set()
         for attribute_key, attribute_type in getmembers(cls):
-
             # Prevent the access to protected or private attributes
             if attribute_key.startswith("_"):
                 continue
@@ -177,7 +176,6 @@ class Serializable(object):
         # Construct state dictionary by querying serializable attributes
         state: Dict[str, Any] = {}
         for attribute_key in serializable_atrributes:
-
             attribute_value = getattr(self, attribute_key)
 
             # Don't serialize attribute if it is None
@@ -239,26 +237,21 @@ class Serializable(object):
         init_properties: Dict[str, Any] = {}
 
         for configuration_key in list(configuration.keys()):
-
             if configuration_key in init_signature or configuration_key in arg_signature:
-
                 init_parameters[configuration_key] = configuration.pop(configuration_key)
                 continue
 
             lower_key = configuration_key.lower()
 
             if lower_key in init_signature or lower_key in arg_signature:
-
                 init_parameters[lower_key] = configuration.pop(configuration_key)
                 continue
 
             if configuration_key in properties:
-
                 init_properties[configuration_key] = configuration.pop(configuration_key)
                 continue
 
             if lower_key in properties:
-
                 init_properties[lower_key] = configuration.pop(configuration_key)
                 continue
 
@@ -274,7 +267,6 @@ class Serializable(object):
 
         # Configure properties
         for property_name, property_value in init_properties.items():
-
             try:
                 setattr(instance, property_name, property_value)
 
@@ -318,20 +310,17 @@ class SerializableEnum(Serializable, Enum):
 
     @classmethod
     def from_yaml(cls: Type[SerializableEnum], _: SafeConstructor, node: Node) -> SerializableEnum:
-
         # Convert scalar string representation back to enum
         return cls[node.value]
 
     @classmethod
     def to_yaml(cls: Type[SerializableEnum], representer: SafeRepresenter, node: SerializableEnum) -> ScalarNode:
-
         # Convert enum to scalar string representation
         return representer.represent_scalar(cls.yaml_tag, "{.name}".format(node))
 
     @classmethod  # type: ignore
     @property
     def yaml_tag(cls) -> str:  # type: ignore
-
         return cls.__name__
 
 
@@ -348,7 +337,6 @@ class Factory:
     __registered_tags: Set[str]
 
     def __init__(self) -> None:
-
         # YAML dumper configuration
         self.__yaml = YAML(typ="safe", pure=True)
         self.__yaml.default_flow_style = False
@@ -373,14 +361,12 @@ class Factory:
 
         lookup_paths = list(hermespy.__path__) + [os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))]
         for _, name, is_module in iter_modules(lookup_paths, hermespy.__name__ + "."):
-
             if not is_module:
                 continue
 
             module = import_module(name)
 
             for _, serializable_class in getmembers(module):
-
                 if not isclass(serializable_class) or not issubclass(serializable_class, Serializable):
                     continue
 
@@ -413,7 +399,6 @@ class Factory:
 
     @clean.setter
     def clean(self, flag: bool) -> None:
-
         self.__clean = flag
 
     @property
@@ -477,7 +462,6 @@ class Factory:
 
         # Transform complex numpy arrays to their string representation
         if array.dtype in [np.complex64, np.complex128]:
-
             object_array = np.empty(array.shape, dtype=object)
             for index, number in np.ndenumerate(array):
                 object_array[index] = str(number)[1:-1]
@@ -589,7 +573,6 @@ class Factory:
 
         hermes_objects = []
         for path in paths:
-
             if not os.path.exists(path):
                 raise ValueError(f"Lookup path '{path}' not found")
 
@@ -634,7 +617,6 @@ class Factory:
 
         for directory, _, files in os.walk(path, followlinks=follow_links):
             for file in files:
-
                 _, extension = os.path.splitext(file)
                 if extension in self.extensions:
                     hermes_objects += self.from_file(os.path.join(directory, file))
@@ -693,13 +675,11 @@ class Factory:
         """
 
         with open(file, mode="r") as file_stream:
-
             try:
                 return self.from_stream(file_stream)
 
             # Re-raise constructor errors with the correct file name
             except ConstructorError as constructor_error:
-
                 constructor_error.problem_mark.name = file
                 raise constructor_error
 
@@ -758,7 +738,6 @@ class Factory:
 
         clean_stream = ""
         for line in stream.readlines():
-
             clean_line = self.__range_regex.sub(self.__range_restore_callback, line)
             clean_line = self.__db_regex.sub(self.__decibel_conversion, clean_line)
             clean_stream += clean_line
@@ -846,7 +825,7 @@ class HDFSerializable(metaclass=ABCMeta):
         """
 
         if not name in group:
-            return group.create_group("mixed_signal")
+            return group.create_group(name)
 
         else:
             return group[name]

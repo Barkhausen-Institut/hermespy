@@ -39,28 +39,23 @@ class SpatialMultiplexing(SymbolPrecoder, Serializable):
         SymbolPrecoder.__init__(self)
 
     def encode(self, symbols: StatedSymbols) -> StatedSymbols:
-
         return symbols
 
     def decode(self, symbols: StatedSymbols) -> StatedSymbols:
-
         # Collect data symbols from the stream
         return symbols
 
     @property
     def num_input_streams(self) -> int:
-
         return self.required_num_output_streams
 
     @property
     def num_output_streams(self) -> int:
-
         # Always outputs the required number of streams
         return self.required_num_output_streams
 
     @property
     def rate(self) -> Fraction:
-
         # Spatial multiplexing distributes the incoming stream symbols
         # equally over the outgoing streams.
         return Fraction(1, 1)

@@ -71,7 +71,6 @@ class Pipeline(Executable, Generic[ScenarioType, DeviceType]):
 
     @num_drops.setter
     def num_drops(self, value: int) -> None:
-
         if value < 1:
             raise ValueError("Number of drops must be greater than zero")
 

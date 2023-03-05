@@ -54,14 +54,11 @@ class ImpedanceCoupling(Serializable, Coupling):
 
     @property
     def transmit_correlation(self) -> Optional[np.ndarray]:
-
         return self.__transmit_correlation
 
     @transmit_correlation.setter
     def transmit_correlation(self, value: Optional[np.ndarray]) -> None:
-
         if value is None:
-
             self.__transmit_correlation = None
             return
 
@@ -75,14 +72,11 @@ class ImpedanceCoupling(Serializable, Coupling):
 
     @property
     def receive_correlation(self) -> np.ndarray:
-
         return self.__receive_correlation
 
     @receive_correlation.setter
     def receive_correlation(self, value: Optional[np.ndarray]) -> None:
-
         if value is None:
-
             self.__receive_correlation = None
             return
 
@@ -96,14 +90,11 @@ class ImpedanceCoupling(Serializable, Coupling):
 
     @property
     def transmit_impedance(self) -> Optional[np.ndarray]:
-
         return self.__transmit_impedance
 
     @transmit_impedance.setter
     def transmit_impedance(self, value: Optional[np.ndarray]) -> None:
-
         if value is None:
-
             self.__transmit_impedance = None
             return
 
@@ -117,14 +108,11 @@ class ImpedanceCoupling(Serializable, Coupling):
 
     @property
     def receive_impedance(self) -> Optional[np.ndarray]:
-
         return self.__receive_impedance
 
     @receive_impedance.setter
     def receive_impedance(self, value: Optional[np.ndarray]) -> None:
-
         if value is None:
-
             self.__receive_impedance = None
             return
 
@@ -138,14 +126,11 @@ class ImpedanceCoupling(Serializable, Coupling):
 
     @property
     def matching_impedance(self) -> Optional[np.ndarray]:
-
         return self.__matching_impedance
 
     @matching_impedance.setter
     def matching_impedance(self, value: Optional[np.ndarray]) -> None:
-
         if value is None:
-
             self.matching_impedance = None
             return
 
@@ -158,7 +143,6 @@ class ImpedanceCoupling(Serializable, Coupling):
         self.__matching_impedance = value
 
     def _transmit(self, signal: Signal) -> Signal:
-
         transmit_impedance = np.eye(self.device.antennas.num_transmit_antennas) if self.transmit_impedance is None else self.transmit_impedance
         transmit_correlation = np.eye(self.device.antennas.num_transmit_antennas) if self.transmit_correlation is None else self.transmit_correlation
 
@@ -168,7 +152,6 @@ class ImpedanceCoupling(Serializable, Coupling):
         return Signal(transmitted_samples, signal.sampling_rate, signal.carrier_frequency)
 
     def _receive(self, signal: Signal) -> Signal:
-
         receive_impedance = np.eye(self.device.antennas.num_receive_antennas) if self.receive_impedance is None else self.receive_impedance
         receive_correlation = np.eye(self.device.antennas.num_receive_antennas) if self.receive_correlation is None else self.receive_correlation
         matching_impedance = np.eye(self.device.antennas.num_receive_antennas) if self.matching_impedance is None else self.matching_impedance

@@ -240,27 +240,22 @@ class ZeroForcingChannelEqualization(Generic[WaveformType], ChannelEqualization[
     """YAML serialization tag"""
 
     def equalize_channel(self, stated_symbols: StatedSymbols) -> Symbols:
-
         equalized_raw_symbols = ZeroForcingChannelEqualization.__equalize_channel(stated_symbols.raw, stated_symbols.states)
 
         return Symbols(equalized_raw_symbols)
 
     @staticmethod
     def __equalize_channel(symbols: np.ndarray, states: np.ndarray) -> np.ndarray:
-
         # If no information about transmitted streams is available, assume orthogonal channels
         if symbols.shape[0] < 2:
-
             summed_tx_states = np.sum(states, axis=1, keepdims=False)
             equalized_symbols = symbols / summed_tx_states
 
         else:
-
             equalized_symbols = np.empty(symbols.shape, dtype=np.complex128)
 
             for b in range(symbols.shape[1]):
                 for s in range(symbols.shape[2]):
-
                     equalization = np.linalg.pinv(states[:, :, b, s])
                     equalized_symbols[:, b, s] = np.dot(equalization, symbols[:, b, s])
 
@@ -524,11 +519,9 @@ class WaveformGenerator(ABC, Serializable):
         ...  # pragma no cover
 
     def estimate_channel(self, frame: Symbols) -> Tuple[StatedSymbols, ChannelStateInformation]:
-
         return self.channel_estimation.estimate_channel(frame)
 
     def equalize_symbols(self, symbols: StatedSymbols) -> Symbols:
-
         return self.channel_equalization.equalize_channel(symbols)
 
     @property
@@ -597,7 +590,6 @@ class WaveformGenerator(ABC, Serializable):
 
     @synchronization.setter
     def synchronization(self, value: Synchronization) -> None:
-
         self.__synchronization = value
 
         if value.waveform_generator is not self:
@@ -615,7 +607,6 @@ class WaveformGenerator(ABC, Serializable):
 
     @channel_estimation.setter
     def channel_estimation(self, value: ChannelEstimation) -> None:
-
         self.__channel_estimation = value
 
         if value.waveform_generator is not self:
@@ -633,7 +624,6 @@ class WaveformGenerator(ABC, Serializable):
 
     @channel_equalization.setter
     def channel_equalization(self, value: ChannelEqualization) -> None:
-
         self.__channel_equalization = value
 
         if value.waveform_generator is not self:
@@ -647,7 +637,7 @@ class WaveformGenerator(ABC, Serializable):
         Returns:
             float: Sampling rate in Hz.
         """
-        ...
+        ...  # pragma: no cover
 
     @property
     def symbol_precoding_support(self) -> bool:
@@ -711,7 +701,6 @@ class UniformPilotSymbolSequence(PilotSymbolSequence):
 
     @property
     def sequence(self) -> np.ndarray:
-
         return np.array([self.__pilot_symbol], dtype=complex)
 
 
@@ -735,7 +724,6 @@ class CustomPilotSymbolSequence(PilotSymbolSequence):
 
     @property
     def sequence(self) -> np.ndarray:
-
         return self.__pilot_symbols
 
 
@@ -753,7 +741,6 @@ class MappedPilotSymbolSequence(CustomPilotSymbolSequence):
 
 
 class ConfigurablePilotWaveform(PilotWaveformGenerator, ABC):
-
     pilot_symbol_sequence: PilotSymbolSequence
     """The configured pilot symbol sequence."""
 
@@ -802,7 +789,6 @@ class ConfigurablePilotWaveform(PilotWaveformGenerator, ABC):
         num_repetitions = int(ceil(num_symbols / len(symbol_sequence)))
 
         if num_repetitions > 1:
-
             if not self.repeat_pilot_symbol_sequence:
                 raise RuntimeError("Pilot symbol repetition required for sequence generation but not allowed")
 

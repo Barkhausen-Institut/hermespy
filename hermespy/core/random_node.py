@@ -94,7 +94,6 @@ class RandomNode(object):
 
     @_rng.setter
     def _rng(self, value: Generator) -> None:
-
         self.__generator = value
 
     @property
@@ -118,7 +117,6 @@ class RandomNode(object):
 
     @seed.setter
     def seed(self, value: int) -> None:
-
         self.__seed = value
         self.__generator = default_rng(value)
 

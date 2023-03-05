@@ -259,7 +259,6 @@ class Precoding(Generic[PrecoderType], Serializable, Sequence):
         precoder_index = self.__precoders.index(precoder)
 
         if precoder_index >= len(self.__precoders) - 1:
-
             if self.modem.transmitting_device:
                 return self.modem.transmitting_device.num_antennas
 

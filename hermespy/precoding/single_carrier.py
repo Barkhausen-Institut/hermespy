@@ -41,7 +41,6 @@ class SingleCarrier(SymbolPrecoder, Serializable):
         SymbolPrecoder.__init__(self)
 
     def encode(self, symbols: StatedSymbols) -> StatedSymbols:
-
         if symbols.num_streams != 1:
             raise RuntimeError("Single-Carrier spatial multiplexing only supports one-dimensional input streams during encoding")
 
@@ -51,7 +50,6 @@ class SingleCarrier(SymbolPrecoder, Serializable):
         return repeated_symbols
 
     def decode(self, symbols: StatedSymbols) -> StatedSymbols:
-
         # Decode data using SC receive diversity with N_rx received antennas.
         #
         # Received signal with equal noise power is assumed, the decoded signal has same noise

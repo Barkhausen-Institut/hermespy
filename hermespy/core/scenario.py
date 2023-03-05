@@ -17,7 +17,7 @@ from h5py import File, Group
 
 from .channel_state_information import ChannelStateInformation
 from .device import DeviceInput, DeviceOutput, DeviceReception, DeviceTransmission, DeviceType, ProcessedDeviceInput, Reception, Transmission, Transmitter, Receiver, Operator
-from .drop import Drop
+from .drop import Drop, RecalledDrop
 from .factory import Factory
 from .random_node import RandomNode
 from .signal_model import Signal
@@ -67,7 +67,6 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
 
     @classmethod
     def _arg_signature(cls: Type[Scenario]) -> Set[str]:
-
         return {"seed", "devices"}
 
     __mode: ScenarioMode  # Current scenario operating mode
@@ -107,7 +106,6 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
                 self.add_device(device)
 
     def __del__(self) -> None:
-
         # Stop recording / playing if not in default mode
         if self.mode != ScenarioMode.DEFAULT:
             self.stop()
@@ -321,7 +319,6 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
 
         # Return the largest frame length as default drop duration
         if self.__drop_duration == 0.0:
-
             duration = 0.0
 
             for device in self.__devices:
@@ -334,7 +331,6 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
 
     @drop_duration.setter
     def drop_duration(self, value: float) -> None:
-
         if value < 0.0:
             raise ValueError("Drop duration must be greater or equal to zero")
 
@@ -361,21 +357,18 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
 
     @campaign.setter
     def campaign(self, value: str) -> None:
-
         # Do nothing if value matches the current campaign
         if value == self.__campaign:
             return
 
         # If in replay mode, make sure the campaign exists
         if self.mode == ScenarioMode.REPLAY:
-
             if not self.__campaign_exists(value):
                 raise ValueError(f"The requested measurement campaign '{value}' does not exists within the currently replayed savefile")
 
             self.__drop_counter = 0
 
         elif self.mode == ScenarioMode.RECORD:
-
             # Create the campaign if it doesn't exists
             if not self.__campaign_exists(value):
                 self.__file.create_group("/campaigns/" + value)
@@ -414,7 +407,6 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
 
     @classmethod
     def _state_from_HDF(cls: Type[Scenario], factory: Factory, group: Group) -> Scenario:
-
         # Initialize class
         scenario = cls()
 
@@ -429,7 +421,7 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
         # Return initialize scenario
         return scenario
 
-    def record(self, file: str, overwrite: bool = False, campaign: str = "default") -> None:
+    def record(self, file: str, overwrite: bool = False, campaign: str = "default", state: Scenario | None = None) -> None:
         """Start recording drop information generated from this scenario.
 
         After the scenario starts recording, changing the device and operator configuration
@@ -447,6 +439,10 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
             campaign (str, optional):
                 Name of the measurement campaign.
 
+            state (scenario, optional):
+                Scenario to be used for state serialization.
+                By default, this scenario is assumed.
+
         Raises:
 
             RuntimeError: If the scenario is not in default mode.
@@ -460,7 +456,6 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
 
         # Remove the existing file if the overwrite flag is enabled
         if overwrite and file_exists:
-
             remove(file)
             file_exists = False
 
@@ -489,7 +484,12 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
         # Write scenario state to the dataset for easy recollection
         # Future feature: Write a locking mechanism during recording
         factory = Factory()
-        self._state_to_HDF(factory, self.__file["/state"])
+
+        if state is None:
+            self._state_to_HDF(factory, self.__file["/state"])
+
+        else:
+            state._state_to_HDF(factory, self.__file["/state"])
 
         # Write meta-information
         self.__file.attrs["hermes_version"] = __version__
@@ -517,7 +517,6 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
         """
 
         if file is None:
-
             if self.__mode == ScenarioMode.DEFAULT:
                 raise RuntimeError("Campain existence may not be queried in default mode")
 
@@ -545,7 +544,6 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
         """
 
         if file is None:
-
             if self.__file is None:
                 raise ValueError("A file location must be specified or the scenario most be in record or replay mode")
 
@@ -608,7 +606,6 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
 
         # Save the overall number of recorder drops if in record mode
         if self.mode == ScenarioMode.RECORD:
-
             self.__file.attrs["num_drops"] = self.__drop_counter
 
         # Close HDF5 file handle properly
@@ -824,29 +821,26 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
         Return: The generated drop information.
         """
 
-        if self.mode == ScenarioMode.REPLAY:
+        drop: Drop
 
+        if self.mode == ScenarioMode.REPLAY:
             # Recall the drop from the savefile
-            drop = Drop.from_HDF(self.__file[f"/campaigns/{self.__campaign}/drop_{self.__drop_counter:02d}"])
+            drop = RecalledDrop(self.__file[f"/campaigns/{self.__campaign}/drop_{self.__drop_counter:02d}"], self)
             self.__drop_counter = (self.__drop_counter + 1) % self.__file.attrs["num_drops"]
 
             # Replay device operator transmissions
             for device, device_transmission in zip(self.devices, drop.device_transmissions):
-
-                for transmitter, transmission in zip(device.transmitters, device_transmission.operator_transmissions):
-                    device.transmitters.add_transmission(transmitter, transmission)
+                device.cache_transmission(device_transmission)
 
             # Replay device operator receptions
             _ = self.receive_operators(drop.operator_inputs, cache=True)
 
         else:
-
             # Generate a new drop
             drop = self._drop()
 
             # Serialize the drop to HDF if in record mode
             if self.mode == ScenarioMode.RECORD:
-
                 drop.to_HDF(self.__file.create_group(f"campaigns/{self.__campaign}/drop_{self.__drop_counter:02d}"))
                 self.__drop_counter += 1
 
@@ -861,5 +855,4 @@ class ReplayScenario(Scenario):
     """Scenario which is unable to generate drops."""
 
     def _drop(self) -> Drop:
-
         raise RuntimeError("Replay scenario may not generate data drops.")

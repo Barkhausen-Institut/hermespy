@@ -311,6 +311,14 @@ class TestTransmittingModem(TestBaseModem):
         self.assertEqual(2, transmission.num_frames)
         self.assertEqual(2 * self.waveform.samples_in_frame, transmission.signal.num_samples)
 
+    def test_device_setget(self) -> None:
+        """Device property getter should return setter argument"""
+
+        expected_device = SimulatedDevice()
+        self.modem.device = expected_device
+
+        self.assertIs(expected_device, self.modem.device)
+
 
 class TestReceivingModem(TestBaseModem):
     """Test the exclusively receiving simplex modem"""
@@ -330,6 +338,14 @@ class TestReceivingModem(TestBaseModem):
         """Receive stream coding property should return correct configuration"""
 
         self.assertIs(self.modem, self.modem.receive_stream_coding.modem)
+
+    def test_device_setget(self) -> None:
+        """Device property getter should return setter argument"""
+
+        expected_device = SimulatedDevice()
+        self.modem.device = expected_device
+
+        self.assertIs(expected_device, self.modem.device)
 
 
 class TestDuplexModem(TestBaseModem):
@@ -370,6 +386,16 @@ class TestDuplexModem(TestBaseModem):
         
         reception = self.modem.receive()
         self.assertEqual(0, reception.num_frames)
+
+    def test_device_setget(self) -> None:
+        """Device property getter should return setter argument"""
+
+        expected_device = SimulatedDevice()
+        self.modem.device = expected_device
+
+        self.assertIs(expected_device, self.modem.device)
+        self.assertIs(expected_device, TransmittingModem.device.fget(self.modem))
+        self.assertIs(expected_device, ReceivingModem.device.fget(self.modem))
 
 
 class TestSimplexLink(TestCase):

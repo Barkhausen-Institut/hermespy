@@ -52,10 +52,8 @@ class QuadrigaOctaveInterface(QuadrigaInterface):
         self.__octave.addpath(self.path_launch_script)
 
     def _run_quadriga(self, **parameters) -> np.ndarray:
-
         # Push parameters to quadriga
         for key, value in parameters.items():
-
             # Convert numpy arrays to lists
             if isinstance(value, np.ndarray):
                 value = value.tolist()

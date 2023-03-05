@@ -72,7 +72,6 @@ class QuadrigaChannel(Channel):
         return QuadrigaInterface.GlobalInstance() if self.__interface is None else self.__interface  # type: ignore
 
     def realize(self, num_samples: int, sampling_rate: float) -> ChannelRealization:
-
         # Query the quadriga interface for a new impulse response
         path_gains, path_delays = self.__quadriga_interface.get_impulse_response(self)
 
@@ -90,7 +89,6 @@ class QuadrigaChannel(Channel):
                 time_delay_in_samples_vec = np.around(tau_txa_rxa * sampling_rate).astype(int)
 
                 for delay_idx, delay_in_samples in enumerate(time_delay_in_samples_vec):
-
                     impulse_response[rx_antenna, tx_antenna, :, delay_in_samples] += cir_txa_rxa[delay_idx]
 
         return ChannelRealization(self, np.sqrt(self.gain) * impulse_response)

@@ -28,7 +28,6 @@ class UsrpSystem(Serializable, PhysicalScenario[UsrpDevice]):
     """YAML serialization tag"""
 
     def __init__(self, *args, **kwargs) -> None:
-
         PhysicalScenario.__init__(self, *args, **kwargs)
 
         # Hacked USRP system (hidden)
