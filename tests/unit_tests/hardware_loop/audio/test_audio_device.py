@@ -64,7 +64,16 @@ class SineOperator(DuplexOperator):
     def _noise_power(self, strength: float, snr_type=...) -> float:
 
         return strength
+
+    def _recall_transmission(self, group) -> Transmission:
+
+        return Transmission.from_HDF(group)
+
+    def _recall_reception(self, group) -> Reception:
+
+        return Reception.from_HDF(group)
     
+
 class TestAudioDeviceAntennas(TestCase):
     
     def setUp(self) -> None:

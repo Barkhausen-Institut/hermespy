@@ -107,7 +107,6 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT], Serializabl
         self.__guard_ratio = value
 
     def synchronize(self, signal: np.ndarray) -> List[int]:
-
         # Expand the dimensionality for flat signal streams
         if signal.ndim == 1:
             signal = signal[np.newaxis, :]

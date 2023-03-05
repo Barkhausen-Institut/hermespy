@@ -26,7 +26,6 @@ __status__ = "Prototype"
 
 
 class UsrpDevice(PhysicalDevice, Serializable):
-
     yaml_tag = "USRP"
     """YAML serialization tag"""
 
@@ -37,7 +36,6 @@ class UsrpDevice(PhysicalDevice, Serializable):
     __collection_enabled: bool
 
     def __init__(self, ip: str, port: int = 5555, carrier_frequency: float = 7e8, tx_gain: float = 0.0, rx_gain: float = 0.0, *args, **kwargs) -> None:
-
         self.__usrp_client = UsrpClient.create(ip, port)
 
         PhysicalDevice.__init__(self, *args, **kwargs)
@@ -60,7 +58,6 @@ class UsrpDevice(PhysicalDevice, Serializable):
         """
 
         for _ in range(self.__num_rpc_retries):
-
             try:
                 return call(*args, **kwargs)
 
@@ -73,7 +70,6 @@ class UsrpDevice(PhysicalDevice, Serializable):
         raise RuntimeError(f"Lost connection to  the remote '{self.ip}:{self.port}'")
 
     def _configure_device(self) -> None:
-
         tx_filter_bandwidth = 4e8
         rx_filter_bandwidth = 4e8
         tx_sampling_rate = self.sampling_rate
@@ -96,14 +92,12 @@ class UsrpDevice(PhysicalDevice, Serializable):
                 rx_gain != self.__current_configuration.rxGain,
             ]
         ):
-
             config = RfConfig(txAnalogFilterBw=tx_filter_bandwidth, rxAnalogFilterBw=rx_filter_bandwidth, txSamplingRate=tx_sampling_rate, rxSamplingRate=rx_sampling_rate, txCarrierFrequency=tx_carrier_frequency, rxCarrierFrequency=rx_carrier_frequency, txGain=tx_gain, rxGain=rx_gain)
 
             self.__rpc_call_wrapper(self.__usrp_client.configureRfConfig, config)
             self.__current_configuration = config
 
     def _upload(self, baseband_signal: Signal) -> None:
-
         # Configure device
         self._configure_device()
 
@@ -131,7 +125,6 @@ class UsrpDevice(PhysicalDevice, Serializable):
         duration = self.receivers.min_frame_duration
 
         if duration >= 0.0:
-
             num_receive_samples = int((duration + self.max_receive_delay) * self.sampling_rate)
             # Workaround for the uneven sample bug
             num_receive_samples += num_receive_samples % 2
@@ -149,7 +142,6 @@ class UsrpDevice(PhysicalDevice, Serializable):
         self.__usrp_client.executeImmediately()
 
     def _download(self) -> Signal:
-
         # Abort if no samples are to be expcted during collection
         if not self.__collection_enabled:
             return Signal.empty(self.sampling_rate, self.antennas.num_antennas)
@@ -158,7 +150,6 @@ class UsrpDevice(PhysicalDevice, Serializable):
         signal_model = Signal.empty(self.sampling_rate, self.antennas.num_antennas, carrier_frequency=self.carrier_frequency)
 
         for mimo_signal in mimo_signals:
-
             streams = np.array(mimo_signal.signals)
             signal_model.samples = np.append(signal_model.samples, streams, axis=1)
 
@@ -197,27 +188,22 @@ class UsrpDevice(PhysicalDevice, Serializable):
 
     @property
     def tx_gain(self) -> float:
-
         return self.__tx_gain
 
     @tx_gain.setter
     def tx_gain(self, value: float) -> None:
-
         self.__tx_gain = value
 
     @property
     def rx_gain(self) -> float:
-
         return self.__rx_gain
 
     @rx_gain.setter
     def rx_gain(self, value: float) -> None:
-
         self.__rx_gain = value
 
     @property
     def sampling_rate(self) -> float:
-
         ideal_sampling_rate = self.transmitters.max_sampling_rate if self.transmitters.num_operators > 0 else self.receivers.max_sampling_rate
         selected_sampling_rate = min(self.__supported_sampling_rates, key=lambda x: abs(x - ideal_sampling_rate))
 
@@ -225,20 +211,16 @@ class UsrpDevice(PhysicalDevice, Serializable):
 
     @property
     def max_sampling_rate(self) -> float:
-
         return max(self.__supported_sampling_rates)
 
     @property
     def carrier_frequency(self) -> float:
-
         return self.__carrier_frequency
 
     @carrier_frequency.setter
     def carrier_frequency(self, value: float) -> None:
-
         self.__carrier_frequency = value
 
     @cached_property
     def __supported_sampling_rates(self) -> List[float]:
-
         return self.__usrp_client.getSupportedSamplingRates()

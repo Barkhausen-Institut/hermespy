@@ -51,9 +51,10 @@ Radar Device Operation
 
 from __future__ import annotations
 from abc import abstractmethod
-from typing import Optional
+from typing import Optional, Type
 
 import numpy as np
+from h5py import Group
 
 from hermespy.beamforming import ReceiveBeamformer, TransmitBeamformer
 from hermespy.core import ChannelStateInformation, DuplexOperator, Signal, Serializable, SNRType, Transmission, Reception, ReceptionType
@@ -171,6 +172,21 @@ class RadarReception(Reception, RadarCube):
         self.cube = cube
         self.cloud = cloud
 
+    def to_HDF(self, group: Group) -> None:
+        # Serialize base class
+        Reception.to_HDF(self, group)
+
+        # Serialize class attributes
+        self.cube.to_HDF(self._create_group(group, "cube"))
+        return
+
+    @classmethod
+    def from_HDF(cls: Type[RadarReception], group: Group) -> RadarReception:
+        signal = Signal.from_HDF(group["signal"])
+        cube = RadarCube.from_HDF(group["cube"])
+
+        return RadarReception(signal, cube)
+
 
 class Radar(DuplexOperator[RadarTransmission, RadarReception], Serializable):
     """HermesPy representation of a mono-static radar sensing its environment."""
@@ -184,7 +200,6 @@ class Radar(DuplexOperator[RadarTransmission, RadarReception], Serializable):
     __detector: Optional[RadarDetector]
 
     def __init__(self) -> None:
-
         self.waveform = None
         self.receive_beamformer = None
         self.transmit_beamformer = None
@@ -207,13 +222,10 @@ class Radar(DuplexOperator[RadarTransmission, RadarReception], Serializable):
 
     @transmit_beamformer.setter
     def transmit_beamformer(self, value: Optional[TransmitBeamformer]) -> None:
-
         if value is None:
-
             self.__transmit_beamformer = None
 
         else:
-
             value.operator = self
             self.__transmit_beamformer = value
 
@@ -231,29 +243,23 @@ class Radar(DuplexOperator[RadarTransmission, RadarReception], Serializable):
 
     @receive_beamformer.setter
     def receive_beamformer(self, value: Optional[ReceiveBeamformer]) -> None:
-
         if value is None:
-
             self.__receive_beamformer = None
 
         else:
-
             value.operator = self
             self.__receive_beamformer = value
 
     @property
     def sampling_rate(self) -> float:
-
         return self.waveform.sampling_rate
 
     @property
     def frame_duration(self) -> float:
-
         # ToDo: Support frame duration
         return 1.0
 
     def _noise_power(self, strength: float, snr_type=SNRType) -> float:
-
         # No waveform configured equals no noise required
         if self.waveform is None:
             return 0.0
@@ -280,7 +286,6 @@ class Radar(DuplexOperator[RadarTransmission, RadarReception], Serializable):
 
     @waveform.setter
     def waveform(self, value: Optional[RadarWaveform]) -> None:
-
         self.__waveform = value
 
     @property
@@ -297,11 +302,9 @@ class Radar(DuplexOperator[RadarTransmission, RadarReception], Serializable):
 
     @detector.setter
     def detector(self, value: Optional[RadarDetector]) -> None:
-
         self.__detector = value
 
     def _transmit(self, duration: float = 0.0) -> RadarTransmission:
-
         if not self.__waveform:
             raise RuntimeError("Radar waveform not specified")
 
@@ -313,10 +316,8 @@ class Radar(DuplexOperator[RadarTransmission, RadarReception], Serializable):
 
         # If the device has more than one antenna, a beamforming strategy is required
         if self.device.antennas.num_antennas > 1:
-
             # If no beamformer is configured, only the first antenna will transmit the ping
             if self.transmit_beamformer is None:
-
                 additional_streams = Signal(np.zeros((self.device.antennas.num_antennas - signal.num_streams, signal.num_samples), dtype=complex), signal.sampling_rate)
                 signal.append_streams(additional_streams)
 
@@ -336,7 +337,6 @@ class Radar(DuplexOperator[RadarTransmission, RadarReception], Serializable):
         return transmission
 
     def _receive(self, signal: Signal, _: ChannelStateInformation) -> RadarReception:
-
         if not self.waveform:
             raise RuntimeError("Radar waveform not specified")
 
@@ -348,7 +348,6 @@ class Radar(DuplexOperator[RadarTransmission, RadarReception], Serializable):
 
         # If the device has more than one antenna, a beamforming strategy is required
         if self.device.antennas.num_antennas > 1:
-
             if self.receive_beamformer is None:
                 raise RuntimeError("Receiving over a device with more than one antenna requires a beamforming configuration")
 
@@ -361,7 +360,6 @@ class Radar(DuplexOperator[RadarTransmission, RadarReception], Serializable):
             beamformed_samples = self.receive_beamformer.probe(signal)[:, 0, :]
 
         else:
-
             beamformed_samples = signal.samples
 
         # Build the radar cube by generating a beam-forming line over all angles of interest
@@ -373,7 +371,6 @@ class Radar(DuplexOperator[RadarTransmission, RadarReception], Serializable):
         cube_data = np.empty((len(angles_of_interest), len(velocity_bins), len(range_bins)), dtype=float)
 
         for angle_idx, line in enumerate(beamformed_samples):
-
             # Process the single angular line by the waveform generator
             line_signal = Signal(line, signal.sampling_rate, carrier_frequency=signal.carrier_frequency)
             line_estimate = self.waveform.estimate(line_signal)
@@ -388,3 +385,9 @@ class Radar(DuplexOperator[RadarTransmission, RadarReception], Serializable):
 
         reception = RadarReception(signal, cube, cloud)
         return reception
+
+    def _recall_transmission(self, group: Group) -> RadarTransmission:
+        return RadarTransmission.from_HDF(group)
+
+    def _recall_reception(self, group: Group) -> RadarReception:
+        return RadarReception.from_HDF(group)

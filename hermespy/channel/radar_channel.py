@@ -31,7 +31,6 @@ class RadarChannelRealization(ChannelRealization):
     __ground_truth: np.ndarray
 
     def __init__(self, channel: RadarChannel, impulse_response: np.ndarray, ground_truth: np.ndarray) -> None:
-
         self.__ground_truth = ground_truth
         ChannelRealization.__init__(self, channel, impulse_response)
 
@@ -144,14 +143,11 @@ class RadarChannel(Channel[RadarChannelRealization], Serializable):
 
     @target_range.setter
     def target_range(self, value: float | Tuple[float, float]) -> None:
-
         if isinstance(value, (float, int)):
-
             if value < 0.0:
                 raise ValueError("Target range must be greater or equal to zero")
 
         elif isinstance(value, (tuple, list)):
-
             if len(value) != 2:
                 raise ValueError("Target range span must be a tuple of two")
 
@@ -177,7 +173,6 @@ class RadarChannel(Channel[RadarChannelRealization], Serializable):
 
     @target_velocity.setter
     def target_velocity(self, value: float | np.ndarray) -> None:
-
         self.__target_velocity = value
 
     @property
@@ -218,7 +213,6 @@ class RadarChannel(Channel[RadarChannelRealization], Serializable):
 
     @target_azimuth.setter
     def target_azimuth(self, value: float) -> None:
-
         self.__target_azimuth = value
 
     @property
@@ -234,7 +228,6 @@ class RadarChannel(Channel[RadarChannelRealization], Serializable):
 
     @target_zenith.setter
     def target_zenith(self, value: float) -> None:
-
         self.__target_zenith = value
 
     @property
@@ -247,7 +240,6 @@ class RadarChannel(Channel[RadarChannelRealization], Serializable):
         return self.__losses_db
 
     def realize(self, num_samples: int, sampling_rate: float) -> RadarChannelRealization:
-
         if self.transmitter is None:
             raise FloatingError("Radar channel must be anchored to a transmitting device")
 
@@ -297,7 +289,6 @@ class RadarChannel(Channel[RadarChannelRealization], Serializable):
         mimo_response = np.outer(array_response.conj(), array_response)
 
         for idx, timestamp in enumerate(timestamps):
-
             echo_delay = delay + 2 * self.target_velocity * timestamp / speed_of_light
             time = timestamp + delay_taps
             echo_weights = power_factor * np.exp(2j * pi * (doppler_frequency * time + reflection_phase))
@@ -329,7 +320,6 @@ class RadarChannel(Channel[RadarChannelRealization], Serializable):
 
         # Assume the last channel propagation realization if the realization has not been specified
         if realization is None:
-
             realization = self.realization
 
             if realization is None:

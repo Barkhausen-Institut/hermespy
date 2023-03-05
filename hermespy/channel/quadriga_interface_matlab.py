@@ -25,7 +25,6 @@ class QuadrigaMatlabInterface(QuadrigaInterface):
     __engine: MatlabEngine
 
     def __init__(self, *args, **kwargs) -> None:
-
         # Init base class
         QuadrigaInterface.__init__(self, *args, **kwargs)
 
@@ -33,12 +32,9 @@ class QuadrigaMatlabInterface(QuadrigaInterface):
         self.__engine = start_matlab()
 
     def _run_quadriga(self, **parameters) -> np.ndarray:
-
         # Create the Matlab workspace from the given parameters
         for key, value in parameters.items():
-
             if isinstance(value, np.ndarray):
-
                 if value.dtype is float:
                     value = matlab.double(value.tolist())
 

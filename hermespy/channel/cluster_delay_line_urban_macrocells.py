@@ -69,7 +69,6 @@ class UrbanMacrocellsLineOfSight(ClusterDelayLineBase, Serializable):
 
     @property
     def zod_spread_mean(self) -> float:
-
         device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
         terminal_height = min(self.transmitter.position[2], self.receiver.position[2])
 
@@ -141,7 +140,6 @@ class UrbanMacrocellsNoLineOfSightBase(ClusterDelayLineBase, metaclass=ABCMeta):
 
     @property
     def zod_spread_mean(self) -> float:
-
         device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
         terminal_height = min(self.transmitter.position[2], self.receiver.position[2])
 
@@ -153,7 +151,6 @@ class UrbanMacrocellsNoLineOfSightBase(ClusterDelayLineBase, metaclass=ABCMeta):
 
     @property
     def zod_offset(self) -> float:
-
         device_distance = float(np.linalg.norm(self.receiver.position - self.transmitter.position, 2))
         terminal_height = min(self.transmitter.position[2], self.receiver.position[2])
         fc = log10(self._center_frequency)

@@ -35,7 +35,6 @@ class MaximumRatioCombining(SymbolPrecoder, Serializable):
         raise NotImplementedError("Maximum ratio combining only supports decoding operations")
 
     def decode(self, symbols: StatedSymbols) -> StatedSymbols:
-
         # Decode data using MRC receive diversity with N_rx received antennas.
         #
         # Received signal with equal noise power is assumed, the decoded signal has same noise

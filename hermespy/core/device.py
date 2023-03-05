@@ -156,6 +156,10 @@ OperationResultType = TypeVar("OperationResultType", bound="OperationResult")
 """Type of OperationResult"""
 
 
+OperatorType = TypeVar("OperatorType", bound="Operator")
+"""Type of operator."""
+
+
 class OperationResult(HDFSerializable):
     """Base class for outputs of device operators."""
 
@@ -174,13 +178,11 @@ class OperationResult(HDFSerializable):
 
     @classmethod
     def from_HDF(cls: Type[OperationResultType], group: Group) -> OperationResultType:
-
         signal = Signal.from_HDF(group["signal"])
         return cls(signal=signal)
 
     def to_HDF(self, group: Group) -> None:
-
-        self.signal.to_HDF(group.create_group("signal"))
+        self.signal.to_HDF(self._create_group(group, "signal"))
 
 
 class Transmission(OperationResult):
@@ -201,10 +203,6 @@ ReceptionType = TypeVar("ReceptionType", bound=Reception)
 
 SlotType = TypeVar("SlotType", bound="OperatorSlot")
 """Type of slot."""
-
-
-OperatorType = TypeVar("OperatorType", bound="Operator")
-"""Type of operator."""
 
 
 class Operator(Generic[SlotType], Serializable):
@@ -245,9 +243,7 @@ class Operator(Generic[SlotType], Serializable):
 
         # A None argument indicates the slot should be unbound
         if value is None:
-
             if hasattr(self, "_Operator__slot") and self.__slot is not None:
-
                 # This is necessary to prevent event-loops. Just ignore it.
                 slot = self.__slot
                 self.__slot = None
@@ -259,14 +255,12 @@ class Operator(Generic[SlotType], Serializable):
                 self.__slot = None
 
         elif not hasattr(self, "_Operator__slot"):
-
             self.__slot = value
 
             if not self.__slot.registered(self):
                 self.__slot.add(self)
 
         elif self.__slot is not value:
-
             # if self.__slot is not None and self.__slot.registered(self):
             #    self.__slot.remove(self)
 
@@ -418,7 +412,6 @@ class DeviceOutput(HDFSerializable):
 
     @classmethod
     def from_HDF(cls: Type[DeviceOutput], group: Group) -> DeviceOutput:
-
         # Recall serialized mixed signal group
         mixed_signal = Signal.from_HDF(group["mixed_signal"])
 
@@ -426,7 +419,6 @@ class DeviceOutput(HDFSerializable):
         return cls(mixed_signal)
 
     def to_HDF(self, group: Group) -> None:
-
         # Serialize groups
         self.mixed_signal.to_HDF(self._create_group(group, "mixed_signal"))
 
@@ -485,21 +477,32 @@ class DeviceTransmission(DeviceOutput):
 
     @classmethod
     def from_HDF(cls: Type[DeviceTransmission], group: Group) -> DeviceTransmission:
-
         # Recall base class
         device_output = DeviceOutput.from_HDF(group)
 
         # Recall attributes
         num_transmissions = group.attrs.get("num_transmissions", 1)
 
-        # Recall groups
+        # Recall transmissions
         transmissions = [Transmission.from_HDF(group[f"transmission_{t:02d}"]) for t in range(num_transmissions)]
 
         # Initialize object
         return cls.From_Output(device_output, transmissions)
 
-    def to_HDF(self, group: Group) -> None:
+    @classmethod
+    def Recall(cls: Type[DeviceTransmission], group: Group, device: Device) -> DeviceTransmission:
+        # Recall base class
+        device_output = DeviceOutput.from_HDF(group)
 
+        # Recall attributes
+        num_transmissions = group.attrs.get("num_transmissions", 1)
+
+        transmissions = [transmitter.recall_transmission(group[f"transmission_{t:02d}"]) for t, transmitter in zip(range(num_transmissions), device.transmitters)]
+
+        # Initialize object
+        return cls.From_Output(device_output, transmissions)
+
+    def to_HDF(self, group: Group) -> None:
         # Serialize base class
         DeviceOutput.to_HDF(self, group)
 
@@ -546,14 +549,12 @@ class DeviceInput(HDFSerializable):
 
     @classmethod
     def from_HDF(cls: Type[DeviceInput], group: Group) -> DeviceInput:
-
         num_impinging_signals = group.attrs.get("num_impinging_signals", 1)
         impinging_signals = [Signal.from_HDF(group[f"impinging_signal_{s:02d}"]) for s in range(num_impinging_signals)]
 
         return cls(impinging_signals)
 
     def to_HDF(self, group: Group) -> None:
-
         # Serialize groups
         for s, signal in enumerate(self.impinging_signals):
             signal.to_HDF(group.create_group(f"impinging_signal_{s:02d}"))
@@ -589,7 +590,6 @@ class ProcessedDeviceInput(DeviceInput):
 
     @property
     def operator_inputs(self) -> Sequence[Tuple[Signal, ChannelStateInformation | None]]:
-
         return self.__operator_inputs
 
     @property
@@ -603,7 +603,6 @@ class ProcessedDeviceInput(DeviceInput):
 
     @classmethod
     def from_HDF(cls: Type[ProcessedDeviceInput], group: Group) -> ProcessedDeviceInput:
-
         # Recall base class
         device_input = DeviceInput.from_HDF(group)
 
@@ -614,7 +613,6 @@ class ProcessedDeviceInput(DeviceInput):
         return cls(device_input, operator_inputs)
 
     def to_HDF(self, group: Group) -> None:
-
         # Serialize base class
         DeviceInput.to_HDF(self, group)
 
@@ -695,18 +693,33 @@ class DeviceReception(ProcessedDeviceInput):
 
     @classmethod
     def from_HDF(cls: Type[DRT], group: Group) -> DRT:
-
         # Recall base class
         device_input = ProcessedDeviceInput.from_HDF(group)
 
         # Recall individual operator receptions
         num_receptions = group.attrs.get("num_operator_receptions", 0)
+
+        # Recall operator receptions
         operator_receptions = [Reception.from_HDF(group[f"reception_{f:02d}"]) for f in range(num_receptions)]
 
+        # Initialize object
         return cls.From_ProcessedDeviceInput(device_input, operator_receptions)
 
-    def to_HDF(self, group: Group) -> None:
+    @classmethod
+    def Recall(cls: Type[DRT], group: Group, device: Device) -> DRT:
+        # Recall base class
+        device_input = ProcessedDeviceInput.from_HDF(group)
 
+        # Recall individual operator receptions
+        num_receptions = group.attrs.get("num_operator_receptions", 0)
+
+        # recall operator receptions
+        receptions = [receiver.recall_reception(group[f"reception_{r:02d}"]) for r, receiver in zip(range(num_receptions), device.receivers)]
+
+        # Initialize object
+        return cls.From_ProcessedDeviceInput(device_input, receptions)
+
+    def to_HDF(self, group: Group) -> None:
         # Serialize base class
         ProcessedDeviceInput.to_HDF(self, group)
 
@@ -752,7 +765,6 @@ class MixingOperator(Generic[SlotType], Operator[SlotType], ABC):
         """
 
         if self.__carrier_frequency is None:
-
             if self.device is None:
                 return 0.0
 
@@ -766,7 +778,6 @@ class MixingOperator(Generic[SlotType], Operator[SlotType], ABC):
         """Set the central frequency of the mixed signal in radio-frequency transmission band."""
 
         if value is None:
-
             self.__carrier_frequency = None
             return
 
@@ -812,7 +823,6 @@ class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType
 
     @Operator.slot.setter  # type: ignore
     def slot(self, value: Optional[ReceiverSlot]) -> None:
-
         Operator.slot.fset(self, value)  # type: ignore
         self.random_mother = None if value is None else value.device
 
@@ -829,7 +839,6 @@ class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType
 
     @reference.setter
     def reference(self, value: Optional[Device]) -> None:
-
         self.__reference = value
 
     @property
@@ -864,7 +873,6 @@ class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType
         """
 
         if signal is None:
-
             if self.signal is None:
                 raise RuntimeError("Error attempting to fetch a cached receiver signal")
 
@@ -935,6 +943,44 @@ class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType
 
         self.__signal = signal
         self.__csi = csi
+
+    def recall_reception(self, group: Group, cache: bool = True) -> ReceptionType:
+        """Recall a specific reception from a serialization.
+
+        Internally calls the abstract method :meth:`Receiver._recall_reception`.
+        Caches the reception if the respective flag is enabled.
+
+        Args:
+
+            group (Group):
+                HDF group containing the reception.
+
+            cache (bool, optional):
+                Cache the reception.
+                Enabled by default.
+
+        Returns: The recalled reception.
+        """
+
+        recalled_reception = self._recall_reception(group)
+
+        if cache:
+            self.__reception = recalled_reception
+
+        return recalled_reception
+
+    @abstractmethod
+    def _recall_reception(self, group: Group) -> ReceptionType:
+        """Recall a specific reception from a serialization.
+
+        Args:
+
+            group (Group):
+                HDF group containing the reception.
+
+        Returns: The recalled reception.
+        """
+        ...  # pragma: no cover
 
     def noise_power(self, strength: float, snr_type: SNRType) -> float:
         """Compute noise power for a given signal strength.
@@ -1125,7 +1171,6 @@ class OperatorSlot(Generic[OperatorType], Sequence[OperatorType]):
         ...  # pragma: no cover
 
     def __getitem__(self, item: int | slice) -> OperatorType | Sequence[OperatorType]:
-
         return self.__operators[item]
 
     def __iter__(self) -> Iterator[OperatorType]:
@@ -1142,7 +1187,6 @@ class OperatorSlot(Generic[OperatorType], Sequence[OperatorType]):
         return operator in self.__operators
 
     def __len__(self) -> int:
-
         return self.num_operators
 
 
@@ -1233,9 +1277,57 @@ class Transmitter(Generic[TransmissionType], RandomNode, MixingOperator["Transmi
 
         return self.__transmission
 
+    def cache_transmission(self, transmission: TransmissionType) -> None:
+        """Cache a transmission for this transmitter.
+
+        Args:
+
+            transmission (TransmissionType):
+                The transmission to be cached.
+        """
+
+        self.__transmission = transmission
+
+    def recall_transmission(self, group: Group, cache: bool = True) -> TransmissionType:
+        """Recall a specific transmission from a serialization.
+
+        Internally calls the abstract method :meth:`Transmitter._recall_transmission`.
+        Caches the transmission if the respective flag is enabled.
+
+        Args:
+
+            group (Group):
+                HDF group containing the transmission.
+
+            cache (bool, optional):
+                Cache the transmission.
+                Enabled by default.
+
+        Returns: The recalled transmission
+        """
+
+        recalled_transmission = self._recall_transmission(group)
+
+        if cache:
+            self.cache_transmission(recalled_transmission)
+
+        return recalled_transmission
+
+    @abstractmethod
+    def _recall_transmission(self, group: Group) -> TransmissionType:
+        """Recall a specific transmission from a serialization.
+
+        Args:
+
+            group (Group):
+                HDF group containing the transmission.
+
+        Returns: The recalled transmission
+        """
+        ...  # pragma: no cover
+
     @Operator.slot.setter  # type: ignore
     def slot(self, value: Optional[TransmitterSlot]) -> None:
-
         Operator.slot.fset(self, value)  # type: ignore
         self.random_mother = None if value is None else value.device
 
@@ -1262,7 +1354,6 @@ class TransmitterSlot(OperatorSlot[Transmitter]):
         OperatorSlot.__init__(self, *args, **kwargs)
 
     def add(self, operator: Transmitter) -> None:
-
         OperatorSlot.add(self, operator)
         self.__transmissions.append(None)
 
@@ -1330,7 +1421,6 @@ class ReceiverSlot(OperatorSlot[Receiver]):
 
         receptions: List[Tuple[Signal, ChannelStateInformation]] = []
         for receiver in self.__operators:
-
             receptions.append((receiver.signal, receiver.csi))
 
             if clear_cache:
@@ -1343,7 +1433,6 @@ class UnsupportedSlot(OperatorSlot):
     """Slot for unsupported operations within devices."""
 
     def add(self, operator: Operator) -> None:
-
         raise RuntimeError("Slot not supported by this device")
 
 
@@ -1403,7 +1492,6 @@ class Device(ABC, Transformable, RandomNode, Serializable):
 
     @antennas.setter
     def antennas(self, value: AntennaArrayBase) -> None:
-
         # Update the internal antenna array reference
         self.__antennas = value
 
@@ -1582,6 +1670,10 @@ class Device(ABC, Transformable, RandomNode, Serializable):
 
         return DeviceTransmission.From_Output(device_output, operator_transmissions)
 
+    def cache_transmission(self, transmission: DeviceTransmission) -> None:
+        for transmitter, operator_transmission in zip(self.transmitters, transmission.operator_transmissions):
+            transmitter.cache_transmission(operator_transmission)
+
     def process_input(self, impinging_signals: DeviceInput | Signal | Sequence[Signal], cache: bool = True) -> ProcessedDeviceInput:
         """Process input signals impinging onto this device.
 
@@ -1607,7 +1699,6 @@ class Device(ABC, Transformable, RandomNode, Serializable):
 
         # Superimpose the impinging signal models
         if len(impinging_signals) != 1:
-
             superimposed_signal = Signal.empty(self.sampling_rate, self.num_antennas, carrier_frequency=self.carrier_frequency)
             for signal in impinging_signals:
                 superimposed_signal.superimpose(signal)
@@ -1620,7 +1711,6 @@ class Device(ABC, Transformable, RandomNode, Serializable):
 
         # Cache the operator inputs if the respective flag is enabled
         if cache:
-
             receiver: Receiver
             for receiver, input in zip(self.receivers, operator_inputs):
                 receiver.cache_reception(input)
@@ -1668,7 +1758,6 @@ class Device(ABC, Transformable, RandomNode, Serializable):
         # Generate receive information
         receptions: List[Reception] = []
         for operator, (signal, csi) in zip(self.receivers, _operator_inputs):
-
             reception = operator.receive(signal, csi, cache)
             receptions.append(reception)
 
@@ -1755,20 +1844,17 @@ class DuplexOperator(Transmitter[TransmissionType], Receiver[ReceptionType], Gen
             return
 
         if self.__device is not None:
-
             self.__device.transmitters.remove(self)
             self.__device.receivers.remove(self)
 
         self.__device = value
 
         if value is not None:
-
             value.transmitters.add(self)
             value.receivers.add(self)
 
     @Transmitter.slot.setter
     def slot(self, value: OperatorSlot[Transmitter]) -> None:
-
         if value is not None:
             self.device = value.device
 
@@ -1776,7 +1862,6 @@ class DuplexOperator(Transmitter[TransmissionType], Receiver[ReceptionType], Gen
 
     @property
     def csi(self) -> Optional[ChannelStateInformation]:
-
         return Receiver.csi.fget(self)  # type: ignore
 
     @abstractmethod

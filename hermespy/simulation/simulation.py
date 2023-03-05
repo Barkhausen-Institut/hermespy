@@ -69,7 +69,6 @@ class SimulatedDrop(Drop):
 
     @classmethod
     def from_HDF(cls: Type[SimulatedDrop], group: Group) -> SimulatedDrop:
-
         # Recall attributes
         timestamp = group.attrs.get("timestamp", 0.0)
         num_transmissions = group.attrs.get("num_transmissions", 0)
@@ -83,7 +82,6 @@ class SimulatedDrop(Drop):
         channel_realizations = np.empty((num_devices, num_devices), dtype=object)
         for d_out in range(num_devices):
             for d_in in range(d_out + 1):
-
                 realization = ChannelStateInformation.from_HDF(group[f"channel_realization_{d_out:02d}_{d_in:02d}_"])
 
                 channel_realizations[d_out, d_in] = realization
@@ -94,7 +92,6 @@ class SimulatedDrop(Drop):
 
 
 class SimulationScenario(Scenario[SimulatedDevice]):
-
     yaml_tag = "SimulationScenario"
 
     __channels: np.ndarray  # Channel matrix linking devices
@@ -120,7 +117,6 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         self.__channels = np.ndarray((0, 0), dtype=object)
 
     def __del__(self) -> None:
-
         self.stop()
 
     def new_device(self, *args, **kwargs) -> SimulatedDevice:
@@ -136,17 +132,14 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         return device
 
     def add_device(self, device: SimulatedDevice) -> None:
-
         # Add the device to the scenario
         Scenario.add_device(self, device)
         device.scenario = self
 
         if self.num_devices == 1:
-
             self.__channels = np.array([[IdealChannel(device, device)]], dtype=object)
 
         else:
-
             # Create new channels from each existing device to the newly added device
             new_channels = np.array([[IdealChannel(device, rx)] for rx in self.devices])
 
@@ -299,7 +292,6 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         self.__channels[receiver, transmitter] = channel
 
         if channel is not None:
-
             # Set proper receiver and transmitter fields
             channel.transmitter = self.devices[transmitter]
             channel.receiver = self.devices[receiver]
@@ -323,13 +315,10 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
     @snr.setter
     def snr(self, value: Optional[float]) -> None:
-
         if value is None:
-
             self.__snr = None
 
         else:
-
             if value <= 0.0:
                 raise ValueError("Signal to noise ratio must be greater than zero")
 
@@ -387,7 +376,6 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         # Loop over each channel within the channel matrix and propagate the signals over the respective channel model
         for device_alpha_idx in range(self.num_devices):
             for device_beta_idx in range(1 + device_alpha_idx):
-
                 alpha_transmission = transmissions[device_alpha_idx]
                 beta_transmission = transmissions[device_beta_idx]
 
@@ -490,7 +478,6 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         return device_receptions
 
     def _drop(self) -> SimulatedDrop:
-
         # Generate drop timestamp
         timestamp = time()
 
@@ -512,7 +499,6 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
 
 class SimulationRunner(object):
-
     __scenario: SimulationScenario  # Scenario to be run
     __propagation: Sequence[Sequence[Tuple[Sequence[Signal], ChannelStateInformation]]] | None
 
@@ -562,7 +548,6 @@ class SimulationRunner(object):
         # Loop over each channel within the channel matrix and propagate the signals over the respective channel model
         for forwards_device_idx in range(self.__scenario.num_devices):
             for backwards_device_idx in range(1 + forwards_device_idx):
-
                 forwards_signals = device_outputs[forwards_device_idx].emerging_signals
                 backwards_signals = device_outputs[backwards_device_idx].emerging_signals
 
@@ -687,21 +672,17 @@ class Simulation(Serializable, Pipeline[SimulationScenario, SimulatedDevice], Mo
 
     @Pipeline.num_drops.setter  # type: ignore
     def num_drops(self, value: int) -> int:
-
         Pipeline.num_drops.fset(self, value)  # type: ignore
         MonteCarlo.num_samples.fset(self, value)  # type: ignore
 
     @MonteCarlo.num_samples.setter  # type: ignore
     def num_samples(self, value: int) -> int:
-
         Pipeline.num_drops.fset(self, value)  # type: ignore
         MonteCarlo.num_samples.fset(self, value)  # type: ignore
 
     def run(self) -> MonteCarloResult[SimulationScenario]:
-
         # Print indicator that the simulation is starting
         if self.console_mode != ConsoleMode.SILENT:
-
             self.console.print()  # Just an empty line
             self.console.rule("Simulation Campaign")
             self.console.print()  # Just an empty line
@@ -712,13 +693,11 @@ class Simulation(Serializable, Pipeline[SimulationScenario, SimulatedDevice], Mo
         # Visualize results if the flag respective is enabled
         figures: List[plt.Figure] = []
         if self.plot_results:
-
             with self.style_context():
                 figures = result.plot()
 
         # Dump results if the respective flag is enabled
         if self.dump_results and self.results_dir is not None:
-
             # Save figures to png files
             for figure_idx, figure in enumerate(figures):
                 figure.savefig(path.join(self.results_dir, f"figure_{figure_idx}.png"), format="png")
@@ -794,10 +773,8 @@ class Simulation(Serializable, Pipeline[SimulationScenario, SimulatedDevice], Mo
 
         # Assign channel models
         for channel in channels:
-
             # If the scenario features just a single device, we can infer the transmitter and receiver easily
             if channel.transmitter is None or channel.receiver is None:
-
                 if simulation.scenario.num_devices > 1:
                     raise RuntimeError("Please specifiy the transmitting and receiving device of each channel in a multi-device scenario")
 
@@ -819,5 +796,4 @@ class Simulation(Serializable, Pipeline[SimulationScenario, SimulatedDevice], Mo
 
     @staticmethod
     def _pip_packages() -> List[str]:
-
         return MonteCarlo._pip_packages() + ["sparse", "protobuf", "numba"]

@@ -61,11 +61,9 @@ class CyclicRedundancyCheck(Encoder, Serializable):
         self.check_block_size = check_block_size
 
     def encode(self, data: np.ndarray) -> np.ndarray:
-
         return np.append(data, self.manager.modem._rng.integers(0, 2, self.__check_block_size))
 
     def decode(self, code: np.ndarray) -> np.ndarray:
-
         return code[: -self.__check_block_size]
 
     @property
@@ -74,7 +72,6 @@ class CyclicRedundancyCheck(Encoder, Serializable):
 
     @bit_block_size.setter
     def bit_block_size(self, value: int) -> None:
-
         if value < 1:
             raise ValueError("CRC bit block size must be greater or equal to one")
 
@@ -96,7 +93,6 @@ class CyclicRedundancyCheck(Encoder, Serializable):
 
     @check_block_size.setter
     def check_block_size(self, value: int) -> None:
-
         if value < 0:
             raise ValueError("Number of check bits must be greater or equal to zero")
 

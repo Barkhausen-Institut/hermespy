@@ -186,6 +186,10 @@ class ReceiverMock(Receiver):
         
         return strength
 
+    def _recall_reception(self, group) -> Reception:
+        
+        return Reception.from_HDF(group)
+
 
 class TestReceiver(TestCase):
     """Test the base class for receiving operators."""
@@ -318,6 +322,10 @@ class TransmitterMock(Transmitter):
     @property
     def sampling_rate(self) -> float:
         return 1.0
+
+    def _recall_transmission(self, group) -> Transmission:
+
+        return Transmission.from_HDF(group)
 
 
 class TestTransmitter(TestCase):

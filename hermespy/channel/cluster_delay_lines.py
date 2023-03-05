@@ -73,7 +73,6 @@ class DelayNormalization(Enum):
 
 
 class ClusterDelayLineBase(Channel):
-
     delay_normalization: DelayNormalization
     """The delay normalization routine applied during channel sampling."""
 
@@ -481,7 +480,6 @@ class ClusterDelayLineBase(Channel):
 
         # Normalize delays if the respective flag is enabled
         if self.delay_normalization == DelayNormalization.ZERO or self.delay_normalization == DelayNormalization.TOF:
-
             raw_delays -= raw_delays[0]
 
         # Scale delays, if required by the configuration
@@ -489,13 +487,11 @@ class ClusterDelayLineBase(Channel):
 
         # In case of line of sight, scale the delays by the appropriate K-factor
         if self.line_of_sight:
-
             rice_scale = 0.775 - 0.0433 * rice_factor + 2e-4 * rice_factor**2 + 17e-6 * rice_factor**3
             scaled_delays /= rice_scale
 
         # Account for the time of flight over the line of sight, if required
         if self.delay_normalization == DelayNormalization.TOF:
-
             time_of_flight = np.linalg.norm(self.transmitter.position - self.receiver.position, 2) / speed_of_light
             scaled_delays += time_of_flight
 
@@ -529,7 +525,6 @@ class ClusterDelayLineBase(Channel):
 
         # In case of line of sight, add a specular component to the cluster delays
         if self.line_of_sight:
-
             linear_rice_factor = db2lin(rice_factor)
             powers /= (1 + linear_rice_factor) * np.sum(powers.flat)
             powers[0] += linear_rice_factor / (1 + linear_rice_factor)
@@ -580,12 +575,10 @@ class ClusterDelayLineBase(Channel):
 
         # Add the actual line of sight term
         if self.line_of_sight:
-
             # The first angle within the list is exactly the line of sight component
             spread_angles += los_azimuth - spread_angles[0]
 
         else:
-
             spread_angles += los_azimuth
 
         # Spread the angles
@@ -703,7 +696,6 @@ class ClusterDelayLineBase(Channel):
         return ray_zenith
 
     def realize(self, num_samples: int, sampling_rate: float) -> ChannelRealization:
-
         center_frequency = self.transmitter.carrier_frequency
 
         delay_spread = 10 ** self._rng.normal(self.delay_spread_mean, self.delay_spread_std)
@@ -766,12 +758,10 @@ class ClusterDelayLineBase(Channel):
         fast_fading = wavelength_factor * np.arange(num_samples) / sampling_rate
 
         for subcluster_idx in range(0, virtual_num_clusters):
-
             cluster_idx = int(subcluster_idx / 3) if subcluster_idx < 6 else subcluster_idx - 4
             ray_indices = self.__subcluster_indices[cluster_idx] if cluster_idx < num_split_clusters else range(num_rays)
 
             for aoa, zoa, aod, zod, jones in zip(ray_aoa[cluster_idx, ray_indices], ray_zoa[cluster_idx, ray_indices], ray_aod[cluster_idx, ray_indices], ray_zod[cluster_idx, ray_indices], jones_matrix[:, :, cluster_idx, ray_indices].transpose(2, 0, 1)):
-
                 # Equation 7.5-23
                 rx_response = self.receiver.antennas.spherical_phase_response(center_frequency, aoa, zoa)
 
@@ -792,7 +782,6 @@ class ClusterDelayLineBase(Channel):
 
         # In the case of line-of-sight, scale the coefficients and append another set according to equation 7.5-30
         if self.line_of_sight:
-
             rice_factor_lin = db2lin(rice_factor)
             receiver_position = self.receiver.position
             transmitter_position = self.transmitter.position
@@ -823,7 +812,6 @@ class ClusterDelayLineBase(Channel):
 
         # Finally, generate the impulse response for all non-line of sight components
         for coefficients, delay in zip(nlos_coefficients, virtual_cluster_delays):
-
             resampling_matrix = delay_resampling_matrix(sampling_rate, 1, delay, num_delay_samples).flatten()
             impulse_response += np.multiply.outer(coefficients, resampling_matrix)
 
@@ -831,7 +819,6 @@ class ClusterDelayLineBase(Channel):
 
     @property
     def _center_frequency(self) -> float:
-
         return 0.5 * (self.transmitter.carrier_frequency + self.receiver.carrier_frequency)
 
 
@@ -951,32 +938,26 @@ class ClusterDelayLine(ClusterDelayLineBase, Serializable):
 
     @property
     def line_of_sight(self) -> bool:
-
         return self.__line_of_sight
 
     @line_of_sight.setter
     def line_of_sight(self, value: bool) -> None:
-
         self.__line_of_sight = value
 
     @property
     def delay_spread_mean(self) -> float:
-
         return self.__delay_spread_mean
 
     @delay_spread_mean.setter
     def delay_spread_mean(self, value: float) -> None:
-
         self.__delay_spread_mean = value
 
     @property
     def delay_spread_std(self) -> float:
-
         return self.__delay_spread_std
 
     @delay_spread_std.setter
     def delay_spread_std(self, value: float) -> None:
-
         if value < 0.0:
             raise ValueError("Delay spread standard deviation must be greater or equal to zero")
 
@@ -984,22 +965,18 @@ class ClusterDelayLine(ClusterDelayLineBase, Serializable):
 
     @property
     def aod_spread_mean(self) -> float:
-
         return self.__aod_spread_mean
 
     @aod_spread_mean.setter
     def aod_spread_mean(self, value: float) -> None:
-
         self.__aod_spread_mean = value
 
     @property
     def aod_spread_std(self) -> float:
-
         return self.__aod_spread_std
 
     @aod_spread_std.setter
     def aod_spread_std(self, value: float) -> None:
-
         if value < 0.0:
             raise ValueError("Angle spread standard deviation must be greater or equal to zero")
 
@@ -1007,22 +984,18 @@ class ClusterDelayLine(ClusterDelayLineBase, Serializable):
 
     @property
     def aoa_spread_mean(self) -> float:
-
         return self.__aoa_spread_mean
 
     @aoa_spread_mean.setter
     def aoa_spread_mean(self, value: float) -> None:
-
         self.__aoa_spread_mean = value
 
     @property
     def aoa_spread_std(self) -> float:
-
         return self.__aoa_spread_std
 
     @aoa_spread_std.setter
     def aoa_spread_std(self, value: float) -> None:
-
         if value < 0.0:
             raise ValueError("Angle spread standard deviation must be greater or equal to zero")
 
@@ -1030,22 +1003,18 @@ class ClusterDelayLine(ClusterDelayLineBase, Serializable):
 
     @property
     def zoa_spread_mean(self) -> float:
-
         return self.__zoa_spread_mean
 
     @zoa_spread_mean.setter
     def zoa_spread_mean(self, value: float) -> None:
-
         self.__zoa_spread_mean = value
 
     @property
     def zoa_spread_std(self) -> float:
-
         return self.__zoa_spread_std
 
     @zoa_spread_std.setter
     def zoa_spread_std(self, value: float) -> None:
-
         if value < 0.0:
             raise ValueError("Angle spread standard deviation must be greater or equal to zero")
 
@@ -1053,22 +1022,18 @@ class ClusterDelayLine(ClusterDelayLineBase, Serializable):
 
     @property
     def zod_spread_mean(self) -> float:
-
         return self.__zod_spread_mean
 
     @zod_spread_mean.setter
     def zod_spread_mean(self, value: float) -> None:
-
         self.__zod_spread_mean = value
 
     @property
     def zod_spread_std(self) -> float:
-
         return self.__zod_spread_std
 
     @zod_spread_std.setter
     def zod_spread_std(self, value: float) -> None:
-
         if value < 0.0:
             raise ValueError("Zenith spread standard deviation must be greater or equal to zero")
 
@@ -1088,12 +1053,10 @@ class ClusterDelayLine(ClusterDelayLineBase, Serializable):
 
     @property
     def rice_factor_mean(self) -> float:
-
         return self.__rice_factor_mean
 
     @rice_factor_mean.setter
     def rice_factor_mean(self, value: float) -> None:
-
         if value < 0.0:
             raise ValueError("Rice factor must be greater or equal to zero")
 
@@ -1101,12 +1064,10 @@ class ClusterDelayLine(ClusterDelayLineBase, Serializable):
 
     @property
     def rice_factor_std(self) -> float:
-
         return self.__rice_factor_std
 
     @rice_factor_std.setter
     def rice_factor_std(self, value: float) -> None:
-
         if value < 0.0:
             raise ValueError("Rice factor standard deviation must be greater or equal to zero")
 
@@ -1114,12 +1075,10 @@ class ClusterDelayLine(ClusterDelayLineBase, Serializable):
 
     @property
     def delay_scaling(self) -> float:
-
         return self.__delay_scaling
 
     @delay_scaling.setter
     def delay_scaling(self, value: float) -> None:
-
         if value < 1.0:
             raise ValueError("Delay scaling must be greater or equal to one")
 
@@ -1127,22 +1086,18 @@ class ClusterDelayLine(ClusterDelayLineBase, Serializable):
 
     @property
     def cross_polarization_power_mean(self) -> float:
-
         return self.__cross_polarization_power_mean
 
     @cross_polarization_power_mean.setter
     def cross_polarization_power_mean(self, value: float) -> None:
-
         self.__cross_polarization_power_mean = value
 
     @property
     def cross_polarization_power_std(self) -> float:
-
         return self.__cross_polarization_power_std
 
     @cross_polarization_power_std.setter
     def cross_polarization_power_std(self, value: float) -> None:
-
         if value < 0.0:
             raise ValueError("Cross-polarization power standard deviation must be greater or equal to zero")
 
@@ -1150,12 +1105,10 @@ class ClusterDelayLine(ClusterDelayLineBase, Serializable):
 
     @property
     def num_clusters(self) -> int:
-
         return self.__num_clusters
 
     @num_clusters.setter
     def num_clusters(self, value: int) -> None:
-
         if value < 1:
             raise ValueError("Number of clusters must be greater or equal to one")
 
@@ -1163,12 +1116,10 @@ class ClusterDelayLine(ClusterDelayLineBase, Serializable):
 
     @property
     def num_rays(self) -> int:
-
         return self.__num_rays
 
     @num_rays.setter
     def num_rays(self, value: int) -> None:
-
         if value < 1:
             raise ValueError("Number of rays per cluster must be greater or equal to one")
 
@@ -1176,12 +1127,10 @@ class ClusterDelayLine(ClusterDelayLineBase, Serializable):
 
     @property
     def cluster_delay_spread(self) -> float:
-
         return self.__cluster_delay_spread
 
     @cluster_delay_spread.setter
     def cluster_delay_spread(self, value: float) -> None:
-
         if value < 0.0:
             raise ValueError("Cluster delay spread must be greater or equal to zero")
 
@@ -1189,12 +1138,10 @@ class ClusterDelayLine(ClusterDelayLineBase, Serializable):
 
     @property
     def cluster_aod_spread(self) -> float:
-
         return self.__cluster_aod_spread
 
     @cluster_aod_spread.setter
     def cluster_aod_spread(self, value: float) -> None:
-
         if value < 0.0:
             raise ValueError("Cluster angle spread must be greater or equal to zero")
 
@@ -1202,12 +1149,10 @@ class ClusterDelayLine(ClusterDelayLineBase, Serializable):
 
     @property
     def cluster_aoa_spread(self) -> float:
-
         return self.__cluster_aoa_spread
 
     @cluster_aoa_spread.setter
     def cluster_aoa_spread(self, value: float) -> None:
-
         if value < 0.0:
             raise ValueError("Cluster angle spread must be greater or equal to zero")
 
@@ -1215,12 +1160,10 @@ class ClusterDelayLine(ClusterDelayLineBase, Serializable):
 
     @property
     def cluster_zoa_spread(self) -> float:
-
         return self.__cluster_zoa_spread
 
     @cluster_zoa_spread.setter
     def cluster_zoa_spread(self, value: float) -> None:
-
         if value < 0.0:
             raise ValueError("Cluster angle spread must be greater or equal to zero")
 
@@ -1228,12 +1171,10 @@ class ClusterDelayLine(ClusterDelayLineBase, Serializable):
 
     @property
     def cluster_shadowing_std(self) -> float:
-
         return self.__cluster_shadowing_std
 
     @cluster_shadowing_std.setter
     def cluster_shadowing_std(self, value: float) -> None:
-
         if value < 0.0:
             raise ValueError("Cluster shadowing standard deviation must be greater or equal to zero")
 

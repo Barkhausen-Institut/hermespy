@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 try:
-
     from .usrp import UsrpDevice
     from .system import UsrpSystem
 

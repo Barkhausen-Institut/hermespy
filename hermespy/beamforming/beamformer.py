@@ -87,7 +87,6 @@ class BeamformerBase(ABC, Generic[OT]):
 
     @operator.setter
     def operator(self, value: OT | None) -> None:
-
         self.__operator = value
 
 
@@ -141,7 +140,6 @@ class TransmitBeamformer(BeamformerBase[Transmitter], TransmitStreamEncoder, ABC
         ...  # pragma no cover
 
     def encode_streams(self, streams: Signal) -> Signal:
-
         if streams.num_streams != self.num_transmit_input_streams:
             raise ValueError("Stream encoding configuration invalid, number of provided streams don't match the beamformer requirements")
 
@@ -149,7 +147,6 @@ class TransmitBeamformer(BeamformerBase[Transmitter], TransmitStreamEncoder, ABC
 
     @TransmitStreamEncoder.precoding.setter  # type: ignore
     def precoding(self, precoding: Precoding) -> None:
-
         self.operator = precoding.modem  # type: ignore
         TransmitStreamEncoder.precoding.fset(self, precoding)  # type: ignore
 
@@ -192,7 +189,6 @@ class TransmitBeamformer(BeamformerBase[Transmitter], TransmitStreamEncoder, ABC
 
     @transmit_focus.setter  # type: ignore
     def transmit_focus(self, value: Union[np.ndarray, Tuple[np.ndarray, FocusMode]]) -> None:
-
         if not isinstance(value, (tuple, list)):
             value = (value, self.__focus_mode)
 
@@ -309,7 +305,6 @@ class ReceiveBeamformer(BeamformerBase[Receiver], ReceiveStreamDecoder, ABC):
         ...  # pragma no cover
 
     def decode_streams(self, streams: Signal) -> Signal:
-
         if streams.num_streams != self.num_receive_input_streams:
             raise ValueError("Stream decoding configuration invalid, number of provided streams don't match the beamformer requirements")
 
@@ -317,7 +312,6 @@ class ReceiveBeamformer(BeamformerBase[Receiver], ReceiveStreamDecoder, ABC):
 
     @ReceiveStreamDecoder.precoding.setter  # type: ignore
     def precoding(self, precoding: Precoding) -> None:
-
         self.operator = precoding.modem  # type: ignore
         ReceiveStreamDecoder.precoding.fset(self, precoding)  # type: ignore
 
@@ -363,7 +357,6 @@ class ReceiveBeamformer(BeamformerBase[Receiver], ReceiveStreamDecoder, ABC):
 
     @receive_focus.setter
     def receive_focus(self, value: Union[np.ndarray, Tuple[np.ndarray, FocusMode]]) -> None:
-
         if not isinstance(value, (tuple, list)):
             value = (value, self.__focus_mode)
 
@@ -438,7 +431,6 @@ class ReceiveBeamformer(BeamformerBase[Receiver], ReceiveStreamDecoder, ABC):
 
     @probe_focus_points.setter
     def probe_focus_points(self, value: np.ndarray) -> None:
-
         # Expand points by new dimension if only a single focus tuple was requested
         if value.ndim == 2:
             value = value[np.newaxis, ::]
@@ -502,7 +494,6 @@ class ReceiveBeamformer(BeamformerBase[Receiver], ReceiveStreamDecoder, ABC):
         """
 
         if signal is None:
-
             samples = self.operator.device.antennas.spherical_phase_response(self.operator.device.carrier_frequency, 0.0, 0.0)
             signal = Signal(samples[:, np.newaxis], 1.0, self.operator.device.carrier_frequency)
 
@@ -517,7 +508,6 @@ class ReceiveBeamformer(BeamformerBase[Receiver], ReceiveStreamDecoder, ABC):
         surface = np.array([received_power * np.cos(aoi[:, 0]) * np.sin(aoi[:, 1]), received_power * np.sin(aoi[:, 0]) * np.sin(aoi[:, 1]), received_power * np.cos(aoi[:, 1])], dtype=float)
 
         with Executable.style_context():
-
             figure, axes = plt.subplots(subplot_kw={"projection": "3d"})
             figure.suptitle(f"{type(self).__name__} Receive Characteristics")
 
@@ -570,6 +560,9 @@ class ReceiveBeamformer(BeamformerBase[Receiver], ReceiveStreamDecoder, ABC):
 
             def _noise_power(self, strength: float, _) -> float:
                 return strength
+
+            def _recall_reception(self, group) -> Reception:
+                return Reception.from_HDF(group)
 
         operator = ReceiverMock()
         operator.slot = device.receivers

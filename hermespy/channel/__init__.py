@@ -26,7 +26,6 @@ try:
 
 except ImportError:
     try:
-
         from .quadriga_interface_octave import QuadrigaOctaveInterface as QuadrigaInterface  # type: ignore
 
     except ImportError:

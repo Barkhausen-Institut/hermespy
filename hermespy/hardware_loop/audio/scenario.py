@@ -25,7 +25,6 @@ class AudioScenario(PhysicalScenario[AudioDevice]):
     yaml_tag = "AudioSystem"
 
     def __init__(self, *args, **kwargs) -> None:
-
         PhysicalScenario.__init__(self, *args, **kwargs)
 
     def new_device(self, *args, **kwargs) -> AudioDevice:
@@ -46,6 +45,5 @@ class AudioScenario(PhysicalScenario[AudioDevice]):
         return device
 
     def _trigger(self) -> None:
-
         # Trigger of the audio scenario is not implemented
         return

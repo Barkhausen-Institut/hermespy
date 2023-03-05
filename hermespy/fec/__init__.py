@@ -8,7 +8,6 @@ from .scrambler import Scrambler3GPP, Scrambler80211a
 # Attempt to import the C++ bindings of aff3ct.
 # They are treated as an optional feature.
 try:
-
     from .aff3ct import BCHCoding, LDPCCoding, PolarSCCoding, PolarSCLCoding, ReedSolomonCoding, RSCCoding, TurboCoding
 
 except ModuleNotFoundError:

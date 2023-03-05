@@ -6,7 +6,8 @@ from unittest.mock import patch, PropertyMock
 import numpy as np
 
 from hermespy.core import Signal
-from hermespy.modem import Symbols, WaveformGenerator
+from hermespy.modem import DuplexModem, Symbols, WaveformGenerator
+from hermespy.radar import Radar
 from hermespy.simulation import SimulatedDevice
 from hermespy.jcas import MatchedFilterJcas
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
@@ -136,6 +137,16 @@ class TestMatchedFilterJoint(TestCase):
             
         with self.assertRaises(ValueError):
             self.joint.range_resolution = 0.
+
+    def test_device_setget(self) -> None:
+        """Device property getter should return setter argument"""
+
+        expected_device = SimulatedDevice()
+        self.joint.device = expected_device
+
+        self.assertIs(expected_device, self.joint.device)
+        self.assertIs(expected_device, DuplexModem.device.fget(self.joint))
+        self.assertIs(expected_device, Radar.device.fget(self.joint))
             
     def test_serialization(self) -> None:
         """Test YAML serialization"""

@@ -14,6 +14,7 @@ from typing import Iterable, List, TypeVar, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
+from h5py import Group
 from scipy.signal import butter, sosfilt
 
 from hermespy.core import Device, DeviceInput, DeviceReception, DeviceTransmission, ChannelStateInformation, ProcessedDeviceInput, Transmitter, Receiver
@@ -61,12 +62,10 @@ class StaticOperator(object):
 
     @property
     def sampling_rate(self) -> float:
-
         return self.__sampling_rate
 
     @property
     def frame_duration(self) -> float:
-
         return self.__num_samples / self.sampling_rate
 
 
@@ -89,7 +88,6 @@ class SilentTransmitter(StaticOperator, Transmitter[Transmission]):
         Transmitter.__init__(self, *args, **kwargs)
 
     def _transmit(self, duration: float = 0.0) -> Transmission:
-
         # Compute the number of samples to be transmitted
         num_samples = self.num_samples if duration <= 0.0 else int(duration * self.sampling_rate)
 
@@ -99,6 +97,9 @@ class SilentTransmitter(StaticOperator, Transmitter[Transmission]):
 
         self.device.transmitters.add_transmission(self, transmission)
         return transmission
+
+    def _recall_transmission(self, group: Group) -> Transmission:
+        return Transmission.from_HDF(group)
 
 
 class SignalTransmitter(StaticOperator, Transmitter[Transmission]):
@@ -122,11 +123,13 @@ class SignalTransmitter(StaticOperator, Transmitter[Transmission]):
         self.__signal = signal
 
     def _transmit(self, duration: float = 0.0) -> Transmission:
-
         transmission = Transmission(self.__signal)
 
         self.device.transmitters.add_transmission(self, transmission)
         return transmission
+
+    def _recall_transmission(self, group: Group) -> Transmission:
+        return Transmission.from_HDF(group)
 
 
 class PowerReceiver(Receiver[Reception]):
@@ -163,51 +166,48 @@ class PowerReceiver(Receiver[Reception]):
 
     @property
     def sampling_rate(self) -> float:
-
         return self.device.sampling_rate
 
     @property
     def energy(self) -> float:
-
         return 0.0
 
     def _receive(self, signal: Signal, _: ChannelStateInformation) -> Reception:
-
         # Fetch noise samples
         return Reception(signal)
 
     @property
     def frame_duration(self) -> float:
-
         return self.num_samples / self.sampling_rate
 
     def _noise_power(self, strength: float, snr_type=...) -> float:
-
         return strength
+
+    def _recall_reception(self, group: Group) -> Reception:
+        return Reception.from_HDF(group)
 
 
 class SignalReceiver(StaticOperator, Receiver[Reception]):
     """Custom signal receiver."""
 
     def __init__(self, num_samples: int, sampling_rate: float, *args, **kwargs) -> None:
-
         # Initialize base classes
         StaticOperator.__init__(self, num_samples, sampling_rate)
         Receiver.__init__(self, *args, **kwargs)
 
     @property
     def energy(self) -> float:
-
         return 0.0
 
     def _receive(self, signal: Signal, _: ChannelStateInformation) -> Reception:
-
         received_signal = signal.resample(self.sampling_rate)
         return Reception(received_signal)
 
     def _noise_power(self, strength, snr_type=...) -> float:
-
         return 0.0
+
+    def _recall_reception(self, group: Group) -> Reception:
+        return Reception.from_HDF(group)
 
 
 class PhysicalDevice(Device):
@@ -251,7 +251,6 @@ class PhysicalDevice(Device):
 
     @calibration_delay.setter
     def calibration_delay(self, vaue: float) -> None:
-
         self.__calibration_delay = vaue
 
     @abstractmethod
@@ -270,7 +269,6 @@ class PhysicalDevice(Device):
 
     @adaptive_sampling.setter
     def adaptive_sampling(self, value: bool) -> None:
-
         self.__adaptive_sampling = bool(value)
 
     @property
@@ -284,7 +282,6 @@ class PhysicalDevice(Device):
 
     @lowpass_filter.setter
     def lowpass_filter(self, value: bool) -> None:
-
         self.__lowpass_filter = bool(value)
 
     @property
@@ -304,7 +301,6 @@ class PhysicalDevice(Device):
 
     @lowpass_bandwidth.setter
     def lowpass_bandwidth(self, value: float) -> None:
-
         if value < 0.0:
             raise ValueError("Lowpass filter bandwidth should be greater or equal to zero")
 
@@ -329,7 +325,6 @@ class PhysicalDevice(Device):
 
     @max_receive_delay.setter
     def max_receive_delay(self, value: float) -> None:
-
         if value < 0.0:
             raise ValueError("The maximum receive delay must be greater or equal to zero")
 
@@ -347,7 +342,6 @@ class PhysicalDevice(Device):
 
     @property
     def velocity(self) -> np.ndarray:
-
         raise NotImplementedError("The velocity of physical devices is undefined by default")
 
     def estimate_noise_power(self, num_samples: int = 1000) -> np.ndarray:
@@ -403,21 +397,17 @@ class PhysicalDevice(Device):
         return  # pragma no cover
 
     def transmit(self, clear_cache: bool = True) -> DeviceTransmission:
-
         # If adaptive sampling is disabled, resort to the default transmission routine
         if not self.adaptive_sampling or self.transmitters.num_operators < 1:
-
             device_transmission = Device.transmit(self, clear_cache)
 
         else:
-
             # Generate operator transmissions
             operator_transmissions = self.transmit_operators()
 
             # Superimpose the operator transmissions
             superimposed_signal = operator_transmissions[0].signal.copy()
             for transmission in operator_transmissions[1:]:
-
                 if transmission.signal.sampling_rate != superimposed_signal.sampling_rate:
                     raise RuntimeError("Adpative sampling does not support operators with differing sampling rates")
 
@@ -447,10 +437,8 @@ class PhysicalDevice(Device):
         raise NotImplementedError("The default physical device does not support downloads")
 
     def process_input(self, impinging_signals: DeviceInput | Signal | Sequence[Signal] | None = None, cache: bool = True) -> ProcessedDeviceInput:
-
         # Physical devices are able to infer their impinging signals by downloading them directly
         if impinging_signals is None:
-
             # Download signal samples
             impinging_signals = self._download()
 
@@ -464,7 +452,6 @@ class PhysicalDevice(Device):
 
             # Apply a lowpass filter if the respective physical device flag is enabled
             if self.lowpass_filter:
-
                 if self.lowpass_bandwidth <= 0.0:
                     filter_cutoff = 0.25 * self.sampling_rate
 
@@ -478,7 +465,6 @@ class PhysicalDevice(Device):
         return Device.process_input(self, impinging_signals, cache)
 
     def receive(self, impinging_signals: DeviceInput | Signal | Sequence[Signal] | None = None, cache: bool = True) -> DeviceReception:
-
         # Process input
         processed_input = self.process_input(impinging_signals)
 
@@ -547,7 +533,6 @@ class PhysicalDevice(Device):
 
         # Make multiple iteration calls for calibration
         for n in range(num_iterations):
-
             # Send and receive calibration waveform
             calibration_transmitter.transmit()
 

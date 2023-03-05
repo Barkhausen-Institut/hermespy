@@ -34,7 +34,6 @@ class SpecificIsolation(Serializable, Isolation):
     __leakage_factors: Optional[np.ndarray]
 
     def __init__(self, isolation: Union[None, np.ndarray, float, int] = None, device: Optional[SimulatedDevice] = None) -> None:
-
         # Initialize base class
         Isolation.__init__(self, device=device)
 
@@ -54,14 +53,11 @@ class SpecificIsolation(Serializable, Isolation):
 
     @isolation.setter
     def isolation(self, value: Union[None, np.ndarray, float, int]) -> None:
-
         if value is None:
-
             self.__isolation = None
             return
 
         if isinstance(value, (float, int)):
-
             if self.device is not None and self.device.num_antennas != 1:
                 raise ValueError("Scalar isolation definition is only allowed for devices with a single antenna")
 
@@ -76,7 +72,6 @@ class SpecificIsolation(Serializable, Isolation):
         self.__leakage_factors = np.power(value, -0.5)
 
     def _leak(self, signal: Signal) -> Signal:
-
         if self.__leakage_factors is None:
             raise RuntimeError("Error trying to model specific isolaion leakage with undefined isolations")
 

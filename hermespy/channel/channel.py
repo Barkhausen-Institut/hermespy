@@ -67,7 +67,6 @@ class ChannelRealization(ChannelStateInformation):
         return self.__channel
 
     def reciprocal(self) -> ChannelRealization:
-
         return ChannelRealization(self.channel, ChannelStateInformation.reciprocal(self).state)
 
 
@@ -147,7 +146,6 @@ class Channel(ABC, RandomNode, Serializable, Generic[ChannelRealizationType]):
             self.receiver = receiver
 
         if devices is not None:
-
             if self.receiver is not None or self.transmitter is not None:
                 raise ValueError("Can't use 'devices' initialization argument in combination with specifying a transmitter / receiver")
 
@@ -239,7 +237,6 @@ class Channel(ABC, RandomNode, Serializable, Generic[ChannelRealizationType]):
 
     @scenario.setter
     def scenario(self, value: SimulationScenario) -> None:
-
         self.__scenario = value
         self.random_mother = value
 
@@ -322,7 +319,6 @@ class Channel(ABC, RandomNode, Serializable, Generic[ChannelRealizationType]):
 
     @gain.setter
     def gain(self, value: float) -> None:
-
         if value < 0.0:
             raise ValueError("Channel gain must be greater or equal to zero")
 
@@ -454,7 +450,6 @@ class Channel(ABC, RandomNode, Serializable, Generic[ChannelRealizationType]):
         csi_sampling_rate = 0.0
         csi_num_samples = 0
         for signal in chain(forwards, backwards):
-
             csi_sampling_rate = max(csi_sampling_rate, signal.sampling_rate)
             csi_num_samples = max(csi_num_samples, signal.num_samples)
 
@@ -507,7 +502,6 @@ class Channel(ABC, RandomNode, Serializable, Generic[ChannelRealizationType]):
 
         for delay_index in range(realization.num_delay_taps):
             for tx_idx, rx_idx in product(range(realization.num_transmit_streams), range(realization.num_receive_streams)):
-
                 delayed_signal = realization.state[rx_idx, tx_idx, : signal.num_samples, delay_index] * signal.samples[tx_idx, :]
                 propagated_samples[rx_idx, delay_index : delay_index + signal.num_samples] += delayed_signal
 

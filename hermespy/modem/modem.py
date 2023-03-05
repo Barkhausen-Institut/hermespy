@@ -269,8 +269,7 @@ class CommunicationTransmissionFrame(Transmission):
         self.timestamp = timestamp
 
     @classmethod
-    def from_HDF(cls: Type[CommunicationTransmissionFrame], group: Group) -> CommunicationTransmissionFrame:
-
+    def from_HDF(cls: Type[CommunicationTransmissionFrame], group: Group, transmitter: Transmitter | None = None) -> CommunicationTransmissionFrame:
         # Recall groups
         signal = Signal.from_HDF(group["signal"])
         symbols = Symbols.from_HDF(group["symbols"])
@@ -287,7 +286,6 @@ class CommunicationTransmissionFrame(Transmission):
         return cls(signal=signal, bits=bits, encoded_bits=encoded_bits, symbols=symbols, encoded_symbols=encoded_symbols, timestamp=timestamp)
 
     def to_HDF(self, group: Group) -> None:
-
         # Serialize base class
         self.signal.to_HDF(group.create_group("signal"))
 
@@ -348,7 +346,6 @@ class CommunicationTransmission(Transmission):
 
     @cached_property
     def symbols(self) -> Symbols:
-
         symbols = Symbols()
         for frame in self.frames:
             symbols.append_symbols(frame.symbols)
@@ -357,7 +354,6 @@ class CommunicationTransmission(Transmission):
 
     @classmethod
     def from_HDF(cls: Type[CommunicationTransmission], group: Group) -> CommunicationTransmission:
-
         # Recall base signal
         signal = Signal.from_HDF(group["signal"])
 
@@ -368,7 +364,6 @@ class CommunicationTransmission(Transmission):
         return cls(signal=signal, frames=frames)
 
     def to_HDF(self, group: Group) -> None:
-
         # Serialize attributes
         group.attrs["num_frames"] = self.num_frames
 
@@ -411,7 +406,6 @@ class CommunicationReceptionFrame(object):
     """Estimated channel state."""
 
     def __init__(self, signal: Signal, decoded_signal: Signal, symbols: Symbols, decoded_symbols: Symbols, timestamp: float, equalized_symbols: Symbols, encoded_bits: np.ndarray, decoded_bits: np.ndarray, csi: ChannelStateInformation) -> None:
-
         self.signal = signal
         self.decoded_signal = decoded_signal
         self.symbols = symbols
@@ -424,7 +418,6 @@ class CommunicationReceptionFrame(object):
 
     @classmethod
     def from_HDF(cls: Type[CommunicationReceptionFrame], group: Group) -> CommunicationReceptionFrame:
-
         # Recall groups
         signal = Signal.from_HDF(group["signal"])
         decoded_signal = Signal.from_HDF(group["decoded_signal"])
@@ -444,7 +437,6 @@ class CommunicationReceptionFrame(object):
         return cls(signal=signal, decoded_signal=decoded_signal, symbols=symbols, decoded_symbols=decoded_symbols, equalized_symbols=equalized_symbols, csi=csi, encoded_bits=encoded_bits, decoded_bits=decoded_bits, timestamp=timestamp)
 
     def to_HDF(self, group: Group) -> None:
-
         # Serialize groups
         self.signal.to_HDF(group.create_group("signal"))
         self.decoded_signal.to_HDF(group.create_group("decoded_signal"))
@@ -543,7 +535,6 @@ class CommunicationReception(Reception):
 
     @classmethod
     def from_HDF(cls: Type[CommunicationReception], group: Group) -> CommunicationReception:
-
         # Recall base signal
         signal = Signal.from_HDF(group["signal"])
 
@@ -554,7 +545,6 @@ class CommunicationReception(Reception):
         return cls(signal=signal, frames=frames)
 
     def to_HDF(self, group: Group) -> None:
-
         # Serialize attributes
         group.attrs["num_frames"] = self.num_frames
 
@@ -575,7 +565,6 @@ class BaseModem(RandomNode, ABC):
 
     @staticmethod
     def _arg_signature() -> Set[str]:
-
         return {"encoding", "precoding", "waveform", "seed"}
 
     def __init__(self, encoding: Optional[EncoderManager] = None, precoding: Optional[SymbolPrecoding] = None, waveform: Optional[WaveformGenerator] = None, seed: Optional[int] = None) -> None:
@@ -740,16 +729,13 @@ class BaseModem(RandomNode, ABC):
 
     @property
     def frame_duration(self) -> float:
-
         return self.waveform_generator.frame_duration
 
     @property
     def sampling_rate(self) -> float:
-
         return self.waveform_generator.sampling_rate
 
     def _noise_power(self, strength: float, snr_type: SNRType) -> float:
-
         # No waveform configured equals no noise required
         if self.waveform_generator is None:
             return 0.0
@@ -767,7 +753,6 @@ class BaseModem(RandomNode, ABC):
 
     @property
     def csi(self) -> Optional[ChannelStateInformation]:
-
         return None
 
 
@@ -781,7 +766,7 @@ class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Seria
     # Stream MIMO coding configuration
     __transmit_stream_coding: TransmitStreamCoding
 
-    def __init__(self, bits_source: Optional[BitsSource] = None, *args, **kwargs) -> None:
+    def __init__(self, bits_source: BitsSource | None = None, device: Device | None = None, *args, **kwargs) -> None:
         """
         Args:
 
@@ -790,22 +775,36 @@ class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Seria
                 Bits are randomly generated by default.
         """
 
-        self.bits_source = RandomBitsSource() if bits_source is None else bits_source
-        self.__transmit_stream_coding = TransmitStreamCoding(modem=self)
-
+        # Initialize base classes
         BaseModem.__init__(self, *args, **kwargs)
         Transmitter.__init__(self)
 
+        # Initialize clas attributes
+        self.bits_source = RandomBitsSource() if bits_source is None else bits_source
+        self.__transmit_stream_coding = TransmitStreamCoding(modem=self)
+
+        if device is not None:
+            self.device = device
+
     @property
     def transmitting_device(self) -> Optional[Device]:
-
         # The transmitting device resolves to the operated device
         return self.device
 
     @property
     def receiving_device(self) -> Optional[Device]:
-
         return None
+
+    @Transmitter.device.setter  # type: ignore
+    def device(self, value: Device) -> None:
+        if value is self.device:
+            return
+
+        if Transmitter.device.fget(self) is not None:  # type: ignore
+            self.device.transmitters.remove(self)
+
+        if value is not None and self not in value.transmitters:
+            value.transmitters.add(self)
 
     @property
     def bits_source(self) -> BitsSource:
@@ -818,7 +817,6 @@ class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Seria
 
     @bits_source.setter
     def bits_source(self, value: BitsSource):
-
         value.random_mother = self
         self.__bits_source = value
 
@@ -833,7 +831,6 @@ class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Seria
 
     @transmit_stream_coding.setter
     def transmit_stream_coding(self, value: TransmitStreamCoding) -> None:
-
         self.__transmit_stream_coding = value
         value.modem = self
 
@@ -915,17 +912,15 @@ class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Seria
         if self.device is not None and num_output_streams != self.device.num_antennas:
             raise ValueError(f"Modem MIMO configuration generates invalid number of antenna streams ({num_output_streams} instead of {self.device.num_antennas})")
 
-        signal = Signal.empty(self.sampling_rate, num_output_streams)
+        signal = Signal.empty(self.waveform_generator.sampling_rate, num_output_streams)
 
         # Abort if no frame is to be transmitted within the current duration
         if num_mimo_frames < 1:
-
             transmission = CommunicationTransmission(signal)
             return transmission
 
         frames: List[CommunicationTransmissionFrame] = []
         for n in range(num_mimo_frames):
-
             # Generate plain data bits
             data_bits = self.bits_source.generate_bits(data_bits_per_mimo_frame)
 
@@ -955,6 +950,9 @@ class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Seria
         transmission = CommunicationTransmission(signal, frames)
         return transmission
 
+    def _recall_transmission(self, group: Group) -> CommunicationTransmission:
+        return CommunicationTransmission.from_HDF(group)
+
 
 class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
     """Representation of a wireless modem exclusively receiving."""
@@ -965,26 +963,34 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
     # MIMO stream configuration during signal rececption
     __receive_stream_coding: ReceiveStreamCoding
 
-    def __init__(self, device: Optional[Device] = None, *args, **kwargs) -> None:
-
+    def __init__(self, device: Device | None = None, *args, **kwargs) -> None:
         self.__receive_stream_coding = ReceiveStreamCoding(modem=self)
 
         BaseModem.__init__(self, *args, **kwargs)
         Receiver.__init__(self)
 
         if device is not None:
-            device.receivers.add(self)
+            self.device = device
 
     @property
     def transmitting_device(self) -> Optional[Device]:
-
         return None
 
     @property
     def receiving_device(self) -> Optional[Device]:
-
         # The receiving device resolves to the operated device
         return self.device
+
+    @Receiver.device.setter  # type: ignore
+    def device(self, value: Device) -> None:
+        if value is not None and self not in value.receivers:
+            value.receivers.add(self)
+
+        if value is self.device:
+            return
+
+        if Receiver.device.fget(self) is not None:  # type: ignore
+            self.device.receivers.remove(self)
 
     @property
     def receive_stream_coding(self) -> ReceiveStreamCoding:
@@ -997,7 +1003,6 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
 
     @receive_stream_coding.setter  # type: ignore
     def transmit_stream_coding(self, value: ReceiveStreamCoding) -> None:
-
         self.__receive_stream_coding = value
         value.modem = self
 
@@ -1022,7 +1027,6 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
 
         synchronized_signals = []
         for frame_start in frame_start_indices:
-
             frame_stop = frame_start + frame_length
 
             if frame_stop <= received_signal.num_samples:
@@ -1051,7 +1055,6 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
 
         symbols = Symbols()
         for stream in frame.samples:
-
             stream_symbols = self.waveform_generator.demodulate(stream)
             symbols.append_stream(stream_symbols)
 
@@ -1076,7 +1079,6 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
         return bits
 
     def _receive(self, signal: Signal, csi: ChannelStateInformation) -> CommunicationReception:
-
         # Resample the signal to match the waveform's requirements
         signal = signal.resample(self.waveform_generator.sampling_rate)
 
@@ -1085,7 +1087,6 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
 
         # Abort if no frame has been detected
         if len(synchronized_signals) < 1:
-
             reception = CommunicationReception(signal)
             return reception
 
@@ -1096,7 +1097,6 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
         # Process each frame independently
         frames: List[CommunicationReceptionFrame] = []
         for frame_index, frame_signal in zip(frame_start_indices, synchronized_signals):
-
             # Apply the stream transmit decoding configuration
             decoded_frame_signal = self.__receive_stream_coding.decode(frame_signal)
 
@@ -1125,9 +1125,11 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
         reception = CommunicationReception(signal=signal, frames=frames)
         return reception
 
+    def _recall_reception(self, group: Group) -> CommunicationReception:
+        return CommunicationReception.from_HDF(group)
+
     @property
     def csi(self) -> Optional[ChannelStateInformation]:
-
         return Receiver.csi.fget(self)  # type: ignore
 
 
@@ -1138,39 +1140,24 @@ class DuplexModem(TransmittingModem, ReceivingModem):
     """YAML serialization tag"""
 
     def __init__(self, *args, **kwargs) -> None:
-
         ReceivingModem.__init__(self)
         TransmittingModem.__init__(self, *args, **kwargs)
 
     @property
     def transmitting_device(self) -> Optional[Device]:
-
         return TransmittingModem.transmitting_device.fget(self)  # type: ignore
 
     @property
     def receiving_device(self) -> Optional[Device]:
-
         return ReceivingModem.receiving_device.fget(self)  # type: ignore
 
     @TransmittingModem.device.setter  # type: ignore
     def device(self, value: Device) -> None:
-
-        if value is self.device:
-            return
-
-        if self.device is not None:
-
-            self.device.transmitters.remove(self)
-            self.device.receivers.remove(self)
-
-        if value is not None and self not in value.transmitters:
-
-            value.transmitters.add(self)
-            value.receivers.add(self)
+        TransmittingModem.device.fset(self, value)
+        ReceivingModem.device.fset(self, value)
 
     @property
     def csi(self) -> Optional[ChannelStateInformation]:
-
         return Receiver.csi.fget(self)  # type: ignore
 
 

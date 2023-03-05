@@ -57,7 +57,6 @@ class SpaceTimeBlockCoding(MaximumRatioCombining, Serializable):
         input_data = symbols.raw[0, :, :]
 
         if num_tx_streams == 2:
-
             if symbols.num_blocks % 2 != 0:
                 raise ValueError("Alamouti encoding must contain an even amount of data symbols")
 
@@ -67,7 +66,6 @@ class SpaceTimeBlockCoding(MaximumRatioCombining, Serializable):
             output[1, 1::2, :] = input_data[0::2, :].conj()
 
         elif num_tx_streams == 4:
-
             output = np.empty((4, symbols.num_blocks, symbols.num_symbols), dtype=complex)
 
             idx0 = np.arange(0, symbols.num_blocks, 4)
@@ -92,7 +90,6 @@ class SpaceTimeBlockCoding(MaximumRatioCombining, Serializable):
         return StatedSymbols(output, state)
 
     def decode(self, symbols: StatedSymbols) -> StatedSymbols:
-
         if symbols.num_streams == 2:
             return self.__decode_stbc_2_rx_antennas(symbols)
 
@@ -216,13 +213,11 @@ class SpaceTimeBlockCoding(MaximumRatioCombining, Serializable):
 
     @property
     def num_input_streams(self) -> int:
-
         # DFT precoding does not alter the number of symbol streams
         return self.precoding.required_inputs(self)
 
     @property
     def num_output_streams(self) -> int:
-
         # DFT precoding does not alter the number of symbol streams
         return self.precoding.required_outputs(self)
 

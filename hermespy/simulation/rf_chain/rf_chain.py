@@ -44,7 +44,6 @@ class RfChain(Serializable):
     __phase_noise: PhaseNoise
 
     def __init__(self, tx_power: float = None, phase_offset: float = None, amplitude_imbalance: float = None) -> None:
-
         self.__tx_power = 1.0
         self.__phase_offset = 0.0
         self.__amplitude_imbalance = 0.0
@@ -90,7 +89,6 @@ class RfChain(Serializable):
 
     @phase_offset.setter
     def phase_offset(self, value: float) -> None:
-
         self.__phase_offset = value
 
     def transmit(self, input_signal: Signal) -> Signal:
@@ -185,5 +183,4 @@ class RfChain(Serializable):
 
     @phase_noise.setter
     def phase_noise(self, value: PhaseNoise) -> None:
-
         self.__phase_noise = value
