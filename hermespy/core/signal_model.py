@@ -98,7 +98,6 @@ class Signal(HDFSerializable, Visualizable):
 
     @property
     def title(self) -> str:
-
         return "Signal Model"
 
     @classmethod
@@ -244,7 +243,6 @@ class Signal(HDFSerializable, Visualizable):
 
     @noise_power.setter
     def noise_power(self, value: float) -> None:
-
         if value < 0.0:
             raise ValueError("Noise power must be greater or equal to zero")
 
@@ -307,13 +305,10 @@ class Signal(HDFSerializable, Visualizable):
 
         # Resample the internal samples
         if self.__sampling_rate != sampling_rate:
-
             # Apply an anti-aliasing filter if the respective flag is enabled
             if aliasing_filter:
-
                 # Apply an anti-aliasing filter after resampling if the signal is upsampled
                 if sampling_rate > self.sampling_rate:
-
                     samples = Signal.__resample(self.__samples, self.__sampling_rate, sampling_rate)
 
                     aliasing_filter = butter(8, self.sampling_rate / sampling_rate, btype="low", output="sos")
@@ -321,14 +316,12 @@ class Signal(HDFSerializable, Visualizable):
 
                 # Apply an anti-aliasing filter before resampling if the signal is downsampled
                 elif sampling_rate < self.sampling_rate:
-
                     aliasing_filter = butter(8, sampling_rate / self.sampling_rate, btype="low", output="sos")
                     samples = sosfilt(aliasing_filter, self.__samples, axis=1)
 
                     samples = Signal.__resample(samples, self.__sampling_rate, sampling_rate)
 
             else:
-
                 samples = Signal.__resample(self.__samples, self.__sampling_rate, sampling_rate)
 
         # Skip resampling if both sampling rates are identical
@@ -371,8 +364,7 @@ class Signal(HDFSerializable, Visualizable):
         if filter_bandwidth <= 0.0:
             return
 
-        if aliasing_filter and filter_bandwidth < self.sampling_rate:
-
+        if aliasing_filter and filter_bandwidth < added_signal.sampling_rate:
             filter_coefficients = firwin(1 + self.filter_order, 0.5 * filter_bandwidth, width=0.5 * filter_bandwidth, fs=added_signal.sampling_rate).astype(complex)
             filter_coefficients *= np.exp(2j * np.pi * (filter_center_frequency - added_signal.carrier_frequency) / added_signal.sampling_rate * np.arange(1 + self.filter_order))
 
@@ -383,7 +375,6 @@ class Signal(HDFSerializable, Visualizable):
 
         # Resample the added signal if the respective sampling rates don't match
         if self.sampling_rate != added_signal.sampling_rate:
-
             if not resample:
                 raise RuntimeError("Resampling required but not allowed")
 
@@ -491,10 +482,8 @@ class Signal(HDFSerializable, Visualizable):
         axes = np.array([[axes]], dtype=object) if isinstance(axes, plt.Axes) else axes
 
         with Executable.style_context():
-
             # Create a new figure if no axes were provided
             if axes is None:
-
                 num_axes = 2 if space == "both" else 1
 
                 figure, axes = plt.subplots(self.num_streams, num_axes, squeeze=False)
@@ -508,10 +497,8 @@ class Signal(HDFSerializable, Visualizable):
             frequency_axis_idx = 1 if space == "both" else 0
 
             for stream_idx, stream_samples in enumerate(self.__samples):
-
                 # Plot time space
                 if space in {"both", "time"}:
-
                     axes[stream_idx, time_axis_idx].plot(timestamps, stream_samples.real, label="Real")
                     axes[stream_idx, time_axis_idx].plot(timestamps, stream_samples.imag, label="Imag")
                     axes[stream_idx, time_axis_idx].set_xlabel("Time-Domain [s]")
@@ -521,7 +508,6 @@ class Signal(HDFSerializable, Visualizable):
 
                 # Plot frequency space
                 if space in {"both", "frequency"}:
-
                     frequencies = fftshift(fftfreq(self.num_samples, 1 / self.sampling_rate))
                     bins = fftshift(fft(stream_samples))
 
@@ -530,7 +516,6 @@ class Signal(HDFSerializable, Visualizable):
                     axes[stream_idx, frequency_axis_idx].set_xlabel("Frequency-Domain [Hz]")
 
                     if angle:
-
                         phase = axes[stream_idx, frequency_axis_idx].twinx()
                         phase.plot(frequencies, np.angle(bins))
                         phase.set_ylabel("Angle [Rad]")
@@ -624,11 +609,9 @@ class Signal(HDFSerializable, Visualizable):
         colors = self._get_color_cycle()
 
         if domain == "time":
-
             timestamps = np.linspace(-symbol_duration, symbol_duration, 1 + 2 * symbol_num_samples, endpoint=True)
 
             for n in range(num_cutoff_symbols, num_symbols - num_cutoff_symbols):
-
                 stream_slice = self.__samples[0, symbol_num_samples * n : symbol_num_samples * (2 + n) + 1]
                 axes.plot(timestamps[: len(stream_slice)], stream_slice.real, color=colors[0], linewidth=linewidth)
                 axes.plot(timestamps[: len(stream_slice)], stream_slice.imag, color=colors[1], linewidth=linewidth)
@@ -641,7 +624,6 @@ class Signal(HDFSerializable, Visualizable):
                 axes.legend(handles=legend_elements, loc="upper left", fancybox=True, shadow=True)
 
         elif domain == "complex":
-
             symbol_num_samples = floor(symbol_duration * self.sampling_rate)
             num_cutoff_samples = num_cutoff_symbols * symbol_num_samples
 
@@ -692,7 +674,6 @@ class Signal(HDFSerializable, Visualizable):
 
         output = np.empty((num_streams, num_output_samples), dtype=complex128)
         for output_idx in np.arange(num_output_samples):
-
             # Sinc interpolation weights for single output sample
             interpolation_weights = np.sinc((input_timestamps - output_timestamps[output_idx]) * input_sampling_rate) + 0j
 
@@ -783,7 +764,7 @@ class Signal(HDFSerializable, Visualizable):
         samples = self.__samples.copy()
 
         # Scale samples if required
-        if scale and (samples.max() > 1.0 or samples.min() < 1.0):
+        if scale and samples.shape[1] > 0 and (samples.max() > 1.0 or samples.min() < 1.0):
             samples /= np.max(abs(samples))
 
         samples *= np.iinfo(data_type).max
@@ -814,7 +795,6 @@ class Signal(HDFSerializable, Visualizable):
 
     @classmethod
     def from_HDF(cls, group: Group) -> Signal:
-
         # De-serialize attributes
         sampling_rate = group.attrs.get("sampling_rate", 1.0)
         carrier_frequency = group.attrs.get("carrier_frequency", 0.0)
@@ -827,7 +807,6 @@ class Signal(HDFSerializable, Visualizable):
         return Signal(samples=samples, sampling_rate=sampling_rate, carrier_frequency=carrier_frequency, delay=delay, noise_power=noise_power)
 
     def to_HDF(self, group: Group) -> None:
-
         # Serialize attributes
         group.attrs["carrier_frequency"] = self.carrier_frequency
         group.attrs["sampling_rate"] = self.sampling_rate

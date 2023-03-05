@@ -35,44 +35,36 @@ class PhysicalDeviceDummy(SimulatedDevice, PhysicalDevice):
     __cached_signal: Signal
 
     def __init__(self, *args, **kwargs) -> None:
-
         SimulatedDevice.__init__(self, *args, **kwargs)
         PhysicalDevice.__init__(self)
 
         self.__cached_signal = Signal.empty(1.0, self.num_antennas)
 
     def _upload(self, signal: Signal) -> None:
-
         self.__cached_signal = signal
 
     def _download(self) -> Signal:
-
         return self.__cached_signal
 
     def transmit(self, clear_cache: bool = True) -> SimulatedDeviceTransmission:
-
         physical_transmission = PhysicalDevice.transmit(self, clear_cache)
         simulated_transmission = SimulatedDeviceTransmission(physical_transmission.operator_transmissions, physical_transmission.mixed_signal, physical_transmission.sampling_rate, physical_transmission.num_antennas, physical_transmission.carrier_frequency)
 
         return simulated_transmission
 
     def process_input(self, impinging_signals: DeviceInput | Signal | Sequence[Signal] | Sequence[Tuple[Sequence[Signal], ChannelStateInformation | None]] | SimulatedDeviceOutput | None = None, cache: bool = True, snr: float = float("inf"), snr_type: SNRType = SNRType.PN0, leaking_signal: Signal | None = None, channel_state: ChannelStateInformation | None = None) -> ProcessedSimulatedDeviceInput:
-
         _impinging_signals = self.__cached_signal if impinging_signals is None else impinging_signals
         return SimulatedDevice.process_input(self, _impinging_signals, cache, snr, snr_type, leaking_signal, channel_state)
 
     def receive(self, *args, **kwargs) -> DeviceReception:
-
         return PhysicalDevice.receive(self, *args, **kwargs)
 
     def trigger(self) -> None:
-
         # Triggering a dummy does nothing
         return
 
     @property
     def max_sampling_rate(self) -> float:
-
         return self.sampling_rate
 
 
@@ -83,7 +75,6 @@ class PhysicalScenarioDummy(PhysicalScenario[PhysicalDeviceDummy]):
         return
 
     def new_device(self, *args, **kwargs) -> PhysicalDeviceDummy:
-
         device = PhysicalDeviceDummy(*args, **kwargs)
         self.add_device(device)
 

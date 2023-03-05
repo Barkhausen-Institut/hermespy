@@ -113,7 +113,6 @@ class CommunicationEvaluator(Evaluator, ABC):
         return self.__receiving_modem
 
     def generate_result(self, grid: Sequence[GridDimension], artifacts: np.ndarray) -> ScalarEvaluationResult:
-
         return ScalarEvaluationResult(grid, artifacts, self)
 
 
@@ -128,17 +127,14 @@ class BitErrorEvaluation(EvaluationTemplate[np.ndarray]):
 
     @property
     def title(self) -> str:
-
         return "Bit Error Evaluation"
 
     def _plot(self, axes: plt.Axes) -> None:
-
         axes.stem(self.evaluation)
         axes.set_xlabel("Bit Index")
         axes.set_ylabel("Bit Error Indicator")
 
     def artifact(self) -> BitErrorArtifact:
-
         ber = np.mean(self.evaluation)
         return BitErrorArtifact(ber)
 
@@ -164,7 +160,6 @@ class BitErrorEvaluator(CommunicationEvaluator, Serializable):
         self.plot_scale = "log"  # Plot logarithmically by default
 
     def evaluate(self) -> BitErrorEvaluation:
-
         # Retrieve transmitted and received bits
         transmitted_bits = self.transmitting_modem.transmission.bits
         received_bits = self.receiving_modem.reception.bits
@@ -204,17 +199,14 @@ class BlockErrorEvaluation(EvaluationTemplate[np.ndarray]):
 
     @property
     def title(self) -> str:
-
         return "Block Error Evaluation"
 
     def _plot(self, axes: plt.Axes) -> None:
-
         axes.stem(self.evaluation)
         axes.set_xlabel("Block Index")
         axes.set_ylabel("Block Error Indicator")
 
     def artifact(self) -> BitErrorArtifact:
-
         bler = np.mean(self.evaluation)
         return BlockErrorArtifact(bler)
 
@@ -240,7 +232,6 @@ class BlockErrorEvaluator(CommunicationEvaluator, Serializable):
         self.plot_scale = "log"  # Plot logarithmically by default
 
     def evaluate(self) -> BlockErrorEvaluation:
-
         # Retrieve transmitted and received bits
         transmitted_bits = self.transmitting_modem.transmission.bits
         received_bits = self.receiving_modem.reception.bits
@@ -250,11 +241,9 @@ class BlockErrorEvaluator(CommunicationEvaluator, Serializable):
         received_bits = np.append(received_bits, np.zeros(received_bits.shape[0] % block_size))
 
         if transmitted_bits.shape[0] >= received_bits.shape[0]:
-
             transmitted_bits = transmitted_bits[: received_bits.shape[0]]
 
         else:
-
             transmitted_bits = np.append(transmitted_bits, -np.ones(received_bits.shape[0] - transmitted_bits.shape[0]))
 
         # Compute bit errors as the positions where both sequences differ.
@@ -266,12 +255,10 @@ class BlockErrorEvaluator(CommunicationEvaluator, Serializable):
 
     @property
     def title(self) -> str:
-
         return "Block Error Rate"
 
     @property
     def abbreviation(self) -> str:
-
         return "BLER"
 
     @staticmethod
@@ -290,17 +277,14 @@ class FrameErrorEvaluation(EvaluationTemplate[np.ndarray]):
 
     @property
     def title(self) -> str:
-
         return "Frame Error Evaluation"
 
     def _plot(self, axes: plt.Axes) -> None:
-
         axes.stem(self.evaluation)
         axes.set_xlabel("Frame Index")
         axes.set_ylabel("Frame Error Indicator")
 
     def artifact(self) -> FrameErrorArtifact:
-
         bler = float(np.mean(self.evaluation))
         return FrameErrorArtifact(bler)
 
@@ -326,7 +310,6 @@ class FrameErrorEvaluator(CommunicationEvaluator, Serializable):
         self.plot_scale = "log"  # Plot logarithmically by default
 
     def evaluate(self) -> FrameErrorEvaluation:
-
         # Retrieve transmitted and received bits
         transmitted_bits = self.transmitting_modem.transmission.bits
         received_bits = self.receiving_modem.reception.bits
@@ -339,11 +322,9 @@ class FrameErrorEvaluator(CommunicationEvaluator, Serializable):
         received_bits = np.append(received_bits, np.zeros(received_bits.shape[0] % frame_size))
 
         if transmitted_bits.shape[0] >= received_bits.shape[0]:
-
             transmitted_bits = transmitted_bits[: received_bits.shape[0]]
 
         else:
-
             transmitted_bits = np.append(transmitted_bits, -np.ones(received_bits.shape[0] - transmitted_bits.shape[0]))
 
         # Compute bit errors as the positions where both sequences differ.
@@ -355,12 +336,10 @@ class FrameErrorEvaluator(CommunicationEvaluator, Serializable):
 
     @property
     def title(self) -> str:
-
         return "Frame Error Rate"
 
     @property
     def abbreviation(self) -> str:
-
         return "FER"
 
     @staticmethod
@@ -398,7 +377,6 @@ class ThroughputEvaluation(EvaluationTemplate[float]):
         EvaluationTemplate.__init__(self, throughput)
 
     def artifact(self) -> ThroughputArtifact:
-
         return ThroughputArtifact(self.evaluation)
 
 
@@ -428,7 +406,6 @@ class ThroughputEvaluator(CommunicationEvaluator, Serializable):
         self.__framer_error_evaluator = FrameErrorEvaluator(transmitting_modem, receiving_modem)
 
     def evaluate(self) -> ThroughputEvaluation:
-
         # Get the frame errors
         frame_errors = self.__framer_error_evaluator.evaluate().evaluation.flatten()
 
@@ -440,10 +417,8 @@ class ThroughputEvaluator(CommunicationEvaluator, Serializable):
 
     @property
     def title(self) -> str:
-
         return "Data Throughput"
 
     @property
     def abbreviation(self) -> str:
-
         return "DRX"

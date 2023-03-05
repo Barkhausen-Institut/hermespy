@@ -80,7 +80,6 @@ class Gain(Serializable):
 
     @gain.setter
     def gain(self, value: float) -> None:
-
         if value <= 0:
             raise ValueError("Gain must be larger than 0")
 
@@ -172,14 +171,12 @@ class AutomaticGainControl(Gain):
 
     @backoff.setter
     def backoff(self, value: float) -> None:
-
         if value <= 0:
             raise ValueError("Backoff must be larger than 0")
 
         self.__backoff = value
 
     def multiply_signal(self, input_signal: Signal) -> None:
-
         samples = input_signal.samples
 
         if self.agc_type == GainControlType.MAX_AMPLITUDE:
@@ -298,12 +295,10 @@ class AnalogDigitalConverter(Serializable):
 
     @num_quantization_bits.setter
     def num_quantization_bits(self, value: int | None) -> None:
-
         if value is None:
             self.__num_quantization_bits = None
 
         else:
-
             if value is None:
                 self.__num_quantization_bits = None
 
@@ -373,17 +368,14 @@ class AnalogDigitalConverter(Serializable):
             quantized_signal = input_signal
 
         else:
-
             max_amplitude = 1.0
             step = 2 * max_amplitude / self.num_quantization_levels
 
             if self.quantizer_type == QuantizerType.MID_RISER:
-
                 bins = np.arange(-max_amplitude + step, max_amplitude, step)
                 offset = 0.0
 
             elif self.quantizer_type == QuantizerType.MID_TREAD:
-
                 bins = np.arange(-max_amplitude + step / 2, max_amplitude - step / 2, step)
                 offset = -0.5 * step
 
@@ -421,7 +413,6 @@ class AnalogDigitalConverter(Serializable):
 
         figure: Optional[plt.figure] = None
         if fig_axes is None:
-
             figure = plt.figure()
             quant_axes = figure.add_axes()
 

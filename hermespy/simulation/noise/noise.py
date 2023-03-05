@@ -143,7 +143,6 @@ class AWGNRealization(NoiseRealization):
     """Realization of additive white Gaussian noise"""
 
     def add_to(self, signal: Signal) -> Signal:
-
         # Create random number generator
         rng = self.generator()
 
@@ -173,6 +172,5 @@ class AWGN(Serializable, Noise[AWGNRealization]):
         Noise.__init__(self, power=power, seed=seed)
 
     def realize(self, power: Optional[float] = None) -> AWGNRealization:
-
         power = self.power if power is None else power
         return AWGNRealization(self, power)

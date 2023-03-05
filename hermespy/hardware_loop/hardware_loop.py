@@ -138,9 +138,7 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PhysicalDeviceTyp
         return len(self.__evaluators)
 
     def __plot_drop(self, drop: Drop, evaluations: List[Evaluation], device_figures: List[plt.Figure], evaluator_figures: List[plt.Figure]) -> None:
-
         for device_tx, device_rx, figure in zip(drop.device_transmissions, drop.device_receptions, device_figures):
-
             figure[1][0].clear()
             figure[1][1].clear()
 
@@ -151,7 +149,6 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PhysicalDeviceTyp
             figure[0].canvas.flush_events()
 
         for evaluation, figure in zip(evaluations, evaluator_figures):
-
             figure[1].clear()
             evaluation.plot(figure[1])
 
@@ -204,23 +201,19 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PhysicalDeviceTyp
 
         # Prepare figures if plotting is enabled.
         if self.plot_information:
-
             plt.ion()
 
             device_figures = []
             evaluator_figures = []
 
             with self.style_context():
-
                 for device_idx in range(self.scenario.num_devices):
-
                     sub = plt.subplots(1, 2)
                     sub[0].suptitle(f"Device #{device_idx}")
 
                     device_figures.append(sub)
 
                 for e, evaluator in enumerate(self.__evaluators):
-
                     sub = plt.subplots()
                     sub[0].suptitle(f"Evaluator #{e}: {evaluator.title}")
 
@@ -234,7 +227,6 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PhysicalDeviceTyp
 
         # Print indicator that the simulation is starting
         if self.console_mode != ConsoleMode.SILENT:
-
             self.console.print()  # Just an empty line
             self.console.rule("Hardware Loop")
             self.console.print()  # Just an empty line
@@ -247,7 +239,6 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PhysicalDeviceTyp
         grid_tasks = []
 
         for grid_dimension in self.__dimensions:
-
             grid_tasks.append(progress.add_task("[cyan]" + grid_dimension.title, total=grid_dimension.num_sample_points))
             num_total_drops *= grid_dimension.num_sample_points
 
@@ -255,14 +246,12 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PhysicalDeviceTyp
         total_progress = progress.add_task("[red]Progress", total=num_total_drops)
 
         with progress if self.console_mode == ConsoleMode.INTERACTIVE else nullcontext():  # type: ignore
-
             # Start counting the total number of completed drops
             total = 0
 
             # Generate the number of required drops
             grid = (self.num_drops, *[d.num_sample_points for d in self.__dimensions])
             for indices in np.ndindex(grid):
-
                 # Configure the parameters according to the grid indces
                 for dim, p in zip(self.__dimensions, indices[1:]):
                     dim.configure_point(p)
@@ -270,7 +259,6 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PhysicalDeviceTyp
                 # Ask for a trigger input if manual mode is enabled
                 # Abort execution if user denies
                 if self.manual_triggering:
-
                     progress.live.stop()
 
                     if not confirm.ask(f"Trigger next drop ({total+1})?"):
@@ -280,7 +268,6 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PhysicalDeviceTyp
 
                 # Generate the next drop
                 try:
-
                     drop = self.scenario.drop()
 
                     # Extract evaluations
@@ -299,7 +286,6 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PhysicalDeviceTyp
 
                     # Print results
                     if self.console is not ConsoleMode.SILENT and self.verbosity.value <= Verbosity.INFO.value:
-
                         result_str = f"# {total:<5}"
 
                         for dimesion, i in zip(self.__dimensions, indices[1:]):
@@ -337,7 +323,6 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PhysicalDeviceTyp
 
         # Save results if a directory was provided
         if self.results_dir:
-
             result.save_to_matlab(path.join(self.results_dir, "results.mat"))
 
             for idx, (figure, evaluator) in enumerate(zip(result_figures, self.__evaluators)):
@@ -347,7 +332,6 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PhysicalDeviceTyp
 
     @classmethod
     def from_yaml(cls: Type[HardwareLoop], constructor: SafeConstructor, node: Node) -> HardwareLoop:
-
         state = constructor.construct_mapping(node, deep=True)
 
         devices: List[PhysicalDevice] = state.pop("Devices", [])

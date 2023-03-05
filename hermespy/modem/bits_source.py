@@ -89,7 +89,6 @@ class RandomBitsSource(BitsSource, Serializable):
         BitsSource.__init__(self, seed=seed)
 
     def generate_bits(self, num_bits: int) -> np.ndarray:
-
         return self._rng.integers(0, 2, size=num_bits, dtype=int)
 
 
@@ -110,11 +109,9 @@ class StreamBitsSource(BitsSource, Serializable):
         self.__stream = open(path, mode="rb")
 
     def __del__(self) -> None:
-
         self.__stream.close()
 
     def generate_bits(self, num_bits: int) -> np.ndarray:
-
         num_bytes = int(ceil(num_bits / 8))
         bit_overflow = num_bytes * 8 - num_bits
 

@@ -154,7 +154,6 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
 
     @symbol_rate.setter
     def symbol_rate(self, value: float) -> None:
-
         if value <= 0.0:
             raise ValueError("Symbol rate must be greater than zero")
 
@@ -177,7 +176,6 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
 
     @num_preamble_symbols.setter
     def num_preamble_symbols(self, value: int) -> None:
-
         if value < 0:
             raise ValueError("Nummber of preamble symbols must be greater or equal to zero")
 
@@ -200,7 +198,6 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
 
     @num_postamble_symbols.setter
     def num_postamble_symbols(self, value: int) -> None:
-
         if value < 0:
             raise ValueError("Nummber of postamble symbols must be greater or equal to zero")
 
@@ -208,13 +205,12 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
 
     @WaveformGenerator.modulation_order.setter  # type: ignore
     def modulation_order(self, value: int) -> None:
-
         self.__mapping = PskQamMapping(value, soft_output=False)
+        self.pilot_symbol_sequence = MappedPilotSymbolSequence(self.__mapping)  # ToDo: Find a better way to update the pilot symbol sequence
         WaveformGenerator.modulation_order.fset(self, value)  # type: ignore
 
     @property
     def pilot_signal(self) -> Signal:
-
         if self.num_preamble_symbols < 1:
             return Signal.empty(self.sampling_rate)
 
@@ -224,7 +220,6 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
         return Signal(np.convolve(pilot_symbols, self._transmit_filter()), sampling_rate=self.sampling_rate)
 
     def map(self, bits: np.ndarray) -> Symbols:
-
         # Generate pilot and data symbol sequences
         pilot_symbols = self.pilot_symbols(self.num_preamble_symbols + self._num_pilot_symbols + self.num_postamble_symbols)
         data_symbols = self.__mapping.get_symbols(bits)
@@ -246,14 +241,12 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
         return Symbols(symbols[np.newaxis, :, np.newaxis])
 
     def unmap(self, symbols: Symbols) -> np.ndarray:
-
         payload = symbols.raw[:, self.num_preamble_symbols : self.num_preamble_symbols + self._num_payload_symbols, :]
         data_symbols = payload[:, self._data_symbol_indices, :].flatten()
 
         return self.__mapping.detect_bits(data_symbols)
 
     def modulate(self, symbols: Symbols) -> Signal:
-
         frame = np.zeros(1 + (self._num_frame_symbols - 1) * self.oversampling_factor, dtype=complex)
         frame[:: self.oversampling_factor] = symbols.raw.flatten()
 
@@ -262,7 +255,6 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
         return Signal(output_signal, self.sampling_rate)
 
     def demodulate(self, signal: np.ndarray) -> Symbols:
-
         # Query filters
         filter_delay = self._filter_delay
 
@@ -397,7 +389,6 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
 
     @property
     def _num_pilot_symbols(self) -> int:
-
         if self.pilot_rate <= 0:
             return 0
 
@@ -405,7 +396,6 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
 
     @property
     def _num_payload_symbols(self) -> int:
-
         num_symbols = self.num_data_symbols + self._num_pilot_symbols
         return num_symbols
 
@@ -479,17 +469,14 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
 
     @property
     def samples_in_frame(self) -> int:
-
         return (self._num_frame_symbols - 1) * self.oversampling_factor + self._transmit_filter().shape[0]
 
     @property
     def bits_per_frame(self) -> int:
-
         return self.__num_data_symbols * int(np.log2(self.modulation_order))
 
     @property
     def symbols_per_frame(self) -> int:
-
         return self.num_preamble_symbols + self._num_payload_symbols + self.num_postamble_symbols
 
     @property
@@ -516,7 +503,6 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
         """
 
         with Executable.style_context():
-
             tx_filter = self._transmit_filter()
             rx_filter = self._receive_filter()
 
@@ -537,7 +523,6 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
         """
 
         with Executable.style_context():
-
             tx_filter = self._transmit_filter()
 
             fig, axes = plt.subplots()
@@ -590,7 +575,6 @@ class SingleCarrierIdealChannelEstimation(IdealChannelEstimation[FilteredSingleC
     """YAML serialization tag"""
 
     def estimate_channel(self, symbols: Symbols) -> Tuple[StatedSymbols, ChannelStateInformation]:
-
         filter_characteristics = self.waveform_generator._transmit_filter() * self.waveform_generator._receive_filter()
         csi = self._csi().state[:, :, :, [0]]
         filtered_state = np.apply_along_axis(lambda c: np.convolve(c, filter_characteristics), axis=2, arr=csi)
@@ -617,7 +601,6 @@ class SingleCarrierLeastSquaresChannelEstimation(SingleCarrierChannelEstimation)
         SingleCarrierChannelEstimation.__init__(self, waveform_generator)
 
     def estimate_channel(self, symbols: Symbols) -> Tuple[StatedSymbols, ChannelStateInformation]:
-
         if self.waveform_generator is None:
             raise FloatingError("Error trying to fetch the pilot section of a floating channel estimator")
 
@@ -686,20 +669,17 @@ class SingleCarrierMinimumMeanSquareChannelEqualization(SingleCarrierChannelEqua
         SingleCarrierChannelEqualization.__init__(self, waveform_generator)
 
     def equalize_channel(self, frame: Symbols) -> Symbols:
-
         # Query SNR and cached CSI from the device
         snr = self.waveform_generator.modem.receiving_device.snr
         csi = self.waveform_generator.modem.csi
 
         # If no information about transmitted streams is available, assume orthogonal channels
         if csi.num_transmit_streams < 2:
-
             return Symbols(frame.raw / (csi.state[:, 0, : frame.num_symbols, 0] + 1 / snr))
 
         # Default behaviour for mimo systems is to use the pseudo-inverse for equalization
         raw_equalized_symbols = np.empty(frame.raw.shape, dtype=complex)
         for s, (symbols, state) in enumerate(zip(frame.raw.T, csi.state[:, :, : frame.num_symbols, 0].transpose((2, 0, 1)))):
-
             # ToDo: Introduce noise term here
             equalization = np.linalg.pinv(state)
             raw_equalized_symbols[:, s] = equalization @ symbols
@@ -717,7 +697,6 @@ class RolledOffSingleCarrierWaveform(FilteredSingleCarrierWaveform):
 
     @staticmethod
     def _arg_signature() -> Set[str]:
-
         return {"symbol_rate", "num_preamble_symbols", "num_data_symbols"}
 
     def __init__(self, relative_bandwidth: float = 1.0, roll_off: float = 0.0, filter_length: int = 16, *args, **kwargs) -> None:
@@ -762,7 +741,6 @@ class RolledOffSingleCarrierWaveform(FilteredSingleCarrierWaveform):
 
     @filter_length.setter
     def filter_length(self, value: int) -> None:
-
         if value < 1:
             raise ValueError("Filter length must be greater than zero")
 
@@ -780,7 +758,6 @@ class RolledOffSingleCarrierWaveform(FilteredSingleCarrierWaveform):
 
     @relative_bandwidth.setter
     def relative_bandwidth(self, value: float) -> None:
-
         if value <= 0.0:
             raise ValueError("Relative pulse bandwidth must be greater than zero")
 
@@ -798,7 +775,6 @@ class RolledOffSingleCarrierWaveform(FilteredSingleCarrierWaveform):
 
     @roll_off.setter
     def roll_off(self, value: float) -> None:
-
         if value < 0.0 or value > 1.0:
             raise ValueError("Filter pulse shape roll off factor value must be between zero and one")
 
@@ -806,7 +782,6 @@ class RolledOffSingleCarrierWaveform(FilteredSingleCarrierWaveform):
 
     @property
     def bandwidth(self) -> float:
-
         return self.symbol_rate * self.relative_bandwidth * (1 + self.roll_off)
 
     @abstractmethod
@@ -819,16 +794,13 @@ class RolledOffSingleCarrierWaveform(FilteredSingleCarrierWaveform):
         ...
 
     def _transmit_filter(self) -> np.ndarray:
-
         return self._base_filter()
 
     def _receive_filter(self) -> np.ndarray:
-
         return self._base_filter()
 
     @property
     def _filter_delay(self) -> int:
-
         return 2 * int(0.5 * self.filter_length) * self.oversampling_factor
 
 
@@ -863,11 +835,9 @@ class RootRaisedCosineWaveform(RolledOffSingleCarrierWaveform, Serializable):
     """YAML serialization tag"""
 
     def __init__(self, *args, **kwargs) -> None:
-
         RolledOffSingleCarrierWaveform.__init__(self, *args, **kwargs)
 
     def _base_filter(self) -> np.ndarray:
-
         impulse_response = np.zeros(self.oversampling_factor * self.filter_length)
 
         # Generate timestamps
@@ -921,11 +891,9 @@ class RaisedCosineWaveform(RolledOffSingleCarrierWaveform, Serializable):
     """YAML serialization tag"""
 
     def __init__(self, *args, **kwargs) -> None:
-
         RolledOffSingleCarrierWaveform.__init__(self, *args, **kwargs)
 
     def _base_filter(self) -> np.ndarray:
-
         impulse_response = np.zeros(self.oversampling_factor * self.filter_length)
 
         # Generate timestamps
@@ -978,11 +946,9 @@ class RectangularWaveform(FilteredSingleCarrierWaveform, Serializable):
 
     @staticmethod
     def _arg_signature() -> Set[str]:
-
         return {"symbol_rate", "num_preamble_symbols", "num_data_symbols"}
 
     def __init__(self, relative_bandwidth: float = 1.0, *args, **kwargs) -> None:
-
         self.relative_bandwidth = relative_bandwidth
 
         FilteredSingleCarrierWaveform.__init__(self, *args, **kwargs)
@@ -999,7 +965,6 @@ class RectangularWaveform(FilteredSingleCarrierWaveform, Serializable):
 
     @relative_bandwidth.setter
     def relative_bandwidth(self, value: float) -> None:
-
         if value <= 0.0:
             raise ValueError("Relative pulse bandwidth must be greater than zero")
 
@@ -1007,21 +972,17 @@ class RectangularWaveform(FilteredSingleCarrierWaveform, Serializable):
 
     @property
     def bandwidth(self) -> float:
-
         return self.symbol_rate * self.relative_bandwidth
 
     def _transmit_filter(self) -> np.ndarray:
-
         pulse_width = int(self.oversampling_factor / self.relative_bandwidth)
         return np.ones(pulse_width, dtype=complex) / np.sqrt(pulse_width)
 
     def _receive_filter(self) -> np.ndarray:
-
         return self._transmit_filter()
 
     @property
     def _filter_delay(self) -> int:
-
         return int(self.oversampling_factor / self.relative_bandwidth) - 1
 
 
@@ -1060,7 +1021,6 @@ class FMCWWaveform(FilteredSingleCarrierWaveform, Serializable):
 
     @staticmethod
     def _arg_signature() -> Set[str]:
-
         return {"symbol_rate", "num_preamble_symbols", "num_data_symbols"}
 
     def __init__(self, bandwidth: float, chirp_duration: float = 0.0, *args, **kwargs) -> None:
@@ -1099,7 +1059,6 @@ class FMCWWaveform(FilteredSingleCarrierWaveform, Serializable):
 
     @chirp_duration.setter
     def chirp_duration(self, value: float) -> None:
-
         if value < 0.0:
             raise ValueError("Chirp duration must be greater or equal to zero")
 
@@ -1121,12 +1080,10 @@ class FMCWWaveform(FilteredSingleCarrierWaveform, Serializable):
 
     @property
     def bandwidth(self) -> float:
-
         return self.__bandwidth
 
     @bandwidth.setter
     def bandwidth(self, value: float) -> None:
-
         if value <= 0.0:
             raise ValueError("Chirp bandwidth must be greater than zero")
 
@@ -1146,7 +1103,6 @@ class FMCWWaveform(FilteredSingleCarrierWaveform, Serializable):
         return self.bandwidth / self.__true_chirp_duration
 
     def _transmit_filter(self) -> np.ndarray:
-
         time = np.linspace(0, 1 / self.symbol_rate, self.oversampling_factor)
         impulse_response = np.exp(1j * np.pi * (self.bandwidth * time + self.chirp_slope * time**2))
         # Cut off the chirp appropriately
@@ -1155,10 +1111,8 @@ class FMCWWaveform(FilteredSingleCarrierWaveform, Serializable):
         return impulse_response / np.sqrt(self.oversampling_factor)
 
     def _receive_filter(self) -> np.ndarray:
-
         return np.flip(self._transmit_filter().conj())
 
     @property
     def _filter_delay(self) -> int:
-
         return self.oversampling_factor - 1

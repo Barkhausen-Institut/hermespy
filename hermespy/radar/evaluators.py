@@ -124,7 +124,6 @@ class RadarEvaluator(Evaluator, ABC):
         return self.__radar_channel
 
     def generate_result(self, grid: Sequence[GridDimension], artifacts: np.ndarray) -> EvaluationResult:
-
         return ScalarEvaluationResult(grid, artifacts, self)
 
 
@@ -136,7 +135,6 @@ class DetectionProbArtifact(ArtifactTemplate[bool]):
 
 class DetectionProbabilityEvaluation(EvaluationTemplate[bool]):
     def artifact(self) -> DetectionProbArtifact:
-
         return DetectionProbArtifact(self.evaluation)
 
 
@@ -170,11 +168,9 @@ class DetectionProbEvaluator(RadarEvaluator, Serializable):
         return uniform.cdf(scalar)
 
     def generate_result(self, grid: Sequence[GridDimension], artifacts: np.ndarray) -> ScalarEvaluationResult:
-
         return ScalarEvaluationResult(grid, artifacts, self)
 
     def evaluate(self) -> DetectionProbabilityEvaluation:
-
         # Retrieve transmitted and received bits
         cloud = self.receiving_radar.reception.cloud
 
@@ -226,12 +222,10 @@ class RocEvaluation(Evaluation):
     data_h1: np.ndarray
 
     def __init__(self, cube_h0: RadarCube, cube_h1: RadarCube) -> None:
-
         self.data_h0 = cube_h0.data
         self.data_h1 = cube_h1.data
 
     def artifact(self) -> RocArtifact:
-
         h0_value = self.data_h0.max()
         h1_value = self.data_h1.max()
 
@@ -246,16 +240,13 @@ class RocEvaluationResult(EvaluationResult):
     __false_alarm_probabilities: np.ndarray
 
     def __init__(self, grid: Sequence[GridDimension], detection_probabilities: np.ndarray, false_alarm_probabilities: np.ndarray, title: str = "Receiver Operating Characteristics") -> None:
-
         self.__grid = grid
         self.__detection_probabilities = detection_probabilities
         self.__false_alarm_probabilities = false_alarm_probabilities
         self.__title = title
 
     def plot(self) -> plt.Figure:
-
         with Executable.style_context():
-
             figure = plt.figure()
             figure.suptitle(self.__title)
 
@@ -272,7 +263,6 @@ class RocEvaluationResult(EvaluationResult):
 
             section_magnitudes = tuple(s.num_sample_points for s in self.__grid)
             for section_indices in np.ndindex(section_magnitudes):
-
                 # Generate the graph line label
                 line_label = ""
                 for i, v in enumerate(section_indices):
@@ -294,7 +284,6 @@ class RocEvaluationResult(EvaluationResult):
             return figure
 
     def to_array(self) -> np.ndarray:
-
         return np.stack((self.__detection_probabilities, self.__false_alarm_probabilities), axis=-1)
 
 
@@ -352,7 +341,6 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
         return RocEvaluation(radar_cube_h0, radar_cube_h1)
 
     def evaluate(self) -> RocEvaluation:
-
         if self.radar_channel is None:
             raise RuntimeError("Radar channel must be specified in order to evaluate during rutime")
 
@@ -391,7 +379,6 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
         return "Operating Characteristics"  # pragma no cover
 
     def generate_result(self, grid: Sequence[GridDimension], artifacts: np.ndarray) -> RocEvaluationResult:
-
         # Prepare result containers
         dimensions = tuple(g.num_sample_points for g in grid)
         detection_probabilities = np.empty((*dimensions, self.__num_thresholds), dtype=float)
@@ -399,12 +386,10 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
 
         # Convert artifacts to raw data array
         for grid_coordinates in np.ndindex(dimensions):
-
             artifact_line = artifacts[grid_coordinates]
             roc_data = np.array([[a.h0_value, a.h1_value] for a in artifact_line])
 
             for t, threshold in enumerate(np.linspace(roc_data.min(), roc_data.max(), self.__num_thresholds, endpoint=True)):
-
                 threshold_coordinates = grid_coordinates + (t,)
                 detection_probabilities[threshold_coordinates] = np.mean(roc_data[:, 1] >= threshold)
                 false_alarm_probabilities[threshold_coordinates] = np.mean(roc_data[:, 0] >= threshold)
@@ -413,7 +398,6 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
 
     @classmethod
     def From_Scenarios(cls: Type[ReceiverOperatingCharacteristic], h0_scenario: Scenario, h1_scenario: Scenario, h0_operator: Optional[Radar] = None, h1_operator: Optional[Radar] = None) -> RocEvaluationResult:
-
         # Assert that both scenarios are in replay mode
         if h0_scenario.mode != ScenarioMode.REPLAY:
             raise ValueError("Null hypothesis scenario is not in replay mode")
@@ -464,7 +448,6 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
 
         # Collect artifacts
         for _ in range(num_drops):
-
             _ = h0_scenario.drop()
             _ = h1_scenario.drop()
 
@@ -532,7 +515,6 @@ class RootMeanSquareArtifact(Artifact):
         self.cummulation = cummulation
 
     def to_scalar(self) -> float:
-
         return np.sqrt(self.cummulation / self.num_errors)
 
     def __str__(self) -> str:
@@ -546,12 +528,10 @@ class RootMeanSquareEvaluation(Evaluation):
     __ground_truth: np.ndarray
 
     def __init__(self, pcl: RadarPointCloud, ground_truth: np.ndarray) -> None:
-
         self.__pcl = pcl
         self.__ground_truth = ground_truth
 
     def artifact(self) -> RootMeanSquareArtifact:
-
         num_errors = self.__pcl.num_points * self.__ground_truth.shape[0]
         cummulative_square_error = 0.0
 
@@ -571,7 +551,6 @@ class RootMeanSquareError(RadarEvaluator):
     """Root mean square estimation error of point detections."""
 
     def evaluate(self) -> Evaluation:
-
         point_cloud = self.receiving_radar.reception.cloud
         ground_truth = self.radar_channel.realization.ground_truth
 
@@ -586,16 +565,13 @@ class RootMeanSquareError(RadarEvaluator):
         return "RMSE"
 
     def generate_result(self, grid: Sequence[GridDimension], artifacts: np.ndarray) -> RootMeanSquareErrorResult:
-
         rmse_section_artifacts = np.empty(artifacts.shape, dtype=float)
         for coordinates, section_artifacts in np.ndenumerate(artifacts):
-
             cummulative_errors = 0.0
             error_count = 0
 
             artifact: RootMeanSquareArtifact
             for artifact in section_artifacts:
-
                 cummulative_errors += artifact.cummulation
                 error_count += artifact.num_errors
 

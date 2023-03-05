@@ -44,11 +44,9 @@ class Visualizable(object):
             return plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
     def _prepare_axes(self, axes: plt.Axes | None = None, title: str | None = None) -> Tuple[None | plt.Figure, plt.Axes]:
-
         figure: plt.Figure | None
 
         if axes is None:
-
             with Executable.style_context():
                 figure, axes = plt.subplots()
 

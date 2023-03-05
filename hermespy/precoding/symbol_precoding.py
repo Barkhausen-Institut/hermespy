@@ -13,7 +13,6 @@ from hermespy.core.factory import Serializable
 from .precoding import Precoder, Precoding
 
 if TYPE_CHECKING:
-
     from hermespy.modem import StatedSymbols
     from hermespy.modem.modem import BaseModem
 

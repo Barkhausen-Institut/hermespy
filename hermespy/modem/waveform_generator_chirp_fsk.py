@@ -112,7 +112,6 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
 
     @chirp_duration.setter
     def chirp_duration(self, value: float) -> None:
-
         if value < 0.0:
             raise ValueError("Chirp duration must be greater than zero")
 
@@ -168,7 +167,6 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
 
     @freq_difference.setter
     def freq_difference(self, value: Optional[float]) -> None:
-
         if value is None:
             self.__freq_difference = None
             return
@@ -279,12 +277,10 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
 
     @property
     def bits_per_frame(self) -> int:
-
         return self.num_data_chirps * self.bits_per_symbol
 
     @property
     def symbols_per_frame(self) -> int:
-
         return self.num_data_chirps
 
     @property
@@ -333,7 +329,6 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
 
     @property
     def symbol_energy(self) -> float:
-
         _, energy = self._prototypes()
         return energy
 
@@ -350,12 +345,10 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
         return bit_energy
 
     def map(self, data_bits: np.ndarray) -> Symbols:
-
         offset = self._calculate_frequency_offsets(data_bits)
         return Symbols(offset[np.newaxis, np.newaxis, :])
 
     def modulate(self, symbols: Symbols) -> Signal:
-
         prototypes, _ = self._prototypes()
         samples = np.empty(self.samples_in_frame, dtype=complex)
 
@@ -370,14 +363,12 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
 
         # Modulate data symbols
         for symbol in symbols.raw[0, ::].flat:
-
             samples[sample_idx : sample_idx + samples_in_chirp] = prototypes[int(symbol.real), :]
             sample_idx += samples_in_chirp
 
         return Signal(samples, self.sampling_rate)
 
     def demodulate(self, baseband_signal: np.ndarray) -> Symbols:
-
         # Assess number of frames contained within this signal
         samples_in_chirp = self.samples_in_chirp
         samples_in_pilot_section = samples_in_chirp * self.num_pilot_chirps
@@ -393,12 +384,10 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
         return Symbols(symbols[np.newaxis, np.newaxis, :])
 
     def unmap(self, symbols: Symbols) -> np.ndarray:
-
         bits_per_symbol = self.bits_per_symbol
         bits = np.empty(symbols.num_symbols * self.bits_per_symbol)
 
         for s, symbol in enumerate(symbols.raw[0, ::].flat):
-
             symbol_bits = [int(x) for x in list(np.binary_repr(int(symbol.real), width=bits_per_symbol))]
             bits[s * bits_per_symbol : (s + 1) * bits_per_symbol] = symbol_bits
 
@@ -406,7 +395,6 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
 
     @property
     def bandwidth(self) -> float:
-
         # The bandwidth is identical to the chirp bandwidth
         return self.chirp_bandwidth
 
@@ -434,13 +422,11 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
 
     @WaveformGenerator.modulation_order.setter  # type: ignore
     def modulation_order(self, value: int) -> None:
-
         self._prototypes.cache_clear()
         WaveformGenerator.modulation_order.fset(self, value)  # type: ignore
 
     @property
     def symbol_precoding_support(self) -> bool:
-
         return False
 
     @lru_cache(maxsize=1, typed=True)
@@ -481,7 +467,6 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
 
     @property
     def sampling_rate(self) -> float:
-
         # Sampling rate scales with the chirp bandwidth
         return self.oversampling_factor * self.__chirp_bandwidth
 
@@ -498,7 +483,6 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
 
         pilot_samples = np.empty(self.samples_in_chirp * self.num_pilot_chirps, dtype=complex)
         for pilot_idx in range(self.num_pilot_chirps):
-
             pilot_samples[pilot_idx * self.samples_in_chirp : (1 + pilot_idx) * self.samples_in_chirp] = prototypes[pilot_idx % len(prototypes)]
 
         return Signal(pilot_samples, self.sampling_rate)

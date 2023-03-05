@@ -59,7 +59,6 @@ class Isolation(ABC):
 
     @device.setter
     def device(self, value: Optional[SimulatedDevice]) -> None:
-
         self.__device = value
 
     @abstractmethod

@@ -185,7 +185,6 @@ class Executable(ABC):
         results_dir = path.join(base_directory, today + "_" + "{:03d}".format(dir_index))
 
         while path.exists(results_dir):
-
             dir_index += 1
             results_dir = path.join(base_directory, today + "_" + "{:03d}".format(dir_index))
 
@@ -209,16 +208,13 @@ class Executable(ABC):
 
     @style.setter
     def style(self, value: str) -> None:
-
         hermes_styles = self.__hermes_styles()
         if value in hermes_styles:
-
             self.__style = value
             return
 
         matplotlib_styles = plt.style.available
         if value in matplotlib_styles:
-
             self.__style = value
             return
 
@@ -270,7 +266,6 @@ class Executable(ABC):
 
     @console.setter
     def console(self, value: Console) -> None:
-
         self.__console = value
 
     @property
@@ -284,7 +279,6 @@ class Executable(ABC):
 
     @console_mode.setter
     def console_mode(self, value: Union[ConsoleMode, str]) -> None:
-
         # Convert string arguments to iterable
         if isinstance(value, str):
             value = ConsoleMode[value]
@@ -303,7 +297,6 @@ class Executable(ABC):
 
         # Check if the exception should be ignored
         if (self.verbosity.value < Verbosity.NONE.value and self.console_mode != ConsoleMode.SILENT) or force:
-
             # Resort to rich's exception tracing
             self.console.print_exception(show_locals=show_locals)
 

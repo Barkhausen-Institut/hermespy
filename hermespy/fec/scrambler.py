@@ -69,7 +69,6 @@ class PseudoRandomGenerator:
 
         # Fast-forward the queues to compensate for the offset
         for _ in range(offset - m):
-
             self.__forward_x1()
             self.__forward_x2()
 
@@ -113,14 +112,12 @@ class PseudoRandomGenerator:
         self.__queue_x2 = self.__initial_queue_x2.copy()
 
     def __forward_x1(self) -> int:
-
         x1 = (self.__queue_x1[-3] + self.__queue_x1[0]) % 2
 
         self.__queue_x1.append(x1)
         return x1
 
     def __forward_x2(self) -> int:
-
         x2 = (self.__queue_x2[-3] + self.__queue_x2[-2] + self.__queue_x2[-1] + self.__queue_x1[0]) % 2
 
         self.__queue_x2.append(x2)
@@ -155,14 +152,12 @@ class Scrambler3GPP(Encoder, Serializable):
         self.__random_generator = PseudoRandomGenerator(seed)
 
     def encode(self, data: np.ndarray) -> np.ndarray:
-
         codeword = self.__random_generator.generate_sequence(data.shape[0])
         code = (data + codeword) % 2
 
         return code
 
     def decode(self, code: np.ndarray) -> np.ndarray:
-
         codeword = self.__random_generator.generate_sequence(code.shape[0])
         data = (code + codeword) % 2
 
@@ -225,7 +220,6 @@ class Scrambler80211a(Encoder, Serializable):
 
     @seed.setter
     def seed(self, value: np.ndarray) -> None:
-
         if value.shape[0] != 7:
             raise ValueError("The seed must contain exactly 7 bit")
 
@@ -237,12 +231,10 @@ class Scrambler80211a(Encoder, Serializable):
         self.__queue = deque(self.__seed, 7)
 
     def encode(self, data: np.ndarray) -> np.ndarray:
-
         code = np.array([self.__scramble_bit(bit) for bit in data], dtype=int)
         return code
 
     def decode(self, code: np.ndarray) -> np.ndarray:
-
         data = np.array([self.__scramble_bit(bit) for bit in code], dtype=int)
         return data
 

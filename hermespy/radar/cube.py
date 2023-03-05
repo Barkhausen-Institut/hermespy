@@ -7,12 +7,14 @@ Radar Cube
 Radar cubes represent the raw image create after the base-band processing of radar samples.
 """
 
-from typing import Optional
+from __future__ import annotations
+from typing import Optional, Type
 
 import matplotlib.pyplot as plt
 import numpy as np
+from h5py import Group
 
-from hermespy.core import Executable
+from hermespy.core import Executable, HDFSerializable
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -24,7 +26,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class RadarCube(object):
+class RadarCube(HDFSerializable):
     """A representation of raw radar image samples."""
 
     data: np.ndarray
@@ -33,7 +35,6 @@ class RadarCube(object):
     range_bins: np.ndarray
 
     def __init__(self, data: np.ndarray, angle_bins: np.ndarray, velocity_bins: np.ndarray, range_bins: np.ndarray) -> None:
-
         if data.shape[0] != len(angle_bins):
             raise ValueError("Data cube angle dimension does not match angle bins")
 
@@ -48,7 +49,7 @@ class RadarCube(object):
         self.velocity_bins = velocity_bins
         self.range_bins = range_bins
 
-    def plot_range(self, title: Optional[str] = None) -> plt.Figure:
+    def plot_range(self, title: Optional[str] = None, axes: plt.Axes | None = None) -> plt.Figure:
         """Visualize the cube's range data.
 
         Args:
@@ -65,16 +66,19 @@ class RadarCube(object):
         # Collapse the cube into the range-dimension
         range_profile = np.sum(self.data, axis=(0, 1), keepdims=False)
 
-        with Executable.style_context():
+        if axes is None:
+            with Executable.style_context():
+                figure, axes = plt.subplots()
+                figure.suptitle(title)
 
-            figure, axes = plt.subplots()
-            figure.suptitle(title)
+        else:
+            figure = axes.figure
 
-            axes.set_xlabel("Range [m]")
-            axes.set_ylabel("Power")
-            axes.plot(self.range_bins, range_profile)
+        axes.set_xlabel("Range [m]")
+        axes.set_ylabel("Power")
+        axes.plot(self.range_bins, range_profile)
 
-            return figure
+        return figure
 
     def plot_range_velocity(self, title: Optional[str] = None, interpolate: bool = True) -> plt.Figure:
         """Visualize the cube's range-velocity profile.
@@ -101,7 +105,6 @@ class RadarCube(object):
         figure.suptitle(title)
 
         with Executable.style_context():
-
             axes.set_xlabel("Range [m]")
             axes.set_ylabel("Doppler [Hz]")
 
@@ -113,3 +116,18 @@ class RadarCube(object):
         """Normalize the represented power indicators to unit maximum."""
 
         self.data /= self.data.max()
+
+    @classmethod
+    def from_HDF(cls: Type[RadarCube], group: Group) -> RadarCube:
+        data = np.array(group["data"])
+        angle_bins = np.array(group["angle_bins"], dtype=np.float_)
+        velocity_bins = np.array(group["velocity_bins"], dtype=np.float_)
+        range_bins = np.array(group["range_bins"], dtype=np.float_)
+
+        return cls(data=data, angle_bins=angle_bins, velocity_bins=velocity_bins, range_bins=range_bins)
+
+    def to_HDF(self, group: Group) -> None:
+        self._write_dataset(group, "data", self.data)
+        self._write_dataset(group, "angle_bins", self.angle_bins)
+        self._write_dataset(group, "velocity_bins", self.velocity_bins)
+        self._write_dataset(group, "range_bins", self.range_bins)

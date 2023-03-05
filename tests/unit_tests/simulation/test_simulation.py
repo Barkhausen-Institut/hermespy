@@ -158,6 +158,10 @@ class MockTransmitter(Transmitter):
     def sampling_rate(self) -> float:
         return 1.
 
+    def _recall_transmission(self, group) -> Transmission:
+
+        return Transmission.from_HDF(group)
+
 
 class MockReceiver(Receiver):
     """Mock receiver for testing purposes."""
@@ -175,6 +179,10 @@ class MockReceiver(Receiver):
 
     def _noise_power(self, strength, snr_type=...) -> float:
         return strength
+
+    def _recall_reception(self, group) -> Reception:
+
+        return Reception.from_HDF(group)
 
 
 class TestSimulationRunner(TestCase):
