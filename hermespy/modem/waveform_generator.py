@@ -96,10 +96,10 @@ class Synchronization(Generic[WaveformType], ABC, Serializable):
         if self.__waveform_generator is None:
             raise RuntimeError("Trying to synchronize with a floating synchronization routine")
 
-        samples_per_frame = self.__waveform_generator.samples_in_frame
-        num_frames = int(signal.shape[1] / samples_per_frame)
+        # samples_per_frame = self.__waveform_generator.samples_in_frame
+        # num_frames = int(signal.shape[1] / samples_per_frame)
 
-        return np.arange(num_frames).tolist()
+        return [0]
 
 
 class ChannelEstimation(Generic[WaveformType], Serializable):
@@ -282,7 +282,7 @@ class WaveformGenerator(ABC, Serializable):
     # Cardinality of the set of communication symbols
     __modulation_order: int
 
-    def __init__(self, modem: Optional[BaseModem] = None, oversampling_factor: int = 1, modulation_order: int = 16) -> None:
+    def __init__(self, modem: Optional[BaseModem] = None, oversampling_factor: int = 1, modulation_order: int = 16, channel_estimation: ChannelEstimation | None = None, channel_equalization: ChannelEqualization | None = None) -> None:
         """Waveform Generator initialization.
 
         Args:
@@ -303,8 +303,8 @@ class WaveformGenerator(ABC, Serializable):
         self.oversampling_factor = oversampling_factor
         self.modulation_order = modulation_order
         self.synchronization = Synchronization(self)
-        self.channel_estimation = ChannelEstimation(self)
-        self.channel_equalization = ChannelEqualization(self)
+        self.channel_estimation = ChannelEstimation(self) if channel_estimation is None else channel_estimation
+        self.channel_equalization = ChannelEqualization(self) if channel_equalization is None else channel_equalization
 
         if modem is not None:
             self.modem = modem

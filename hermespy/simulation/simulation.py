@@ -9,7 +9,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from sys import maxsize
 from time import time
-from typing import Any, Callable, Dict, List, Optional, overload, Tuple, Type, Union
+from typing import Any, Callable, Dict, List, Optional, overload, Set, Tuple, Type, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -20,7 +20,7 @@ from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, Node
 
 from hermespy.core import DeviceInput, DeviceTransmission, ChannelStateInformation, Drop, Serializable, Pipeline, Verbosity, Operator, ConsoleMode, Evaluator, register, MonteCarloActor, MonteCarlo, MonteCarloResult, Scenario, Signal, DeviceOutput, DeviceReception, SNRType
 from hermespy.channel import Channel, ChannelRealization, QuadrigaInterface, IdealChannel
-from .simulated_device import ProcessedSimulatedDeviceInput, SimulatedDeviceReception, SimulatedDevice, SimulatedDeviceReception
+from .simulated_device import TriggerModel, TriggerRealization, ProcessedSimulatedDeviceInput, SimulatedDevice, SimulatedDeviceTransmission, SimulatedDeviceReception
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -352,6 +352,32 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
         self.__snr_type = snr_type
 
+    def transmit_devices(self) -> Sequence[SimulatedDeviceTransmission]:
+
+        # Collect unique triggers
+        triggers: List[TriggerModel] = []
+        trigger_realizations: List[TriggerRealization] = []
+        transmissions: List[SimulatedDeviceTransmission] = []
+
+        for device in self.devices:
+
+            trigger_realization: TriggerRealization
+
+            if device.trigger_model not in triggers:
+
+                trigger_realization = device.trigger_model.realize()
+
+                triggers.append(device.trigger_model)
+                trigger_realizations.append(trigger_realization)
+
+            else:
+                trigger_realization = trigger_realizations[triggers.index(device.trigger_model)]
+
+            transmission = device.transmit(cache=True, trigger_realization=trigger_realization)
+            transmissions.append(transmission)
+
+        return transmissions
+
     def propagate(self, transmissions: Sequence[DeviceOutput]) -> List[List[Tuple[Signal, ChannelRealization]]]:
         """Propagate device transmissions over the scenario's channel instances.
 
@@ -388,22 +414,22 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         return propagation_matrix.tolist()
 
     @overload
-    def process_inputs(self, impinging_signals: Sequence[DeviceInput], cache: bool = True) -> List[ProcessedSimulatedDeviceInput]:
+    def process_inputs(self, impinging_signals: Sequence[DeviceInput], cache: bool = True, trigger_realizations: Sequence[TriggerRealization] | None = None) -> List[ProcessedSimulatedDeviceInput]:
         ...  # pragma: no cover
 
     @overload
-    def process_inputs(self, impinging_signals: Sequence[Signal], cache: bool = True) -> List[ProcessedSimulatedDeviceInput]:
+    def process_inputs(self, impinging_signals: Sequence[Signal], cache: bool = True, trigger_realizations: Sequence[TriggerRealization] | None = None) -> List[ProcessedSimulatedDeviceInput]:
         ...  # pragma: no cover
 
     @overload
-    def process_inputs(self, impinging_signals: Sequence[Sequence[Signal]], cache: bool = True) -> List[ProcessedSimulatedDeviceInput]:
+    def process_inputs(self, impinging_signals: Sequence[Sequence[Signal]], cache: bool = True, trigger_realizations: Sequence[TriggerRealization] | None = None) -> List[ProcessedSimulatedDeviceInput]:
         ...  # pragma: no cover
 
     @overload
-    def process_inputs(self, impinging_signals: Sequence[Sequence[Tuple[Signal, ChannelStateInformation | None]]], cache: bool = True) -> List[ProcessedSimulatedDeviceInput]:
+    def process_inputs(self, impinging_signals: Sequence[Sequence[Tuple[Signal, ChannelStateInformation | None]]], cache: bool = True, trigger_realizations: Sequence[TriggerRealization] | None = None) -> List[ProcessedSimulatedDeviceInput]:
         ...  # pragma: no cover
 
-    def process_inputs(self, impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]] | Sequence[Sequence[Tuple[Signal, ChannelStateInformation | None]]], cache: bool = True) -> List[ProcessedSimulatedDeviceInput]:
+    def process_inputs(self, impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]] | Sequence[Sequence[Tuple[Signal, ChannelStateInformation | None]]], cache: bool = True, trigger_realizations: Sequence[TriggerRealization] | None = None) -> List[ProcessedSimulatedDeviceInput]:
         """Process input signals impinging onto the scenario's devices.
 
         Args:
@@ -415,6 +441,10 @@ class SimulationScenario(Scenario[SimulatedDevice]):
                 Cache the operator inputs at the registered receive operators for further processing.
                 Enabled by default.
 
+            trigger_realizations (Sequence[TriggerRealization], optional):
+                Sequence of trigger realizations.
+                If not specified, ideal triggerings are assumed for all devices.
+
         Returns: List of the processed device input information.
 
         Raises:
@@ -422,31 +452,37 @@ class SimulationScenario(Scenario[SimulatedDevice]):
             ValueError: If the number of `impinging_signals` does not match the number of registered devices.
         """
 
+        if trigger_realizations is None:
+            trigger_realizations = [TriggerRealization(0, device.sampling_rate) for device in self.devices]
+
         if len(impinging_signals) != self.num_devices:
             raise ValueError(f"Number of impinging signals ({len(impinging_signals)}) does not match the number if registered devices ({self.num_devices}) within this scenario")
 
+        if len(trigger_realizations) != self.num_devices:
+            raise ValueError(f"Number of trigger realizations ({len(trigger_realizations)}) does not match the number if registered devices ({self.num_devices}) within this scenario")
+
         # Call the process input method for each device
-        processed_inputs = [d.process_input(i, cache) for d, i in zip(self.devices, impinging_signals)]  # type: ignore
+        processed_inputs = [d.process_input(i, cache=cache, trigger_realization=t) for d, i, t in zip(self.devices, impinging_signals, trigger_realizations)]  # type: ignore
 
         return processed_inputs
 
     @overload
-    def receive_devices(self, impinging_signals: Sequence[DeviceInput], cache: bool = True) -> Sequence[SimulatedDeviceReception]:
+    def receive_devices(self, impinging_signals: Sequence[DeviceInput], cache: bool = True, trigger_realizations: Sequence[TriggerRealization] | None = None) -> Sequence[SimulatedDeviceReception]:
         ...  # pragma: no cover
 
     @overload
-    def receive_devices(self, impinging_signals: Sequence[Signal], cache: bool = True) -> Sequence[SimulatedDeviceReception]:
+    def receive_devices(self, impinging_signals: Sequence[Signal], cache: bool = True, trigger_realizations: Sequence[TriggerRealization] | None = None) -> Sequence[SimulatedDeviceReception]:
         ...  # pragma: no cover
 
     @overload
-    def receive_devices(self, impinging_signals: Sequence[Sequence[Signal]], cache: bool = True) -> Sequence[SimulatedDeviceReception]:
+    def receive_devices(self, impinging_signals: Sequence[Sequence[Signal]], cache: bool = True, trigger_realizations: Sequence[TriggerRealization] | None = None) -> Sequence[SimulatedDeviceReception]:
         ...  # pragma: no cover
 
     @overload
-    def receive_devices(self, impinging_signals: Sequence[Sequence[Tuple[Signal, ChannelStateInformation | None]]], cache: bool = True) -> Sequence[SimulatedDeviceReception]:
+    def receive_devices(self, impinging_signals: Sequence[Sequence[Tuple[Signal, ChannelStateInformation | None]]], cache: bool = True, trigger_realizations: Sequence[TriggerRealization] | None = None) -> Sequence[SimulatedDeviceReception]:
         ...  # pragma: no cover
 
-    def receive_devices(self, impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]] | Sequence[Sequence[Tuple[Signal, ChannelStateInformation | None]]], cache: bool = True) -> Sequence[SimulatedDeviceReception]:
+    def receive_devices(self, impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]] | Sequence[Sequence[Tuple[Signal, ChannelStateInformation | None]]], cache: bool = True, trigger_realizations: Sequence[TriggerRealization] | None = None) -> Sequence[SimulatedDeviceReception]:
         """Receive over all simulated scenario devices.
 
         Internally calls :meth:`SimulationScenario.process_inputs` and :meth:`Scenario.receive_operators`.
@@ -460,6 +496,10 @@ class SimulationScenario(Scenario[SimulatedDevice]):
                 Cache the operator inputs at the registered receive operators for further processing.
                 Enabled by default.
 
+            trigger_realizations (Sequence[TriggerRealization], optional):
+                Sequence of trigger realizations.
+                If not specified, ideal triggerings are assumed for all devices.
+
         Returns: List of the processed device input information.
 
         Raises:
@@ -468,7 +508,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         """
 
         # Generate inputs
-        processed_inputs = self.process_inputs(impinging_signals, cache)
+        processed_inputs = self.process_inputs(impinging_signals, cache=cache, trigger_realizations=trigger_realizations)
 
         # Generate operator receptions
         operator_receptions = self.receive_operators([i.operator_inputs for i in processed_inputs])
@@ -478,6 +518,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         return device_receptions
 
     def _drop(self) -> SimulatedDrop:
+
         # Generate drop timestamp
         timestamp = time()
 
@@ -485,12 +526,14 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         _ = self.transmit_operators()
         device_outputs = self.transmit_devices()
 
+        trigger_realizations = [output.trigger_realization for output in device_outputs]
+
         # Simulate channel propagation
         propagation_matrix = self.propagate(device_outputs)
         csi = [[tx[1] for tx in rx] for rx in propagation_matrix]
 
         # Process receptions
-        device_inputs = self.receive_devices(propagation_matrix)
+        device_inputs = self.receive_devices(propagation_matrix, trigger_realizations=trigger_realizations)
         operator_receptions = self.receive_operators()
         device_receptions = [SimulatedDeviceReception.From_ProcessedSimulatedDeviceInput(i, r) for i, r in zip(device_inputs, operator_receptions)]  # type: ignore
 
@@ -499,6 +542,8 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
 
 class SimulationRunner(object):
+    """Runner remote thread deployed by the monte carlo routines"""
+
     __scenario: SimulationScenario  # Scenario to be run
     __propagation: Sequence[Sequence[Tuple[Sequence[Signal], ChannelStateInformation]]] | None
 

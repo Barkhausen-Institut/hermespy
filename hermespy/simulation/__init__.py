@@ -1,5 +1,5 @@
 from .simulation import Simulation, SimulationScenario
-from .simulated_device import ProcessedSimulatedDeviceInput, SimulatedDevice, SimulatedDeviceOutput, SimulatedDeviceReceiveRealization, SimulatedDeviceTransmission, SimulatedDeviceReception
+from .simulated_device import ProcessedSimulatedDeviceInput, SimulatedDevice, SimulatedDeviceOutput, SimulatedDeviceReceiveRealization, SimulatedDeviceTransmission, SimulatedDeviceReception, TriggerModel, TriggerRealization, RandomTrigger, StaticTrigger, OffsetTrigger
 from .rf_chain import RfChain, PowerAmplifier, SalehPowerAmplifier, RappPowerAmplifier, ClippingPowerAmplifier, CustomPowerAmplifier, PhaseNoise, NoPhaseNoise
 from .analog_digital_converter import AnalogDigitalConverter, Gain, AutomaticGainControl, QuantizerType
 from .isolation import Isolation, SpecificIsolation, PerfectIsolation
@@ -25,6 +25,11 @@ __all__ = [
     "SimulatedDeviceReceiveRealization",
     "SimulatedDeviceTransmission",
     "SimulatedDeviceReception",
+    "TriggerModel",
+    "TriggerRealization",
+    "RandomTrigger",
+    "StaticTrigger",
+    "OffsetTrigger",
     "RfChain",
     "PowerAmplifier",
     "SalehPowerAmplifier",
