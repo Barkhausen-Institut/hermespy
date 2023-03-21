@@ -12,7 +12,7 @@ from time import time
 from typing import Generic, Optional, Tuple, TypeVar
 
 from hermespy.core import ChannelStateInformation, DeviceInput, DeviceReception, Scenario, Drop, Signal
-from hermespy.simulation import SimulatedDeviceReception, SimulationScenario
+from hermespy.simulation import SimulatedDeviceReception, SimulationScenario, TriggerRealization
 from .physical_device import PhysicalDeviceType
 
 __author__ = "Jan Adler"
@@ -101,9 +101,14 @@ class SimulatedPhysicalScenario(SimulationScenario, PhysicalScenario):
         # Triggering does nothing
         pass
 
-    def receive_devices(self, impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]] | Sequence[Sequence[Tuple[Signal, ChannelStateInformation | None]]] | None = None, cache: bool = True) -> Sequence[SimulatedDeviceReception]:
+    def receive_devices(self, impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]] | Sequence[Sequence[Tuple[Signal, ChannelStateInformation | None]]] | None = None, cache: bool = True, trigger_realizations: Sequence[TriggerRealization] | None = None) -> Sequence[SimulatedDeviceReception]:
+
         if impinging_signals is None:
+
+            _trigger_realizations = [None for _ in range(self.num_devices)] if trigger_realizations is None else trigger_realizations
             device_receptions = PhysicalScenario.receive_devices(self, None, cache)
-            return [SimulatedDeviceReception(r.impinging_signals, Signal.empty(0.0, 0, 0), False, r.operator_inputs, [], r.operator_receptions) for r in device_receptions]
+
+            return [SimulatedDeviceReception(r.impinging_signals, Signal.empty(0.0, 0, 0), False, r.operator_inputs, [], t, r.operator_receptions) for r, t in zip(device_receptions, _trigger_realizations)]
+
         else:
-            return SimulationScenario.receive_devices(self, impinging_signals, cache)
+            return SimulationScenario.receive_devices(self, impinging_signals, cache, trigger_realizations)
