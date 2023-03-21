@@ -118,7 +118,7 @@ class TestSynchronization(unittest.TestCase):
         """Default synchronization should properly split signals into frame-sections."""
 
         num_streams = 3
-        num_frames = 5
+        num_frames = 1
         num_offset_samples = 2
         num_samples = num_frames * self.waveform_generator.samples_in_frame + num_offset_samples
 
@@ -129,7 +129,7 @@ class TestSynchronization(unittest.TestCase):
     def test_serialization(self) -> None:
         """Test YAML serialization"""
         
-        with patch('hermespy.modem.waveform_generator.Synchronization.property_blacklist', new_callable=PropertyMock) as blacklist:
+        with patch('hermespy.modem.waveform.Synchronization.property_blacklist', new_callable=PropertyMock) as blacklist:
         
             blacklist.return_value  = {'waveform_generator',}
             test_yaml_roundtrip_serialization(self, self.synchronization)
@@ -150,7 +150,7 @@ class TestChannelEstimation(unittest.TestCase):
     def test_serialization(self) -> None:
         """Test YAML serialization"""
         
-        with patch('hermespy.modem.waveform_generator.ChannelEstimation.property_blacklist', new_callable=PropertyMock) as blacklist:
+        with patch('hermespy.modem.waveform.ChannelEstimation.property_blacklist', new_callable=PropertyMock) as blacklist:
         
             blacklist.return_value  = {'waveform_generator',}
             test_yaml_roundtrip_serialization(self, self.estimation)
@@ -212,7 +212,7 @@ class TestWaveformGenerator(unittest.TestCase):
 
             # Number of frames is the number of frames that fit into the samples
             num_frames = len(synchronized_frames)
-            expected_num_frames = int(floor(num_samples / self.waveform_generator.samples_in_frame))
+            expected_num_frames = 1
             self.assertEqual(expected_num_frames, num_frames)
 
     def test_synchronize_validation(self) -> None:

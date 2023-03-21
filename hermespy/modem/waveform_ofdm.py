@@ -18,7 +18,7 @@ from scipy.signal import find_peaks
 
 from hermespy.core import ChannelStateFormat, ChannelStateInformation, Serializable, SerializableEnum, Signal
 from .symbols import StatedSymbols, Symbols
-from .waveform_generator import ChannelEqualization, ChannelEstimation, IdealChannelEstimation, ConfigurablePilotWaveform, Synchronization, WaveformGenerator, ZeroForcingChannelEqualization, MappedPilotSymbolSequence
+from .waveform import ChannelEqualization, ChannelEstimation, IdealChannelEstimation, ConfigurablePilotWaveform, Synchronization, WaveformGenerator, ZeroForcingChannelEqualization, MappedPilotSymbolSequence
 from .waveform_correlation_synchronization import CorrelationSynchronization
 from .tools import PskQamMapping
 

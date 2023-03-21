@@ -205,7 +205,7 @@ from hermespy.core import ChannelStateInformation, RandomNode, Transmission, Rec
 from hermespy.precoding import SymbolPrecoding, ReceiveStreamCoding, TransmitStreamCoding
 from .bits_source import BitsSource, RandomBitsSource
 from .symbols import StatedSymbols, Symbols
-from .waveform_generator import WaveformGenerator
+from .waveform import WaveformGenerator
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -1189,8 +1189,8 @@ class SimplexLink(TransmittingModem, ReceivingModem, Serializable):
         """
 
         # Make sure the link is established between two dedicated devices
-        if transmitting_device is receiving_device:
-            raise ValueError("Transmitter and receiver must be two independent device instances")
+        # if transmitting_device is receiving_device:
+        #    raise ValueError("Transmitter and receiver must be two independent device instances")
 
         self.__transmitting_device = transmitting_device
         self.__receiving_device = receiving_device

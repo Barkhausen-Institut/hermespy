@@ -164,10 +164,10 @@ class RadarReception(Reception, RadarCube):
     cube: RadarCube
     """Processed raw radar data."""
 
-    cloud: Optional[RadarPointCloud]
+    cloud: RadarPointCloud | None
     """Radar point cloud."""
 
-    def __init__(self, signal: Signal, cube: RadarCube, cloud: Optional[RadarPointCloud] = None) -> None:
+    def __init__(self, signal: Signal, cube: RadarCube, cloud: RadarPointCloud | None = None) -> None:
         """
         Args:
 

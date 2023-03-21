@@ -35,4 +35,4 @@ class TestVisualizable(TestCase):
         axes = Mock()
         result = self.visualizable.plot(axes)
 
-        self.assertIsNone(result)
+        self.assertIsInstance(result, Mock)

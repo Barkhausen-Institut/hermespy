@@ -125,7 +125,6 @@ import numpy as np
 from h5py import Group
 from scipy.constants import speed_of_light
 
-from hermespy.tools.math import transform_coordinates
 from .antennas import AntennaArrayBase, UniformArray, IdealAntenna
 from .definitions import SNRType
 from .channel_state_information import ChannelStateInformation
