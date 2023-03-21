@@ -99,6 +99,15 @@ class RadarWaveform(object):
 
     @property
     @abstractmethod
+    def frame_duration(self) -> float:
+        """Duration of the radar frame.
+
+        Returns: Frame duration in seconds.
+        """
+        ...  # pragma: no ocver
+
+    @property
+    @abstractmethod
     def range_bins(self) -> np.ndarray:
         """Sample bins of the depth sensing.
 
@@ -256,8 +265,11 @@ class Radar(DuplexOperator[RadarTransmission, RadarReception], Serializable):
 
     @property
     def frame_duration(self) -> float:
-        # ToDo: Support frame duration
-        return 1.0
+
+        if self.waveform is None:
+            return 0.0
+
+        return self.waveform.frame_duration
 
     def _noise_power(self, strength: float, snr_type=SNRType) -> float:
         # No waveform configured equals no noise required

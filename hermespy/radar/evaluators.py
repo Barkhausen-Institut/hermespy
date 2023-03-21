@@ -364,7 +364,7 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
         impinging_signals[device_index] = null_hypothesis_propagation
 
         # Receive again
-        null_hypothesis_device_reception = self.radar_channel.receiver.process_from_realization(impinging_signals, device_input, device_input.leaking_signal, False, channel_state=null_hypothesis_channel_realization)
+        null_hypothesis_device_reception = self.radar_channel.receiver.process_from_realization(impinging_signals, device_input, device_output.trigger_realization, device_input.leaking_signal, False, channel_state=null_hypothesis_channel_realization)
         null_hypothesis_radar_reception = self.receiving_radar.receive(null_hypothesis_device_reception.operator_inputs[operator_index][0], None, False)
 
         # Generate evaluation
