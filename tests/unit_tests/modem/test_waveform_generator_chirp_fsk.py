@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch, PropertyMock
 import numpy as np
 
 from hermespy.modem.modem import Symbols
-from hermespy.modem.waveform_generator_chirp_fsk import ChirpFSKWaveform, ChirpFSKSynchronization,\
+from hermespy.modem.waveform_chirp_fsk import ChirpFSKWaveform, ChirpFSKSynchronization,\
     ChirpFSKCorrelationSynchronization
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
@@ -352,7 +352,7 @@ class TestChirpFSKWaveform(unittest.TestCase):
     def test_serialization(self) -> None:
         """Test YAML serialization"""
         
-        with patch('hermespy.modem.waveform_generator_chirp_fsk.ChirpFSKWaveform.modem', new_callable=PropertyMock) as blacklist:
+        with patch('hermespy.modem.waveform_chirp_fsk.ChirpFSKWaveform.modem', new_callable=PropertyMock) as blacklist:
         
             blacklist.return_value = {'modem'}
             test_yaml_roundtrip_serialization(self, self.generator, {'modem',})

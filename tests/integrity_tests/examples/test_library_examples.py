@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
+from contextlib import ExitStack
 from os import path as os_path
-from sys import path as sys_path
+from sys import gettrace, path as sys_path
 from unittest import TestCase
 from unittest.mock import patch, PropertyMock
 from warnings import catch_warnings, simplefilter
@@ -88,15 +89,38 @@ class TestLibraryExamples(TestCase):
 
         import getting_started
         mock_figure.assert_called()
+        
+    def test_getting_started_radarlink(self) -> None:
+        """Test getting started radar link example"""
+        
+        with ExitStack() as stack:
+            
+            if gettrace() is None:
+                stack.enter_context(patch('matplotlib.pyplot.figure'))
+                
+            import getting_started_radarlink
 
-    @patch('sys.stdout')
-    def test_usrp_loop(self, _) -> None:
+    def test_usrp_loop(self) -> None:
         """Test USRP loop example execution"""
         
-        from hermespy.hardware_loop import PhysicalDeviceDummy
-
-        with patch('hermespy.hardware_loop.uhd.system.UsrpSystem.new_device') as new_device_patch, \
-            patch('hermespy.hardware_loop.hardware_loop.HardwareLoop.new_dimension'):
+        with ExitStack() as stack:
             
-                new_device_patch.side_effect = lambda *args, **kwargs: PhysicalDeviceDummy()
-                import usrp_loop
+            if gettrace() is None:
+                stack.enter_context(patch('sys.stdout'))
+                
+            from hermespy.hardware_loop import PhysicalScenarioDummy, PhysicalDeviceDummy
+
+            new_device = PhysicalDeviceDummy()
+            def new_device_callback(self, *args, **kwargs):
+                
+                if new_device not in self.devices:
+                    self.add_device(new_device)
+                return new_device
+                         
+            new_device_patch = stack.enter_context(patch.object(PhysicalScenarioDummy, 'new_device', autospec=True))
+            new_device_patch.side_effect = new_device_callback
+
+            stack.enter_context(patch('hermespy.hardware_loop.UsrpSystem', PhysicalScenarioDummy))
+            stack.enter_context(patch('hermespy.hardware_loop.HardwareLoop.new_dimension'))
+
+            import usrp_loop

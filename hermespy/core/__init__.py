@@ -3,6 +3,7 @@ from .definitions import ConsoleMode, SNRType
 from .logarithmic import dB, Logarithmic, LogarithmicSequence, ValueType
 from .channel_state_information import ChannelStateFormat, ChannelStateInformation
 from .transformation import Direction, Transformable, TransformableBase, Transformation
+from .animation import Moveable
 from .device import Operator, OperatorSlot, DuplexOperator, MixingOperator, ProcessedDeviceInput, TransmitterSlot, ReceiverSlot, Transmitter, Receiver, Device, FloatingError, Transmission, Reception, ReceptionType, DeviceReception, DeviceTransmission, DeviceInput, DeviceOutput
 from .executable import Executable, Verbosity
 from .pipeline import Pipeline
@@ -43,6 +44,7 @@ __all__ = [
     "Transformable",
     "TransformableBase",
     "Transformation",
+    "Moveable",
     "Operator",
     "OperatorSlot",
     "DuplexOperator",

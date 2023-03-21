@@ -14,7 +14,7 @@ import numpy as np
 from scipy import integrate
 
 from hermespy.core.factory import Serializable
-from hermespy.modem.waveform_generator import PilotWaveformGenerator, WaveformGenerator, Synchronization
+from hermespy.modem.waveform import PilotWaveformGenerator, WaveformGenerator, Synchronization
 from hermespy.core.signal_model import Signal
 from .symbols import Symbols
 from .waveform_correlation_synchronization import CorrelationSynchronization

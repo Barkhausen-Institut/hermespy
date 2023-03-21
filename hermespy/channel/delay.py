@@ -13,6 +13,7 @@ import numpy as np
 from scipy.constants import speed_of_light
 
 from hermespy.channel import Channel, ChannelRealization
+from hermespy.tools import amplitude_path_loss
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -25,6 +26,8 @@ __status__ = "Prototype"
 
 
 class DelayChannelRealization(ChannelRealization):
+    """Realization of a delay channel model."""
+
     ...  # pragma: no cover
 
 
@@ -33,9 +36,25 @@ class DelayChannelBase(Channel[DelayChannelRealization]):
 
     yaml_tag = "DelayChannelBase"
 
-    def __init__(self, *args, **kwargs) -> None:
+    __model_propagation_loss: bool
+
+    def __init__(self, model_propagation_loss: bool = True, **kwargs) -> None:
+        """
+        Args:
+
+            model_propagation_loss (bool, optional):
+                Should free space propagation loss be modeled?
+                Enabled by default.
+
+            **kawrgs:
+                :class:`Channel` base class initialization arguments.
+        """
+
         # Initialize base class
-        Channel.__init__(self, *args, **kwargs)
+        Channel.__init__(self, **kwargs)
+
+        # Initialize class attributes
+        self.__model_propagation_loss = model_propagation_loss
 
     @abstractmethod
     def _realize_delay(self) -> float:
@@ -53,14 +72,36 @@ class DelayChannelBase(Channel[DelayChannelRealization]):
         """
         ...  # pragma no cover
 
+    @property
+    def model_propagation_loss(self) -> bool:
+        """Should free space propagation loss be modeled?
+
+        Returns: Enabled flag.
+        """
+
+        return self.__model_propagation_loss
+
+    @model_propagation_loss.setter
+    def model_propagation_loss(self, value: bool) -> None:
+        self.__model_propagation_loss = value
+
     def realize(self, num_samples: int, sampling_rate: float) -> DelayChannelRealization:
         delay = self._realize_delay()
         delay_samples = int(delay * sampling_rate)
 
+        loss_factor = 1.0
+        if self.model_propagation_loss:
+            carrier_frequency = self.transmitter.carrier_frequency
+
+            if carrier_frequency == 0.0:
+                raise RuntimeError("Transmitting device's carrier frequency may not be zero, disable propagation path loss modeling")
+
+            loss_factor = amplitude_path_loss(carrier_frequency, delay * speed_of_light)
+
         spatial_response = self._realize_response()
 
         time_response = np.zeros((num_samples, 1 + delay_samples), dtype=complex)
-        time_response[:, -1] = np.sqrt(self.gain)
+        time_response[:, -1] = loss_factor * np.sqrt(self.gain)
 
         # The impulse response is an elment-wise matrix multiplication
         # exploding two two-dimensional matrices into a four-dimensional tensor

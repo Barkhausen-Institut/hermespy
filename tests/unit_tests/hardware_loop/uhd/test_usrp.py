@@ -26,31 +26,30 @@ class TestUsrpDevice(TestCase):
     def setUp(self) -> None:
 
         self.rng = default_rng(42)
-
-        self.zerorpc_patch = patch('hermespy.hardware_loop.uhd.usrp.Client')
-        self.client_patch = patch('hermespy.hardware_loop.uhd.usrp.UsrpClient')
-
-        self.zerorpc_mock: MagicMock = self.zerorpc_patch.start()
-        self.client_mock: MagicMock = self.client_patch.start()
-        self.zerorpc_mock.return_value = self.zerorpc_mock
-        self.client_mock.return_value = self.client_mock
-        self.client_mock.getSupportedSamplingRates.return_value = [1., 2., 3., 4.]
         
         self.ip = '192.168.0.1'
-        self.port = '9999'
+        self.port = 9999
         self.carrier_frequency = 1.123e4
+
+        self.client_mock = MagicMock()
+        self.client_mock.getSupportedSamplingRates.return_value = [1., 2., 3., 4.]
+        self.client_mock.ip = self.ip
+        self.client_mock.port = self.port
+        
+        self.client_create_patch = patch('hermespy.hardware_loop.uhd.usrp.UsrpClient.create')
+        self.client_create_mock: MagicMock = self.client_create_patch.start()
+        self.client_create_mock.return_value = self.client_mock
+        
+        
         self.usrp = UsrpDevice(ip=self.ip, port=self.port, carrier_frequency=self.carrier_frequency)
         
     def tearDown(self) -> None:
 
-        self.zerorpc_patch.stop()
-        self.client_patch.stop()
+        self.client_create_patch.stop()
 
     def test_init(self) -> None:
         """Test initialization routine"""
-        
-        self.zerorpc_mock.connect.assert_called_once()
-        
+                
         self.assertEqual(self.ip, self.usrp.ip)
         self.assertEqual(self.port, self.usrp.port)
         self.assertEqual(self.carrier_frequency, self.usrp.carrier_frequency)
@@ -78,7 +77,7 @@ class TestUsrpDevice(TestCase):
         """Test the individual device trigger"""
 
         self.usrp.trigger()
-        self.client_mock.execute.assert_called_once()
+        self.client_mock.executeImmediately.assert_called_once()
 
     def test_download(self) -> None:
         """Test the device download subroutine"""

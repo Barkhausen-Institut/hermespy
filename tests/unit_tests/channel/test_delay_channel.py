@@ -8,8 +8,9 @@ from numpy.testing import assert_array_equal
 from scipy.constants import speed_of_light
 
 from hermespy.channel import DelayChannelBase, SpatialDelayChannel, RandomDelayChannel
-from hermespy.core import UniformArray, IdealAntenna
+from hermespy.core import UniformArray, IdealAntenna, Signal
 from hermespy.simulation import SimulatedDevice
+from hermespy.tools import amplitude_path_loss
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
@@ -37,7 +38,10 @@ class TestDelayChannelBase(TestCase):
 
     def setUp(self) -> None:
 
-        self.channel = MockDelayChannel()
+        self.transmitter = SimulatedDevice(carrier_frequency=1.234)
+        self.receiver = SimulatedDevice(carrier_frequency=1.234)
+        
+        self.channel = MockDelayChannel(transmitter=self.transmitter, receiver=self.receiver)
 
     def test_realize(self) -> None:
         """Test impulse response generation"""
@@ -45,20 +49,29 @@ class TestDelayChannelBase(TestCase):
         num_samples = 10
         sampling_rate = 1.234
         realization = self.channel.realize(num_samples, sampling_rate)
+        expected_signal_scale = amplitude_path_loss(self.transmitter.carrier_frequency, self.channel._realize_delay() * speed_of_light)
 
         self.assertSequenceEqual((1, 2, 10, 2), realization.state.shape)
-        self.assertAlmostEqual(10., np.sum(realization.state))
-        assert_array_equal(np.eye(1, 2), realization.state[:, :, 0, -1])
+        self.assertAlmostEqual(10. * expected_signal_scale, np.sum(realization.state))
+        assert_array_equal(expected_signal_scale * np.eye(1, 2), realization.state[:, :, 0, -1])
+
+    def test_realize_validation(self) -> None:
+        """Realization routine should raise RuntimeError for base band transmissions"""
+
+        self.transmitter.carrier_frequency = 0.
+
+        with self.assertRaises(RuntimeError):
+            _ = self.channel.realize(1, 1.234)
 
 
 class TestSpatialDelayChannel(TestCase):
 
     def setUp(self) -> None:
 
-        carrier_frequency = 60e9
+        self.carrier_frequency = 60e9
 
-        self.transmitter = SimulatedDevice(carrier_frequency=carrier_frequency, antennas=UniformArray(IdealAntenna(), .5 * speed_of_light / carrier_frequency, (2, 1, 1)))
-        self.receiver = SimulatedDevice(carrier_frequency=carrier_frequency, antennas=UniformArray(IdealAntenna(), .5 * speed_of_light / carrier_frequency, (3, 1, 1)))
+        self.transmitter = SimulatedDevice(carrier_frequency=self.carrier_frequency, antennas=UniformArray(IdealAntenna(), .5 * speed_of_light / self.carrier_frequency, (2, 1, 1)))
+        self.receiver = SimulatedDevice(carrier_frequency=self.carrier_frequency, antennas=UniformArray(IdealAntenna(), .5 * speed_of_light / self.carrier_frequency, (3, 1, 1)))
 
         self.expected_delay = 1.4567
         self.transmitter.position = np.zeros(3)
@@ -76,7 +89,30 @@ class TestSpatialDelayChannel(TestCase):
         """Channel realization should yield the correct sensor array response"""
 
         response = self.channel._realize_response()
+        
+        # Assert general response shape
         self.assertSequenceEqual((self.receiver.num_antennas, self.transmitter.num_antennas), response.shape)
+
+    def test_power_loss(self) -> None:
+        """Propagated signals should loose power according to the free space propagation loss"""
+        
+        # Assert free space propagation power loss
+        power_signal = Signal(np.zeros((self.transmitter.num_antennas, 10)), self.transmitter.sampling_rate, self.transmitter.carrier_frequency)
+        power_signal.samples[0, :] = np.ones(10)
+        
+        initial_energy = np.sum(power_signal.energy)
+        expected_received_energy = initial_energy * amplitude_path_loss(self.transmitter.carrier_frequency, self.expected_delay * speed_of_light) ** 2
+
+        propagated_signals, _, _ = self.channel.propagate(power_signal)
+        received_energy = np.mean(propagated_signals[0].energy)
+        
+        self.assertAlmostEqual(expected_received_energy, received_energy)
+        
+        # Assert no power loss (flag disabled)
+        self.channel.model_propagation_loss = False
+        propagated_signals, _, _ = self.channel.propagate(power_signal)
+        
+        self.assertAlmostEqual(initial_energy, np.mean(propagated_signals[0].energy))     
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""

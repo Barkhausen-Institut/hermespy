@@ -6,7 +6,7 @@ from numpy.testing import assert_array_equal
 from numpy.random import default_rng
 
 
-from hermespy.channel import RadarChannel
+from hermespy.channel import SingleTargetRadarChannel
 from hermespy.jcas import MatchedFilterJcas
 from hermespy.modem import RootRaisedCosineWaveform, CustomPilotSymbolSequence
 from hermespy.modem.waveform_single_carrier import SingleCarrierCorrelationSynchronization, SingleCarrierLeastSquaresChannelEstimation, SingleCarrierZeroForcingChannelEqualization
@@ -33,7 +33,7 @@ class TestSCMatchedFilterJcas(TestCase):
         
         self.target_range = 5
         self.max_range = 10
-        self.channel = RadarChannel(target_range=self.target_range,
+        self.channel = SingleTargetRadarChannel(target_range=self.target_range,
                                     transmitter=self.device,
                                     receiver=self.device,
                                     radar_cross_section=1.)
