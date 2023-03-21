@@ -8,7 +8,7 @@ Radar cubes represent the raw image create after the base-band processing of rad
 """
 
 from __future__ import annotations
-from typing import Optional, Type
+from typing import Literal, Type
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -29,12 +29,44 @@ __status__ = "Prototype"
 class RadarCube(HDFSerializable):
     """A representation of raw radar image samples."""
 
-    data: np.ndarray
-    angle_bins: np.ndarray
-    velocity_bins: np.ndarray
-    range_bins: np.ndarray
+    __data: np.ndarray
+    __angle_bins: np.ndarray
+    __velocity_bins: np.ndarray
+    __range_bins: np.ndarray
 
     def __init__(self, data: np.ndarray, angle_bins: np.ndarray, velocity_bins: np.ndarray, range_bins: np.ndarray) -> None:
+        """
+        Args:
+
+            data (np.ndarray):
+                Raw radar cube data.
+                Three-dimensional real-valued numpy tensor :math:`\\mathbb{R}^{A \\times B \\times C}`, where
+                :math:`A` denotes the number of discrete angle of arrival bins,
+                :math:`B` denotes the number of discrete doppler frequency bins,
+                and :math:`C` denotes the number of discrete range bins.
+
+            angle_bins (np.ndarray):
+                Numpy matrix specifying the represented discrete angle of arrival bins.
+                Must be of dimension :math:`\\mathbb{R}^{A \\times 2}`,
+                the second dimension denoting azimuth and zenith of arrival in radians, respectively.
+
+            velocity_bins (np.ndarray):
+                Numpy vector specifying the represented discrete doppler frequency bins in Hz.
+                Must be of dimension :math:`\\mathbb{R}^{B}`.
+
+            range_bins (np.ndarray):
+                Numpy vector specifying the represented discrete range bins in :math:`\\mathrm{m}`.
+                Must be of dimension :math:`\\mathbb{R}^{C}`.
+
+        Raises:
+
+            ValueError:
+                If the argument numpy arrays have unexpected dimensions or if their dimensions don't match.
+        """
+
+        if data.ndim != 3:
+            raise ValueError(f"Cube data must be a three-dimensional numpy tensor (has {data.ndim} dimenions)")
+
         if data.shape[0] != len(angle_bins):
             raise ValueError("Data cube angle dimension does not match angle bins")
 
@@ -44,12 +76,59 @@ class RadarCube(HDFSerializable):
         if data.shape[2] != len(range_bins):
             raise ValueError("Data cube range dimension does not match range bins")
 
-        self.data = data
-        self.angle_bins = angle_bins
-        self.velocity_bins = velocity_bins
-        self.range_bins = range_bins
+        self.__data = data
+        self.__angle_bins = angle_bins
+        self.__velocity_bins = velocity_bins
+        self.__range_bins = range_bins
 
-    def plot_range(self, title: Optional[str] = None, axes: plt.Axes | None = None) -> plt.Figure:
+    @property
+    def data(self) -> np.ndarray:
+        """Raw radar cube data.
+
+        Three-dimensional real-valued numpy tensor :math:`\\mathbb{R}^{A \\times B \\times C}`, where
+        :math:`A` denotes the number of discrete angle of arrival bins,
+        :math:`B` denotes the number of discrete doppler frequency bins,
+        and :math:`C` denotes the number of discrete range bins.
+
+        Returns: Radar cube numpy tensor.
+        """
+
+        return self.__data
+
+    @property
+    def angle_bins(self) -> np.ndarray:
+        """Discrete angle estimation bins.
+
+        Returns:
+            Numpy matrix of dimension :math:`\\mathbb{R}^{A \\times 2}`,
+            the second dimension denoting azimuth and zenith of arrival in radians, respectively.
+        """
+
+        return self.__angle_bins
+
+    @property
+    def velocity_bins(self) -> np.ndarray:
+        """Discrete velocity estimation bins.
+
+
+        Returns:
+            Numpy vector specifying the represented discrete doppler frequency bins in Hz.
+        """
+
+        return self.__velocity_bins
+
+    @property
+    def range_bins(self) -> np.ndarray:
+        """Discrete range estimation bins.
+
+
+        Returns:
+                Numpy vector specifying the represented discrete range bins in :math:`\\mathrm{m}`.
+        """
+
+        return self.__range_bins
+
+    def plot_range(self, title: str | None = None, axes: plt.Axes | None = None, scale: Literal["lin", "log"] = "lin") -> plt.Figure:
         """Visualize the cube's range data.
 
         Args:
@@ -76,11 +155,19 @@ class RadarCube(HDFSerializable):
 
         axes.set_xlabel("Range [m]")
         axes.set_ylabel("Power")
-        axes.plot(self.range_bins, range_profile)
+
+        if scale == "lin":
+            axes.plot(self.range_bins, range_profile)
+
+        elif scale == "log":
+            axes.semilogy(self.range_bins, range_profile)
+
+        else:
+            raise ValueError(f"Unsupported plotting scale option '{scale}'")
 
         return figure
 
-    def plot_range_velocity(self, title: Optional[str] = None, interpolate: bool = True) -> plt.Figure:
+    def plot_range_velocity(self, title: str | None = None, interpolate: bool = True) -> plt.Figure:
         """Visualize the cube's range-velocity profile.
 
         Args:
@@ -101,10 +188,10 @@ class RadarCube(HDFSerializable):
         # Collapse the cube into the range-dimension
         range_velocity_profile = np.sum(self.data, axis=0, keepdims=False)
 
-        figure, axes = plt.subplots()
-        figure.suptitle(title)
-
         with Executable.style_context():
+            figure, axes = plt.subplots()
+            figure.suptitle(title)
+
             axes.set_xlabel("Range [m]")
             axes.set_ylabel("Doppler [Hz]")
 
@@ -115,7 +202,7 @@ class RadarCube(HDFSerializable):
     def normalize_power(self) -> None:
         """Normalize the represented power indicators to unit maximum."""
 
-        self.data /= self.data.max()
+        self.__data /= self.__data.max()
 
     @classmethod
     def from_HDF(cls: Type[RadarCube], group: Group) -> RadarCube:

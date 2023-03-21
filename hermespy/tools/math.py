@@ -14,6 +14,7 @@ from typing import Optional
 
 import numpy as np
 from scipy import stats
+from scipy.constants import speed_of_light
 from numba import jit
 
 __author__ = "Andre Noll Barreto"
@@ -123,3 +124,30 @@ def rms_value(x: np.ndarray) -> float:
     """Returns the root-mean-square value of a given input vector"""
 
     return np.linalg.norm(x, 2) / np.sqrt(x.size)
+
+
+def amplitude_path_loss(carrier_frequency: float, distance: float) -> float:
+    """Compute the free space propagation loss of a wave in vacuum.
+
+    Args:
+
+        carrier_frequency (float):
+            The wave's carrier frequency in Hz.
+
+        distance (float):
+            The traveled distance in m.
+
+    Raises:
+
+        ValueError: If the absolute value of `carrier_frequency` is zero.
+    """
+
+    absolute_carrier = abs(carrier_frequency)
+
+    if absolute_carrier == 0.0:
+        raise ValueError("Carrier frequency may not be zero for free space propagation path loss modeling")
+
+    wavelength = speed_of_light / absolute_carrier
+    amplitude_scale = wavelength / (4 * np.pi * distance)
+
+    return amplitude_scale

@@ -61,7 +61,7 @@ from scipy.stats import uniform
 from hermespy.core import Executable, ReplayScenario, Scenario, ScenarioMode, Serializable
 from hermespy.core.monte_carlo import Evaluator, Evaluation, EvaluationResult, EvaluationTemplate, GridDimension, ArtifactTemplate, Artifact, ScalarEvaluationResult, ProcessedScalarEvaluationResult
 from hermespy.radar import Radar, RadarReception
-from hermespy.channel.radar_channel import RadarChannel
+from hermespy.channel import SingleTargetRadarChannel, RadarChannelBase
 from hermespy.radar.cube import RadarCube
 from hermespy.radar.detection import RadarPointCloud
 
@@ -80,14 +80,14 @@ class RadarEvaluator(Evaluator, ABC):
     """Base class for evaluating sensing performance."""
 
     __receiving_radar: Radar  # Handle to the radar receiver
-    __radar_channel: RadarChannel  # Handle to the radar channel
+    __radar_channel: RadarChannelBase  # Handle to the radar channel
 
-    def __init__(self, receiving_radar: Radar, radar_channel: Optional[RadarChannel] = None) -> None:
+    def __init__(self, receiving_radar: Radar, radar_channel: RadarChannelBase | None = None) -> None:
         """
         Args:
 
             receiving_radar (Radar): nRadar under test.
-            radar_channel (RadarChannel): Radar channel modeling a desired target.
+            radar_channel (RadarChannelBase): Radar channel modeling a desired target.
 
         Raises:
 
@@ -114,12 +114,8 @@ class RadarEvaluator(Evaluator, ABC):
         return self.__receiving_radar
 
     @property
-    def radar_channel(self) -> RadarChannel:
-        """Radar channel
-
-        Returns:
-            RadarChannel: Handle to the radar channel
-        """
+    def radar_channel(self) -> RadarChannelBase:
+        """The considered radar channel."""
 
         return self.__radar_channel
 
@@ -295,14 +291,14 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
 
     __num_thresholds: int
 
-    def __init__(self, radar: Radar, radar_channel: RadarChannel | None = None, num_thresholds=101) -> None:
+    def __init__(self, radar: Radar, radar_channel: RadarChannelBase | None = None, num_thresholds=101) -> None:
         """
         Args:
 
             radar (Radar):
                 Radar under test.
 
-            radar_channel (RadarChannel, optional):
+            radar_channel (RadarChannelBase, optional):
                 Radar channel containing a desired target.
                 If the radar channel is not specified, the :meth:`.evaluate` routine will not be available.
 
@@ -344,17 +340,21 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
         if self.radar_channel is None:
             raise RuntimeError("Radar channel must be specified in order to evaluate during rutime")
 
-        # Generate the null hypothesis detection radar cube by re-running the radar detection routine
-        null_hypothesis_channel_realization = self.radar_channel.null_hypothesis()
-
         # Collect required information from the simulation
+        one_hypothesis_channel_realization = self.radar_channel.realization
         device_output = self.radar_channel.transmitter.output
         device_input = self.radar_channel.receiver.input
         device_index = self.radar_channel.scenario.device_index(self.radar_channel.transmitter)
         operator_index = self.receiving_radar.device.receivers.operator_index(self.receiving_radar)
 
+        if one_hypothesis_channel_realization is None:
+            raise RuntimeError("Channel has not been realized yet")
+
         if device_output is None or device_input is None:
             raise RuntimeError("Channel devices lack cached transmission / reception information")
+
+        # Generate the null hypothesis detection radar cube by re-running the radar detection routine
+        null_hypothesis_channel_realization = self.radar_channel.null_hypothesis(device_output.mixed_signal.num_samples, device_output.sampling_rate, one_hypothesis_channel_realization)
 
         # Propagate again over the radar channel
         null_hypothesis_propagation = self.radar_channel.Propagate(device_output.mixed_signal, null_hypothesis_channel_realization)

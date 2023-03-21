@@ -124,7 +124,7 @@ class MatchedFilterJcas(Radar, DuplexModem, Transmitter[JCASTransmission], Recei
         # correlation = np.append(correlation, np.zeros(num_appended_zeros))
 
         # Create the cube object
-        angle_bins = np.array([0.0])
+        angle_bins = np.array([[0.0, 0.0]])
         velocity_bins = np.array([0.0])
         range_bins = 0.5 * lags[:num_propagated_samples] * resolution
         cube_data = np.array([[correlation[:num_propagated_samples]]], dtype=float)

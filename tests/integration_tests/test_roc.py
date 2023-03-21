@@ -7,7 +7,7 @@ from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import patch
 
-from hermespy.channel import RadarChannel
+from hermespy.channel import SingleTargetRadarChannel
 from hermespy.core import SNRType
 from hermespy.hardware_loop import HardwareLoop, SimulatedPhysicalScenario
 from hermespy.radar import Radar, FMCW, ReceiverOperatingCharacteristic
@@ -49,7 +49,7 @@ class TestRocFromMeasurements(TestCase):
         radar.waveform = FMCW(bandwidth=bandwidth, num_chirps=10, chirp_duration=chirp_duration, pulse_rep_interval=1.1*chirp_duration)
         radar.device = device
 
-        channel = RadarChannel(target_range=(.75, 1.25), radar_cross_section=1.)
+        channel = SingleTargetRadarChannel(target_range=(.75, 1.25), radar_cross_section=1.)
         system.set_channel(device, device, channel)
 
         with ExitStack() as stack:

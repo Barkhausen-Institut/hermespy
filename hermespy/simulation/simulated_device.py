@@ -13,7 +13,7 @@ from typing import List, Optional, Set, Tuple, Type
 import numpy as np
 from h5py import Group
 
-from hermespy.core import ChannelStateInformation, Device, DeviceInput, DeviceOutput, DeviceReception, DeviceTransmission, HDFSerializable, ProcessedDeviceInput, RandomNode, Transmission, Reception, Scenario, Serializable, Signal, Receiver, SNRType
+from hermespy.core import ChannelStateInformation, Device, DeviceInput, DeviceOutput, DeviceReception, DeviceTransmission, HDFSerializable, Moveable, ProcessedDeviceInput, RandomNode, Transformation, Transmission, Reception, Scenario, Serializable, Signal, Receiver, SNRType
 from .analog_digital_converter import AnalogDigitalConverter
 from .noise import Noise, NoiseRealization, AWGN
 from .rf_chain.rf_chain import RfChain
@@ -653,7 +653,7 @@ class SimulatedDeviceReception(ProcessedSimulatedDeviceInput, DeviceReception):
         return cls.From_ProcessedDeviceInput(device_input, device_reception.operator_receptions)
 
 
-class SimulatedDevice(Device, Serializable):
+class SimulatedDevice(Device, Moveable, Serializable):
     """Representation of a device simulating hardware.
 
     Simulated devices are required to attach to a scenario in order to simulate proper channel propagation.
@@ -693,7 +693,7 @@ class SimulatedDevice(Device, Serializable):
     __operator_separation: bool  # Operator separation flag
     __realization: Optional[SimulatedDeviceReceiveRealization]  # Most recent device receive realization
 
-    def __init__(self, scenario: Optional[Scenario] = None, rf_chain: Optional[RfChain] = None, adc: Optional[AnalogDigitalConverter] = None, isolation: Optional[Isolation] = None, coupling: Optional[Coupling] = None, trigger_model: TriggerModel | None = None, sampling_rate: Optional[float] = None, carrier_frequency: float = 0.0, *args, **kwargs) -> None:
+    def __init__(self, scenario: Optional[Scenario] = None, rf_chain: Optional[RfChain] = None, adc: Optional[AnalogDigitalConverter] = None, isolation: Optional[Isolation] = None, coupling: Optional[Coupling] = None, trigger_model: TriggerModel | None = None, sampling_rate: Optional[float] = None, carrier_frequency: float = 0.0, pose: Transformation | None = None, velocity: np.ndarray | None = None, *args, **kwargs) -> None:
         """
         Args:
 
@@ -726,6 +726,14 @@ class SimulatedDevice(Device, Serializable):
             carrier_frequency (float, optional):
                 Center frequency of the mixed signal in rf-band in Hz.
                 Zero by default.
+                
+            pose (Transformation, optional):
+                Initial pose of the moveable with respect to its reference coordinate frame.
+                By default, a unit transformation is assumed.
+
+            velocity (np.ndarray, optional):
+                Initial velocity of the moveable in local coordinates.
+                By default, the moveable is assumed to be resting.
 
             *args:
                 Device base class initialization parameters.
@@ -734,9 +742,12 @@ class SimulatedDevice(Device, Serializable):
                 Device base class initialization parameters.
         """
 
-        # Init base class
+        # Init base classes
         Device.__init__(self, *args, **kwargs)
+        Moveable.__init__(self, pose=pose, velocity=velocity)
+        Serializable.__init__(self)
 
+        # Initialize class attributes
         self.__scenario = None
         self.scenario = scenario
         self.rf_chain = RfChain() if rf_chain is None else rf_chain
