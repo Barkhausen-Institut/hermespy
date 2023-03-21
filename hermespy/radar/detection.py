@@ -8,12 +8,13 @@ Radar Detection
 from __future__ import annotations
 from abc import abstractmethod
 from math import cos, sin
-from typing import List, Type
+from typing import List, Tuple, Type
 
+import matplotlib.pyplot as plt
 import numpy as np
 from scipy.ndimage.filters import maximum_filter
 
-from hermespy.core import Serializable
+from hermespy.core import Serializable, Visualizable
 from .cube import RadarCube
 
 __author__ = "Jan Adler"
@@ -126,13 +127,55 @@ class PointDetection(object):
         return self.__power
 
 
-class RadarPointCloud(object):
+class RadarPointCloud(Visualizable):
     """A sparse radar point cloud."""
 
-    points: List[PointDetection]
+    __points: List[PointDetection]
+    __max_range: float
 
-    def __init__(self) -> None:
-        self.points = []
+    def __init__(self, max_range: float = 0.0) -> None:
+        """
+
+        Args:
+
+            max_range (float, optional):
+                Maximal represented range.
+                Used for visualization.
+
+        Raises:
+
+            ValueError: For `max_range` smaller than zero.
+        """
+
+        if max_range < 0.0:
+            raise ValueError(f"Maximal represented range must be greater or equal to zero (not {max_range})")
+
+        # Initialize base class
+        Visualizable.__init__(self)
+
+        # Initialize class attributes
+        self.__points = []
+        self.__max_range = max_range
+
+    @property
+    def max_range(self) -> float:
+        """Maximal represented range.
+
+        Returns:
+            Maximal range in m.
+            Zero if unknown.
+        """
+
+        return self.__max_range
+
+    @property
+    def points(self) -> List[PointDetection]:
+        """Points contained within the represented point cloud.
+
+        Returns: List of represented points.
+        """
+
+        return self.__points
 
     @property
     def num_points(self) -> int:
@@ -143,7 +186,7 @@ class RadarPointCloud(object):
             The number of points.
         """
 
-        return len(self.points)
+        return len(self.__points)
 
     def add_point(self, point: PointDetection) -> None:
         """Add a new detection to the point cloud.
@@ -154,7 +197,30 @@ class RadarPointCloud(object):
                 The detection to be added.
         """
 
-        self.points.append(point)
+        self.__points.append(point)
+
+    @property
+    def title(self) -> str:
+        return "Radar Point Coud"
+
+    def _new_axes(self) -> Tuple[plt.Figure, plt.Axes]:
+        figure = plt.figure()
+        axis = figure.add_subplot(projection="3d")
+
+        return figure, axis
+
+    def _plot(self, axes: plt.Axes) -> None:
+        for point in self.points:
+            position = point.position
+            axes.scatter(position[0], position[1], position[2], marker="o", c=point.power, cmap="Greens")
+
+        # Configure axes
+        axes.set_xlim((-self.max_range, self.max_range))
+        axes.set_ylim((0, self.max_range))
+        axes.set_zlim((-self.max_range, self.max_range))
+        axes.set_xlabel("X [m]")
+        axes.set_ylabel("Z [m]")
+        axes.set_zlabel("Y [m]")
 
 
 class RadarDetector(object):
@@ -183,18 +249,31 @@ class ThresholdDetector(RadarDetector, Serializable):
     """Extract points by a power threshold."""
 
     yaml_tag = "Threshold"
-    """YAML serialization tag."""
 
     __min_power: float  # Minmally required point power
+    __normalize: bool
+    __peak_detection: bool
 
-    def __init__(self, min_power: float) -> None:
-        """Args:
+    def __init__(self, min_power: float, normalize: bool = True, peak_detection: bool = True) -> None:
+        """
+        Args:
 
-        min_power (float):
-            Minmally required point power.
+            min_power (float):
+                Minmally required point power.
+
+            normalize (bool, optional):
+                Normalize the power during detection, so that min_power
+                becomes a relative value betwee zero and one.
+                Enabled by default.
+
+            peak_detection (bool, optional):
+                Run a peak detection algorithm to only extract points at power peaks.
+                Enabled by default.
         """
 
         self.min_power = min_power
+        self.__normalize = normalize
+        self.__peak_detection = peak_detection
 
     @property
     def min_power(self) -> float:
@@ -218,21 +297,43 @@ class ThresholdDetector(RadarDetector, Serializable):
 
         self.__min_power = value
 
+    @property
+    def normalize(self) -> bool:
+        """Normalize cube power before detection.
+
+        Returns: Enabled flag.
+        """
+
+        return self.__normalize
+
+    @property
+    def peak_detection(self) -> bool:
+        """Run a peak search before detection.
+
+        Returns: Enabled flag.
+        """
+
+        return self.__peak_detection
+
     def detect(self, cube: RadarCube) -> RadarPointCloud:
+        # Extract cube data and normalize if the respective flag is enabled
+        cube_max = cube.data.max()
+        cube_data: np.ndarray = (cube.data - cube.data.min()) / cube_max if self.normalize and cube_max > 0.0 else cube.data
+
         # Filter the raw cube data for peaks
-        footprint = np.array([1, 1, 10])
-        filtered_image = maximum_filter(cube.data, footprint)
+        if self.peak_detection:
+            footprint = np.array([1, 1, 10])
+            cube_data = maximum_filter(cube_data, footprint)
 
         # Apply the thershold and extract the coordinates matching the requirements
-        detection_point_indices = np.argwhere(filtered_image >= self.min_power)
+        detection_point_indices = np.argwhere(cube_data >= self.min_power)
 
         # Transform the detections to a point cloud
-        cloud = RadarPointCloud()
+        cloud = RadarPointCloud(cube.range_bins.max())
         for point_indices in detection_point_indices:
             # angles = cube.angle_bins[point_indices[0]]
             # ToDo: Add angular domains
-            zenith = 0.0
-            azimuth = 0.0
+            azimuth, zenith = cube.angle_bins[point_indices[0]]
             velocity = cube.velocity_bins[point_indices[1]]
             range = cube.range_bins[point_indices[2]]
             power_indicator = cube.data[tuple(point_indices)]
@@ -261,7 +362,7 @@ class MaxDetector(RadarDetector, Serializable):
         velocity = cube.velocity_bins[point_index[1]]
         range = cube.range_bins[point_index[2]]
 
-        cloud = RadarPointCloud()
+        cloud = RadarPointCloud(cube.range_bins.max())
         cloud.add_point(PointDetection.FromSpherical(angles_of_arrival[0], angles_of_arrival[1], velocity, range, point_power))
 
         return cloud

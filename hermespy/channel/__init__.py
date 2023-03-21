@@ -9,7 +9,7 @@ from .delay import DelayChannelBase, SpatialDelayChannel, RandomDelayChannel
 from .ideal import IdealChannel, IdealChannelRealization
 from .multipath_fading_channel import MultipathFadingChannel, AntennaCorrelation, CustomAntennaCorrelation
 from .multipath_fading_templates import MultipathFadingCost256, Cost256Type, MultipathFading5GTDL, TDLType, MultipathFadingExponential, StandardAntennaCorrelation, DeviceType, CorrelationType
-from .radar_channel import RadarChannel
+from .radar_channel import RadarChannelBase, SingleTargetRadarChannel, RadarTarget, RadarCrossSectionModel, FixedCrossSection, MultiTargetRadarChannel, VirtualRadarTarget, PhysicalRadarTarget, MultiTargetRadarChannelRealization
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -72,5 +72,13 @@ __all__ = [
     "CorrelationType",
     "QuadrigaChannel",
     "QuadrigaInterface",
-    "RadarChannel",
+    "RadarChannelBase",
+    "SingleTargetRadarChannel",
+    "RadarTarget",
+    "RadarCrossSectionModel",
+    "FixedCrossSection",
+    "MultiTargetRadarChannel",
+    "VirtualRadarTarget",
+    "PhysicalRadarTarget",
+    "MultiTargetRadarChannelRealization",
 ]

@@ -12,7 +12,7 @@ import numpy as np
 from scipy.signal import correlate, find_peaks
 
 from hermespy.core import Serializable
-from .waveform_generator import PilotWaveformGenerator, Synchronization
+from .waveform import PilotWaveformGenerator, Synchronization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"

@@ -7,7 +7,7 @@ from unittest.mock import PropertyMock, patch, Mock
 import numpy as np
 from numpy.random import default_rng
 
-from hermespy.channel import RadarChannel
+from hermespy.channel import SingleTargetRadarChannel
 from hermespy.radar import DetectionProbEvaluator, FMCW, Radar, ReceiverOperatingCharacteristic
 from hermespy.radar.evaluators import RocEvaluation, RocEvaluationResult
 from hermespy.simulation import SimulationScenario
@@ -55,13 +55,13 @@ class TestDetectionProbEvaluator(TestCase):
         self.assertEqual(1., evaluation.artifact().to_scalar())
 
 
-class TestReceiverOperatingCharacteristic(TestCase):
+class TestReciverOperatingCharacteristics(TestCase):
     
     def setUp(self) -> None:
         
         self.scenario = SimulationScenario()
         self.device = self.scenario.new_device(carrier_frequency=1e9)
-        self.channel = RadarChannel(1., 1.)
+        self.channel = SingleTargetRadarChannel(1., 1.)
         self.scenario.set_channel(self.device, self.device, self.channel)
         
         self.radar = Radar()

@@ -15,7 +15,7 @@ import numpy as np
 
 from hermespy.core import ChannelStateInformation, Executable, FloatingError, Serializable, Signal
 from hermespy.core.channel_state_information import ChannelStateFormat
-from .waveform_generator import ConfigurablePilotWaveform, MappedPilotSymbolSequence, WaveformGenerator, Synchronization, ChannelEstimation, ChannelEqualization, PilotSymbolSequence, IdealChannelEstimation, ZeroForcingChannelEqualization
+from .waveform import ConfigurablePilotWaveform, MappedPilotSymbolSequence, WaveformGenerator, Synchronization, ChannelEstimation, ChannelEqualization, PilotSymbolSequence, IdealChannelEstimation, ZeroForcingChannelEqualization
 from hermespy.modem.tools.psk_qam_mapping import PskQamMapping
 from .symbols import StatedSymbols, Symbols
 from .waveform_correlation_synchronization import CorrelationSynchronization

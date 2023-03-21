@@ -4,7 +4,7 @@ This script simulates a monostatic radar detector using FMCW pulses
 from operator import attrgetter
 import matplotlib.pyplot as plt
 
-from hermespy.channel import RadarChannel
+from hermespy.channel import SingleTargetRadarChannel
 from hermespy.radar import Radar, FMCW
 from hermespy.simulation import SimulatedDevice
 from hermespy.tools import db2lin
@@ -47,11 +47,11 @@ operator_h0.waveform = FMCW(chirp_duration=chirp_duration,
 operator_h0.device = device_h0
 
 # Simulate a radar channel for each device, one with (H1) and one without (H0) a target
-channel_h1 = RadarChannel(target_range=target_range, velocity=target_velocity, radar_cross_section=1, target_exists=True, attenuate=False)
+channel_h1 = SingleTargetRadarChannel(target_range=target_range, velocity=target_velocity, radar_cross_section=1, target_exists=True, attenuate=False)
 channel_h1.transmitter = device_h1
 channel_h1.receiver = device_h1
 
-channel_h0 = RadarChannel(target_range=target_range, velocity=target_velocity, radar_cross_section=1, target_exists=False, attenuate=False)
+channel_h0 = SingleTargetRadarChannel(target_range=target_range, velocity=target_velocity, radar_cross_section=1, target_exists=False, attenuate=False)
 channel_h0.transmitter = device_h0
 channel_h0.receiver = device_h0
 
@@ -70,10 +70,10 @@ device_h0.process_input(rx_signal_h0, snr=snr)
 operator_h0.receive()
 
 # Plot range profile
-operator_h1.cube.plot_range('Range Profile with Target')
-operator_h0.cube.plot_range('Range Profile without Target')
+operator_h1.reception.cube.plot_range('Range Profile with Target')
+operator_h0.reception.cube.plot_range('Range Profile without Target')
 
 # Plot range-Doppler map
-operator_h1.cube.plot_range_velocity()
+operator_h1.reception.cube.plot_range_velocity()
 
 plt.show()

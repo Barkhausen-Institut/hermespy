@@ -15,7 +15,7 @@ from scipy.fft import fft, fftshift
 from hermespy.core import ChannelStateInformation
 from hermespy.modem.modem import Symbols
 from hermespy.modem import OFDMWaveform, FrameSymbolSection, FrameGuardSection, FrameResource
-from hermespy.modem.waveform_generator_ofdm import FrameElement, ElementType, PrefixType, FrameSection, OFDMCorrelationSynchronization, OFDMIdealChannelEstimation, PilotSection, SchmidlCoxPilotSection, SchmidlCoxSynchronization, OFDMLeastSquaresChannelEstimation, OFDMChannelEqualization, OFDMZeroForcingChannelEqualization, OFDMMinimumMeanSquareChannelEqualization
+from hermespy.modem.waveform_ofdm import FrameElement, ElementType, PrefixType, FrameSection, OFDMCorrelationSynchronization, OFDMIdealChannelEstimation, PilotSection, SchmidlCoxPilotSection, SchmidlCoxSynchronization, OFDMLeastSquaresChannelEstimation, OFDMChannelEqualization, OFDMZeroForcingChannelEqualization, OFDMMinimumMeanSquareChannelEqualization
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "André Noll Barreto"
@@ -296,7 +296,7 @@ class TestFrameSymbolSection(TestCase):
     def test_serialization(self) -> None:
         """Test YAML serialization"""
         
-        with patch('hermespy.modem.waveform_generator_ofdm.FrameSymbolSection.frame', new_callable=PropertyMock) as frame:
+        with patch('hermespy.modem.waveform_ofdm.FrameSymbolSection.frame', new_callable=PropertyMock) as frame:
         
             frame.return_value = self.frame
             test_yaml_roundtrip_serialization(self, self.section)
@@ -364,7 +364,7 @@ class TestFrameGuardSection(TestCase):
     def test_serialization(self) -> None:
         """Test YAML serialization"""
         
-        with patch('hermespy.modem.waveform_generator_ofdm.FrameGuardSection.frame', new_callable=PropertyMock) as frame:
+        with patch('hermespy.modem.waveform_ofdm.FrameGuardSection.frame', new_callable=PropertyMock) as frame:
         
             frame.return_value = self.frame
             test_yaml_roundtrip_serialization(self, self.section)
@@ -522,7 +522,7 @@ class TestOFDMWaveform(TestCase):
     def test_serialization(self) -> None:
         """Test YAML serialization"""
         
-        with patch('hermespy.modem.waveform_generator_ofdm.OFDMWaveform.modem', new_callable=PropertyMock) as blacklist:
+        with patch('hermespy.modem.waveform_ofdm.OFDMWaveform.modem', new_callable=PropertyMock) as blacklist:
         
             blacklist.return_value = {'modem'}
             test_yaml_roundtrip_serialization(self, self.ofdm, {'modem',})

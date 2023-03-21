@@ -8,8 +8,8 @@ from unittest import TestCase
 import numpy as np
 
 from hermespy.beamforming import ConventionalBeamformer
-from hermespy.core import UniformArray, IdealAntenna
-from hermespy.channel import RadarChannel
+from hermespy.core import Direction, UniformArray, IdealAntenna, Transformation
+from hermespy.channel import MultiTargetRadarChannel, VirtualRadarTarget, FixedCrossSection
 from hermespy.radar.radar import Radar
 from hermespy.radar.fmcw import FMCW
 from hermespy.simulation import Simulation
@@ -32,7 +32,7 @@ class FMCWRadarSimulation(TestCase):
         self.simulation = Simulation()
         self.device = self.simulation.scenario.new_device()
         self.device.carrier_frequency = 1e8
-        self.device.antennas = UniformArray(IdealAntenna(), .5 * speed_of_light / self.device.carrier_frequency, (3, 3))
+        self.device.antennas = UniformArray(IdealAntenna(), .5 * speed_of_light / self.device.carrier_frequency, (5, 5))
 
         self.waveform = FMCW()
         self.beamformer = ConventionalBeamformer()
@@ -45,9 +45,12 @@ class FMCWRadarSimulation(TestCase):
         self.device.transmitters.add(self.radar)
         self.device.receivers.add(self.radar)
 
-        self.target_range = int(.5 * self.waveform.max_range) * self.waveform.range_resolution
-        self.channel = RadarChannel(target_range=self.target_range,
-                                    radar_cross_section=1.)
+        self.target_range = .5 * self.waveform.max_range
+        self.channel = MultiTargetRadarChannel()
+        
+        self.virtual_target = VirtualRadarTarget(FixedCrossSection(1.), velocity=np.array([0., 0., 0.]), pose=Transformation.From_Translation(np.array([0, 0, self.target_range])))
+        self.channel.add_target(self.virtual_target)
+
         self.simulation.scenario.set_channel(self.device, self.device, self.channel)
 
     def test_beamforming(self) -> None:
@@ -65,10 +68,8 @@ class FMCWRadarSimulation(TestCase):
 
         for angle_index, (azimuth, zenith) in enumerate(self.radar.receive_beamformer.probe_focus_points[:, 0, :]):
 
-            # Configure the channel
-            self.channel.target_range = self.target_range
-            self.channel.target_azimuth = azimuth
-            self.channel.target_zenith = zenith
+            # Configure the channel's only target
+            self.virtual_target.pose = Transformation.From_Translation(Direction.From_Spherical(azimuth, zenith) * self.target_range)
 
             # Generate the radar cube
             self.radar.transmit()

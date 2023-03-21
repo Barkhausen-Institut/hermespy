@@ -43,17 +43,45 @@ class Visualizable(object):
         with Executable.style_context():
             return plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
-    def _prepare_axes(self, axes: plt.Axes | None = None, title: str | None = None) -> Tuple[None | plt.Figure, plt.Axes]:
-        figure: plt.Figure | None
+    def _new_axes(self) -> Tuple[plt.Figure, plt.Axes]:
+        """Generate a new figure and axes to plot into.
+
+        Can be overriden by subclasses to configure custom axes flags.
+
+        Returns: Tuple of matplotlib figure and axes.
+        """
+
+        figure, axes = plt.subplots()
+        return figure, axes
+
+    def _prepare_axes(self, axes: plt.Axes | None = None, title: str | None = None) -> Tuple[plt.Figure, plt.Axes]:
+        """Prepare axes to plot into.
+
+        Args:
+
+            axes (plt.Axes, optional):
+                Axes to plot into.
+                If not provided, a new figure and axes will be generated.
+                See :meth:`Visualizable._new_axes`
+
+            title (str, optional):
+                Title of the generated figure.
+                Only applied if `axes` are not provided and a new figure is generated.
+                If not specified, :meth:`Visualizable.title` will be applied.
+
+        Returns:
+            Tuple of the newly generated figure and configured axis.
+        """
+
+        figure: plt.Figure
 
         if axes is None:
             with Executable.style_context():
-                figure, axes = plt.subplots()
-
-            figure.suptitle(self.title if title is None else title)
+                figure, axes = self._new_axes()
+                figure.suptitle(title)
 
         else:
-            figure, axes = None, axes
+            figure, axes = axes.figure, axes
 
         return figure, axes
 
