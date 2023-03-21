@@ -646,7 +646,7 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
         outputs = [d.generate_output(t) for d, t in zip(self.devices, transmissions)]
         return outputs
 
-    def transmit_devices(self) -> List[DeviceTransmission]:
+    def transmit_devices(self) -> Sequence[DeviceTransmission]:
         """Generated information transmitted by all registered devices.
 
         Returns: List of generated information transmitted by each device.

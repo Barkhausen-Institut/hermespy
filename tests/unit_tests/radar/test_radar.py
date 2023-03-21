@@ -134,6 +134,11 @@ class RadarWaveformMock(RadarWaveform):
     def power(self) -> float:
         return 1.
 
+    @property
+    def frame_duration(self) -> float:
+
+        return 12.345
+
 
 class TestRadar(TestCase):
     """Test the radar operator."""
@@ -182,7 +187,7 @@ class TestRadar(TestCase):
     def test_frame_duration(self) -> None:
         """Frame duration property should return the frame duration"""
         
-        self.assertEqual(1., self.radar.frame_duration)
+        self.assertEqual(12.345, self.radar.frame_duration)
         
     def test_noise_power(self) -> None:
         """Noise power estimator should compute the correct powers"""
