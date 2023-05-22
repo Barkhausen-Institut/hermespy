@@ -1328,7 +1328,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
         # Return result
         return processed_input
 
-    def receive(self, impinging_signals: DeviceInput | Signal | Sequence[Signal], cache: bool = True, trigger_realization: TriggerRealization | None = None, channel_state: ChannelStateInformation | None = None) -> DeviceReception:
+    def receive(self, impinging_signals: DeviceInput | Signal | Sequence[Signal], cache: bool = True, trigger_realization: TriggerRealization | None = None, channel_state: ChannelStateInformation | None = None) -> SimulatedDeviceReception:
         """Receive information at this device.
 
         Args:
@@ -1360,4 +1360,4 @@ class SimulatedDevice(Device, Moveable, Serializable):
         receptions = self.receive_operators(processed_input.operator_inputs, cache)
 
         # Generate device reception
-        return DeviceReception.From_ProcessedDeviceInput(processed_input, receptions)
+        return SimulatedDeviceReception.From_ProcessedSimulatedDeviceInput(processed_input, receptions)

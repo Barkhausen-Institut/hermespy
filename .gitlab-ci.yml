@@ -1,4 +1,5 @@
-image: $CI_REGISTRY/barkhauseninstitut/wicon/hermespy:python-39-linux
+#image: $CI_REGISTRY/barkhauseninstitut/wicon/hermespy:python-39-linux
+image: python:3.9
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
@@ -19,8 +20,13 @@ cache:
 
 Build Package:
   stage: build
+  before_script:
+    - apt update && apt-get install -y build-essential octave pandoc python-dev
+    - pip install --upgrade setuptools sphinx wheel pybind11 scikit-build cmake build
   script:
     - export MAKEFLAGS="-j $(grep -c ^processor /proc/cpuinfo)"
+    - pip install --no-cache-dir -U -e .\[test,quadriga,documentation,uhd,audio,develop\]  # remove for docker
+    - pip uninstall -y hermespy  # remove for docker
     - python -m build
   artifacts:
     paths:
@@ -31,15 +37,23 @@ Unit Testing:
   dependencies:
     - Build Package
   before_script:
+    - apt update && apt-get install -y octave portaudio19-dev python-dev  # remove for docker
     - pip install dist/$HERMES_WHEEL\[test,quadriga,uhd,audio\]
   script:
-    - python tests/test_install.py unit_tests
-
+    - coverage run ./tests/test_install.py ./tests/unit_tests/ 
+    - coverage xml
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+  
 Integration Testing:
   stage: test
   dependencies:
     - Build Package
   before_script:
+    - apt update && apt-get install -y octave portaudio19-dev python-dev  # remove for docker
     - pip install dist/$HERMES_WHEEL\[test,quadriga,uhd,audio\]
   script:
     - python tests/test_install.py integration_tests
@@ -49,6 +63,7 @@ Integrity Testing:
   dependencies:
     - Build Package
   before_script:
+    - apt update && apt-get install -y octave portaudio19-dev python-dev  # remove for docker
     - pip install dist/$HERMES_WHEEL\[test,quadriga,uhd,audio\]
   script:
     - python tests/test_install.py integrity_tests
@@ -56,6 +71,7 @@ Integrity Testing:
 PEP8 Testing:
   stage: lint
   before_script:
+    - apt update && apt-get install -y octave portaudio19-dev python-dev  # remove for docker
     - pip install dist/$HERMES_WHEEL\[test,quadriga,uhd,audio\]
     - pip install flake8
   script:
@@ -64,6 +80,7 @@ PEP8 Testing:
 Type Checking:
   stage: lint
   before_script:
+    - apt update && apt-get install -y octave portaudio19-dev python-dev  # remove for docker
     - pip install dist/$HERMES_WHEEL\[test,quadriga,uhd,audio\]
     - pip install mypy
   script:
@@ -74,9 +91,10 @@ pages:
   only:
     - master
   before_script:
+    - apt update && apt-get install -y octave portaudio19-dev python-dev  # remove for docker
     - pip install dist/$HERMES_WHEEL\[test,documentation,quadriga,uhd,audio\]
   script:
-    - python -m setup build_sphinx
+    - sphinx-build ./docssource/ ./documentation/
   after_script:
     - mkdir public/
     - cp -r documentation/html/* public/

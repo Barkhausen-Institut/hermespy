@@ -7,7 +7,7 @@ Leakage Calibration
 
 from __future__ import annotations
 from math import ceil
-from typing import Tuple
+from typing import Tuple, Type
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -151,7 +151,7 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Visualizable, Serializ
         group.attrs["delay"] = self.delay
 
     @classmethod
-    def from_HDF(cls: SelectiveLeakageCalibration, group: Group) -> SelectiveLeakageCalibration:
+    def from_HDF(cls: Type[SelectiveLeakageCalibration], group: Group) -> SelectiveLeakageCalibration:
         leakage_response = np.asarray(group.get("leakage_response"), dtype=np.complex_)
         sampling_rate = group.attrs.get("sampling_rate")
         delay = group.attrs.get("delay")
@@ -166,7 +166,7 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Visualizable, Serializ
         """
 
         # The delay is estimated by finding the maximum of the absolute value of the leakage response
-        delay = np.argmax(np.abs(self.leakage_response)) / self.sampling_rate + self.delay
+        delay = float(np.argmax(np.abs(self.leakage_response)) / self.sampling_rate + self.delay)
 
         return DelayCalibration(delay)
 

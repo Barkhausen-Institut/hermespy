@@ -189,7 +189,7 @@ class PhysicalDevice(Device):
         if group_name not in file.attrs:
             return None
 
-        calibration_class: Type[CT] = factory.tag_registry[file.attrs.get(group_name)]
+        calibration_class: Type[CT] = factory.tag_registry[file.attrs.get(group_name)]  # type: ignore
         return calibration_class.from_HDF(file[group_name])
 
     def load_calibration(self, path: str) -> None:
@@ -205,12 +205,12 @@ class PhysicalDevice(Device):
         factory = Factory()
 
         # Load leakage calibration if available in save file
-        leakage_calibration = self.__calibration_from_hdf(file, factory, LeakageCalibrationBase)
+        leakage_calibration = self.__calibration_from_hdf(file, factory, LeakageCalibrationBase)  # type: ignore
         if leakage_calibration is not None:
             self.leakage_calibration = leakage_calibration
 
         # Load delay calibration if available in save file
-        delay_calibration = self.__calibration_from_hdf(file, factory, DelayCalibrationBase)
+        delay_calibration = self.__calibration_from_hdf(file, factory, DelayCalibrationBase)  # type: ignore
         if delay_calibration is not None:
             self.delay_calibration = delay_calibration
 
