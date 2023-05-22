@@ -103,10 +103,11 @@ class SimulatedPhysicalScenario(SimulationScenario, PhysicalScenario):
 
     def receive_devices(self, impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]] | Sequence[Sequence[Tuple[Signal, ChannelStateInformation | None]]] | None = None, cache: bool = True, trigger_realizations: Sequence[TriggerRealization] | None = None) -> Sequence[SimulatedDeviceReception]:
         if impinging_signals is None:
-            _trigger_realizations = [None for _ in range(self.num_devices)] if trigger_realizations is None else trigger_realizations
-            device_receptions = PhysicalScenario.receive_devices(self, None, cache)
 
-            return [SimulatedDeviceReception(r.impinging_signals, Signal.empty(0.0, 0, 0), False, r.operator_inputs, [], t, r.operator_receptions) for r, t in zip(device_receptions, _trigger_realizations)]
+            physical_device_receptions = PhysicalScenario.receive_devices(self, None, cache)
+            impinging_signals = [r.impinging_signals for r in physical_device_receptions]
+
+            return SimulationScenario.receive_devices(self, impinging_signals, cache, trigger_realizations)
 
         else:
             return SimulationScenario.receive_devices(self, impinging_signals, cache, trigger_realizations)
