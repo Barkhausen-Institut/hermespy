@@ -8,7 +8,7 @@ Signal Modeling
 from __future__ import annotations
 from copy import deepcopy
 from math import floor
-from typing import Literal, Optional, Type, Union
+from typing import Literal, Optional, Type
 
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
@@ -122,7 +122,7 @@ class Signal(HDFSerializable, Visualizable):
 
     @property
     def samples(self) -> np.ndarray:
-        """Uniformly sampled c
+        """Uniformly sampled complex signal model in time-domain.
 
         Returns:
             np.ndarray:
@@ -499,8 +499,13 @@ class Signal(HDFSerializable, Visualizable):
             for stream_idx, stream_samples in enumerate(self.__samples):
                 # Plot time space
                 if space in {"both", "time"}:
-                    axes[stream_idx, time_axis_idx].plot(timestamps, stream_samples.real, label="Real")
-                    axes[stream_idx, time_axis_idx].plot(timestamps, stream_samples.imag, label="Imag")
+                    if self.num_samples < 1:
+                        axes[stream_idx, time_axis_idx].text(0.5, 0.5, "NO SAMPLES", horizontalalignment="center")
+
+                    else:
+                        axes[stream_idx, time_axis_idx].plot(timestamps, stream_samples.real, label="Real")
+                        axes[stream_idx, time_axis_idx].plot(timestamps, stream_samples.imag, label="Imag")
+
                     axes[stream_idx, time_axis_idx].set_xlabel("Time-Domain [s]")
 
                     if legend:
@@ -508,10 +513,15 @@ class Signal(HDFSerializable, Visualizable):
 
                 # Plot frequency space
                 if space in {"both", "frequency"}:
-                    frequencies = fftshift(fftfreq(self.num_samples, 1 / self.sampling_rate))
-                    bins = fftshift(fft(stream_samples))
+                    if self.num_samples < 1:
+                        axes[stream_idx, time_axis_idx].text(0.5, 0.5, "NO SAMPLES", horizontalalignment="center")
 
-                    axes[stream_idx, frequency_axis_idx].plot(frequencies, np.abs(bins))
+                    else:
+                        frequencies = fftshift(fftfreq(self.num_samples, 1 / self.sampling_rate))
+                        bins = fftshift(fft(stream_samples))
+
+                        axes[stream_idx, frequency_axis_idx].plot(frequencies, np.abs(bins))
+
                     axes[stream_idx, frequency_axis_idx].set_ylabel("Abs")
                     axes[stream_idx, frequency_axis_idx].set_xlabel("Frequency-Domain [Hz]")
 
@@ -744,7 +754,7 @@ class Signal(HDFSerializable, Visualizable):
 
         return self.num_samples / self.sampling_rate
 
-    def to_interleaved(self, data_type: Type = np.int16, scale: bool = True) -> np.ndarray:
+    def to_interleaved(self, data_type: Type = np.int16, scale: bool = False) -> np.ndarray:
         """Convert the complex-valued floating-point model samples to interleaved integers.
 
         Args:

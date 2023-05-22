@@ -6,7 +6,7 @@ Channel State Information Model
 """
 
 from __future__ import annotations
-from typing import Generator, Optional, List, overload, Union, SupportsIndex, Tuple, Type
+from typing import Generator, Optional, List, Union, SupportsIndex, Tuple, Type
 from enum import Enum
 
 import numpy as np

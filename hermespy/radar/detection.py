@@ -12,7 +12,7 @@ from typing import List, Tuple, Type
 
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.ndimage.filters import maximum_filter
+from scipy.ndimage import maximum_filter
 
 from hermespy.core import Serializable, Visualizable
 from .cube import RadarCube

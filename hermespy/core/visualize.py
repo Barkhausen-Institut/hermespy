@@ -78,7 +78,7 @@ class Visualizable(object):
         if axes is None:
             with Executable.style_context():
                 figure, axes = self._new_axes()
-                figure.suptitle(title)
+                figure.suptitle(self.title if title is None else title)
 
         else:
             figure, axes = axes.figure, axes

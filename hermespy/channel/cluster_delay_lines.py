@@ -33,7 +33,7 @@ positions and orientations, since the specular line of sight ray components are 
 from __future__ import annotations
 from abc import abstractmethod
 from enum import Enum
-from math import atan, ceil, sin, cos, sqrt
+from math import ceil, sin, cos, sqrt
 from typing import Any, List, Tuple
 
 import numpy as np

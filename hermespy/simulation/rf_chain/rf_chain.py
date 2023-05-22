@@ -9,10 +9,9 @@ Isolation model (to be implemented): :footcite:t:`2018:kiayni`
 
 
 from __future__ import annotations
-from typing import Type, Optional
+from typing import Optional
 
 import numpy as np
-from ruamel.yaml import SafeRepresenter, Node
 
 from hermespy.core.signal_model import Signal
 from hermespy.core.factory import Serializable

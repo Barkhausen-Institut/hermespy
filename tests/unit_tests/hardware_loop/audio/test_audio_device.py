@@ -1,13 +1,14 @@
-from multiprocessing.sharedctypes import Value
+# -*- coding: utf-8 -*-
+
 from unittest import TestCase
 
 import numpy as np
 from unittest.mock import MagicMock, Mock, patch
 from numpy.testing import assert_array_almost_equal
 
-from hermespy.core import ChannelStateInformation, DuplexOperator, Reception, Signal, Transmission
+from hermespy.core import DuplexOperator, Reception, Signal, Transmission
 from hermespy.hardware_loop.audio import AudioDevice
-from hermespy.hardware_loop.audio.device import AudioDeviceAntennas
+from hermespy.hardware_loop.audio.device import AudioAntenna, AudioDeviceAntennas
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
@@ -20,7 +21,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class SineOperator(DuplexOperator):
+class SineOperator(DuplexOperator[Transmission, Reception]):
     """Operator transmitting a sine wave for testing purposes."""
     
     __duration: float
@@ -73,6 +74,19 @@ class SineOperator(DuplexOperator):
 
         return Reception.from_HDF(group)
     
+    
+class TestAudioAntenna(TestCase):
+    """Test audio antenna model."""
+    
+    def setUp(self) -> None:
+        
+        self.antenna = AudioAntenna()
+        
+    def test_characteristics(self) -> None:
+        """Audio device antenna should always return ideal characteristics"""
+        
+        self.assertCountEqual(np.array([2**0.5, 2**0.5], dtype=float), self.antenna.characteristics(0., 0.))
+
 
 class TestAudioDeviceAntennas(TestCase):
     
@@ -84,9 +98,14 @@ class TestAudioDeviceAntennas(TestCase):
         self.antennas = AudioDeviceAntennas(self.device)
         
     def test_num_antennas(self) -> None:
-        """Test numbero of transmit antennas calcualtion."""
+        """Test numbero of transmit antennas calcualtion"""
         
         self.assertEqual(5, self.antennas.num_antennas)
+        
+    def test_antennas(self) -> None:
+        """Antennas property should alwys return a list of antenna instances"""
+        
+        self.assertEqual(5, len(self.antennas.antennas))
 
 
 class TestAudioDevice(TestCase):

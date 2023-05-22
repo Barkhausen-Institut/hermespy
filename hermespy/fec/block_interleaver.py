@@ -12,8 +12,6 @@ i.e. the code rate is :math:`R = 1`.
 """
 
 from __future__ import annotations
-from typing import Type
-from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, Node
 import numpy as np
 
 from hermespy.core import Serializable

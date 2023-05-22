@@ -5,7 +5,6 @@ Frequency Modulated Continuous Waveform Radar
 =============================================
 """
 
-from math import ceil
 from fractions import Fraction
 
 import numpy as np

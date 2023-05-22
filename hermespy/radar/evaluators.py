@@ -51,7 +51,7 @@ from __future__ import annotations
 from abc import ABC
 from collections.abc import Sequence
 from itertools import product
-from typing import List, Optional, Type, Union
+from typing import Optional, Type, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -61,7 +61,7 @@ from scipy.stats import uniform
 from hermespy.core import Executable, ReplayScenario, Scenario, ScenarioMode, Serializable
 from hermespy.core.monte_carlo import Evaluator, Evaluation, EvaluationResult, EvaluationTemplate, GridDimension, ArtifactTemplate, Artifact, ScalarEvaluationResult, ProcessedScalarEvaluationResult
 from hermespy.radar import Radar, RadarReception
-from hermespy.channel import SingleTargetRadarChannel, RadarChannelBase
+from hermespy.channel import RadarChannelBase
 from hermespy.radar.cube import RadarCube
 from hermespy.radar.detection import RadarPointCloud
 
@@ -254,8 +254,8 @@ class RocEvaluationResult(EvaluationResult):
             axes.set_ylabel("Detection Probability")
 
             # Configure axes limits
-            axes.set_xlim(0.0, 1.0)
-            axes.set_ylim(0.0, 1.0)
+            axes.set_xlim(0.0, 2)
+            axes.set_ylim(0.0, 2)
 
             section_magnitudes = tuple(s.num_sample_points for s in self.__grid)
             for section_indices in np.ndindex(section_magnitudes):
@@ -421,8 +421,13 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
             if h0_scenario.num_operators < 1:
                 raise ValueError("Null hypothesis radar has no registered operators")
 
-            inferred_h0_operator = list(h0_scenario.operators)[0]
-            if not isinstance(inferred_h0_operator, Radar):
+            inferred_h0_operator = None
+            for operator in h0_scenario.operators:
+                if isinstance(operator, Radar):
+                    inferred_h0_operator = operator
+                    break
+
+            if inferred_h0_operator is None:
                 raise ValueError("Could not infer radar operator from list of operators")
 
             h0_operator = inferred_h0_operator
@@ -435,8 +440,13 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
             if h1_scenario.num_operators < 1:
                 raise ValueError("One hypothesis radar has no registered operators")
 
-            inferred_h1_operator = list(h1_scenario.operators)[0]
-            if not isinstance(inferred_h1_operator, Radar):
+            inferred_h1_operator = None
+            for operator in h1_scenario.operators:
+                if isinstance(operator, Radar):
+                    inferred_h1_operator = operator
+                    break
+
+            if inferred_h1_operator is None:
                 raise ValueError("Could not infer radar operator from list of operators")
 
             h1_operator = inferred_h1_operator

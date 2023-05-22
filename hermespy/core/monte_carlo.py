@@ -1379,6 +1379,12 @@ class GridDimension(object):
         return self.__considered_objects
 
     @property
+    def dimension(self) -> str:
+        """Dimension property name."""
+
+        return self.__dimension
+
+    @property
     def sample_points(self) -> List[Any]:
         """Points at which this grid dimension is sampled.
 

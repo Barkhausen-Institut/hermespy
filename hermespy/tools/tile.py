@@ -30,8 +30,8 @@ def screen_geometry(monitor=0):
         return sizes[monitor]
     except ModuleNotFoundError:
         default = (0, 0, 900, 600)
-        print("screen_geometry: module screeninfo is no available.")
-        print("Returning default: %s" % (default,))
+        # print("screen_geometry: module screeninfo is no available.")
+        # print("Returning default: %s" % (default,))
         return default
 
 
@@ -43,8 +43,8 @@ def set_figure_geometry(fig, backend, x, y, w, h):
     elif backend in ("TkAgg",):
         fig.canvas.manager.window.wm_geometry("%dx%d+%d+%d" % (w, h, x, y))
     else:
-        print("This backend is not supported yet.")
-        print("Set the backend with matplotlib.use(<name>).")
+        # print("This backend is not supported yet.")
+        # print("Set the backend with matplotlib.use(<name>).")
         return
 
 

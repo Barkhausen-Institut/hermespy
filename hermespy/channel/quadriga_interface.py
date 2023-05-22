@@ -2,7 +2,7 @@
 """Interface prototype to the Quadriga channel model."""
 
 from __future__ import annotations
-from typing import List, Tuple, Optional, Type, TYPE_CHECKING, Any
+from typing import List, Tuple, Optional, Type, TYPE_CHECKING
 
 import os
 import numpy as np

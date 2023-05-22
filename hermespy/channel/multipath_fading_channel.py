@@ -15,7 +15,6 @@ from numpy import cos, exp
 from scipy.constants import pi
 
 from hermespy.core import Serializable
-from hermespy.core.device import Device
 from hermespy.tools import delay_resampling_matrix
 from .channel import Channel, ChannelRealization
 
