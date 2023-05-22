@@ -9,7 +9,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from enum import Enum
 from math import isclose
-from typing import Any, overload, List, Optional, Sequence, Tuple, Type, Union
+from typing import Any, overload, List, Optional, Tuple, Type, Union
 
 import numpy as np
 

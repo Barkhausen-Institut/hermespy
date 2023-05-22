@@ -2,7 +2,6 @@
 """Matlab interface to the Quadriga channel model."""
 
 from __future__ import annotations
-from typing import List, Any
 from matlab.engine import MatlabEngine, start_matlab
 import matlab
 import numpy as np

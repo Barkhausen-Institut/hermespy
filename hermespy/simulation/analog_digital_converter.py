@@ -16,7 +16,7 @@ The following figure visualizes the quantizer responses.
 """
 
 from __future__ import annotations
-from typing import Type, TypeVar, Union, Optional
+from typing import Type, TypeVar, Optional
 
 import numpy as np
 from matplotlib import pyplot as plt

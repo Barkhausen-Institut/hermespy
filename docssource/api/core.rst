@@ -11,14 +11,14 @@ The core module of HermesPy provides all basic functionalities of the simulator.
 It is split into several interdependent sub-modules:
 
 .. toctree::
-   :maxdepth: 0
-   :titlesonly:
+   :maxdepth: 1
 
    core.monte_carlo
    core.executable
    core.factory
    core.definitions
    core.device
+   core.operators
    core.logarithmic
    core.pipeline
    core.random_node
@@ -27,3 +27,5 @@ It is split into several interdependent sub-modules:
    core.channel_state_information
    core.antennas
    core.transformation
+   core.animation
+   core.visualize

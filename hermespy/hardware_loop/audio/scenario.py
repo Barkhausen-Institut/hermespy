@@ -5,7 +5,6 @@ Audio Device Scenario
 =====================
 """
 
-from hermespy.core import Serializable
 from ..scenario import PhysicalScenario
 from .device import AudioDevice
 

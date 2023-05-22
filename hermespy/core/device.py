@@ -129,7 +129,6 @@ from .antennas import AntennaArrayBase, UniformArray, IdealAntenna
 from .definitions import SNRType
 from .channel_state_information import ChannelStateInformation
 from .factory import HDFSerializable, Serializable
-from .signal_model import Signal
 from .random_node import RandomNode
 from .signal_model import Signal
 from .transformation import Transformable, Transformation
@@ -1470,9 +1469,11 @@ class Device(ABC, Transformable, RandomNode, Serializable):
                 Random seed used to initialize the pseudo-random number generator.
         """
 
+        # Initialize base classes
         RandomNode.__init__(self, seed=seed)
         Transformable.__init__(self, pose=pose)
 
+        # Initalize device attributes and properties
         self.antennas = UniformArray(IdealAntenna(), 5e-3, (1,)) if antennas is None else antennas
         self.transmitters = TransmitterSlot(self)
         self.receivers = ReceiverSlot(self)
@@ -1802,85 +1803,3 @@ class Device(ABC, Transformable, RandomNode, Serializable):
 
 DeviceType = TypeVar("DeviceType", bound="Device")
 """Type of device."""
-
-
-class DuplexOperator(Transmitter[TransmissionType], Receiver[ReceptionType], Generic[TransmissionType, ReceptionType]):
-    """Operator binding to both transmit and receive slots of any device."""
-
-    __device: Optional[Device]
-
-    def __init__(self, device: Optional[Device] = None, reference: Optional[Device] = None, seed: Optional[int] = None):
-        """
-        Args:
-
-            device (Device, optional):
-                Device the duplex operator operates.
-        """
-
-        Transmitter.__init__(self, seed=seed)
-        Receiver.__init__(self, seed=seed, reference=reference)
-
-        self.__device = None
-        self.device = device
-
-    @property
-    def device(self) -> Optional[Device]:
-        """Device this operator is operating.
-
-        Returns:
-            device (Optional[device]):
-                Handle to the operated device.
-                `None` if the operator is currently operating no device and considered floating.
-        """
-
-        return self.__device
-
-    @device.setter
-    def device(self, value: Optional[Device]) -> None:
-        """Set the device this operator is operating."""
-
-        if value is self.__device:
-            return
-
-        if self.__device is not None:
-            self.__device.transmitters.remove(self)
-            self.__device.receivers.remove(self)
-
-        self.__device = value
-
-        if value is not None:
-            value.transmitters.add(self)
-            value.receivers.add(self)
-
-    @Transmitter.slot.setter
-    def slot(self, value: OperatorSlot[Transmitter]) -> None:
-        if value is not None:
-            self.device = value.device
-
-        Transmitter.slot.fset(self, value)
-
-    @property
-    def csi(self) -> Optional[ChannelStateInformation]:
-        return Receiver.csi.fget(self)  # type: ignore
-
-    @abstractmethod
-    def _transmit(self, duration: float = 0.0) -> TransmissionType:
-        ...  # pragma: no cover
-
-    @abstractmethod
-    def _receive(self, signal: Signal, csi: ChannelStateInformation) -> ReceptionType:
-        ...  # pragma: no cover
-
-    @property
-    @abstractmethod
-    def sampling_rate(self) -> float:
-        ...  # pragma: no cover
-
-    @property
-    @abstractmethod
-    def frame_duration(self) -> float:
-        ...  # pragma: no cover
-
-    @abstractmethod
-    def _noise_power(self, strength: float, snr_type: SNRType) -> float:
-        ...  # pragma: no cover

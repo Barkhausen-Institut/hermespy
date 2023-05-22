@@ -57,7 +57,7 @@ import numpy as np
 from h5py import Group
 
 from hermespy.beamforming import ReceiveBeamformer, TransmitBeamformer
-from hermespy.core import ChannelStateInformation, DuplexOperator, Signal, Serializable, SNRType, Transmission, Reception, ReceptionType
+from hermespy.core import ChannelStateInformation, DuplexOperator, Signal, Serializable, SNRType, Transmission, Reception
 from .cube import RadarCube
 from .detection import RadarDetector, RadarPointCloud
 
@@ -265,7 +265,6 @@ class Radar(DuplexOperator[RadarTransmission, RadarReception], Serializable):
 
     @property
     def frame_duration(self) -> float:
-
         if self.waveform is None:
             return 0.0
 

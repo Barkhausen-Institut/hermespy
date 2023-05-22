@@ -2,7 +2,7 @@ from .simulation import Simulation, SimulationScenario
 from .simulated_device import ProcessedSimulatedDeviceInput, SimulatedDevice, SimulatedDeviceOutput, SimulatedDeviceReceiveRealization, SimulatedDeviceTransmission, SimulatedDeviceReception, TriggerModel, TriggerRealization, RandomTrigger, StaticTrigger, OffsetTrigger
 from .rf_chain import RfChain, PowerAmplifier, SalehPowerAmplifier, RappPowerAmplifier, ClippingPowerAmplifier, CustomPowerAmplifier, PhaseNoise, NoPhaseNoise
 from .analog_digital_converter import AnalogDigitalConverter, Gain, AutomaticGainControl, QuantizerType
-from .isolation import Isolation, SpecificIsolation, PerfectIsolation
+from .isolation import Isolation, SpecificIsolation, PerfectIsolation, SelectiveLeakage
 from .noise import Noise, AWGN
 from .coupling import Coupling, ImpedanceCoupling, PerfectCoupling
 
@@ -46,6 +46,7 @@ __all__ = [
     "Isolation",
     "SpecificIsolation",
     "PerfectIsolation",
+    "SelectiveLeakage",
     "Noise",
     "AWGN",
     "Coupling",

@@ -782,7 +782,7 @@ class MultiTargetRadarChannel(RadarChannelBase[MultiTargetRadarChannelRealizatio
 
     interfernce: bool
     """Consider interference between linked devices.
-    
+
     Only applies in the bistatic case, where transmitter and receiver are two dedicated device instances.
     """
 

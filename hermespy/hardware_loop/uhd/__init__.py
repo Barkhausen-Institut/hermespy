@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-try:
+try:  # pragma: no cover
     from .usrp import UsrpDevice
     from .system import UsrpSystem
 
-except ImportError:
+except ImportError:  # pragma: no cover
     UsrpDevice, UsrpSystem = None, None  # type: ignore
 
 __author__ = "Jan Adler"
