@@ -424,12 +424,12 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PDT], Pipeline[Ph
             operator_devices = [(operator.device, self.scenario.device_index(operator.device)) for operator in self.scenario.operators]
 
             for (_, device_idx), operator in zip(operator_devices, self.scenario.operators):
-                operator.device = state.devices[device_idx]
+                operator.device = state.devices[device_idx]  # type: ignore
 
             self.scenario.record(file_location, overwrite=overwrite, campaign=campaign, state=state)
 
             for (_, device_idx), operator in zip(operator_devices, state.operators):
-                operator.device = self.scenario.devices[device_idx]
+                operator.device = self.scenario.devices[device_idx]  # type: ignore
 
         # Run internally
         self.__run()
@@ -455,12 +455,12 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PDT], Pipeline[Ph
         # Stop the scenario replay
         self.scenario.stop()
 
-    def __generate_sample(self, section_indices: np.ndarray, sample_index: int) -> HardwareLoopSample:
+    def __generate_sample(self, section_indices: Tuple[int, ...], sample_index: int) -> HardwareLoopSample:
         """Generate a sample from the grid.
 
         Args:
 
-            section_indices (np.ndarray):
+            section_indices (Tuple[int, ...]):
                 The indices of the section within the sample grid.
 
             sample_index (int):
