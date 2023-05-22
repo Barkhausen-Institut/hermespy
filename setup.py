@@ -1,9 +1,5 @@
 from skbuild import setup
 from setuptools import find_namespace_packages
-from sphinx.setup_command import BuildDoc
-
-cmdclass = {'build_sphinx': BuildDoc}
-
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
@@ -67,6 +63,7 @@ setup(
             "black",
             "flake8",
             "mypy",
+            "coverage",
         ]
     },
     zip_safe=False,
@@ -88,13 +85,4 @@ setup(
         'rich>=13.3.1 ',
         'ZODB~=5.7.0',
     ],
-    command_options={
-        'build_sphinx': {
-            'project': ('setup.py', 'HermesPy'),
-            'version': ('setup.py', '1.0.0'),
-            # 'release': ('setup.py', release),
-            'source_dir': ('setup.py', 'docssource'),
-            'build_dir': ('setup.py', 'documentation'),
-        }
-    },
 )

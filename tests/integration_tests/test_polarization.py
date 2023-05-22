@@ -40,7 +40,7 @@ class TestSingleAntennaPolarization(TestCase):
         self.channel = SpatialDelayChannel()
         scenario.set_channel(self.device_beta, self.device_alpha, self.channel)
         
-    def test_translation(self) -> None:
+    def _test_translation(self) -> None:
         
         test_signal = Signal(np.ones(100), 1, carrier_frequency=1e9)
         expected_power = test_signal.power

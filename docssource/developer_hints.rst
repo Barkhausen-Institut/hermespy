@@ -62,14 +62,14 @@ extension.
 A reference example can be found in `/hermespy/simulation/rf_chain/power_amplifier.py`.
 See :doc:`api/simulation.rf_chain.power_amplifier` for the rendered results.
 
-HermesPy provides a setuptools extension to build the documentation,
-which can be used by executing
+Sphinx with serveral extensions is used to generate the documentation.
+Build the documentation by executing
 
 .. code-block:: bash
 
-   python -m setup build_sphinx
+   sphinx-build ./docssource/ ./documentation/
 
-within the root directory.
+within the project's root directory.
 This results in the rendering of a html-based documentation website,
 located under `documentation/html`.
 In order to view it locally, open `index.html` within a web-browser.

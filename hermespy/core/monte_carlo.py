@@ -717,7 +717,7 @@ class MonteCarloSample(Persistent):
     __grid_section: Tuple[int, ...]
     __artifacts: PersistentList[Artifact]  # Artifacts of evaluation
 
-    def __init__(self, grid_section: Tuple[int, ...], sample_index: int, artifacts: List[Artifact]) -> None:
+    def __init__(self, grid_section: Tuple[int, ...], sample_index: int, artifacts: Sequence[Artifact]) -> None:
         """
         Args:
 
@@ -728,7 +728,7 @@ class MonteCarloSample(Persistent):
                 Index of the sample.
                 In other words this object represents the `sample_index`th sample of the selected `grid_section`.
 
-            artifacts (List[Artifact]):
+            artifacts (Sequence[Artifact]):
                 Artifacts of evaluation
         """
 
