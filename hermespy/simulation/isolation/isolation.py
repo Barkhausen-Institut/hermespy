@@ -77,6 +77,8 @@ class Isolation(ABC):
     def _assert_leaking_signal(self, signal: Signal | None) -> Signal:
         """Assert the validity of a leaking signal.
 
+        Subroutine of :meth:`Isolation.leak`.
+
         Args:
 
             signal (Signal, None):
@@ -96,7 +98,7 @@ class Isolation(ABC):
             raise ValueError("Leaking signal not specified")
 
         if self.device.antennas.num_transmit_antennas != signal.num_streams:
-            raise ValueError("Number of signal streams ({signal.num_streams}) does not match the number of transmitting antennas ({self.device.antennas.num_transmit_antennas})")
+            raise ValueError(f"Number of signal streams ({signal.num_streams}) does not match the number of transmitting antennas ({self.device.antennas.num_transmit_antennas})")
 
         return signal
 

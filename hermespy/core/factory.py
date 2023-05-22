@@ -33,17 +33,16 @@ from any context.
 from __future__ import annotations
 
 import re
-from abc import ABCMeta, abstractclassmethod, abstractmethod
+from abc import ABCMeta, abstractmethod
 from collections.abc import Iterable
 from enum import Enum
-from functools import partial
 from inspect import getmembers, isclass, signature
 from importlib import import_module
 from io import TextIOBase, StringIO
 import os
 from pkgutil import iter_modules
 from re import compile, Pattern, Match
-from typing import Any, Dict, Set, Sequence, Mapping, Union, List, Optional, Tuple, Type, TypeVar
+from typing import Any, Dict, Set, Sequence, Mapping, Union, KeysView, List, Optional, Type, TypeVar, ValuesView
 
 import numpy as np
 from h5py import Group
@@ -333,8 +332,7 @@ class Factory:
     __yaml: YAML
     __clean: bool
     __db_regex: Pattern
-    __registered_classes: Set[Type[Serializable]]
-    __registered_tags: Set[str]
+    __tag_registry: Mapping[str, Type[Serializable]]
 
     def __init__(self) -> None:
         # YAML dumper configuration
@@ -344,12 +342,12 @@ class Factory:
         self.__yaml.encoding = None
         self.__yaml.indent(mapping=4, sequence=4, offset=2)
         self.__clean = True
-        self.__registered_classes = set()
-        self.__registered_tags = set()
+        self.__tag_registry = {}
 
         # Add custom representers
         self.__yaml.representer.add_representer(complex, Factory.__complex_representer)
         self.__yaml.representer.add_representer(np.ndarray, Factory.__array_representer)
+        self.__yaml.representer.add_representer(np.float_, Factory.__numpy_float_representer)
 
         # Add custom constructors
         self.__yaml.constructor.add_constructor("complex", Factory.__complex_constructor)
@@ -370,11 +368,12 @@ class Factory:
                 if not isclass(serializable_class) or not issubclass(serializable_class, Serializable):
                     continue
 
-                self.__registered_classes.add(serializable_class)
+                # Register serializable class at the YAML factory
                 self.__yaml.register_class(serializable_class)
 
+                # Remember tag for tagged classes
                 if serializable_class.yaml_tag is not None:
-                    self.__registered_tags.add(serializable_class.yaml_tag)
+                    self.__tag_registry[serializable_class.yaml_tag] = serializable_class
 
         # Add constructors for untagged classes
         self.__yaml.constructor.add_constructor("tag:yaml.org,2002:map", self.__construct_map)
@@ -402,20 +401,22 @@ class Factory:
         self.__clean = flag
 
     @property
-    def registered_classes(self) -> Set[Type[Serializable]]:
+    def registered_classes(self) -> ValuesView[Type[Serializable]]:
         """Classes registered for serialization within the factory."""
 
-        return self.__registered_classes.copy()
+        return self.__tag_registry.values()
 
     @property
-    def registered_tags(self) -> Set[str]:
-        """Read registered YAML tags.
+    def registered_tags(self) -> KeysView[str]:
+        """Read registered YAML tags."""
 
-        Returns:
-            Set[str]: Set of registered YAML tags.
-        """
+        return self.__tag_registry.keys()
 
-        return self.__registered_tags
+    @property
+    def tag_registry(self) -> Mapping[str, Type[Serializable]]:
+        """Read registered YAML tags."""
+
+        return self.__tag_registry
 
     @staticmethod
     def __complex_representer(representer: SafeRepresenter, value: complex) -> ScalarNode:
@@ -464,7 +465,7 @@ class Factory:
         if array.dtype in [np.complex64, np.complex128]:
             object_array = np.empty(array.shape, dtype=object)
             for index, number in np.ndenumerate(array):
-                object_array[index] = str(number)[1:-1]
+                object_array[index] = str(number).replace("(", "").replace(")", "")
 
             list = object_array.tolist()
 
@@ -473,6 +474,20 @@ class Factory:
 
         sequence = representer.represent_sequence("array", list, flow_style=True)
         return sequence
+
+    @staticmethod
+    def __numpy_float_representer(representer: SafeRepresenter, value: np.float_) -> ScalarNode:
+        """Represent numy floating point scalar numbers as strings.
+
+        Args:
+
+            representer (SafeRepresenter): YAML representer.
+            value (np.float_): The number to be transformed to a string.
+
+        Returns: Scalar yaml node.
+        """
+
+        return representer.represent_float(float(value))
 
     @staticmethod
     def __array_constructor(constructor: SafeConstructor, node: SequenceNode) -> np.ndarray:
@@ -824,7 +839,7 @@ class HDFSerializable(metaclass=ABCMeta):
         Returns: A handle to group `name`.
         """
 
-        if not name in group:
+        if name not in group:
             return group.create_group(name)
 
         else:

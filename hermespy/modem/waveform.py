@@ -560,7 +560,7 @@ class WaveformGenerator(ABC, Serializable):
         return self.__modem
 
     @modem.setter
-    def modem(self, handle: BaseModem) -> None:
+    def modem(self, handle: BaseModem | None) -> None:
         """Modify the modem this generator is attached to.
 
         Args:
@@ -571,6 +571,9 @@ class WaveformGenerator(ABC, Serializable):
             RuntimeError:
                 If the `modem` does not reference this generator.
         """
+
+        if handle is None and self.__modem is None:
+            return
 
         if handle.waveform_generator is not self:
             handle.waveform_generator = self

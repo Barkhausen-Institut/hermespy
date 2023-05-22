@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 from logging import getLogger, Logger
-from typing import Optional, List, Any
+from typing import Optional, Any
 
 import numpy as np
 from oct2py import Oct2Py, Oct2PyError, Struct

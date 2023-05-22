@@ -6,8 +6,9 @@ from unittest.mock import MagicMock, Mock, patch
 from numpy.random import default_rng
 from numpy.testing import assert_array_equal
 from uhd_wrapper.utils.config import MimoSignal
+from zerorpc.exceptions import LostRemote, RemoteError
 
-from hermespy.core import Signal
+from hermespy.core import Signal, SignalTransmitter, SignalReceiver
 from hermespy.hardware_loop.uhd import UsrpDevice
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
@@ -40,8 +41,7 @@ class TestUsrpDevice(TestCase):
         self.client_create_mock: MagicMock = self.client_create_patch.start()
         self.client_create_mock.return_value = self.client_mock
         
-        
-        self.usrp = UsrpDevice(ip=self.ip, port=self.port, carrier_frequency=self.carrier_frequency)
+        self.usrp = UsrpDevice(ip=self.ip, port=self.port, carrier_frequency=self.carrier_frequency, num_prepended_zeros=0, num_appended_zeros=0)
         
     def tearDown(self) -> None:
 
@@ -60,9 +60,31 @@ class TestUsrpDevice(TestCase):
         self.usrp._configure_device()
         
         self.client_mock.configureRfConfig.assert_called_once()
+        
+    def test_error_handling(self) -> None:
+        """Test error handling behaviour"""
+        
+        def raiseLostRemote(*args, **kwargs):
+            raise LostRemote()
+        
+        def raiseRemoteError(*args, **kwargs):
+            raise RemoteError("a", "b", "c")
+        
+        signal = Signal.empty(self.usrp.sampling_rate, self.usrp.antennas.num_transmit_antennas, carrier_frequency=self.usrp.carrier_frequency)
+
+        self.client_mock.configureTx.side_effect = raiseLostRemote
+        with self.assertRaises(RuntimeError):
+            self.usrp.trigger_direct(signal)
+            
+        self.client_mock.configureTx.side_effect = raiseRemoteError
+        with self.assertRaises(RuntimeError):
+            self.usrp.trigger_direct(signal)
 
     def test_upload(self) -> None:
         """Test the device upload subroutine"""
+
+        # Enable transmission scaling for increased coverage
+        self.usrp.scale_transmission = True
 
         transmitted_signal = Signal(self.rng.normal(size=(self.usrp.num_antennas, 11)),
                                     sampling_rate=self.usrp.sampling_rate,
@@ -72,6 +94,30 @@ class TestUsrpDevice(TestCase):
 
         self.client_mock.configureTx.assert_called_once()
         self.client_mock.configureRx.assert_called_once()
+        
+    def test_transmit(self) -> None:
+        """Test transmitting operator behaviour"""
+        
+        transmitted_signal = Signal(self.rng.normal(size=(self.usrp.num_antennas, 11)),
+                                    sampling_rate=self.usrp.sampling_rate,
+                                    carrier_frequency=self.usrp.carrier_frequency)
+        transmitter = SignalTransmitter(transmitted_signal)
+        self.usrp.transmitters.add(transmitter)
+        
+        receiver = SignalReceiver(16, self.usrp.sampling_rate)
+        self.usrp.receivers.add(receiver)
+        
+        transmission = self.usrp.transmit()
+
+        self.client_mock.configureTx.assert_called_once()
+        self.client_mock.configureRx.assert_called_once()
+        assert_array_equal(transmitted_signal.samples, transmission.mixed_signal.samples)
+
+    def test_receive_no_colletion(self) -> None:
+        """Test reception without enabled collection"""
+        
+        reception = self.usrp.receive()
+        self.assertEqual(0, reception.impinging_signals[0].num_samples)
 
     def test_trigger(self) -> None:
         """Test the individual device trigger"""
@@ -86,7 +132,7 @@ class TestUsrpDevice(TestCase):
                                  sampling_rate=self.usrp.sampling_rate,
                                  carrier_frequency=self.usrp.carrier_frequency)
 
-        self.usrp._UsrpDevice__collection_enabled= True
+        self.usrp._UsrpDevice__collection_enabled = True
         self.client_mock.collect.return_value = [MimoSignal([s for s in received_signal.samples])]
         signal = self.usrp._download()
 
@@ -112,6 +158,46 @@ class TestUsrpDevice(TestCase):
         self.usrp.rx_gain = gain
 
         self.assertEqual(gain, self.usrp.rx_gain)
+
+    def test_num_prepended_zeros_setget(self) -> None:
+        """Number of prepended zeros property getter should return setter argument"""
+
+        expected_num_zeros = 1234
+        self.usrp.num_prepeneded_zeros = expected_num_zeros
+
+        self.assertEqual(expected_num_zeros, self.usrp.num_prepeneded_zeros)
+
+    def test_num_prepended_zeros_validation(self) -> None:
+        """Number of prepended zeros property should raise ValueError on negative arguments"""
+
+        try:
+            self.usrp.num_prepeneded_zeros = 0
+
+        except ValueError:
+            self.fail()
+
+        with self.assertRaises(ValueError):
+            self.usrp.num_prepeneded_zeros = -1
+
+    def test_num_appended_zeros_setget(self) -> None:
+        """Number of appended zeros property getter should return setter argument"""
+
+        expected_num_zeros = 1234
+        self.usrp.num_prepeneded_zeros = expected_num_zeros
+
+        self.assertEqual(expected_num_zeros, self.usrp.num_prepeneded_zeros)
+
+    def test_num_appended_zeros_validation(self) -> None:
+        """Number of appended zeros property should raise ValueError on negative arguments"""
+
+        try:
+            self.usrp.num_appended_zeros = 0
+
+        except ValueError:
+            self.fail()
+
+        with self.assertRaises(ValueError):
+            self.usrp.num_appended_zeros = -1
 
     def test_max_sampling_rate(self) -> None:
         """Max sampling rate property should return the correct sampling rate"""

@@ -8,7 +8,7 @@ from unittest import TestCase
 import numpy as np
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 
-from hermespy.channel import Channel, MultipathFadingChannel
+from hermespy.channel import Channel, MultipathFadingChannel, IdealChannel
 from hermespy.core.factory import Factory, Serializable
 
 __author__ = "Jan Adler"
@@ -181,7 +181,7 @@ class TestFactory(TestCase):
     def test_registered_classes(self) -> None:
         """Registered classes should contain all serializable classes"""
 
-        expected_classes = [Channel, MultipathFadingChannel]
+        expected_classes = [IdealChannel, MultipathFadingChannel]
         registered_classes = self.factory.registered_classes
 
         for expected_class in expected_classes:
@@ -221,6 +221,7 @@ class TestFactory(TestCase):
         """Test serialization of complex numpy arrays"""
         
         expected_array = np.random.normal(size=(2, 3)) + 1j * np.random.normal(size=(2, 3))
+        expected_array[0] = 0
         
         serialized_array = self.factory.to_str(expected_array)
         deserialized_array = self.factory.from_str(serialized_array)

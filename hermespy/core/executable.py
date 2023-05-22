@@ -12,7 +12,6 @@ import os.path as path
 import datetime
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
-from enum import Enum
 from glob import glob
 from os import getcwd, mkdir
 from sys import exit
@@ -23,6 +22,7 @@ from rich.console import Console
 from rich.prompt import Confirm
 
 from .definitions import ConsoleMode
+from .factory import SerializableEnum
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -34,7 +34,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class Verbosity(Enum):
+class Verbosity(SerializableEnum):
     """Information output behaviour configuration of an executable"""
 
     ALL = 0

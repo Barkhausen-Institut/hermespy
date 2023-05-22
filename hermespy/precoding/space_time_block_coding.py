@@ -6,7 +6,7 @@ Space-Time Block Coding
 """
 
 from __future__ import annotations
-from typing import Type, Tuple
+from typing import Type
 
 import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, Node

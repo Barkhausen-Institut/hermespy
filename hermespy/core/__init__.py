@@ -1,10 +1,12 @@
 from .antennas import Antenna, IdealAntenna, Dipole, PatchAntenna, AntennaArrayBase, AntennaArray, UniformArray
 from .definitions import ConsoleMode, SNRType
 from .logarithmic import dB, Logarithmic, LogarithmicSequence, ValueType
+from .operators import StaticOperator, SilentTransmitter, SignalTransmitter, SignalReceiver
 from .channel_state_information import ChannelStateFormat, ChannelStateInformation
 from .transformation import Direction, Transformable, TransformableBase, Transformation
 from .animation import Moveable
-from .device import Operator, OperatorSlot, DuplexOperator, MixingOperator, ProcessedDeviceInput, TransmitterSlot, ReceiverSlot, Transmitter, Receiver, Device, FloatingError, Transmission, Reception, ReceptionType, DeviceReception, DeviceTransmission, DeviceInput, DeviceOutput
+from .device import Operator, OperatorSlot, MixingOperator, ProcessedDeviceInput, TransmitterSlot, ReceiverSlot, Transmitter, Receiver, Device, FloatingError, Transmission, Reception, ReceptionType, DeviceReception, DeviceTransmission, DeviceInput, DeviceOutput
+from .duplex import DuplexOperator
 from .executable import Executable, Verbosity
 from .pipeline import Pipeline
 from .factory import Factory, Serializable, SerializableEnum, HDFSerializable
@@ -38,6 +40,10 @@ __all__ = [
     "Logarithmic",
     "LogarithmicSequence",
     "ValueType",
+    "StaticOperator",
+    "SilentTransmitter",
+    "SignalTransmitter",
+    "SignalReceiver",
     "ChannelStateFormat",
     "ChannelStateInformation",
     "Direction",
@@ -47,7 +53,6 @@ __all__ = [
     "Moveable",
     "Operator",
     "OperatorSlot",
-    "DuplexOperator",
     "MixingOperator",
     "TransmitterSlot",
     "ReceiverSlot",
@@ -62,6 +67,7 @@ __all__ = [
     "DeviceOutput",
     "DeviceReception",
     "DeviceTransmission",
+    "DuplexOperator",
     "Executable",
     "Verbosity",
     "Pipeline",

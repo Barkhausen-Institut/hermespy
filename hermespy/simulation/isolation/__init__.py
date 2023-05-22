@@ -1,6 +1,7 @@
 from .isolation import Isolation
 from .specific import SpecificIsolation
 from .perfect import PerfectIsolation
+from .selective import SelectiveLeakage
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -12,4 +13,4 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-__all__ = ["Isolation", "SpecificIsolation", "PerfectIsolation"]
+__all__ = ["Isolation", "SpecificIsolation", "PerfectIsolation", "SelectiveLeakage"]

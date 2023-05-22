@@ -301,7 +301,8 @@ class Symbols(HDFSerializable):
     @classmethod
     def from_HDF(cls: Type[Symbols], group: Group) -> Symbols:
         # Recall datasets
-        symbols = np.array(group["symbols"], dtype=complex)
+
+        symbols = np.array(group["symbols"])  # dtype=complex
 
         # Initialize object from recalled state
         return cls(symbols=symbols)
