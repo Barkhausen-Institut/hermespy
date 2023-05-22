@@ -6,7 +6,7 @@ Maximum Ratio Combining
 """
 
 from __future__ import annotations
-from typing import Tuple, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import numpy as np
 

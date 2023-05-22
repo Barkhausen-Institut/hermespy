@@ -825,8 +825,13 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
 
         if self.mode == ScenarioMode.REPLAY:
             # Recall the drop from the savefile
-            drop = RecalledDrop(self.__file[f"/campaigns/{self.__campaign}/drop_{self.__drop_counter:02d}"], self)
-            self.__drop_counter = (self.__drop_counter + 1) % self.__file.attrs["num_drops"]
+            for _ in range(self.__file.attrs["num_drops"]):
+                drop_path = f"/campaigns/{self.__campaign}/drop_{self.__drop_counter:02d}"
+                self.__drop_counter = (self.__drop_counter + 1) % self.__file.attrs["num_drops"]
+
+                if drop_path in self.__file:
+                    drop = RecalledDrop(self.__file[drop_path], self)
+                    break
 
             # Replay device operator transmissions
             for device, device_transmission in zip(self.devices, drop.device_transmissions):

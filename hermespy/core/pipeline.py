@@ -110,3 +110,22 @@ class Pipeline(Executable, Generic[ScenarioType, DeviceType]):
         """
 
         return self.scenario.new_device(*args, **kwargs)
+
+    def device_index(self, device: DeviceType) -> int:
+        """Get the index of a device in the scenario.
+
+        Convenience function pointing to :meth:`hermespy.core.scenario.Scenario.device_index`.
+
+        Args:
+
+            device:
+                Device to be searched for.
+
+        Returns: The index of the device.
+
+        Raises:
+
+            ValueError: If the device does not exist.
+        """
+
+        return self.scenario.device_index(device)

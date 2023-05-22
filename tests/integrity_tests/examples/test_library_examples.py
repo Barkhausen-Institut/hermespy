@@ -107,6 +107,7 @@ class TestLibraryExamples(TestCase):
             
             if gettrace() is None:
                 stack.enter_context(patch('sys.stdout'))
+                stack.enter_context(patch('matplotlib.pyplot.figure'))
                 
             from hermespy.hardware_loop import PhysicalScenarioDummy, PhysicalDeviceDummy
 

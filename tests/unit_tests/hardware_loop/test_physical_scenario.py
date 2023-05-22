@@ -3,7 +3,7 @@
 from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
 
-from hermespy.hardware_loop.scenario import PhysicalScenario
+from hermespy.hardware_loop.scenario import SimulatedPhysicalScenario, PhysicalScenario
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -52,3 +52,23 @@ class TestPhysicalScenario(TestCase):
         self.device.process_input.assert_called_once()
         self.device.receive_operators.assert_called_once()
         _trigger.assert_called_once()
+
+
+class TestSimualtedPhysicalScenario(TestCase):
+    """Test the simulated physical scenario"""
+    
+    def setUp(self) -> None:
+        
+        self.scenario = SimulatedPhysicalScenario()
+        
+    def test_receive_devices_empty(self) -> None:
+        """Test reception over all devices without impinging signals"""
+        
+        reception = self.scenario.receive_devices()
+        self.assertSequenceEqual([], reception)
+
+    def test_receive_devices(self) -> None:
+        """Test reception over all devices"""
+        
+        reception = self.scenario.receive_devices([])
+        self.assertSequenceEqual([], reception)

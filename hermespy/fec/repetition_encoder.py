@@ -9,10 +9,8 @@ The achieve redundancy by repeating all bits within a block during encoding.
 """
 
 from __future__ import annotations
-from typing import Type
 
 import numpy as np
-from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, Node
 
 from hermespy.core import Serializable
 from .coding import Encoder

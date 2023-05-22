@@ -34,7 +34,7 @@ class RadarCube(HDFSerializable):
     __velocity_bins: np.ndarray
     __range_bins: np.ndarray
 
-    def __init__(self, data: np.ndarray, angle_bins: np.ndarray, velocity_bins: np.ndarray, range_bins: np.ndarray) -> None:
+    def __init__(self, data: np.ndarray, angle_bins: np.ndarray | None = None, velocity_bins: np.ndarray | None = None, range_bins: np.ndarray | None = None) -> None:
         """
         Args:
 
@@ -66,6 +66,25 @@ class RadarCube(HDFSerializable):
 
         if data.ndim != 3:
             raise ValueError(f"Cube data must be a three-dimensional numpy tensor (has {data.ndim} dimenions)")
+
+        # Infer angle bins
+        if angle_bins is None:
+            if data.shape[0] == 1:
+                angle_bins = np.array([[0, 0]], dtype=np.float_)
+
+            else:
+                raise ValueError("Can't infer angle bins from data cube")
+
+        # Infer velocity bins
+        if velocity_bins is None:
+            if data.shape[0] == 1:
+                velocity_bins = np.array([0], dtype=np.float_)
+
+            else:
+                raise ValueError("Can't infer velocity bins from data cube")
+
+        # Infer range bins
+        range_bins = np.arange(data.shape[2], dtype=np.float_) if range_bins is None else range_bins
 
         if data.shape[0] != len(angle_bins):
             raise ValueError("Data cube angle dimension does not match angle bins")

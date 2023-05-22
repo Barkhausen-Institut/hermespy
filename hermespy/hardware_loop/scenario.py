@@ -13,7 +13,7 @@ from typing import Generic, Optional, Tuple, TypeVar
 
 from hermespy.core import ChannelStateInformation, DeviceInput, DeviceReception, Scenario, Drop, Signal
 from hermespy.simulation import SimulatedDeviceReception, SimulationScenario, TriggerRealization
-from .physical_device import PhysicalDeviceType
+from .physical_device import PDT
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -25,14 +25,14 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class PhysicalScenario(Scenario[PhysicalDeviceType], Generic[PhysicalDeviceType]):
+class PhysicalScenario(Scenario[PDT], Generic[PDT]):
     """Scenario of physical device bindings.
 
     Managing physical devices by a scenario enables synchronized triggering
     and shared random seed configuration.
     """
 
-    def __init__(self, seed: Optional[int] = None, devices: Optional[Sequence[PhysicalDeviceType]] = None) -> None:
+    def __init__(self, seed: Optional[int] = None, devices: Optional[Sequence[PDT]] = None) -> None:
         Scenario.__init__(self, seed, devices)
 
     @abstractmethod
@@ -86,7 +86,7 @@ class PhysicalScenario(Scenario[PhysicalDeviceType], Generic[PhysicalDeviceType]
 
         return Drop(timestamp, device_transmissions, device_receptions)
 
-    def add_device(self, device: PhysicalDeviceType) -> None:
+    def add_device(self, device: PDT) -> None:
         Scenario.add_device(self, device)
 
 
@@ -99,12 +99,10 @@ class SimulatedPhysicalScenario(SimulationScenario, PhysicalScenario):
 
     def _trigger(self) -> None:
         # Triggering does nothing
-        pass
+        pass  # pragma: no cover
 
     def receive_devices(self, impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]] | Sequence[Sequence[Tuple[Signal, ChannelStateInformation | None]]] | None = None, cache: bool = True, trigger_realizations: Sequence[TriggerRealization] | None = None) -> Sequence[SimulatedDeviceReception]:
-
         if impinging_signals is None:
-
             _trigger_realizations = [None for _ in range(self.num_devices)] if trigger_realizations is None else trigger_realizations
             device_receptions = PhysicalScenario.receive_devices(self, None, cache)
 

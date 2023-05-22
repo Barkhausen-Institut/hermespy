@@ -1214,12 +1214,11 @@ class SimplexLink(TransmittingModem, ReceivingModem, Serializable):
 
     @ReceivingModem.reference.setter  # type: ignore
     def reference(self, _: Device) -> None:
-
         raise RuntimeError("Specifying the reference device of a simplex link is not supported")
 
-    @ReceivingModem.reference.getter  # type: ignore
+    @ReceivingModem.reference.getter
+    # flake8: noqa: F811
     def reference(self) -> Device:
-
         return self.transmitting_device
 
     @property

@@ -9,7 +9,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from sys import maxsize
 from time import time
-from typing import Any, Callable, Dict, List, Optional, overload, Set, Tuple, Type, Union
+from typing import Any, Callable, Dict, List, Optional, overload, Tuple, Type, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -18,7 +18,7 @@ from os import path
 from ray import remote
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, Node
 
-from hermespy.core import DeviceInput, DeviceTransmission, ChannelStateInformation, Drop, Serializable, Pipeline, Verbosity, Operator, ConsoleMode, Evaluator, register, MonteCarloActor, MonteCarlo, MonteCarloResult, Scenario, Signal, DeviceOutput, DeviceReception, SNRType
+from hermespy.core import DeviceInput, DeviceTransmission, ChannelStateInformation, Drop, Serializable, Pipeline, Verbosity, Operator, ConsoleMode, Evaluator, register, MonteCarloActor, MonteCarlo, MonteCarloResult, Scenario, Signal, DeviceOutput, SNRType
 from hermespy.channel import Channel, ChannelRealization, QuadrigaInterface, IdealChannel
 from .simulated_device import TriggerModel, TriggerRealization, ProcessedSimulatedDeviceInput, SimulatedDevice, SimulatedDeviceTransmission, SimulatedDeviceReception
 
@@ -249,7 +249,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
             raise ValueError("The provided transmitter is not registered with this scenario.")
 
         receiver_index = devices.index(receiver)
-        channels: List[Channel] = self.__channels[receiver_index,].tolist()
+        channels: List[Channel] = self.__channels[receiver_index, ].tolist()
 
         if active_only:
             channels = [channel for channel in channels if channel.active]
@@ -353,18 +353,15 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         self.__snr_type = snr_type
 
     def transmit_devices(self) -> Sequence[SimulatedDeviceTransmission]:
-
         # Collect unique triggers
         triggers: List[TriggerModel] = []
         trigger_realizations: List[TriggerRealization] = []
         transmissions: List[SimulatedDeviceTransmission] = []
 
         for device in self.devices:
-
             trigger_realization: TriggerRealization
 
             if device.trigger_model not in triggers:
-
                 trigger_realization = device.trigger_model.realize()
 
                 triggers.append(device.trigger_model)
@@ -518,7 +515,6 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         return device_receptions
 
     def _drop(self) -> SimulatedDrop:
-
         # Generate drop timestamp
         timestamp = time()
 

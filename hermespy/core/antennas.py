@@ -125,18 +125,18 @@ class Antenna(Transformable, Serializable):
         The polarization is characterized by the angle-dependant field vector
 
         .. math::
-        
+
             \\mathbf{F}(\\phi, \\theta) =
             \\begin{pmatrix}
                 F_{\\mathrm{H}}(\\phi, \\theta) \\\\
                 F_{\\mathrm{V}}(\\phi, \\theta) \\\\
             \\end{pmatrix}
-            
+
         denoting the horizontal and vertical field components.
         The directional antenna gain can be computed from the polarization vector magnitude
-        
+
         .. math::
-        
+
             A(\\phi, \\theta) &= \\lVert \\mathbf{F}(\\phi, \\theta) \\rVert \\\\
                               &= \\sqrt{ F_{\\mathrm{H}}(\\phi, \\theta)^2 + F_{\\mathrm{V}}(\\phi, \\theta)^2 }
 
@@ -149,7 +149,7 @@ class Antenna(Transformable, Serializable):
                 Considered vertical wave angle in radians :math:`\\theta`.
 
         Returns:
-            
+
             Two dimensional numpy array denoting the horizontal and vertical ploarization components
             of the antenna response.
         """

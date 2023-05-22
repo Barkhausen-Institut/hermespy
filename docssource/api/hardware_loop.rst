@@ -17,6 +17,7 @@ It consists of the base classes for hardware bindings
    hardware_loop.physical_device
    hardware_loop.scenario
    hardware_loop.physical_device_dummy
+   hardware_loop.visualizers
 
 as well as specific bindings to UHD devices
 
@@ -30,3 +31,10 @@ and audio devices (sound cards)
    
    hardware_loop.audio.device
    hardware_loop.audio.scenario
+
+and offers calibration routines for testbed setups
+
+.. toctree::
+
+   hardware_loop.calibration.delay
+   hardware_loop.calibration.leakage
