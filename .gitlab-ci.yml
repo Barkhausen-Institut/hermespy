@@ -27,7 +27,6 @@ Build Package:
     - export MAKEFLAGS="-j $(grep -c ^processor /proc/cpuinfo)"
     - pip install --no-cache-dir -U -e .\[test,quadriga,documentation,uhd,audio,develop\]  # remove for docker
     - pip uninstall -y hermespy  # remove for docker
-    - python -m build
   artifacts:
     paths:
       - dist/$HERMES_WHEEL
@@ -37,11 +36,15 @@ Unit Testing:
   dependencies:
     - Build Package
   before_script:
-    - apt update && apt-get install -y octave portaudio19-dev python-dev  # remove for docker
-    - pip install dist/$HERMES_WHEEL\[test,quadriga,uhd,audio\]
+    - apt update && apt-get install -y octave portaudio19-dev python-dev unzip  # remove for docker
+    - pip install -e .\[develop,test,quadriga,uhd,audio\]
+    - unzip dist/$HERMES_WHEEL "hermespy/fec/aff3ct/*.so"
   script:
-    - coverage run ./tests/test_install.py ./tests/unit_tests/ 
+    - coverage run --include=hermespy/* ./tests/test_install.py ./tests/unit_tests/ 
+  after_script:
     - coverage xml
+    - coverage report
+  coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
     reports:
       coverage_report:
@@ -91,7 +94,7 @@ pages:
   only:
     - master
   before_script:
-    - apt update && apt-get install -y octave portaudio19-dev python-dev  # remove for docker
+    - apt update && apt-get install -y octave portaudio19-dev python-dev pandoc  # remove for docker
     - pip install dist/$HERMES_WHEEL\[test,documentation,quadriga,uhd,audio\]
   script:
     - sphinx-build ./docssource/ ./documentation/
