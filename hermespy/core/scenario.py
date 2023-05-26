@@ -105,11 +105,6 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
             for device in devices:
                 self.add_device(device)
 
-    def __del__(self) -> None:
-        # Stop recording / playing if not in default mode
-        if self.mode != ScenarioMode.DEFAULT:
-            self.stop()
-
     @property
     def mode(self) -> ScenarioMode:
         """Current operating mode of the scenario.
@@ -363,14 +358,14 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
 
         # If in replay mode, make sure the campaign exists
         if self.mode == ScenarioMode.REPLAY:
-            if not self.__campaign_exists(value):
+            if not self.__campaign_exists(value, self.__file):
                 raise ValueError(f"The requested measurement campaign '{value}' does not exists within the currently replayed savefile")
 
             self.__drop_counter = 0
 
         elif self.mode == ScenarioMode.RECORD:
             # Create the campaign if it doesn't exists
-            if not self.__campaign_exists(value):
+            if not self.__campaign_exists(value, self.__file):
                 self.__file.create_group("/campaigns/" + value)
 
             self.__drop_counter = self.__file["/campaigns/" + value].len
@@ -498,15 +493,15 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
         # Update the campaign, will create the respective group if it doesn't exist yet
         self.campaign = campaign
 
-    def __campaign_exists(self, campaign: str, file: Optional[File] = None) -> bool:
-        """Check wether a campaign identifier exists within the current dataset.
+    def __campaign_exists(self, campaign: str, file: File) -> bool:
+        """Check whether a campaign identifier exists within the current dataset.
 
         Args:
 
             campaign (str):
                 The campaign identifier string.
 
-            file (File, optoinal):
+            file (File):
                 The HDF5 file to check for campaign existence.
 
         Returns: Boolean indicator.
@@ -516,15 +511,9 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
             RuntimeError: If the scenario is currently in default mode and `file` was not specified.
         """
 
-        if file is None:
-            if self.__mode == ScenarioMode.DEFAULT:
-                raise RuntimeError("Campain existence may not be queried in default mode")
-
-            file = self.__file
-
         return "/campaigns/" + campaign in file
 
-    def replay(self, file: Union[None, str, File] = None, campaign: str = "default") -> None:
+    def replay(self, file: str | File | None = None, campaign: str = "default") -> None:
         """Replay the scenario from and HDF5 savefile.
 
         Args:
@@ -550,18 +539,18 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
             file = self.__file.filename
 
         # If only a file system location was specified, open the file
-        if isinstance(file, str):
-            file = File(file, "r")
+        _file = File(file, "r") if isinstance(file, str) else file
 
         # Check if the campaign is available (if a campaign was specified)
-        if not self.__campaign_exists(campaign, file):
-            raise ValueError(f"The requested measurement campaign '{campaign}' does not exists within the savefile '{file.filename}'")
+        if not self.__campaign_exists(campaign, _file):
+            _file.close()
+            raise ValueError(f"The requested measurement campaign '{campaign}' does not exists within the savefile '{_file.filename}'")
 
         # Stop any action and close file handles if required
         self.stop()
 
         # Initialize dataset
-        self.__file = file
+        self.__file = _file
         self.__drop_counter = 0
         self.__campaign = campaign
 
@@ -793,16 +782,13 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
         Returns: Number of drops. `None` if not applicable.
         """
 
-        if self.mode == ScenarioMode.DEFAULT:
-            return None
-
         if self.mode == ScenarioMode.RECORD:
             return self.__drop_counter
 
         if self.mode == ScenarioMode.REPLAY:
             return self.__file.attrs["num_drops"]
 
-        raise RuntimeError("Unsupported scenario mode")
+        return None
 
     @abstractmethod
     def _drop(self) -> Drop:

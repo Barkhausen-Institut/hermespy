@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from contextlib import AbstractContextManager
+from typing import Any
 from unittest import TestCase
 
 import numpy as np
@@ -8,6 +10,16 @@ from numpy.testing import assert_array_almost_equal
 
 from hermespy.core import dB, Logarithmic, LogarithmicSequence, ValueType
 from hermespy.tools import db2lin, lin2db
+
+
+__author__ = "Jan Adler"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__credits__ = ["Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "1.0.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
 
 
 class TestLogarithmic(TestCase):
@@ -23,6 +35,23 @@ class TestLogarithmic(TestCase):
         self.assertIsInstance(sum, Logarithmic)
         self.assertEqual(30, sum)
         self.assertAlmostEqual(lin2db(30), sum.value_db)
+        
+    def test_init_validation(self) -> None:
+        """Init routine should raise ValueErrors on invalid arguments"""
+        
+        with self.assertRaises(ValueError):
+            Logarithmic.__init__(1, 10, 'invalid_value_type')
+            
+        with self.assertRaises(ValueError):
+            Logarithmic.__init__(-1, -1, ValueType.LIN)
+            
+    def test_new_validation(self) -> None:
+        """New routine should raise ValueErrors on invalid arguments"""
+        
+        logarithmic = Logarithmic(1, ValueType.LIN)
+        
+        with self.assertRaises(ValueError):
+            Logarithmic.__new__(logarithmic, 1, 'invalid_value_type')
 
     def test_add_float(self) -> None:
         """Test addition of floating pint number"""
@@ -174,6 +203,12 @@ class TestLogarithmicSequence(TestCase):
         self.expected_values = [20, 10, 30]
         self.sequence = LogarithmicSequence(self.expected_values, ValueType.LIN)
 
+    def test_init_validation(self) -> None:
+        """Init routine should raise ValueErrors on invalid arguments"""
+        
+        with self.assertRaises(ValueError):
+            LogarithmicSequence([1, 2], 'invalid_value_type')
+            
     def test_len(self) -> None:
         """Test length calculation"""
 
@@ -193,6 +228,13 @@ class TestLogarithmicSequence(TestCase):
         self.expected_values[1] = expected_value
         
         self.assertEqual(expected_value, self.sequence[1])
+        self.assertSequenceEqual(self.expected_values, self.sequence.tolist())
+
+        expected_logarithmic_value = Logarithmic(24)
+        self.sequence[1] = expected_logarithmic_value
+        self.expected_values[1] = float(expected_logarithmic_value)
+        
+        self.assertEqual(expected_logarithmic_value, self.sequence[1])
         self.assertSequenceEqual(self.expected_values, self.sequence.tolist())
 
     def test_interaction_scalar(self) -> None:
@@ -250,3 +292,12 @@ class TestLogarithmicSequence(TestCase):
         
         assert_array_almost_equal(self.sequence, sequence_copy)
         self.assertEqual(self.sequence[1], sequence_copy[1])
+
+class TestDb(TestCase):
+    """Test dB shorthand function"""
+    
+    def test_validation(self) -> None:
+        """Shorthand should raise ValuError on invalid arguments"""
+        
+        with self.assertRaises(ValueError):
+            dB(5, [1, 2])

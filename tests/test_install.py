@@ -31,7 +31,7 @@ if __name__ == '__main__':
     else:
         start_dir = argv[1]
     
-    tests = test_loader.discover(start_dir)
+    tests = test_loader.discover(start_dir, top_level_dir=os.path.join(repository, 'tests'))
     test_result = test_runner.run(tests)
 
     # Return with a proper exit code indicating test success / failure

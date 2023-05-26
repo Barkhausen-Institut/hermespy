@@ -58,8 +58,8 @@ import numpy as np
 from h5py import File
 from scipy.stats import uniform
 
-from hermespy.core import Executable, ReplayScenario, Scenario, ScenarioMode, Serializable
-from hermespy.core.monte_carlo import Evaluator, Evaluation, EvaluationResult, EvaluationTemplate, GridDimension, ArtifactTemplate, Artifact, ScalarEvaluationResult, ProcessedScalarEvaluationResult
+from hermespy.core import ReplayScenario, Scenario, ScenarioMode, Serializable
+from hermespy.core.monte_carlo import Evaluator, Evaluation, EvaluationResult, EvaluationTemplate, GridDimension, ArtifactTemplate, Artifact, ScalarEvaluationResult
 from hermespy.radar import Radar, RadarReception
 from hermespy.channel import RadarChannelBase
 from hermespy.radar.cube import RadarCube
@@ -241,43 +241,34 @@ class RocEvaluationResult(EvaluationResult):
         self.__false_alarm_probabilities = false_alarm_probabilities
         self.__title = title
 
-    def plot(self) -> plt.Figure:
-        with Executable.style_context():
-            figure = plt.figure()
-            figure.suptitle(self.__title)
+    def _plot(self, axes: plt.Axes) -> None:
+        # Configure axes labels
+        axes.set_xlabel("False Alarm Probability")
+        axes.set_ylabel("Detection Probability")
 
-            # Create single axes
-            axes = figure.add_subplot()
+        # Configure axes limits
+        axes.set_xlim(0.0, 2)
+        axes.set_ylim(0.0, 2)
 
-            # Configure axes labels
-            axes.set_xlabel("False Alarm Probability")
-            axes.set_ylabel("Detection Probability")
+        section_magnitudes = tuple(s.num_sample_points for s in self.__grid)
+        for section_indices in np.ndindex(section_magnitudes):
+            # Generate the graph line label
+            line_label = ""
+            for i, v in enumerate(section_indices):
+                line_label += f"{self.__grid[i].title} = {self.__grid[i].sample_points[v]}, "
+            line_label = line_label[:-2]
 
-            # Configure axes limits
-            axes.set_xlim(0.0, 2)
-            axes.set_ylim(0.0, 2)
+            # Select the graph line scalars
+            x_axis = self.__false_alarm_probabilities[section_indices]
+            y_axis = self.__detection_probabilities[section_indices]
 
-            section_magnitudes = tuple(s.num_sample_points for s in self.__grid)
-            for section_indices in np.ndindex(section_magnitudes):
-                # Generate the graph line label
-                line_label = ""
-                for i, v in enumerate(section_indices):
-                    line_label += f"{self.__grid[i].title} = {self.__grid[i].sample_points[v]}, "
-                line_label = line_label[:-2]
+            # Plot the graph line
 
-                # Select the graph line scalars
-                x_axis = self.__false_alarm_probabilities[section_indices]
-                y_axis = self.__detection_probabilities[section_indices]
+            axes.plot(x_axis, y_axis, label=line_label)
 
-                # Plot the graph line
-
-                axes.plot(x_axis, y_axis, label=line_label)
-
-            # Only plot the legend for an existing sweep grid.
-            if len(self.__grid) > 0:
-                axes.legend()
-
-            return figure
+        # Only plot the legend for an existing sweep grid.
+        if len(self.__grid) > 0:
+            axes.legend()
 
     def to_array(self) -> np.ndarray:
         return np.stack((self.__detection_probabilities, self.__false_alarm_probabilities), axis=-1)
@@ -551,7 +542,7 @@ class RootMeanSquareEvaluation(Evaluation):
         return RootMeanSquareArtifact(num_errors, cummulative_square_error)
 
 
-class RootMeanSquareErrorResult(ProcessedScalarEvaluationResult):
+class RootMeanSquareErrorResult(ScalarEvaluationResult):
     """Result of a root mean square error evaluation."""
 
     ...  # pragma no cover
@@ -588,4 +579,4 @@ class RootMeanSquareError(RadarEvaluator):
             rmse = np.sqrt(cummulative_errors / error_count)
             rmse_section_artifacts[coordinates] = rmse
 
-        return RootMeanSquareErrorResult(grid, rmse_section_artifacts, self)
+        return RootMeanSquareErrorResult.From_Artifacts(grid, rmse_section_artifacts, self)

@@ -249,7 +249,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
             raise ValueError("The provided transmitter is not registered with this scenario.")
 
         receiver_index = devices.index(receiver)
-        channels: List[Channel] = self.__channels[receiver_index, ].tolist()
+        channels: List[Channel] = self.__channels[receiver_index,].tolist()
 
         if active_only:
             channels = [channel for channel in channels if channel.active]
@@ -721,7 +721,7 @@ class Simulation(Serializable, Pipeline[SimulationScenario, SimulatedDevice], Mo
         Pipeline.num_drops.fset(self, value)  # type: ignore
         MonteCarlo.num_samples.fset(self, value)  # type: ignore
 
-    def run(self) -> MonteCarloResult[SimulationScenario]:
+    def run(self) -> MonteCarloResult:
         # Print indicator that the simulation is starting
         if self.console_mode != ConsoleMode.SILENT:
             self.console.print()  # Just an empty line

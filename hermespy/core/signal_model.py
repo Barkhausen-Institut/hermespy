@@ -391,7 +391,7 @@ class Signal(HDFSerializable, Visualizable):
 
     @staticmethod
     @jit(nopython=True)
-    def __mix(target_samples: np.ndarray, added_samples: np.ndarray, sampling_rate: float, frequency_distance: float) -> None:
+    def __mix(target_samples: np.ndarray, added_samples: np.ndarray, sampling_rate: float, frequency_distance: float) -> None:  # pragma: no cover
         """Internal subroutine to mix two sets of signal model samples.
 
         Args:
@@ -651,7 +651,7 @@ class Signal(HDFSerializable, Visualizable):
 
     @staticmethod
     @jit(nopython=True)
-    def __resample(signal: np.ndarray, input_sampling_rate: float, output_sampling_rate: float) -> np.ndarray:
+    def __resample(signal: np.ndarray, input_sampling_rate: float, output_sampling_rate: float) -> np.ndarray:  # pragma: no cover
         """Internal subroutine to resample a given set of samples to a new sampling rate.
 
         Uses sinc-interpolation, therefore `signal` is assumed to be band-limited.
@@ -775,7 +775,7 @@ class Signal(HDFSerializable, Visualizable):
 
         # Scale samples if required
         if scale and samples.shape[1] > 0 and (samples.max() > 1.0 or samples.min() < 1.0):
-            samples /= np.max(abs(samples))
+            samples /= np.max(abs(samples))  # pragma: no cover
 
         samples *= np.iinfo(data_type).max
         return samples.view(np.float64).astype(data_type)
