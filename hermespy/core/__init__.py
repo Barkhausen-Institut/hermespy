@@ -2,7 +2,7 @@ from .antennas import Antenna, IdealAntenna, Dipole, PatchAntenna, AntennaArrayB
 from .definitions import ConsoleMode, SNRType
 from .logarithmic import dB, Logarithmic, LogarithmicSequence, ValueType
 from .operators import StaticOperator, SilentTransmitter, SignalTransmitter, SignalReceiver
-from .channel_state_information import ChannelStateFormat, ChannelStateInformation
+from .channel_state_information import ChannelStateFormat, ChannelStateInformation, ChannelStateDimension
 from .transformation import Direction, Transformable, TransformableBase, Transformation
 from .animation import Moveable
 from .device import Operator, OperatorSlot, MixingOperator, ProcessedDeviceInput, TransmitterSlot, ReceiverSlot, Transmitter, Receiver, Device, FloatingError, Transmission, Reception, ReceptionType, DeviceReception, DeviceTransmission, DeviceInput, DeviceOutput
@@ -12,7 +12,7 @@ from .pipeline import Pipeline
 from .factory import Factory, Serializable, SerializableEnum, HDFSerializable
 from .monte_carlo import Artifact, ArtifactTemplate, Evaluator, Evaluation, EvaluationResult, EvaluationTemplate, GridDimension, ScalarEvaluationResult, MonteCarlo, MonteCarloActor, MonteCarloResult, MonteCarloSample, register
 from .random_node import RandomRealization, RandomNode
-from .drop import Drop
+from .drop import Drop, RecalledDrop
 from .scenario import Scenario, ScenarioMode, ScenarioType, ReplayScenario
 from .signal_model import Signal
 from .visualize import Visualizable
@@ -46,6 +46,7 @@ __all__ = [
     "SignalReceiver",
     "ChannelStateFormat",
     "ChannelStateInformation",
+    "ChannelStateDimension",
     "Direction",
     "Transformable",
     "TransformableBase",
@@ -93,6 +94,7 @@ __all__ = [
     "RandomRealization",
     "RandomNode",
     "Drop",
+    "RecalledDrop",
     "Scenario",
     "ScenarioMode",
     "ScenarioType",

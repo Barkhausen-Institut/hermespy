@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 
+from os.path import join
+from tempfile import TemporaryDirectory
 from unittest import TestCase
 
 import numpy as np
+from h5py import File
 from numpy.testing import assert_array_equal
 
 from hermespy.core import Signal, StaticOperator, SilentTransmitter, SignalTransmitter, SignalReceiver
@@ -77,12 +80,36 @@ class TestSignalTransmitter(TestCase):
         self.transmitter = SignalTransmitter(self.signal)
         self.device.transmitters.add(self.transmitter)
     
+    def test_signal_setget(self) -> None:
+        """Signal property getter should return setter argument"""
+        
+        expected_seignal = Signal(np.zeros((1, 10)), sampling_rate=self.device.sampling_rate, carrier_frequency=self.device.carrier_frequency)
+        self.transmitter.signal = expected_seignal
+        
+        self.assertIs(expected_seignal, self.transmitter.signal)
+    
     def test_transmit(self) -> None:
         """Transmit routine should transmit the submitted signal samples"""
         
         transmission = self.transmitter.transmit()
         
         assert_array_equal(self.signal.samples, transmission.signal.samples)
+
+    def test_recall_transmission(self) -> None:
+        """Recall transmission should recall the last transmission"""
+        
+        transmission = self.transmitter.transmit()
+        
+        with TemporaryDirectory() as temp:
+            
+            file_location = join(temp, "test.h5")
+            with File(file_location, "w") as file:
+                transmission.to_HDF(file.create_group("transmission"))
+                
+            with File(file_location, "r") as file:
+                recalled_transmission = self.transmitter.recall_transmission(file["transmission"])
+        
+        assert_array_equal(transmission.signal.samples, recalled_transmission.signal.samples)
 
 
 class TestSignalReceiver(TestCase):

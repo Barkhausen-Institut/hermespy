@@ -67,6 +67,9 @@ class StaticOperator(object):
 class SilentTransmitter(StaticOperator, Transmitter[Transmission]):
     """Silent transmitter mock."""
 
+    yaml_tag = "SilentTransmitter"
+    serialized_attributes = {"num_samples", "sampling_rate", "device"}
+
     def __init__(self, num_samples: int, sampling_rate: float, *args, **kwargs) -> None:
         """
         Args:
@@ -100,6 +103,8 @@ class SilentTransmitter(StaticOperator, Transmitter[Transmission]):
 class SignalTransmitter(StaticOperator, Transmitter[Transmission]):
     """Custom signal transmitter."""
 
+    yaml_tag = "SignalTransmitter"
+
     __signal: Signal
 
     def __init__(self, signal: Signal, *args, **kwargs) -> None:
@@ -129,6 +134,9 @@ class SignalTransmitter(StaticOperator, Transmitter[Transmission]):
 
 class SignalReceiver(StaticOperator, Receiver[Reception]):
     """Custom signal receiver."""
+
+    yaml_tag = "SignalReceiver"
+    serialized_attributes = {"num_samples", "sampling_rate", "device"}
 
     def __init__(self, num_samples: int, sampling_rate: float, *args, **kwargs) -> None:
         # Initialize base classes
