@@ -18,7 +18,7 @@ from .signal_model import Signal
 from .monte_carlo import Artifact
 
 if TYPE_CHECKING:
-    from .scenario import Scenario
+    from .scenario import Scenario  # pragma: no cover
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
