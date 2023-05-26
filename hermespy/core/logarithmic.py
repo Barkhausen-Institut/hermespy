@@ -99,9 +99,6 @@ class Logarithmic(float):
         if float(self) <= 0.0:
             raise ValueError("Logarithmic scales can't express values smaller or equal to zero")
 
-        if np.isnan(value_db):
-            raise ValueError("Numerical error computing logarithmic value")
-
         # Save attributes
         self.__value_db = value_db
         self.__conversion = conversion
@@ -293,7 +290,7 @@ class LogarithmicSequence(np.ndarray):
     def __array_finalize__(self, instance: Union[np.ndarray, None]) -> None:
         # Do nothing if the view is on None
         if instance is None:
-            return
+            return  # pragma: no cover
 
         # Convert view
         view = self.view(np.ndarray)

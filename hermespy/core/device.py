@@ -158,6 +158,10 @@ OperatorType = TypeVar("OperatorType", bound="Operator")
 """Type of operator."""
 
 
+DeviceType = TypeVar("DeviceType", bound="Device")
+"""Type of device."""
+
+
 class OperationResult(HDFSerializable):
     """Base class for outputs of device operators."""
 
@@ -266,17 +270,6 @@ class Operator(Generic[SlotType], Serializable):
 
             if not self.__slot.registered(self):
                 self.__slot.add(self)
-
-    def bind(self, slot: SlotType) -> None:
-        """Bind the operator to a specific slot.
-
-        Args:
-
-            slot (SlotType):
-                The slot to be bound to.
-        """
-
-        self.__slot = slot
 
     @property
     def slot_index(self) -> Optional[int]:
@@ -819,6 +812,10 @@ class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType
         self.__csi = None
         self.__reception = None
 
+    @Operator.device.setter  # type: ignore
+    def device(self, value: Device) -> None:  # type: ignore
+        value.receivers.add(self)
+
     @Operator.slot.setter  # type: ignore
     def slot(self, value: Optional[ReceiverSlot]) -> None:
         Operator.slot.fset(self, value)  # type: ignore
@@ -1324,6 +1321,10 @@ class Transmitter(Generic[TransmissionType], RandomNode, MixingOperator["Transmi
         """
         ...  # pragma: no cover
 
+    @Operator.device.setter  # type: ignore
+    def device(self, value: Device) -> None:  # type: ignore
+        value.transmitters.add(self)
+
     @Operator.slot.setter  # type: ignore
     def slot(self, value: Optional[TransmitterSlot]) -> None:
         Operator.slot.fset(self, value)  # type: ignore
@@ -1413,18 +1414,6 @@ class ReceiverSlot(OperatorSlot[Receiver]):
 
         # Init base class
         OperatorSlot.__init__(self, *args, **kwargs)
-
-    def get_receptions(self, clear_cache: bool = True) -> List[Tuple[Signal, ChannelStateInformation]]:
-        """Get recent receptions."""
-
-        receptions: List[Tuple[Signal, ChannelStateInformation]] = []
-        for receiver in self.__operators:
-            receptions.append((receiver.signal, receiver.csi))
-
-            if clear_cache:
-                receiver.cache_reception(None, None)
-
-        return receptions
 
 
 class UnsupportedSlot(OperatorSlot):
@@ -1646,7 +1635,7 @@ class Device(ABC, Transformable, RandomNode, Serializable):
             raise RuntimeError("Error trying to generate outputs without specifying transmissions, caches are empty")
 
         # Superimpose the operator transmissions to the device's RF configuration
-        superimposed_signal = Signal.empty(self.sampling_rate, self.num_antennas, carrier_frequency=self.carrier_frequency)
+        superimposed_signal = Signal.empty(self.sampling_rate, self.antennas.num_transmit_antennas, carrier_frequency=self.carrier_frequency)
 
         for transmission in operator_transmissions:
             superimposed_signal.superimpose(transmission.signal)
@@ -1699,7 +1688,7 @@ class Device(ABC, Transformable, RandomNode, Serializable):
 
         # Superimpose the impinging signal models
         if len(impinging_signals) != 1:
-            superimposed_signal = Signal.empty(self.sampling_rate, self.num_antennas, carrier_frequency=self.carrier_frequency)
+            superimposed_signal = Signal.empty(self.sampling_rate, self.antennas.num_receive_antennas, carrier_frequency=self.carrier_frequency)
             for signal in impinging_signals:
                 superimposed_signal.superimpose(signal)
 
@@ -1788,18 +1777,3 @@ class Device(ABC, Transformable, RandomNode, Serializable):
 
         # Generate device reception
         return DeviceReception.From_ProcessedDeviceInput(processed_input, receptions)
-
-    @property
-    def received_signal(self) -> Optional[Signal]:
-        """Recently received signal.
-
-        Returns:
-            The received signal Model.
-            `None` if nothing has been received yet.
-        """
-
-        return self.__received_signal
-
-
-DeviceType = TypeVar("DeviceType", bound="Device")
-"""Type of device."""

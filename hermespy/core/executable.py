@@ -232,7 +232,7 @@ class Executable(ABC):
 
     @staticmethod
     @contextmanager
-    def style_context() -> Generator:
+    def style_context() -> Generator:  # pragma: no cover
         """Context for the configured style.
 
         Returns:  Style context manager generator.

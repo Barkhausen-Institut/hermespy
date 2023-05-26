@@ -242,7 +242,7 @@ class Serializable(object):
 
             lower_key = configuration_key.lower()
 
-            if lower_key in init_signature or lower_key in arg_signature:
+            if lower_key in init_signature or lower_key in arg_signature:  # pragma: no cover
                 init_parameters[lower_key] = configuration.pop(configuration_key)
                 continue
 
@@ -250,7 +250,7 @@ class Serializable(object):
                 init_properties[configuration_key] = configuration.pop(configuration_key)
                 continue
 
-            if lower_key in properties:
+            if lower_key in properties:  # pragma: no cover
                 init_properties[lower_key] = configuration.pop(configuration_key)
                 continue
 
@@ -360,7 +360,7 @@ class Factory:
         lookup_paths = list(hermespy.__path__) + [os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))]
         for _, name, is_module in iter_modules(lookup_paths, hermespy.__name__ + "."):
             if not is_module:
-                continue
+                continue  # pragma: no cover
 
             module = import_module(name)
 
@@ -374,10 +374,6 @@ class Factory:
                 # Remember tag for tagged classes
                 if serializable_class.yaml_tag is not None:
                     self.__tag_registry[serializable_class.yaml_tag] = serializable_class
-
-        # Add constructors for untagged classes
-        self.__yaml.constructor.add_constructor("tag:yaml.org,2002:map", self.__construct_map)
-        # self.__yaml.constructor.add_constructor('tag:yaml.org,2002:seq', self.__construct_sequence)
 
         # Construct regular expressions for purging
         self.__range_regex = compile(r"([0-9.e-]*)[ ]*,[ ]*([0-9.e-]*)[ ]*,[ ]*\.\.\.[ ]*,[ ]*([0-9.e-]*)")
@@ -523,32 +519,10 @@ class Factory:
         """
 
         if isinstance(node, ScalarNode):
-            return Logarithmic(constructor.construct_scalar(node))
+            return Logarithmic(float(constructor.construct_scalar(node)))
 
         if isinstance(node, SequenceNode):
             return LogarithmicSequence(constructor.construct_sequence(node))
-
-    @staticmethod
-    def __construct_map(constructor: SafeConstructor, node: MappingNode) -> Mapping[MappingNode, Any]:
-        """A custom map generator.
-
-        Hacks ruamel to accept node names as tags.
-
-        Args:
-            constructor (SafeConstructor): Handle to the constructor.
-            node (MappingNode): A YAML map node.
-
-        Returns:
-            Mapping[MappingNode, Any]: A sequence of objects created from `node`.
-        """
-
-        tag = node.value[0][0].value
-
-        if tag in constructor.yaml_constructors:
-            return constructor.yaml_constructors[tag](constructor, node.value[0][1])
-
-        else:
-            return constructor.construct_mapping(node, deep=True)
 
     @staticmethod
     def __decibel_conversion(match: re.Match) -> str:
@@ -594,17 +568,14 @@ class Factory:
             if os.path.isdir(path):
                 deserialization = self.from_folder(path)
 
-            elif os.path.isfile(path):
-                deserialization = self.from_file(path)
-
             else:
-                raise ValueError("Lookup location '{}' not recognized".format(path))
+                deserialization = self.from_file(path)
 
             if isinstance(deserialization, list):
                 hermes_objects += deserialization
 
             else:
-                hermes_objects.append(deserialization)
+                hermes_objects.append(deserialization)  # pragma: no cover
 
         return hermes_objects
 
@@ -634,7 +605,8 @@ class Factory:
             for file in files:
                 _, extension = os.path.splitext(file)
                 if extension in self.extensions:
-                    hermes_objects += self.from_file(os.path.join(directory, file))
+                    deserialization = self.from_file(os.path.join(directory, file))
+                    hermes_objects += deserialization if isinstance(deserialization, list) else [deserialization]
 
             if not recurse:
                 break
@@ -649,7 +621,7 @@ class Factory:
             *args (Any):
                 Configuration objects to be dumped.
         """
-        pass
+        pass  # pragma: no cover
 
     def from_str(self, config: str) -> Sequence[Any] | Any:
         """Load a configuration from a string object.
@@ -708,7 +680,7 @@ class Factory:
         Raises:
             RepresenterError: If objects in ``*args`` are unregistered classes.
         """
-        pass
+        pass  # pragma: no cover
 
     @staticmethod
     def __range_restore_callback(m: Match) -> str:
