@@ -7,7 +7,6 @@ Hardware Radio Frequency Chain Modeling
 Isolation model (to be implemented): :footcite:t:`2018:kiayni`
 """
 
-
 from __future__ import annotations
 from typing import Optional
 
@@ -35,23 +34,19 @@ class RfChain(Serializable):
     """
 
     yaml_tag = "RfChain"
-    __tx_power: float
+
     __phase_offset: float
     __amplitude_imbalance: float
 
     __power_amplifier: Optional[PowerAmplifier]
     __phase_noise: PhaseNoise
 
-    def __init__(self, tx_power: float = None, phase_offset: float = None, amplitude_imbalance: float = None) -> None:
-        self.__tx_power = 1.0
+    def __init__(self, phase_offset: float = None, amplitude_imbalance: float = None) -> None:
         self.__phase_offset = 0.0
         self.__amplitude_imbalance = 0.0
 
         self.__power_amplifier = None
         self.__phase_noise = NoPhaseNoise()
-
-        if tx_power is not None:
-            self.__tx_power = tx_power
 
         if phase_offset is not None:
             self.__phase_offset = phase_offset
@@ -160,20 +155,12 @@ class RfChain(Serializable):
         return self.__power_amplifier
 
     @power_amplifier.setter
-    def power_amplifier(self, power_amplifier: PowerAmplifier) -> None:
-        """Reassign the power amplifier configuration.
-
-        Args:
-            power_amplifier (PowerAmplifier):
-                The new power amplifier configuration.
-        """
-
-        self.__power_amplifier = power_amplifier
+    def power_amplifier(self, value: PowerAmplifier) -> None:
+        self.__power_amplifier = value
 
     @property
     def phase_noise(self) -> PhaseNoise:
         """Phase Noise model configuration.
-
 
         Returns: Handle to the pase noise model.
         """

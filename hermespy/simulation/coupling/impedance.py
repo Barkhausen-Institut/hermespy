@@ -14,10 +14,10 @@ from hermespy.core import Serializable, Signal
 from .coupling import Coupling
 
 if TYPE_CHECKING:
-    from hermespy.simulation import SimulatedDevice
+    from hermespy.simulation import SimulatedDevice  # pragma: no cover
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.0.0"
@@ -41,7 +41,28 @@ class ImpedanceCoupling(Serializable, Coupling):
         """
         Args:
 
-            device (SimulatedDevice, optional): Device the model is configured to.
+            device (SimulatedDevice, optional)
+                Device the model is configured to.
+
+            transmit_correlation (np.ndarray, optional):
+                Correlation matrix of the transmit antenna array.
+                Defaults to the identity matrix.
+
+            receive_correlation (np.ndarray, optional):
+                Correlation matrix of the receive antenna array.
+                Defaults to the identity matrix.
+
+            transmit_impedance (np.ndarray, optional):
+                Impedance matrix of the transmit antenna array.
+                Defaults to the identity matrix.
+
+            receive_impedance (np.ndarray, optional):
+                Impedance matrix of the receive antenna array.
+                Defaults to the identity matrix.
+
+            matching_impedance (np.ndarray, optional):
+                Impedance matrix of the matching network.
+                Defaults to the identity matrix.
         """
 
         Coupling.__init__(self, device=device)
@@ -131,7 +152,7 @@ class ImpedanceCoupling(Serializable, Coupling):
     @matching_impedance.setter
     def matching_impedance(self, value: Optional[np.ndarray]) -> None:
         if value is None:
-            self.matching_impedance = None
+            self.__matching_impedance = None
             return
 
         if value.ndim != 2:

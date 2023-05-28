@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
 from unittest import TestCase
 
 import numpy as np
@@ -11,7 +10,7 @@ from hermespy.core import IdealAntenna, Signal, UniformArray
 from hermespy.simulation import SelectiveLeakage, SimulatedDevice
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.0.0"
@@ -21,6 +20,7 @@ __status__ = "Prototype"
 
 
 class TestSelectiveLeakage(TestCase):
+    """Test frequency-selective leakage"""
 
     def setUp(self) -> None:
         
@@ -28,7 +28,13 @@ class TestSelectiveLeakage(TestCase):
         
         self.leakage = SelectiveLeakage.Normal(self.device, num_samples=10, mean=1., variance=0.)
         self.device.isolation = self.leakage
-
+        
+    def test_init_validation(self) -> None:
+        """Initialization should raise a ValueError on invalid arguments"""
+        
+        with self.assertRaises(ValueError):
+            _ = SelectiveLeakage(np.zeros((1, 2)))
+        
     def test_leakage_response(self) -> None:
         """The leakage response matrix should be the FFT of its impulse response"""
 

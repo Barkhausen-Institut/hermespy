@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import logging
 from contextlib import AbstractContextManager
 from typing import Any
 from unittest import TestCase
@@ -197,6 +198,16 @@ class TestLogarithmic(TestCase):
 
 
 class TestLogarithmicSequence(TestCase):
+    
+    @classmethod
+    def setUpClass(cls) -> None:
+
+        ray.init(local_mode=True, num_cpus=1, logging_level=logging.ERROR)
+            
+    @classmethod
+    def tearDownClass(cls):
+        
+        ray.shutdown()
 
     def setUp(self) -> None:
 
@@ -283,9 +294,7 @@ class TestLogarithmicSequence(TestCase):
         self.assertEqual(self.expected_values[1], casted_sequence[1])
 
     def test_ray_serialization(self) -> None:
-        """Test serializatin within the Ray framework."""
-        
-        ray.init(local_mode=True)
+        """Test serialization within the Ray framework"""
         
         sequence_reference = ray.put(self.sequence)
         sequence_copy  = ray.get(sequence_reference)

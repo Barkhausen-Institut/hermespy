@@ -6,8 +6,7 @@ from io import StringIO
 from os import getenv
 from typing import Callable, List
 from unittest import TestCase
-from unittest.mock import Mock, patch, PropertyMock
-import matplotlib.pyplot as plt
+from unittest.mock import Mock, patch
 
 import ray
 import numpy as np

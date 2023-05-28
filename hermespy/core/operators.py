@@ -59,6 +59,13 @@ class StaticOperator(object):
     def sampling_rate(self) -> float:
         return self.__sampling_rate
 
+    @sampling_rate.setter
+    def sampling_rate(self, value: float) -> None:
+        if value <= 0:
+            raise ValueError(f"Sampling rate must be positive (not {value})")
+
+        self.__sampling_rate = value
+
     @property
     def frame_duration(self) -> float:
         return self.__num_samples / self.sampling_rate

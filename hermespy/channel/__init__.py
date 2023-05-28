@@ -1,4 +1,4 @@
-from .channel import Channel, ChannelRealization, ChannelRealizationType
+from .channel import Channel, ChannelRealization, CRT
 from .cluster_delay_line_indoor_factory import IndoorFactoryLineOfSight, IndoorFactoryNoLineOfSight
 from .cluster_delay_line_indoor_office import IndoorOfficeLineOfSight, IndoorOfficeNoLineOfSight
 from .cluster_delay_line_rural_macrocells import RuralMacrocellsLineOfSight, RuralMacrocellsNoLineOfSight, RuralMacrocellsOutsideToInside
@@ -38,7 +38,7 @@ __all__ = [
     "ChannelStateFormat",
     "Channel",
     "ChannelRealization",
-    "ChannelRealizationType",
+    "CRT",
     "DelayChannelBase",
     "SpatialDelayChannel",
     "RandomDelayChannel",

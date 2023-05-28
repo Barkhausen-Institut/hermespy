@@ -812,7 +812,7 @@ class Signal(HDFSerializable, Visualizable):
         noise_power = group.attrs.get("noise_power", 0.0)
 
         # De-serialize samples
-        samples = np.array(group["samples"], dtype=complex)
+        samples = np.array(group["samples"], dtype=np.complex_)
 
         return Signal(samples=samples, sampling_rate=sampling_rate, carrier_frequency=carrier_frequency, delay=delay, noise_power=noise_power)
 
