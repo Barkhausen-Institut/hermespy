@@ -18,7 +18,7 @@ from abc import ABC, abstractmethod
 from hermespy.core import Signal, FloatingError
 
 if TYPE_CHECKING:
-    from ..simulated_device import SimulatedDevice
+    from ..simulated_device import SimulatedDevice  # pragma: no cover
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -92,7 +92,7 @@ class Coupling(ABC):
 
         Returns: The signal resulting from coupling modeling.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     def receive(self, signal: Signal) -> Signal:
         """Apply the mutual coupling model during signal reception.
@@ -127,4 +127,4 @@ class Coupling(ABC):
 
         Returns: The signal resulting from coupling modeling.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover

@@ -623,7 +623,7 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PDT], Pipeline[Ph
         for evaluator in evaluators:
             hardware_loop.add_evaluator(evaluator)
 
-        # Add simulation dimensions
+        # Add sweeping dimensions
         for dimension in dimensions:
             new_dim = hardware_loop.new_dimension(dimension["property"], dimension["points"], *dimension["objects"])
 

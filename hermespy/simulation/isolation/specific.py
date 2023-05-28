@@ -14,7 +14,7 @@ from hermespy.core import register, Serializable, Signal
 from .isolation import Isolation
 
 if TYPE_CHECKING:
-    from ..simulated_device import SimulatedDevice
+    from ..simulated_device import SimulatedDevice  # pragma: no cover
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"

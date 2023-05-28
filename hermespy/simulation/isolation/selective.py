@@ -16,11 +16,11 @@ from hermespy.core import Serializable, Signal
 from .isolation import Isolation
 
 if TYPE_CHECKING:
-    from ..simulated_device import SimulatedDevice
+    from ..simulated_device import SimulatedDevice  # pragma: no cover
 
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.0.0"
@@ -37,6 +37,20 @@ class SelectiveLeakage(Serializable, Isolation):
     __leakage_response: np.ndarray  # Impulse response of the leakage model
 
     def __init__(self, leakage_response: np.ndarray, *args, **kwargs) -> None:
+        """
+        Args:
+
+            leakage_response (np.ndarray):
+                Three-dimensional leakge impulse response matrix :math:`\\mathbf{H}` of dimensions :math:`M \\times N \\times L`,
+                where :math:`M` is the number of receive streams and
+                :math:`N` is the number of transmit streams and
+                :math:`L` is the number of samples in the impulse response.
+
+        Raises:
+
+            ValueError: If the leakage response matrix has invalid dimensions.
+        """
+
         if leakage_response.ndim != 3:
             raise ValueError(f"Leakage response matrix must be a three-dimensional array (has {leakage_response.ndim} dimensions)")
 
@@ -73,9 +87,9 @@ class SelectiveLeakage(Serializable, Isolation):
     def leakage_response(self) -> np.ndarray:
         """Leakage impulse response matrix.
 
-        Returns:
-            Numpy matrix of dimensions :math:`M \\times N \\times L`,
-            where :math:`M` is the number of receive streams and :math:`N` is the number of transmit streams and :math:`L` is the number of samples in the impulse response.
+        Numpy matrix of dimensions :math:`M \\times N \\times L`,
+        where :math:`M` is the number of receive streams and :math:`N` is the number of transmit streams and
+        :math:`L` is the number of samples in the impulse response.
         """
 
         return self.__leakage_response
