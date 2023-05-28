@@ -8,6 +8,7 @@ Simulated Devices
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
+from itertools import chain
 from typing import List, Optional, Set, Tuple, Type
 
 import numpy as np
@@ -184,7 +185,7 @@ class TriggerModel(ABC, RandomNode):
 
     @abstractmethod
     def realize(self) -> TriggerRealization:
-        """Realize a triggering of all controled devices.
+        """Realize a triggering of all controlled devices.
 
         Returns: Realization of the trigger model.
         """
@@ -580,6 +581,13 @@ class ProcessedSimulatedDeviceInput(SimulatedDeviceReceiveRealization, Processed
 
         return self.__trigger_realization
 
+    def to_HDF(self, group: Group) -> None:
+        ProcessedDeviceInput.to_HDF(self, group)
+        group.attrs["operator_separation"] = self.operator_separation
+        self.leaking_signal.to_HDF(self._create_group(group, "leaking_signal"))
+        self.baseband_signal.to_HDF(self._create_group(group, "baseband_signal"))
+        self.trigger_realization.to_HDF(self._create_group(group, "trigger_realization"))
+
     @classmethod
     def from_HDF(cls: Type[ProcessedSimulatedDeviceInput], group: Group) -> ProcessedSimulatedDeviceInput:
         device_input = ProcessedDeviceInput.from_HDF(group)
@@ -644,12 +652,16 @@ class SimulatedDeviceReception(ProcessedSimulatedDeviceInput, DeviceReception):
 
         return cls(device_input.impinging_signals, device_input.leaking_signal, device_input.baseband_signal, device_input.operator_separation, device_input.operator_inputs, device_input.noise_realizations, device_input.trigger_realization, operator_receptions)
 
+    def to_HDF(self, group: Group) -> None:
+        ProcessedSimulatedDeviceInput.to_HDF(self, group)
+        DeviceReception.to_HDF(self, group)
+
     @classmethod
     def from_HDF(cls: Type[SimulatedDeviceReception], group: Group) -> SimulatedDeviceReception:
         device_input = ProcessedSimulatedDeviceInput.from_HDF(group)
         device_reception = DeviceReception.from_HDF(group)
 
-        return cls.From_ProcessedDeviceInput(device_input, device_reception.operator_receptions)
+        return cls.From_ProcessedSimulatedDeviceInput(device_input, device_reception.operator_receptions)
 
 
 class SimulatedDevice(Device, Moveable, Serializable):
@@ -801,7 +813,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
         if self.__scenario is not scenario:
             # Pop the device from the old scenario
             if self.__scenario is not None:
-                ...  # ToDo
+                raise NotImplementedError()  # pragma: no cover
 
             self.__scenario = scenario
             self.random_mother = scenario
@@ -892,13 +904,11 @@ class SimulatedDevice(Device, Moveable, Serializable):
         if self.__sampling_rate is not None:
             return self.__sampling_rate
 
-        if self.transmitters.num_operators > 0:
-            return self.transmitters[0].sampling_rate
+        sampling_rate = 0.0
+        for operator in chain(self.transmitters, self.receivers):
+            sampling_rate = max(sampling_rate, operator.sampling_rate)  # type: ignore
 
-        if self.receivers.num_operators > 0:
-            return self.receivers[0].sampling_rate
-
-        return 1.0
+        return 1.0 if sampling_rate == 0.0 else sampling_rate
 
     @sampling_rate.setter
     def sampling_rate(self, value: Optional[float]) -> None:
@@ -1076,7 +1086,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
     @snr.setter
     def snr(self, value: float) -> None:
         if value <= 0:
-            raise ValueError("The linear signal to noise ratio must be greater than zero")
+            raise ValueError(f"The linear signal to noise ratio must be greater than zero (not {value})")
 
         self.__snr = value
 
@@ -1119,7 +1129,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
 
         return self.__input
 
-    def realize_reception(self, snr: float = float("inf"), snr_type: SNRType = SNRType.PN0) -> SimulatedDeviceReceiveRealization:
+    def realize_reception(self, snr: float = float("inf"), snr_type: SNRType = SNRType.PN0, cache=True) -> SimulatedDeviceReceiveRealization:
         """Generate a random realization for receiving over the simulated device.
 
         Args:
@@ -1131,6 +1141,10 @@ class SimulatedDevice(Device, Moveable, Serializable):
             snr_type (SNRType, optional):
                 Type of signal to noise ratio.
 
+            cache (bool, optional):
+                Cache the generated realization at this device.
+                Enabled by default.
+
         Returns: The generated realization.
         """
 
@@ -1141,7 +1155,13 @@ class SimulatedDevice(Device, Moveable, Serializable):
         noise_realizations = [self.noise.realize(r.noise_power(snr, snr_type)) for r in self.receivers]
 
         # Return device receive realization
-        return SimulatedDeviceReceiveRealization(noise_realizations)
+        realization = SimulatedDeviceReceiveRealization(noise_realizations)
+
+        # Cache realization if the respective flag is enabled
+        if cache:
+            self.__realization = realization
+
+        return realization
 
     def _simulate_input(self, mixed_signal: Signal, leaking_signal: Signal | None = None) -> Tuple[Signal, Signal]:
         # Model mutual coupling behaviour
@@ -1320,7 +1340,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
         """
 
         # Realize the random process
-        realization = self.realize_reception(snr, snr_type)
+        realization = self.realize_reception(snr, snr_type, cache=cache)
 
         # Receive the signal
         processed_input = self.process_from_realization(impinging_signals, realization, trigger_realization, leaking_signal, cache, channel_state)

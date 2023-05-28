@@ -22,7 +22,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 from hermespy.core import Serializable, SerializableEnum, Signal
-from ruamel.yaml import Node, ScalarNode, MappingNode, SafeRepresenter, SafeConstructor
+from ruamel.yaml import MappingNode, SafeRepresenter
 
 from hermespy.tools.math import rms_value
 
@@ -134,6 +134,10 @@ class AutomaticGainControl(Gain):
 
         """
 
+        # Initialize base class
+        Gain.__init__(self)
+
+        # Initialize attributes
         self.agc_type = agc_type
         self.backoff = backoff
 
@@ -155,8 +159,8 @@ class AutomaticGainControl(Gain):
         return self.__agc_type
 
     @agc_type.setter
-    def agc_type(self, value: GainControlType) -> None:
-        self.__agc_type = value
+    def agc_type(self, value: GainControlType | str) -> None:
+        self.__agc_type = value if isinstance(value, GainControlType) else GainControlType[value]
 
     @property
     def backoff(self) -> float:
@@ -191,29 +195,6 @@ class AutomaticGainControl(Gain):
         self.gain = 1 / max_amplitude if max_amplitude > 0.0 else 1.0
 
         super().multiply_signal(input_signal)
-
-    @classmethod
-    def from_yaml(cls: Type[AutomaticGainControl], constructor: SafeConstructor, node: Node) -> AutomaticGainControl:
-        """Recall a new `AnalogDigitalConverter` instance from YAML.
-
-        Args:
-            constructor (RoundTripConstructor):
-                A handle to the constructor extracting the YAML information.
-
-            node (Union[ScalarNode, MappingNode]):
-                YAML node representing the `AnalogDigitalConverter` serialization.
-
-        Returns:
-            AnalogDigitalConverter:
-                Newly created `AnalogDigitalConverter` instance.
-        """
-
-        if isinstance(node, ScalarNode):
-            return cls()
-
-        state = SafeConstructor.construct_mapping(constructor, node, deep=False)
-
-        return cls.InitializationWrapper(state)
 
     @classmethod
     def to_yaml(cls: Type[AutomaticGainControl], representer: SafeRepresenter, node: AutomaticGainControl) -> MappingNode:
@@ -299,10 +280,7 @@ class AnalogDigitalConverter(Serializable):
             self.__num_quantization_bits = None
 
         else:
-            if value is None:
-                self.__num_quantization_bits = None
-
-            elif value < 0 or not isinstance(value, (int, np.int_)):
+            if value < 0 or not isinstance(value, (int, np.int_)):
                 raise ValueError("Number of bits must be a non-negative integer")
 
             else:
@@ -406,10 +384,7 @@ class AnalogDigitalConverter(Serializable):
                 By default, a new figure is created.
         """
 
-        if input_samples is None:
-            input_samples = np.arange(-1, 1, 0.01) + 1j * np.arange(1, -1, -0.01)
-
-        input_samples = input_samples.flatten()
+        _input_samples = np.arange(-1, 1, 0.01) + 1j * np.arange(1, -1, -0.01) if input_samples is None else input_samples.flatten()
 
         figure: Optional[plt.figure] = None
         if fig_axes is None:
@@ -421,8 +396,8 @@ class AnalogDigitalConverter(Serializable):
         else:
             quant_axes = fig_axes
 
-        output_samples = self.convert(Signal(input_samples, 1.0)).samples.flatten()
-        quant_axes.plot(np.real(input_samples), np.real(output_samples))
+        output_samples = self.convert(Signal(_input_samples, 1.0)).samples.flatten()
+        quant_axes.plot(np.real(_input_samples), np.real(output_samples))
 
         quant_axes.axhline(0)
         quant_axes.axvline(0)

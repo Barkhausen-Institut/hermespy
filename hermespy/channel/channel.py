@@ -9,14 +9,13 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from enum import Enum
-from typing import Generic, List, Optional, Tuple, TypeVar, Union, TYPE_CHECKING
+from typing import Generic, List, Optional, Tuple, Type, TypeVar, Union, TYPE_CHECKING
 from itertools import chain, product
+from h5py import Group
 
 import numpy as np
 
-from hermespy.core import DeviceOutput, RandomNode, Signal, ChannelStateInformation
-from hermespy.core.factory import Serializable
-from hermespy.core.channel_state_information import ChannelStateFormat
+from hermespy.core import DeviceOutput, RandomNode, Signal, ChannelStateInformation, ChannelStateFormat, Serializable
 
 if TYPE_CHECKING:
     from hermespy.simulation import SimulatedDevice, SimulationScenario
@@ -36,6 +35,10 @@ class PropagationDirection(Enum):
 
     FORWARDS = 0
     BACKWARDS = 1
+
+
+CRT = TypeVar("CRT", bound="ChannelRealization")
+"""Type of channel realization"""
 
 
 class ChannelRealization(ChannelStateInformation):
@@ -69,12 +72,30 @@ class ChannelRealization(ChannelStateInformation):
     def reciprocal(self) -> ChannelRealization:
         return ChannelRealization(self.channel, ChannelStateInformation.reciprocal(self).state)
 
+    def to_HDF(self, group: Group) -> None:
+        # Serialize attributes
+        group.attrs["num_delay_taps"] = self.num_delay_taps
+        group.attrs["num_receive_streams"] = self.num_receive_streams
+        group.attrs["num_transmit_streams"] = self.num_transmit_streams
 
-ChannelRealizationType = TypeVar("ChannelRealizationType", bound=ChannelRealization)
-"""Type of channel realization"""
+        # Serialize state
+        self._write_dataset(group, "impulse_response", self.state)
+
+    @classmethod
+    def from_HDF(cls: Type[CRT], group: Group) -> CRT:
+        # Deserialize attributes
+        # num_delay_taps = group.attrs['num_delay_taps']
+        # num_receive_streams = group.attrs['num_receive_streams']
+        # num_transmit_streams = group.attrs['num_transmit_streams']
+
+        # Deserialize state
+        impulse_response = np.array(group["impulse_response"], dtype=np.complex_)
+
+        # Create channel realization
+        return cls(channel=None, impulse_response=impulse_response)
 
 
-class Channel(ABC, RandomNode, Serializable, Generic[ChannelRealizationType]):
+class Channel(ABC, RandomNode, Serializable, Generic[CRT]):
     """Base class of all channel models."""
 
     serialized_attributes = {"impulse_response_interpolation"}
@@ -86,7 +107,7 @@ class Channel(ABC, RandomNode, Serializable, Generic[ChannelRealizationType]):
     __gain: float
     __sync_offset_low: float
     __sync_offset_high: float
-    __last_realization: Optional[ChannelRealizationType]
+    __last_realization: Optional[CRT]
     impulse_response_interpolation: bool
 
     def __init__(self, transmitter: Optional[SimulatedDevice] = None, receiver: Optional[SimulatedDevice] = None, devices: Optional[Tuple[SimulatedDevice, SimulatedDevice]] = None, active: Optional[bool] = None, gain: Optional[float] = None, sync_offset_low: float = 0.0, sync_offset_high: float = 0.0, impulse_response_interpolation: bool = True, seed: Optional[int] = None) -> None:
@@ -380,7 +401,7 @@ class Channel(ABC, RandomNode, Serializable, Generic[ChannelRealizationType]):
 
         raise ValueError("Propagated signal is of unsupported type")
 
-    def propagate(self, forwards: Union[DeviceOutput, Signal, Sequence[Signal], None] = None, backwards: Union[DeviceOutput, Signal, Sequence[Signal], None] = None, realization: Optional[ChannelRealizationType] = None) -> Tuple[List[Signal], List[Signal], ChannelRealizationType]:
+    def propagate(self, forwards: Union[DeviceOutput, Signal, Sequence[Signal], None] = None, backwards: Union[DeviceOutput, Signal, Sequence[Signal], None] = None, realization: Optional[CRT] = None) -> Tuple[List[Signal], List[Signal], CRT]:
         """Propagate radio-frequency band signals over a channel instance.
 
         For the ideal channel in the base class, the MIMO channel is modeled as a matrix of ones.
@@ -459,7 +480,7 @@ class Channel(ABC, RandomNode, Serializable, Generic[ChannelRealizationType]):
             return [Signal.empty(csi_sampling_rate, self.receiver.num_antennas)], [Signal.empty(csi_sampling_rate, self.transmitter.num_antennas)], self.realize(0, csi_sampling_rate)
 
         # Generate the channel's impulse response realization
-        _realization: ChannelRealizationType = self.realize(csi_num_samples, csi_sampling_rate) if realization is None else realization
+        _realization: CRT = self.realize(csi_num_samples, csi_sampling_rate) if realization is None else realization
 
         # Consider the a random synchronization offset between transmitter and receiver
         sync_offset: float = self._rng.uniform(low=self.__sync_offset_low, high=self.__sync_offset_high)
@@ -508,7 +529,7 @@ class Channel(ABC, RandomNode, Serializable, Generic[ChannelRealizationType]):
         return Signal(propagated_samples, sampling_rate=signal.sampling_rate, carrier_frequency=signal.carrier_frequency, delay=signal.delay + delay)
 
     @abstractmethod
-    def realize(self, num_samples: int, sampling_rate: float) -> ChannelRealizationType:
+    def realize(self, num_samples: int, sampling_rate: float) -> CRT:
         """Generate a new channel impulse response.
 
         Note that this is the core routine from which :meth:`Channel.propagate` will create the channel state.
@@ -534,7 +555,7 @@ class Channel(ABC, RandomNode, Serializable, Generic[ChannelRealizationType]):
         ...  # pragma: no cover
 
     @property
-    def realization(self) -> Optional[ChannelRealizationType]:
+    def realization(self) -> Optional[CRT]:
         """The last realization used for channel propagation.
 
         Updated every time :meth:`Channel.propagate` is called.

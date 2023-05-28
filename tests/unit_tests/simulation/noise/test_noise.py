@@ -33,6 +33,20 @@ class TestAWGN(unittest.TestCase):
         self.noise = AWGN()
         self.noise.random_mother = self.random_node
 
+    def test_power_validation(self) -> None:
+        """Power property setter should raise ValueError on negative argument"""
+
+        with self.assertRaises(ValueError):
+            self.noise.power = -1.
+
+    def test_power_setget(self) -> None:
+        """Noise power property getter should return setter argument"""
+
+        expected_noise = 1.234
+        self.noise.power = expected_noise
+
+        self.assertEqual(expected_noise, self.noise.power)
+
     def test_add_noise_power(self) -> None:
         """Added noise should have correct power"""
 

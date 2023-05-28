@@ -502,7 +502,7 @@ class DeviceTransmission(DeviceOutput):
 
         # Serialize groups
         for t, transmission in enumerate(self.operator_transmissions):
-            transmission.to_HDF(group.create_group(f"transmission_{t:02d}"))
+            transmission.to_HDF(self._create_group(group, f"transmission_{t:02d}"))
 
 
 class DeviceInput(HDFSerializable):
@@ -548,7 +548,7 @@ class DeviceInput(HDFSerializable):
     def to_HDF(self, group: Group) -> None:
         # Serialize groups
         for s, signal in enumerate(self.impinging_signals):
-            signal.to_HDF(group.create_group(f"impinging_signal_{s:02d}"))
+            signal.to_HDF(self._create_group(group, f"impinging_signal_{s:02d}"))
 
         # Serialize attributes
         group.attrs["num_impinging_signals"] = self.num_impinging_signals
@@ -609,7 +609,7 @@ class ProcessedDeviceInput(DeviceInput):
 
         # Serialize groups
         for i, (input_signal, _) in enumerate(self.operator_inputs):
-            input_signal.to_HDF(group.create_group(f"operator_input_{i:02d}"))
+            input_signal.to_HDF(self._create_group(group, f"operator_input_{i:02d}"))
 
         # Serialize attributes
         group.attrs["num_operator_inputs"] = self.num_operator_inputs
@@ -716,7 +716,7 @@ class DeviceReception(ProcessedDeviceInput):
 
         # Serialize groups
         for t, reception in enumerate(self.operator_receptions):
-            reception.to_HDF(group.create_group(f"reception_{t:02d}"))
+            reception.to_HDF(self._create_group(group, f"reception_{t:02d}"))
 
         # Serialize attributes
         group.attrs["num_operator_receptions"] = self.num_operator_receptions

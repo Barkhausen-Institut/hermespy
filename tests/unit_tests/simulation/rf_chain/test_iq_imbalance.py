@@ -30,14 +30,14 @@ class TestIqImbalance(unittest.TestCase):
         phase_offset = np.pi
         amplitude_imbalance = 0.5
 
-        rf_chain = RfChain(None, phase_offset, amplitude_imbalance)
+        rf_chain = RfChain(phase_offset, amplitude_imbalance)
 
         expected_deteriorated_xt = 0.5j*self.x_t -1j * np.conj(self.x_t)
         
         assert_array_almost_equal(expected_deteriorated_xt, rf_chain.add_iq_imbalance(self.x_t))
 
     def test_default_values_result_in_no_detoriation(self) -> None:
-        rf_chain = RfChain(None, None, None)
+        rf_chain = RfChain(None, None)
         i_samples = np.random.randint(low=1, high=4, size=100)
         q_samples = np.random.randint(low=1, high=4, size=100)
 
@@ -47,7 +47,7 @@ class TestIqImbalance(unittest.TestCase):
     def test_exception_raised_if_amplitude_imbalance_not_within_interval(self) -> None:
 
         with self.assertRaises(ValueError):
-            _ = RfChain(None, None, -3)
+            _ = RfChain(None, -3)
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""
