@@ -1346,7 +1346,7 @@ class GridDimension(object):
     __first_impact: str | None
     __last_impact: str | None
 
-    def __init__(self, considered_objects: Union[Any, Tuple[Any, ...]], dimension: str, sample_points: List[Any], title: str | None = None, plot_scale: str | None = None, tick_format: Optional[ValueType] = None) -> None:
+    def __init__(self, considered_objects: Any | Tuple[Any, ...], dimension: str, sample_points: List[Any], title: str | None = None, plot_scale: str | None = None, tick_format: Optional[ValueType] = None) -> None:
         """
         Args:
 
@@ -1376,7 +1376,8 @@ class GridDimension(object):
                 If the selected `dimension` does not exist within the `considered_object`.
         """
 
-        self.__considered_objects = considered_objects if isinstance(considered_objects, tuple) else (considered_objects,)
+        _considered_objects = considered_objects if isinstance(considered_objects, tuple) else (considered_objects,)
+        self.__considered_objects = tuple()
 
         property_path = dimension.split(".")
         object_path = property_path[:-1]
@@ -1411,7 +1412,7 @@ class GridDimension(object):
         self.__first_impact = None
         self.__last_impact = None
 
-        for considered_object in self.__considered_objects:
+        for considered_object in _considered_objects:
             # Make sure the dimension exists
             try:
                 dimension_object = reduce(lambda obj, attr: getattr(obj, attr), object_path, considered_object)
@@ -2073,7 +2074,7 @@ class MonteCarlo(Generic[MO]):
 
         return self.__investigated_object
 
-    def new_dimension(self, dimension: str, sample_points: List[Any], *args: Tuple[Any], **kwargs) -> GridDimension:
+    def new_dimension(self, dimension: str, sample_points: List[Any], *args: Any, **kwargs) -> GridDimension:
         """Add a dimension to the simulation grid.
 
         Must be a property of the investigated object.
@@ -2122,6 +2123,12 @@ class MonteCarlo(Generic[MO]):
 
         self.__dimensions.append(dimension)
 
+    @property
+    def dimensions(self) -> List[GridDimension]:
+        """Simulation grid dimensions which make up the grid."""
+
+        return self.__dimensions.copy()
+
     def add_evaluator(self, evaluator: Evaluator) -> None:
         """Add new evaluator to the Monte Carlo simulation.
 
@@ -2132,6 +2139,12 @@ class MonteCarlo(Generic[MO]):
         """
 
         self.__evaluators.append(evaluator)
+
+    @property
+    def evaluators(self) -> List[Evaluator]:
+        """Evaluators used to process the investigated object sample state."""
+
+        return self.__evaluators.copy()
 
     @property
     def num_samples(self) -> int:

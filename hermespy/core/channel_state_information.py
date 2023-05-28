@@ -6,7 +6,7 @@ Channel State Information Model
 """
 
 from __future__ import annotations
-from typing import Generator, Optional, List, SupportsIndex, Tuple, Type
+from typing import Generator, Optional, List, SupportsIndex, Tuple, Type, TypeVar
 from enum import Enum
 
 import numpy as np
@@ -25,6 +25,10 @@ __version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
+
+
+CSIT = TypeVar("CSIT", bound="ChannelStateInformation")
+"""Type hint for channel state information."""
 
 
 class ChannelStateFormat(Enum):
@@ -502,7 +506,7 @@ class ChannelStateInformation(HDFSerializable):
         return ChannelStateInformation(self.__state_format, reciprocal_state, self.num_delay_taps, self.__num_frequency_bins)
 
     @classmethod
-    def from_HDF(cls: Type[ChannelStateInformation], group: Group) -> ChannelStateInformation:
+    def from_HDF(cls: Type[CSIT], group: Group) -> CSIT:
         # Recall datasets
         state = np.array(group["state"], dtype=complex)
 
