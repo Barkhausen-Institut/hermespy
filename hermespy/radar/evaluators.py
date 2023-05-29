@@ -94,7 +94,7 @@ class RadarEvaluator(Evaluator, ABC):
             ValueError: If the receiving radar is not an operator of the radar_channel receiver.
         """
 
-        if radar_channel is not None and receiving_radar not in radar_channel.receiver.receivers:
+        if radar_channel is not None and (radar_channel.receiver is None or receiving_radar not in radar_channel.receiver.receivers):
             raise ValueError("The radar operator is not a receiver within the radar channel receiving device")
 
         self.__receiving_radar = receiving_radar
@@ -236,10 +236,30 @@ class RocEvaluationResult(EvaluationResult):
     __false_alarm_probabilities: np.ndarray
 
     def __init__(self, grid: Sequence[GridDimension], detection_probabilities: np.ndarray, false_alarm_probabilities: np.ndarray, title: str = "Receiver Operating Characteristics") -> None:
+        """
+        Args:
+
+            grid (Sequence[GridDimension]):
+                Grid dimensions of the evaluation result.
+
+            detection_probabilities (np.ndarray):
+                Detection probabilities for each grid point.
+
+            false_alarm_probabilities (np.ndarray):
+                False alarm probabilities for each grid point.
+
+            title (str, optional):
+                Title of the evaluation result.
+        """
+
         self.__grid = grid
         self.__detection_probabilities = detection_probabilities
         self.__false_alarm_probabilities = false_alarm_probabilities
         self.__title = title
+
+    @property
+    def title(self) -> str:
+        return self.__title
 
     def _plot(self, axes: plt.Axes) -> None:
         # Configure axes labels
@@ -247,8 +267,8 @@ class RocEvaluationResult(EvaluationResult):
         axes.set_ylabel("Detection Probability")
 
         # Configure axes limits
-        axes.set_xlim(0.0, 2)
-        axes.set_ylim(0.0, 2)
+        axes.set_xlim(0.0, 1.1)
+        axes.set_ylim(0.0, 1.1)
 
         section_magnitudes = tuple(s.num_sample_points for s in self.__grid)
         for section_indices in np.ndindex(section_magnitudes):
@@ -263,7 +283,6 @@ class RocEvaluationResult(EvaluationResult):
             y_axis = self.__detection_probabilities[section_indices]
 
             # Plot the graph line
-
             axes.plot(x_axis, y_axis, label=line_label)
 
         # Only plot the legend for an existing sweep grid.
@@ -363,15 +382,15 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
 
     @property
     def abbreviation(self) -> str:
-        return "ROC"  # pragma no cover
+        return "ROC"  # pragma: no cover
 
     @property
     def title(self) -> str:
-        return "Operating Characteristics"  # pragma no cover
+        return "Operating Characteristics"  # pragma: no cover
 
     def generate_result(self, grid: Sequence[GridDimension], artifacts: np.ndarray) -> RocEvaluationResult:
         # Prepare result containers
-        dimensions = tuple(g.num_sample_points for g in grid)
+        dimensions = tuple(g.num_sample_points for g in grid) if len(grid) > 0 else (1,)
         detection_probabilities = np.empty((*dimensions, self.__num_thresholds), dtype=float)
         false_alarm_probabilities = np.empty((*dimensions, self.__num_thresholds), dtype=float)
 
@@ -456,7 +475,7 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
             artifacts[0].append(evaluation.artifact())
 
         # Generate results
-        grid = [GridDimension(h1_scenario, "num_drops", [0.0])]
+        grid: Sequence[GridDimension] = []
         result = cls(h1_operator).generate_result(grid, artifacts)
         return result
 
@@ -498,8 +517,8 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
 class RootMeanSquareArtifact(Artifact):
     """Artifact of a root mean square evaluation"""
 
-    num_errors: int
-    cummulation: float
+    __num_errors: int
+    __cummulation: float
 
     def __init__(self, num_errors: int, cummulation: float) -> None:
         """
@@ -512,14 +531,26 @@ class RootMeanSquareArtifact(Artifact):
                 Sum of squared errors distances.
         """
 
-        self.num_errors = num_errors
-        self.cummulation = cummulation
+        self.__num_errors = num_errors
+        self.__cummulation = cummulation
 
     def to_scalar(self) -> float:
         return np.sqrt(self.cummulation / self.num_errors)
 
     def __str__(self) -> str:
         return f"{self.to_scalar():4.0f}"
+
+    @property
+    def num_errors(self) -> int:
+        """Number of cummulated errors"""
+
+        return self.__num_errors
+
+    @property
+    def cummulation(self) -> float:
+        """Cummulated squared error"""
+
+        return self.__cummulation
 
 
 class RootMeanSquareEvaluation(Evaluation):
@@ -545,17 +576,28 @@ class RootMeanSquareEvaluation(Evaluation):
 class RootMeanSquareErrorResult(ScalarEvaluationResult):
     """Result of a root mean square error evaluation."""
 
-    ...  # pragma no cover
+    ...  # pragma: no cover
 
 
 class RootMeanSquareError(RadarEvaluator):
     """Root mean square estimation error of point detections."""
 
     def evaluate(self) -> Evaluation:
-        point_cloud = self.receiving_radar.reception.cloud
-        ground_truth = self.radar_channel.realization.ground_truth
+        reception = self.receiving_radar.reception
 
-        return RootMeanSquareEvaluation(point_cloud, ground_truth)
+        if reception is None:
+            raise RuntimeError("Root mean square evaluation requires its radar to have received a reception")
+
+        point_cloud = reception.cloud
+        channel_realization = self.radar_channel.realization
+
+        if point_cloud is None:
+            raise RuntimeError("Root mean square evaluation requires a detector to be configured at the radar")
+
+        if channel_realization is None:
+            raise RuntimeError("Root mean square evaluation requires a realized radar channel")
+
+        return RootMeanSquareEvaluation(point_cloud, channel_realization.ground_truth())
 
     @property
     def title(self) -> str:
@@ -566,7 +608,7 @@ class RootMeanSquareError(RadarEvaluator):
         return "RMSE"
 
     def generate_result(self, grid: Sequence[GridDimension], artifacts: np.ndarray) -> RootMeanSquareErrorResult:
-        rmse_section_artifacts = np.empty(artifacts.shape, dtype=float)
+        rmse_scalar_results = np.empty(artifacts.shape, dtype=float)
         for coordinates, section_artifacts in np.ndenumerate(artifacts):
             cummulative_errors = 0.0
             error_count = 0
@@ -577,6 +619,6 @@ class RootMeanSquareError(RadarEvaluator):
                 error_count += artifact.num_errors
 
             rmse = np.sqrt(cummulative_errors / error_count)
-            rmse_section_artifacts[coordinates] = rmse
+            rmse_scalar_results[coordinates] = rmse
 
-        return RootMeanSquareErrorResult.From_Artifacts(grid, rmse_section_artifacts, self)
+        return RootMeanSquareErrorResult(grid, rmse_scalar_results, self)
