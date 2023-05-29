@@ -16,7 +16,7 @@ from hermespy.core import Signal, Serializable
 from .radar import RadarWaveform
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.0.0"
@@ -86,7 +86,6 @@ class FMCW(RadarWaveform, Serializable):
 
         if self.adc_sampling_rate < self.sampling_rate:
             downsampling_rate = Fraction(self.adc_sampling_rate / self.sampling_rate).limit_denominator(100)
-
             baseband_samples = signal.resample_poly(baseband_samples, up=downsampling_rate.numerator, down=downsampling_rate.denominator, axis=1)
 
         transform = fft2(baseband_samples)
@@ -300,7 +299,7 @@ class FMCW(RadarWaveform, Serializable):
         num_zero_samples = int((self.pulse_rep_interval - self.chirp_duration) * self.sampling_rate)
 
         if num_zero_samples < 0:
-            raise ValueError("Pulse repetition interval cannot be less than chirp duration in FMCW radar")
+            raise RuntimeError("Pulse repetition interval cannot be less than chirp duration in FMCW radar")
 
         pulse = np.concatenate((self.__chirp_prototype(), np.zeros(num_zero_samples)))
         return pulse
