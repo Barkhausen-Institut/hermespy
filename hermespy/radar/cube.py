@@ -17,7 +17,7 @@ from h5py import Group
 from hermespy.core import Executable, HDFSerializable
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.0.0"
@@ -77,7 +77,7 @@ class RadarCube(HDFSerializable):
 
         # Infer velocity bins
         if velocity_bins is None:
-            if data.shape[0] == 1:
+            if data.shape[1] == 1:
                 velocity_bins = np.array([0], dtype=np.float_)
 
             else:
@@ -214,14 +214,14 @@ class RadarCube(HDFSerializable):
             axes.set_xlabel("Range [m]")
             axes.set_ylabel("Doppler [Hz]")
 
-            plt.pcolormesh(self.range_bins, self.velocity_bins, range_velocity_profile, shading="auto")
+            axes.pcolormesh(self.range_bins, self.velocity_bins, range_velocity_profile, shading="auto")
 
             return figure
 
     def normalize_power(self) -> None:
         """Normalize the represented power indicators to unit maximum."""
 
-        self.__data /= self.__data.max()
+        self.__data = self.__data / self.__data.max()
 
     @classmethod
     def from_HDF(cls: Type[RadarCube], group: Group) -> RadarCube:

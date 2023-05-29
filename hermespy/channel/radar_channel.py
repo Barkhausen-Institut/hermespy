@@ -411,6 +411,17 @@ class RadarChannelRealization(ChannelRealization):
         """
         ...  # pragma: no cover
 
+    @abstractmethod
+    def ground_truth(self) -> np.ndarray:
+        """Generate a ground truth realization from a given channel realization.
+
+        Returns:
+            The ground truth radar channel realization.
+            A :math:`P\\times 3` matrix, where :math:`P` is the number of targets
+            and each row contains the target's position in global coordinates.
+        """
+        ...  # pragma: no cover
+
 
 class RadarChannelBase(Generic[RCRT], Channel[RCRT]):
     """Base class of all radar channel implementations."""
@@ -515,7 +526,7 @@ class RadarChannelBase(Generic[RCRT], Channel[RCRT]):
         mimo_response = np.inner(rx_response, tx_response)
 
         # Return realized information wrapped in a target realization dataclass
-        return RadarTargetRealization(reflection_phase, delay, doppler_shift, power_factor, mimo_response, target.static)
+        return RadarTargetRealization(reflection_phase, delay, doppler_shift, power_factor, mimo_response, target_forwards_transform.translation, target.static)
 
     def null_hypothesis(self, num_samples: int, sampling_rate: float, realization: RCRT | None = None) -> RCRT:
         """Generate a channel realization missing the target to be estimated.
@@ -551,9 +562,10 @@ class RadarPathRealization(object):
     __doppler_shift: float
     __power_factor: float
     __mimo_response: np.ndarray
+    __global_position: np.ndarray
     __static: bool
 
-    def __init__(self, phase_shift: float, delay: float, doppler_shift: float, power_factor: float, mimo_response: np.ndarray, static: bool = False) -> None:
+    def __init__(self, phase_shift: float, delay: float, doppler_shift: float, power_factor: float, mimo_response: np.ndarray, global_position: np.ndarray, static: bool = False) -> None:
         """
         Args:
 
@@ -573,6 +585,9 @@ class RadarPathRealization(object):
                 Spatial sensor array response of the propagation.
                 Must be numpy matrix.
 
+            global_position (np.ndarray):
+                Global position of the path's target as a cartesian vector.
+
             static (bool, optional):
                 Is the path considered static?
                 Static paths will remain during null hypothesis testing.
@@ -584,6 +599,7 @@ class RadarPathRealization(object):
         self.__doppler_shift = doppler_shift
         self.__power_factor = power_factor
         self.__mimo_response = mimo_response
+        self.__global_position = global_position
         self.__static = static
 
     @property
@@ -634,6 +650,15 @@ class RadarPathRealization(object):
         return self.__mimo_response
 
     @property
+    def global_position(self) -> np.ndarray:
+        """Global position of the path's target.
+
+        Returns: Cartesian numpy vector.
+        """
+
+        return self.__global_position
+
+    @property
     def static(self) -> bool:
         return self.__static
 
@@ -668,7 +693,6 @@ class SingleTargetRadarChannelRealization(RadarChannelRealization):
                 Single target realization.
                 `None` if no target should be present.
 
-
             num_samples (int):
                 Number of generated time-domain impulse response samples.
 
@@ -698,6 +722,9 @@ class SingleTargetRadarChannelRealization(RadarChannelRealization):
 
     def null_hypothesis(self, num_samples: int, sampling_rate: float) -> SingleTargetRadarChannelRealization:
         return SingleTargetRadarChannelRealization(self.channel, self.gain, None, num_samples, sampling_rate)
+
+    def ground_truth(self) -> np.ndarray:
+        return np.empty((0, 3), dtype=float) if self.target_realization is None else self.target_realization.global_position[None, :]
 
 
 class MultiTargetRadarChannelRealization(RadarChannelRealization):
@@ -764,6 +791,12 @@ class MultiTargetRadarChannelRealization(RadarChannelRealization):
 
         return self.__target_realizations
 
+    @property
+    def num_targets(self) -> int:
+        """Number of realized targets."""
+
+        return len(self.target_realizations)
+
     def null_hypothesis(self, num_samples: int, sampling_rate: float) -> MultiTargetRadarChannelRealization:
         null_hypothesis_target_realizations = []
         for target_realization in self.target_realizations:
@@ -775,6 +808,13 @@ class MultiTargetRadarChannelRealization(RadarChannelRealization):
             null_hypothesis_interference = None
 
         return MultiTargetRadarChannelRealization(self.channel, self.gain, null_hypothesis_interference, null_hypothesis_target_realizations, num_samples, sampling_rate)
+
+    def ground_truth(self) -> np.ndarray:
+        truth = np.empty((self.num_targets, 3), dtype=np.float_)
+        for target in self.target_realizations:
+            truth[target, :] = target.global_position
+
+        return truth
 
 
 class MultiTargetRadarChannel(RadarChannelBase[MultiTargetRadarChannelRealization], Serializable):
@@ -869,7 +909,7 @@ class MultiTargetRadarChannel(RadarChannelBase[MultiTargetRadarChannelRealizatio
         mimo_response = np.inner(rx_response, tx_response)
 
         # Return realized information wrapped in a target realization dataclass
-        return RadarInterferenceRealization(phase, delay, doppler_shift, power_factor, mimo_response, True)
+        return RadarInterferenceRealization(phase, delay, doppler_shift, power_factor, mimo_response, self.transmitter.global_position, True)
 
     def realize(self, num_samples: int, sampling_rate: float) -> MultiTargetRadarChannelRealization:
         if self.transmitter is None or self.receiver is None:
