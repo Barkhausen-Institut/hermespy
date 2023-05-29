@@ -12,7 +12,7 @@ from typing import List, Tuple, Type
 
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.ndimage import maximum_filter
+from scipy.ndimage import generate_binary_structure, maximum_filter
 
 from hermespy.core import Serializable, Visualizable
 from .cube import RadarCube
@@ -68,7 +68,7 @@ class PointDetection(object):
         self.__power = power
 
     @classmethod
-    def FromSpherical(cls: Type[PointDetection], zenith: float, azimuth: float, velocity: float, range: float, power: float) -> PointDetection:
+    def FromSpherical(cls: Type[PointDetection], zenith: float, azimuth: float, range: float, velocity: float, power: float) -> PointDetection:
         """Generate a point detection from radar cube spherical coordinates.
 
         Args:
@@ -79,11 +79,11 @@ class PointDetection(object):
             azimuth (float):
                 Azimuth angle in Radians.
 
-            velocity (float):
-                Velocity from / to the coordinate system origin in m/s.
-
             range (float):
                 Point distance to coordiante system origin in m/s.
+
+            velocity (float):
+                Velocity from / to the coordinate system origin in m/s.
 
             power (float):
                 Point power indicator.
@@ -147,8 +147,8 @@ class RadarPointCloud(Visualizable):
             ValueError: For `max_range` smaller than zero.
         """
 
-        if max_range < 0.0:
-            raise ValueError(f"Maximal represented range must be greater or equal to zero (not {max_range})")
+        if max_range <= 0.0:
+            raise ValueError(f"Maximal represented range must be greater than zero (not {max_range})")
 
         # Initialize base class
         Visualizable.__init__(self)
@@ -204,10 +204,8 @@ class RadarPointCloud(Visualizable):
         return "Radar Point Coud"
 
     def _new_axes(self) -> Tuple[plt.Figure, plt.Axes]:
-        figure = plt.figure()
-        axis = figure.add_subplot(projection="3d")
-
-        return figure, axis
+        figure, axes = plt.subplots(projection="3d")
+        return figure, axes
 
     def _plot(self, axes: plt.Axes) -> None:
         for point in self.points:
@@ -242,7 +240,7 @@ class RadarDetector(object):
 
             The resulting (usually sparse) point cloud.
         """
-        ...  # Pragma no cover
+        ...  # pragma: no cover
 
 
 class ThresholdDetector(RadarDetector, Serializable):
@@ -315,6 +313,10 @@ class ThresholdDetector(RadarDetector, Serializable):
 
         return self.__peak_detection
 
+    @peak_detection.setter
+    def peak_detection(self, value: bool) -> None:
+        self.__peak_detection = value
+
     def detect(self, cube: RadarCube) -> RadarPointCloud:
         # Extract cube data and normalize if the respective flag is enabled
         cube_max = cube.data.max()
@@ -322,11 +324,13 @@ class ThresholdDetector(RadarDetector, Serializable):
 
         # Filter the raw cube data for peaks
         if self.peak_detection:
-            footprint = np.array([1, 1, 10])
-            cube_data = maximum_filter(cube_data, footprint)
+            footprint = generate_binary_structure(3, 1)
+            candidates = maximum_filter(cube_data, footprint=footprint) == cube_data
+            detection_point_indices = np.argwhere(np.logical_and(candidates, cube_data >= self.min_power))
 
-        # Apply the thershold and extract the coordinates matching the requirements
-        detection_point_indices = np.argwhere(cube_data >= self.min_power)
+        else:
+            # Apply the thershold and extract the coordinates matching the requirements
+            detection_point_indices = np.argwhere(cube_data >= self.min_power)
 
         # Transform the detections to a point cloud
         cloud = RadarPointCloud(cube.range_bins.max())
@@ -356,7 +360,7 @@ class MaxDetector(RadarDetector, Serializable):
 
         # Return an empty point cloud if no maximum was found
         if point_power <= 0.0:
-            return RadarPointCloud()
+            return RadarPointCloud(cube.range_bins.max())
 
         angles_of_arrival = cube.angle_bins[point_index[0], :]
         velocity = cube.velocity_bins[point_index[1]]

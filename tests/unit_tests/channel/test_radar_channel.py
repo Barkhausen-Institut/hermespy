@@ -35,15 +35,19 @@ class RadarChannelRealizationMock(RadarChannelRealization):
         impulse_response = self.ImpulseResponse([], self.gain, num_samples, sampling_rate, self.channel.transmitter, self.channel.receiver)
         return  RadarChannelRealizationMock(self.channel, self.gain, impulse_response)
 
+    def ground_truth(self) -> np.ndarray:
+        return np.empty((0, 3), dtype=np.float_)
+
 
 class RadarChannelMock(RadarChannelBase[RadarChannelRealizationMock]):
     """Radar channel for base class testing"""
     
     def realize(self, num_samples: int, sampling_rate: float) -> RadarChannelRealizationMock:
-        
-        target_realization = RadarTargetRealization(0, 0, 0, 1, np.eye(self.receiver.antennas.num_receive_antennas, self.transmitter.antennas.num_transmit_antennas))
+      
+        global_position = np.array([1, 1, 1], dtype=np.float_)  
+        target_realization = RadarTargetRealization(0, 0, 0, 1, np.eye(self.receiver.antennas.num_receive_antennas, self.transmitter.antennas.num_transmit_antennas), global_position)
         impulse_response = RadarChannelRealization.ImpulseResponse([target_realization], self.gain, num_samples, sampling_rate, self.transmitter, self.receiver)
-        
+
         return RadarChannelRealizationMock(self, self.gain, impulse_response)
 
 
