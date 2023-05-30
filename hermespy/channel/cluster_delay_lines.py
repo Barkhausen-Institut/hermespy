@@ -34,7 +34,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from enum import Enum
 from math import ceil, sin, cos, sqrt
-from typing import Any, List, Tuple
+from typing import Any, Literal, List, Tuple
 
 import numpy as np
 from scipy.constants import pi, speed_of_light
@@ -110,7 +110,7 @@ class ClusterDelayLineBase(Channel):
         Returns:
             bool: Line of sight indicator.
         """
-        ...
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -123,7 +123,7 @@ class ClusterDelayLineBase(Channel):
         Returns:
             float: Mean delay spread in seconds.
         """
-        ...
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -139,7 +139,7 @@ class ClusterDelayLineBase(Channel):
         Raises:
             ValueError: If the standard deviation is smaller than zero.
         """
-        ...
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -152,7 +152,7 @@ class ClusterDelayLineBase(Channel):
         Returns:
             float: Mean angle spread in seconds
         """
-        ...
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -168,7 +168,7 @@ class ClusterDelayLineBase(Channel):
         Raises:
             ValueError: If the standard deviation is smaller than zero.
         """
-        ...
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -181,7 +181,7 @@ class ClusterDelayLineBase(Channel):
         Returns:
             float: Mean angle spread in seconds
         """
-        ...
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -197,7 +197,7 @@ class ClusterDelayLineBase(Channel):
         Raises:
             ValueError: If the standard deviation is smaller than zero.
         """
-        ...
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -210,7 +210,7 @@ class ClusterDelayLineBase(Channel):
         Returns:
             float: Mean angle spread in seconds
         """
-        ...
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -226,7 +226,7 @@ class ClusterDelayLineBase(Channel):
         Raises:
             ValueError: If the standard deviation is smaller than zero.
         """
-        ...
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -239,7 +239,7 @@ class ClusterDelayLineBase(Channel):
         Returns:
             float: Mean angle spread in degrees
         """
-        ...
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -255,7 +255,7 @@ class ClusterDelayLineBase(Channel):
         Raises:
             ValueError: If the standard deviation is smaller than zero.
         """
-        ...
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -267,7 +267,7 @@ class ClusterDelayLineBase(Channel):
         Returns:
             float: The offset in degrees.
         """
-        ...
+        ...  # pragma: no cover
 
     ###############################
     # ToDo: Shadow fading function
@@ -284,7 +284,7 @@ class ClusterDelayLineBase(Channel):
         Returns:
             float: Rice factor mean in dB.
         """
-        ...
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -300,7 +300,7 @@ class ClusterDelayLineBase(Channel):
         Raises:
             ValueError: If the standard deviation is smaller than zero.
         """
-        ...
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -316,7 +316,7 @@ class ClusterDelayLineBase(Channel):
             ValueError:
                 If scaling factor is smaller than one.
         """
-        ...
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -329,7 +329,7 @@ class ClusterDelayLineBase(Channel):
         Returns:
             float: Mean power in dB.
         """
-        ...
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -345,7 +345,7 @@ class ClusterDelayLineBase(Channel):
         Raises:
             ValueError: If the standard deviation is smaller than zero.
         """
-        ...
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -360,7 +360,7 @@ class ClusterDelayLineBase(Channel):
         Raises:
             ValueError: If the number of clusters is smaller than one.
         """
-        ...
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -371,11 +371,8 @@ class ClusterDelayLineBase(Channel):
 
         Returns:
             int: Number of rays.
-
-        Raises:
-            ValueError: If the number of clusters is smaller than one.
         """
-        ...
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -390,7 +387,7 @@ class ClusterDelayLineBase(Channel):
         Raises:
             ValueError: If spread is smaller than zero.
         """
-        ...
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -405,7 +402,7 @@ class ClusterDelayLineBase(Channel):
         Raises:
             ValueError: If spread is smaller than zero.
         """
-        ...
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -420,7 +417,7 @@ class ClusterDelayLineBase(Channel):
         Raises:
             ValueError: If spread is smaller than zero.
         """
-        ...
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -435,7 +432,7 @@ class ClusterDelayLineBase(Channel):
         Raises:
             ValueError: If spread is smaller than zero.
         """
-        ...
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -450,7 +447,7 @@ class ClusterDelayLineBase(Channel):
         Raises:
             ValueError: If the deviation is smaller than zero.
         """
-        ...
+        ...  # pragma: no cover
 
     def _cluster_delays(self, delay_spread: float, rice_factor: float) -> Tuple[np.ndarray, np.ndarray]:
         """Compute a single sample set of normalized cluster delays.
@@ -534,7 +531,7 @@ class ClusterDelayLineBase(Channel):
 
         return powers
 
-    def _ray_azimuth_angles(self, cluster_powers: np.ndarray, rice_factor: float, los_azimuth: float) -> np.ndarray:
+    def _ray_azimuth_angles(self, cluster_powers: np.ndarray, rice_factor: float, los_azimuth: float, direction: Literal["arrival", "departure"]) -> np.ndarray:
         """Compute cluster ray azimuth angles of arrival or departure.
 
         Args:
@@ -564,7 +561,9 @@ class ClusterDelayLineBase(Channel):
             angle_scale *= 1.1035 - 0.028 * rice_factor - 2e-3 * rice_factor**2 + 1e-4 * rice_factor**3
 
         # Draw azimuth angle spread from the distribution
-        spread = 10 ** self._rng.normal(self.aoa_spread_mean, self.aoa_spread_std, size=size)
+        spread_mean = self.aoa_spread_mean if direction == "arrival" else self.aod_spread_mean
+        spread_std = self.aoa_spread_std if direction == "arrival" else self.aod_spread_std
+        spread = 10 ** self._rng.normal(spread_mean, spread_std, size=size)
 
         angles: np.ndarray = 2 * (spread / 1.4) * np.sqrt(-np.log(cluster_powers / cluster_powers.max())) / angle_scale
 
@@ -582,7 +581,8 @@ class ClusterDelayLineBase(Channel):
             spread_angles += los_azimuth
 
         # Spread the angles
-        ray_offsets = self.cluster_aoa_spread * self.__ray_offset_angles
+        cluster_spread = self.cluster_aoa_spread if direction == "arrival" else self.cluster_aod_spread
+        ray_offsets = cluster_spread * self.__ray_offset_angles
         ray_angles = np.tile(spread_angles[:, None], len(ray_offsets)) + ray_offsets
 
         return ray_angles
@@ -670,7 +670,7 @@ class ClusterDelayLineBase(Channel):
             zenith_scale *= 1.3086 + 0.0339 * rice_factor - 0.0077 * rice_factor**2 + 2e-4 * rice_factor**3
 
         # Draw zenith angle spread from the distribution
-        zenith_spread = 10 ** self._rng.normal(self.zoa_spread_mean, self.zoa_spread_std, size=size)
+        zenith_spread = 10 ** self._rng.normal(self.zod_spread_mean, self.zod_spread_std, size=size)
 
         # Generate angle starting point
         zenith_centroids: np.ndarray = -zenith_spread * np.log(cluster_powers / cluster_powers.max()) / zenith_scale
@@ -711,15 +711,14 @@ class ClusterDelayLineBase(Channel):
 
         # Compute cluster delays and powers
         num_clusters = self.num_clusters
-        num_rays = 20
+        num_rays = self.num_rays
 
         raw_cluster_delays, cluster_delays = self._cluster_delays(delay_spread, rice_factor)
         cluster_powers = self._cluster_powers(delay_spread, raw_cluster_delays, rice_factor)
 
         # Compute cluster angles
-        ray_aod = pi / 180 * self._ray_azimuth_angles(cluster_powers, rice_factor, 180 * tx_los_angles[0] / pi)
-        ray_aoa = pi / 180 * self._ray_azimuth_angles(cluster_powers, rice_factor, 180 * rx_los_angles[0] / pi)
-        # ToDo: Zenith departure modeling
+        ray_aod = pi / 180 * self._ray_azimuth_angles(cluster_powers, rice_factor, 180 * tx_los_angles[0] / pi, "departure")
+        ray_aoa = pi / 180 * self._ray_azimuth_angles(cluster_powers, rice_factor, 180 * rx_los_angles[0] / pi, "arrival")
         ray_zod = pi / 180 * self._ray_zod(cluster_powers, rice_factor, 180 * tx_los_angles[1] / pi)
         ray_zoa = pi / 180 * self._ray_zoa(cluster_powers, rice_factor, 180 * rx_los_angles[1] / pi)
 

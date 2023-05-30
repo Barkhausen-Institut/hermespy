@@ -6,15 +6,14 @@ from typing import List, Tuple, Optional, Type, TYPE_CHECKING
 
 import os
 import numpy as np
-from os import path
-from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
+from os import getenv, path
 
 if TYPE_CHECKING:
-    from hermespy.channel import QuadrigaChannel
-    from hermespy.simulation import SimulatedDevice
+    from hermespy.channel import QuadrigaChannel  # pragma: no cover
+    from hermespy.simulation import SimulatedDevice  # pragma: no cover
 
 __author__ = "Tobias Kronauer"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.0.0"
@@ -43,10 +42,8 @@ class QuadrigaInterface:
     __scenario_label: str
     __channels: List[QuadrigaChannel]
     __fetched_channels: List[QuadrigaChannel]
-    __impulse_responses: List
-    __delays: List
 
-    def __init__(self, path_quadriga_src: Optional[str] = None, antenna_kind: Optional[str] = None, scenario_label: Optional[str] = None) -> None:
+    def __init__(self, path_quadriga_src: Optional[str] = None, antenna_kind: str = "omni", scenario_label: str = "3GPP_38.901_UMa_LOS") -> None:
         """Quadriga Interface object initialization.
 
         Args:
@@ -56,25 +53,13 @@ class QuadrigaInterface:
         """
 
         # Infer the quadriga source path
-        self.__path_quadriga_src = os.environ.get("HERMES_QUADRIGA")
-        if self.__path_quadriga_src is None:
-            self.__path_quadriga_src = os.path.join(os.path.dirname(__file__), "../..", "3rdparty", "quadriga_src")
+        default_src_path = path.join(path.dirname(__file__), "..", "..", "submodules", "quadriga", "quadriga_src")
+        self.path_quadriga_src = getenv("HERMES_QUADRIGA", default_src_path) if path_quadriga_src is None else path_quadriga_src
 
-        self.__antenna_kind = "omni"
-        self.__scenario_label = "3GPP_38.901_UMa_LOS"
+        self.antenna_kind = antenna_kind
+        self.scenario_label = scenario_label
         self.__channels = []
         self.__fetched_channels = []
-        self.__impulse_responses = []
-        self.__delays = []
-
-        if path_quadriga_src is not None:
-            self.path_quadriga_src = path_quadriga_src
-
-        if antenna_kind is not None:
-            self.antenna_kind = antenna_kind
-
-        if scenario_label is not None:
-            self.scenario_label = scenario_label
 
     @property
     def path_launch_script(self) -> str:
@@ -107,7 +92,7 @@ class QuadrigaInterface:
             bool: If a global instance exists.
         """
 
-        return QuadrigaInterface.__instance is None
+        return QuadrigaInterface.__instance is not None
 
     @classmethod
     def SetGlobalInstance(cls: Type[QuadrigaInterface], new_instance: QuadrigaInterface) -> None:
@@ -283,9 +268,6 @@ class QuadrigaInterface:
                 If transmitter sampling rates are not identical.
         """
 
-        if len(self.__channels) < 1:
-            raise RuntimeError("Attempting to launch Quadriga simulation without registered channels")
-
         transmitters: List[SimulatedDevice] = []
         receivers: List[SimulatedDevice] = []
 
@@ -313,8 +295,6 @@ class QuadrigaInterface:
 
         for t, transmitter in enumerate(transmitters):
             position = transmitter.position
-            if position is None:
-                raise RuntimeError("Quadriga channel model requires transmitter position definitions")
 
             if np.array_equal(position, np.array([0, 0, 0])):
                 raise RuntimeError("Position of transmitter must not be [0, 0, 0]")
@@ -325,10 +305,6 @@ class QuadrigaInterface:
             tx_num_antennas[t] = transmitter.num_antennas
 
         for r, receiver in enumerate(receivers):
-            position = receiver.position
-            if position is None:
-                raise RuntimeError("Quadriga channel model requires receiver position definitions")
-
             rx_positions[r, :] = receiver.position
             rx_num_antennas[r] = receiver.num_antennas
 
@@ -365,45 +341,3 @@ class QuadrigaInterface:
         """
 
         raise NotImplementedError("Neither a Matlab or Octave interface was found during Quadriga execution")
-
-    @classmethod
-    def to_yaml(cls: Type[QuadrigaInterface], representer: SafeRepresenter, node: QuadrigaInterface) -> MappingNode:
-        """Serialize a QuadrigaInterface object to YAML.
-
-        Args:
-            representer (SafeRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
-
-            node (QuadrigaInterface):
-                The QuadrigaInterface instance to be serialized.
-
-        Returns:
-            Node:
-                The serialized YAML node.
-        """
-
-        state = {"path_quadriga_src": node.path_quadriga_src, "antenna_kind": node.antenna_kind, "scenario_label": node.scenario_label}
-
-        return representer.represent_mapping(cls.yaml_tag, state)
-
-    @classmethod
-    def from_yaml(cls: Type[QuadrigaInterface], constructor: SafeConstructor, node: MappingNode) -> QuadrigaInterface:
-        """Recall a new `QuadrigaInterface` instance from YAML.
-
-        Args:
-            constructor (SafeConstructor):
-                A handle to the constructor extracting the YAML information.
-
-            node (Node):
-                YAML node representing the `QuadrigaInterface` serialization.
-
-        Returns:
-            QuadrigaInterface:
-                Newly created `QuadrigaInterface` instance. The internal references to modems will be `None` and need to be
-                initialized by the `scenario` YAML constructor.
-
-        """
-
-        state = constructor.construct_mapping(node)
-        return cls(**state)

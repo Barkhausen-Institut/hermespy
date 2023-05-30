@@ -120,7 +120,7 @@ class SpatialDelayChannel(DelayChannelBase):
     yaml_tag: str = "SpatialDelay"
 
     def _realize_delay(self) -> float:
-        if self.transmitter.position is None or self.receiver.position is None:
+        if self.transmitter is None or self.receiver is None:
             raise RuntimeError("The spatial delay channel requires the linked devices positions to be specified")
 
         distance = float(np.linalg.norm(self.transmitter.global_position - self.receiver.global_position))

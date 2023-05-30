@@ -18,10 +18,10 @@ import numpy as np
 from hermespy.core import DeviceOutput, RandomNode, Signal, ChannelStateInformation, ChannelStateFormat, Serializable
 
 if TYPE_CHECKING:
-    from hermespy.simulation import SimulatedDevice, SimulationScenario
+    from hermespy.simulation import SimulatedDevice, SimulationScenario  # pragma: no cover
 
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.0.0"
@@ -101,8 +101,8 @@ class Channel(ABC, RandomNode, Serializable, Generic[CRT]):
     serialized_attributes = {"impulse_response_interpolation"}
 
     __active: bool
-    __transmitter: Optional[SimulatedDevice]
-    __receiver: Optional[SimulatedDevice]
+    __transmitter: SimulatedDevice | None
+    __receiver: SimulatedDevice | None
     __scenario: SimulationScenario
     __gain: float
     __sync_offset_low: float
@@ -110,7 +110,7 @@ class Channel(ABC, RandomNode, Serializable, Generic[CRT]):
     __last_realization: Optional[CRT]
     impulse_response_interpolation: bool
 
-    def __init__(self, transmitter: Optional[SimulatedDevice] = None, receiver: Optional[SimulatedDevice] = None, devices: Optional[Tuple[SimulatedDevice, SimulatedDevice]] = None, active: Optional[bool] = None, gain: Optional[float] = None, sync_offset_low: float = 0.0, sync_offset_high: float = 0.0, impulse_response_interpolation: bool = True, seed: Optional[int] = None) -> None:
+    def __init__(self, transmitter: SimulatedDevice | None = None, receiver: SimulatedDevice | None = None, devices: Optional[Tuple[SimulatedDevice, SimulatedDevice]] = None, active: bool = True, gain: float = 1.0, sync_offset_low: float = 0.0, sync_offset_high: float = 0.0, impulse_response_interpolation: bool = True, seed: Optional[int] = None) -> None:
         """
         Args:
 
@@ -153,7 +153,8 @@ class Channel(ABC, RandomNode, Serializable, Generic[CRT]):
         self.__active = True
         self.__transmitter = None
         self.__receiver = None
-        self.__gain = 1.0
+        self.gain = gain
+        self.active = active
         self.__scenario = None
         self.sync_offset_low = sync_offset_low
         self.sync_offset_high = sync_offset_high
@@ -172,12 +173,6 @@ class Channel(ABC, RandomNode, Serializable, Generic[CRT]):
 
             self.transmitter = devices[0]
             self.receiver = devices[1]
-
-        if active is not None:
-            self.active = active
-
-        if gain is not None:
-            self.gain = gain
 
     @property
     def active(self) -> bool:
@@ -393,7 +388,7 @@ class Channel(ABC, RandomNode, Serializable, Generic[CRT]):
         if isinstance(propagated_signal, Signal):
             return [propagated_signal]
 
-        if isinstance(propagated_signal, list):
+        if isinstance(propagated_signal, Sequence):
             return propagated_signal
 
         if propagated_signal is None:
@@ -459,11 +454,11 @@ class Channel(ABC, RandomNode, Serializable, Generic[CRT]):
 
         # Validate that the signal models contain the correct number of streams
         for signal in forwards:
-            if signal.num_streams != self.transmitter.antennas.num_antennas:
+            if signal.num_streams != self.transmitter.antennas.num_transmit_antennas:
                 raise ValueError("Number of transmitted signal streams does not match number of transmit antennas")
 
         for signal in backwards:
-            if signal.num_streams != self.receiver.antennas.num_antennas:
+            if signal.num_streams != self.receiver.antennas.num_receive_antennas:
                 raise ValueError("Number of transmitted signal streams does not match number of transmit antennas")
 
         # Determine the sampling rate and sample count of the CSI samples
@@ -474,10 +469,13 @@ class Channel(ABC, RandomNode, Serializable, Generic[CRT]):
             csi_sampling_rate = max(csi_sampling_rate, signal.sampling_rate)
             csi_num_samples = max(csi_num_samples, signal.num_samples)
 
+        if csi_sampling_rate == 0.0:
+            csi_sampling_rate = max(self.transmitter.sampling_rate, self.receiver.sampling_rate)
+
         # If the channel is inactive, propagation will result in signal loss
         # This is modeled by returning an zero-length signal and impulse-response (in time-domain) after propagation
         if not self.active:
-            return [Signal.empty(csi_sampling_rate, self.receiver.num_antennas)], [Signal.empty(csi_sampling_rate, self.transmitter.num_antennas)], self.realize(0, csi_sampling_rate)
+            return [Signal.empty(csi_sampling_rate, self.receiver.antennas.num_receive_antennas)], [Signal.empty(csi_sampling_rate, self.transmitter.antennas.num_transmit_antennas)], self.realize(0, csi_sampling_rate)
 
         # Generate the channel's impulse response realization
         _realization: CRT = self.realize(csi_num_samples, csi_sampling_rate) if realization is None else realization

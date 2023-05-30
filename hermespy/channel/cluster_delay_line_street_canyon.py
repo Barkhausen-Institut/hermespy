@@ -57,7 +57,7 @@ class StreetCanyonLineOfSight(ClusterDelayLineBase, Serializable):
 
     @property
     def aoa_spread_std(self) -> float:
-        return -0.014 * log10(1 + self._center_frequency * 1e-9) + 0.28
+        return 0.014 * log10(1 + self._center_frequency * 1e-9) + 0.28
 
     @property
     def zoa_spread_mean(self) -> float:
@@ -179,7 +179,7 @@ class StreetCanyonNoLineOfSight(UrbanMicroCellsNoLineOfSight, Serializable):
 
     @property
     def aod_spread_std(self) -> float:
-        return 0.11 * log10(1 + self._center_frequency * 1e-9) - 0.33
+        return 0.11 * log10(1 + self._center_frequency * 1e-9) + 0.33
 
     @property
     def aoa_spread_mean(self) -> float:
@@ -341,5 +341,5 @@ class StreetCanyonOutsideToInside(UrbanMicroCellsNoLineOfSight, Serializable):
         return 4.0
 
     @property
-    def _center_frequency(self) -> float:
+    def _center_frequency(self) -> float:  # pragma: no cover
         return max(2e9, ClusterDelayLineBase._center_frequency.fget(self))  # type: ignore
