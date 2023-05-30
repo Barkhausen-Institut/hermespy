@@ -79,6 +79,13 @@ class TestSpatialDelayChannel(TestCase):
 
         self.channel = SpatialDelayChannel(transmitter=self.transmitter, receiver=self.receiver)
 
+    def test_delay_realization_validation(self) -> None:
+        """Delay realization should raise RuntimeErrors on invalid internal states"""
+        
+        self.channel.transmitter = None
+        with self.assertRaises(RuntimeError):
+            self.channel._realize_delay()
+
     def test_delay_realization(self) -> None:
         """Delay realization should yield the correct time delay"""
 

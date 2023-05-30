@@ -14,11 +14,12 @@ from scipy import stats
 from scipy.constants import pi
 
 from hermespy.channel import MultipathFadingChannel, AntennaCorrelation, CustomAntennaCorrelation
-from hermespy.core.signal_model import Signal
+from hermespy.core import Signal, UniformArray, IdealAntenna
+from hermespy.simulation import SimulatedDevice
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.0.0"
@@ -121,12 +122,8 @@ class TestMultipathFadingChannel(unittest.TestCase):
         self.doppler_frequency = 0.0
         self.los_doppler_frequency = 0.
 
-        self.transmitter = Mock()
-        self.receiver = Mock()
-        self.transmitter.sampling_rate = self.sampling_rate
-        self.receiver.sampling_rate = self.sampling_rate
-        self.transmitter.antennas.num_antennas = 1
-        self.receiver.antennas.num_antennas = 1
+        self.transmitter = SimulatedDevice(sampling_rate=self.sampling_rate)
+        self.receiver = SimulatedDevice(sampling_rate=self.sampling_rate)
         self.sync_offset_low = 1e-6
         self.sync_offset_high = 3e-6
 
@@ -542,8 +539,8 @@ class TestMultipathFadingChannel(unittest.TestCase):
     def test_antenna_correlation(self) -> None:
         """Test channel simulation with antenna correlation modeling"""
         
-        self.transmitter.antennas.num_antennas = 2
-        self.receiver.antennas.num_antennas = 2
+        self.transmitter.antennas = UniformArray(IdealAntenna, 1e-2, (2, 1, 1))
+        self.receiver.antennas = UniformArray(IdealAntenna, 1e-2, (2, 1, 1))
         
         uncorrelated_channel = MultipathFadingChannel(**self.channel_params)
         

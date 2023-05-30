@@ -15,7 +15,7 @@ from ..core.factory import Serializable
 from .cluster_delay_lines import ClusterDelayLineBase
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.0.0"
@@ -130,7 +130,7 @@ class RuralMacrocellsLineOfSight(ClusterDelayLineBase, Serializable):
         return 3.0
 
     @property
-    def _center_frequency(self) -> float:
+    def _center_frequency(self) -> float:  # pragma: no cover
         return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))  # type: ignore
 
 
@@ -242,7 +242,7 @@ class RuralMacrocellsNoLineOfSight(ClusterDelayLineBase, Serializable):
         return 3.0
 
     @property
-    def _center_frequency(self) -> float:
+    def _center_frequency(self) -> float:  # pragma: no cover
         return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))  # type: ignore
 
 
@@ -354,5 +354,5 @@ class RuralMacrocellsOutsideToInside(ClusterDelayLineBase, Serializable):
         return 3.0
 
     @property
-    def _center_frequency(self) -> float:
+    def _center_frequency(self) -> float:  # pragma: no cover
         return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))  # type: ignore

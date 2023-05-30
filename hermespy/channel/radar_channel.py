@@ -488,10 +488,10 @@ class RadarChannelBase(Generic[RCRT], Channel[RCRT]):
 
         # Make sure the transmitter / receiver positions don't collide with target locations
         # This implicitly violates the far-field assumption and leads to numeric instabilities
-        if np.array_equal(target_backwards_transform.translation, self.transmitter.global_position):
+        if np.array_equal(target_forwards_transform.translation, self.transmitter.global_position):
             raise RuntimeError("Radar channel transmitter position colliding with an assumed target location")
 
-        if np.array_equal(target_backwards_transform.translation, self.receiver.global_position):
+        if np.array_equal(target_forwards_transform.translation, self.receiver.global_position):
             raise RuntimeError("Radar channel receiver position colliding with an assumed target location")
 
         # Compute the impinging and emerging far-field wave direction from the target
@@ -811,8 +811,8 @@ class MultiTargetRadarChannelRealization(RadarChannelRealization):
 
     def ground_truth(self) -> np.ndarray:
         truth = np.empty((self.num_targets, 3), dtype=np.float_)
-        for target in self.target_realizations:
-            truth[target, :] = target.global_position
+        for t, target in enumerate(self.target_realizations):
+            truth[t, :] = target.global_position
 
         return truth
 
@@ -1033,7 +1033,7 @@ class SingleTargetRadarChannel(RadarChannelBase[SingleTargetRadarChannelRealizat
             if value[1] < value[0]:
                 raise ValueError("Target range span second value must be greater than first value")
 
-            if value[1] < 0.0:
+            if value[0] < 0.0:
                 raise ValueError("Target range span minimum must be greater or equal to zero")
 
         else:

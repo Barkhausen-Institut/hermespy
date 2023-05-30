@@ -7,11 +7,11 @@ from unittest.mock import patch, Mock, PropertyMock
 
 import numpy as np
 from numpy.random import default_rng
-from numpy.testing import assert_array_almost_equal
+from numpy.testing import assert_array_almost_equal, assert_array_equal
 from scipy.constants import pi, speed_of_light
 
 from hermespy.channel import SingleTargetRadarChannel, MultiTargetRadarChannel, VirtualRadarTarget, PhysicalRadarTarget, FixedCrossSection
-from hermespy.channel.radar_channel import RadarChannelBase, RadarChannelRealization, RadarTargetRealization
+from hermespy.channel.radar_channel import MultiTargetRadarChannelRealization, SingleTargetRadarChannelRealization, RadarChannelBase, RadarChannelRealization, RadarPathRealization, RadarInterferenceRealization, RadarTargetRealization
 from hermespy.core import Direction, FloatingError, IdealAntenna, Moveable, Signal, Transformation, UniformArray
 from hermespy.simulation import SimulatedDevice
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
@@ -229,17 +229,24 @@ class TestRadarChannelBase(unittest.TestCase):
         with self.assertRaises(ValueError):
             _ = self.channel._realize_target(-1, target)
             
-        target.pose.translation = self.transmitter.global_position
+        target.position = self.transmitter.global_position
         with self.assertRaises(RuntimeError):
             _ = self.channel._realize_target(1, target)
             
-        target.pose.translation = self.receiver.global_position
+        self.receiver.position = np.array([1, 2, 3])
+        target.position = self.receiver.global_position
         with self.assertRaises(RuntimeError):
             _ = self.channel._realize_target(1, target)
             
         self.channel.transmitter = None
         with self.assertRaises(FloatingError):
             _ = self.channel._realize_target(1, target)
+            
+    def test_null_hypothesis_validation(self) -> None:
+        """Null hypothesis realization should raise RuntimeError on invalid internal state"""
+        
+        with self.assertRaises(RuntimeError):
+            self.channel.null_hypothesis(1, 1)
             
     def test_null_hypothesis(self) -> None:
         """The radar channel null hypothesis routine should create a valid null hypothesis"""
@@ -251,6 +258,107 @@ class TestRadarChannelBase(unittest.TestCase):
         self.assertEqual(self.transmitter.antennas.num_transmit_antennas, null_hypothesis.num_transmit_streams)
         self.assertEqual(self.receiver.antennas.num_receive_antennas, null_hypothesis.num_receive_streams)
         self.assertEqual(10, null_hypothesis.num_samples)
+
+
+class TestRadarPathRealization(unittest.TestCase):
+    """Test the radar path realization class"""
+    
+    def setUp(self) -> None:
+        
+        self.phase_shift = 1.
+        self.delay = 2.
+        self.doppler_shift = 3.
+        self.power_factor = 4.
+        self.mimo_response = np.array([[[1, 2], [3, 4]]])
+        self.global_position = np.array([1, 2, 3])
+        self.static = True
+        self.realization = RadarPathRealization(self.phase_shift, self.delay, self.doppler_shift, self.power_factor, self.mimo_response, self.global_position, self.static)
+        
+    def test_properties(self) -> None:
+        """Class properties should return initialization arguments"""
+        
+        self.assertEqual(self.phase_shift, self.realization.phase_shift)
+        self.assertEqual(self.delay, self.realization.delay)
+        self.assertEqual(self.doppler_shift, self.realization.doppler_shift)
+        self.assertEqual(self.power_factor, self.realization.power_factor)
+        assert_array_equal(self.mimo_response, self.realization.mimo_response)
+        assert_array_equal(self.global_position, self.realization.global_position)
+        self.assertEqual(self.static, self.realization.static)
+
+
+class TestSingleTargetRadarChannelRealization(unittest.TestCase):
+    """Test the single target radar channel realization class"""
+    
+    def setUp(self) -> None:
+        
+        self.device = SimulatedDevice(carrier_frequency=1e9, antennas=UniformArray(IdealAntenna, .01, (2, 1, 1)))
+        self.channel = SingleTargetRadarChannel(1., 1.)
+        self.channel.transmitter = self.device
+        self.channel.receiver = self.device
+        
+        self.gain = 2.
+        self.target_realization = RadarTargetRealization(1., 2., 3., 4., np.array([[1, 2], [3, 4]]), np.array([1, 2, 3]))
+        self.num_samples = 10
+        self.sampling_rate = 1.234
+        
+        self.realization = SingleTargetRadarChannelRealization(self.channel, self.gain, self.target_realization, self.num_samples, self.sampling_rate)
+
+    def test_properties(self) -> None:
+        """Class properties should return initialization arguments"""
+        
+        self.assertEqual(self.gain, self.realization.gain)
+        self.assertIs(self.target_realization, self.realization.target_realization)
+
+    def test_null_hypothesis(self) -> None:
+        """Null hypothesis realization should generate correct channel realization"""
+        
+        null_realization = self.realization.null_hypothesis(10, 1e8)
+        
+        self.assertIsInstance(null_realization, SingleTargetRadarChannelRealization)
+
+    def test_ground_trutch(self) -> None:
+        """Ground truth should return correct information"""
+        
+        assert_array_equal(np.array([[1, 2, 3]]), self.realization.ground_truth())
+
+
+class TestMultiTargetRadarChannelRealization(unittest.TestCase):
+    """Test the multi target radar channel realization class"""
+    
+    def setUp(self) -> None:
+    
+        self.device = SimulatedDevice(carrier_frequency=1e9, antennas=UniformArray(IdealAntenna, .01, (2, 1, 1)))
+        self.channel = SingleTargetRadarChannel(1., 1.)
+        self.channel.transmitter = self.device
+        self.channel.receiver = self.device
+        
+        self.gain = 2.
+        self.target_realization = RadarTargetRealization(1., 2., 3., 4., np.array([[1, 2], [3, 4]]), np.array([1, 2, 3]))
+        self.interference_realization = RadarInterferenceRealization(1., 2., 3., 4., np.array([[2, 5], [1, 3]]), np.array([4, 5, 6]))
+        self.num_samples = 10
+        self.sampling_rate = 1.234
+        
+        
+        self.realization = MultiTargetRadarChannelRealization(self.channel, self.gain, self.interference_realization, [self.target_realization], self.num_samples, self.sampling_rate)
+
+    def test_properties(self) -> None:
+        """Class properties should return initialization arguments"""
+        
+        self.assertEqual(self.gain, self.realization.gain)
+        self.assertIs(self.interference_realization, self.realization.interference_realization)
+        self.assertSequenceEqual([self.target_realization], self.realization.target_realizations)
+
+    def test_null_hypothesis(self) -> None:
+        """Null hypothesis realization should generate correct channel realization"""
+        
+        null_realization = self.realization.null_hypothesis(self.num_samples, self.sampling_rate)
+        
+        self.assertIsInstance(null_realization, MultiTargetRadarChannelRealization)
+        
+    def test_ground_trutch(self) -> None:
+        """Ground truth should return correct information"""
+        
+        assert_array_equal(np.array([[1, 2, 3]]), self.realization.ground_truth())
 
 
 class TestMultiTargetRadarChannel(unittest.TestCase):
@@ -291,6 +399,33 @@ class TestMultiTargetRadarChannel(unittest.TestCase):
         new_target = self.channel.make_target(moveable, crosse_section)
         
         self.assertCountEqual([self.first_target, self.second_target, new_target], self.channel.targets)
+        
+    def test_realize_interference_validation(self) -> None:
+        """Interference realization subroutine should raise errors on invalid parameters and states"""
+        
+        with self.assertRaises(ValueError):
+            self.channel._realize_interference(0.)
+            
+        with self.assertRaises(FloatingError):
+            MultiTargetRadarChannel()._realize_interference(1.2345)
+            
+        self.transmitter.pose.translation = np.zeros(3)
+        self.receiver.pose.translation = np.zeros(3)
+        
+        with self.assertRaises(RuntimeError):
+            self.channel._realize_interference(1.234)
+            
+    def test_realize_interference_monostatic(self) -> None:
+        """Realization should not realize self-interference"""
+        
+        self.channel.receiver = self.channel.transmitter
+        self.assertIsNone(self.channel._realize_interference(1.234))
+            
+    def test_realize_validation(self) -> None:
+        """Realization should raise FloatingError if devices aren't specified"""
+        
+        with self.assertRaises(FloatingError):
+            MultiTargetRadarChannel().realize(1, 1.)
 
     def test_siso_realize(self) -> None:
         """Test SISO channel realization"""
@@ -408,6 +543,18 @@ class TestSingleTargetRadarChannel(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             self.channel.target_range = -1.
+            
+        with self.assertRaises(ValueError):
+            self.channel.target_range = (1, 2, 3)
+            
+        with self.assertRaises(ValueError):
+            self.channel.target_range = (3, 2)
+            
+        with self.assertRaises(ValueError):
+            self.channel.target_range = (-1, 0)
+            
+        with self.assertRaises(ValueError):
+            self.channel.target_range = 'wrong argument type'
 
     def test_target_exists_setget(self) -> None:
         """Target exists flag getter should return setter argument"""
