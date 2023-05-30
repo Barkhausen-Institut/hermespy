@@ -7,7 +7,6 @@
 
 from math import sin, cos
 from unittest import TestCase
-from unittest.mock import Mock
 
 import numpy as np
 from numpy.testing import assert_array_equal
@@ -28,7 +27,7 @@ __status__ = "Prototype"
 
 
 class TestClusterDelayLine(TestCase):
-    """Test the 3GPP Cluster Delay Line Model Implementation."""
+    """Test the 3GPP Cluster Delay Line Model Implementation"""
 
     def setUp(self) -> None:
 
@@ -57,7 +56,7 @@ class TestClusterDelayLine(TestCase):
                                         seed=1234)
 
     def test_init(self) -> None:
-        """Initialization parameters should be properly stored as class attributes."""
+        """Initialization parameters should be properly stored as class attributes"""
 
         self.assertEqual(self.delay_spread_mean, self.channel.delay_spread_mean)
         self.assertEqual(self.delay_spread_std, self.channel.delay_spread_std)
@@ -66,7 +65,7 @@ class TestClusterDelayLine(TestCase):
         self.assertEqual(self.delay_scaling, self.channel.delay_scaling)
 
     def test_num_clusters_setget(self) -> None:
-        """Number of clusters property getter should return setter argument."""
+        """Number of clusters property getter should return setter argument"""
 
         num_clusters = 123
         self.channel.num_clusters = num_clusters
@@ -74,7 +73,7 @@ class TestClusterDelayLine(TestCase):
         self.assertEqual(num_clusters, self.channel.num_clusters)
 
     def test_num_clusters_validation(self) -> None:
-        """Number of clusters property setter should raise ValueError on invalid arguments."""
+        """Number of clusters property setter should raise ValueError on invalid arguments"""
 
         with self.assertRaises(ValueError):
             self.channel.num_clusters = -1
@@ -83,7 +82,7 @@ class TestClusterDelayLine(TestCase):
             self.channel.num_clusters = 0
 
     def test_delay_spread_mean_setget(self) -> None:
-        """Delay spread mean property getter should return setter argument."""
+        """Delay spread mean property getter should return setter argument"""
 
         delay_spread = 123
         self.channel.delay_spread_mean = delay_spread
@@ -91,7 +90,7 @@ class TestClusterDelayLine(TestCase):
         self.assertEqual(delay_spread, self.channel.delay_spread_mean)
 
     def test_delay_spread_std_setget(self) -> None:
-        """Delay spread mean property getter should return setter argument."""
+        """Delay spread mean property getter should return setter argument"""
 
         std = 123
         self.channel.delay_spread_std = std
@@ -99,7 +98,7 @@ class TestClusterDelayLine(TestCase):
         self.assertEqual(std, self.channel.delay_spread_std)
 
     def test_delay_scaling_setget(self) -> None:
-        """Delay scaling property getter should return setter argument."""
+        """Delay scaling property getter should return setter argument"""
 
         delay_scaling = 123
         self.channel.delay_scaling = delay_scaling
@@ -107,7 +106,7 @@ class TestClusterDelayLine(TestCase):
         self.assertEqual(delay_scaling, self.channel.delay_scaling)
 
     def test_delay_scaling_validation(self) -> None:
-        """Delay scaling property setter should raise ValueError on invalid arguments."""
+        """Delay scaling property setter should raise ValueError on invalid arguments"""
 
         with self.assertRaises(ValueError):
             self.channel.delay_scaling = -1.
@@ -123,7 +122,7 @@ class TestClusterDelayLine(TestCase):
             self.fail()
 
     def test_rice_factor_mean_setget(self) -> None:
-        """Rice factor mean property getter should return setter argument."""
+        """Rice factor mean property getter should return setter argument"""
 
         rice_factor_mean = 123
         self.channel.rice_factor_mean = rice_factor_mean
@@ -131,7 +130,7 @@ class TestClusterDelayLine(TestCase):
         self.assertEqual(rice_factor_mean, self.channel.rice_factor_mean)
 
     def test_rice_factor_mean_validation(self) -> None:
-        """Rice factor mean property setter should raise ValueError on invalid arguments."""
+        """Rice factor mean property setter should raise ValueError on invalid arguments"""
 
         with self.assertRaises(ValueError):
             self.channel.rice_factor_mean = -1.
@@ -144,7 +143,7 @@ class TestClusterDelayLine(TestCase):
             self.fail()
             
     def test_rice_factor_std_setget(self) -> None:
-        """Rice factor standard deviation property getter should return setter argument."""
+        """Rice factor standard deviation property getter should return setter argument"""
 
         rice_factor_std = 123
         self.channel.rice_factor_std = rice_factor_std
@@ -152,7 +151,7 @@ class TestClusterDelayLine(TestCase):
         self.assertEqual(rice_factor_std, self.channel.rice_factor_std)
 
     def test_rice_factor_std_validation(self) -> None:
-        """Rice factor standard deviation property setter should raise ValueError on invalid arguments."""
+        """Rice factor standard deviation property setter should raise ValueError on invalid arguments"""
 
         with self.assertRaises(ValueError):
             self.channel.rice_factor_std = -1.
@@ -165,7 +164,7 @@ class TestClusterDelayLine(TestCase):
             self.fail()
             
     def test_cluster_shadowing_std_setget(self) -> None:
-        """Cluster shadowing standard deviation property getter should return setter argument."""
+        """Cluster shadowing standard deviation property getter should return setter argument"""
 
         cluster_shadowing_std = 123
         self.channel.cluster_shadowing_std = cluster_shadowing_std
@@ -173,7 +172,7 @@ class TestClusterDelayLine(TestCase):
         self.assertEqual(cluster_shadowing_std, self.channel.cluster_shadowing_std)
 
     def test_cluster_shadowing_std_validation(self) -> None:
-        """Cluster shadowing standard deviation property setter should raise ValueError on invalid arguments."""
+        """Cluster shadowing standard deviation property setter should raise ValueError on invalid arguments"""
 
         with self.assertRaises(ValueError):
             self.channel.cluster_shadowing_std = -1.
@@ -237,7 +236,18 @@ class TestClusterDelayLine(TestCase):
 
         self.assertEqual(expected_num_tof_samples, num_tof_samples)
 
+    def test_realization_los_validation(self) -> None:
+        """Realzation of the LOS case should raise RuntimeError if connected devices colldie"""
+
+        self.channel.line_of_sight = True
+        self.transmitter.position = np.zeros(3)
+        self.receiver.position = np.zeros(3)
+        
+        with self.assertRaises(RuntimeError):
+            self.channel.realize(1, 1.)
+
     def test_realization_los(self):
+        """Test realization of the LOS case"""
 
         self.channel.line_of_sight = True
         num_samples = 100
@@ -251,7 +261,7 @@ class TestClusterDelayLine(TestCase):
         self.assertEqual(self.transmitter.num_antennas, realization.num_transmit_streams)
 
     def test_pseudo_randomness(self) -> None:
-        """Setting the random seed should result in identical impulse responses."""
+        """Setting the random seed should result in identical impulse responses"""
         
         num_samples = 100
         sampling_rate = 1e5
@@ -308,3 +318,132 @@ class TestClusterDelayLine(TestCase):
 
             beamformer = np.linalg.norm(steering_codebook.T.conj() @ received_signal[0].samples, 2, axis=1, keepdims=False)
             self.assertEqual(a, np.argmax(beamformer))
+
+    def test_delay_spread_std_validation(self) -> None:
+        """Delay spread standard deviation property setter should raise ValueError on invalid arguments"""
+        
+        with self.assertRaises(ValueError):
+            self.channel.delay_spread_std = -1.
+
+        try:
+            self.channel.delay_spread_std = 0.
+
+        except ValueError:
+            self.fail()
+
+    def test_aod_spread_std_validation(self) -> None:
+        """AOD spread standard deviation property setter should raise ValueError on invalid arguments"""
+
+        with self.assertRaises(ValueError):
+            self.channel.aod_spread_std = -1.
+
+        try:
+            self.channel.aod_spread_std = 0.
+
+        except ValueError:
+            self.fail()
+            
+    def test_aoa_spread_std_validation(self) -> None:
+        """AOA spread standard deviation property setter should raise ValueError on invalid arguments"""
+        
+        with self.assertRaises(ValueError):
+            self.channel.aoa_spread_std = -1.
+
+        try:
+            self.channel.aoa_spread_std = 0.
+
+        except ValueError:
+            self.fail()
+            
+    def test_zoa_spread_std_validation(self) -> None:
+        """ZOA spread standard deviation property setter should raise ValueError on invalid arguments"""
+        
+        with self.assertRaises(ValueError):
+            self.channel.zoa_spread_std = -1.
+
+        try:
+            self.channel.zoa_spread_std = 0.
+
+        except ValueError:
+            self.fail()
+            
+    def test_zod_spread_std_validation(self) -> None:
+        """ZOD spread standard deviation property setter should raise ValueError on invalid arguments"""
+        
+        with self.assertRaises(ValueError):
+            self.channel.zod_spread_std = -1.
+
+        try:
+            self.channel.zod_spread_std = 0.
+
+        except ValueError:
+            self.fail()
+            
+    def test_cross_polarization_power_std_validation(self) -> None:
+        """Cross polarization power standard deviation property setter should raise ValueError on invalid arguments"""
+        
+        with self.assertRaises(ValueError):
+            self.channel.cross_polarization_power_std = -1.
+
+        try:
+            self.channel.cross_polarization_power_std = 0.
+
+        except ValueError:
+            self.fail()
+            
+    def test_num_rays_validation(self) -> None:
+        """Number of rays property setter should raise ValueError on invalid arguments"""
+        
+        with self.assertRaises(ValueError):
+            self.channel.num_rays = -1
+
+        with self.assertRaises(ValueError):
+            self.channel.num_rays = 0
+            
+    def test_cluster_delay_spread_validation(self) -> None:
+        """Cluster delay spread property setter should raise ValueError on invalid arguments"""
+        
+        with self.assertRaises(ValueError):
+            self.channel.cluster_delay_spread = -1.
+
+        try:
+            self.channel.cluster_delay_spread = 0.
+
+        except ValueError:
+            self.fail()
+            
+    def test_cluster_aod_spread_validation(self) -> None:
+        """Cluster AOD spread property setter should raise ValueError on invalid arguments"""
+        
+        with self.assertRaises(ValueError):
+            self.channel.cluster_aod_spread = -1.
+
+        try:
+            self.channel.cluster_aod_spread = 0.
+
+        except ValueError:
+            self.fail()
+            
+    def test_cluster_aoa_spread_validation(self) -> None:
+        """Cluster AOA spread property setter should raise ValueError on invalid arguments"""
+        
+        with self.assertRaises(ValueError):
+            self.channel.cluster_aoa_spread = -1.
+
+        try:
+            self.channel.cluster_aoa_spread = 0.
+
+        except ValueError:
+            self.fail()
+            
+    def test_cluster_zoa_spread_validation(self) -> None:
+        """Cluster ZOA spread property setter should raise ValueError on invalid arguments"""
+        
+        with self.assertRaises(ValueError):
+            self.channel.cluster_zoa_spread = -1.
+
+        try:
+            self.channel.cluster_zoa_spread = 0.
+
+        except ValueError:
+            self.fail()

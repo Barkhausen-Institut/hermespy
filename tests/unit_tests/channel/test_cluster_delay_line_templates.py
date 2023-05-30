@@ -62,7 +62,7 @@ class __TestClusterDelayLineTemplate(TestCase):
 
 
 class TestStreetCanyonLOS(__TestClusterDelayLineTemplate):
-    """Test the 3GPP Cluster Delay Line Model Implementation."""
+    """Test the 3GPP Cluster Delay Line Model Implementation"""
 
     def setUp(self) -> None:
 
@@ -75,7 +75,7 @@ class TestStreetCanyonLOS(__TestClusterDelayLineTemplate):
 
 
 class TestStreetCanyonNLOS(__TestClusterDelayLineTemplate):
-    """Test the 3GPP Cluster Delay Line Model Implementation."""
+    """Test the 3GPP Cluster Delay Line Model Implementation"""
 
     def setUp(self) -> None:
 
@@ -88,7 +88,7 @@ class TestStreetCanyonNLOS(__TestClusterDelayLineTemplate):
 
 
 class TestStreetCanyonO2I(__TestClusterDelayLineTemplate):
-    """Test the 3GPP Cluster Delay Line Model Implementation."""
+    """Test the 3GPP Cluster Delay Line Model Implementation"""
 
     def setUp(self) -> None:
 
@@ -101,7 +101,7 @@ class TestStreetCanyonO2I(__TestClusterDelayLineTemplate):
 
 
 class TestUrbanMacrocellsLOS(__TestClusterDelayLineTemplate):
-    """Test the 3GPP Cluster Delay Line Model Implementation."""
+    """Test the 3GPP Cluster Delay Line Model Implementation"""
 
     def setUp(self) -> None:
 
@@ -114,7 +114,7 @@ class TestUrbanMacrocellsLOS(__TestClusterDelayLineTemplate):
 
 
 class TestUrbanMacrocellsNLOS(__TestClusterDelayLineTemplate):
-    """Test the 3GPP Cluster Delay Line Model Implementation."""
+    """Test the 3GPP Cluster Delay Line Model Implementation"""
 
     def setUp(self) -> None:
 
@@ -127,7 +127,7 @@ class TestUrbanMacrocellsNLOS(__TestClusterDelayLineTemplate):
 
 
 class TestUrbanMacrocellsO2I(__TestClusterDelayLineTemplate):
-    """Test the 3GPP Cluster Delay Line Model Implementation."""
+    """Test the 3GPP Cluster Delay Line Model Implementation"""
 
     def setUp(self) -> None:
         
@@ -140,7 +140,7 @@ class TestUrbanMacrocellsO2I(__TestClusterDelayLineTemplate):
 
 
 class TestRuralMacrocellsLOS(__TestClusterDelayLineTemplate):
-    """Test the 3GPP Cluster Delay Line Model Implementation."""
+    """Test the 3GPP Cluster Delay Line Model Implementation"""
 
     def setUp(self) -> None:
 
@@ -153,7 +153,7 @@ class TestRuralMacrocellsLOS(__TestClusterDelayLineTemplate):
 
 
 class TestRuralMacrocellsNLOS(__TestClusterDelayLineTemplate):
-    """Test the 3GPP Cluster Delay Line Model Implementation."""
+    """Test the 3GPP Cluster Delay Line Model Implementation"""
 
     def setUp(self) -> None:
 
@@ -166,7 +166,7 @@ class TestRuralMacrocellsNLOS(__TestClusterDelayLineTemplate):
 
 
 class TestRuralMacrocellsO2I(__TestClusterDelayLineTemplate):
-    """Test the 3GPP Cluster Delay Line Model Implementation."""
+    """Test the 3GPP Cluster Delay Line Model Implementation"""
 
     def setUp(self) -> None:
 
@@ -179,7 +179,7 @@ class TestRuralMacrocellsO2I(__TestClusterDelayLineTemplate):
 
 
 class TestIndoorOfficeLOS(__TestClusterDelayLineTemplate):
-    """Test the 3GPP Cluster Delay Line Model Implementation."""
+    """Test the 3GPP Cluster Delay Line Model Implementation"""
 
     def setUp(self) -> None:
 
@@ -192,7 +192,7 @@ class TestIndoorOfficeLOS(__TestClusterDelayLineTemplate):
 
 
 class TestIndoorOfficeNLOS(__TestClusterDelayLineTemplate):
-    """Test the 3GPP Cluster Delay Line Model Implementation."""
+    """Test the 3GPP Cluster Delay Line Model Implementation"""
 
     def setUp(self) -> None:
 
@@ -204,8 +204,50 @@ class TestIndoorOfficeNLOS(__TestClusterDelayLineTemplate):
         self._assert_realization(realization)
 
 
+class TestIndoorFactory(__TestClusterDelayLineTemplate):
+    """Test the indoor factory parameterization base"""
+    
+    def setUp(self) -> None:
+
+        self._init(IndoorFactoryLineOfSight, volume=1e5, surface=1e6)
+
+    def test_volume_validation(self) -> None:
+        """Volume property setter should raise ValueErrors on arguments smaller or equal to zero"""
+        
+        with self.assertRaises(ValueError):
+            self.channel.volume = 0.
+            
+        with self.assertRaises(ValueError):
+            self.channel.volume = -1.
+            
+    def test_volume_setget(self) -> None:
+        """Volume property getter should return setter argument"""#
+        
+        expected_volume = 1.2345
+        self.channel.volume = expected_volume
+        
+        self.assertEqual(expected_volume, self.channel.volume)
+        
+    def test_surface_validation(self) -> None:
+        """Surface property setter should raise ValueErrors on arguments smaller or equal to zero"""
+        
+        with self.assertRaises(ValueError):
+            self.channel.surface = 0.
+            
+        with self.assertRaises(ValueError):
+            self.channel.surface = -1.
+            
+    def test_surface_setget(self) -> None:
+        """Surface property getter should return setter argument"""#
+        
+        expected_surface = 1.2345
+        self.channel.surface = expected_surface
+        
+        self.assertEqual(expected_surface, self.channel.surface)
+        
+
 class TestIndoorFactoryLOS(__TestClusterDelayLineTemplate):
-    """Test the 3GPP Cluster Delay Line Model Implementation."""
+    """Test the 3GPP Cluster Delay Line Model Implementation"""
 
     def setUp(self) -> None:
 
@@ -218,7 +260,7 @@ class TestIndoorFactoryLOS(__TestClusterDelayLineTemplate):
 
 
 class TestIndoorFactoryNLOS(__TestClusterDelayLineTemplate):
-    """Test the 3GPP Cluster Delay Line Model Implementation."""
+    """Test the 3GPP Cluster Delay Line Model Implementation"""
 
     def setUp(self) -> None:
 

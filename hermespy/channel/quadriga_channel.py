@@ -6,10 +6,9 @@ Quadriga Channel Model
 """
 
 from __future__ import annotations
-from typing import Type, Optional
+from typing import Optional
 
 import numpy as np
-from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode, Node
 
 from hermespy.channel import Channel, ChannelRealization, QuadrigaInterface
 
@@ -30,7 +29,7 @@ class QuadrigaChannel(Channel):
     """
 
     yaml_tag = "Quadriga"
-    yaml_matrix = True
+    serialized_attributes = Channel.serialized_attributes.union({"active", "gain"})
 
     # Reference to the interface class
     __interface: Optional[QuadrigaInterface]
@@ -92,49 +91,3 @@ class QuadrigaChannel(Channel):
                     impulse_response[rx_antenna, tx_antenna, :, delay_in_samples] += cir_txa_rxa[delay_idx]
 
         return ChannelRealization(self, np.sqrt(self.gain) * impulse_response)
-
-    @classmethod
-    def to_yaml(cls: Type[QuadrigaChannel], representer: SafeRepresenter, node: QuadrigaChannel) -> MappingNode:
-        """Serialize a QuadrigaChannel object to YAML.
-
-        Args:
-            representer (SafeRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
-
-            node (QuadrigaChannel):
-                The QuadrigaChannel instance to be serialized.
-
-        Returns:
-            Node:
-                The serialized YAML node.
-        """
-
-        state = {"active": node.active, "gain": node.gain, "sync_offset_low": node.sync_offset_low, "sync_offset_high": node.sync_offset_high}
-
-        return representer.represent_mapping(cls.yaml_tag, state)
-
-    @classmethod
-    def from_yaml(cls: Type[QuadrigaChannel], constructor: SafeConstructor, node: Node) -> QuadrigaChannel:
-        """Recall a new `QuadrigaChannel` instance from YAML.
-
-        Args:
-            constructor (SafeConstructor):
-                A handle to the constructor extracting the YAML information.
-
-            node (Node):
-                YAML node representing the `QuadrigaChannel` serialization.
-
-        Returns:
-            QuadrigaChannel:
-                Newly created `QuadrigaChannel` instance. The internal references to modems will be `None` and need to be
-                initialized by the `scenario` YAML constructor.
-
-        """
-
-        # Handle empty yaml nodes
-        if isinstance(node, ScalarNode):
-            return cls()
-
-        state = constructor.construct_mapping(node)
-        return cls(**state)

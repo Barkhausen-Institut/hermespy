@@ -9,7 +9,8 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 from numpy.random import default_rng
 
 from hermespy.channel import IdealChannel
-from hermespy.core.signal_model import Signal
+from hermespy.core import Signal, UniformArray, IdealAntenna
+from hermespy.simulation import SimulatedDevice
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 
@@ -28,8 +29,8 @@ class TestIdealChannel(unittest.TestCase):
 
     def setUp(self) -> None:
 
-        self.transmitter = Mock()
-        self.receiver = Mock()
+        self.transmitter = SimulatedDevice()
+        self.receiver = SimulatedDevice()
         self.active = True
         self.gain = 1.0
         self.random_node = Mock()
@@ -89,71 +90,11 @@ class TestIdealChannel(unittest.TestCase):
 
         self.assertIs(self.receiver, channel.receiver, "Receiver property set/get produced unexpected result")
 
-    def test_sync_offset_low_setget(self) -> None:
-        """Synchronization offset lower bound property getter should return setter argument"""
-
-        expected_sync_offset = 1.2345
-        self.channel.sync_offset_low = expected_sync_offset
-
-        self.assertEqual(expected_sync_offset, self.channel.sync_offset_low)
-
-    def test_sync_offset_low_validation(self) -> None:
-        """Synchronization offset lower bound property setter should raise ValueError on negative arguments"""
-
-        with self.assertRaises(ValueError):
-            self.channel.sync_offset_low = -1.0
-
-        try:
-            self.channel.sync_offset_low = 0.
-
-        except ValueError:
-            self.fail()
-
-    def test_sync_offset_high_setget(self) -> None:
-        """Synchronization offset upper bound property getter should return setter argument"""
-
-        expected_sync_offset = 1.2345
-        self.channel.sync_offset_high = expected_sync_offset
-
-        self.assertEqual(expected_sync_offset, self.channel.sync_offset_high)
-
-    def test_sync_offset_high_validation(self) -> None:
-        """Synchronization offset upper bound property setter should raise ValueError on negative arguments"""
-
-        with self.assertRaises(ValueError):
-            self.channel.sync_offset_high = -1.0
-
-        try:
-            self.channel.sync_offset_high = 0.
-
-        except ValueError:
-            self.fail()
-
-    def test_gain_setget(self) -> None:
-        """Gain property getter must return setter parameter"""
-
-        gain = 5.0
-        self.channel.gain = 5.0
-
-        self.assertIs(gain, self.channel.gain, "Gain property set/get produced unexpected result")
-
-    def test_gain_validation(self) -> None:
-        """Gain property setter must raise exception on arguments smaller than zero"""
-
-        with self.assertRaises(ValueError):
-            self.channel.gain = -1.0
-
-        try:
-            self.channel.gain = 0.0
-
-        except ValueError:
-            self.fail("Gain property set to zero raised unexpected exception")
-
     def test_num_inputs_get(self) -> None:
         """Number of inputs property must return number of transmitting antennas"""
 
         num_inputs = 5
-        self.transmitter.antennas.num_antennas = num_inputs
+        self.transmitter.antennas = UniformArray(IdealAntenna, 1e-2, (num_inputs, 1, 1))
 
         self.assertEqual(num_inputs, self.channel.num_inputs, "Number of inputs property returned unexpected result")
 
@@ -167,10 +108,9 @@ class TestIdealChannel(unittest.TestCase):
     def test_num_outputs_get(self) -> None:
         """Number of outputs property must return number of receiving antennas"""
 
-        num_outputs = 5
-        self.receiver.antennas.num_antennas = num_outputs
+        self.receiver.antennas = UniformArray(IdealAntenna, 1e-2, (5, 1, 1))
 
-        self.assertEqual(num_outputs, self.channel.num_outputs, "Number of outputs property returned unexpected result")
+        self.assertEqual(5, self.channel.num_outputs, "Number of outputs property returned unexpected result")
 
     def test_num_outputs_validation(self) -> None:
         """Number of outputs property must raise RuntimeError if the channel is currently floating"""
@@ -181,9 +121,6 @@ class TestIdealChannel(unittest.TestCase):
 
     def test_propagate_SISO(self) -> None:
         """Test valid propagation for the Single-Input-Single-Output channel"""
-
-        self.transmitter.antennas.num_antennas = 1
-        self.receiver.antennas.num_antennas = 1
 
         for num_samples in self.propagate_signal_lengths:
             for gain in self.propagate_signal_gains:
@@ -202,8 +139,7 @@ class TestIdealChannel(unittest.TestCase):
     def test_propagate_SIMO(self) -> None:
         """Test valid propagation for the Single-Input-Multiple-Output channel"""
 
-        self.transmitter.antennas.num_antennas = 1
-        self.receiver.antennas.num_antennas = 3
+        self.receiver.antennas = UniformArray(IdealAntenna, 1., (3, 1, 1))
 
         for num_samples in self.propagate_signal_lengths:
             for gain in self.propagate_signal_gains:
@@ -227,14 +163,12 @@ class TestIdealChannel(unittest.TestCase):
     def test_propagate_MISO(self) -> None:
         """Test valid propagation for the Multiple-Input-Single-Output channel"""
 
-        num_transmit_antennas = 3
-        self.transmitter.antennas.num_antennas = num_transmit_antennas
-        self.receiver.antennas.num_antennas = 1
+        self.transmitter.antennas = UniformArray(IdealAntenna, 1., (3, 1, 1))
 
         for num_samples in self.propagate_signal_lengths:
             for gain in self.propagate_signal_gains:
 
-                forwards_samples = (np.random.rand(num_transmit_antennas, num_samples) + 1j * np.random.rand(num_transmit_antennas, num_samples))
+                forwards_samples = (np.random.rand(self.transmitter.antennas.num_transmit_antennas, num_samples) + 1j * np.random.rand(self.transmitter.antennas.num_transmit_antennas, num_samples))
                 backwards_samples = np.random.rand(1, num_samples) + 1j * np.random.rand(1, num_samples)
                 forwards_input = Signal(forwards_samples, self.sampling_rate)
                 backwards_input = Signal(backwards_samples, self.sampling_rate)
@@ -242,7 +176,7 @@ class TestIdealChannel(unittest.TestCase):
                 self.channel.gain = gain
 
                 expected_forwards_samples = np.sqrt(gain) * np.sum(forwards_samples, axis=0, keepdims=True)
-                expected_backwards_samples = np.sqrt(gain) * np.repeat(backwards_samples, num_transmit_antennas, axis=0)
+                expected_backwards_samples = np.sqrt(gain) * np.repeat(backwards_samples, self.transmitter.antennas.num_transmit_antennas, axis=0)
 
                 forwards_signal, backwards_signal,  _ = self.channel.propagate(forwards_input, backwards_input)
 
@@ -253,8 +187,8 @@ class TestIdealChannel(unittest.TestCase):
         """Test valid propagation for the Multiple-Input-Multiple-Output channel"""
 
         num_antennas = 3
-        self.transmitter.antennas.num_antennas = num_antennas
-        self.receiver.antennas.num_antennas = num_antennas
+        self.transmitter.antennas = UniformArray(IdealAntenna, 1., (num_antennas, 1, 1))
+        self.receiver.antennas = UniformArray(IdealAntenna, 1., (num_antennas, 1, 1))
 
         for num_samples in self.propagate_signal_lengths:
             for gain in self.propagate_signal_gains:
@@ -271,27 +205,8 @@ class TestIdealChannel(unittest.TestCase):
                 assert_array_almost_equal(expected_propagated_samples, forwards_signal[0].samples)
                 assert_array_almost_equal(expected_propagated_samples, backwards_signal[0].samples)
 
-    def test_propagate_validation(self) -> None:
-        """Propagation routine must raise errors in case of unsupported scenarios"""
-
-        with self.assertRaises(ValueError):
-            _ = self.channel.propagate(Signal(np.array([1, 2, 3]), self.sampling_rate))
-
-        with self.assertRaises(ValueError):
-
-            self.transmitter.num_antennas = 1
-            _ = self.channel.propagate(Signal(np.array([[1, 2, 3], [4, 5, 6]]), self.sampling_rate))
-
-        with self.assertRaises(RuntimeError):
-
-            floating_channel = IdealChannel()
-            _ = floating_channel.propagate(Signal(np.array([[1, 2, 3]]), self.sampling_rate))
-
     def test_realize_SISO(self) -> None:
         """Test the realization generation for the Single-Input-Single-Output case"""
-
-        self.transmitter.antennas.num_antennas = 1
-        self.receiver.antennas.num_antennas = 1
 
         for response_length in self.impulse_response_lengths:
             for gain in self.impulse_response_gains:
@@ -305,8 +220,7 @@ class TestIdealChannel(unittest.TestCase):
     def test_realize_SIMO(self) -> None:
         """Test the realization generation for the Single-Input-Multiple-Output case"""
 
-        self.transmitter.antennas.num_antennas = 1
-        self.receiver.antennas.num_antennas = 3
+        self.receiver.antennas = UniformArray(IdealAntenna, 1., (3, 1, 1))
 
         for response_length in self.impulse_response_lengths:
             for gain in self.impulse_response_gains:
@@ -321,8 +235,7 @@ class TestIdealChannel(unittest.TestCase):
     def test_realize_MISO(self) -> None:
         """Test the realization generation for the Multiple-Input-Single-Output case"""
 
-        self.transmitter.antennas.num_antennas = 3
-        self.receiver.antennas.num_antennas = 1
+        self.transmitter.antennas = UniformArray(IdealAntenna, 1., (3, 1, 1))
 
         for response_length in self.impulse_response_lengths:
             for gain in self.impulse_response_gains:
@@ -338,8 +251,8 @@ class TestIdealChannel(unittest.TestCase):
         """Test the realization generation for the Multiple-Input-Multiple-Output case"""
 
         num_antennas = 3
-        self.transmitter.antennas.num_antennas = num_antennas
-        self.receiver.antennas.num_antennas = num_antennas
+        self.transmitter.antennas = UniformArray(IdealAntenna, 1., (num_antennas, 1, 1))
+        self.receiver.antennas = UniformArray(IdealAntenna, 1., (num_antennas, 1, 1))
 
         for response_length in self.impulse_response_lengths:
             for gain in self.impulse_response_gains:
@@ -362,9 +275,6 @@ class TestIdealChannel(unittest.TestCase):
     def test_channel_state_information(self) -> None:
         """Propagating over the linear channel state model should return identical results"""
 
-        self.transmitter.antennas.num_antennas = 1
-        self.receiver.antennas.num_antennas = 1
-
         for num_samples in self.propagate_signal_lengths:
             for gain in self.propagate_signal_gains:
 
@@ -380,9 +290,6 @@ class TestIdealChannel(unittest.TestCase):
 
     def test_synchronization_offset(self) -> None:
         """The synchronization offset should be applied properly by adding a delay to the propgated signal"""
-
-        self.transmitter.antennas.num_antennas = 1
-        self.receiver.antennas.num_antennas = 1
 
         mock_generator = Mock()
         self.random_node._rng = mock_generator

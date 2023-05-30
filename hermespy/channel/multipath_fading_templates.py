@@ -358,15 +358,15 @@ class MultipathFadingExponential(MultipathFadingChannel):
     __tap_interval: float
     __rms_delay: float
 
-    def __init__(self, tap_interval: float = 0.0, rms_delay: float = 0.0, **kwargs: Any) -> None:
+    def __init__(self, tap_interval: float, rms_delay: float, **kwargs: Any) -> None:
         """Exponential Multipath Channel Model initialization.
 
         Args:
 
-            tap_interval (float, optional):
+            tap_interval (float):
                 Tap interval in seconds.
 
-            rms_delay (float, optional):
+            rms_delay (float):
                 Root-Mean-Squared delay in seconds.
 
             kwargs (Any):
