@@ -230,10 +230,10 @@ class TestExponential(unittest.TestCase):
         """Object initialization should raise ValueErrors on negative tap intervals and rms delays."""
 
         with self.assertRaises(ValueError):
-            _ = MultipathFadingExponential(tap_interval=-1.0)
+            _ = MultipathFadingExponential(0., 1.)
 
         with self.assertRaises(ValueError):
-            _ = MultipathFadingExponential(rms_delay=-1.0)
+            _ = MultipathFadingExponential(1., 0.)
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""
