@@ -69,7 +69,7 @@ setup(
     zip_safe=False,
     python_requires=">=3.9",
     entry_points={
-        'console_scripts': ['hermes=hermespy.bin:hermes'],
+        'console_scripts': ['hermes=hermespy.bin:hermes_simulation'],
     },
     install_requires=[
         "numpy>=1.23.5",
