@@ -22,13 +22,13 @@ import matplotlib.tri as tri
 import numpy as np
 from scipy.constants import pi
 
-from hermespy.core import Executable, FloatingError, IdealAntenna, Operator, Receiver, Reception, SerializableEnum, Signal, Transmitter, UniformArray
+from hermespy.core import Executable, FloatingError, IdealAntenna, SignalReceiver, Operator, Receiver, SerializableEnum, Signal, Transmitter, UniformArray
 from hermespy.precoding import ReceiveStreamDecoder, TransmitStreamEncoder
 from hermespy.precoding.precoding import Precoding
 from hermespy.simulation import SimulatedDevice
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.0.0"
@@ -117,7 +117,7 @@ class TransmitBeamformer(BeamformerBase[Transmitter], TransmitStreamEncoder, ABC
 
             Number of input streams.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     @abstractproperty
     def num_transmit_output_streams(self) -> int:
@@ -127,7 +127,7 @@ class TransmitBeamformer(BeamformerBase[Transmitter], TransmitStreamEncoder, ABC
 
             Number of output streams.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     @abstractproperty
     def num_transmit_focus_angles(self) -> int:
@@ -137,7 +137,7 @@ class TransmitBeamformer(BeamformerBase[Transmitter], TransmitStreamEncoder, ABC
 
             Number of focus angles.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     def encode_streams(self, streams: Signal) -> Signal:
         if streams.num_streams != self.num_transmit_input_streams:
@@ -173,7 +173,7 @@ class TransmitBeamformer(BeamformerBase[Transmitter], TransmitStreamEncoder, ABC
             zenith (float):
                 Zenith angle of departure in Radians.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     @property
     def transmit_focus(self) -> Tuple[np.ndarray, FocusMode]:
@@ -279,7 +279,7 @@ class ReceiveBeamformer(BeamformerBase[Receiver], ReceiveStreamDecoder, ABC):
 
             Number of input streams :math:`N`.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     @abstractproperty
     def num_receive_output_streams(self) -> int:
@@ -292,7 +292,7 @@ class ReceiveBeamformer(BeamformerBase[Receiver], ReceiveStreamDecoder, ABC):
 
             Number of output streams :math:`M`.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     @abstractproperty
     def num_receive_focus_angles(self) -> int:
@@ -302,7 +302,7 @@ class ReceiveBeamformer(BeamformerBase[Receiver], ReceiveStreamDecoder, ABC):
 
             Number of focus angles :math:`F`.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     def decode_streams(self, streams: Signal) -> Signal:
         if streams.num_streams != self.num_receive_input_streams:
@@ -341,7 +341,7 @@ class ReceiveBeamformer(BeamformerBase[Receiver], ReceiveStreamDecoder, ABC):
             A three-dimensional numpy array with the first dimension representing the number of focus points,
             the second dimension the number of returned streams and the third dimension the amount of samples.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     @property
     def receive_focus(self) -> Tuple[np.ndarray, FocusMode]:
@@ -542,31 +542,9 @@ class ReceiveBeamformer(BeamformerBase[Receiver], ReceiveStreamDecoder, ABC):
         device.carrier_frequency = 1e9
         device.antennas = UniformArray(IdealAntenna(), 0.5 * device.wavelength, (8, 8))
 
-        class ReceiverMock(Receiver[Reception], ABC):
-            def _receive(self, *args, **kwargs) -> Reception:
-                raise NotImplementedError()  # pragma: no cover
+        receiver = SignalReceiver(0, 1.0)
+        device.receivers.add(receiver)
 
-            @property
-            def energy(self) -> float:
-                return 1.0  # pragma no cover
-
-            @property
-            def sampling_rate(self) -> float:
-                return 1.0  # pragma no cover
-
-            @property
-            def frame_duration(self) -> float:
-                return 1.0
-
-            def _noise_power(self, strength: float, _) -> float:
-                return strength
-
-            def _recall_reception(self, group) -> Reception:
-                return Reception.from_HDF(group)
-
-        operator = ReceiverMock()
-        operator.slot = device.receivers
-
-        beamformer = cls(operator=operator)
+        beamformer = cls(operator=receiver)
 
         return beamformer.plot_receive_pattern(signal)
