@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from .psk_qam_mapping import PskQamMapping
 
 __author__ = "André Noll Barreto"

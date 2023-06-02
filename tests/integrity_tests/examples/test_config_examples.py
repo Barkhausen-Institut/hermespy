@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import logging
 from unittest import TestCase
 from unittest.mock import patch
 from sys import gettrace
@@ -8,7 +9,7 @@ from typing import Any, List, Optional
 
 import ray as ray
 
-from hermespy.bin.hermes import hermes
+from hermespy.bin.hermes import hermes_simulation
 from hermespy.core.monte_carlo import MonteCarlo, GridDimension
 
 __author__ = "Jan Adler"
@@ -61,8 +62,7 @@ class TestConfigurationExamples(TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         
-        if not ray.is_initialized():
-            ray.init(local_mode=True)
+        ray.init(local_mode=True, num_cpus=1, ignore_reinit_error=True, logging_level=logging.ERROR)
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -83,11 +83,11 @@ class TestConfigurationExamples(TestCase):
         if gettrace() is None:
             with patch('sys.stdout'), patch.object(MonteCarlo, '__init__', new=init_mock), patch.object(MonteCarlo, 'new_dimension', new=new_dimension_mock), patch('matplotlib.pyplot.figure'):
 
-                hermes([path, '-o', self.tempdir.name])
+                hermes_simulation([path, '-o', self.tempdir.name])
                 
         else:
             with patch.object(MonteCarlo, '__init__', new=init_mock):
-                hermes([path, '-o', self.tempdir.name])
+                hermes_simulation([path, '-o', self.tempdir.name])
     
     def test_chirp_fsk_lora(self) -> None:
         """Test example settings for chirp FSK modulation"""
@@ -107,7 +107,7 @@ class TestConfigurationExamples(TestCase):
     def test_interference_ofdm_sc(self) -> None:
         """Test example settings for single carrier OFDM interference"""
 
-        # Currently disabled due to suspicious high runtime
+        # Currently disabled due to suspiciously high runtime
         # self.__run_yaml("_examples/settings/interference_ofdm_single_carrier.yml")
 
     def test_jcas(self) -> None:

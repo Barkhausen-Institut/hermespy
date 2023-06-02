@@ -6,13 +6,12 @@ import numpy as np
 from hermespy.channel import Channel, IdealChannel, MultipathFading5GTDL
 from hermespy.core import IdealAntenna, UniformArray
 from hermespy.simulation import SimulationScenario
-from hermespy.modem import TransmittingModem, ReceivingModem, BitErrorEvaluator, RootRaisedCosineWaveform, CustomPilotSymbolSequence, \
+from hermespy.modem import DFT, SpatialMultiplexing, TransmittingModem, ReceivingModem, BitErrorEvaluator, RootRaisedCosineWaveform, CustomPilotSymbolSequence, \
     SingleCarrierCorrelationSynchronization, SingleCarrierZeroForcingChannelEqualization, SingleCarrierIdealChannelEstimation, \
     ChirpFSKWaveform, ChirpFSKCorrelationSynchronization, \
     OFDMWaveform, FrameResource, FrameSymbolSection, FrameElement, ElementType, OFDMCorrelationSynchronization, PilotSection, \
     OFDMLeastSquaresChannelEstimation, OFDMZeroForcingChannelEqualization, OFDMIdealChannelEstimation, SchmidlCoxPilotSection, \
     SchmidlCoxSynchronization
-from hermespy.precoding import DFT, SpatialMultiplexing
 from hermespy.fec import RepetitionEncoder
 
 __author__ = "Jan Adler"

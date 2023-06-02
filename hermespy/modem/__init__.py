@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from .bits_source import RandomBitsSource, StreamBitsSource
 from .symbols import Symbol, Symbols, StatedSymbols
 from .modem import CommunicationReception, CommunicationReceptionFrame, CommunicationTransmission, CommunicationTransmissionFrame, BaseModem, TransmittingModem, ReceivingModem, DuplexModem, SimplexLink
@@ -24,6 +26,7 @@ from .waveform_ofdm import (
     OFDMLeastSquaresChannelEstimation,
     ReferencePosition,
 )
+from .precoding import Alamouti, SymbolPrecoding, SymbolPrecoder, SingleCarrier, SpatialMultiplexing, DFT, MaximumRatioCombining
 from .evaluators import BitErrorEvaluator, BlockErrorEvaluator, FrameErrorEvaluator, ThroughputEvaluator
 from .tools import PskQamMapping
 
@@ -107,6 +110,13 @@ __all__ = [
     "OFDMLeastSquaresChannelEstimation",
     "ReferencePosition",
     "Synchronization",
+    "Alamouti",
+    "SymbolPrecoding",
+    "SymbolPrecoder",
+    "SingleCarrier",
+    "SpatialMultiplexing",
+    "DFT",
+    "MaximumRatioCombining",
     "BitErrorEvaluator",
     "BlockErrorEvaluator",
     "FrameErrorEvaluator",
