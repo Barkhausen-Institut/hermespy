@@ -26,3 +26,15 @@ as well as multiple communication waveform implementations
    modem.waveform_chirp_fsk
    modem.waveform_ofdm
    modem.waveform_correlation_synchronization
+
+Its precoding subpackage includes MIMO precoding algorithms
+for communication symbol streams
+
+.. toctree::
+
+   modem.precoding.symbol_precoding
+   modem.precoding.dft
+   modem.precoding.single_carrier
+   modem.precoding.spatial_multiplexing
+   modem.precoding.ratio_combining
+   modem.precoding.space_time_block_coding

@@ -15,8 +15,7 @@ from numpy.testing import assert_array_almost_equal
 from hermespy.core import UniformArray, IdealAntenna, Signal, Device, ChannelStateFormat, ChannelStateInformation, SNRType
 from hermespy.fec import EncoderManager
 from hermespy.modem import Symbols, CommunicationReceptionFrame, CommunicationTransmission, CommunicationTransmissionFrame, CommunicationReception, \
-                           BaseModem, TransmittingModem, ReceivingModem, DuplexModem, SimplexLink, RandomBitsSource
-from hermespy.precoding import SymbolPrecoding
+                           BaseModem, TransmittingModem, ReceivingModem, DuplexModem, SimplexLink, RandomBitsSource, SymbolPrecoding
 from hermespy.simulation import SimulatedDevice
 
 from .test_waveform_generator import MockWaveformGenerator

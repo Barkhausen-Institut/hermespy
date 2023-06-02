@@ -22,11 +22,12 @@ Build Package:
   stage: build
   before_script:
     - apt update && apt-get install -y build-essential octave pandoc python-dev
-    - pip install --upgrade setuptools sphinx wheel pybind11 scikit-build cmake build
+    - pip install --upgrade setuptools wheel pybind11 scikit-build cmake build
   script:
     - export MAKEFLAGS="-j $(grep -c ^processor /proc/cpuinfo)"
-    - pip install --no-cache-dir -U -e .\[test,quadriga,documentation,uhd,audio,develop\]  # remove for docker
-    - pip uninstall -y hermespy  # remove for docker
+    - python -m build
+#    - pip install --no-cache-dir -U -e .\[test,quadriga,documentation,uhd,audio,develop\]  # remove for docker
+#    - pip uninstall -y hermespy  # remove for docker
   artifacts:
     paths:
       - dist/$HERMES_WHEEL
@@ -59,7 +60,7 @@ Integration Testing:
     - apt update && apt-get install -y octave portaudio19-dev python-dev  # remove for docker
     - pip install dist/$HERMES_WHEEL\[test,quadriga,uhd,audio\]
   script:
-    - python tests/test_install.py integration_tests
+    - python ./tests/test_install.py ./tests/integration_tests/ 
 
 Integrity Testing:
   stage: test
@@ -69,7 +70,7 @@ Integrity Testing:
     - apt update && apt-get install -y octave portaudio19-dev python-dev  # remove for docker
     - pip install dist/$HERMES_WHEEL\[test,quadriga,uhd,audio\]
   script:
-    - python tests/test_install.py integrity_tests
+    - python ./tests/test_install.py ./tests/integrity_tests/ 
 
 PEP8 Testing:
   stage: lint

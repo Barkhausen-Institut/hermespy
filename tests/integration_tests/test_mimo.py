@@ -7,15 +7,14 @@ from numpy.testing import assert_array_equal
 from scipy.constants import speed_of_light, pi
 
 from hermespy.beamforming import ConventionalBeamformer
-from hermespy.core.antennas import UniformArray, IdealAntenna
-from hermespy.modem import  TransmittingModem, ReceivingModem, ChannelEqualization, CommunicationReception, CommunicationTransmission
-from hermespy.modem.waveform_single_carrier import RootRaisedCosineWaveform, SingleCarrierIdealChannelEstimation, SingleCarrierLeastSquaresChannelEstimation, SingleCarrierZeroForcingChannelEqualization
-from hermespy.precoding.space_time_block_coding import SpaceTimeBlockCoding
+from hermespy.core import UniformArray, IdealAntenna
+from hermespy.modem import Alamouti, TransmittingModem, ReceivingModem, ChannelEqualization, CommunicationReception, CommunicationTransmission, \
+    RootRaisedCosineWaveform, SingleCarrierIdealChannelEstimation, SingleCarrierLeastSquaresChannelEstimation, SingleCarrierZeroForcingChannelEqualization
 from hermespy.simulation import SimulatedDevice
 from hermespy.channel import RuralMacrocellsLineOfSight
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.0.0"
@@ -84,10 +83,10 @@ class TestMIMOLink(TestCase):
         """Test valid data tansmission via Alamouti precoding"""
         
         self.tx_device.antennas = UniformArray(IdealAntenna(), .5 * self.wavelength, [2])
-        self.rx_device.antennas = UniformArray(IdealAntenna(), .5 * self.wavelength, [2])
+        self.rx_device.antennas = UniformArray(IdealAntenna(), .5 * self.wavelength, [1])
         
-        self.tx_modem.precoding[0] = SpaceTimeBlockCoding()
-        self.rx_modem.precoding[0] = SpaceTimeBlockCoding()
+        self.tx_modem.precoding[0] = Alamouti()
+        self.rx_modem.precoding[0] = Alamouti()
         self.rx_modem.waveform_generator.channel_estimation = SingleCarrierIdealChannelEstimation()
         self.rx_modem.waveform_generator.channel_equalization = ChannelEqualization()
 
