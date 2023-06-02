@@ -30,8 +30,14 @@ if __name__ == '__main__':
         
     else:
         start_dir = argv[1]
+
+    if os.path.isfile(start_dir):
+        module_name = start_dir.replace('.py', '').replace('.\\', '').replace('./', '').replace('/', '.').replace('\\', '.')
+        tests = test_loader.loadTestsFromName(module_name)
+   
+    else:
+        tests = test_loader.discover(start_dir, top_level_dir=os.path.join(repository, 'tests'))
     
-    tests = test_loader.discover(start_dir, top_level_dir=os.path.join(repository, 'tests'))
     test_result = test_runner.run(tests)
 
     # Return with a proper exit code indicating test success / failure

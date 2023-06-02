@@ -202,7 +202,8 @@ from h5py import Group
 
 from hermespy.fec import EncoderManager
 from hermespy.core import ChannelStateInformation, RandomNode, Transmission, Reception, Serializable, Signal, Device, Transmitter, Receiver, SNRType
-from hermespy.precoding import SymbolPrecoding, ReceiveStreamCoding, TransmitStreamCoding
+from hermespy.precoding import ReceiveStreamCoding, TransmitStreamCoding
+from .precoding import SymbolPrecoding
 from .bits_source import BitsSource, RandomBitsSource
 from .symbols import StatedSymbols, Symbols
 from .waveform import WaveformGenerator

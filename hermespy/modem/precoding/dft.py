@@ -6,15 +6,13 @@ Discrete Fourier Transform Precoding
 """
 
 from __future__ import annotations
-from typing import Literal, TYPE_CHECKING
+from typing import Literal
 
 import numpy as np
 
-from hermespy.core.factory import Serializable
-from . import SymbolPrecoder
-
-if TYPE_CHECKING:
-    from hermespy.modem import StatedSymbols
+from hermespy.core import Serializable
+from ..symbols import StatedSymbols
+from .symbol_precoding import SymbolPrecoder
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"

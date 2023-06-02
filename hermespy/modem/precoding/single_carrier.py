@@ -6,19 +6,16 @@ Single Carrier Encoding
 """
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
 
 import numpy as np
 from numpy import argmax
 
-from hermespy.core.factory import Serializable
+from hermespy.core import Serializable
+from ..symbols import StatedSymbols
 from .symbol_precoding import SymbolPrecoder
 
-if TYPE_CHECKING:
-    from hermespy.modem import StatedSymbols
-
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "André Noll Barreto"]
 __license__ = "AGPLv3"
 __version__ = "1.0.0"
@@ -46,6 +43,7 @@ class SingleCarrier(SymbolPrecoder, Serializable):
 
         repeated_symbols = symbols.copy()
         repeated_symbols.raw = np.repeat(repeated_symbols.raw, self.num_output_streams, axis=0)
+        repeated_symbols.states = np.repeat(repeated_symbols.states, self.num_output_streams, axis=0)
 
         return repeated_symbols
 
@@ -55,7 +53,6 @@ class SingleCarrier(SymbolPrecoder, Serializable):
         # Received signal with equal noise power is assumed, the decoded signal has same noise
         # level as input. It is assumed that all data points equal noise levels.
 
-        # TODO: Check this approach with André
         # Essentially, over all symbol streams for each symbol the one with the strongest response will be selected
         symbols = symbols.copy()
         squeezed_channel_state = symbols.states.sum(axis=1, keepdims=False)

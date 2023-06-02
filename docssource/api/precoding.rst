@@ -16,10 +16,4 @@ for spatial channel propagation.
    :titlesonly:
 
    precoding.precoding
-   precoding.symbol_precoding
    precoding.stream_precoding
-   precoding.dft
-   precoding.single_carrier
-   precoding.spatial_multiplexing
-   precoding.ratio_combining
-   precoding.space_time_block_coding
