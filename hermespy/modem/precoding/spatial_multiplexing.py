@@ -7,16 +7,13 @@ Spatial Multiplexing
 
 from __future__ import annotations
 from fractions import Fraction
-from typing import TYPE_CHECKING
 
-from hermespy.core.factory import Serializable
-from . import SymbolPrecoder
-
-if TYPE_CHECKING:
-    from hermespy.modem import StatedSymbols
+from hermespy.core import Serializable
+from ..symbols import StatedSymbols
+from .symbol_precoding import SymbolPrecoder
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "André Noll Barreto"]
 __license__ = "AGPLv3"
 __version__ = "1.0.0"

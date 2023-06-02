@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
+import logging
 from contextlib import ExitStack
 from os import path as os_path
 from sys import gettrace, path as sys_path
 from unittest import TestCase
 from unittest.mock import patch, PropertyMock
-from warnings import catch_warnings, simplefilter
 
 import ray as ray
 
@@ -30,33 +30,25 @@ class TestLibraryExamples(TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         
-        if not ray.is_initialized():
-
-            # Run ray in local mode
-            with catch_warnings():
-
-                simplefilter("ignore")
-                ray.init(local_mode=True)
+        ray.init(local_mode=True, num_cpus=1, ignore_reinit_error=True, logging_level=logging.ERROR)
 
     @classmethod
     def tearDownClass(cls) -> None:
 
-        ...
-        # Shut down ray 
-        #ray.shutdown()
+        ray.shutdown()
 
     @patch('matplotlib.pyplot.figure')
     def test_getting_started_link(self, mock_figure) -> None:
         """Test getting started library link example execution"""
 
-        import getting_started_link
+        import getting_started_link  # type: ignore
         mock_figure.assert_called()
         
     @patch('matplotlib.pyplot.figure')
     def test_getting_started_ofdm_link(self, mock_figure) -> None:
         """Test getting started library OFDM link example execution"""
 
-        import getting_started_ofdm_link
+        import getting_started_ofdm_link  # type: ignore
         mock_figure.assert_called()
 
     @patch('matplotlib.pyplot.figure')
@@ -67,7 +59,7 @@ class TestLibraryExamples(TestCase):
         with patch('hermespy.simulation.Simulation.num_samples', new_callable=PropertyMock) as num_samples:
 
             num_samples.return_value = 1
-            import getting_started_simulation_multidim
+            import getting_started_simulation_multidim  # type: ignore
 
         mock_figure.assert_called()
 
@@ -79,7 +71,7 @@ class TestLibraryExamples(TestCase):
         with patch('hermespy.simulation.Simulation.num_samples', new_callable=PropertyMock) as num_samples:
 
             num_samples.return_value = 1
-            import getting_started_simulation
+            import getting_started_simulation  # type: ignore
 
         mock_figure.assert_called()
 
@@ -87,7 +79,7 @@ class TestLibraryExamples(TestCase):
     def test_getting_started(self, mock_figure) -> None:
         """Test getting started library example execution"""
 
-        import getting_started
+        import getting_started  # type: ignore
         mock_figure.assert_called()
         
     def test_getting_started_radarlink(self) -> None:
@@ -98,7 +90,7 @@ class TestLibraryExamples(TestCase):
             if gettrace() is None:
                 stack.enter_context(patch('matplotlib.pyplot.figure'))
                 
-            import getting_started_radarlink
+            import getting_started_radarlink  # type: ignore
 
     def test_usrp_loop(self) -> None:
         """Test USRP loop example execution"""
@@ -124,4 +116,4 @@ class TestLibraryExamples(TestCase):
             stack.enter_context(patch('hermespy.hardware_loop.UsrpSystem', PhysicalScenarioDummy))
             stack.enter_context(patch('hermespy.hardware_loop.HardwareLoop.new_dimension'))
 
-            import usrp_loop
+            import usrp_loop  # type: ignore

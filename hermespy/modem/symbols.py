@@ -77,7 +77,7 @@ class Symbols(HDFSerializable):
                 A three-dimensional array of complex-valued communication symbols.
                 The first dimension denotes the number of streams,
                 the second dimension the number of symbol blocks per stream,
-                the the dimension the number of symbols per block.
+                the third dimension the number of symbols per block.
         """
 
         symbols = np.empty((0, 0, 0), dtype=complex) if symbols is None else symbols

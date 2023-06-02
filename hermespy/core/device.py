@@ -980,13 +980,13 @@ class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType
     def noise_power(self, strength: float, snr_type: SNRType) -> float:
         """Compute noise power for a given signal strength.
 
-        Internally calls :meth:`._noise_power` for some `snr_type`s.
+        Internally calls :meth:`._noise_power` for some :meth:`.snr_type` .
 
         Args:
 
             strength (float):
                 Signal strength indicator.
-                The unit depends on `snr_type`.
+                The unit depends on :meth:`snr_type`.
 
             snr_type (SNRType):
                 The considered signal to noise ratio type.

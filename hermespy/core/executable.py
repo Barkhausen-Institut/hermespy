@@ -80,7 +80,7 @@ class Executable(ABC):
 
             console_mode (ConsoleMode, optional):
                 Output behaviour of the information printed to the console.
-                :class:`ConsoleMode.Interactive: by default.
+                Interactive by default.
         """
 
         # Default parameters

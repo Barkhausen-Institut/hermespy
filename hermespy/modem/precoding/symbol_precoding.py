@@ -9,15 +9,16 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
-from hermespy.core.factory import Serializable
-from .precoding import Precoder, Precoding
+from hermespy.core import Serializable
+from hermespy.precoding.precoding import Precoder, Precoding
+
+from ..symbols import StatedSymbols
 
 if TYPE_CHECKING:
-    from hermespy.modem import StatedSymbols
-    from hermespy.modem.modem import BaseModem
+    from ..modem import BaseModem  # pragma: no cover
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.0.0"

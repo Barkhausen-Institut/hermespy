@@ -6,18 +6,15 @@ Maximum Ratio Combining
 """
 
 from __future__ import annotations
-from typing import TYPE_CHECKING
 
 import numpy as np
 
 from hermespy.core import Serializable
+from ..symbols import StatedSymbols
 from .symbol_precoding import SymbolPrecoder
 
-if TYPE_CHECKING:
-    from hermespy.modem import StatedSymbols
-
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "André Noll Barreto"]
 __license__ = "AGPLv3"
 __version__ = "1.0.0"
@@ -27,7 +24,10 @@ __status__ = "Prototype"
 
 
 class MaximumRatioCombining(SymbolPrecoder, Serializable):
-    """Maximum ratio combining symbol decoding step"""
+    """Maximum ratio combining symbol decoding step.
+
+    https://en.wikipedia.org/wiki/Maximal-ratio_combining
+    """
 
     yaml_tag: str = "MRC"
 
@@ -40,11 +40,19 @@ class MaximumRatioCombining(SymbolPrecoder, Serializable):
         # Received signal with equal noise power is assumed, the decoded signal has same noise
         # level as input. It is assumed that all data have equal noise levels.
 
-        resulting_symbols = np.sum(symbols.raw * symbols.states.conj(), axis=0, keepdims=True)
-        # resulting_noises = np.sum(stream_noises * (np.abs(stream_responses) ** 2), axis=0, keepdims=True)
-        resulting_states = np.sum(np.abs(symbols.states) ** 2, axis=0)
+        if symbols.num_transmit_streams != 1:
+            raise RuntimeError("Maximum ratio combining only supports a  single transmit stream")
 
-        return StatedSymbols(resulting_symbols, resulting_states)
+        simo_states = symbols.states.reshape((symbols.num_streams, symbols.num_symbols * symbols.num_blocks))
+        symbols_raw = symbols.raw.reshape((symbols.num_streams, symbols.num_symbols * symbols.num_blocks))
+
+        symbol_estimates = np.sum(simo_states.conj() * symbols_raw, axis=0, keepdims=True) / np.sum(np.abs(simo_states) ** 2, axis=0, keepdims=True)
+        state_estimates = np.sum(np.abs(symbols.states) ** 2, axis=0)
+        # resulting_noises = np.sum(stream_noises * (np.abs(stream_responses) ** 2), axis=0, keepdims=True)
+
+        symbol_estimates = symbol_estimates.reshape((1, symbols.num_blocks, symbols.num_symbols))
+        state_estimates = state_estimates.reshape((1, 1, symbols.num_blocks, symbols.num_symbols))
+        return StatedSymbols(symbol_estimates, state_estimates)
 
     @property
     def num_input_streams(self) -> int:

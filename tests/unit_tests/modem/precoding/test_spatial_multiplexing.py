@@ -5,11 +5,11 @@ from unittest.mock import Mock, patch, PropertyMock
 
 import numpy as np
 
-from hermespy.precoding import SpatialMultiplexing
+from hermespy.modem.precoding import SpatialMultiplexing
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.0.0"
@@ -33,7 +33,19 @@ class TestSpatialMultiplexing(unittest.TestCase):
         self.precoding.required_outputs = lambda precoder: 4
         self.precoding.required_inputs = lambda precoder: 1
         self.precoder.precoding = self.precoding
+        
+    def test_encode(self) -> None:
+        """Encoding should return original input unaltered"""
 
+        symbols = Mock()
+        self.assertIs(symbols, self.precoder.encode(symbols))
+        
+    def test_decode(self) -> None:
+        """Decoding should return original input unaltered"""
+        
+        symbols = Mock()
+        self.assertIs(symbols, self.precoder.decode(symbols))
+        
     def test_num_input_streams(self) -> None:
         """The number of input streams is always one."""
 
@@ -61,8 +73,8 @@ class TestSpatialMultiplexing(unittest.TestCase):
     def test_serialization(self) -> None:
         """Test YAML serialization"""
         
-        with patch('hermespy.precoding.spatial_multiplexing.SpatialMultiplexing.precoding', new_callable=PropertyMock) as precoding, \
-             patch('hermespy.precoding.spatial_multiplexing.SpatialMultiplexing.property_blacklist', new_callable=PropertyMock) as blacklist:
+        with patch('hermespy.modem.precoding.spatial_multiplexing.SpatialMultiplexing.precoding', new_callable=PropertyMock) as precoding, \
+             patch('hermespy.modem.precoding.spatial_multiplexing.SpatialMultiplexing.property_blacklist', new_callable=PropertyMock) as blacklist:
         
             precoding.return_value = self.precoding
             blacklist.return_value = {'precoding'}
