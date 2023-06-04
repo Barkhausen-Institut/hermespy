@@ -12,14 +12,13 @@ from numpy.random import default_rng
 from scipy.constants import pi
 from scipy.fft import fft, fftshift
 
-from hermespy.core import ChannelStateInformation
-from hermespy.modem.modem import Symbols
-from hermespy.modem import OFDMWaveform, FrameSymbolSection, FrameGuardSection, FrameResource
-from hermespy.modem.waveform_ofdm import FrameElement, ElementType, PrefixType, FrameSection, OFDMCorrelationSynchronization, OFDMIdealChannelEstimation, PilotSection, SchmidlCoxPilotSection, SchmidlCoxSynchronization, OFDMLeastSquaresChannelEstimation, OFDMChannelEqualization, OFDMZeroForcingChannelEqualization, OFDMMinimumMeanSquareChannelEqualization
+from hermespy.core import ChannelStateInformation, ChannelStateFormat
+from hermespy.modem import OFDMWaveform, FrameSymbolSection, FrameGuardSection, FrameResource, Symbols, CustomPilotSymbolSequence
+from hermespy.modem.waveform_ofdm import FrameElement, ElementType, PrefixType, FrameSection, OFDMCorrelationSynchronization, OFDMIdealChannelEstimation, PilotSection, SchmidlCoxPilotSection, SchmidlCoxSynchronization, OFDMLeastSquaresChannelEstimation, OFDMChannelEqualization, OFDMZeroForcingChannelEqualization
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "André Noll Barreto"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["André Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.0.0"
@@ -251,6 +250,17 @@ class TestFrameSymbolSection(TestCase):
         """Number of subcarriers property should return the correct number of occupied subcarriers"""
 
         self.assertEqual(18, self.section.num_subcarriers)
+        
+    def test_modulate_validation(self) -> None:
+        """Modulation should raise Errors on invalid arguments and states"""
+        
+        num_blocks = self.section.num_words
+        num_symbols = self.section.num_subcarriers
+        expected_symbols = np.exp(2j * self.rnd.uniform(0, pi, (num_blocks, num_symbols)))
+
+        self.resource_a.prefix_type = Mock()
+        with self.assertRaises(RuntimeError):
+            self.section.modulate(expected_symbols)
 
     def test_modulate_demodulate_no_dc_suppression(self) -> None:
         """Modulating and subsequently de-modulating an OFDM symbol section should yield correct symbols."""
@@ -347,6 +357,12 @@ class TestFrameGuardSection(TestCase):
 
         expected_num_samples = int(self.num_repetitions * self.duration * self.frame.sampling_rate)
         self.assertEqual(expected_num_samples, self.section.num_samples)
+
+    def test_modulate_validation(self) -> None:
+        """Modualation should raise ValueError if symbols are provided"""
+        
+        with self.assertRaises(ValueError):
+            self.section.modulate(np.random.standard_normal(2))
 
     def test_modulate(self) -> None:
         """Modulation should return a zero-vector."""
@@ -486,6 +502,14 @@ class TestOFDMWaveform(TestCase):
 
         with self.assertRaises(ValueError):
             self.ofdm.subcarrier_spacing = 0.
+            
+    def test_modulate_no_blocks(self) -> None:
+        """Modulating an empty data frame should return a zero-vector."""
+        
+        expected_signal = np.zeros((1, 0), dtype=complex)
+        signal = self.ofdm.modulate(Symbols(np.empty((1, 0, 10), dtype=complex)))
+        
+        assert_array_equal(expected_signal, signal.samples)
 
     def test_modulate_demodulate(self) -> None:
         """Modulating and subsequently de-modulating a data frame should yield identical symbols."""
@@ -497,6 +521,24 @@ class TestOFDMWaveform(TestCase):
         symbols = self.ofdm.demodulate(baseband_signal.samples[0, :])
 
         assert_array_almost_equal(expected_symbols.raw, symbols.raw)
+        
+    def test_modulate_demodulate_pilot(self) -> None:
+        """Modulating and subsequently de-modulating a data frame with pilot section should yield identical symbols."""
+
+        self.ofdm.pilot_section = SchmidlCoxPilotSection()
+        bits = self.rng.integers(0, 2, self.ofdm.bits_per_frame)
+        expected_symbols = self.ofdm.map(bits)
+
+        baseband_signal = self.ofdm.modulate(expected_symbols)
+        symbols = self.ofdm.demodulate(baseband_signal.samples[0, :])
+
+        assert_array_almost_equal(expected_symbols.raw, symbols.raw)
+
+    def test_map_validation(self) -> None:
+        """Mapping should raise ValueError on invalid arguments"""
+        
+        with self.assertRaises(ValueError):
+            self.ofdm.map(np.random.standard_normal(2))
         
     def test_map_unmap(self) -> None:
         """Mappding and numapping should result in identical bit sequences"""
@@ -518,6 +560,67 @@ class TestOFDMWaveform(TestCase):
         bits = self.ofdm.unmap(demodulated_symbols)
         
         assert_array_equal(expected_bits, bits)
+        
+    def test_words_per_frame(self) -> None:
+        """The number of words per frame should be the sum of the number of words of all sections"""
+        
+        self.assertEqual(self.section_a.num_words + self.section_b.num_words + self.section_c.num_words, self.ofdm.words_per_frame)
+        
+    def test_references_per_frame(self) -> None:
+        """The number of references per frame should be the sum of the number of references of all sections"""
+        
+        self.assertEqual(self.section_a.num_references + self.section_b.num_references + self.section_c.num_references, self.ofdm.references_per_frame)
+
+    def test_frame_duration(self) -> None:
+        """The frame duration should be the sum of the durations of all sections"""
+        
+        self.assertEqual(self.ofdm.samples_in_frame / self.ofdm.sampling_rate, self.ofdm.frame_duration)
+
+    def test_resource_mask(self) -> None:
+        """The resource mask should be the sum of the masks of all resources"""
+        
+        resource_mask = self.ofdm._resource_mask
+        self.assertSequenceEqual((3, self.ofdm.num_subcarriers, self.ofdm.words_per_frame), resource_mask.shape)
+
+    def test_bit_energy(self) -> None:
+        """The bit energy should be the sum of the bit energies of all sections"""
+        
+        self.assertEqual(1/4, self.ofdm.bit_energy)
+        
+    def test_symbol_energy(self) -> None:
+        """The symbol energy should be the sum of the symbol energies of all sections"""
+        
+        self.assertEqual(1, self.ofdm.symbol_energy)
+
+    def test_bandwidth(self) -> None:
+        """The bandwidth should be the number of subcarriers times the subcarrier spacing"""
+        
+        self.assertEqual(self.num_subcarriers * self.subcarrier_spacing, self.ofdm.bandwidth)
+
+    def test_power(self) -> None:
+        """The signal power should be computed correctly"""
+        
+        self.elements_a = [FrameElement(ElementType.DATA, self.num_subcarriers)]
+        self.resource_a = FrameResource(1, PrefixType.NONE, 0, self.elements_a)
+        self.section_a = FrameSymbolSection(100, [0])
+        
+        self.ofdm = OFDMWaveform(subcarrier_spacing=self.subcarrier_spacing, modem=self.modem,
+                                 resources=[self.resource_a], structure=[self.section_a], num_subcarriers=self.num_subcarriers,
+                                 oversampling_factor=self.oversampling_factor)
+        
+        symbols = self.ofdm.map(self.rng.integers(0, 2, self.ofdm.bits_per_frame))
+        transmission = self.ofdm.modulate(symbols) 
+        
+        self.assertAlmostEqual(self.ofdm.power, transmission.power[0], places=2)
+
+    def test_num_subcarriers_validation(self) -> None:
+        """Number of subcarries property setter should raise ValueError on arguments smaller than one."""
+
+        with self.assertRaises(ValueError):
+            self.ofdm.num_subcarriers = 0
+
+        with self.assertRaises(ValueError):
+            self.ofdm.num_subcarriers = -1
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""
@@ -569,6 +672,9 @@ class TestPilotSection(TestCase):
         with self.assertRaises(ValueError):
             self.pilot_section.pilot_elements = Symbols()
             
+        with self.assertRaises(ValueError):
+            self.pilot_section.pilot_elements = Symbols(np.empty((1, 1, 0)))
+
     def test_pseudorandom_pilot_sequence(self) -> None:
         """Unspecified subsymbols should result in the generation of constant valid pilot sequence"""
         
@@ -600,6 +706,7 @@ class TestPilotSection(TestCase):
         pilot = self.pilot_section.modulate()
         cached_pilot = self.pilot_section.modulate()
         assert_array_equal(pilot, cached_pilot)
+
         
     def test_demodulate(self) -> None:
         """Demodulation should always return an empty tuple"""
@@ -661,6 +768,12 @@ class TestSchmidlCoxPilotSection(TestCase):
             second_half_symbol = pilot[half_symbol_length:]
             
             assert_array_almost_equal(first_half_symbol, second_half_symbol, err_msg="Synchronization symbol not symmmetric")
+    
+    def test_demodulate(self) -> None:
+        """Demodulation should always return an empty tuple"""
+        
+        symbols = self.pilot.demodulate(np.empty(0))
+        self.assertEqual(0, len(symbols))
     
     def test_serialization(self) -> None:
         """Test YAML serialization"""
@@ -730,6 +843,14 @@ class TestSchmidlCoxSynchronization(TestCase):
         self.num_frames = [1, 2, 3]
         self.max_delay_offset = 8
 
+    def test_synchronize_empty_signal(self) -> None:
+        """Test the proper estimation of delays during correlation synchronization for an empty signal"""
+        
+        signal = np.empty((self.num_streams, 0), dtype=complex)
+        frame_delays = self.synchronization.synchronize(signal)
+        
+        self.assertEqual(0, len(frame_delays))
+
     def test_synchronize(self) -> None:
         """Test the proper estimation of delays during Schmidl-Cox synchronization"""
 
@@ -764,25 +885,128 @@ class TestIdealChannelEstimation(TestCase):
     
     def setUp(self) -> None:
         
-        self.waveform = Mock()
-        self.channel_estimation = OFDMIdealChannelEstimation()
-    
+        self.subcarrier_spacing = 1e3
+        self.num_subcarriers = 100
+        self.oversampling_factor = 2
+
+        self.rng = default_rng(42)
+
+        self.modem = Mock()
+        self.modem.random_generator = self.rng
+        self.modem.carrier_frequency = 100e6
+
+        self.repetitions_a = 2
+        self.prefix_type_a = PrefixType.CYCLIC
+        self.prefix_ratio_a = 0.1
+        self.elements_a = [FrameElement(ElementType.DATA, 2),
+                           FrameElement(ElementType.REFERENCE, 1),
+                           FrameElement(ElementType.NULL, 3)]
+        self.resource_a = FrameResource(self.repetitions_a, self.prefix_type_a, self.prefix_ratio_a, self.elements_a)
+
+        self.repetitions_b = 3
+        self.prefix_type_b = PrefixType.ZEROPAD
+        self.prefix_ratio_b = 0.2
+        self.elements_b = [FrameElement(ElementType.REFERENCE, 2),
+                           FrameElement(ElementType.DATA, 1),
+                           FrameElement(ElementType.NULL, 3)]
+        self.resource_b = FrameResource(self.repetitions_b, self.prefix_type_b, self.prefix_ratio_b, self.elements_b)
+
+        self.section_a = FrameSymbolSection(2, [1, 0, 1])
+        self.section_b = FrameGuardSection(1e-3)
+        self.section_c = FrameSymbolSection(2, [0, 1, 0])
+
+        self.resources = [self.resource_a, self.resource_b]
+        self.sections = [self.section_a, self.section_b, self.section_c]
+
+        self.ofdm = OFDMWaveform(subcarrier_spacing=self.subcarrier_spacing, modem=self.modem,
+                                 resources=self.resources, structure=self.sections,
+                                 num_subcarriers=self.num_subcarriers,
+                                 oversampling_factor=self.oversampling_factor)
+        
+        self.estimation = OFDMIdealChannelEstimation()
+        self.ofdm.channel_estimation = self.estimation
+        
+    def test_estimate_channel(self) -> None:
+        """Ideal channel estimation should correctly fetch the channel estimate"""
+        
+        symbols = self.ofdm.map(self.rng.integers(0, 2, self.ofdm.bits_per_frame))
+        
+        with patch('hermespy.modem.waveform.IdealChannelEstimation._csi') as csi_mock:
+            
+            expected_csi = self.rng.standard_normal((1, 1, symbols.num_blocks, symbols.num_symbols))
+            state = ChannelStateInformation(ChannelStateFormat.FREQUENCY_SELECTIVITY, expected_csi)
+            csi_mock.return_value = state
+            
+            _, csi = self.estimation.estimate_channel(symbols)
+            assert_array_almost_equal(expected_csi, csi.state)
+                
     def test_serialization(self) -> None:
         """Test YAML serialization"""
         
-        test_yaml_roundtrip_serialization(self, self.channel_estimation)
+        test_yaml_roundtrip_serialization(self, self.estimation)
 
 
 class TestLeastSquaresChannelEstimation(TestCase):
     
     def setUp(self) -> None:
         
-        self.channel_estimation = OFDMLeastSquaresChannelEstimation()
+        self.subcarrier_spacing = 1e3
+        self.num_subcarriers = 100
+        self.oversampling_factor = 2
+
+        self.rng = default_rng(42)
+
+        self.modem = Mock()
+        self.modem.random_generator = self.rng
+        self.modem.carrier_frequency = 100e6
+
+        self.prefix_type_a = PrefixType.CYCLIC
+        self.prefix_ratio_a = 0.1
+        self.elements_a = [FrameElement(ElementType.REFERENCE, self.num_subcarriers)]
+        self.resource_a = FrameResource(1, self.prefix_type_a, self.prefix_ratio_a, self.elements_a)
+
+        self.section_a = FrameSymbolSection(2, [0])
+
+        self.resources = [self.resource_a]
+        self.sections = [self.section_a]
+
+        self.ofdm = OFDMWaveform(subcarrier_spacing=self.subcarrier_spacing, modem=self.modem,
+                                 resources=self.resources, structure=self.sections,
+                                 num_subcarriers=self.num_subcarriers,
+                                 oversampling_factor=self.oversampling_factor)
+        
+        self.estimation = OFDMLeastSquaresChannelEstimation()
+        self.ofdm.channel_estimation = self.estimation
+        
+        self.ofdm.pilot_symbol_sequence = CustomPilotSymbolSequence(np.arange(1, 1 + 2 * self.num_subcarriers))
+        
+    def test_estimate_channel_validation(self) -> None:
+        """Least squares channel estimation should raise a NotImplementedError on invalid arguments"""
+        
+        with self.assertRaises(NotImplementedError):
+            self.estimation.estimate_channel(Symbols(np.empty((2, 0, 10), dtype=complex)))
+            
+    def test_estimate_channel(self) -> None:
+        """Least squares channel estimation should correctly compute the channel estimate"""
+        
+        symbols = self.ofdm.map(self.rng.integers(0, 2, self.ofdm.bits_per_frame))
+        
+        with patch('hermespy.modem.waveform.IdealChannelEstimation._csi') as csi_mock:
+            
+            expected_csi = 1 / np.arange(1, 1 + symbols.num_blocks * symbols.num_symbols).reshape((1, 1, symbols.num_blocks, symbols.num_symbols), order='F')
+            propagated_symbols_raw = symbols.raw * expected_csi[:, 0, : ,:]
+            propagated_symbols = Symbols(propagated_symbols_raw)
+            
+            state = ChannelStateInformation(ChannelStateFormat.FREQUENCY_SELECTIVITY, expected_csi)
+            csi_mock.return_value = state
+            
+            _, csi = self.estimation.estimate_channel(propagated_symbols)
+            assert_array_almost_equal(expected_csi, csi.state)
     
     def test_serialization(self) -> None:
         """Test YAML serialization"""
         
-        test_yaml_roundtrip_serialization(self, self.channel_estimation)
+        test_yaml_roundtrip_serialization(self, self.estimation)
 
 
 class TestChannelEqualization(TestCase):
@@ -802,18 +1026,6 @@ class TestZeroForcingChannelEqualization(TestCase):
     def setUp(self) -> None:
         
         self.channel_equalization = OFDMZeroForcingChannelEqualization()
-    
-    def test_serialization(self) -> None:
-        """Test YAML serialization"""
-        
-        test_yaml_roundtrip_serialization(self, self.channel_equalization)
-
-
-class TestMinimumMeanSquareChannelEqualization(TestCase):
-    
-    def setUp(self) -> None:
-        
-        self.channel_equalization = OFDMMinimumMeanSquareChannelEqualization()
     
     def test_serialization(self) -> None:
         """Test YAML serialization"""

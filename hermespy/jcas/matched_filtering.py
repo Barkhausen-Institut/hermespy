@@ -81,8 +81,8 @@ class MatchedFilterJcas(Radar, DuplexModem, Transmitter[JCASTransmission], Recei
         """
 
         # Initialize base classes
-        DuplexModem.__init__(self, **kwargs)
         Radar.__init__(self)
+        DuplexModem.__init__(self, **kwargs)
 
         # Initialize class attributes
         self.__sampling_rate = None

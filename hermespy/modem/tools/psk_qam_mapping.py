@@ -21,7 +21,7 @@ from typing import Union
 import numpy as np
 
 __author__ = "André Noll Barreto"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["André Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.0.0"
@@ -154,11 +154,7 @@ class PskQamMapping(object):
                 imag_part = self.generate_pam_symbol_3gpp(16, bits[[1, 3, 5, 7], :])
                 symbols = (real_part + 1j * imag_part) / np.sqrt(170)
             else:
-                if self.is_complex:
-                    modulation_type = "QAM"
-                else:
-                    modulation_type = "PAM"
-                raise ValueError(f"Modulation ({self.modulation_order}-{modulation_type}) not supported")
+                raise RuntimeError(f"Modulation ({self.modulation_order}-{'QAM' if self.is_complex else 'PAM'}) not supported")
 
         return np.ravel(symbols)
 
@@ -200,7 +196,7 @@ class PskQamMapping(object):
                     llr[bits_idx + bit_offset] = np.bitwise_and(min_index, power_of_2) > 0
                     llr = llr * 2 - 1
             else:
-                raise ValueError("soft output not yet supported for this modulation scheme")
+                raise RuntimeError("Soft output demodulation not implemented for custom constellation")
 
         # use 3GPP mapping for BPSK, QPSK, 16-,64- and 256-QAM
         elif self.modulation_order == 2:
@@ -240,13 +236,10 @@ class PskQamMapping(object):
             llr[1::2] = self.get_llr_3gpp(16, np.imag(rx_symbols), noise_variance, True)
 
         else:
-            raise ValueError("Unsupported modulation scheme")
+            raise RuntimeError("Unsupported modulation scheme")
 
-        if not self.soft_output:
-            bits = llr > 0
-            return bits
-        else:
-            return llr
+        # Return finished bit stream either as soft or hard detections
+        return llr if self.soft_output else llr > 0
 
     @staticmethod
     def generate_pam_symbol_3gpp(modulation_order, bits: np.ndarray) -> np.ndarray:

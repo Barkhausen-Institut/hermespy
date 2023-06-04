@@ -348,6 +348,11 @@ class TestChirpFSKWaveform(unittest.TestCase):
                 f"{file_name} must be in same folder as this file.")
 
         return np.load(os.path.join(self.parent_dir, file_name))
+
+    def test_symbol_precoding_support(self) -> None:
+        """Test if symbol precoding is supported"""
+        
+        self.assertFalse(self.generator.symbol_precoding_support)
             
     def test_serialization(self) -> None:
         """Test YAML serialization"""

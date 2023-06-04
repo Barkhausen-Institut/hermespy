@@ -23,7 +23,7 @@ from .waveform_correlation_synchronization import CorrelationSynchronization
 from .tools import PskQamMapping
 
 __author__ = "André Noll Barreto"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["André Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.0.0"
@@ -65,16 +65,9 @@ class FrameElement(Serializable):
     type: ElementType
     repetitions: int = 1
 
-    def __init__(self, type: Union[str, ElementType], repetitions: int = 1) -> None:
-        if type is None:
-            self.type = ElementType.NULL
+    def __init__(self, type: str | ElementType, repetitions: int = 1) -> None:
 
-        elif isinstance(type, str):
-            self.type = ElementType[type]
-
-        else:
-            self.type = type
-
+        self.type = ElementType[type] if isinstance(type, str) else type
         self.repetitions = repetitions
 
 
@@ -314,7 +307,7 @@ class FrameSection:
         Returns:
             int: Number of samples
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     def place_symbols(self, data_symbols: np.ndarray, reference_symbols: np.ndarray) -> np.ndarray:
         # Collect resource masks
@@ -352,7 +345,7 @@ class FrameSection:
         Returns:
             np.ndarray: The modulated signal vector.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     @abstractmethod
     def demodulate(self, signal: np.ndarray) -> np.ndarray:
@@ -363,7 +356,7 @@ class FrameSection:
 
         Returns: Sequence of demodulated data and reference symbols.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
 
 class FrameSymbolSection(FrameSection, Serializable):
@@ -446,7 +439,7 @@ class FrameSymbolSection(FrameSection, Serializable):
 
                 # Raise exception for unsupproted prefix types
                 else:
-                    raise NotImplementedError("Unsupported prefix type configured")
+                    raise RuntimeError("Unsupported prefix type configured")
 
             # Append base resource waveform after prefix
             signals.append(resource_samples)
@@ -792,6 +785,8 @@ class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
 
     @property
     def symbols_per_frame(self) -> int:
+        """Number of symbols per OFDM frame."""
+
         num_symbols = 0
         for section in self.structure:
             num_symbols += section.num_symbols + section.num_references
@@ -800,6 +795,8 @@ class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
 
     @property
     def words_per_frame(self) -> int:
+        """Number of words per OFDM frame."""
+
         num_words = 0
         for section in self.structure:
             num_words += section.num_words
@@ -808,6 +805,8 @@ class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
 
     @property
     def references_per_frame(self) -> int:
+        """Number of reference symbols per OFDM frame."""
+
         num_symbols = 0
         for section in self.structure:
             num_symbols += section.num_references
@@ -820,8 +819,6 @@ class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
 
     @property
     def samples_in_frame(self) -> int:
-        """int: Returns read-only samples_in_frame"""
-
         num = 0
         for section in self.structure:
             num += section.num_samples
@@ -831,22 +828,6 @@ class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
 
         return num
 
-    @property
-    def _num_reference_symbols(self) -> int:
-        num_symbols = 0
-        for section in self.structure:
-            num_symbols += section.num_references
-
-        return num_symbols
-
-    @property
-    def _num_data_symbols(self) -> int:
-        num_symbols = 0
-        for section in self.structure:
-            num_symbols += section.num_symbols
-
-        return num_symbols
-
     def map(self, data_bits: np.ndarray) -> Symbols:
         if len(data_bits) != self.bits_per_frame:
             raise ValueError("Incorrect number of information bits provided for mapping")
@@ -855,7 +836,7 @@ class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
         data_symbols = self._mapping.get_symbols(data_bits)
 
         # Query reference symbols
-        reference_symbols = self.pilot_symbols(self._num_reference_symbols)
+        reference_symbols = self.pilot_symbols(self.references_per_frame)
 
         # Generate the symbol sequence for a full OFDM frame
         symbols = Symbols()
@@ -968,107 +949,6 @@ class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
         b = self.num_subcarriers * self.subcarrier_spacing
         return b
 
-    #    def __channel_estimation(self, symbol_grid: np.ndarray, channel_state: ChannelStateInformation, resource_mask: np.ndarray) -> ChannelStateInformation:
-    #        """Performs channel estimation over the OFDM grid.
-    #
-    #        This methods estimates the frequency response of the channel for all OFDM symbols in a frame. The estimation
-    #        algorithm is defined in the parameter variable `self.param`.
-    #
-    #        With ideal channel estimation, the channel state information is obtained directly from the ideal channel state.
-    #        The CSI can be considered to be known only at the beginning/middle/end of the frame
-    #        (estimation_type='IDEAL_PREAMBLE'/'IDEAL_MIDAMBLE'/ 'IDEAL_POSTAMBLE'), or at every OFDM symbol ('IDEAL').
-    #
-    #        With reference-based estimation, the specified reference subcarriers are employed for channel estimation.
-    #
-    #        Args:
-    #
-    #            symbol_grid (numpy.ndarray):
-    #                Frequency-domain samples of the received signal over the whole frame.
-    #
-    #            channel_state (ChannelStateInformation):
-    #                Perfect channel state from which to simulate the channel state estimation.
-    #
-    #            resource_mask (np.ndarray):
-    #                Boolean mask for OFDM resource allocation.
-    #                Required to distinguish between data, reference and null symbols within `symbol_grid`.
-    #
-    #        Returns:
-    #            ChannelStateInformation:
-    #                The channel state estimate resulting from the selected method.
-    #        """
-    #
-    #        # Ideally, the channel is estimated perfectly at each received symbol slot
-    #        if self.channel_estimation_algorithm == ChannelEstimation.IDEAL:
-    #            return channel_state
-    #
-    #        # Number of modulation symbols per ofdm word
-    #        num_symbols = symbol_grid.shape[0]
-    #        num_words = symbol_grid.shape[1]
-    #
-    #        # An ideal pre-amble estimates the channel at the first sample position
-    #        if self.channel_estimation_algorithm == ChannelEstimation.IDEAL_PREAMBLE:
-    #
-    #            estimate = channel_state.state[:, :, :num_symbols, :]
-    #            channel_state.state = np.tile(estimate, (1, 1, num_words, 1))
-    #            return channel_state
-    #
-    #        # An ideal mid-amble estimates the channel at the central symbol position
-    #        if self.channel_estimation_algorithm == ChannelEstimation.IDEAL_MIDAMBLE:
-    #
-    #            word_idx = int(0.5 * num_words)
-    #            estimate = channel_state.state[:, :, word_idx * num_symbols : (1 + word_idx) * num_symbols, :]
-    #            channel_state.state = np.tile(estimate, (1, 1, num_words, 1))
-    #            return channel_state
-    #
-    #        # An ideal post-amble estimates the channel at the last sample position
-    #        if self.channel_estimation_algorithm == ChannelEstimation.IDEAL_POSTAMBLE:
-    #
-    #            estimate = channel_state.state[:, :, -num_symbols:, :]
-    #            channel_state.state = np.tile(estimate, (1, 1, num_words, 1))
-    #            return channel_state
-    #
-    #        if self.channel_estimation_algorithm == ChannelEstimation.REFERENCE:
-    #            return self.reference_based_channel_estimation(symbol_grid, resource_mask)
-    #
-    #        raise RuntimeError("Unknown OFDM channel estimation routine requested")
-
-    def reference_based_channel_estimation(self, symbol_grid: np.ndarray, resource_mask: np.ndarray) -> ChannelStateInformation:
-        """Perform a reference-symbol based channel estimation over the OFDM frame grid.
-
-        This method estimates the channel using reference symbols. Only LS method is currently implemented. The function
-        will return only a single value for each subcarrier. If several reference symbols are available, then the
-        estimate will be averaged over all OFDM symbols.
-
-        Args:
-
-            symbol_grid (numpy.ndarray):
-                Frequency-domain samples of the received signal over the whole frame.
-
-            resource_mask (np.ndarray):
-                Boolean mask for OFDM resource allocation.
-                Required to distinguish between data, reference and null symbols within `symbol_grid`.
-
-        Returns:
-
-            ChannelStateInformation:
-                The channel state estimate.
-        """
-
-        propagated_reference_symbols = symbol_grid[resource_mask[ElementType.REFERENCE.value, ::]]
-        reference_symbols = self.pilot_symbols(self._num_reference_symbols)
-        reference_channel_estimation = propagated_reference_symbols / reference_symbols
-
-        channel_estimation = np.zeros(symbol_grid.shape, dtype=complex)
-        channel_estimation.T[resource_mask[ElementType.REFERENCE.value, ::].T] = reference_channel_estimation
-
-        interpolation_stems = np.where(resource_mask[ElementType.REFERENCE.value, ::])
-        holes = np.where(np.invert(resource_mask[ElementType.REFERENCE.value, ::]))
-
-        # ToDo: Check with group what to do about missing values outside the convex hull
-        interpolated_holes = griddata(interpolation_stems, reference_channel_estimation, holes, method="nearest")
-        channel_estimation[holes] = interpolated_holes
-        return ChannelStateInformation(ChannelStateFormat.FREQUENCY_SELECTIVITY, channel_estimation.T.flatten()[None, None, :, None])
-
     @property
     def bits_per_frame(self) -> int:
         num_data_symbols = 0
@@ -1079,17 +959,15 @@ class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
 
     @property
     def bit_energy(self) -> float:
-        return 1 / self._mapping.bits_per_symbol  # ToDo: Re-implement
-        # return self.oversampling_factor / self._mapping.bits_per_symbol * self._cyclic_prefix_overhead
+        return 1 / self._mapping.bits_per_symbol  # ToDo: Check validity
 
     @property
     def symbol_energy(self) -> float:
-        return 1 / self._mapping.bits_per_symbol  # ToDo: Re-implement
-        # return self.oversampling_factor * self._cyclic_prefix_overhead
+        return 1  # ToDo: Check validity
 
     @property
     def power(self) -> float:
-        return 1 / np.sqrt(2)
+        return 1 / self.oversampling_factor
 
     @property
     def num_subcarriers(self) -> int:
@@ -1224,7 +1102,11 @@ class PilotSection(FrameSection, Serializable):
             return self.__cached_pilot
 
         pilot = self._pilot()
+
+        # Cache the pilot
         self.__cached_pilot = pilot
+        self.__cached_num_subcarriers = self.frame.num_subcarriers
+        self.__cached_oversampling_factor = self.frame.oversampling_factor
 
         return pilot
 
@@ -1340,7 +1222,7 @@ class SchmidlCoxPilotSection(PilotSection):
 class OFDMSynchronization(Synchronization[OFDMWaveform]):
     """Synchronization Routine for OFDM Waveforms."""
 
-    ...  # pragma no cover
+    ...  # pragma: no cover
 
 
 class OFDMCorrelationSynchronization(CorrelationSynchronization[OFDMWaveform]):
@@ -1434,8 +1316,9 @@ class OFDMLeastSquaresChannelEstimation(ChannelEstimation[OFDMWaveform], Seriali
         reference_symbols = self.waveform_generator.pilot_symbols(len(propagated_references))
         reference_channel_estimation = propagated_references / reference_symbols
 
-        channel_estimation = np.zeros(((1, 1, symbols.num_blocks, symbols.num_symbols)), dtype=complex)
-        channel_estimation[0, 0, resource_mask[ElementType.REFERENCE.value, ::].T] = reference_channel_estimation
+        channel_estimation = np.zeros(((1, 1, symbols.num_symbols, symbols.num_blocks)), dtype=complex)
+        channel_estimation[0, 0, resource_mask[ElementType.REFERENCE.value, ::]] = reference_channel_estimation
+        channel_estimation = channel_estimation.transpose((0, 1, 3, 2))
 
         interpolation_stems = np.where(resource_mask[ElementType.REFERENCE.value, ::])
         holes = np.where(np.invert(resource_mask[ElementType.REFERENCE.value, ::]))
@@ -1467,25 +1350,3 @@ class OFDMZeroForcingChannelEqualization(ZeroForcingChannelEqualization[OFDMWave
 
     yaml_tag = "OFDM-ZF"
     """YAML serialization tag"""
-
-
-class OFDMMinimumMeanSquareChannelEqualization(OFDMChannelEqualization, ABC):
-    """Minimum-Mean-Square Channel estimation for Psk Qam waveforms."""
-
-    yaml_tag = "OFDM-MMSE"
-    """YAML serialization tag"""
-
-    def __init__(self, waveform_generator: Optional[OFDMWaveform] = None) -> None:
-        """
-        Args:
-
-            waveform_generator (WaveformGenerator, optional):
-                The waveform generator this equalization routine is attached to.
-        """
-
-        OFDMChannelEqualization.__init__(self, waveform_generator)
-
-    def equalize_channel(self, symbols: StatedSymbols, snr: float = float("inf")) -> Symbols:
-        equalized_symbols = symbols.raw / symbols.states[0, 0, : symbols.num_symbols, 0] + 1 / snr
-
-        return Symbols(equalized_symbols)

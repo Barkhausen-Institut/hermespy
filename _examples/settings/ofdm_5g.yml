@@ -95,13 +95,13 @@ Operators:
           prefix_ratio: 0.078125
           elements:
             - !<FrameElement>
-              type: NULL
+              type: !<ElementType> NULL
               repetitions: 600
             - !<FrameElement>
-              type: DATA
+              type: !<ElementType> DATA
               repetitions: 2100
             - !<FrameElement>
-              type: NULL
+              type: !<ElementType> NULL
               repetitions: 600
 
       # Frame configuration in time domain, i.e. the x-axis in the OFDM time-frequency grid

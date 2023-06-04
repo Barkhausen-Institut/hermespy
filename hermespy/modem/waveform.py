@@ -17,10 +17,10 @@ from hermespy.modem.tools.psk_qam_mapping import PskQamMapping
 from .symbols import StatedSymbols, Symbols
 
 if TYPE_CHECKING:
-    from hermespy.modem.modem import BaseModem
+    from hermespy.modem.modem import BaseModem  # pragma: no cover
 
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.0.0"
@@ -30,6 +30,7 @@ __status__ = "Prototype"
 
 
 WaveformType = TypeVar("WaveformType", bound="WaveformGenerator")
+"""Type hint for waveform generator classes."""
 
 
 class Synchronization(Generic[WaveformType], ABC, Serializable):
@@ -174,7 +175,7 @@ class IdealChannelEstimation(Generic[WaveformType], ChannelEstimation[WaveformTy
         if self.waveform_generator is None:
             raise RuntimeError("Ideal channel state estimation routine floating")
 
-        if self.waveform_generator.modem.receiving_device is None:
+        if self.waveform_generator.modem is None or self.waveform_generator.modem.receiving_device is None:
             raise RuntimeError("Operating modem floating")
 
         cached_csi = self.waveform_generator.modem.csi
@@ -239,27 +240,18 @@ class ZeroForcingChannelEqualization(Generic[WaveformType], ChannelEqualization[
     yaml_tag = "ZeroForcing"
     """YAML serialization tag"""
 
-    def equalize_channel(self, stated_symbols: StatedSymbols) -> Symbols:
-        equalized_raw_symbols = ZeroForcingChannelEqualization.__equalize_channel(stated_symbols.raw, stated_symbols.states)
-
-        return Symbols(equalized_raw_symbols)
-
-    @staticmethod
-    def __equalize_channel(symbols: np.ndarray, states: np.ndarray) -> np.ndarray:
-        # If no information about transmitted streams is available, assume orthogonal channels
-        if symbols.shape[0] < 2:
-            summed_tx_states = np.sum(states, axis=1, keepdims=False)
-            equalized_symbols = symbols / summed_tx_states
+    def equalize_channel(self, symbols: StatedSymbols) -> Symbols:
+        if symbols.num_streams < 2:
+            summed_tx_states = np.sum(symbols.states, axis=1, keepdims=False)
+            equalized_symbols = symbols.raw / summed_tx_states
 
         else:
-            equalized_symbols = np.empty(symbols.shape, dtype=np.complex128)
+            equalized_symbols = np.empty((symbols.num_transmit_streams, symbols.num_blocks, symbols.num_symbols), dtype=np.complex_)
+            for b, s in np.ndindex(symbols.num_blocks, symbols.num_symbols):
+                equalization = np.linalg.pinv(symbols.states[:, :, b, s])
+                equalized_symbols[:, b, s] = np.dot(equalization, symbols.raw[:, b, s])
 
-            for b in range(symbols.shape[1]):
-                for s in range(symbols.shape[2]):
-                    equalization = np.linalg.pinv(states[:, :, b, s])
-                    equalized_symbols[:, b, s] = np.dot(equalization, symbols[:, b, s])
-
-        return equalized_symbols
+        return Symbols(equalized_symbols)
 
 
 class WaveformGenerator(ABC, Serializable):
@@ -324,7 +316,7 @@ class WaveformGenerator(ABC, Serializable):
             int:
                 The number of samples.
         """
-        pass
+        ...  # pragma: no cover
 
     @property
     def oversampling_factor(self) -> int:
@@ -404,7 +396,7 @@ class WaveformGenerator(ABC, Serializable):
         Returns:
             int: Number of bits
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -414,7 +406,7 @@ class WaveformGenerator(ABC, Serializable):
         Returns:
             int: Number of data symbols
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     @property
     def frame_duration(self) -> float:
@@ -434,7 +426,7 @@ class WaveformGenerator(ABC, Serializable):
         Energy of baseband_signal :math:`x[k]` is defined as :math:`\\sum{|x[k]}^2`
         Only data bits are considered, i.e., reference, guard intervals are ignored.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -447,7 +439,7 @@ class WaveformGenerator(ABC, Serializable):
         Returns:
             The average symbol energy in UNIT.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -457,7 +449,7 @@ class WaveformGenerator(ABC, Serializable):
         Power of baseband_signal :math:`x[k]` is defined as :math:`\\sum_{k=1}^N{|x[k]|}^2 / N`
         Power is the average power of the data part of the transmitted frame, i.e., bit energy x raw bit rate
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     @abstractmethod
     def map(self, data_bits: np.ndarray) -> Symbols:
@@ -470,7 +462,7 @@ class WaveformGenerator(ABC, Serializable):
         Returns:
             Symbols: Mapped data symbols.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     @abstractmethod
     def unmap(self, symbols: Symbols) -> np.ndarray:
@@ -485,7 +477,7 @@ class WaveformGenerator(ABC, Serializable):
                 Vector containing the resulting sequence of L data bits
                 In general, L is greater or equal to K.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     @abstractmethod
     def modulate(self, data_symbols: Symbols) -> Signal:
@@ -499,7 +491,7 @@ class WaveformGenerator(ABC, Serializable):
         Returns:
             Signal: Signal model of a single modulate data frame.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     # Hint: Channel propagation occurs here
 
@@ -516,7 +508,7 @@ class WaveformGenerator(ABC, Serializable):
 
             The demodulated communication symbols
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     def estimate_channel(self, frame: Symbols) -> Tuple[StatedSymbols, ChannelStateInformation]:
         return self.channel_estimation.estimate_channel(frame)
@@ -534,7 +526,7 @@ class WaveformGenerator(ABC, Serializable):
         Returns:
             float: Bandwidth in Hz.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     @property
     def data_rate(self) -> float:
@@ -663,7 +655,7 @@ class PilotWaveformGenerator(WaveformGenerator, ABC):
         Returns:
             Signal: The pilot sequence.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
 
 class PilotSymbolSequence(ABC):
@@ -679,7 +671,7 @@ class PilotSymbolSequence(ABC):
         Returns:
             The symbol sequence.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
 
 class UniformPilotSymbolSequence(PilotSymbolSequence):

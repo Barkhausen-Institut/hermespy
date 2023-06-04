@@ -59,7 +59,7 @@ from hermespy.core import ArtifactTemplate, Serializable, Evaluator, EvaluationT
 from .modem import TransmittingModem, ReceivingModem
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.0.0"
@@ -374,6 +374,10 @@ class ThroughputEvaluation(EvaluationTemplate[float]):
 
         throughput = num_correct_frames * bits_per_frame / (num_frames * frame_duration)
         EvaluationTemplate.__init__(self, throughput)
+
+    @property
+    def title(self) -> str:
+        return "Data Throughput"
 
     def artifact(self) -> ThroughputArtifact:
         return ThroughputArtifact(self.evaluation)

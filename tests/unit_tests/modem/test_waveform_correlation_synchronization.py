@@ -82,8 +82,23 @@ class TestCorellationSynchronization(TestCase):
         shifted_sequence = np.append(np.zeros((1, 10), dtype=complex), pilot_sequence.samples, axis=1)
 
         pilot_indices = self.synchronization.synchronize(shifted_sequence)
-        self.assertCountEqual([10], pilot_indices)
-    
+        self.assertSequenceEqual([10], pilot_indices)
+        
+    def test_default_synchronize(self) -> None:
+        """Synchronization should properly order pilot sections into frames"""
+        
+        pilot_sequence = Signal(np.ones(20, dtype=complex), 1.)
+
+        waveform_generator = Mock()
+        waveform_generator.pilot_signal = pilot_sequence
+        waveform_generator.samples_in_frame = 20
+        self.synchronization.waveform_generator = waveform_generator
+
+        empty_sequence = np.zeros((1, 40), dtype=complex)
+
+        pilot_indices = self.synchronization.synchronize(empty_sequence)
+        self.assertSequenceEqual([], pilot_indices)
+            
     def test_serialization(self) -> None:
         """Test YAML serialization"""
         
