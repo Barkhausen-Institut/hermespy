@@ -15,13 +15,13 @@ import numpy as np
 
 from hermespy.core import ChannelStateInformation, Executable, FloatingError, Serializable, Signal
 from hermespy.core.channel_state_information import ChannelStateFormat
-from .waveform import ConfigurablePilotWaveform, MappedPilotSymbolSequence, WaveformGenerator, Synchronization, ChannelEstimation, ChannelEqualization, PilotSymbolSequence, IdealChannelEstimation, ZeroForcingChannelEqualization
+from .waveform import ConfigurablePilotWaveform, MappedPilotSymbolSequence, WaveformGenerator, ChannelEstimation, ChannelEqualization, PilotSymbolSequence, IdealChannelEstimation, ZeroForcingChannelEqualization
 from hermespy.modem.tools.psk_qam_mapping import PskQamMapping
 from .symbols import StatedSymbols, Symbols
 from .waveform_correlation_synchronization import CorrelationSynchronization
 
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.0.0"
@@ -114,7 +114,7 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
 
             The shaping filter impulse response.
         """
-        ...
+        ...  # pragma: no cover
 
     @abstractmethod
     def _receive_filter(self) -> np.ndarray:
@@ -125,7 +125,7 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
 
             The shaping filter impulse response.
         """
-        ...
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -135,7 +135,7 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
         Returns:
             Delay in samples.
         """
-        ...
+        ...  # pragma: no cover
 
     @property
     def symbol_rate(self) -> float:
@@ -266,70 +266,6 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
 
         return Symbols(symbols[np.newaxis, :, np.newaxis])
 
-    #    def _equalizer(self, data_symbols: np.ndarray, channel: np.ndarray, noise_var) -> np.ndarray:
-    #        """Equalize the received data symbols
-    #
-    #        This method applies a linear block equalizer to the received data symbols to compensate for intersymbol
-    #        interference in case of non-orthogonal transmission pulses.
-    #        The equalizer can be either NONE, ZF or MMSE, depending on parameter `self.param.equalizer`
-    #
-    #        Note that currently  this is not a channel equalization, but it equalizes only the ISI in an AWGN channel.
-    #        Only the amplitude and phase of the first path of the propagation channel is compensated.
-    #
-    #        Args:
-    #            data_symbols(np.ndarray): received data symbols after matched filtering
-    #            channel(np.ndarray): one-path complex channel gain at the sampling instants of the data symbols
-    #            noise_var(float): noise variance (for MMSE equalizer)
-    #
-    #        Returns:
-    #            equalized_signal(np.ndarray): data symbols after ISI equalization and channel compensation
-    #        """
-    #
-    #        if self._pulse_correlation_matrix:
-    #            snr_factor = 0  # ZF
-    #            h_matrix = self._pulse_correlation_matrix
-    #            h_matrix_hermitian = h_matrix.conjugate().T
-    #
-    #            if self.equalization == FilteredSingleCarrierWaveform.Equalization.MMSE:
-    #                snr_factor = noise_var * h_matrix
-    #
-    #            isi_equalizer = np.matmul(h_matrix_hermitian, np.linalg.inv(np.matmul(h_matrix_hermitian, h_matrix) + snr_factor))
-    #
-    #            equalized_symbols = np.matmul(isi_equalizer, data_symbols[:, np.newaxis]).flatten()
-    #        else:
-    #            equalized_symbols = data_symbols
-    #
-    #        # compensate channel phase and amplitude
-    #        equalized_symbols = equalized_symbols / channel
-    #
-    #        return equalized_symbols
-
-    @property
-    def num_pilot_samples(self) -> int:
-        """Number of samples within the pilot section of a frame.
-
-        Returns:
-            int: Number of pilot samples.
-        """
-
-        if self.num_preamble_symbols < 1 and self.num_postamble_symbols < 1:
-            return 0
-
-        if self.__pilot_rate == 0:
-            return 0
-
-        return int(round(self.sampling_rate / self.pilot_rate))
-
-    @property
-    def num_guard_samples(self) -> int:
-        """Number of samples within the guarding section of a frame.
-
-        Returns:
-            int: Number of samples.
-        """
-
-        return int(round(self.guard_interval * self.sampling_rate))
-
     @property
     def guard_interval(self) -> float:
         """Frame guard interval.
@@ -355,6 +291,16 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
             raise ValueError("Guard interval must be greater or equal to zero")
 
         self.__guard_interval = interval
+
+    @property
+    def num_guard_samples(self) -> int:
+        """Number of samples within the guarding section of a frame.
+
+        Returns:
+            int: Number of samples.
+        """
+
+        return int(round(self.guard_interval * self.sampling_rate))
 
     @property
     def pilot_rate(self) -> int:
@@ -534,20 +480,6 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
         return fig
 
 
-class SingleCarrierSynchronization(Synchronization[FilteredSingleCarrierWaveform]):
-    """Synchronization for chirp-based frequency shift keying communication waveforms."""
-
-    def __init__(self, waveform_generator: Optional[FilteredSingleCarrierWaveform] = None, *args: Any) -> None:
-        """
-        Args:
-
-            waveform_generator (WaveformGenerator, optional):
-                The waveform generator this synchronization routine is attached to.
-        """
-
-        Synchronization.__init__(self, waveform_generator)
-
-
 class SingleCarrierCorrelationSynchronization(CorrelationSynchronization[FilteredSingleCarrierWaveform]):
     """Correlation-based clock-synchronization for PSK-QAM waveforms."""
 
@@ -634,15 +566,15 @@ class SingleCarrierLeastSquaresChannelEstimation(SingleCarrierChannelEstimation)
 class SingleCarrierChannelEqualization(ChannelEqualization[FilteredSingleCarrierWaveform], ABC):
     """Channel estimation for Psk Qam waveforms."""
 
-    def __init__(self, waveform_generator: Optional[FilteredSingleCarrierWaveform] = None) -> None:
+    def __init__(self, waveform: Optional[FilteredSingleCarrierWaveform] = None) -> None:
         """
         Args:
 
-            waveform_generator (WaveformGenerator, optional):
+            waveform (WaveformGenerator, optional):
                 The waveform generator this equalization routine is attached to.
         """
 
-        ChannelEqualization.__init__(self, waveform_generator)
+        ChannelEqualization.__init__(self, waveform)
 
 
 class SingleCarrierZeroForcingChannelEqualization(ZeroForcingChannelEqualization[FilteredSingleCarrierWaveform]):
@@ -668,21 +600,26 @@ class SingleCarrierMinimumMeanSquareChannelEqualization(SingleCarrierChannelEqua
 
         SingleCarrierChannelEqualization.__init__(self, waveform_generator)
 
-    def equalize_channel(self, frame: Symbols) -> Symbols:
+    def equalize_channel(self, symbols: StatedSymbols) -> Symbols:
         # Query SNR and cached CSI from the device
         snr = self.waveform_generator.modem.receiving_device.snr
-        csi = self.waveform_generator.modem.csi
 
         # If no information about transmitted streams is available, assume orthogonal channels
-        if csi.num_transmit_streams < 2:
-            return Symbols(frame.raw / (csi.state[:, 0, : frame.num_symbols, 0] + 1 / snr))
+        if symbols.num_transmit_streams < 2 and symbols.num_streams < 2:
+            return Symbols(symbols.raw / (symbols.states[:, 0, :, :] + 1 / snr))
+
+        if symbols.num_transmit_streams > symbols.num_streams:
+            raise RuntimeError("MMSE equalization is not supported for more transmit streams than receive streams")
 
         # Default behaviour for mimo systems is to use the pseudo-inverse for equalization
-        raw_equalized_symbols = np.empty(frame.raw.shape, dtype=complex)
-        for s, (symbols, state) in enumerate(zip(frame.raw.T, csi.state[:, :, : frame.num_symbols, 0].transpose((2, 0, 1)))):
+        raw_equalized_symbols = np.empty((symbols.num_transmit_streams, symbols.num_blocks, symbols.num_symbols), dtype=complex)
+        for b, s in np.ndindex(symbols.num_blocks, symbols.num_symbols):
+            symbol_slice = symbols.raw[:, b, s]
+            mimo_state = symbols.states[:, :, b, s]
+
             # ToDo: Introduce noise term here
-            equalization = np.linalg.pinv(state)
-            raw_equalized_symbols[:, s] = equalization @ symbols
+            equalization = np.linalg.pinv(mimo_state)
+            raw_equalized_symbols[:, b, s] = equalization @ symbol_slice
 
         return Symbols(raw_equalized_symbols)
 
@@ -791,7 +728,7 @@ class RolledOffSingleCarrierWaveform(FilteredSingleCarrierWaveform):
         Returns:
             The base filter impulse response as a numpy array.
         """
-        ...
+        ...  # pragma: no cover
 
     def _transmit_filter(self) -> np.ndarray:
         return self._base_filter()
@@ -1073,7 +1010,7 @@ class FMCWWaveform(FilteredSingleCarrierWaveform, Serializable):
             The inverse symbol rate or the specified chirp duration.
         """
 
-        if self.__chirp_duration <= 0.0:
+        if self.chirp_duration <= 0.0:
             return 1 / self.symbol_rate
 
         return self.chirp_duration
@@ -1108,7 +1045,7 @@ class FMCWWaveform(FilteredSingleCarrierWaveform, Serializable):
         # Cut off the chirp appropriately
         impulse_response[time > self.__true_chirp_duration] = 0.0
 
-        return impulse_response / np.sqrt(self.oversampling_factor)
+        return impulse_response / np.linalg.norm(impulse_response)
 
     def _receive_filter(self) -> np.ndarray:
         return np.flip(self._transmit_filter().conj())

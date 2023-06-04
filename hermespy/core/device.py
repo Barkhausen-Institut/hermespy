@@ -1090,7 +1090,10 @@ class OperatorSlot(Generic[OperatorType], Sequence[OperatorType]):
         if operator in self.__operators:
             self.__operators.remove(operator)
 
-        operator.slot = None
+        # Only detach from the operator's slot if it matches to this signal
+        # This is required to prevent duplex operators from accidentally detaching themselves
+        if isinstance(operator.slot, type(self)):
+            operator.slot = None
 
     def registered(self, operator: OperatorType) -> bool:
         """Check if an operator is registered at this slot.

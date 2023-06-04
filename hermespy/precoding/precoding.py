@@ -40,7 +40,6 @@ class Precoder(ABC):
     __precoding: Optional[Precoding]
 
     def __init__(self) -> None:
-
         self.__precoding = None
 
     @property

@@ -70,7 +70,7 @@ class BitsSource(ABC, RandomNode):
             np.ndarray:
                 A numpy vector of `num_bits` generated bits.
         """
-        ...
+        ...  # pragma: no cover
 
 
 class RandomBitsSource(BitsSource, Serializable):
