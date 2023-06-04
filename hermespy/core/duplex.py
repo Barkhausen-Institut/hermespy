@@ -58,9 +58,6 @@ class DuplexOperator(Transmitter[TransmissionType], Receiver[ReceptionType], Gen
     def device(self, value: Device | None) -> None:
         """Set the device this operator is operating."""
 
-        if value is self.__device:
-            return
-
         if self.__device is not None:
             self.__device.transmitters.remove(self)
             self.__device.receivers.remove(self)
@@ -73,7 +70,7 @@ class DuplexOperator(Transmitter[TransmissionType], Receiver[ReceptionType], Gen
 
     @Transmitter.slot.setter
     def slot(self, value: OperatorSlot[Transmitter]) -> None:
-        if value is not None:
+        if value is not None and self.device is not value.device:
             self.device = value.device
 
         Transmitter.slot.fset(self, value)
