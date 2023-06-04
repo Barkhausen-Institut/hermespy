@@ -151,6 +151,9 @@ class TestRepetitionEncoder(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.encoder.repetitions = -1
 
+        with self.assertRaises(ValueError):
+            self.encoder.repetitions = 10
+
     def test_serialization(self) -> None:
         """Test YAML serialization"""
 

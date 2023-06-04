@@ -69,7 +69,7 @@ from hermespy.core.factory import Serializable
 from hermespy.core.random_node import RandomNode
 
 if TYPE_CHECKING:
-    from hermespy.modem.modem import BaseModem
+    from hermespy.modem.modem import BaseModem  # pragma: no cover
 
 
 __author__ = "Jan Adler"
@@ -168,7 +168,7 @@ class Encoder(ABC, Serializable):
             ValueError:
                 If the length of ``bits`` does not equal :meth:`bit_block_size`.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     @abstractmethod
     def decode(self, encoded_bits: np.ndarray) -> np.ndarray:
@@ -192,7 +192,7 @@ class Encoder(ABC, Serializable):
             ValueError:
                 If the length of ``encoded_bits`` does not equal :meth:`code_block_size`.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -208,7 +208,7 @@ class Encoder(ABC, Serializable):
             int:
                 Number of bits :math:`K_n`.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -224,7 +224,7 @@ class Encoder(ABC, Serializable):
             int:
                 Number of bits :math:`L_n`.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     @property
     def rate(self) -> float:

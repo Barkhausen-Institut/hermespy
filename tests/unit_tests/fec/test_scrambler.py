@@ -7,7 +7,7 @@ from hermespy.fec import Scrambler3GPP, Scrambler80211a
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
 __version__ = "1.0.0"
@@ -17,7 +17,7 @@ __status__ = "Prototype"
 
 
 class TestPseudoRandomGenerator(unittest.TestCase):
-    """Test the pseudo random numbers rng."""
+    """Test the pseudo random numbers rng"""
 
     def setUp(self) -> None:
 
@@ -26,20 +26,26 @@ class TestPseudoRandomGenerator(unittest.TestCase):
         self.expected_output = np.array([1, 0, 0, 0, 0, 0, 0, 1], dtype=int)
         self.generator = PseudoRandomGenerator(init_sequence, offset)
 
+    def test_init_validation(self) -> None:
+        """Initializtion should raise ValueError on invalid arguments"""
+
+        with self.assertRaises(ValueError):
+            PseudoRandomGenerator(np.zeros(3))
+
     def test_generate(self) -> None:
-        """Test the first generated bit."""
+        """Test the first generated bit"""
 
         for bit in self.expected_output:
             self.assertEqual(self.generator.generate(), bit, "Unexpected rng result")
 
     def test_generate_sequence(self) -> None:
-        """Test the sequence generation."""
+        """Test the sequence generation"""
 
         assert_array_equal(self.expected_output, self.generator.generate_sequence(self.expected_output.shape[0]),
                            "Unexpected sequence generated")
 
     def test_reset(self) -> None:
-        """Test the rng reset behaviour."""
+        """Test the rng reset behaviour"""
 
         _ = self.generator.generate_sequence(1000)
         self.generator.reset()
@@ -49,15 +55,21 @@ class TestPseudoRandomGenerator(unittest.TestCase):
 
 
 class TestScrambler3GPP(unittest.TestCase):
-    """Test the bit scrambling 3GPP standard implementation."""
+    """Test the bit scrambling 3GPP standard implementation"""
 
     def setUp(self) -> None:
-        """Set up testing."""
+        """Set up testing"""
 
         self.scrambler = Scrambler3GPP()
 
+    def test_properties(self) -> None:
+        """Properties should return the correct values"""
+
+        self.assertEqual(1, self.scrambler.bit_block_size)
+        self.assertEqual(1, self.scrambler.code_block_size)
+
     def test_coding(self) -> None:
-        """Test encoding and subsequent decoding behaviour."""
+        """Test encoding and subsequent decoding behaviour"""
 
         data = np.random.randint(0, 2, 31)
         code = self.scrambler.encode(data)
@@ -77,25 +89,35 @@ class TestScrambler80211a(unittest.TestCase):
     """Test the scrambling implemented according to"""
 
     def setUp(self) -> None:
-        """Set up testing."""
+        """Set up testing"""
 
         self.scrambler = Scrambler80211a()
 
-    def test_seed(self) -> None:
-        """Seed getter should return setter value."""
+    def test_properties(self) -> None:
+        """Properties should return the correct values"""
+
+        self.assertEqual(1, self.scrambler.bit_block_size)
+        self.assertEqual(1, self.scrambler.code_block_size)
+
+    def test_seed_validation(self) -> None:
+        """Seed property setter should raise ValueErrors on invalid arguments"""
+
+        with self.assertRaises(ValueError):
+            self.scrambler.seed = np.array([0])
+
+        with self.assertRaises(ValueError):
+            self.scrambler.seed = np.array([0, 2, 0, 1, 1, 0, 1], dtype=int)
+
+    def test_seed_setget(self) -> None:
+        """Seed getter should return setter value"""
 
         seed = np.array([0, 1, 0, 1, 1, 0, 1], dtype=int)
         self.scrambler.seed = seed
         assert_array_equal(seed, self.scrambler.seed, "Seed getter does not return setter value")
 
-    def test_seed_validation(self) -> None:
-        """Setting a seed without 7 bit should raise an exception."""
-
-        with self.assertRaises(ValueError):
-            self.scrambler.seed = np.array([0])
 
     def test_sequence(self) -> None:
-        """Make sure the scrambler produces an expected sequence internally."""
+        """Make sure the scrambler produces an expected sequence internally"""
 
         self.scrambler.seed = np.ones(7, dtype=np.int8)
         expected_sequence = np.array([0, 0, 0, 0, 1, 1, 1, 0,
