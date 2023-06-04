@@ -264,8 +264,8 @@ class TestHardwareLoop(TestCase):
         
         # Configure hardware loop
         self.hardware_loop.num_drops = 2
-        #self.hardware_loop.console_mode = ConsoleMode.SILENT
-        #self.hardware_loop.plot_information = False
+        self.hardware_loop.console_mode = ConsoleMode.SILENT
+        self.hardware_loop.plot_information = False
         
         with TemporaryDirectory() as temp:
 
