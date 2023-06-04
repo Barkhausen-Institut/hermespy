@@ -783,9 +783,7 @@ class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Seria
         # Initialize clas attributes
         self.bits_source = RandomBitsSource() if bits_source is None else bits_source
         self.__transmit_stream_coding = TransmitStreamCoding(modem=self)
-
-        if device is not None:
-            self.device = device
+        self.device = device
 
     @property
     def transmitting_device(self) -> Optional[Device]:
@@ -798,8 +796,6 @@ class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Seria
 
     @Transmitter.device.setter  # type: ignore
     def device(self, value: Device) -> None:
-        if value is self.device:
-            return
 
         if Transmitter.device.fget(self) is not None:  # type: ignore
             self.device.transmitters.remove(self)
@@ -970,8 +966,7 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
         BaseModem.__init__(self, *args, **kwargs)
         Receiver.__init__(self)
 
-        if device is not None:
-            self.device = device
+        self.device = device
 
     @property
     def transmitting_device(self) -> Optional[Device]:
@@ -984,14 +979,11 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
 
     @Receiver.device.setter  # type: ignore
     def device(self, value: Device) -> None:
-        if value is not None and self not in value.receivers:
-            value.receivers.add(self)
-
-        if value is self.device:
-            return
-
         if Receiver.device.fget(self) is not None:  # type: ignore
             self.device.receivers.remove(self)
+
+        if value is not None and self not in value.receivers:
+            value.receivers.add(self)
 
     @property
     def receive_stream_coding(self) -> ReceiveStreamCoding:
@@ -1002,8 +994,8 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
 
         return self.__receive_stream_coding
 
-    @receive_stream_coding.setter  # type: ignore
-    def transmit_stream_coding(self, value: ReceiveStreamCoding) -> None:
+    @receive_stream_coding.setter
+    def receive_stream_coding(self, value: ReceiveStreamCoding) -> None:
         self.__receive_stream_coding = value
         value.modem = self
 
@@ -1029,14 +1021,9 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
         synchronized_signals = []
         for frame_start in frame_start_indices:
             frame_stop = frame_start + frame_length
-
-            if frame_stop <= received_signal.num_samples:
-                frame_samples = received_signal.samples[:, frame_start:frame_stop]
-
-            else:
-                frame_samples = np.append(received_signal.samples[:, frame_start:], np.zeros((received_signal.num_streams, frame_stop - received_signal.num_samples), dtype=complex))
-
+            frame_samples = received_signal.samples[:, frame_start:frame_stop]
             frame_signal = Signal(frame_samples, received_signal.sampling_rate)
+
             synchronized_signals.append(frame_signal)
 
         return frame_start_indices, synchronized_signals
@@ -1141,6 +1128,7 @@ class DuplexModem(TransmittingModem, ReceivingModem):
     """YAML serialization tag"""
 
     def __init__(self, *args, **kwargs) -> None:
+
         ReceivingModem.__init__(self)
         TransmittingModem.__init__(self, *args, **kwargs)
 
@@ -1189,10 +1177,6 @@ class SimplexLink(TransmittingModem, ReceivingModem, Serializable):
             ValueError: If `transmitting_device` and `receiving_device` are identical.
         """
 
-        # Make sure the link is established between two dedicated devices
-        # if transmitting_device is receiving_device:
-        #    raise ValueError("Transmitter and receiver must be two independent device instances")
-
         self.__transmitting_device = transmitting_device
         self.__receiving_device = receiving_device
 
@@ -1213,14 +1197,14 @@ class SimplexLink(TransmittingModem, ReceivingModem, Serializable):
 
         return self.__transmitting_device
 
-    @ReceivingModem.reference.setter  # type: ignore
-    def reference(self, _: Device) -> None:
-        raise RuntimeError("Specifying the reference device of a simplex link is not supported")
-
-    @ReceivingModem.reference.getter  # type: ignore
-    # flake8: noqa: F811
-    def reference(self) -> Device:
+    @property
+    def reference(self) -> Device | None:
         return self.transmitting_device
+
+    @reference.setter
+    def reference(self, value: Device | None) -> None:
+        if value is not self.transmitting_device and value is not None:
+            raise RuntimeError("Specifying the reference device of a simplex link is not supported")
 
     @property
     def receiving_device(self) -> Device:

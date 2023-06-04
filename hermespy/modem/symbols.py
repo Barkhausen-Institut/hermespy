@@ -6,7 +6,6 @@ Communication Symbols
 """
 
 from __future__ import annotations
-from copy import deepcopy
 from enum import Enum
 from typing import Optional, Union, Iterable, Type
 
@@ -225,7 +224,7 @@ class Symbols(HDFSerializable):
             Symbols: Copied sequence.
         """
 
-        return deepcopy(self)
+        return Symbols(self.__symbols.copy())
 
     def __getitem__(self, section: slice) -> Symbols:
         """Slice this symbol series.
@@ -253,10 +252,10 @@ class Symbols(HDFSerializable):
         """
 
         if isinstance(value, Symbols):
-            self.__symbols[slice] = value.__symbols
+            self.__symbols[section] = value.__symbols
 
         else:
-            self.__symbols[slice] = value
+            self.__symbols[section] = value
 
     def plot_constellation(self, axes: Optional[plt.axes.Axes] = None, title: str = "Symbol Constellation") -> Optional[plt.Figure]:
         """Plot the symbol constellation.

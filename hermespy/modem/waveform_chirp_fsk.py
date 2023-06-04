@@ -306,17 +306,6 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
         return self.num_pilot_chirps + self.num_data_chirps
 
     @property
-    def chirp_time(self) -> np.ndarray:
-        """Chirp timestamps.
-
-        Returns:
-            array:
-                Chirp timestamps.
-        """
-
-        return np.arange(self.samples_in_chirp) / self.sampling_rate
-
-    @property
     def samples_in_frame(self) -> int:
         """The number of discrete samples per generated frame.
 
