@@ -43,7 +43,7 @@ class QuadrigaMatlabInterface(QuadrigaInterface):
         # Create the Matlab workspace from the given parameters
         for key, value in parameters.items():
             if isinstance(value, np.ndarray):
-                if value.dtype is float:
+                if value.dtype is float:  # pragma: no cover
                     value = matlab.double(value.tolist())
 
                 elif value.dtype is int:  # pragma: no cover
