@@ -33,6 +33,12 @@ class TestStaticOperator(TestCase):
         self.operator = StaticOperator(self.num_samples, self.sampling_rate)
         self.device.transmitters.add(self.operator)
         
+    def test_sampling_rate_validation(self) -> None:
+        """Sampling rate property setter should raise ValueError on invalid arguments"""
+
+        with self.assertRaises(ValueError):
+            self.operator.sampling_rate = 0.
+
     def test_sampling_rate(self) -> None:
         """Sampling rate should be the configured sampling rate"""
         
