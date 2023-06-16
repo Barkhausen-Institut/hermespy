@@ -1195,7 +1195,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
         noisy_signal = self.__noise.add(baseband_signal, noise_realization)
 
         # Model adc conversion during reception
-        quantized_signal = self.adc.convert(noisy_signal)
+        quantized_signal = self.adc.convert(noisy_signal, receiver.frame_duration)
 
         # Cache signal and channel state information if the respective flag is enabled
         if cache:
