@@ -19,7 +19,7 @@ try:  # pragma: no cover
 
 except ModuleNotFoundError:  # pragma: no cover
 
-    def get_monitors():
+    def get_monitors():  # type: ignore
         return []
 
 
