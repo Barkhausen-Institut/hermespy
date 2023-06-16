@@ -7,6 +7,7 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 
 from hermespy.core import Signal
+from hermespy.simulation.analog_digital_converter import GainControlBase
 from hermespy.simulation import Gain, AutomaticGainControl, GainControlType, QuantizerType, AnalogDigitalConverter
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
@@ -18,6 +19,62 @@ __version__ = "1.0.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
+
+
+class MockGainControl(GainControlBase):
+    """Mock gain control model for testing"""
+    
+    def estimate_gain(self, _: Signal) -> float:
+        return 0.456
+    
+    
+class TestGainControlBase(TestCase):
+    """Test gain control base model"""
+    
+    def setUp(self) -> None:
+        
+        self.gain = MockGainControl()
+        
+    def test_rescale_quanization_setget(self) -> None:
+        """Rescale quantization property getter should return setter argument"""
+        
+        expected_rescale = True
+        self.gain.rescale_quantization = expected_rescale
+        self.assertEqual(self.gain.rescale_quantization, expected_rescale)
+
+    def test_adjust_signal(self) -> None:
+        """Adjust signal should return correct signal"""
+        
+        gain = 0.456
+        signal = Signal(np.ones((2, 1)) / gain, 1., 0.)
+        expected_signal = Signal(np.ones((2, 1)), 1., 0.)
+        
+        adjusted_signal = self.gain.adjust_signal(signal, gain)
+        assert_array_almost_equal(expected_signal.samples, adjusted_signal.samples)
+
+    def test_scale_quantized_signal_disabled(self) -> None:
+        """Scale quantized signal should return correct signal when the flag is disabled"""
+        
+        self.gain.rescale_quantization = False
+        
+        gain = 0.456
+        signal = Signal(np.ones((2, 1)), 1., 0.)
+        expected_signal = Signal(np.ones((2, 1)), 1., 0.)
+        
+        rescaled_signal = self.gain.scale_quantized_signal(signal, gain)
+        assert_array_almost_equal(expected_signal.samples, rescaled_signal.samples)
+        
+    def test_scale_quantized_signal_enabled(self) -> None:
+        """Scale quantized signal should return correct signal when the flag is enabled"""
+        
+        self.gain.rescale_quantization = True
+        
+        gain = 0.456
+        signal = Signal(np.ones((2, 1)), 1., 0.)
+        expected_signal = Signal(np.ones((2, 1)) / gain, 1., 0.)
+        
+        rescaled_signal = self.gain.scale_quantized_signal(signal, gain)
+        assert_array_almost_equal(expected_signal.samples, rescaled_signal.samples)
 
 
 class TestGain(TestCase):
@@ -44,32 +101,17 @@ class TestGain(TestCase):
         
         self.assertEqual(self.gain.gain, expected_gain)
         
-    def test_multiply_signal(self) -> None:
-        """Multiply method should multiply signal by gain"""
+    def test_estimate_gain(self) -> None:
+        """Gain estimation should return correct gain"""
         
-        expected_gain = 0.5
-        self.gain.gain = expected_gain
-        
-        signal = Signal(np.ones((2, 1)), 1., 0.)
-        self.gain.multiply_signal(signal)
-        
-        np.testing.assert_array_almost_equal(signal.samples, expected_gain * np.ones((2, 1)))
-        
-    def test_divide_signal(self) -> None:
-        """Divide method should divide signal by gain"""
-        
-        expected_gain = 0.5
-        self.gain.gain = expected_gain
-        
-        signal = Signal(np.ones((2, 1)), 1., 0.)
-        self.gain.divide_signal(signal)
-        
-        np.testing.assert_array_almost_equal(signal.samples, (1. / expected_gain) * np.ones((2, 1)))
+        estimate = self.gain.estimate_gain(Mock())
+        self.assertEqual(estimate, self.gain.gain)
         
     def test_yaml_serialization(self) -> None:
         """Test YAML roundtrip serialization"""
         
         test_yaml_roundtrip_serialization(self, self.gain)
+
 
 class TestAutomaticGainControl(TestCase):
     """Test automatic gain control model"""
@@ -103,29 +145,28 @@ class TestAutomaticGainControl(TestCase):
         
         self.assertEqual(self.gain.backoff, expected_backoff)
         
-    def test_multiply_signal_validation(self) -> None:
-        """Multiply method should raise RuntimeError on invalid internal states"""
+    def test_estimate_gain_validation(self) -> None:
+        """Gain estimation should raise RuntimeError on invalid internal states"""
         
         signal = Signal(np.ones((2, 1)), 1., 0.)
         self.gain.agc_type = Mock(spec=GainControlType)
         
         with self.assertRaises(RuntimeError):
-            self.gain.multiply_signal(signal)
+            self.gain.estimate_gain(signal)
         
-    def test_multiply_signal(self) -> None:
-        """Multiply method should multiply signal by gain"""
+    def test_estimate_gain(self) -> None:
+        """Gain estimation should return correct gain"""
         
         self.gain.agc_type = GainControlType.MAX_AMPLITUDE
         signal = Signal(2 * np.ones((2, 1)), 1., 0.)
-        self.gain.multiply_signal(signal)
-        
-        assert_array_almost_equal(signal.samples, np.ones((2, 1), dtype=complex))
+        max_amplitude_gain_estimate = self.gain.estimate_gain(signal)
         
         self.gain.agc_type = GainControlType.RMS_AMPLITUDE
         signal = Signal(2 * np.ones((2, 1)), 1., 0.)
-        self.gain.multiply_signal(signal)
+        rms_amplitude_gain_estimate = self.gain.estimate_gain(signal)
         
-        assert_array_almost_equal(signal.samples, np.ones((2, 1), dtype=complex))
+        self.assertEqual(.5, max_amplitude_gain_estimate)
+        self.assertEqual(.5, rms_amplitude_gain_estimate)
         
     def test_yaml_serialization(self) -> None:
         """Test YAML roundtrip serialization"""
@@ -139,6 +180,7 @@ class TestAnalogDigitalConverter(TestCase):
     def setUp(self) -> None:
         
         self.adc = AnalogDigitalConverter()
+        self.adc.gain = MockGainControl()
         
     def test_num_quantization_bits_validation(self) -> None:
         """Number of quantization bits property should raise ValueError on invalid arguments"""
@@ -180,10 +222,11 @@ class TestAnalogDigitalConverter(TestCase):
         """Convert method should return signal"""
         
         self.adc.num_quantization_bits = None
-        expected_signal = Signal(np.ones((2, 2)), 1., 0.)
+        input_signal = Signal(np.ones((2, 2)), 1., 0.)
+        expected_signal = Signal(np.ones((2, 2)) * 0.456, 1., 0.)
         
-        converted_signal = self.adc.convert(expected_signal)
-        assert_array_almost_equal(converted_signal.samples, expected_signal.samples)
+        converted_signal = self.adc.convert(input_signal)
+        assert_array_almost_equal(expected_signal.samples, converted_signal.samples)
 
     def test_mid_riser_convert(self) -> None:
         """Convert method should return correctly quantized signal for mid_riser setting"""
@@ -192,7 +235,7 @@ class TestAnalogDigitalConverter(TestCase):
         self.adc.quantizer_type = QuantizerType.MID_RISER
         
         signal = Signal(np.ones((2, 2)), 1., 0.)
-        expected_signal = Signal(.75 * np.ones((2, 2)) + .25j * np.ones((2, 2)), 1., 0.)
+        expected_signal = Signal(.25 * np.ones((2, 2)) + .25j * np.ones((2, 2)), 1., 0.)
         converted_signal = self.adc.convert(signal)
         
         assert_array_almost_equal(converted_signal.samples, expected_signal.samples)
@@ -206,6 +249,18 @@ class TestAnalogDigitalConverter(TestCase):
         signal = Signal(np.ones((2, 2)), 1., 0.)
         expected_signal = Signal(.5 * np.ones((2, 2)), 1., 0.)
         converted_signal = self.adc.convert(signal)
+        
+        assert_array_almost_equal(converted_signal.samples, expected_signal.samples)
+        
+    def test_convert_multiple_frames(self) -> None:
+        """Convert method should return correctly quantized signal for multiple frames"""
+        
+        self.adc.num_quantization_bits = 2
+        self.adc.quantizer_type = QuantizerType.MID_TREAD
+        
+        signal = Signal(.5 * np.array([[1, 2, 2, 3]]), 1., 0.)
+        expected_signal = Signal(.5 * np.array([[0, 1, 1, 1]]), 1., 0.)
+        converted_signal = self.adc.convert(signal, 2.)
         
         assert_array_almost_equal(converted_signal.samples, expected_signal.samples)
         

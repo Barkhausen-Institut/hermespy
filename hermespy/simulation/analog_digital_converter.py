@@ -16,13 +16,13 @@ The following figure visualizes the quantizer responses.
 """
 
 from __future__ import annotations
-from typing import Type, TypeVar, Optional
+from abc import ABC, abstractmethod
+from typing import TypeVar, Optional
 
 import numpy as np
 from matplotlib import pyplot as plt
 
 from hermespy.core import Serializable, SerializableEnum, Signal
-from ruamel.yaml import MappingNode, SafeRepresenter
 
 from hermespy.tools.math import rms_value
 
@@ -48,72 +48,143 @@ GainType = TypeVar("GainType", bound="Gain")
 """Type of gain."""
 
 
-class Gain(Serializable):
-    """Base class for analog-to-digital conversion gain modeling."""
+class GainControlBase(ABC):
+    """Base class for all ADC gain control models."""
+
+    __rescale_quantization: bool
+
+    def __init__(self, rescale_quantization: bool = False) -> None:
+        """
+        Args:
+
+            rescale_quantization (bool, optional):
+                If enabled, the quantized signal is rescaled to the original signal range before gain adjustment.
+                Disabled by default.
+        """
+
+        self.rescale_quantization = rescale_quantization
+
+    @property
+    def rescale_quantization(self) -> bool:
+        """Rescale the quantized signal to the original signal range before gain adjustment."""
+
+        return self.__rescale_quantization
+
+    @rescale_quantization.setter
+    def rescale_quantization(self, value: bool) -> None:
+        self.__rescale_quantization = value
+
+    @abstractmethod
+    def estimate_gain(self, input_signal: Signal) -> float:
+        """Estimate the gain required to adjust the signal to the ADC input range.
+
+        Args:
+
+            input_signal (Signal):
+                Input signal to be adjusted.
+
+        Returns: Linear gain to be applied to the `input_signal`'s Voltage samples.
+        """
+        ...  # pragma: no cover
+
+    def adjust_signal(self, input_signal: Signal, gain: float) -> Signal:
+        """Adjust the signal to the ADC input range.
+
+        Args:
+
+            input_signal (Signal):
+                Input signal to be adjusted.
+
+            gain (float):
+                Linear gain to be applied to the `input_signal`'s Voltage samples.
+
+        Returns: The adjusted signal.
+        """
+
+        adjusted_signal = input_signal.copy()
+        adjusted_signal.samples = adjusted_signal.samples * gain
+
+        return adjusted_signal
+
+    def scale_quantized_signal(self, quantized_signal: Signal, gain: float) -> Signal:
+        """Scale the quantized signal back to the original signal range before gain adjustment.
+
+        Only applied if :py:attr:`rescale_quantization` is enabled.
+
+        Args:
+
+            quantized_signal (Signal):
+                Quantized signal to be adjusted.
+
+            gain (float):
+                Linear gain to applied to the `input_signal`'s Voltage samples before quantization.
+
+        Returns: The scaled qzanitized signal.
+        """
+
+        if not self.rescale_quantization:
+            return quantized_signal
+
+        scaled_signal = quantized_signal.copy()
+        scaled_signal.samples = scaled_signal.samples / gain
+
+        return scaled_signal
+
+
+class Gain(Serializable, GainControlBase):
+    """Constant gain model."""
 
     yaml_tag = "Gain"
     """YAML serialization tag."""
 
     __gain: float
 
-    def __init__(self, gain=1.0) -> None:
+    def __init__(self, gain: float = 1.0, rescale_quantization: bool = False) -> None:
         """
         Args:
+
             gain (float, optional):
-                signal gain
+                Linear signal gain to be applied before ADC quantization.
+                Unit by default, meaning no gain adjustment.
+
+            rescale_quantization (bool, optional):
+                If enabled, the quantized signal is rescaled to the original signal range before gain adjustment.
+                Disabled by default.
         """
 
+        # Initialize base class
+        GainControlBase.__init__(self, rescale_quantization=rescale_quantization)
+
+        # Initialize attributes
         self.gain = gain
 
     @property
     def gain(self) -> float:
-        """Gain before quantizer
+        """Linear gain before ADC quantization.
 
         Quantizer operates by default between -1. and +1.
         Signal can be adjusted by to this range by appropriate gain setting.
 
-        Returns:
-            float: fixed gain
+        Returns: Gain in Volt.
 
+        Raises:
+
+            ValueError: If gain is smaller or equal to zero.
         """
         return self.__gain
 
     @gain.setter
     def gain(self, value: float) -> None:
         if value <= 0:
-            raise ValueError("Gain must be larger than 0")
+            raise ValueError("Gain must be larger than zero")
 
         self.__gain = value
 
-    def multiply_signal(self, input_signal: Signal) -> None:
-        input_signal.samples = input_signal.samples * self.gain
-
-    def divide_signal(self, input_signal: Signal) -> None:
-        input_signal.samples = input_signal.samples / self.gain
-
-    @classmethod
-    def to_yaml(cls: Type[GainType], representer: SafeRepresenter, node: GainType) -> MappingNode:
-        """Serialize a `Gain` object to YAML.
-
-        Args:
-
-            representer (SafeRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
-
-            node (Gain):
-                The gain instance to be serialized.
-
-        Returns:
-            Node:
-                The serialized YAML node.
-        """
-        state = {"gain": node.gain}
-
-        return representer.represent_mapping(cls.yaml_tag, state)
+    def estimate_gain(self, input_signal: Signal) -> float:
+        return self.gain
 
 
-class AutomaticGainControl(Gain):
+class AutomaticGainControl(Serializable, GainControlBase):
     """Analog-to-digital conversion automatic gain control modeling."""
 
     yaml_tag = "AutomaticGainControl"
@@ -122,9 +193,10 @@ class AutomaticGainControl(Gain):
     __agc_type: GainControlType
     __backoff: float
 
-    def __init__(self, agc_type=GainControlType.MAX_AMPLITUDE, backoff=1.0) -> None:
+    def __init__(self, agc_type: GainControlType = GainControlType.MAX_AMPLITUDE, backoff: float = 1.0, rescale_quantization: bool = False) -> None:
         """
         Args:
+
             agc_type (GainControlType, optional):
                 Type of amplitude gain control at ADC input. Default is GainControlType.MAX_AMPLITUDE.
 
@@ -132,10 +204,13 @@ class AutomaticGainControl(Gain):
                 this is the ratio between maximum amplitude and the rms value or maximum of input signal,
                 depending on AGC type. Default value is 1.0.
 
+            rescale_quantization (bool, optional):
+                If enabled, the quantized signal is rescaled to the original signal range before gain adjustment.
+                Disabled by default.
         """
 
         # Initialize base class
-        Gain.__init__(self)
+        GainControlBase.__init__(self, rescale_quantization=rescale_quantization)
 
         # Initialize attributes
         self.agc_type = agc_type
@@ -180,40 +255,17 @@ class AutomaticGainControl(Gain):
 
         self.__backoff = value
 
-    def multiply_signal(self, input_signal: Signal) -> None:
-        samples = input_signal.samples
-
+    def estimate_gain(self, input_signal: Signal) -> float:
         if self.agc_type == GainControlType.MAX_AMPLITUDE:
-            max_amplitude = np.maximum(np.amax(np.real(samples)), np.amax(np.imag(samples))) * self.backoff
+            max_amplitude = np.maximum(np.amax(np.real(input_signal.samples)), np.amax(np.imag(input_signal.samples))) * self.backoff
 
         elif self.agc_type == GainControlType.RMS_AMPLITUDE:
-            max_amplitude = np.maximum(rms_value(np.real(samples)), rms_value(np.imag(samples))) * self.backoff
+            max_amplitude = np.maximum(rms_value(np.real(input_signal.samples)), rms_value(np.imag(input_signal.samples))) * self.backoff
 
         else:
             raise RuntimeError("Unsupported gain control type")
 
-        self.gain = 1 / max_amplitude if max_amplitude > 0.0 else 1.0
-
-        super().multiply_signal(input_signal)
-
-    @classmethod
-    def to_yaml(cls: Type[AutomaticGainControl], representer: SafeRepresenter, node: AutomaticGainControl) -> MappingNode:
-        """Serialize a `AutomaticGainControl` object to YAML.
-
-        Args:
-
-            representer (SafeRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
-
-            node (AutomaticGainControl):
-                The gain control instance to be serialized.
-
-        Returns: The serialized YAML node.
-        """
-        state = {"backoff": node.backoff, "agc_type": node.agc_type.name}
-
-        return representer.represent_mapping(cls.yaml_tag, state)
+        return 1 / max_amplitude if max_amplitude > 0.0 else 1.0
 
 
 class QuantizerType(SerializableEnum):
@@ -319,13 +371,60 @@ class AnalogDigitalConverter(Serializable):
     def quantizer_type(self, value: QuantizerType) -> None:
         self.__quantizer_type = value
 
-    def convert(self, input_signal: Signal) -> Signal:
-        output_signal = input_signal.copy()
-        self.gain.multiply_signal(output_signal)
-        output_signal.samples = self._quantize(output_signal.samples)
-        self.gain.divide_signal(output_signal)
+    def __convert_frame(self, frame_signal: Signal) -> Signal:
+        """Converts an analog frame into a digitally quantized frame.
+
+        Subroutine of :meth:`convert`.
+
+        Args:
+            input_signal (Signal): Signal to be converted.
+
+        Returns: Gain adjusted and quantized signal.
+        """
+
+        # Initially, estimate the required gain to avoid clipping
+        gain = self.gain.estimate_gain(frame_signal)
+
+        # Scale the input signal according to the estimated gain
+        adjusted_signal = self.gain.adjust_signal(frame_signal, gain)
+
+        # Quantize adjusted signal
+        adjusted_signal.samples = self._quantize(adjusted_signal.samples)
+
+        # Rescale adjusted signal to the original amplitude range
+        output_signal = self.gain.scale_quantized_signal(adjusted_signal, gain)
 
         return output_signal
+
+    def convert(self, input_signal: Signal, frame_duration: float = 0.0) -> Signal:
+        """Converts an analog signal into a digitally quantized signal.
+
+        Args:
+
+            input_signal (Signal):
+                Signal to be converted.
+
+            frame_duration (float, optional):
+                Duration of a signal frame frame in seconds.
+                Each frame will get converted indepentedly.
+                By default the whole signal is converted at once.
+
+        Returns: Gain adjusted and quantized signal.
+        """
+
+        num_frame_samples = int(round(frame_duration * input_signal.sampling_rate)) if frame_duration > 0 else input_signal.num_samples
+        num_frames = int(np.ceil(input_signal.num_samples / num_frame_samples))
+        converted_signal = Signal.empty(input_signal.sampling_rate, input_signal.num_streams, 0, carrier_frequency=input_signal.carrier_frequency)
+
+        # Iterate over each frame independtenly
+        for f in range(num_frames):
+            frame_samples = input_signal.samples[:, f * num_frame_samples : (f + 1) * num_frame_samples]
+            frame_signal = Signal(frame_samples, input_signal.sampling_rate, input_signal.carrier_frequency)
+
+            converted_frame_signal = self.__convert_frame(frame_signal)
+            converted_signal.append_samples(converted_frame_signal)
+
+        return converted_signal
 
     def _quantize(self, input_signal: np.ndarray) -> np.ndarray:
         """Quantizes the input signal

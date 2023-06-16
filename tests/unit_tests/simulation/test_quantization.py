@@ -110,7 +110,7 @@ class TestQuantization(unittest.TestCase):
         """ Test correct quantizer output without gain control"""
 
         max_amplitude = 100
-        self.quantizer.gain = Gain(1 / max_amplitude)
+        self.quantizer.gain = Gain(1 / max_amplitude, True)
 
         # randomly choose quantization levels
         quantization_idx = self.rng.integers(self.quantizer.num_quantization_levels,
@@ -139,7 +139,7 @@ class TestQuantization(unittest.TestCase):
     def test_quantization_max_amplitude(self):
         """ Test correct quantizer output with gain control to maximum amplitude"""
 
-        self.quantizer.gain = AutomaticGainControl(GainControlType.MAX_AMPLITUDE)
+        self.quantizer.gain = AutomaticGainControl(GainControlType.MAX_AMPLITUDE, 1., True)
 
         max_amplitude = 123.7
 
@@ -193,7 +193,7 @@ class TestQuantization(unittest.TestCase):
     def test_quantization_complex(self):
         """ Test correct quantization of complex numbers"""
         max_amplitude = 100
-        self.quantizer.gain = Gain(1 / max_amplitude)
+        self.quantizer.gain = Gain(1 / max_amplitude, True)
 
         # randomly choose quantization levels
         quantization_idx = self.rng.integers(self.quantizer.num_quantization_levels,
@@ -219,7 +219,7 @@ class TestQuantization(unittest.TestCase):
         """ Test correct mid-tread quantizer output without gain control"""
 
         max_amplitude = 150.
-        self.quantizer.gain = Gain(1 / max_amplitude)
+        self.quantizer.gain = Gain(1 / max_amplitude, True)
         self.quantizer.quantizer_type = QuantizerType.MID_TREAD
 
         # randomly choose quantization levels

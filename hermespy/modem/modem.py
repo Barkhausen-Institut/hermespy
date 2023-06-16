@@ -796,7 +796,6 @@ class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Seria
 
     @Transmitter.device.setter  # type: ignore
     def device(self, value: Device) -> None:
-
         if Transmitter.device.fget(self) is not None:  # type: ignore
             self.device.transmitters.remove(self)
 
@@ -1128,7 +1127,6 @@ class DuplexModem(TransmittingModem, ReceivingModem):
     """YAML serialization tag"""
 
     def __init__(self, *args, **kwargs) -> None:
-
         ReceivingModem.__init__(self)
         TransmittingModem.__init__(self, *args, **kwargs)
 
