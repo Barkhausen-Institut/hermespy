@@ -66,7 +66,6 @@ class FrameElement(Serializable):
     repetitions: int = 1
 
     def __init__(self, type: str | ElementType, repetitions: int = 1) -> None:
-
         self.type = ElementType[type] if isinstance(type, str) else type
         self.repetitions = repetitions
 
