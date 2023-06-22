@@ -23,54 +23,65 @@ class TestCube(TestCase):
     def setUp(self) -> None:
         
         self.angle_bins = np.array([[0., 0.]])
-        self.velocity_bins = np.array([0.])
+        self.doppler_bins = np.array([0.])
         self.range_bins = np.arange(10)
+        self.carrier_frequency = 72e9
         
         self.data = np.array([[np.arange(10)]])
         
-        self.cube = RadarCube(self.data, self.angle_bins, self.velocity_bins, self.range_bins)
+        self.cube = RadarCube(self.data, self.angle_bins, self.doppler_bins, self.range_bins, self.carrier_frequency)
         
     def test_init(self) -> None:
         """Initialization arguments should be properly stored as class attributes"""
         
         assert_array_almost_equal(self.angle_bins, self.cube.angle_bins)
-        assert_array_almost_equal(self.velocity_bins, self.cube.velocity_bins)
+        assert_array_almost_equal(self.doppler_bins, self.cube.doppler_bins)
         assert_array_almost_equal(self.range_bins, self.cube.range_bins)
         
     def test_angle_bin_inference(self) -> None:
         """Angle bins should be inferred from data if not provided"""
         
-        cube = RadarCube(self.data, None, self.velocity_bins, self.range_bins)
+        cube = RadarCube(self.data, None, self.doppler_bins, self.range_bins)
         
         assert_array_almost_equal(self.angle_bins, cube.angle_bins)
         
-    def test_velocity_bin_inference(self) -> None:
-        """Velocity bins should be inferred from data if not provided"""
+    def test_doppler_bin_inference(self) -> None:
+        """Doppler bins should be inferred from data if not provided"""
         
         cube = RadarCube(self.data, self.angle_bins, None, self.range_bins)
         
-        assert_array_almost_equal(self.velocity_bins, cube.velocity_bins)
+        assert_array_almost_equal(self.doppler_bins, cube.doppler_bins)
 
     def test_init_validation(self) -> None:
         """Radar cube initializations should raise ValueErrors on invalid arguments"""
         
         with self.assertRaises(ValueError):
-            _ = RadarCube(np.zeros((1, 2, 3, 4)), self.angle_bins, self.velocity_bins, self.range_bins)
+            _ = RadarCube(np.zeros((1, 2, 3, 4)), self.angle_bins, self.doppler_bins, self.range_bins)
         
         with self.assertRaises(ValueError):
-            _ = RadarCube(self.data, np.array([[1, 2], [3, 4]]), self.velocity_bins, self.range_bins)
+            _ = RadarCube(self.data, np.array([[1, 2], [3, 4]]), self.doppler_bins, self.range_bins)
             
         with self.assertRaises(ValueError):
             _ = RadarCube(self.data, self.angle_bins, np.array([1, 2]), self.range_bins)
     
         with self.assertRaises(ValueError):
-            _ = RadarCube(self.data, self.angle_bins, self.velocity_bins, np.array([1, 2, 3]))
+            _ = RadarCube(self.data, self.angle_bins, self.doppler_bins, np.array([1, 2, 3]))
 
         with self.assertRaises(ValueError):
-            _ = RadarCube(np.zeros((2, 1, 1)), None, self.velocity_bins, self.range_bins)
+            _ = RadarCube(np.zeros((2, 1, 1)), None, self.doppler_bins, self.range_bins)
             
         with self.assertRaises(ValueError):
             _ = RadarCube(np.zeros((1, 2, 1)), self.angle_bins, None, self.range_bins)
+
+        with self.assertRaises(ValueError):
+            _ = RadarCube(self.data, self.angle_bins, self.doppler_bins, self.range_bins, -1.0)
+
+    def test_velocity_bins_validation(self) -> None:
+        """Velocity bin comutation should raise RuntimeError if carrier frequency is unknown"""
+        
+        self.cube = RadarCube(self.data, self.angle_bins, self.doppler_bins, self.range_bins, 0.)
+        with self.assertRaises(RuntimeError):
+            _ = self.cube.velocity_bins
 
     def test_plot_range_validation(self) -> None:
         """Plotting range should raise ValueErrors on invalid arguments"""
@@ -113,8 +124,16 @@ class TestCube(TestCase):
             mock_subplots.return_value = (figure, axes)
             
             self.cube.plot_range_velocity()
-            
             axes.pcolormesh.assert_called_once()
+            axes.reset_mock()
+            
+            self.cube.plot_range_velocity(scale='velocity')
+            axes.pcolormesh.assert_called_once()
+            axes.reset_mock()
+            
+            self.cube.plot_range_velocity(scale='frequency')
+            axes.pcolormesh.assert_called_once()
+            axes.reset_mock()
 
     def test_normalize_power(self) -> None:
         """Power normalization should be performed properly"""

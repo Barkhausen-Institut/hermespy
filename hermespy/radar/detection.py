@@ -204,7 +204,7 @@ class RadarPointCloud(Visualizable):
         return "Radar Point Coud"
 
     def _new_axes(self) -> Tuple[plt.Figure, plt.Axes]:
-        figure, axes = plt.subplots(projection="3d")
+        figure, axes = plt.subplots(subplot_kw={"projection": "3d"})
         return figure, axes
 
     def _plot(self, axes: plt.Axes) -> None:

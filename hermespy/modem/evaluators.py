@@ -112,7 +112,7 @@ class CommunicationEvaluator(Evaluator, ABC):
         return self.__receiving_modem
 
     def generate_result(self, grid: Sequence[GridDimension], artifacts: np.ndarray) -> ScalarEvaluationResult:
-        return ScalarEvaluationResult(grid, artifacts, self)
+        return ScalarEvaluationResult.From_Artifacts(grid, artifacts, self)
 
 
 class BitErrorArtifact(ArtifactTemplate[np.float_]):

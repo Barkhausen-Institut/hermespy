@@ -41,7 +41,7 @@ class RadarWaveformMock(RadarWaveform):
             
     def estimate(self, signal: Signal) -> np.ndarray:
 
-        num_velocity_bins = len(self.velocity_bins)
+        num_velocity_bins = len(self.relative_doppler_bins)
         num_range_bins = len(self.range_bins)
 
         velocity_range_estimate = np.zeros((num_velocity_bins, num_range_bins), dtype=float)
@@ -56,9 +56,17 @@ class RadarWaveformMock(RadarWaveform):
     @property
     def range_bins(self) -> np.ndarray:
         return np.arange(10)
+    
+    @property
+    def max_relative_doppler(self) -> float:
+        return 1.
+        
+    @property
+    def relative_doppler_resolution(self) -> float:
+        return .5
 
     @property
-    def velocity_bins(self) -> np.ndarray:
+    def relative_doppler_bins(self) -> np.ndarray:
         return np.arange(5)
     
     @property
@@ -173,7 +181,45 @@ class TestRadar(TestCase):
 
         self.radar.waveform = None
         self.assertEqual(0., self.radar.noise_power(1., SNRType.PN0))
-
+        
+    def test_waveform_setget(self) -> None:
+        """Waveform property getter should return setter argument"""
+        
+        self.radar.waveform = None
+        self.assertEqual(None, self.radar.waveform)
+        
+        waveform = Mock()
+        self.radar.waveform = waveform
+        self.assertEqual(waveform, self.radar.waveform)
+        
+    def test_max_range_validation(self) -> None:
+        """Max range property getter should raise RuntimError if no waveform is configured"""
+ 
+        self.radar.waveform = None
+        with self.assertRaises(RuntimeError):
+            _ = self.radar.max_range
+            
+    def test_max_range(self) -> None:
+        """Max range property getter should return the waveform's max range"""
+        
+        self.assertEqual(self.waveform.max_range, self.radar.max_range)
+        
+    def test_velocity_resolution_validation(self) -> None:
+        """Velocity resolution property getter should raise errors on invalid internal states"""
+ 
+        self.radar.carrier_frequency = 0.
+        with self.assertRaises(RuntimeError):
+            _ = self.radar.velocity_resolution
+            
+        self.radar.waveform = None
+        with self.assertRaises(RuntimeError):
+            _ = self.radar.velocity_resolution
+            
+    def test_velocity_resolution(self) -> None:
+        """Velocity resolution property getter should return the correct value"""
+        
+        self.assertEqual(.5 * self.waveform.relative_doppler_resolution * speed_of_light / self.device.carrier_frequency, self.radar.velocity_resolution)
+ 
     def test_transmit_waveform_validation(self) -> None:
         """Transmitting should raise a RuntimeError if no waveform was configured"""
         

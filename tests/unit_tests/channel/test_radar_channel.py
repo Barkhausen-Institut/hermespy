@@ -45,7 +45,7 @@ class RadarChannelMock(RadarChannelBase[RadarChannelRealizationMock]):
     def realize(self, num_samples: int, sampling_rate: float) -> RadarChannelRealizationMock:
       
         global_position = np.array([1, 1, 1], dtype=np.float_)  
-        target_realization = RadarTargetRealization(0, 0, 0, 1, np.eye(self.receiver.antennas.num_receive_antennas, self.transmitter.antennas.num_transmit_antennas), global_position)
+        target_realization = RadarTargetRealization(0, 0, 0, 1, 2, np.eye(self.receiver.antennas.num_receive_antennas, self.transmitter.antennas.num_transmit_antennas), global_position, global_position)
         impulse_response = RadarChannelRealization.ImpulseResponse([target_realization], self.gain, num_samples, sampling_rate, self.transmitter, self.receiver)
 
         return RadarChannelRealizationMock(self, self.gain, impulse_response)
@@ -137,16 +137,15 @@ class TestPhysicalRadarTarget(unittest.TestCase):
         self.velocity = np.array([1, 2, 3], dtype=float)
         self.pose = Transformation.From_Translation(np.array([2, 3, 4]))
         self.moveable = Moveable(self.pose, self.velocity)
-        
+
         self.target = PhysicalRadarTarget(self.cross_section, self.moveable)
-        
+
     def test_init(self) -> None:
         """Initialization paramters should be properly stored as class attributes"""
-        
+
         self.assertIs(self.cross_section, self.target.cross_section)
         self.assertIs(self.moveable, self.target.moveable)
 
-        
     def test_cross_section_setget(self) -> None:
         """Cross section property getter should return setter argument"""
         
@@ -268,11 +267,13 @@ class TestRadarPathRealization(unittest.TestCase):
         self.phase_shift = 1.
         self.delay = 2.
         self.doppler_shift = 3.
+        self.doppler_velocity = 312.
         self.power_factor = 4.
         self.mimo_response = np.array([[[1, 2], [3, 4]]])
         self.global_position = np.array([1, 2, 3])
+        self.global_velocity = np.array([0, 0, 312])
         self.static = True
-        self.realization = RadarPathRealization(self.phase_shift, self.delay, self.doppler_shift, self.power_factor, self.mimo_response, self.global_position, self.static)
+        self.realization = RadarPathRealization(self.phase_shift, self.delay, self.doppler_shift, self.doppler_velocity, self.power_factor, self.mimo_response, self.global_position, self.global_velocity, self.static)
         
     def test_properties(self) -> None:
         """Class properties should return initialization arguments"""
@@ -280,9 +281,11 @@ class TestRadarPathRealization(unittest.TestCase):
         self.assertEqual(self.phase_shift, self.realization.phase_shift)
         self.assertEqual(self.delay, self.realization.delay)
         self.assertEqual(self.doppler_shift, self.realization.doppler_shift)
+        self.assertEqual(self.doppler_velocity, self.realization.doppler_velocity)
         self.assertEqual(self.power_factor, self.realization.power_factor)
         assert_array_equal(self.mimo_response, self.realization.mimo_response)
         assert_array_equal(self.global_position, self.realization.global_position)
+        assert_array_equal(self.global_velocity, self.realization.global_velocity)
         self.assertEqual(self.static, self.realization.static)
 
 
@@ -297,7 +300,7 @@ class TestSingleTargetRadarChannelRealization(unittest.TestCase):
         self.channel.receiver = self.device
         
         self.gain = 2.
-        self.target_realization = RadarTargetRealization(1., 2., 3., 4., np.array([[1, 2], [3, 4]]), np.array([1, 2, 3]))
+        self.target_realization = RadarTargetRealization(1., 2., 3., 4., 5., np.array([[1, 2], [3, 4]]), np.array([1, 2, 3]), np.array([0, 0, 4.]))
         self.num_samples = 10
         self.sampling_rate = 1.234
         
@@ -333,11 +336,10 @@ class TestMultiTargetRadarChannelRealization(unittest.TestCase):
         self.channel.receiver = self.device
         
         self.gain = 2.
-        self.target_realization = RadarTargetRealization(1., 2., 3., 4., np.array([[1, 2], [3, 4]]), np.array([1, 2, 3]))
-        self.interference_realization = RadarInterferenceRealization(1., 2., 3., 4., np.array([[2, 5], [1, 3]]), np.array([4, 5, 6]))
+        self.target_realization = RadarTargetRealization(1., 2., 3., 4., 5., np.array([[1, 2], [3, 4]]), np.array([0, 1, 2]), np.array([1, 2, 3]))
+        self.interference_realization = RadarInterferenceRealization(1., 2., 3., 4., 5., np.array([[2, 5], [1, 3]]), np.array([0, 1, 2]), np.array([4, 5, 6]))
         self.num_samples = 10
         self.sampling_rate = 1.234
-        
         
         self.realization = MultiTargetRadarChannelRealization(self.channel, self.gain, self.interference_realization, [self.target_realization], self.num_samples, self.sampling_rate)
 
@@ -358,7 +360,7 @@ class TestMultiTargetRadarChannelRealization(unittest.TestCase):
     def test_ground_trutch(self) -> None:
         """Ground truth should return correct information"""
         
-        assert_array_equal(np.array([[1, 2, 3]]), self.realization.ground_truth())
+        assert_array_equal(np.array([[0, 1, 2]]), self.realization.ground_truth())
 
 
 class TestMultiTargetRadarChannel(unittest.TestCase):
