@@ -45,7 +45,7 @@ class TestFMCW(TestCase):
         signal = self.fmcw.ping()
         estimate = self.fmcw.estimate(signal)
 
-        self.assertEqual(len(self.fmcw.velocity_bins), estimate.shape[0])
+        self.assertEqual(len(self.fmcw.relative_doppler_bins), estimate.shape[0])
         self.assertEqual(len(self.fmcw.range_bins), estimate.shape[1])
         
     def test_ping_estimate_downsampling(self) -> None:
@@ -56,7 +56,7 @@ class TestFMCW(TestCase):
         signal = self.fmcw.ping()
         estimate = self.fmcw.estimate(signal)
         
-        self.assertEqual(len(self.fmcw.velocity_bins), estimate.shape[0])
+        self.assertEqual(len(self.fmcw.relative_doppler_bins), estimate.shape[0])
         self.assertEqual(len(self.fmcw.range_bins), estimate.shape[1])
         
     def test_frame_duration(self) -> None:

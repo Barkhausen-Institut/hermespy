@@ -30,7 +30,7 @@ def init_mock(cls: MonteCarlo, *args, **kwargs) -> None:
     args[1] = 1
     kwargs['num_actors'] = 1            # Only spawn a single actor
     kwargs['catch_exceptions'] = False  # Don't catch exceptions during runtime
-    
+
     monte_carlo_init(cls, *args, **kwargs)
 
 
