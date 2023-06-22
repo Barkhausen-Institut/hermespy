@@ -13,6 +13,7 @@ from typing import Literal, Type
 import matplotlib.pyplot as plt
 import numpy as np
 from h5py import Group
+from scipy.constants import speed_of_light
 
 from hermespy.core import Executable, HDFSerializable
 
@@ -31,10 +32,11 @@ class RadarCube(HDFSerializable):
 
     __data: np.ndarray
     __angle_bins: np.ndarray
-    __velocity_bins: np.ndarray
+    __doppler_bins: np.ndarray
     __range_bins: np.ndarray
+    __carrier_frequency: float
 
-    def __init__(self, data: np.ndarray, angle_bins: np.ndarray | None = None, velocity_bins: np.ndarray | None = None, range_bins: np.ndarray | None = None) -> None:
+    def __init__(self, data: np.ndarray, angle_bins: np.ndarray | None = None, doppler_bins: np.ndarray | None = None, range_bins: np.ndarray | None = None, carrier_frequency: float = 0.0) -> None:
         """
         Args:
 
@@ -50,13 +52,17 @@ class RadarCube(HDFSerializable):
                 Must be of dimension :math:`\\mathbb{R}^{A \\times 2}`,
                 the second dimension denoting azimuth and zenith of arrival in radians, respectively.
 
-            velocity_bins (np.ndarray):
-                Numpy vector specifying the represented discrete doppler frequency bins in Hz.
+            doppler_bins (np.ndarray):
+                Numpy vector specifying the represented discrete doppler frequency shift bins in Hz.
                 Must be of dimension :math:`\\mathbb{R}^{B}`.
 
             range_bins (np.ndarray):
                 Numpy vector specifying the represented discrete range bins in :math:`\\mathrm{m}`.
                 Must be of dimension :math:`\\mathbb{R}^{C}`.
+
+            carrier_frequency (float, optional):
+                Central carrier frequency of the radar in Hz.
+                Zero by default.
 
         Raises:
 
@@ -76,9 +82,9 @@ class RadarCube(HDFSerializable):
                 raise ValueError("Can't infer angle bins from data cube")
 
         # Infer velocity bins
-        if velocity_bins is None:
+        if doppler_bins is None:
             if data.shape[1] == 1:
-                velocity_bins = np.array([0], dtype=np.float_)
+                doppler_bins = np.array([0], dtype=np.float_)
 
             else:
                 raise ValueError("Can't infer velocity bins from data cube")
@@ -89,16 +95,20 @@ class RadarCube(HDFSerializable):
         if data.shape[0] != len(angle_bins):
             raise ValueError("Data cube angle dimension does not match angle bins")
 
-        if data.shape[1] != len(velocity_bins):
-            raise ValueError("Data cube velocity dimension does not match velocity bins")
+        if data.shape[1] != len(doppler_bins):
+            raise ValueError("Data cube velocity dimension does not match doppler bins")
 
         if data.shape[2] != len(range_bins):
             raise ValueError("Data cube range dimension does not match range bins")
 
+        if carrier_frequency < 0:
+            raise ValueError(f"Carrier frequency must be non-negtative (not {carrier_frequency})")
+
         self.__data = data
         self.__angle_bins = angle_bins
-        self.__velocity_bins = velocity_bins
+        self.__doppler_bins = doppler_bins
         self.__range_bins = range_bins
+        self.__carrier_frequency = carrier_frequency
 
     @property
     def data(self) -> np.ndarray:
@@ -126,15 +136,30 @@ class RadarCube(HDFSerializable):
         return self.__angle_bins
 
     @property
-    def velocity_bins(self) -> np.ndarray:
-        """Discrete velocity estimation bins.
-
+    def doppler_bins(self) -> np.ndarray:
+        """Discrete doppler shift estimation bins.
 
         Returns:
             Numpy vector specifying the represented discrete doppler frequency bins in Hz.
         """
 
-        return self.__velocity_bins
+        return self.__doppler_bins
+
+    @property
+    def velocity_bins(self) -> np.ndarray:
+        """Discrete doppler estimation bins.
+
+        Returns:
+            Numpy vector specifying the represented discrete doppler velocity bins in :math:`\\mathrm{m/s}`.
+
+        Raises:
+            RuntimeError: If the carrier frequency is not specified.
+        """
+
+        if self.__carrier_frequency <= 0.0:
+            raise RuntimeError("Carrier frequency not specified")
+
+        return self.__doppler_bins * speed_of_light / self.__carrier_frequency
 
     @property
     def range_bins(self) -> np.ndarray:
@@ -186,7 +211,7 @@ class RadarCube(HDFSerializable):
 
         return figure
 
-    def plot_range_velocity(self, title: str | None = None, interpolate: bool = True) -> plt.Figure:
+    def plot_range_velocity(self, title: str | None = None, interpolate: bool = True, scale: Literal["frequency", "velocity"] | None = None) -> plt.Figure:
         """Visualize the cube's range-velocity profile.
 
         Args:
@@ -198,11 +223,23 @@ class RadarCube(HDFSerializable):
                 Interpolate the axis for a square profile plot.
                 Enabled by default.
 
+            scale (Literal['frequency', 'velocity'], optional):
+                Plot the velocity axis in frequency (Hz) or velocity units (m/s).
+                If not specified, plotting in velocity is preferred, if the carrier frequency is known.
+
         Returns:
             plt.Figure:
         """
 
         title = "Radar Range-Doppler Profile" if title is None else title
+
+        if scale is None:
+            _scale = "velocity" if self.__carrier_frequency > 0 else "frequency"
+        else:
+            _scale = scale
+
+        # Compute velocity axis bins depending on the scale
+        velocity_axis = self.velocity_bins if _scale == "velocity" else self.doppler_bins
 
         # Collapse the cube into the range-dimension
         range_velocity_profile = np.sum(self.data, axis=0, keepdims=False)
@@ -212,9 +249,9 @@ class RadarCube(HDFSerializable):
             figure.suptitle(title)
 
             axes.set_xlabel("Range [m]")
-            axes.set_ylabel("Doppler [Hz]")
+            axes.set_ylabel("Doppler [Hz]" if _scale == "frequency" else "Velocity [m/s]")
 
-            axes.pcolormesh(self.range_bins, self.velocity_bins, range_velocity_profile, shading="auto")
+            axes.pcolormesh(self.range_bins, velocity_axis, range_velocity_profile, shading="auto")
 
             return figure
 
@@ -227,13 +264,15 @@ class RadarCube(HDFSerializable):
     def from_HDF(cls: Type[RadarCube], group: Group) -> RadarCube:
         data = np.array(group["data"])
         angle_bins = np.array(group["angle_bins"], dtype=np.float_)
-        velocity_bins = np.array(group["velocity_bins"], dtype=np.float_)
+        doppler_bins = np.array(group["doppler_bins"], dtype=np.float_)
         range_bins = np.array(group["range_bins"], dtype=np.float_)
+        carrier_frequency = group.attrs.get("carrier_frequency", 0.0)
 
-        return cls(data=data, angle_bins=angle_bins, velocity_bins=velocity_bins, range_bins=range_bins)
+        return cls(data=data, angle_bins=angle_bins, doppler_bins=doppler_bins, range_bins=range_bins, carrier_frequency=carrier_frequency)
 
     def to_HDF(self, group: Group) -> None:
         self._write_dataset(group, "data", self.data)
         self._write_dataset(group, "angle_bins", self.angle_bins)
-        self._write_dataset(group, "velocity_bins", self.velocity_bins)
+        self._write_dataset(group, "doppler_bins", self.doppler_bins)
         self._write_dataset(group, "range_bins", self.range_bins)
+        group.attrs["carrier_frequency"] = self.__carrier_frequency

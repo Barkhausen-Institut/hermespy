@@ -1295,7 +1295,6 @@ class MonteCarloResult(object):
             List[plt.Figure]:
                 List of handles to all created Matplotlib figures.
         """
-
         return [result.plot() for result in self.__results]
 
     def save_to_matlab(self, file: str) -> None:

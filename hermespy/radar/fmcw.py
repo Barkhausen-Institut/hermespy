@@ -76,16 +76,20 @@ class FMCW(RadarWaveform, Serializable):
         return Signal(self.__frame_prototype(), self.sampling_rate)
 
     def estimate(self, input_signal: Signal) -> np.ndarray:
-        pulse_len = int(self.pulse_rep_interval * self.sampling_rate)
-        input_samples = input_signal.resample(self.sampling_rate).samples[0, : pulse_len * self.num_chirps]
-        chirp_stack = np.reshape(input_samples, (-1, pulse_len))
+        num_pulse_samples = int(self.pulse_rep_interval * self.sampling_rate)
+        num_frame_samples = self.num_chirps * num_pulse_samples
+
+        resampled_input_signal = input_signal.resample(self.sampling_rate)
+        input_samples = resampled_input_signal.samples[0, :num_frame_samples] if resampled_input_signal.num_samples >= num_frame_samples else np.append(resampled_input_signal.samples[0, :], np.zeros(num_frame_samples - resampled_input_signal.num_samples))
+
+        chirp_stack = np.reshape(input_samples, (-1, num_pulse_samples))
 
         chirp_prototype = self.__chirp_prototype()
         chirp_stack = chirp_stack[:, : len(chirp_prototype)]
         baseband_samples = chirp_stack.conj() * chirp_prototype
 
         if self.adc_sampling_rate < self.sampling_rate:
-            downsampling_rate = Fraction(self.adc_sampling_rate / self.sampling_rate).limit_denominator(100)
+            downsampling_rate = Fraction(self.adc_sampling_rate / self.sampling_rate).limit_denominator(1000)
             baseband_samples = signal.resample_poly(baseband_samples, up=downsampling_rate.numerator, down=downsampling_rate.denominator, axis=1)
 
         transform = fft2(baseband_samples)
@@ -100,13 +104,24 @@ class FMCW(RadarWaveform, Serializable):
         return max_range
 
     @property
-    def range_bins(self) -> np.ndarray:
-        return np.arange(int(self.max_range / self.range_resolution)) * self.range_resolution
+    def range_resolution(self) -> float:
+        return speed_of_light / (2 * self.bandwidth)
 
     @property
-    def velocity_bins(self) -> np.ndarray:
-        bins = (np.arange(self.num_chirps) - np.ceil(self.num_chirps / 2)) * self.doppler_resolution
-        return bins
+    def max_relative_doppler(self) -> float:
+        # The maximum velocity is the wavelength divided by four times the pulse repetition interval
+        max_doppler = 1 / (4 * self.pulse_rep_interval)
+        return max_doppler
+
+    @property
+    def relative_doppler_resolution(self) -> float:
+        # The doppler resolution is the inverse of twice the frame duration
+        resolution = 1 / (2 * self.frame_duration)
+        return resolution
+
+    @property
+    def relative_doppler_bins(self) -> np.ndarray:
+        return np.arange(self.num_chirps) * self.relative_doppler_resolution - self.max_relative_doppler
 
     @property
     def frame_duration(self) -> float:
@@ -192,32 +207,6 @@ class FMCW(RadarWaveform, Serializable):
         self.__adc_sampling_rate = value
 
     @property
-    def range_resolution(self) -> float:
-        """Depth sensing resolution.
-
-        Returns:
-            float: Range resolution in m.
-
-        Raises:
-            ValueError: If resolution is smaller or equal to zero.
-        """
-
-        return speed_of_light / (2 * self.bandwidth)
-
-    @property
-    def doppler_resolution(self) -> float:
-        """Doppler sensing resolution.
-
-        Returns:
-            float: Doppler resolution in Hz.
-
-        Raises:
-            ValueError: If resolution is smaller or equal to zero.
-        """
-
-        return 1.0 / self.pulse_rep_interval / self.num_chirps
-
-    @property
     def sampling_rate(self) -> float:
         return self.__sampling_rate
 
@@ -247,17 +236,6 @@ class FMCW(RadarWaveform, Serializable):
             raise ValueError("Pulse repetition interval must be greater than zero")
 
         self.__pulse_rep_interval = value
-
-    @property
-    def max_velocity(self) -> float:
-        """Maximum relative target velocity detectable.
-
-        Returns:
-
-            float: Maximum target velocity in m/s.
-        """
-
-        raise NotImplementedError  # pragma no cover
 
     @property
     def slope(self) -> float:

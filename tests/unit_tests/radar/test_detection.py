@@ -154,7 +154,7 @@ class TestThresholdDetector(TestCase):
         self.detector.peak_detection = True
         
         range_bins = np.arange(101)
-        velocity_bins = np.arange(15) - 7
+        doppler_bins = np.arange(15) - 7
         angle_bins = np.array([[-1, 0.],
                                [0., 0.],
                                [1, 0.]])
@@ -163,7 +163,7 @@ class TestThresholdDetector(TestCase):
         data[1, 4, :51] = np.arange(51) / 50
         data[1, 4, 51:] = np.arange(50, 0, -1) / 51  
         
-        cube = RadarCube(data, angle_bins, velocity_bins, range_bins)
+        cube = RadarCube(data, angle_bins, doppler_bins, range_bins, 72e9)
         cloud = self.detector.detect(cube)
         
         self.assertEqual(1, cloud.num_points)
@@ -183,7 +183,7 @@ class TestThresholdDetector(TestCase):
         data = np.zeros((3, 15, 101))
         data[1, 2, 3] = 0.5
         
-        cube = RadarCube(data, angle_bins, velocity_bins, range_bins)
+        cube = RadarCube(data, angle_bins, velocity_bins, range_bins, 72e9)
         cloud = self.detector.detect(cube)
         
         self.assertEqual(1, cloud.num_points)
@@ -211,7 +211,7 @@ class TestMaxDetector(TestCase):
         data[1, 2, 3] = 0.5
         data[2, 3, 4] = .1
         
-        cube = RadarCube(data, angle_bins, velocity_bins, range_bins)
+        cube = RadarCube(data, angle_bins, velocity_bins, range_bins, 72e9)
         cloud = self.detector.detect(cube)
         
         self.assertEqual(1, cloud.num_points)
