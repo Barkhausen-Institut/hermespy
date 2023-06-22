@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch, PropertyMock
 import numpy as np
 from numpy.random import default_rng
 
-from hermespy.core.monte_carlo import ScalarEvaluationResult
+from hermespy.core.monte_carlo import ScalarEvaluationResult, ArtifactTemplate
 from hermespy.modem import TransmittingModem, ReceivingModem, RootRaisedCosineWaveform
 from hermespy.modem.evaluators import BitErrorEvaluation, BitErrorEvaluator, BlockErrorEvaluation, BlockErrorEvaluator, CommunicationEvaluator, FrameErrorEvaluation, FrameErrorEvaluator, ThroughputEvaluation, ThroughputEvaluator
 
@@ -55,7 +55,10 @@ class TestCommunicationEvaluator(TestCase):
     def test_generate_result(self) -> None:
         """Result should be properly generated"""
         
-        result = self.evaluator.generate_result([], np.arange(10))
+        artifacts = np.empty(1, dtype=np.object_)
+        artifacts[0] = [ArtifactTemplate(n) for n in range(10)]
+        
+        result = self.evaluator.generate_result([], artifacts)
         self.assertIsInstance(result, ScalarEvaluationResult)
         
         

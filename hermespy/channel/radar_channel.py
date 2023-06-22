@@ -282,13 +282,13 @@ class PhysicalRadarTarget(RadarTarget, Serializable):
         return self.cross_section.get_cross_section(impinging_direction, emerging_direction)
 
     def get_velocity(self) -> np.ndarray:
-        return self.__moveable.velocity
+        return self.moveable.velocity
 
     def get_forwards_transformation(self) -> Transformation:
-        return self.__moveable.forwards_transformation
+        return self.moveable.forwards_transformation
 
     def get_backwards_transformation(self) -> Transformation:
-        return self.__moveable.backwards_transformation
+        return self.moveable.backwards_transformation
 
 
 RCRT = TypeVar("RCRT", bound="RadarChannelRealization")
@@ -329,7 +329,7 @@ class RadarChannelRealization(ChannelRealization):
         # Infer parameter limits
         max_time = float(timestamps[-1]) if num_samples > 0 else 0.0
         max_propagation_delay = max(path_realizations, key=lambda t: t.delay).delay if len(path_realizations) > 0 else 0.0
-        max_velocity = 0.0  # ToDo
+        max_velocity = max(path_realizations, key=lambda t: t.doppler_velocity).doppler_velocity if len(path_realizations) > 0 else 0.0
         # This equation can be improved to compute the max delay for each target realization
         max_delay = max_propagation_delay + 2 * max_velocity * max_time / speed_of_light
         max_delay_in_samples = int(np.ceil(max_delay * sampling_rate))
@@ -341,15 +341,14 @@ class RadarChannelRealization(ChannelRealization):
         delay_taps = np.arange(1 + max_delay_in_samples) / sampling_rate
 
         for (tidx, timestamp), target in product(enumerate(timestamps), path_realizations):  # type: ignore
-            target_velocity = 0.0
-            echo_delay = target.delay + 2 * target_velocity * timestamp / speed_of_light
+            echo_delay = target.delay + 2 * target.doppler_velocity * timestamp / speed_of_light
             time = timestamp + delay_taps
             echo_weights = target.power_factor * np.exp(2j * pi * (target.doppler_shift * time + target.phase_shift))
 
             interpolated_impulse_tap = np.sinc(sampling_rate * (delay_taps - echo_delay)) * echo_weights
 
             # Note that this impulse response selection is technically incorrect,
-            # since it is only feasible for planar arrays
+            # since it is only feasible for planar arrays in the far-field
             impulse_response[:, :, tidx, :] += np.tensordot(target.mimo_response, interpolated_impulse_tap, axes=0)
 
         # Apply the channel gain
@@ -494,24 +493,28 @@ class RadarChannelBase(Generic[RCRT], Channel[RCRT]):
         if np.array_equal(target_forwards_transform.translation, self.receiver.global_position):
             raise RuntimeError("Radar channel receiver position colliding with an assumed target location")
 
-        # Compute the impinging and emerging far-field wave direction from the target
-        impinging_direction = target_backwards_transform.transform_direction(self.transmitter.global_position, normalize=True)
-        emerging_direction = target_forwards_transform.transform_direction(self.receiver.global_position, normalize=True)
+        # Compute the impinging and emerging far-field wave direction from the target in local target coordinates
+        target_impinging_direction = target_backwards_transform.transform_direction(self.transmitter.global_position, normalize=True)
+        target_emerging_direction = target_backwards_transform.transform_direction(self.receiver.global_position, normalize=True)
 
         # Query the radar cross section from the target's model given impinging and emerging directions
-        cross_section = target.get_cross_section(impinging_direction, emerging_direction)
+        cross_section = target.get_cross_section(target_impinging_direction, target_emerging_direction)
 
         # Query reflection phase shift
         reflection_phase = self._rng.uniform(0, 1)
 
         # Compute the wave's propagated distance and propagation delay
-        distance = np.linalg.norm(self.transmitter.global_position - target_forwards_transform.translation) + np.linalg.norm(self.receiver.global_position - target_forwards_transform.translation)
+        emerging_vector = target_forwards_transform.translation - self.transmitter.global_position
+        impinging_vector = self.receiver.global_position - target_forwards_transform.translation
+        distance = np.linalg.norm(emerging_vector) + np.linalg.norm(impinging_vector)
         delay = distance / speed_of_light
 
         # Model the doppler-shift from transmitter to receiver
-        # ToDo: Non-reciprocity in this case
         target_velocity = target.get_velocity()
-        doppler_velocity = np.dot(self.receiver.velocity - target_velocity, impinging_direction) - np.dot(self.transmitter.velocity - target_velocity, emerging_direction)
+        relative_transmitter_velocity = np.dot(Direction.From_Cartesian(emerging_vector, normalize=True), target_velocity - self.transmitter.velocity)
+        relative_receiver_velocity = np.dot(Direction.From_Cartesian(impinging_vector, normalize=True), self.receiver.velocity - target_velocity)
+
+        doppler_velocity = relative_transmitter_velocity + relative_receiver_velocity
         doppler_shift = doppler_velocity * carrier_frequency / speed_of_light
 
         # Compute the power factor given the radar range equation
@@ -526,7 +529,7 @@ class RadarChannelBase(Generic[RCRT], Channel[RCRT]):
         mimo_response = np.inner(rx_response, tx_response)
 
         # Return realized information wrapped in a target realization dataclass
-        return RadarTargetRealization(reflection_phase, delay, doppler_shift, power_factor, mimo_response, target_forwards_transform.translation, target.static)
+        return RadarTargetRealization(reflection_phase, delay, doppler_shift, doppler_velocity, power_factor, mimo_response, target_forwards_transform.translation, target_velocity, target.static)
 
     def null_hypothesis(self, num_samples: int, sampling_rate: float, realization: RCRT | None = None) -> RCRT:
         """Generate a channel realization missing the target to be estimated.
@@ -560,23 +563,28 @@ class RadarPathRealization(object):
     __phase_shift: float
     __delay: float
     __doppler_shift: float
+    __dopler_velocity: float
     __power_factor: float
     __mimo_response: np.ndarray
     __global_position: np.ndarray
+    __global_velocity: np.ndarray
     __static: bool
 
-    def __init__(self, phase_shift: float, delay: float, doppler_shift: float, power_factor: float, mimo_response: np.ndarray, global_position: np.ndarray, static: bool = False) -> None:
+    def __init__(self, phase_shift: float, delay: float, doppler_shift: float, doppler_velocity: float, power_factor: float, mimo_response: np.ndarray, global_position: np.ndarray, global_velocity: np.ndarray, static: bool = False) -> None:
         """
         Args:
 
             phase_shift (float):
                 Phase shift of the propagation path in radians.
 
+            doppler_shift (float):
+                Spectral doppler shift in Hz.
+
+            doppler_velocity:
+                Perceived target velocity in m/s.
+
             delay (float):
                 Propagation delay in seconds.
-
-            doppler_shift (float):
-                Doppler shift in Hz.
 
             power_factor (float):
                 Linear factor a propagated signal gets scaled by in its amplitude.
@@ -588,6 +596,9 @@ class RadarPathRealization(object):
             global_position (np.ndarray):
                 Global position of the path's target as a cartesian vector.
 
+            global_velcity (np.ndarray):
+                Global velocity of the path's target a a cartesian vector of unit m/s.
+
             static (bool, optional):
                 Is the path considered static?
                 Static paths will remain during null hypothesis testing.
@@ -595,11 +606,13 @@ class RadarPathRealization(object):
         """
 
         self.__phase_shift = phase_shift
-        self.__delay = delay
         self.__doppler_shift = doppler_shift
+        self.__dopler_velocity = doppler_velocity
+        self.__delay = delay
         self.__power_factor = power_factor
         self.__mimo_response = mimo_response
         self.__global_position = global_position
+        self.__global_velocity = global_velocity
         self.__static = static
 
     @property
@@ -630,6 +643,12 @@ class RadarPathRealization(object):
         return self.__doppler_shift
 
     @property
+    def doppler_velocity(self) -> float:
+        """Perceived doppler velocity in m/s."""
+
+        return self.__dopler_velocity
+
+    @property
     def power_factor(self) -> float:
         """Power loss factor the wave during free space propagation and reflection
 
@@ -657,6 +676,12 @@ class RadarPathRealization(object):
         """
 
         return self.__global_position
+
+    @property
+    def global_velocity(self) -> np.ndarray:
+        """Global velocity of the path's target in m/s as a cartesian vector."""
+
+        return self.__global_velocity
 
     @property
     def static(self) -> bool:
@@ -909,7 +934,7 @@ class MultiTargetRadarChannel(RadarChannelBase[MultiTargetRadarChannelRealizatio
         mimo_response = np.inner(rx_response, tx_response)
 
         # Return realized information wrapped in a target realization dataclass
-        return RadarInterferenceRealization(phase, delay, doppler_shift, power_factor, mimo_response, self.transmitter.global_position, True)
+        return RadarInterferenceRealization(phase, delay, doppler_shift, relative_velocity, power_factor, mimo_response, self.transmitter.global_position, self.transmitter.global_position, True)
 
     def realize(self, num_samples: int, sampling_rate: float) -> MultiTargetRadarChannelRealization:
         if self.transmitter is None or self.receiver is None:

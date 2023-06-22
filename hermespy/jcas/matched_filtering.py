@@ -128,7 +128,7 @@ class MatchedFilterJcas(Radar, DuplexModem, Transmitter[JCASTransmission], Recei
         velocity_bins = np.array([0.0])
         range_bins = 0.5 * lags[:num_propagated_samples] * resolution
         cube_data = np.array([[correlation[:num_propagated_samples]]], dtype=float)
-        cube = RadarCube(cube_data, angle_bins, velocity_bins, range_bins)
+        cube = RadarCube(cube_data, angle_bins, velocity_bins, range_bins, self.carrier_frequency)
 
         # Infer the point cloud, if a detector has been configured
         cloud = None if self.detector is None else self.detector.detect(cube)

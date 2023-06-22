@@ -55,9 +55,10 @@ from typing import Optional, Type
 
 import numpy as np
 from h5py import Group
+from scipy.constants import speed_of_light
 
 from hermespy.beamforming import ReceiveBeamformer, TransmitBeamformer
-from hermespy.core import ChannelStateInformation, DuplexOperator, Signal, Serializable, SNRType, Transmission, Reception
+from hermespy.core import ChannelStateInformation, DuplexOperator, FloatingError, Signal, Serializable, SNRType, Transmission, Reception
 from .cube import RadarCube
 from .detection import RadarDetector, RadarPointCloud
 
@@ -108,23 +109,66 @@ class RadarWaveform(object):
 
     @property
     @abstractmethod
-    def range_bins(self) -> np.ndarray:
-        """Sample bins of the depth sensing.
+    def max_range(self) -> float:
+        """Maximum detectable radial range of the radar waveform.
 
-        Returns:
-            np.ndarray: Ranges in m.
+        Returns: Maximum range in m.
         """
         ...  # pragma: no cover
 
     @property
     @abstractmethod
-    def velocity_bins(self) -> np.ndarray:
-        """Sample bins of the radial velocity sensing.
+    def range_resolution(self) -> float:
+        """Resolution of the radial range sensing in m.
+
+        Returns: Range resolution in m.
+        """
+        ...  # pragma: no cover
+
+    @property
+    def range_bins(self) -> np.ndarray:
+        """Discrete sample bins of the radial range sensing.
 
         Returns:
-            np.ndarray: Doppler shift in Hz.
+            np.ndarray: Ranges in m.
         """
-        ...  # pragma no cover
+
+        return np.arange(int(self.max_range / self.range_resolution)) * self.range_resolution
+
+    @property
+    @abstractmethod
+    def max_relative_doppler(self) -> float:
+        """Maximum relative detectable radial doppler frequency shift in Hz.
+
+        .. math::
+
+           \\math{\Delta f_\\mathrm{Max}} = \\frac{v_\\mathrm{Max}}{\\lambda}
+
+        Returns: Shift frequency delta in Hz.
+        """
+        ...  # pragma: no cover
+
+    @property
+    @abstractmethod
+    def relative_doppler_resolution(self) -> float:
+        """Relative resolution of the radial doppler frequency shift sensing in Hz.
+
+        .. math::
+
+           \\math{\Delta f_\\mathrm{Res}} = \\frac{v_\\mathrm{Res}}{\\lambda}
+
+        Returns: Doppler resolution in Hz.
+        """
+        ...  # pragma: no cover
+
+    @property
+    def relative_doppler_bins(self) -> np.ndarray:
+        """Realtive discrete sample bins of the radial doppler frequency shift sensing.
+
+        Returns:
+            np.ndarray: Doppler shift bins in Hz.
+        """
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -300,6 +344,32 @@ class Radar(DuplexOperator[RadarTransmission, RadarReception], Serializable):
         self.__waveform = value
 
     @property
+    def max_range(self) -> float:
+        """Maximum detectable range in m.
+
+        Raises:
+
+            FloatingError: If no waveform is configured.
+        """
+
+        if self.waveform is None:
+            raise FloatingError("Cannot compute maximum range without a waveform")
+
+        return self.waveform.max_range
+
+    @property
+    def velocity_resolution(self) -> float:
+        """Velocity sensing resulution in m/s."""
+
+        if self.waveform is None:
+            raise FloatingError("Cannot compute velocity resolution without a waveform")
+
+        if self.carrier_frequency == 0.0:
+            raise RuntimeError("Cannot compute velocity resolution in base-band carrier frequency")
+
+        return 0.5 * self.waveform.relative_doppler_resolution * speed_of_light / self.carrier_frequency
+
+    @property
     def detector(self) -> Optional[RadarDetector]:
         """The detector configured to process the resulting radar cube.
 
@@ -377,9 +447,9 @@ class Radar(DuplexOperator[RadarTransmission, RadarReception], Serializable):
         angles_of_interest = np.array([[0.0, 0.0]], dtype=float) if self.receive_beamformer is None else self.receive_beamformer.probe_focus_points[:, 0, :]
 
         range_bins = self.waveform.range_bins
-        velocity_bins = self.waveform.velocity_bins
+        doppler_bins = self.waveform.relative_doppler_bins
 
-        cube_data = np.empty((len(angles_of_interest), len(velocity_bins), len(range_bins)), dtype=float)
+        cube_data = np.empty((len(angles_of_interest), len(doppler_bins), len(range_bins)), dtype=float)
 
         for angle_idx, line in enumerate(beamformed_samples):
             # Process the single angular line by the waveform generator
@@ -389,7 +459,7 @@ class Radar(DuplexOperator[RadarTransmission, RadarReception], Serializable):
             cube_data[angle_idx, ::] = line_estimate
 
         # Create radar cube object
-        cube = RadarCube(cube_data, angles_of_interest, velocity_bins, range_bins)
+        cube = RadarCube(cube_data, angles_of_interest, doppler_bins, range_bins, self.carrier_frequency)
 
         # Infer the point cloud, if a detector has been configured
         cloud = None if self.detector is None else self.detector.detect(cube)
