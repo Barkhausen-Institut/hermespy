@@ -1,4 +1,4 @@
-from .antennas import Antenna, IdealAntenna, Dipole, PatchAntenna, AntennaArrayBase, AntennaArray, UniformArray
+from .antennas import Antenna, IdealAntenna, Dipole, LinearAntenna, PatchAntenna, AntennaArrayBase, AntennaArray, UniformArray
 from .definitions import ConsoleMode, SNRType
 from .logarithmic import dB, Logarithmic, LogarithmicSequence, ValueType
 from .operators import StaticOperator, SilentTransmitter, SignalTransmitter, SignalReceiver
@@ -31,6 +31,7 @@ __all__ = [
     "Antenna",
     "IdealAntenna",
     "Dipole",
+    "LinearAntenna",
     "PatchAntenna",
     "AntennaArrayBase",
     "AntennaArray",

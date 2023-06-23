@@ -207,16 +207,16 @@ class TestClusterDelayLine(TestCase):
         num_samples = 400
         signal = np.outer(np.ones(4, dtype=complex), np.exp(2j * pi * .2 * np.arange(num_samples)))
 
-        radial_velocity = (self.transmitter.velocity - self.receiver.velocity) @ Direction.From_Cartesian(self.receiver.global_position - self.transmitter.global_position, True)
+        radial_velocity = (self.receiver.velocity - self.transmitter.velocity) @ Direction.From_Cartesian(self.receiver.global_position - self.transmitter.global_position, True)
         expected_doppler_shift = radial_velocity * self.transmitter.carrier_frequency / speed_of_light
         frequency_resolution = sampling_rate / num_samples
 
         shifted_signal, _, _ = self.channel.propagate(Signal(signal, sampling_rate))
 
-        input_freq = np.fft.fft(signal[0, :])
-        output_freq = np.fft.fft(shifted_signal[0].samples[0, :].flatten())
+        input_freq = np.abs(np.fft.fft(signal[0, :]))
+        output_freq = np.abs(np.fft.fft(shifted_signal[0].samples[0, :].flatten()))
 
-        self.assertAlmostEqual(expected_doppler_shift, (np.argmax(output_freq) - np.argmax(input_freq)) * frequency_resolution, delta=1)
+        self.assertAlmostEqual(expected_doppler_shift, (np.argmax(input_freq) - np.argmax(output_freq)) * frequency_resolution, delta=1*frequency_resolution)
 
     def test_time_of_flight_delay_normalization(self) -> None:
         """Time of flight delay normalization should result in an impulse response padded by the appropriate number of samples"""
@@ -291,19 +291,17 @@ class TestClusterDelayLine(TestCase):
         self.receiver.orientation = np.zeros(3, dtype=float)
         self.receiver.antennas = UniformArray(IdealAntenna, .5 * speed_of_light / self.carrier_frequency, (8,8))
 
-        angle_candidates = [(.25 * pi, 0),
-                            (.25 * pi, .25 * pi), 
-                            (.25 * pi, .5 * pi), 
+        angle_candidates = [(0, 0),
+                            (.25 * pi, .5 * pi),
                             (.5 * pi, 0),
-                            (.5 * pi, .25 * pi), 
-                            (.5 * pi, .5 * pi), 
+                            (.5 * pi, .25 * pi),
+                            (.5 * pi, .5 * pi),
                             ]
         range = 1e3
       
         steering_codebook = np.empty((8**2, len(angle_candidates)), dtype=complex)
         for a, (zenith, azimuth) in enumerate(angle_candidates):
             steering_codebook[:, a] = self.receiver.antennas.spherical_phase_response(self.carrier_frequency, azimuth, zenith)
-
 
         probing_signal = Signal(np.exp(2j * pi * .25 * np.arange(100)), sampling_rate=1e3, carrier_frequency=self.carrier_frequency)
 

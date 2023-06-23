@@ -8,7 +8,7 @@ import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.constants import pi, speed_of_light
 
-from hermespy.core import AntennaArray, Dipole, Direction, IdealAntenna, PatchAntenna, Transformation, UniformArray
+from hermespy.core import AntennaArray, Dipole, Direction, LinearAntenna, IdealAntenna, PatchAntenna, Transformation, UniformArray
 from .test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
@@ -63,7 +63,8 @@ class TestIdealAntenna(TestCase):
     def test_polarization(self) -> None:
         """Polarization should return unit polarization"""
 
-        self.assertCountEqual((2 ** -.5, 2 ** -.5), self.antenna.characteristics(0., 0.))
+        self.assertCountEqual((2 ** -.5, 2 ** -.5), self.antenna.local_characteristics(0., 0.))
+
 
     def test_plot_polarization(self) -> None:
         """Calling the plot routine should return a figure object"""
@@ -80,6 +81,48 @@ class TestIdealAntenna(TestCase):
 
         test_yaml_roundtrip_serialization(self, self.antenna)
         
+
+class TestLinearAntenna(TestCase):
+        
+        def setUp(self) -> None:
+            
+            self.antenna = LinearAntenna(slant=0.)
+            
+        def test_local_polarization(self) -> None:
+            """Polarization should return the correct polarization for the given slant angle"""
+            
+            self.antenna.slant = 0.
+            expected_vertical_polarization = (1., 0.)
+            
+            assert_array_almost_equal(expected_vertical_polarization, self.antenna.local_characteristics(0., 0.))
+            assert_array_almost_equal(expected_vertical_polarization, self.antenna.local_characteristics(1., 1.))
+            
+            self.antenna.slant = .5 * pi
+            expected_horizontal_polarization = (0., 1.)
+            
+            assert_array_almost_equal(expected_horizontal_polarization, self.antenna.local_characteristics(0., 0.))
+            assert_array_almost_equal(expected_horizontal_polarization, self.antenna.local_characteristics(1., 1.))
+
+        def test_global_polarization(self) -> None:
+            """Global polarization should be correctly computed for different poses"""
+
+            self.antenna.orientation = np.array([.5 * pi, 0., 0.])
+            assert_array_almost_equal(np.array([0., 1.]), self.antenna.global_characteristics(Direction.From_Cartesian(np.array([1, 0, 0]))))
+            assert_array_almost_equal(np.array([1., 0.]), self.antenna.global_characteristics(Direction.From_Cartesian(np.array([0, 1, 0]))))
+            assert_array_almost_equal(np.array([0., 1.]), self.antenna.global_characteristics(Direction.From_Cartesian(np.array([0, 0, 1]))))
+
+            self.antenna.orientation = np.array([0., 0., 0.])
+            assert_array_almost_equal(np.array([1., 0.]), self.antenna.global_characteristics(Direction.From_Cartesian(np.array([1, 0, 0]))))
+            assert_array_almost_equal(np.array([1., 0.]), self.antenna.global_characteristics(Direction.From_Cartesian(np.array([0, 1, 0]))))
+            assert_array_almost_equal(np.array([1., 0.]), self.antenna.global_characteristics(Direction.From_Cartesian(np.array([0, 0, 1]))))
+
+
+
+        def test_serialization(self) -> None:
+            """Test YAML serialization"""
+
+            test_yaml_roundtrip_serialization(self, self.antenna)
+
         
 class TestPatchAntenna(TestCase):
     """Test the patch antenna model"""
@@ -91,7 +134,7 @@ class TestPatchAntenna(TestCase):
     def test_polarization(self) -> None:
         """Polarization should return vertical polarization"""
 
-        self.assertCountEqual((1., 0.), self.antenna.characteristics(0., 0.))
+        self.assertCountEqual((1., 0.), self.antenna.local_characteristics(0., 0.))
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""
@@ -109,7 +152,7 @@ class TestDipoleAntenna(TestCase):
     def test_polarization(self) -> None:
         """Polarization should return vertical polarization"""
 
-        self.assertCountEqual((0., 0.), self.antenna.characteristics(0., 0.))
+        self.assertCountEqual((0., 0.), self.antenna.local_characteristics(0., 0.))
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""

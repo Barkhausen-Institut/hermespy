@@ -1105,6 +1105,7 @@ class TestMonteCarlo(TestCase):
 
         dimension = Mock()
         self.monte_carlo.add_dimension(dimension)
+        self.assertIn(dimension, self.monte_carlo.dimensions)
 
     def test_add_dimension_validation(self) -> None:
         """Adding an already existing dimension should raise a ValueError"""
@@ -1199,6 +1200,8 @@ class TestMonteCarlo(TestCase):
         evaluator = Mock()
         self.monte_carlo.add_evaluator(evaluator)
         
+        self.assertIn(evaluator, self.monte_carlo.evaluators)
+        
     def test_min_num_samples_validation(self) -> None:
         """Minimum number of samples property setter should raise ValueError on negative arguments"""
         
@@ -1226,7 +1229,7 @@ class TestMonteCarlo(TestCase):
         self.monte_carlo.section_block_size = section_block_size
 
         self.assertEqual(section_block_size, self.monte_carlo.section_block_size)
-        
+
     def test_num_actors_validation(self) -> None:
         """Number of actors property should raise ValueError on arguments smaller than one"""
 
