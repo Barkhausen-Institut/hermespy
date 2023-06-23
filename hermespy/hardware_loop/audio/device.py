@@ -35,7 +35,7 @@ __status__ = "Prototype"
 class AudioAntenna(Antenna):
     """Antenna model for audio devices."""
 
-    def characteristics(self, azimuth: float, elevation) -> np.ndarray:
+    def local_characteristics(self, azimuth: float, elevation) -> np.ndarray:
         return np.array([2**0.5, 2**0.5], dtype=float)
 
 

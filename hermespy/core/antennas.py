@@ -119,7 +119,7 @@ class Antenna(Transformable, Serializable):
         return signal
 
     @abstractmethod
-    def characteristics(self, azimuth: float, elevation) -> np.ndarray:
+    def local_characteristics(self, azimuth: float, elevation) -> np.ndarray:
         """Generate a single sample of the antenna's characteristics.
 
         The polarization is characterized by the angle-dependant field vector
@@ -151,9 +151,52 @@ class Antenna(Transformable, Serializable):
         Returns:
 
             Two dimensional numpy array denoting the horizontal and vertical ploarization components
-            of the antenna response.
+            of the antenna response vector.
         """
         ...  # pragma: no cover
+
+    def global_characteristics(self, global_direction: Direction) -> np.ndarray:
+        """Query the antenna's polarization characteristics towards a certain direction of interest.
+
+        Args:
+
+            global_direction (Direction):
+                Cartesian direction unit vector of interest.
+
+        Returns:
+            Two-dimensional numpy vector representing the antenna's polarization components.
+        """
+
+        # Compute the local angle of interest for each antenna element
+        local_direction = self.backwards_transformation.transform_direction(global_direction, normalize=True)
+
+        # Query polarization vector for a-th antenna given local azimuth and zenith angles of interest
+        local_antenna_character = self.local_characteristics(*local_direction.to_spherical())
+
+        # Azimuth is denoted by phi in the standard
+        # Zenith is denoted by theta in the standard
+        azimuth_global, zenith_global = global_direction.to_spherical()
+        azimuth_local, zenith_local = local_direction.to_spherical()
+
+        # Phi unit vector implemention of equation (7.1-14) of ETSI TR 138901 version 17.0
+        azimuth_global_unit = np.array([-sin(azimuth_global), cos(azimuth_global), 0], dtype=np.float_)
+        azimuth_local_unit = np.array([-sin(azimuth_local), cos(azimuth_local), 0], dtype=np.float_)
+
+        # Theta unit vector implemention of equation (7.1-13) of ETSI TR 138901 version 17.0
+        zenith_global_unit = np.array([cos(zenith_global) * cos(azimuth_global), cos(zenith_global) * sin(azimuth_global), -sin(zenith_global)], dtype=np.float_)
+        zenith_local_unit = np.array([cos(zenith_local) * cos(azimuth_local), cos(zenith_local) * sin(azimuth_local), -sin(zenith_local)], dtype=np.float_)
+
+        # Implemention of equation (7.1-12) of ETSI TR 138901 version 17.0
+        rotation = self.forwards_transformation[:3, :3]
+        local_zenith_transformed = rotation @ zenith_local_unit
+        local_azimuth_transformed = rotation @ azimuth_local_unit
+        polarization_transformation = np.array([[np.inner(zenith_global_unit, local_zenith_transformed), np.inner(zenith_global_unit, local_azimuth_transformed)], [np.inner(azimuth_global_unit, local_zenith_transformed), np.inner(azimuth_global_unit, local_azimuth_transformed)]])
+
+        # Implemention of equation (7.1-11) of ETSI TR 138901 version 17.0
+        global_antenna_character = polarization_transformation @ local_antenna_character
+
+        # We're finally done
+        return global_antenna_character
 
     def plot_polarization(self, angle_resolution: int = 180) -> plt.Figure:
         """Visualize the antenna polarization depending on the angles of interest.
@@ -188,7 +231,7 @@ class Antenna(Transformable, Serializable):
             h_magnitudes = np.empty(len(azimuth_angles) * len(elevation_angles), dtype=float)
 
             for i, (azimuth, elevation) in enumerate(zip(azimuth_samples.flat, elevation_samples.flat)):
-                e_magnitude, h_magnitude = self.characteristics(azimuth, elevation)
+                e_magnitude, h_magnitude = self.local_characteristics(azimuth, elevation)
 
                 e_magnitudes[i] = e_magnitude
                 h_magnitudes[i] = h_magnitude
@@ -248,7 +291,7 @@ class Antenna(Transformable, Serializable):
             magnitudes = np.empty(len(azimuth_angles) * len(elevation_angles), dtype=float)
 
             for i, (azimuth, elevation) in enumerate(zip(azimuth_samples.flat, elevation_samples.flat)):
-                e_magnitude, h_magnitude = self.characteristics(azimuth, elevation)
+                e_magnitude, h_magnitude = self.local_characteristics(azimuth, elevation)
                 magnitude = sqrt(e_magnitude**2 + h_magnitude**2)
                 magnitudes[i] = magnitude
 
@@ -293,8 +336,60 @@ class IdealAntenna(Antenna):
     yaml_tag = "IdealAntenna"
     """YAML serialization tag"""
 
-    def characteristics(self, azimuth: float, elevation: float) -> np.ndarray:
+    def local_characteristics(self, azimuth: float, elevation: float) -> np.ndarray:
         return np.array([2**-0.5, 2**-0.5], dtype=float)
+
+
+class LinearAntenna(Antenna):
+    """Model of a linearly polarized ideal antenna.
+
+    The assumed characteristic is
+
+    .. math::
+
+       \\mathbf{F}(\\theta, \\phi, \\zeta) =
+          \\begin{pmatrix}
+             \\cos (\\zeta) \\\\
+             \\sin (\\zeta) \\\\
+          \\end{pmatrix}
+
+    with :math:`zeta = 0` resulting in vertical polarization and :math:`zeta = \\pi / 2` resulting in horizontal polarization.
+    """
+
+    yaml_tag = "LinearAntenna"
+
+    __slant: float
+
+    def __init__(self, slant: float = 0.0, pose: Transformation | None = None):
+        """Initialize a new linear antenna.
+
+        Args:
+
+            slant (float):
+                Slant of the antenna in radians.
+
+            pose (Transformation, optional):
+                Pose of the antenna.
+        """
+
+        # Initialize base class
+        Antenna.__init__(self, pose)
+
+        # Initialize class attributes
+        self.__slant = slant
+
+    @property
+    def slant(self) -> float:
+        """Slant of the antenna in radians."""
+
+        return self.__slant
+
+    @slant.setter
+    def slant(self, value: float):
+        self.__slant = value
+
+    def local_characteristics(self, azimuth: float, zenith: float) -> np.ndarray:
+        return np.array([cos(self.slant), sin(self.slant)], dtype=np.float_)
 
 
 class PatchAntenna(Antenna):
@@ -313,7 +408,7 @@ class PatchAntenna(Antenna):
     yaml_tag = "PatchAntenna"
     """YAML serialization tag"""
 
-    def characteristics(self, azimuth: float, elevation: float) -> np.ndarray:
+    def local_characteristics(self, azimuth: float, elevation: float) -> np.ndarray:
         vertical_azimuth = 0.1 + 0.9 * exp(-1.315 * azimuth**2)
         vertical_elevation = cos(elevation) ** 2
 
@@ -342,7 +437,7 @@ class Dipole(Antenna):
     yaml_tag = "DipoleAntenna"
     """YAML serialization tag"""
 
-    def characteristics(self, azimuth: float, elevation: float) -> np.ndarray:
+    def local_characteristics(self, azimuth: float, elevation: float) -> np.ndarray:
         vertical_polarization = 0.0 if elevation == 0.0 else cos(0.5 * pi * cos(elevation)) / sin(elevation)
         return np.array([vertical_polarization, 0.0], dtype=float)
 
@@ -457,18 +552,7 @@ class AntennaArrayBase(Transformable):
 
         antenna_characteristics = np.empty((self.num_antennas, 2), dtype=float)
         for a, antenna in enumerate(self.antennas):
-            # Compute the local angle of interest for each antenna element
-            local_antenna_direction = antenna.backwards_transformation.transform_direction(global_direction, normalize=True)
-
-            # Query polarization vector for a-th antenna given local azimuth and zenith angles of interest
-            local_antenna_character = antenna.characteristics(*local_antenna_direction.to_spherical())
-
-            # The global polarization is the forwards transformation of the local
-            # H-V (X-Y) polarization components to the global (X-Y) system
-            global_antenna_character = antenna.forwards_transformation.rotate_direction(local_antenna_character)[:2]
-
-            # We're finally done
-            antenna_characteristics[a, :] = global_antenna_character
+            antenna_characteristics[a] = antenna.global_characteristics(global_direction)
 
         return antenna_characteristics
 
