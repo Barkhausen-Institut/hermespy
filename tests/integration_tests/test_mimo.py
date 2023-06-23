@@ -45,8 +45,7 @@ class TestMIMOLink(TestCase):
         self.tx_modem = TransmittingModem()
         self.tx_modem.waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e8, num_preamble_symbols=16, num_data_symbols=51, 
                                                                     pilot_rate=5, oversampling_factor=4, modulation_order=4)
-        
-        
+
         self.rx_modem = ReceivingModem()
         self.rx_modem.waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e8, num_preamble_symbols=16, num_data_symbols=51,
                                                                     pilot_rate=5, oversampling_factor=4, modulation_order=4)

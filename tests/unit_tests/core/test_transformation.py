@@ -124,6 +124,25 @@ class TestTransformation(TestCase):
         with self.assertRaises(ValueError):
             transformation.translation = np.arange(5)
         
+    def test_rotation_setget(self) -> None:
+        """Rotation property getter should return setter argument"""
+        
+        transformation = Transformation.No()
+        expected_rotation = np.arange(3)
+        transformation.rotation_rpy = expected_rotation
+        
+        assert_array_almost_equal(expected_rotation, transformation.rotation_rpy)
+
+    def test_rotation_singularity_handling(self) -> None:
+        """Rotation property getter should return setter argument for the singularity"""
+
+        transformation = Transformation.No()
+        expected_rotation = np.array([0, np.pi / 2, 0])
+        transformation.rotation_rpy = expected_rotation
+        transformation[0, 0] = 0.
+
+        assert_array_almost_equal(expected_rotation, transformation.rotation_rpy)
+
     def test_transform_position(self) -> None:
         """Test transformation of a cartesian position vector"""
         

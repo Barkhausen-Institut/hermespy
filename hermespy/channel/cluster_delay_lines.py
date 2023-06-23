@@ -39,7 +39,7 @@ from typing import Any, Literal, List, Tuple
 import numpy as np
 from scipy.constants import pi, speed_of_light
 
-from hermespy.core import Serializable
+from hermespy.core import Direction, Serializable
 from hermespy.tools import db2lin, delay_resampling_matrix
 from .channel import Channel, ChannelRealization
 
@@ -761,17 +761,15 @@ class ClusterDelayLineBase(Channel):
             ray_indices = self.__subcluster_indices[cluster_idx] if cluster_idx < num_split_clusters else range(num_rays)
 
             for aoa, zoa, aod, zod, jones in zip(ray_aoa[cluster_idx, ray_indices], ray_zoa[cluster_idx, ray_indices], ray_aod[cluster_idx, ray_indices], ray_zod[cluster_idx, ray_indices], jones_matrix[:, :, cluster_idx, ray_indices].transpose(2, 0, 1)):
-                # Equation 7.5-23
-                rx_response = self.receiver.antennas.spherical_phase_response(center_frequency, aoa, zoa)
+                # Compute directive unit vectors
+                tx_direction = Direction.From_Spherical(aod, zod)
+                rx_direction = Direction.From_Spherical(aoa, zoa)
 
-                # Equation 7.5-24
-                tx_response = self.transmitter.antennas.spherical_phase_response(center_frequency, aod, zod).conj()
+                # Combination of Equation 7.5-23, 7.5.24 and 7.5.28
+                tx_array_response = self.transmitter.antennas.cartesian_array_response(center_frequency, tx_direction.view(np.ndarray), "global").conj()
+                rx_array_response = self.receiver.antennas.cartesian_array_response(center_frequency, rx_direction.view(np.ndarray), "global")
 
-                # Equation 7.5-28
-                rx_polarization = self.receiver.antennas.characteristics(aoa, zoa)
-                tx_polarization = self.transmitter.antennas.characteristics(aod, zod)
-
-                channel = (rx_response[:, None] * rx_polarization) @ jones @ (tx_polarization * tx_response[:, None]).T * sqrt(cluster_powers[cluster_idx] / num_clusters)
+                channel = rx_array_response @ jones @ tx_array_response.T * sqrt(cluster_powers[cluster_idx] / num_clusters)
 
                 wave_vector = np.array([cos(aoa) * sin(zoa), sin(aoa) * sin(zoa), cos(zoa)], dtype=float)
                 impulse = np.exp(np.inner(wave_vector, relative_velocity) * fast_fading * 2j * pi)
@@ -797,12 +795,10 @@ class ClusterDelayLineBase(Channel):
             nlos_coefficients *= (1 + rice_factor_lin) ** -0.5
 
             # Equation 7.5-29
-            rx_response = self.receiver.antennas.spherical_phase_response(center_frequency, *rx_los_angles)
-            tx_response = self.transmitter.antennas.spherical_phase_response(center_frequency, *tx_los_angles).conj()
-            rx_polarization = self.receiver.antennas.characteristics(*rx_los_angles)
-            tx_polarization = self.transmitter.antennas.characteristics(*tx_los_angles)
+            tx_array_response = self.transmitter.antennas.cartesian_array_response(center_frequency, self.receiver.global_position, "global").conj()
+            rx_array_response = self.receiver.antennas.cartesian_array_response(center_frequency, self.transmitter.global_position, "global")
 
-            channel = (rx_response[:, None] * rx_polarization) @ (tx_polarization * tx_response[:, None]).T
+            channel = rx_array_response @ tx_array_response.T
             impulse = np.exp(-2j * pi * los_distance * wavelength_factor) * np.exp(np.inner(rx_wave_vector, relative_velocity) * fast_fading * 2j * pi)
 
             # Second summand of equation 7.5-30

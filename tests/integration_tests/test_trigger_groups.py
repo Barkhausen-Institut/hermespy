@@ -43,9 +43,9 @@ class TestTriggerGroups(TestCase):
 
         # Set up the operations
         self.alpha_link = SimplexLink(self.alpha_transmitter, self.alpha_receiver,
-                                      waveform=RectangularWaveform(guard_interval=4e-7, num_preamble_symbols=0, num_data_symbols=100, symbol_rate=3e9, pilot_rate=1e9, channel_estimation=SingleCarrierIdealChannelEstimation(), channel_equalization=SingleCarrierZeroForcingChannelEqualization()))
+                                      waveform=RectangularWaveform(guard_interval=4e-7, modulation_order=4, num_preamble_symbols=0, num_data_symbols=100, symbol_rate=3e7, pilot_rate=1e7, channel_estimation=SingleCarrierIdealChannelEstimation(), channel_equalization=SingleCarrierZeroForcingChannelEqualization()))
         self.beta_link = SimplexLink(self.beta_transmitter, self.beta_receiver,
-                                     waveform=RectangularWaveform(guard_interval=4e-7, num_preamble_symbols=0, num_data_symbols=100, symbol_rate=3e9, pilot_rate=1e9, channel_estimation=SingleCarrierIdealChannelEstimation(), channel_equalization=SingleCarrierZeroForcingChannelEqualization()))
+                                     waveform=RectangularWaveform(guard_interval=4e-7, modulation_order=4, num_preamble_symbols=0, num_data_symbols=100, symbol_rate=3e7, pilot_rate=1e7, channel_estimation=SingleCarrierIdealChannelEstimation(), channel_equalization=SingleCarrierZeroForcingChannelEqualization()))
 
         # Set up evaluators
         self.alpha_error = BitErrorEvaluator(self.alpha_link, self.alpha_link)

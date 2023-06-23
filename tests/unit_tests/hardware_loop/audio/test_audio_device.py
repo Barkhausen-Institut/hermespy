@@ -85,7 +85,7 @@ class TestAudioAntenna(TestCase):
     def test_characteristics(self) -> None:
         """Audio device antenna should always return ideal characteristics"""
         
-        self.assertCountEqual(np.array([2**0.5, 2**0.5], dtype=float), self.antenna.characteristics(0., 0.))
+        self.assertCountEqual(np.array([2**0.5, 2**0.5], dtype=float), self.antenna.local_characteristics(0., 0.))
 
 
 class TestAudioDeviceAntennas(TestCase):
