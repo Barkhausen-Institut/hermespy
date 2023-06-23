@@ -44,7 +44,7 @@ class StaticOperator(object):
         """
 
         self.__num_samples = num_samples
-        self.__sampling_rate = sampling_rate
+        self.sampling_rate = sampling_rate
 
     @property
     def num_samples(self) -> int:

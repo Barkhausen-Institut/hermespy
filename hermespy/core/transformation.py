@@ -76,11 +76,12 @@ class Direction(np.ndarray):
             unit_vector (np.ndarray):
                 Cartesian numpy vector.
 
-        Returns: An array representing azimuth and elevation angles in radians.
+        Returns: An array representing azimuth and zenith angles in radians.
         """
 
         # Equation 7.1-8 of ETSI TR 138901 v17
-        azimuth = np.angle(unit_vector[0] + 1j * unit_vector[1])
+        azimuth = np.arctan2(unit_vector[1], unit_vector[0])
+        # azimuth = np.angle(unit_vector[0] + 1j * unit_vector[1])
 
         # Equation 7.1-7 of ETSI TR 138901 v17
         # Only valid if the direction has been normalized!!!!
@@ -91,7 +92,7 @@ class Direction(np.ndarray):
     def to_spherical(self) -> np.ndarray:
         """Represent the direction as spherical coordinates.
 
-        Returns: An array representing azimuth and elevation angles in radians.
+        Returns: An array representing azimuth and zenith angles in radians.
         """
 
         return self.__to_spherical().view(np.ndarray)
@@ -142,7 +143,13 @@ class Transformation(np.ndarray, Serializable):
         Returns: Roll, Pitch and Yaw in Radians.
         """
 
-        rpy = np.arctan2([self[2, 1], -self[2, 0], self[1, 0]], [self[2, 2], (self[2, 1] ** 2 + self[2, 2] ** 2) ** 0.5, self[0, 0]])
+        c = (self[0, 0] ** 2 + self[1, 0] ** 2) ** 0.5
+
+        if c != 0:
+            rpy = np.arctan2([self[2, 1] / c, -self[2, 0], self[1, 0] / c], [self[2, 2] / c, c, self[0, 0] / c])
+
+        else:
+            rpy = np.array([np.arctan2(self[0, 1], self[1, 1]), 0.5 * np.pi, 0], dtype=np.float_)
 
         return rpy.view(np.ndarray)
 
@@ -372,7 +379,7 @@ class TransformableLink(metaclass=ABCMeta):
 class TransformableBase(TransformableLink):
     """Base of kinematic chains."""
 
-    @cached_property
+    @property  # @cached_property
     def forwards_transformation(self) -> Transformation:
         return Transformation.No()
 

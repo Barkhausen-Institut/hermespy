@@ -43,7 +43,7 @@ class TestStaticOperator(TestCase):
         """Sampling rate should be the configured sampling rate"""
         
         self.assertEqual(self.sampling_rate, self.operator.sampling_rate)
-        
+
     def test_frame_duration(self) -> None:
         """Silent transmitter should report the correct frame duration"""
         
