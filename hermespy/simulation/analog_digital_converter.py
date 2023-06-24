@@ -257,15 +257,15 @@ class AutomaticGainControl(Serializable, GainControlBase):
 
     def estimate_gain(self, input_signal: Signal) -> float:
         if self.agc_type == GainControlType.MAX_AMPLITUDE:
-            max_amplitude = np.maximum(np.amax(np.real(input_signal.samples)), np.amax(np.imag(input_signal.samples))) * self.backoff
+            max_amplitude = max(np.abs(np.real(input_signal.samples)).max(), np.abs(np.imag(input_signal.samples)).max())
 
         elif self.agc_type == GainControlType.RMS_AMPLITUDE:
-            max_amplitude = np.maximum(rms_value(np.real(input_signal.samples)), rms_value(np.imag(input_signal.samples))) * self.backoff
+            max_amplitude = max(rms_value(np.real(input_signal.samples)), rms_value(np.imag(input_signal.samples)))
 
         else:
             raise RuntimeError("Unsupported gain control type")
 
-        return 1 / max_amplitude if max_amplitude > 0.0 else 1.0
+        return 1 / (max_amplitude * self.backoff) if max_amplitude > 0.0 else 1.0
 
 
 class QuantizerType(SerializableEnum):
