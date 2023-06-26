@@ -210,7 +210,7 @@ class RadarPointCloud(Visualizable):
     def _plot(self, axes: plt.Axes) -> None:
         for point in self.points:
             position = point.position
-            axes.scatter(position[0], position[1], position[2], marker="o", c=point.power, cmap="Greens")
+            axes.scatter(position[0], position[2], position[1], marker="o", c=point.power, cmap="Greens")
 
         # Configure axes
         axes.set_xlim((-self.max_range, self.max_range))
@@ -335,14 +335,12 @@ class ThresholdDetector(RadarDetector, Serializable):
         # Transform the detections to a point cloud
         cloud = RadarPointCloud(cube.range_bins.max())
         for point_indices in detection_point_indices:
-            # angles = cube.angle_bins[point_indices[0]]
-            # ToDo: Add angular domains
             azimuth, zenith = cube.angle_bins[point_indices[0]]
             velocity = cube.velocity_bins[point_indices[1]]
             range = cube.range_bins[point_indices[2]]
             power_indicator = cube.data[tuple(point_indices)]
 
-            cloud.add_point(PointDetection.FromSpherical(zenith, azimuth, velocity, range, power_indicator))
+            cloud.add_point(PointDetection.FromSpherical(zenith, azimuth, range, velocity, power_indicator))
 
         return cloud
 
@@ -367,6 +365,6 @@ class MaxDetector(RadarDetector, Serializable):
         range = cube.range_bins[point_index[2]]
 
         cloud = RadarPointCloud(cube.range_bins.max())
-        cloud.add_point(PointDetection.FromSpherical(angles_of_arrival[0], angles_of_arrival[1], velocity, range, point_power))
+        cloud.add_point(PointDetection.FromSpherical(angles_of_arrival[0], angles_of_arrival[1], range, velocity, point_power))
 
         return cloud
