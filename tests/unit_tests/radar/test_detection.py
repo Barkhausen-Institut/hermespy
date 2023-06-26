@@ -5,6 +5,7 @@ from unittest.mock import patch, Mock
 
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
+from scipy.constants import speed_of_light
 
 from hermespy.radar import PointDetection, RadarCube, RadarPointCloud, ThresholdDetector, MaxDetector
 
@@ -153,6 +154,7 @@ class TestThresholdDetector(TestCase):
         
         self.detector.peak_detection = True
         
+        carrier_frequency = 72e9
         range_bins = np.arange(101)
         doppler_bins = np.arange(15) - 7
         angle_bins = np.array([[-1, 0.],
@@ -161,21 +163,24 @@ class TestThresholdDetector(TestCase):
 
         data = np.zeros((3, 15, 101))
         data[1, 4, :51] = np.arange(51) / 50
-        data[1, 4, 51:] = np.arange(50, 0, -1) / 51  
+        data[1, 4, 51:] = np.arange(50, 0, -1) / 51
         
-        cube = RadarCube(data, angle_bins, doppler_bins, range_bins, 72e9)
+        cube = RadarCube(data, angle_bins, doppler_bins, range_bins, carrier_frequency)
         cloud = self.detector.detect(cube)
         
         self.assertEqual(1, cloud.num_points)
-        self.assertAlmostEqual(1., cloud.points[0].power)   
+        self.assertAlmostEqual(1., cloud.points[0].power)
+        assert_array_almost_equal(np.array([0., 0., range_bins[50]]), cloud.points[0].position)
+        assert_array_almost_equal(np.array([0, 0, doppler_bins[4] * speed_of_light / carrier_frequency]), cloud.points[0].velocity)
 
     def test_detect_unfiltered(self) -> None:
         """Threshold detector should properly detect points with filtering disabled"""
         
         self.detector.peak_detection = False
         
+        carrier_frequency = 72e9
         range_bins = np.arange(101)
-        velocity_bins = np.arange(15) - 7
+        doppler_bins = np.arange(15) - 7
         angle_bins = np.array([[-1, 0.],
                                [0., 0.],
                                [1, 0.]])
@@ -183,11 +188,13 @@ class TestThresholdDetector(TestCase):
         data = np.zeros((3, 15, 101))
         data[1, 2, 3] = 0.5
         
-        cube = RadarCube(data, angle_bins, velocity_bins, range_bins, 72e9)
+        cube = RadarCube(data, angle_bins, doppler_bins, range_bins, carrier_frequency)
         cloud = self.detector.detect(cube)
         
         self.assertEqual(1, cloud.num_points)
         self.assertAlmostEqual(0.5, cloud.points[0].power)
+        assert_array_almost_equal(np.array([0., 0., range_bins[3]]), cloud.points[0].position)
+        assert_array_almost_equal(np.array([0, 0, doppler_bins[2] * speed_of_light / carrier_frequency]), cloud.points[0].velocity)
 
 
 class TestMaxDetector(TestCase):
@@ -200,8 +207,9 @@ class TestMaxDetector(TestCase):
     def test_detect(self) -> None:
         """Max detector should properly detect points"""
         
+        carrier_frequency = 72e9
         range_bins = np.arange(101)
-        velocity_bins = np.arange(15) - 7
+        doppler_bins = np.arange(15) - 7
         angle_bins = np.array([[-1, 0.],
                                [0., 0.],
                                [1, 0.]])
@@ -211,11 +219,13 @@ class TestMaxDetector(TestCase):
         data[1, 2, 3] = 0.5
         data[2, 3, 4] = .1
         
-        cube = RadarCube(data, angle_bins, velocity_bins, range_bins, 72e9)
+        cube = RadarCube(data, angle_bins, doppler_bins, range_bins, carrier_frequency)
         cloud = self.detector.detect(cube)
         
         self.assertEqual(1, cloud.num_points)
         self.assertAlmostEqual(0.5, cloud.points[0].power)
+        assert_array_almost_equal(np.array([0., 0., range_bins[3]]), cloud.points[0].position)
+        assert_array_almost_equal(np.array([0, 0, doppler_bins[2] * speed_of_light / carrier_frequency]), cloud.points[0].velocity)
 
     def test_empty_detect(self) -> None:
         """Max detector should return an empty point cloud if no points are detected"""
