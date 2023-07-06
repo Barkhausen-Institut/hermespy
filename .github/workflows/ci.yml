@@ -25,7 +25,7 @@ jobs:
     - name: Set up Python 3.10
       uses: actions/setup-python@v2
       with:
-        python-version: 3.10
+        python-version: '3.10'
 
     - name: Install dependencies
       run: |
@@ -53,7 +53,7 @@ jobs:
     - name: Setup python 3.10
       uses: actions/setup-python@v2
       with:
-        python-version: 3.10
+        python-version: '3.10'
 
     - name: Install doc dependencies
       run: |
@@ -63,11 +63,11 @@ jobs:
         pip install -e .[test,documentation,quadriga,uhd,audio]
 
     - name: Build documentation
-      run: python -m setup build_sphinx
+      run: sphinx-build docssource/ documentation/
 
     - name: Create github pages
       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
       uses: JamesIves/github-pages-deploy-action@4.1.2
       with:
         branch: gh-pages
-        folder: documentation/html
+        folder: documentation
