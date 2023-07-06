@@ -11,10 +11,10 @@ import numpy as np
 from hermespy.modem.bits_source import RandomBitsSource, StreamBitsSource
 
 __author__ = "Tobias Kronauer"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -53,6 +53,7 @@ class TestRandomBitsSource(TestCase):
 
 
 class TestStreamBitsSource(TestCase):
+    """Test bits source that reads bits from a file stream"""
 
     def setUp(self) -> None:
 
@@ -69,8 +70,15 @@ class TestStreamBitsSource(TestCase):
 
         del self.source
         self.temp_dir.cleanup()
+        
+    def test_get_bits_validation(self) -> None:
+        """Get bits routine should raise RuntimeError if the requested number of bits is not a multiple of 8"""
+
+        with self.assertRaises(RuntimeError):
+            self.source.generate_bits(1)
 
     def test_get_bits(self) -> None:
+        """Test fetching the next block of bits from the file stream"""
 
         bits = self.source.generate_bits(len(self.text)*8)
         text = np.packbits(bits).tobytes()

@@ -6,78 +6,130 @@ Channel Modeling
 """
 
 from __future__ import annotations
-from typing import List, Optional, Tuple, Type, Union, TYPE_CHECKING
+from abc import ABC, abstractmethod
+from collections.abc import Sequence
+from enum import Enum
+from typing import Generic, List, Optional, Tuple, Type, TypeVar, Union, TYPE_CHECKING
 from itertools import chain, product
+from h5py import Group
 
 import numpy as np
-from ruamel.yaml import SafeRepresenter, MappingNode
 
-from hermespy.core import RandomNode, Signal, ChannelStateInformation
-from hermespy.core.factory import SerializableArray
-from hermespy.core.channel_state_information import ChannelStateFormat
+from hermespy.core import DeviceOutput, RandomNode, Signal, ChannelStateInformation, ChannelStateFormat, Serializable
 
 if TYPE_CHECKING:
-    from hermespy.simulation import SimulatedDevice
+    from hermespy.simulation import SimulatedDevice, SimulationScenario  # pragma: no cover
 
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class Channel(SerializableArray, RandomNode):
-    """An ideal distortion-less channel.
+class PropagationDirection(Enum):
+    """Channel signal propagation direction"""
 
-    It also serves as a base class for all other channel models.
+    FORWARDS = 0
+    BACKWARDS = 1
 
-    For MIMO systems, the received signal is the addition of the signal transmitted at all
-    antennas.
-    The channel will provide `number_rx_antennas` outputs to a signal
-    consisting of `number_tx_antennas` inputs. Depending on the channel model,
-    a random number generator, given by `rnd` may be needed. The sampling rate is
-    the same at both input and output of the channel, and is given by `sampling_rate`
-    samples/second.
-    """
 
-    yaml_tag: str = u'Channel'
-    yaml_matrix = True
+CRT = TypeVar("CRT", bound="ChannelRealization")
+"""Type of channel realization"""
+
+
+class ChannelRealization(ChannelStateInformation):
+    """Realization of a wireless channel channel model."""
+
+    __channel: Channel
+
+    def __init__(self, channel: Channel, impulse_response: np.ndarray) -> None:
+        """
+        Args:
+
+            channel (Channel): Channel from which the impulse response was generated.
+            impulse_response (np.ndarray): The channel impulse response.
+        """
+
+        if impulse_response.ndim != 4:
+            raise ValueError("Channel impulse response must be four-dimensional numpy tensor")
+
+        self.__channel = channel
+        ChannelStateInformation.__init__(self, ChannelStateFormat.IMPULSE_RESPONSE, impulse_response)
+
+    @property
+    def channel(self) -> Channel:
+        """The channel from which the impulse response was generated.
+
+        Returns: Handle to the channel instance.
+        """
+
+        return self.__channel
+
+    def reciprocal(self) -> ChannelRealization:
+        return ChannelRealization(self.channel, ChannelStateInformation.reciprocal(self).state)
+
+    def to_HDF(self, group: Group) -> None:
+        # Serialize attributes
+        group.attrs["num_delay_taps"] = self.num_delay_taps
+        group.attrs["num_receive_streams"] = self.num_receive_streams
+        group.attrs["num_transmit_streams"] = self.num_transmit_streams
+
+        # Serialize state
+        self._write_dataset(group, "impulse_response", self.state)
+
+    @classmethod
+    def from_HDF(cls: Type[CRT], group: Group) -> CRT:
+        # Deserialize attributes
+        # num_delay_taps = group.attrs['num_delay_taps']
+        # num_receive_streams = group.attrs['num_receive_streams']
+        # num_transmit_streams = group.attrs['num_transmit_streams']
+
+        # Deserialize state
+        impulse_response = np.array(group["impulse_response"], dtype=np.complex_)
+
+        # Create channel realization
+        return cls(channel=None, impulse_response=impulse_response)
+
+
+class Channel(ABC, RandomNode, Serializable, Generic[CRT]):
+    """Base class of all channel models."""
+
+    serialized_attributes = {"impulse_response_interpolation"}
+
     __active: bool
-    __transmitter: Optional[SimulatedDevice]
-    __receiver: Optional[SimulatedDevice]
+    __transmitter: SimulatedDevice | None
+    __receiver: SimulatedDevice | None
+    __scenario: SimulationScenario
     __gain: float
     __sync_offset_low: float
     __sync_offset_high: float
+    __last_realization: Optional[CRT]
     impulse_response_interpolation: bool
 
-    def __init__(self,
-                 transmitter: Optional[SimulatedDevice] = None,
-                 receiver: Optional[SimulatedDevice] = None,
-                 active: Optional[bool] = None,
-                 gain: Optional[float] = None,
-                 sync_offset_low: float = 0.,
-                 sync_offset_high: float = 0.,
-                 impulse_response_interpolation: bool = True,
-                 seed: Optional[int] = None) -> None:
+    def __init__(self, transmitter: SimulatedDevice | None = None, receiver: SimulatedDevice | None = None, devices: Optional[Tuple[SimulatedDevice, SimulatedDevice]] = None, active: bool = True, gain: float = 1.0, sync_offset_low: float = 0.0, sync_offset_high: float = 0.0, impulse_response_interpolation: bool = True, seed: Optional[int] = None) -> None:
         """
         Args:
 
             transmitter (Transmitter, optional):
-                The modem transmitting into this channel.
+                The device transmitting into this channel.
 
             receiver (Receiver, optional):
-                The modem receiving from this channel.
+                The device receiving from this channel.
+
+            devices (Tuple[SimulatedDevice, SimulatedDevice], optional):
+                Tuple of devices connected by this channel model.
 
             active (bool, optional):
                 Channel activity flag.
                 Activated by default.
 
             gain (float, optional):
-                Channel power gain.
-                1.0 by default.
+                Linear channel power gain factor.
+                `1.0` by default.
 
             sync_offset_low (float, optional):
                 Minimum synchronization error in seconds.
@@ -93,18 +145,20 @@ class Channel(SerializableArray, RandomNode):
         """
 
         # Initialize base classes
-        SerializableArray.__init__(self)        # Must be first in order for correct diamond resolve
+        # Must be first in order for correct diamond resolve
+        Serializable.__init__(self)
         RandomNode.__init__(self, seed=seed)
 
         # Default parameters
         self.__active = True
         self.__transmitter = None
         self.__receiver = None
-        self.__gain = 1.0
+        self.gain = gain
+        self.active = active
         self.__scenario = None
         self.sync_offset_low = sync_offset_low
         self.sync_offset_high = sync_offset_high
-        self.recent_response = None
+        self.__last_realization = None
         self.impulse_response_interpolation = impulse_response_interpolation
 
         if transmitter is not None:
@@ -113,11 +167,12 @@ class Channel(SerializableArray, RandomNode):
         if receiver is not None:
             self.receiver = receiver
 
-        if active is not None:
-            self.active = active
+        if devices is not None:
+            if self.receiver is not None or self.transmitter is not None:
+                raise ValueError("Can't use 'devices' initialization argument in combination with specifying a transmitter / receiver")
 
-        if gain is not None:
-            self.gain = gain
+            self.transmitter = devices[0]
+            self.receiver = devices[1]
 
     @property
     def active(self) -> bool:
@@ -158,8 +213,8 @@ class Channel(SerializableArray, RandomNode):
     def transmitter(self, value: SimulatedDevice) -> None:
         """Set the device transmitting into this channel."""
 
-        if self.__transmitter is not None:
-            raise RuntimeError("Overwriting a transmitter configuration is not supported")
+        # if self.__transmitter is not None:
+        #    raise RuntimeError("Overwriting a transmitter configuration is not supported")
 
         self.__transmitter = value
 
@@ -180,10 +235,26 @@ class Channel(SerializableArray, RandomNode):
     def receiver(self, value: SimulatedDevice) -> None:
         """Set the device receiving from this channel."""
 
-        if self.__receiver is not None:
-            raise RuntimeError("Overwriting a receiver configuration is not supported")
+        # if self.__receiver is not None:
+        #    raise RuntimeError("Overwriting a receiver configuration is not supported")
 
         self.__receiver = value
+
+    @property
+    def scenario(self) -> Optional[SimulationScenario]:
+        """Simulation scenario the channel belongs to.
+
+        Returns:
+            Handle to the :class:`Scenario <hermespy.simulation.simulation.SimulationScenario>`.
+            `None` if the channel is considered floating.
+        """
+
+        return self.__scenario
+
+    @scenario.setter
+    def scenario(self, value: SimulationScenario) -> None:
+        self.__scenario = value
+        self.random_mother = value
 
     @property
     def sync_offset_low(self) -> float:
@@ -239,30 +310,31 @@ class Channel(SerializableArray, RandomNode):
 
     @property
     def gain(self) -> float:
-        """Access the channel gain.
+        """Linear channel power gain factor.
 
         The default channel gain is 1.
         Realistic physical channels should have a gain less than one.
 
-        Returns:
-            float:
-                The channel gain.
+        For configuring logarithmic gains, set the attribute using the dB shorthand:
+
+        .. code-block:: python
+
+           from hermespy.core import dB
+
+           # Configure a 10 dB gain
+           channel.gain = dB(10)
+
+        Returns: The channel gain.
+
+        Raises:
+
+            ValueError: For gains smaller than zero.
         """
 
         return self.__gain
 
     @gain.setter
     def gain(self, value: float) -> None:
-        """Modify the channel gain.
-
-        Args:
-            value (float):
-                The new channel gain.
-
-        Raises:
-            ValueError: If gain is smaller than zero.
-        """
-
         if value < 0.0:
             raise ValueError("Channel gain must be greater or equal to zero")
 
@@ -306,10 +378,25 @@ class Channel(SerializableArray, RandomNode):
 
         return self.__receiver.antennas.num_antennas
 
-    def propagate(self,
-                  forwards: Union[Signal, List[Signal], None] = None,
-                  backwards: Union[Signal, List[Signal], None] = None) -> \
-            Tuple[List[Signal], List[Signal], ChannelStateInformation]:
+    @staticmethod
+    def __ensure_sequence(propagated_signal: Union[DeviceOutput, Signal, Sequence[Signal], None]) -> Sequence[Signal]:
+        """Subroutine of :meth:`Channel.propagate`."""
+
+        if isinstance(propagated_signal, DeviceOutput):
+            return propagated_signal.emerging_signals
+
+        if isinstance(propagated_signal, Signal):
+            return [propagated_signal]
+
+        if isinstance(propagated_signal, Sequence):
+            return propagated_signal
+
+        if propagated_signal is None:
+            return list()
+
+        raise ValueError("Propagated signal is of unsupported type")
+
+    def propagate(self, forwards: Union[DeviceOutput, Signal, Sequence[Signal], None] = None, backwards: Union[DeviceOutput, Signal, Sequence[Signal], None] = None, realization: Optional[CRT] = None) -> Tuple[List[Signal], List[Signal], CRT]:
         """Propagate radio-frequency band signals over a channel instance.
 
         For the ideal channel in the base class, the MIMO channel is modeled as a matrix of ones.
@@ -317,11 +404,15 @@ class Channel(SerializableArray, RandomNode):
 
         Args:
 
-            forwards (Union[Signal, List[Signal]], optional):
+            forwards (Union[DeviceOutput, Signal, Sequence[Signal]], optional):
                 Signal models emitted by `device_alpha` associated with this wireless channel model.
 
-            backwards (Union[Signal, List[Signal]], optional):
+            backwards (Union[Signal, Sequence[Signal]], optional):
                 Signal models emitted by `device_beta` associated with this wireless channel model.
+
+            realization (ChannelRealizationType, optional):
+                Channel realization over which to propagate the signals.
+                If not specified, a new channel realization will be generated.
 
         Returns:
 
@@ -353,10 +444,8 @@ class Channel(SerializableArray, RandomNode):
         """
 
         # Convert forwards and backwards transmissions to lists if required
-        forwards = [] if forwards is None else forwards
-        backwards = [] if backwards is None else backwards
-        forwards = [forwards] if isinstance(forwards, Signal) else forwards
-        backwards = [backwards] if isinstance(backwards, Signal) else backwards
+        forwards = self.__ensure_sequence(forwards)
+        backwards = self.__ensure_sequence(backwards)
 
         # Abort if the channel is considered floating, since physical device properties are required for
         # channel modeling
@@ -365,136 +454,116 @@ class Channel(SerializableArray, RandomNode):
 
         # Validate that the signal models contain the correct number of streams
         for signal in forwards:
-            if signal.num_streams != self.transmitter.antennas.num_antennas:
+            if signal.num_streams != self.transmitter.antennas.num_transmit_antennas:
                 raise ValueError("Number of transmitted signal streams does not match number of transmit antennas")
 
         for signal in backwards:
-            if signal.num_streams != self.receiver.antennas.num_antennas:
+            if signal.num_streams != self.receiver.antennas.num_receive_antennas:
                 raise ValueError("Number of transmitted signal streams does not match number of transmit antennas")
 
         # Determine the sampling rate and sample count of the CSI samples
         # For now, the sampling rate and sample count is the maximum over all provided signal models
-        csi_sampling_rate = 0.
+        csi_sampling_rate = 0.0
         csi_num_samples = 0
         for signal in chain(forwards, backwards):
-
             csi_sampling_rate = max(csi_sampling_rate, signal.sampling_rate)
             csi_num_samples = max(csi_num_samples, signal.num_samples)
+
+        if csi_sampling_rate == 0.0:
+            csi_sampling_rate = max(self.transmitter.sampling_rate, self.receiver.sampling_rate)
 
         # If the channel is inactive, propagation will result in signal loss
         # This is modeled by returning an zero-length signal and impulse-response (in time-domain) after propagation
         if not self.active:
-            return [], [], ChannelStateInformation.Ideal(self.num_outputs, self.num_inputs, 0)
+            return [Signal.empty(csi_sampling_rate, self.receiver.antennas.num_receive_antennas)], [Signal.empty(csi_sampling_rate, self.transmitter.antennas.num_transmit_antennas)], self.realize(0, csi_sampling_rate)
 
-        # Generate the channel's impulse response
-        impulse_response = self.impulse_response(csi_num_samples, csi_sampling_rate)
+        # Generate the channel's impulse response realization
+        _realization: CRT = self.realize(csi_num_samples, csi_sampling_rate) if realization is None else realization
 
         # Consider the a random synchronization offset between transmitter and receiver
         sync_offset: float = self._rng.uniform(low=self.__sync_offset_low, high=self.__sync_offset_high)
 
-        forwards_receptions = [self.Propagate(signal.resample(csi_sampling_rate), impulse_response, sync_offset)
-                               for signal in forwards]
-        backwards_receptions = [self.Propagate(signal.resample(csi_sampling_rate),
-                                               impulse_response.transpose((0, 2, 1, 3)).conj(), sync_offset)
-                                for signal in backwards]
+        # Compute the propgated signal samples for both channel directions
+        forwards_receptions = [self.Propagate(signal.resample(csi_sampling_rate), _realization, PropagationDirection.FORWARDS, sync_offset) for signal in forwards]
+        backwards_receptions = [self.Propagate(signal.resample(csi_sampling_rate), _realization, PropagationDirection.BACKWARDS, sync_offset) for signal in backwards]
 
-        channel_state = ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE,
-                                                impulse_response.transpose((1, 2, 0, 3)))
-
-        return forwards_receptions, backwards_receptions, channel_state
+        # Cache the realization and return results
+        self.__last_realization = _realization
+        return forwards_receptions, backwards_receptions, _realization
 
     @staticmethod
-    def Propagate(signal: Signal,
-                  impulse_response: np.ndarray,
-                  delay: float) -> Signal:
-        """Propagate a single signal model given a specific channel impulse response.
+    def Propagate(signal: Signal, realization: ChannelRealization, direction: PropagationDirection = PropagationDirection.FORWARDS, delay: float = 0.0) -> Signal:
+        """Propagate a single signal model given a specific channel realzation.
 
         Args:
 
             signal (Signal):
                 Signal model to be propagated.
 
-            impulse_response (np.ndarray):
-                The impulse response by which to propagate the signal model.
+            realization (ChannelRealization):
+                Channel realization over which the signal model should be propagated.
 
-            delay (float):
+            direction (PropagationDirection, optional):
+                Direction in which the propagation should be assumed.
+                :class:`PropagationDirection.FORWARDS` by default.
+
+            delay (float, optional):
                 Additional delays, for example synchronization offsets.
+                Zero by default.
 
-        Returns:
-
-            propagated_signal (Signal):
-                Propagated signal model.
+        Returns: Propagated signal model.
         """
 
-        # The maximum delay in samples is modeled by the last impulse response dimension
-        num_signal_samples = signal.num_samples
-        num_delay_samples = impulse_response.shape[3] - 1
-        num_tx_streams = impulse_response.shape[2]
-        num_rx_streams = impulse_response.shape[1]
+        realization = realization if direction is PropagationDirection.FORWARDS else realization.reciprocal()
 
         # Propagate the signal
-        propagated_samples = np.zeros((impulse_response.shape[1],
-                                       signal.num_samples + num_delay_samples), dtype=complex)
+        propagated_samples = np.zeros((realization.num_receive_streams, signal.num_samples + realization.num_delay_taps - 1), dtype=complex)
 
-        for delay_index in range(num_delay_samples+1):
-            for tx_idx, rx_idx in product(range(num_tx_streams), range(num_rx_streams)):
+        for delay_index in range(realization.num_delay_taps):
+            for tx_idx, rx_idx in product(range(realization.num_transmit_streams), range(realization.num_receive_streams)):
+                delayed_signal = realization.state[rx_idx, tx_idx, : signal.num_samples, delay_index] * signal.samples[tx_idx, :]
+                propagated_samples[rx_idx, delay_index : delay_index + signal.num_samples] += delayed_signal
 
-                delayed_signal = impulse_response[:num_signal_samples, rx_idx, tx_idx, delay_index] * signal.samples[tx_idx, :]
-                propagated_samples[rx_idx, delay_index:delay_index+num_signal_samples] += delayed_signal
+        return Signal(propagated_samples, sampling_rate=signal.sampling_rate, carrier_frequency=signal.carrier_frequency, delay=signal.delay + delay)
 
-        return Signal(propagated_samples, sampling_rate=signal.sampling_rate,
-                      carrier_frequency=signal.carrier_frequency, delay=signal.delay+delay)
+    @abstractmethod
+    def realize(self, num_samples: int, sampling_rate: float) -> CRT:
+        """Generate a new channel impulse response.
 
-    def impulse_response(self,
-                         num_samples: int,
-                         sampling_rate: float) -> np.ndarray:
-        """Sample a new channel impulse response.
-
-        Note that this is the core routine from which `propagate` will create the channel state.
+        Note that this is the core routine from which :meth:`Channel.propagate` will create the channel state.
 
         Args:
 
             num_samples (int):
-                Number of samples within the impulse response.
+                Number of samples :math:`N` within the impulse response.
 
             sampling_rate (float):
                 The rate at which the delay taps will be sampled, i.e. the delay resolution.
 
         Returns:
-            np.ndarray:
-                Impulse response in all `number_rx_antennas` x `number_tx_antennas`.
-                4-dimensional array of size `T x number_rx_antennas x number_tx_antennas x (L+1)`
-                where `L` is the maximum path delay (in samples). For the ideal
-                channel in the base class, `L = 0`.
+
+                Numpy aray representing the impulse response for all propagation paths between antennas.
+                4-dimensional tensor of size :math:`M_\\mathrm{Rx} \\times M_\\mathrm{Tx} \\times N \\times (L+1)` where
+                :math:`M_\\mathrm{Rx}` is the number of receiving antennas,
+                :math:`M_\\mathrm{Tx}` is the number of transmitting antennas,
+                :math:`N` is the number of propagated samples and
+                :math:`L` is the maximum path delay (in samples).
+                For the ideal  channel in the base class :math:`L = 0`.
+        """
+        ...  # pragma: no cover
+
+    @property
+    def realization(self) -> Optional[CRT]:
+        """The last realization used for channel propagation.
+
+        Updated every time :meth:`Channel.propagate` is called.
+
+        Returns:
+            The channel realization.
+            `None` if :meth:`Channel.propagate` has not been called yet.
         """
 
-        if self.transmitter is None or self.receiver is None:
-            raise RuntimeError("Channel is floating, making impulse response simulation impossible")
-
-        # MISO case
-        if self.receiver.antennas.num_antennas == 1:
-            impulse_responses = np.tile(np.ones((1, self.transmitter.antennas.num_antennas), dtype=complex),
-                                        (num_samples, 1, 1))
-
-        # SIMO case
-        elif self.transmitter.antennas.num_antennas == 1:
-            impulse_responses = np.tile(np.ones((self.receiver.antennas.num_antennas, 1), dtype=complex),
-                                        (num_samples, 1, 1))
-
-        # MIMO case
-        else:
-            impulse_responses = np.tile(np.eye(self.receiver.antennas.num_antennas,
-                                               self.transmitter.antennas.num_antennas,
-                                               dtype=complex), (num_samples, 1, 1))
-
-        # Scale by channel gain and add dimension for delay response
-        impulse_responses = self.gain * np.expand_dims(impulse_responses, axis=3)
-
-        # Save newly generated response as most recent impulse response
-        self.recent_response = impulse_responses
-
-        # Return resulting impulse response
-        return impulse_responses
+        return self.__last_realization
 
     @property
     def min_sampling_rate(self) -> float:
@@ -506,29 +575,3 @@ class Channel(SerializableArray, RandomNode):
 
         # Since the default channel is time-invariant, there are no sampling rate requirements
         return 0.0
-
-    @classmethod
-    def to_yaml(cls: Type[Channel], representer: SafeRepresenter, node: Channel) -> MappingNode:
-        """Serialize a channel object to YAML.
-
-        Args:
-            representer (SafeRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
-
-            node (Channel):
-                The channel instance to be serialized.
-
-        Returns:
-            Node:
-                The serialized YAML node.
-        """
-
-        state = {
-            'gain': node.__gain,
-            'active': node.__active,
-            'sync_offset_low': node.__sync_offset_low,
-            'sync_offset_high': node.__sync_offset_high
-        }
-
-        return representer.represent_mapping(cls.yaml_tag, state)

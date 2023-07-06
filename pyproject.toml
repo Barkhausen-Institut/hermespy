@@ -1,10 +1,13 @@
 [build-system]
 requires = [
-    "setuptools",
-    "sphinx",
+    "setuptools>=42",
     "wheel",
     "pybind11",
     "scikit-build",
     "cmake"
 ]
 build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 400
+target-version = ['py39']

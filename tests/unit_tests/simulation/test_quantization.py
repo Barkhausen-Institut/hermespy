@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+from copy import deepcopy
 import unittest
 
 import numpy as np
@@ -6,13 +9,13 @@ from hermespy.simulation.analog_digital_converter import AnalogDigitalConverter,
                                                          QuantizerType, GainControlType
 from hermespy.tools.math import rms_value
 from hermespy.core.signal_model import Signal
-from copy import deepcopy
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "André Noll-Barreto"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["André Noll-Barreto"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -30,8 +33,7 @@ class TestQuantization(unittest.TestCase):
 
         self.quantizer = AnalogDigitalConverter(num_quantization_bits=self.num_quantization_bits,
                                                 gain=self.gain,
-                                                quantizer_type=self.quantizer_type
-                                                )
+                                                quantizer_type=self.quantizer_type)
 
     def test_init(self) -> None:
         """Initialization arguments should be properly stored as object attributes."""
@@ -48,7 +50,7 @@ class TestQuantization(unittest.TestCase):
 
         number_bits = 0
         self.quantizer.num_quantization_bits = number_bits
-        self.assertEqual(np.inf, self.quantizer.num_quantization_bits)
+        self.assertEqual(None, self.quantizer.num_quantization_bits)
 
     def test_num_quantization_bits_validation(self) -> None:
         """Quantization bits property setter should raise ValueError on arguments smaller than zero or non-integer."""
@@ -108,7 +110,7 @@ class TestQuantization(unittest.TestCase):
         """ Test correct quantizer output without gain control"""
 
         max_amplitude = 100
-        self.quantizer.gain = Gain(1 / max_amplitude)
+        self.quantizer.gain = Gain(1 / max_amplitude, True)
 
         # randomly choose quantization levels
         quantization_idx = self.rng.integers(self.quantizer.num_quantization_levels,
@@ -137,7 +139,7 @@ class TestQuantization(unittest.TestCase):
     def test_quantization_max_amplitude(self):
         """ Test correct quantizer output with gain control to maximum amplitude"""
 
-        self.quantizer.gain = AutomaticGainControl(GainControlType.MAX_AMPLITUDE)
+        self.quantizer.gain = AutomaticGainControl(GainControlType.MAX_AMPLITUDE, 1., True)
 
         max_amplitude = 123.7
 
@@ -191,7 +193,7 @@ class TestQuantization(unittest.TestCase):
     def test_quantization_complex(self):
         """ Test correct quantization of complex numbers"""
         max_amplitude = 100
-        self.quantizer.gain = Gain(1 / max_amplitude)
+        self.quantizer.gain = Gain(1 / max_amplitude, True)
 
         # randomly choose quantization levels
         quantization_idx = self.rng.integers(self.quantizer.num_quantization_levels,
@@ -217,7 +219,7 @@ class TestQuantization(unittest.TestCase):
         """ Test correct mid-tread quantizer output without gain control"""
 
         max_amplitude = 150.
-        self.quantizer.gain = Gain(1 / max_amplitude)
+        self.quantizer.gain = Gain(1 / max_amplitude, True)
         self.quantizer.quantizer_type = QuantizerType.MID_TREAD
 
         # randomly choose quantization levels
@@ -246,5 +248,8 @@ class TestQuantization(unittest.TestCase):
 
         np.testing.assert_almost_equal(np.real(output_signal.samples.flatten()), quantization_levels)
 
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
 
-
+        test_yaml_roundtrip_serialization(self, self.quantizer)
+ 

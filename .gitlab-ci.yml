@@ -1,65 +1,104 @@
+#image: $CI_REGISTRY/barkhauseninstitut/wicon/hermespy:python-39-linux
 image: python:3.9
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  GIT_SUBMODULE_STRATEGY: recursive
+  HERMES_VERSION: "1.1.0"
+  HERMES_WHEEL: "hermespy-$HERMES_VERSION-cp39-cp39-linux_x86_64.whl"
 
 stages:
   - build
   - test
+  - lint 
   - deploy
 
 cache:
+  key: build-cache
   paths:
-    - .cache/pip
-    - venv/
-
-before_script:
-  - apt update
-  - apt-get install -y build-essential octave
-  - pip install virtualenv
-  - virtualenv venv
-  - source venv/bin/activate
+    - dist/
 
 Build Package:
   stage: build
+  before_script:
+    - apt update && apt-get install -y build-essential octave pandoc python-dev-is-python3
+    - pip install --upgrade setuptools wheel pybind11 scikit-build cmake build
+  script:
+    - export MAKEFLAGS="-j $(grep -c ^processor /proc/cpuinfo)"
+    - python -m build
+#    - pip install --no-cache-dir -U -e .\[test,quadriga,documentation,uhd,audio,develop\]  # remove for docker
+#    - pip uninstall -y hermespy  # remove for docker
   artifacts:
     paths:
-      - dist/*.whl
-  script:
-    - pip install -r requirements.txt
-    - python setup.py bdist_wheel
-    - pip install dist/hermespy-0.3.0-py3-none-any.whl[test,quadriga,documentation]
+      - dist/$HERMES_WHEEL
 
 Unit Testing:
   stage: test
   dependencies:
     - Build Package
+  before_script:
+    - apt update && apt-get install -y octave portaudio19-dev python-dev-is-python3 unzip  # remove for docker
+    - pip install -e .\[develop,test,quadriga,uhd,audio\]
+    - unzip dist/$HERMES_WHEEL "hermespy/fec/aff3ct/*.so"
   script:
-    - python -m unittest discover tests/unit_tests
-
+    - coverage run --include=hermespy/* ./tests/test_install.py ./tests/unit_tests/ 
+  after_script:
+    - coverage xml
+    - coverage report -m --include=hermespy/* --skip-covered
+  coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+  
 Integration Testing:
   stage: test
   dependencies:
     - Build Package
+  before_script:
+    - apt update && apt-get install -y octave portaudio19-dev python-dev-is-python3  # remove for docker
+    - pip install dist/$HERMES_WHEEL\[test,quadriga,uhd,audio\]
   script:
-    - python -m unittest discover tests/integration_tests
+    - python ./tests/test_install.py ./tests/integration_tests/ 
 
 Integrity Testing:
   stage: test
   dependencies:
     - Build Package
+  before_script:
+    - apt update && apt-get install -y octave portaudio19-dev python-dev-is-python3  # remove for docker
+    - pip install dist/$HERMES_WHEEL\[test,quadriga,uhd,audio\]
   script:
-    - python -m unittest discover tests/integrity_tests
+    - python ./tests/test_install.py ./tests/integrity_tests/ 
+
+PEP8 Testing:
+  stage: lint
+  before_script:
+    - apt update && apt-get install -y octave portaudio19-dev python-dev-is-python3  # remove for docker
+    - pip install dist/$HERMES_WHEEL\[test,quadriga,uhd,audio\]
+    - pip install flake8
+  script:
+    - flake8 hermespy/
+
+Type Checking:
+  stage: lint
+  before_script:
+    - apt update && apt-get install -y octave portaudio19-dev python-dev-is-python3  # remove for docker
+    - pip install dist/$HERMES_WHEEL\[test,quadriga,uhd,audio\]
+    - pip install mypy
+  script:
+    - mypy
 
 pages:
   stage: deploy
   only:
     - master
+  before_script:
+    - apt update && apt-get install -y octave portaudio19-dev python-dev-is-python3 pandoc  # remove for docker
+    - pip install dist/$HERMES_WHEEL\[test,documentation,quadriga,uhd,audio\]
   script:
-    - python -m setup build_sphinx
-  after_script:
-    - mkdir public/
-    - cp -r documentation/html/* public/
+    - sphinx-build ./docssource/ ./public/
   artifacts:
     paths:
       - public

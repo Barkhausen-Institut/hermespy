@@ -6,29 +6,36 @@ Channel State Information Model
 """
 
 from __future__ import annotations
-from typing import Generator, Optional, List, Union
+from typing import Generator, Optional, List, SupportsIndex, Tuple, Type, TypeVar
 from enum import Enum
 
 import numpy as np
 import matplotlib.pyplot as plt
+from h5py import Group
 from scipy.fft import fft, ifft
-from sparse import COO, diagonal
+from sparse import COO  # type: ignore
+
+from .factory import HDFSerializable
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
+CSIT = TypeVar("CSIT", bound="ChannelStateInformation")
+"""Type hint for channel state information."""
+
+
 class ChannelStateFormat(Enum):
     """Format flag for wireless transmission link states."""
 
-    IMPULSE_RESPONSE = 0        # Channel state in impulse response format
-    FREQUENCY_SELECTIVITY = 1   # Channel state in frequency selectivity format
+    IMPULSE_RESPONSE = 0  # Channel state in impulse response format
+    FREQUENCY_SELECTIVITY = 1  # Channel state in frequency selectivity format
 
 
 class ChannelStateDimension(Enum):
@@ -40,7 +47,7 @@ class ChannelStateDimension(Enum):
     INFORMATION = 3
 
 
-class ChannelStateInformation:
+class ChannelStateInformation(HDFSerializable):
     """State of a single wireless link between a transmitting and receiving modem.
 
     Attributes:
@@ -74,11 +81,7 @@ class ChannelStateInformation:
     __num_delay_taps: int
     __num_frequency_bins: int
 
-    def __init__(self,
-                 state_format: ChannelStateFormat,
-                 state: Optional[np.ndarray] = None,
-                 num_delay_taps: Optional[int] = None,
-                 num_frequency_bins: Optional[int] = None) -> None:
+    def __init__(self, state_format: ChannelStateFormat, state: Optional[np.ndarray] = None, num_delay_taps: Optional[int] = None, num_frequency_bins: Optional[int] = None) -> None:
         """Channel State Information object initialization.
 
         Args:
@@ -136,11 +139,7 @@ class ChannelStateInformation:
 
         self.set_state(self.__state_format, new_state)
 
-    def set_state(self,
-                  state_format: ChannelStateFormat,
-                  state: Optional[np.ndarray] = None,
-                  num_delay_taps: Optional[int] = None,
-                  num_frequency_bins: Optional[int] = None) -> None:
+    def set_state(self, state_format: ChannelStateFormat, state: Optional[np.ndarray] = None, num_delay_taps: Optional[int] = None, num_frequency_bins: Optional[int] = None) -> None:
         """Set a new channel state.
 
         Args:
@@ -165,9 +164,6 @@ class ChannelStateInformation:
 
         state = np.empty((0, 0, 0, 1), dtype=complex) if state is None else state
 
-        if state_format not in ChannelStateFormat:
-            raise ValueError("Unknown channel state format flag")
-
         if state.ndim != 4:
             raise ValueError("Channel state tensor must be 4-dimensional")
 
@@ -177,18 +173,18 @@ class ChannelStateInformation:
         if num_frequency_bins is None:
             num_frequency_bins = state.shape[3]
 
-        if num_delay_taps < 1:
-            raise ValueError("Number of delay taps must be greater or equal to one")
+        # if num_delay_taps < 1:
+        #    raise ValueError("Number of delay taps must be greater or equal to one")
 
-        if num_frequency_bins < 1:
-            raise ValueError("Number of frequency bins must be greater or equal to one")
+        # if num_frequency_bins < 1:
+        #    raise ValueError("Number of frequency bins must be greater or equal to one")
 
         if state_format == ChannelStateFormat.IMPULSE_RESPONSE and num_delay_taps != state.shape[3]:
             raise ValueError("Number of delay taps must be equal to the last dimension of the impulse response")
 
-#        if state_format == ChannelStateFormat.FREQUENCY_SELECTIVITY and state.shape[3] != 1:
-#            raise ValueError("In frequency selectivity mode,"
-#                             "the fourth channel state matrix dimension must be of size one")
+        #        if state_format == ChannelStateFormat.FREQUENCY_SELECTIVITY and state.shape[3] != 1:
+        #            raise ValueError("In frequency selectivity mode,"
+        #                             "the fourth channel state matrix dimension must be of size one")
 
         self.__state_format = state_format
         self.__state = state
@@ -207,7 +203,6 @@ class ChannelStateInformation:
         """
 
         if self.__state_format == ChannelStateFormat.FREQUENCY_SELECTIVITY:
-
             self.__state = ifft(self.__state, axis=3)
             self.__state_format = ChannelStateFormat.IMPULSE_RESPONSE
 
@@ -231,15 +226,13 @@ class ChannelStateInformation:
         """
 
         if self.__state_format == ChannelStateFormat.IMPULSE_RESPONSE:
-
             if num_bins is None:
                 num_bins = self.__num_frequency_bins
 
             else:
                 self.__num_frequency_bins = num_bins
 
-            self.__state = fft(self.__state, axis=3, n=num_bins)
-            self.__state = self.__state.reshape((self.num_receive_streams, self.num_transmit_streams, -1, 1))
+            self.__state = fft(self.__state[:, :, :num_bins, :], axis=3, n=num_bins)
 
             self.__state_format = ChannelStateFormat.FREQUENCY_SELECTIVITY
 
@@ -286,7 +279,7 @@ class ChannelStateInformation:
         if self.__state_format == ChannelStateFormat.IMPULSE_RESPONSE:
             return self.__state.shape[2]
 
-        if self.__state_format == ChannelStateFormat.FREQUENCY_SELECTIVITY:
+        else:  # Channel estate is in frequency selectivity format
             return self.__state.shape[2] * self.__state.shape[3]
 
     @property
@@ -310,28 +303,8 @@ class ChannelStateInformation:
         if self.__state_format == ChannelStateFormat.IMPULSE_RESPONSE:
             return self.__impulse_response_transformation()
 
-        if self.__state_format == ChannelStateFormat.FREQUENCY_SELECTIVITY:
+        else:  # Channel estate is in frequency selectivity format
             return self.__frequency_response_transformation()
-
-        raise RuntimeError("To linear CSI conversion encountered invalid internal state format")
-
-    @linear.setter
-    def linear(self, transformation: Union[COO, np.ndarray]) -> None:
-        """Set the channel state from a linear transformation tensor.
-
-        Args:
-            transformation (Union[COO, np.ndarray]):
-                Linear transformation tensor.
-        """
-
-        if self.__state_format == ChannelStateFormat.IMPULSE_RESPONSE:
-            self.__from_impulse_response(self.__state, transformation, self.num_delay_taps)
-
-        elif self.__state_format == ChannelStateFormat.FREQUENCY_SELECTIVITY:
-            self.__from_frequency_selectivity(self.__state, transformation)
-
-        else:
-            raise RuntimeError("To linear CSI conversion encountered invalid internal state format")
 
     def __impulse_response_transformation(self) -> COO:
         """Convert a channel impulse response to a linear transformation tensor.
@@ -355,10 +328,7 @@ class ChannelStateInformation:
         rx_ids = np.arange(num_rx)
         tx_ids = np.arange(num_tx)
 
-        coordinates = [rx_ids.repeat(num_tx * num_taps * num_in),
-                       tx_ids.repeat(num_rx * num_taps * num_in).reshape((num_tx, -1), order='F').flatten(),
-                       np.tile(out_ids, num_rx * num_tx),
-                       np.tile(in_ids, num_rx * num_tx)]
+        coordinates = [rx_ids.repeat(num_tx * num_taps * num_in), tx_ids.repeat(num_rx * num_taps * num_in).reshape((num_tx, -1), order="F").flatten(), np.tile(out_ids, num_rx * num_tx), np.tile(in_ids, num_rx * num_tx)]
 
         transformation = COO(coordinates, self.__state.flatten(), shape=(num_rx, num_tx, num_out, num_in))
         return transformation
@@ -384,35 +354,19 @@ class ChannelStateInformation:
         rx_ids = np.arange(num_rx)
         tx_ids = np.arange(num_tx)
 
-        coordinates = [rx_ids.repeat(num_tx * num_symbols),
-                       np.tile(tx_ids.repeat(num_symbols), num_rx),     # ToDo: This is probably not completely correct
-                       np.tile(diagonal_ids, num_rx * num_tx),
-                       np.tile(diagonal_ids, num_rx * num_tx)]
+        coordinates = [
+            rx_ids.repeat(num_tx * num_symbols),
+            # ToDo: This is probably not completely correct
+            np.tile(tx_ids.repeat(num_symbols), num_rx),
+            np.tile(diagonal_ids, num_rx * num_tx),
+            np.tile(diagonal_ids, num_rx * num_tx),
+        ]
 
-        transformation = COO(coordinates, self.__state.flatten(),
-                             shape=(num_rx, num_tx, num_symbols, num_symbols))
+        transformation = COO(coordinates, self.__state.flatten(), shape=(num_rx, num_tx, num_symbols, num_symbols))
         return transformation
 
     @staticmethod
-    def __from_impulse_response(state: np.ndarray,
-                                transformation: Union[COO, np.ndarray],
-                                num_taps: int) -> None:
-
-        for delay_idx in range(num_taps):
-
-            diagonal_elements = diagonal(transformation, axis1=3, axis2=2, offset=delay_idx)
-            state[:, :, :diagonal_elements.shape[2], delay_idx] = diagonal_elements.todense()
-
-    @staticmethod
-    def __from_frequency_selectivity(state: np.ndarray, transformation: Union[COO, np.ndarray]) -> None:
-
-        diagonal_elements = diagonal(transformation, axis1=2, axis2=3)
-        state[:, :, :diagonal_elements.shape[2], :].flat = diagonal_elements.todense()
-
-    @staticmethod
-    def Ideal(num_samples: int,
-              num_receive_streams: int = 1,
-              num_transmit_streams: int = 1) -> ChannelStateInformation:
+    def Ideal(num_samples: int, num_receive_streams: int = 1, num_transmit_streams: int = 1) -> ChannelStateInformation:
         """Initialize an ideal channel state.
 
         Args:
@@ -441,12 +395,8 @@ class ChannelStateInformation:
             Generator: Generator.
         """
 
-        for stream_idx, received_stream in enumerate(self.__state):
-
-            updated_stream = yield ChannelStateInformation(self.__state_format, received_stream[np.newaxis, ...])
-
-            if updated_stream is not None:
-                self[stream_idx, ::] = updated_stream
+        for received_stream in self.__state:
+            yield ChannelStateInformation(self.__state_format, received_stream[np.newaxis, ...])
 
     def samples(self) -> Generator[ChannelStateInformation, ChannelStateInformation, None]:
         """Iterate over the sample slices within this channel state.
@@ -456,10 +406,9 @@ class ChannelStateInformation:
         """
 
         for sample_idx in range(self.num_samples):
-            yield ChannelStateInformation(self.__state_format, self.__state[:, :, [sample_idx], :],
-                                          self.__num_delay_taps, self.__num_frequency_bins)
+            yield ChannelStateInformation(self.__state_format, self.__state[:, :, [sample_idx], :], self.__num_delay_taps, self.__num_frequency_bins)
 
-    def __getitem__(self, section: slice) -> ChannelStateInformation:
+    def __getitem__(self, section: SupportsIndex | Tuple[SupportsIndex | slice, ...] | slice) -> ChannelStateInformation:
         """Slice the channel state information.
 
         Args:
@@ -472,11 +421,16 @@ class ChannelStateInformation:
         """
 
         state_section = self.__state[section]
+
+        for s, sec in enumerate(section):  # type: ignore
+            if isinstance(sec, int):
+                state_section = np.expand_dims(state_section, axis=s)
+
         num_delay_taps = self.__num_delay_taps if state_section.shape[3] == self.__state.shape[3] else None
 
         return ChannelStateInformation(self.__state_format, state_section, num_delay_taps)
 
-    def __setitem__(self, key: slice, value: ChannelStateInformation) -> None:
+    def __setitem__(self, key: SupportsIndex | slice | Tuple[SupportsIndex | slice, ...], value: ChannelStateInformation) -> None:
         """Update the channel state information.
 
         Args:
@@ -497,9 +451,7 @@ class ChannelStateInformation:
         self.__state[key] = value.__state
 
     @staticmethod
-    def concatenate(elements: List[ChannelStateInformation],
-                    dimension: ChannelStateDimension) -> ChannelStateInformation:
-
+    def concatenate(elements: List[ChannelStateInformation], dimension: ChannelStateDimension) -> ChannelStateInformation:
         states = [element.__state for element in elements]
         stack = np.concatenate(states, axis=dimension.value)
 
@@ -518,12 +470,9 @@ class ChannelStateInformation:
         fig, axes = plt.subplots(self.__state.shape[0], self.__state.shape[1], squeeze=False)
         for rx_id, receive_states in enumerate(self.__state):
             for tx_id, transmit_states in enumerate(receive_states):
-
                 axes[rx_id, tx_id].imshow(abs(transmit_states))
 
-    def append(self,
-               state: ChannelStateInformation,
-               axis: int) -> None:
+    def append(self, state: ChannelStateInformation, axis: int) -> None:
         """Append a channel state slice to this channel state.
 
         Args:
@@ -535,9 +484,7 @@ class ChannelStateInformation:
                 The dimension along which to append the `linear_state`.
         """
 
-    def append_linear(self,
-                      linear_state: np.ndarray,
-                      axis: int) -> None:
+    def append_linear(self, linear_state: np.ndarray, axis: int) -> None:
         """Append a linear channel state slice to this channel state.
 
         Args:
@@ -548,3 +495,35 @@ class ChannelStateInformation:
             axis (int):
                 The dimension along which to append the `linear_state`.
         """
+
+    def reciprocal(self) -> ChannelStateInformation:
+        """Compute the reciprocal channel state.
+
+        Returns: The reciprocal channel state information.
+        """
+
+        reciprocal_state = self.__state.transpose((1, 0, 2, 3))
+        return ChannelStateInformation(self.__state_format, reciprocal_state, self.num_delay_taps, self.__num_frequency_bins)
+
+    @classmethod
+    def from_HDF(cls: Type[CSIT], group: Group) -> CSIT:
+        # Recall datasets
+        state = np.array(group["state"], dtype=complex)
+
+        # Recall attributes
+        format = ChannelStateFormat[group.attrs.get("format", "IMPULSE_RESPONSE")]
+
+        # Initialize object from recalled state
+        return cls(state=state, state_format=format)
+
+    def to_HDF(self, group: Group) -> None:
+        # Serialize datasets
+        group.create_dataset("state", data=self.state)
+
+        # Serialize attributes
+        group.attrs["num_transmit_streams"] = self.num_transmit_streams
+        group.attrs["num_receive_streams"] = self.num_receive_streams
+        group.attrs["num_symbols"] = self.num_symbols
+        group.attrs["num_taps"] = self.num_delay_taps
+        group.attrs["num_samples"] = self.num_samples
+        group.attrs["format"] = self.state_format.name

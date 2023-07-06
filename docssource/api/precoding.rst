@@ -1,22 +1,19 @@
-================
-Precoding Module
-================
+=========
+Precoding
+=========
 
 The precoding module of HermesPy provides functionalities to code multidimensional wireless streams
 for spatial channel propagation.
 
 .. autoclasstree:: hermespy.precoding
-   :strict:
    :namespace: hermespy
+   :full:
+   :strict:
 
 .. toctree::
+   :maxdepth: 0
+   :caption: Module Content:
+   :titlesonly:
 
    precoding.precoding
-   precoding.precoder
-   precoding.mean_square_equalizer
-   precoding.zero_forcing_equalizer
-   precoding.dft
-   precoding.single_carrier
-   precoding.spatial_multiplexing
-   precoding.ratio_combining
-   precoding.space_time_block_coding
+   precoding.stream_precoding

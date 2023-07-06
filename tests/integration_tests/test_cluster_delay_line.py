@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 from itertools import product
 from unittest import TestCase
 
@@ -12,10 +12,10 @@ from hermespy.simulation import Simulation
 from hermespy.core import IdealAntenna, UniformArray
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -48,7 +48,7 @@ class TestClusterDelayLine(TestCase):
 
         self.channel = RuralMacrocellsLineOfSight()
         self.simulation.scenario.set_channel(self.device_a, self.device_b, self.channel)
-        self.channel.set_seed(123456)
+        self.channel.seed = 123456
 
     def test_cdl(self):
 
@@ -67,16 +67,7 @@ class TestClusterDelayLine(TestCase):
         dictionary = np.empty((self.antennas.num_antennas, num_angle_candidates ** 2), dtype=complex)
         for i, (aoa, zoa) in enumerate(product(azimuth_angles, zenith_angles)):
 
-            dictionary[:, i] = self.device_a.antennas.spherical_response(self.frequency, aoa, zoa)
+            dictionary[:, i] = self.device_a.antennas.spherical_phase_response(self.frequency, aoa, zoa)
 
         beamformer = np.linalg.norm(dictionary.T @ samples, axis=1, keepdims=False).reshape((num_angle_candidates, num_angle_candidates))
-        
-        import matplotlib.pyplot as plt
-        
-        fig, ax = plt.subplots(subplot_kw={'projection': 'polar'})
-        X, Y = np.meshgrid(azimuth_angles, zenith_angles)
-        ax.pcolormesh(X, Y, beamformer.T, shading='nearest')
-        ax.plot(azimuth_angles, zenith_angles, color='k', ls='none')
-        ax.grid()
-        #plt.show()
         return

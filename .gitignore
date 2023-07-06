@@ -3,19 +3,22 @@
 .mypy_cache/
 __pycache__
 _results_*/
-documentation/
+/documentation/
 results/
 .idea/
 env*/
 matlab_env/
+.ipynb_checkpoints/
 
 # IDE specific
 .vscode/
+*.code-workspace
 
 # python-specific
-
+*.so
 *.pyc
 .python-version
+*.so
 
 # Don't track build fragments
 wheel/
@@ -25,7 +28,7 @@ _skbuild/
 build/
 dist/
 .coverage
-MANIFEST
+MANIFEST*
 pip-wheel-metadata/
 
 # misc

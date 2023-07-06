@@ -34,10 +34,10 @@ from hermespy.core.factory import Serializable
 from hermespy.core.random_node import RandomNode
 
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -49,8 +49,7 @@ class BitsSource(ABC, RandomNode):
     Inheriting classes are required to implement the :meth:`.generate_bits` routine.
     """
 
-    def __init__(self,
-                 seed: Optional[int] = None) -> None:
+    def __init__(self, seed: Optional[int] = None) -> None:
         """
         Args:
             seed (int, optional): Seed used to initialize the pseudo-random number generator.
@@ -71,16 +70,15 @@ class BitsSource(ABC, RandomNode):
             np.ndarray:
                 A numpy vector of `num_bits` generated bits.
         """
-        ...
+        ...  # pragma: no cover
 
 
 class RandomBitsSource(BitsSource, Serializable):
     """Bit stream generator for pseudo-random sequences of bits."""
 
-    yaml_tag = u'RandomBits'
+    yaml_tag = "RandomBits"
 
-    def __init__(self, 
-                 seed: Optional[int] = None) -> None:
+    def __init__(self, seed: Optional[int] = None) -> None:
         """
         Args:
             seed (int, optional):
@@ -91,7 +89,6 @@ class RandomBitsSource(BitsSource, Serializable):
         BitsSource.__init__(self, seed=seed)
 
     def generate_bits(self, num_bits: int) -> np.ndarray:
-
         return self._rng.integers(0, 2, size=num_bits, dtype=int)
 
 
@@ -100,8 +97,7 @@ class StreamBitsSource(BitsSource, Serializable):
 
     __stream: BinaryIO
 
-    def __init__(self,
-                 path: str) -> None:
+    def __init__(self, path: str) -> None:
         """
         Args:
 
@@ -110,14 +106,12 @@ class StreamBitsSource(BitsSource, Serializable):
         """
 
         BitsSource.__init__(self)
-        self.__stream = open(path, mode='rb')
+        self.__stream = open(path, mode="rb")
 
     def __del__(self) -> None:
-
         self.__stream.close()
 
     def generate_bits(self, num_bits: int) -> np.ndarray:
-
         num_bytes = int(ceil(num_bits / 8))
         bit_overflow = num_bytes * 8 - num_bits
 

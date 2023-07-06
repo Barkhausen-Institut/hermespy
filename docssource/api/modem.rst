@@ -1,6 +1,6 @@
-====================
-Communication Module
-====================
+=============
+Communication
+=============
 
 This module provides functionalities to transmit information in form of bits over a wireless link.
 
@@ -15,14 +15,26 @@ It consists of the base configuration classes for communication modems
    modem.modem
    modem.bits_source
    modem.symbols
-   modem.waveform_generator
+   modem.waveform
    modem.evaluators
 
 as well as multiple communication waveform implementations
 
 .. toctree::
 
-   modem.waveform_generator_psk_qam
-   modem.waveform_generator_chirp_fsk
-   modem.waveform_generator_ofdm
+   modem.waveform_single_carrier
+   modem.waveform_chirp_fsk
+   modem.waveform_ofdm
    modem.waveform_correlation_synchronization
+
+Its precoding subpackage includes MIMO precoding algorithms
+for communication symbol streams
+
+.. toctree::
+
+   modem.precoding.symbol_precoding
+   modem.precoding.dft
+   modem.precoding.single_carrier
+   modem.precoding.spatial_multiplexing
+   modem.precoding.ratio_combining
+   modem.precoding.space_time_block_coding

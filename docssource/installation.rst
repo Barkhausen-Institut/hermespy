@@ -1,11 +1,12 @@
 Installation
 ===============
 
-There are two supported ways to install HermesPy on your system.
-Users may either pull pre-built wheels from the official python package index `PyPi`_ or
-or clone the source code from `GitHub`_ and build the package from scratch.
+There are three supported ways to install HermesPy on your system.
+Users may either pull pre-built wheels from the official python package index `PyPi`_,
+clone the source code from `GitHub`_ and build the package from scratch,
+or execute the provided `installation routine`_ to install the Hermes command line interface on Windows systems.
 
-Both methods will be described in the following sections.
+All methods will be described in the following sections.
 
 Install from PyPi
 -----------------
@@ -21,17 +22,23 @@ Install the package by executing the following commands within a terminal:
 
 .. tabs::
 
-   .. code-tab:: batch Windows
+   .. code-tab:: batch Windows Conda
 
-      conda create -n <envname> python=3.9
+      conda create -n <envname> python=3.10
       conda activate <envname>
       conda install pip
       pip install hermespy
 
-   .. code-tab:: bash Linux
+   .. code-tab:: batch Windows vEnv
+
+      python -m venv <envname>
+      <envname>\\Scripts\\activate
+      pip install hermespy
+
+   .. code-tab:: bash Linux vEnv
 
       python -m venv env
-      . env/bin/activate
+      source env/bin/activate
       pip install hermespy
 
 Executing these statements sequentially results in the following actions:
@@ -43,12 +50,43 @@ Executing these statements sequentially results in the following actions:
 Note that if you plan on utilizing HermesPy within an already existing Python environment,
 you may omit step one and replace `<envname>` by the title of the existing environment.
 
+Hermes' setup lists a set of optional features requiring the installation of additional dependencies.
+In order for those features to function properly, the respective identifiers have to be appended to the installation command
+
+.. code:: bash
+
+   pip install "hermespy[feature,feature,feature]"
+
+The following feature identifiers are available:
+
+.. list-table:: Optional Features
+   :header-rows: 1
+
+   * - Feature
+     - Description
+
+   * - quadriga
+     - Support for the `Quadriga`_ channel model
+
+   * - uhd
+     - Support for the USRP Hardware Driver
+
+   * - audio
+     - Support for audio hardware
+
+   * - documentation
+     - Dependencies to build the documentation from source
+
+   * - develop
+     - Dependencies to build binaries from source
+
+
 Install from Source
 -------------------
 
 Cloning the HermesPy source code and manually building / installing its package is the recommended way
 for developers who plan on extending the HermesPy source code.
-Additionally, it can also be applied by users who, for any reason, are unable to install HermesPy from
+Additionally, this mathod can also be applied by users as a fall-back who, for any reason, are unable to install HermesPy from
 the index.
 
 Before cloning, make sure to have the `LFS`_ extension to `Git`_ installed.
@@ -57,7 +95,7 @@ the HermesPy source code can be copied to any system by executing
 
 .. code-block:: bash
 
-   git clone <this-repo>
+   git clone --recursive <this-repo>
    cd hermespy/
 
 within a terminal.
@@ -66,25 +104,30 @@ within a terminal.
 Some submodules of HermesPy are provided as C++ implementations with Python bindings for improved performance.
 Therefore, building the package from source requires your system to have a
 build chain detectable by `CMake`_ installed and configured.
-For Windows users, we recommend downloading and installing either the `Visual Studio Build Tools`_
-or `MinGW`_ as a free open-source alternative.
+For Windows users, we recommend downloading and installing the `Visual Studio Build Tools`_.
 
 
 Build and install the package contained within the repository by executing the following commands within a terminal:
 
 .. tabs::
 
-   .. code-tab:: batch Windows
+   .. code-tab:: batch Windows Conda
 
-      conda create -n <envname> python=3.9
+      conda create -n <envname> python=3.10
       conda activate <envname>
       conda install pip
       pip install .
 
-   .. code-tab:: bash Linux
+   .. code-tab:: batch Windows vEnv
+
+      python -m venv <envname>
+      <envname>\\Scripts\\activate
+      pip install .
+
+   .. code-tab:: bash Linux vEnv
 
       python -m venv env
-      . env/bin/activate
+      source env/bin/activate
       pip install .
 
 Executing these statements sequentially results in the following actions:
@@ -96,13 +139,33 @@ Executing these statements sequentially results in the following actions:
 Note that if you plan on utilizing HermesPy within an already existing Python environment,
 you may omit step one and replace `<envname>` by the title of the existing environment.
 
-**If you plan to alter the source code in any way, we recommend appending the editable flag**
+**If you plan to alter the source code in any way, we recommend installing the package as editable.**
+As a result, all combined binaries and source files will remain within the repository directory during installation.
 
-.. code-block:: bash
+.. tabs::
 
-   pip install -e .
+   .. code-tab:: batch Windows Conda
 
-**during installation.**
+      conda create -n <envname> python=3.9
+      conda activate <envname>
+      conda install pip
+      pip install -e ".[develop]"
+      python -m setup develop
+
+   .. code-tab:: batch Windows vEnv
+
+      python -m venv <envname>
+      <envname>\\Scripts\\activate
+      pip install -e ".[develop]"
+      python -m setup develop
+
+   .. code-tab:: bash Linux vEnv
+
+      python -m venv env
+      source env/bin/activate
+      pip install -e ".[develop]"
+      python -m setup develop
+
 
 Install Quadriga
 ----------------
@@ -130,6 +193,20 @@ Download the latest version of `Quadriga`_ and extract the zip archive in a loca
 Afterwards, set the environment variable `HERMES_QUADRIGA` to point to the `quadriga_src` directory.
 This will point Hermes to search for the Quadriga files within the specified location during simulation runtime.
 
+
+Installation Routine
+---------------------
+
+The installation routine automatically sets up a Python environment and pulls Hermes from `PyPi`_,
+setting the proper Windows environment variables to enable the operation from Hermes as a command
+line tool within the userspace.
+Simply download and execute the `installation routine`_.
+
+Please note that the installer feature has been newly introduced with version `1.0.0`
+in order to streamline the setup process for users inexperienced in Python.
+To further improve the user experience for everyone, please report issues with the installation to `GitHub`_.
+
+
 .. _PyPi: https://pypi.org/
 .. _GitHub: https://github.com/Barkhausen-Institut/hermespy
 .. _package: https://pypi.org/project/hermespy/
@@ -142,4 +219,4 @@ This will point Hermes to search for the Quadriga files within the specified loc
 .. _oct2py: https://pypi.org/project/oct2py/
 .. _CMake: https://cmake.org/
 .. _Visual Studio Build Tools: https://visualstudio.microsoft.com/de/downloads/#build-tools-for-visual-studio-2022
-.. _MinGW: https://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Personal%20Builds/mingw-builds/installer/mingw-w64-install.exe/download
+.. _installation routine: https://github.com/Barkhausen-Institut/hermespy/blob/main/scripts/install/HermesPy.exe

@@ -6,36 +6,61 @@ Random Graph
 """
 
 from __future__ import annotations
-from typing import Optional, Type, Union
+from sys import maxsize
+from typing import Optional
 
 from numpy.random import default_rng, Generator
-from ruamel.yaml import SafeConstructor, SafeRepresenter, ScalarNode, MappingNode
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
+class RandomRealization(object):
+    """Realization of a random node."""
+
+    __seed: int
+
+    def __init__(self, random_node: RandomNode) -> None:
+        """
+        Args:
+            random_node (RandomNode): Random node from which to generate a realization.
+        """
+
+        # Draw a random signed integer from the node's random number generator
+        self.__seed = random_node._rng.integers(0, maxsize)
+
+    @property
+    def seed(self) -> int:
+        """Seed of the random realization.
+
+        Returns: A signed integer representing the random seed.
+        """
+
+        return self.__seed
+
+    def generator(self) -> Generator:
+        """Initialize a new generator from the realized random seed.
+
+        Returns: A new numpy generator object.
+        """
+
+        return default_rng(self.__seed)
+
+
 class RandomNode(object):
     """Random Node within a random dependency graph."""
 
-    # __slots__ = ['__mother_node', '__generator', '__seed']
+    __mother_node: Optional[RandomNode]  # Mother node of this node
+    __generator: Optional[Generator]  # Numpy generator object
+    __seed: Optional[int]
 
-    yaml_tag = u'RandomNode'
-    """YAML serialization tag."""
-
-    __mother_node: Optional[RandomNode]     # Mother node of this node
-    __generator: Optional[Generator]        # Numpy generator object
-    __seed: Optional[int]                   # Seed used to initialize the pseud-random number generator
-
-    def __init__(self,
-                 mother_node: Optional[RandomNode] = None,
-                 seed: Optional[int] = None) -> None:
+    def __init__(self, mother_node: Optional[RandomNode] = None, seed: Optional[int] = None) -> None:
         """
         Args:
 
@@ -48,7 +73,7 @@ class RandomNode(object):
 
         """
 
-        self.__generator = default_rng(seed)
+        self.seed = seed
         self.__mother_node = mother_node
 
     @property
@@ -65,7 +90,11 @@ class RandomNode(object):
         if self.is_random_root:
             return self.__generator
 
-        return self.__mother_node._rng
+        return self.random_mother._rng
+
+    @_rng.setter
+    def _rng(self, value: Generator) -> None:
+        self.__generator = value
 
     @property
     def is_random_root(self) -> bool:
@@ -77,17 +106,19 @@ class RandomNode(object):
 
         return self.__generator is not None
 
-    def set_seed(self, seed: int) -> None:
-        """Set an initialization seed for the pseudo-random number generator.
+    @property
+    def seed(self) -> Optional[int]:
+        """Random seed of this node.
 
-        Note that setting a seed will convert any random node to a base node!
-
-        Args:
-            seed (int): Random number seed.
+        Returns: Random seed. `None` if no seed was specified.
         """
 
-        self.__seed = seed
-        self.__generator = default_rng(seed)
+        return self.__seed
+
+    @seed.setter
+    def seed(self, value: int) -> None:
+        self.__seed = value
+        self.__generator = default_rng(value)
 
     @property
     def random_mother(self) -> Optional[RandomNode]:
@@ -107,56 +138,5 @@ class RandomNode(object):
     def random_mother(self, value: RandomNode) -> None:
         """Set the mother node of this random number generator."""
 
-        self.__generator = None
+        self.__generator = default_rng(self.seed) if value is None else None
         self.__mother_node = value
-
-    @classmethod
-    def to_yaml(cls: Type[RandomNode], representer: SafeRepresenter, node: RandomNode) -> ScalarNode:
-        """Serialize a `RandomNode` object to YAML.
-
-        Args:
-            representer (SafeRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
-
-            node (RandomNode):
-                The `RandomNode` instance to be serialized.
-
-        Returns:
-            Node:
-                The serialized YAML node.
-                None if the object state is default.
-        """
-
-        if node.__seed is not None:
-
-            state = {'seed': node.__seed}
-            return representer.represent_mapping(cls.yaml_tag, state)
-
-        return representer.represent_none(None)
-
-    @classmethod
-    def from_yaml(cls: Type[RandomNode],
-                  constructor: SafeConstructor,
-                  node: Union[ScalarNode, MappingNode]) -> RandomNode:
-        """Recall a new `RandomNode` instance from YAML.
-
-        Args:
-            constructor (SafeConstructor):
-                A handle to the constructor extracting the YAML information.
-
-            node (Node):
-                YAML node representing the `RandomNode` serialization.
-
-        Returns:
-            RandomNode:
-                Newly created `RandomNode` instance.
-        """
-
-        if isinstance(node, ScalarNode):
-            return cls()
-
-        state = constructor.construct_mapping(node)
-
-        # Just mask the seed state if provided
-        state['random_generator'] = state.pop('seed', None)

@@ -1,26 +1,26 @@
 # -*- coding: utf-8 -*-
 
 from unittest import TestCase
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import numpy as np
 from numpy.testing import assert_array_equal
 
-from hermespy.core import FloatingError, Signal
+from hermespy.core import FloatingError, Signal, UniformArray, IdealAntenna
 from hermespy.beamforming import BeamformerBase, FocusMode, ReceiveBeamformer, TransmitBeamformer
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
 class TestBeamformerBase(TestCase):
-    """Test the base for all beamformers."""
+    """Test the base for all beamformers"""
     
     def setUp(self) -> None:
         
@@ -42,7 +42,7 @@ class TestBeamformerBase(TestCase):
         
 
 class TransmitBeamformerMock(TransmitBeamformer):
-    """Mock class to test transmitting beamformers."""
+    """Mock class to test transmitting beamformers"""
     
     @property
     def num_transmit_input_streams(self) -> int:
@@ -73,6 +73,30 @@ class TestTransmitBeamformer(TestCase):
         """Initialization parameters should be properly stored as class attributes"""
         
         self.assertIs(self.operator, self.beamformer.operator)
+        
+    def test_encode_streams_validation(self) -> None:
+        """Encode streams routine should raise exceptions on invalid arguments"""
+        
+        signal = Signal(np.zeros((3, 10), dtype=complex), 1.)
+        with self.assertRaises(ValueError):
+            self.beamformer.encode_streams(signal)
+            
+    def test_encode_streams(self) -> None:
+        """Stream encoding should properly encode the argument signal"""    
+        
+        signal = Signal(np.ones((2, 10), dtype=complex), 1.)
+        encoded_signal = self.beamformer.encode_streams(signal)
+        
+        assert_array_equal(signal.samples, encoded_signal.samples)
+        
+    def test_precoding_setget(self) -> None:
+        """Precoding property getter should return setter argument"""
+        
+        precoding = Mock()
+        self.beamformer.precoding = precoding
+        
+        self.assertIs(precoding, self.beamformer.precoding)
+        self.assertIs(precoding.modem, self.beamformer.operator)
         
     def test_focus_point_validation(self) -> None:
         """Focus point property setter should raise ValueErrors on invalid arguments"""
@@ -127,7 +151,7 @@ class TestTransmitBeamformer(TestCase):
 
 
 class ReceiveBeamformerMock(ReceiveBeamformer):
-    """Mock class to test receiving beamformers."""
+    """Mock class to test receiving beamformers"""
     
     @property
     def num_receive_input_streams(self) -> int:
@@ -151,6 +175,8 @@ class TestReceiveBeamformer(TestCase):
         
         self.operator = Mock()
         self.operator.device = Mock()
+        self.operator.device.carrier_frequency = 10e9
+        self.operator.device.antennas = UniformArray(IdealAntenna, 1e-2, (4, 4))
         
         self.beamformer = ReceiveBeamformerMock(operator=self.operator)
         
@@ -158,6 +184,30 @@ class TestReceiveBeamformer(TestCase):
         """Initialization parameters should be properly stored as class attributes"""
         
         self.assertIs(self.operator, self.beamformer.operator)
+        
+    def test_decode_streams_validation(self) -> None:
+        """Decode streams routine should raise exceptions on invalid arguments"""
+        
+        signal = Signal(np.zeros((3, 10), dtype=complex), 1.)
+        with self.assertRaises(ValueError):
+            self.beamformer.decode_streams(signal)
+            
+    def test_decode_streams(self) -> None:
+        """Stream decoding should properly encode the argument signal"""    
+        
+        signal = Signal(np.ones((2, 10), dtype=complex), 1.)
+        decoded_signal = self.beamformer.decode_streams(signal)
+        
+        assert_array_equal(signal.samples, decoded_signal.samples)
+        
+    def test_precoding_setget(self) -> None:
+        """Precoding property getter should return setter argument"""
+        
+        precoding = Mock()
+        self.beamformer.precoding = precoding
+        
+        self.assertIs(precoding, self.beamformer.precoding)
+        self.assertIs(precoding.modem, self.beamformer.operator)
         
     def test_focus_point_validation(self) -> None:
         """Focus point property setter should raise ValueErrors on invalid arguments"""
@@ -190,6 +240,9 @@ class TestReceiveBeamformer(TestCase):
         
         with self.assertRaises(ValueError):
             self.beamformer.probe_focus_points = np.ones((2, 3))
+            
+        with self.assertRaises(ValueError):
+            self.beamformer.probe_focus_points = np.ones((2, 3, 4, 1))
             
         with self.assertRaises(ValueError):
             self.beamformer.probe_focus_points = np.ones((2, 2))
@@ -252,3 +305,16 @@ class TestReceiveBeamformer(TestCase):
         
         steered_signal = self.beamformer.probe(expected_signal, focus)
         assert_array_equal(expected_samples[np.newaxis, ::], steered_signal)
+
+    def test_plot_receive_characteristics(self) -> None:
+        """Plotting the receive beamforming characteristics should result in a proper figure generation"""
+        
+        with patch('matplotlib.pyplot.figure') as figure:
+            
+            _ = self.beamformer.plot_receive_pattern()
+            figure.assert_called()
+            
+        with patch('matplotlib.pyplot.figure') as figure:
+            
+            _ = self.beamformer.PlotReceivePattern()
+            figure.assert_called()

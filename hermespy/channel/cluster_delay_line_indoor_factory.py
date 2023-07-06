@@ -11,16 +11,14 @@ from abc import ABCMeta
 from math import log10
 from typing import Any
 
-import numpy as np
-
 from ..core.factory import Serializable
 from .cluster_delay_lines import ClusterDelayLineBase
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -29,48 +27,44 @@ __status__ = "Prototype"
 class IndoorFactoryBase(ClusterDelayLineBase, metaclass=ABCMeta):
     """Indoor Factory Cluster Delay Line Model Base."""
 
-    __volume: float     # Hall volume in m3
-    __surface: float    # Total surface hall area in m2 (walls/floor/ceiling)
+    __volume: float  # Hall volume in m3
+    __surface: float  # Total surface hall area in m2 (walls/floor/ceiling)
 
-    def __init__(self,
-                 volume: float,
-                 surface: float,
-                 **kwargs: Any) -> None:
+    def __init__(self, volume: float, surface: float, **kwargs: Any) -> None:
         """
         Args:
-            
+
             volume (float):
                 Hall volume in m3.
-                
+
             surface (float):
                 Total surface hall area in m2 (walls/floor/ceiling).
         """
-        
+
         self.volume = volume
         self.surface = surface
         ClusterDelayLineBase.__init__(self, **kwargs)
-        
+
     @property
     def volume(self) -> float:
         """Hall volume.
-        
+
         Returns:
-            
+
             float: Volume in m3.
-            
+
         Raises:
             ValueError:
                 For volumes smaller or equal to zero.
         """
-        
+
         return self.__volume
-    
+
     @volume.setter
     def volume(self, value: float) -> None:
-        
-        if value <= 0.:
+        if value <= 0.0:
             raise ValueError("Hall volume must be greater than zero")
-        
+
         self.__volume = value
 
     @property
@@ -90,8 +84,7 @@ class IndoorFactoryBase(ClusterDelayLineBase, metaclass=ABCMeta):
 
     @surface.setter
     def surface(self, value: float) -> None:
-
-        if value <= 0.:
+        if value <= 0.0:
             raise ValueError("Hall surface area must be greater than zero")
 
         self.__surface = value
@@ -100,7 +93,7 @@ class IndoorFactoryBase(ClusterDelayLineBase, metaclass=ABCMeta):
 class IndoorFactoryLineOfSight(IndoorFactoryBase, Serializable):
     """Parameter Preset for the 3GPP Cluster Indoor-Factory Model."""
 
-    yaml_tag = u'IndoorFactoryLOS'
+    yaml_tag = "IndoorFactoryLOS"
     """YAML serialization tag."""
 
     @property
@@ -113,7 +106,7 @@ class IndoorFactoryLineOfSight(IndoorFactoryBase, Serializable):
 
     @property
     def delay_spread_std(self) -> float:
-        return .15
+        return 0.15
 
     @property
     def aod_spread_mean(self) -> float:
@@ -121,23 +114,23 @@ class IndoorFactoryLineOfSight(IndoorFactoryBase, Serializable):
 
     @property
     def aod_spread_std(self) -> float:
-        return .25
+        return 0.25
 
     @property
     def aoa_spread_mean(self) -> float:
-        return -.18 * log10(1 + self._center_frequency * 1e-9) + 1.78
+        return -0.18 * log10(1 + self._center_frequency * 1e-9) + 1.78
 
     @property
     def aoa_spread_std(self) -> float:
-        return .12 * log10(1 + self._center_frequency * 1e-9) + .2
+        return 0.12 * log10(1 + self._center_frequency * 1e-9) + 0.2
 
     @property
     def zoa_spread_mean(self) -> float:
-        return -.2 * log10(1 + self._center_frequency * 1e-9) + 1.5
+        return -0.2 * log10(1 + self._center_frequency * 1e-9) + 1.5
 
     @property
     def zoa_spread_std(self) -> float:
-        return .35
+        return 0.35
 
     @property
     def zod_spread_mean(self) -> float:
@@ -145,19 +138,19 @@ class IndoorFactoryLineOfSight(IndoorFactoryBase, Serializable):
 
     @property
     def zod_spread_std(self) -> float:
-        return .35
+        return 0.35
 
     @property
     def zod_offset(self) -> float:
-        return 0.
+        return 0.0
 
     @property
     def rice_factor_mean(self) -> float:
-        return 7.
+        return 7.0
 
     @property
     def rice_factor_std(self) -> float:
-        return 8.
+        return 8.0
 
     @property
     def delay_scaling(self) -> float:
@@ -165,11 +158,11 @@ class IndoorFactoryLineOfSight(IndoorFactoryBase, Serializable):
 
     @property
     def cross_polarization_power_mean(self) -> float:
-        return 12.
+        return 12.0
 
     @property
     def cross_polarization_power_std(self) -> float:
-        return 6.
+        return 6.0
 
     @property
     def num_clusters(self) -> int:
@@ -181,33 +174,33 @@ class IndoorFactoryLineOfSight(IndoorFactoryBase, Serializable):
 
     @property
     def cluster_delay_spread(self) -> float:
-        return 0.
+        return 0.0
 
     @property
     def cluster_aod_spread(self) -> float:
-        return 5.
+        return 5.0
 
     @property
     def cluster_aoa_spread(self) -> float:
-        return 8.
+        return 8.0
 
     @property
     def cluster_zoa_spread(self) -> float:
-        return 9.
+        return 9.0
 
     @property
     def cluster_shadowing_std(self) -> float:
-        return 4.
+        return 4.0
 
     @property
     def _center_frequency(self) -> float:
-        return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))
+        return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))  # type: ignore
 
 
 class IndoorFactoryNoLineOfSight(IndoorFactoryBase, Serializable):
     """Parameter Preset for the 3GPP Cluster Indoor-Factory Model."""
 
-    yaml_tag = u'IndoorFactoryNLOS'
+    yaml_tag = "IndoorFactoryNLOS"
     """YAML serialization tag."""
 
     @property
@@ -220,7 +213,7 @@ class IndoorFactoryNoLineOfSight(IndoorFactoryBase, Serializable):
 
     @property
     def delay_spread_std(self) -> float:
-        return .19
+        return 0.19
 
     @property
     def aod_spread_mean(self) -> float:
@@ -228,7 +221,7 @@ class IndoorFactoryNoLineOfSight(IndoorFactoryBase, Serializable):
 
     @property
     def aod_spread_std(self) -> float:
-        return .2
+        return 0.2
 
     @property
     def aoa_spread_mean(self) -> float:
@@ -236,15 +229,15 @@ class IndoorFactoryNoLineOfSight(IndoorFactoryBase, Serializable):
 
     @property
     def aoa_spread_std(self) -> float:
-        return .3
+        return 0.3
 
     @property
     def zoa_spread_mean(self) -> float:
-        return -.13 * log10(1 + self._center_frequency * 1e-9) + 1.45
+        return -0.13 * log10(1 + self._center_frequency * 1e-9) + 1.45
 
     @property
     def zoa_spread_std(self) -> float:
-        return .45
+        return 0.45
 
     @property
     def zod_spread_mean(self) -> float:
@@ -252,31 +245,31 @@ class IndoorFactoryNoLineOfSight(IndoorFactoryBase, Serializable):
 
     @property
     def zod_spread_std(self) -> float:
-        return .55
+        return 0.55
 
     @property
     def zod_offset(self) -> float:
-        return 0.
+        return 0.0
 
     @property
     def rice_factor_mean(self) -> float:
-        return 0.
+        return 0.0
 
     @property
     def rice_factor_std(self) -> float:
-        return 0.
+        return 0.0
 
     @property
     def delay_scaling(self) -> float:
-        return 3.
+        return 3.0
 
     @property
     def cross_polarization_power_mean(self) -> float:
-        return 11.
+        return 11.0
 
     @property
     def cross_polarization_power_std(self) -> float:
-        return 6.
+        return 6.0
 
     @property
     def num_clusters(self) -> int:
@@ -288,24 +281,24 @@ class IndoorFactoryNoLineOfSight(IndoorFactoryBase, Serializable):
 
     @property
     def cluster_delay_spread(self) -> float:
-        return 0.
+        return 0.0
 
     @property
     def cluster_aod_spread(self) -> float:
-        return 5.
+        return 5.0
 
     @property
     def cluster_aoa_spread(self) -> float:
-        return 8.
+        return 8.0
 
     @property
     def cluster_zoa_spread(self) -> float:
-        return 9.
+        return 9.0
 
     @property
     def cluster_shadowing_std(self) -> float:
-        return 3.
+        return 3.0
 
     @property
     def _center_frequency(self) -> float:
-        return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))
+        return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))  # type: ignore

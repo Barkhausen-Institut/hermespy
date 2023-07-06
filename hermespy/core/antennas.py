@@ -7,8 +7,10 @@ Antenna Configuration
 
 from __future__ import annotations
 from abc import abstractmethod
+from collections.abc import Sequence
+from copy import deepcopy
 from math import cos, sin, exp, sqrt
-from typing import List, Optional, Tuple
+from typing import List, Literal, Optional, overload, Tuple, Type
 
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
@@ -19,27 +21,38 @@ from scipy.constants import pi, speed_of_light
 from .executable import Executable
 from .factory import Serializable
 from .signal_model import Signal
+from .transformation import Direction, Transformable, Transformation
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "0.3.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class Antenna(Serializable):
+class Antenna(Transformable, Serializable):
     """Model of a single antenna.
 
     A set of antenna models defines an antenna array model.
     """
 
-    yaml_tag = u'Antenna'
-    __array: Optional[AntennaArray]     # Array this antenna belongs to
+    yaml_tag = "Antenna"
+    __array: Optional[AntennaArray]  # Array this antenna belongs to
 
-    def __init__(self) -> None:
+    def __init__(self, pose: Transformation | None = None) -> None:
+        """
+        Args:
+
+            pose (Transformation, optional):
+                The antenna's position and orientation with respect to its array.
+        """
+
+        # Init base class
+        Serializable.__init__(self)
+        Transformable.__init__(self, pose=pose)
 
         self.__array = None
 
@@ -57,42 +70,15 @@ class Antenna(Serializable):
 
     @array.setter
     def array(self, value: Optional[AntennaArray]) -> None:
-
         # Do nothing if the state does not change
         if self.__array == value:
             return
 
         if self.__array is not None:
             self.__array.remove_antenna(self)
-        
+
         self.__array = value
-
-    @property
-    def pos(self) -> np.ndarray:
-        """Local position of the antenna within its local coordinate system.
-
-        Returns:
-            np.ndarray:
-                Three-dimensional cartesian position vector.
-
-        Raises:
-
-            ValueError:
-                Floating error if the antenna is not attached to an array.
-        """
-
-        if self.__array is None:
-            raise RuntimeError("Error trying to access the position of a floating antenna")
-
-        return self.__array.antenna_position(self)
-
-    @pos.setter
-    def pos(self, value: np.ndarray) -> None:
-
-        if self.__array is None:
-            raise RuntimeError("Error trying to access the position of a floating antenna")
-
-        self.__array.set_antenna_position(self)
+        self.set_base(self.__array)
 
     def transmit(self, signal: Signal) -> Signal:
         """Transmit a signal over this antenna.
@@ -133,18 +119,26 @@ class Antenna(Serializable):
         return signal
 
     @abstractmethod
-    def polarization(self,
-                     azimuth: float,
-                     elevation) -> Tuple[float, float]:
-        """Generate a single sample of the antenna's polarization characteristics.
+    def local_characteristics(self, azimuth: float, elevation) -> np.ndarray:
+        """Generate a single sample of the antenna's characteristics.
 
+        The polarization is characterized by the angle-dependant field vector
 
         .. math::
+
             \\mathbf{F}(\\phi, \\theta) =
             \\begin{pmatrix}
-                F_{\\mathrm{V}}(\\phi, \\theta) \\\\
                 F_{\\mathrm{H}}(\\phi, \\theta) \\\\
+                F_{\\mathrm{V}}(\\phi, \\theta) \\\\
             \\end{pmatrix}
+
+        denoting the horizontal and vertical field components.
+        The directional antenna gain can be computed from the polarization vector magnitude
+
+        .. math::
+
+            A(\\phi, \\theta) &= \\lVert \\mathbf{F}(\\phi, \\theta) \\rVert \\\\
+                              &= \\sqrt{ F_{\\mathrm{H}}(\\phi, \\theta)^2 + F_{\\mathrm{V}}(\\phi, \\theta)^2 }
 
         Args:
 
@@ -155,15 +149,58 @@ class Antenna(Serializable):
                 Considered vertical wave angle in radians :math:`\\theta`.
 
         Returns:
-            Tuple[float, float]:
-                Vertical and horizontal polarization components of the antenna response.
+
+            Two dimensional numpy array denoting the horizontal and vertical ploarization components
+            of the antenna response vector.
+        """
+        ...  # pragma: no cover
+
+    def global_characteristics(self, global_direction: Direction) -> np.ndarray:
+        """Query the antenna's polarization characteristics towards a certain direction of interest.
+
+        Args:
+
+            global_direction (Direction):
+                Cartesian direction unit vector of interest.
+
+        Returns:
+            Two-dimensional numpy vector representing the antenna's polarization components.
         """
 
-        ...
+        # Compute the local angle of interest for each antenna element
+        local_direction = self.backwards_transformation.transform_direction(global_direction, normalize=True)
+
+        # Query polarization vector for a-th antenna given local azimuth and zenith angles of interest
+        local_antenna_character = self.local_characteristics(*local_direction.to_spherical())
+
+        # Azimuth is denoted by phi in the standard
+        # Zenith is denoted by theta in the standard
+        azimuth_global, zenith_global = global_direction.to_spherical()
+        azimuth_local, zenith_local = local_direction.to_spherical()
+
+        # Phi unit vector implemention of equation (7.1-14) of ETSI TR 138901 version 17.0
+        azimuth_global_unit = np.array([-sin(azimuth_global), cos(azimuth_global), 0], dtype=np.float_)
+        azimuth_local_unit = np.array([-sin(azimuth_local), cos(azimuth_local), 0], dtype=np.float_)
+
+        # Theta unit vector implemention of equation (7.1-13) of ETSI TR 138901 version 17.0
+        zenith_global_unit = np.array([cos(zenith_global) * cos(azimuth_global), cos(zenith_global) * sin(azimuth_global), -sin(zenith_global)], dtype=np.float_)
+        zenith_local_unit = np.array([cos(zenith_local) * cos(azimuth_local), cos(zenith_local) * sin(azimuth_local), -sin(zenith_local)], dtype=np.float_)
+
+        # Implemention of equation (7.1-12) of ETSI TR 138901 version 17.0
+        rotation = self.forwards_transformation[:3, :3]
+        local_zenith_transformed = rotation @ zenith_local_unit
+        local_azimuth_transformed = rotation @ azimuth_local_unit
+        polarization_transformation = np.array([[np.inner(zenith_global_unit, local_zenith_transformed), np.inner(zenith_global_unit, local_azimuth_transformed)], [np.inner(azimuth_global_unit, local_zenith_transformed), np.inner(azimuth_global_unit, local_azimuth_transformed)]])
+
+        # Implemention of equation (7.1-11) of ETSI TR 138901 version 17.0
+        global_antenna_character = polarization_transformation @ local_antenna_character
+
+        # We're finally done
+        return global_antenna_character
 
     def plot_polarization(self, angle_resolution: int = 180) -> plt.Figure:
         """Visualize the antenna polarization depending on the angles of interest.
-        
+
         Args:
 
             angle_resolution (int, optional):
@@ -172,8 +209,7 @@ class Antenna(Serializable):
 
         Returns:
 
-            np.Figure:
-                The created matplotlib figure.
+            The created matplotlib figure.
 
         Raises:
 
@@ -182,57 +218,51 @@ class Antenna(Serializable):
         """
 
         with Executable.style_context():
-
             figure, axes = plt.subplots(1, 2, subplot_kw={"projection": "3d"})
-            figure.suptitle('Antenna Polarization')
+            figure.suptitle("Antenna Polarization")
 
             azimuth_angles = 2 * pi * np.arange(angle_resolution) / angle_resolution - pi
-            elevation_angles = pi * np.arange(int(.5 * angle_resolution)) / int(.5 * angle_resolution) - .5 * pi
+            elevation_angles = pi * np.arange(int(0.5 * angle_resolution)) / int(0.5 * angle_resolution) - 0.5 * pi
 
             azimuth_samples, elevation_samples = np.meshgrid(azimuth_angles, elevation_angles)
             e_surface = np.empty((len(azimuth_angles) * len(elevation_angles), 3), dtype=float)
             e_magnitudes = np.empty(len(azimuth_angles) * len(elevation_angles), dtype=float)
             h_surface = np.empty((len(azimuth_angles) * len(elevation_angles), 3), dtype=float)
             h_magnitudes = np.empty(len(azimuth_angles) * len(elevation_angles), dtype=float)
-            
+
             for i, (azimuth, elevation) in enumerate(zip(azimuth_samples.flat, elevation_samples.flat)):
-                
-                e_magnitude, h_magnitude = self.polarization(azimuth, elevation)
-                
+                e_magnitude, h_magnitude = self.local_characteristics(azimuth, elevation)
+
                 e_magnitudes[i] = e_magnitude
                 h_magnitudes[i] = h_magnitude
-                
-                e_surface[i, :] = (e_magnitude * cos(azimuth) * cos(elevation),
-                                   e_magnitude * sin(azimuth) * cos(elevation),
-                                   e_magnitude * sin(elevation))
-                h_surface[i, :] = (h_magnitude * cos(azimuth) * cos(elevation),
-                                   h_magnitude * sin(azimuth) * cos(elevation),
-                                   h_magnitude * sin(elevation))
+
+                e_surface[i, :] = (e_magnitude * cos(azimuth) * cos(elevation), e_magnitude * sin(azimuth) * cos(elevation), e_magnitude * sin(elevation))
+                h_surface[i, :] = (h_magnitude * cos(azimuth) * cos(elevation), h_magnitude * sin(azimuth) * cos(elevation), h_magnitude * sin(elevation))
 
             triangles = tri.Triangulation(azimuth_samples.flatten(), elevation_samples.flatten())
 
-            e_cmap = plt.cm.ScalarMappable(norm=colors.Normalize(e_magnitudes.min(), e_magnitudes.max()), cmap='jet')
+            e_cmap = plt.cm.ScalarMappable(norm=colors.Normalize(e_magnitudes.min(), e_magnitudes.max()), cmap="jet")
             e_cmap.set_array(e_magnitudes)
-            h_cmap = plt.cm.ScalarMappable(norm=colors.Normalize(h_magnitudes.min(), h_magnitudes.max()), cmap='jet')
+            h_cmap = plt.cm.ScalarMappable(norm=colors.Normalize(h_magnitudes.min(), h_magnitudes.max()), cmap="jet")
             h_cmap.set_array(h_magnitudes)
 
-            axes[0].set_title('E-Field')
-            axes[0].plot_trisurf(e_surface[:, 0], e_surface[:, 1], e_surface[:, 2], triangles=triangles.triangles, cmap=e_cmap.cmap, norm=e_cmap.norm, linewidth=0.)
-            axes[0].set_xlabel('X')
-            axes[0].set_ylabel('Y')
-            axes[0].set_zlabel('Z')
+            axes[0].set_title("E-Field")
+            axes[0].plot_trisurf(e_surface[:, 0], e_surface[:, 1], e_surface[:, 2], triangles=triangles.triangles, cmap=e_cmap.cmap, norm=e_cmap.norm, linewidth=0.0)
+            axes[0].set_xlabel("X")
+            axes[0].set_ylabel("Y")
+            axes[0].set_zlabel("Z")
 
-            axes[1].set_title('H-Field')
-            axes[1].plot_trisurf(h_surface[:, 0], h_surface[:, 1], h_surface[:, 2], triangles=triangles.triangles, cmap=h_cmap.cmap, norm=h_cmap.norm, linewidth=0.)
-            axes[1].set_xlabel('X')
-            axes[1].set_ylabel('Y')
-            axes[1].set_zlabel('Z')
+            axes[1].set_title("H-Field")
+            axes[1].plot_trisurf(h_surface[:, 0], h_surface[:, 1], h_surface[:, 2], triangles=triangles.triangles, cmap=h_cmap.cmap, norm=h_cmap.norm, linewidth=0.0)
+            axes[1].set_xlabel("X")
+            axes[1].set_ylabel("Y")
+            axes[1].set_zlabel("Z")
 
             return figure
 
     def plot_gain(self, angle_resolution: int = 180) -> plt.Figure:
         """Visualize the antenna gain depending on the angles of interest.
-        
+
         Args:
 
             angle_resolution (int, optional):
@@ -241,8 +271,7 @@ class Antenna(Serializable):
 
         Returns:
 
-            np.Figure:
-                The created matplotlib figure.
+            The created matplotlib figure.
 
         Raises:
 
@@ -251,36 +280,32 @@ class Antenna(Serializable):
         """
 
         with Executable.style_context():
-
             figure, axes = plt.subplots(subplot_kw={"projection": "3d"})
-            figure.suptitle('Antenna Gain')
+            figure.suptitle("Antenna Gain")
 
             azimuth_angles = 2 * pi * np.arange(angle_resolution) / angle_resolution - pi
-            elevation_angles = pi * np.arange(int(.5 * angle_resolution)) / int(.5 * angle_resolution) - .5 * pi
+            elevation_angles = pi * np.arange(int(0.5 * angle_resolution)) / int(0.5 * angle_resolution) - 0.5 * pi
 
             azimuth_samples, elevation_samples = np.meshgrid(azimuth_angles, elevation_angles)
             surface = np.empty((len(azimuth_angles) * len(elevation_angles), 3), dtype=float)
             magnitudes = np.empty(len(azimuth_angles) * len(elevation_angles), dtype=float)
 
             for i, (azimuth, elevation) in enumerate(zip(azimuth_samples.flat, elevation_samples.flat)):
-                
-                e_magnitude, h_magnitude = self.polarization(azimuth, elevation)
-                magnitude = sqrt(e_magnitude ** 2 + h_magnitude **2)    
+                e_magnitude, h_magnitude = self.local_characteristics(azimuth, elevation)
+                magnitude = sqrt(e_magnitude**2 + h_magnitude**2)
                 magnitudes[i] = magnitude
-                
-                surface[i, :] = (magnitude * cos(azimuth) * cos(elevation),
-                                 magnitude * sin(azimuth) * cos(elevation),
-                                 magnitude * sin(elevation))
+
+                surface[i, :] = (magnitude * cos(azimuth) * cos(elevation), magnitude * sin(azimuth) * cos(elevation), magnitude * sin(elevation))
 
             triangles = tri.Triangulation(azimuth_samples.flatten(), elevation_samples.flatten())
 
-            cmap = plt.cm.ScalarMappable(norm=colors.Normalize(magnitudes.min(), magnitudes.max()), cmap='jet')
+            cmap = plt.cm.ScalarMappable(norm=colors.Normalize(magnitudes.min(), magnitudes.max()), cmap="jet")
             cmap.set_array(magnitudes)
 
-            axes.plot_trisurf(surface[:, 0], surface[:, 1], surface[:, 2], triangles=triangles.triangles, cmap=cmap.cmap, norm=cmap.norm, linewidth=0.)
-            axes.set_xlabel('X')
-            axes.set_ylabel('Y')
-            axes.set_zlabel('Z')
+            axes.plot_trisurf(surface[:, 0], surface[:, 1], surface[:, 2], triangles=triangles.triangles, cmap=cmap.cmap, norm=cmap.norm, linewidth=0.0)
+            axes.set_xlabel("X")
+            axes.set_ylabel("Y")
+            axes.set_zlabel("Z")
 
             return figure
 
@@ -308,11 +333,63 @@ class IdealAntenna(Antenna):
     resulting in unit gain in every direction.
     """
 
-    yaml_tag: u'IdealAntenna'
+    yaml_tag = "IdealAntenna"
+    """YAML serialization tag"""
 
-    def polarization(self, azimuth: float, elevation: float) -> Tuple[float, float]:
+    def local_characteristics(self, azimuth: float, elevation: float) -> np.ndarray:
+        return np.array([2**-0.5, 2**-0.5], dtype=float)
 
-        return 2 ** -.5, 2 ** -.5
+
+class LinearAntenna(Antenna):
+    """Model of a linearly polarized ideal antenna.
+
+    The assumed characteristic is
+
+    .. math::
+
+       \\mathbf{F}(\\theta, \\phi, \\zeta) =
+          \\begin{pmatrix}
+             \\cos (\\zeta) \\\\
+             \\sin (\\zeta) \\\\
+          \\end{pmatrix}
+
+    with :math:`zeta = 0` resulting in vertical polarization and :math:`zeta = \\pi / 2` resulting in horizontal polarization.
+    """
+
+    yaml_tag = "LinearAntenna"
+
+    __slant: float
+
+    def __init__(self, slant: float = 0.0, pose: Transformation | None = None):
+        """Initialize a new linear antenna.
+
+        Args:
+
+            slant (float):
+                Slant of the antenna in radians.
+
+            pose (Transformation, optional):
+                Pose of the antenna.
+        """
+
+        # Initialize base class
+        Antenna.__init__(self, pose)
+
+        # Initialize class attributes
+        self.__slant = slant
+
+    @property
+    def slant(self) -> float:
+        """Slant of the antenna in radians."""
+
+        return self.__slant
+
+    @slant.setter
+    def slant(self, value: float):
+        self.__slant = value
+
+    def local_characteristics(self, azimuth: float, zenith: float) -> np.ndarray:
+        return np.array([cos(self.slant), sin(self.slant)], dtype=np.float_)
 
 
 class PatchAntenna(Antenna):
@@ -328,12 +405,14 @@ class PatchAntenna(Antenna):
     Refer to :footcite:t:`2012:jaeckel` for further information.
     """
 
-    def polarization(self, azimuth: float, elevation: float) -> Tuple[float, float]:
+    yaml_tag = "PatchAntenna"
+    """YAML serialization tag"""
 
-        vertical_azimuth = .1 + .9 * exp(-1.315 * azimuth ** 2)
+    def local_characteristics(self, azimuth: float, elevation: float) -> np.ndarray:
+        vertical_azimuth = 0.1 + 0.9 * exp(-1.315 * azimuth**2)
         vertical_elevation = cos(elevation) ** 2
 
-        return max(.1, vertical_azimuth * vertical_elevation), 0.
+        return np.array([max(0.1, vertical_azimuth * vertical_elevation), 0.0], dtype=float)
 
 
 class Dipole(Antenna):
@@ -355,15 +434,15 @@ class Dipole(Antenna):
 
     """
 
-    def polarization(self,
-                     azimuth: float,
-                     elevation) -> Tuple[float, float]:
+    yaml_tag = "DipoleAntenna"
+    """YAML serialization tag"""
 
-        vertical_polarization = 0. if elevation == 0. else cos(.5 * pi * cos(elevation)) / sin(elevation)
-        return vertical_polarization, 0.
+    def local_characteristics(self, azimuth: float, elevation: float) -> np.ndarray:
+        vertical_polarization = 0.0 if elevation == 0.0 else cos(0.5 * pi * cos(elevation)) / sin(elevation)
+        return np.array([vertical_polarization, 0.0], dtype=float)
 
 
-class AntennaArrayBase(object):
+class AntennaArrayBase(Transformable):
     """Base class of a model of a set of antennas."""
 
     @property
@@ -374,11 +453,36 @@ class AntennaArrayBase(object):
         Returns:
             int: Number of antenna elements.
         """
+        ...  # pragma: no cover
 
-        ...
+    @property
+    def num_transmit_antennas(self) -> int:
+        """Number of transmitting antenna elements within this array.
+
+        Returns: Number of transmitting elements.
+        """
+
+        return self.num_antennas
+
+    @property
+    def num_receive_antennas(self) -> int:
+        """Number of receiving antenna elements within this array.
+
+        Returns: Number of receiving elements.
+        """
+
+        return self.num_antennas
 
     @property
     @abstractmethod
+    def antennas(self) -> List[Antenna]:
+        """All individual antenna elements within this array.
+
+        Returns: List of antennas.
+        """
+        ...  # pragma: no cover
+
+    @property
     def topology(self) -> np.ndarray:
         """Sensor array topology.
 
@@ -388,37 +492,73 @@ class AntennaArrayBase(object):
         Returns:
 
             np.ndarray:
-                math:`M \\times 3` topology matrix, where :math:`M` is the number of antenna elements.
+                :math:`M \\times 3` topology matrix, where :math:`M` is the number of antenna elements.
         """
+        return np.array([antenna.forwards_transformation.translation for antenna in self.antennas], dtype=float)
 
-        ...
+    @overload
+    def characteristics(self, location: np.ndarray, frame: Literal["global", "local"] = "local") -> np.ndarray:
+        """Sensor array characteristics towards a certain angle.
 
-    @abstractmethod
-    def polarization(self,
-                     azimuth: float,
-                     elevation: float) -> np.ndarray:
-        """Sensor array polarizations towards a certain angle.
-           
         Args:
-        
-            azimuth (float):
-                Azimuth angle of interest in radians.
 
+            location (np.ndarray):
+                Cartesian position of the target of interest.
 
-            elevation (float):
-                Elevation angle of interest in radians.
+            frame(Literal['local', 'global']):
+                Coordinate system reference frame.
+                `local` assumes `location` to be in the antenna array's native coordiante system.
+                `global` assumes `location` and `azimuth` to be in the antenna array's root coordinate system.
 
         Returns:
 
-            np.ndarray:
-                math:`M \\times 2` topology matrix, where :math:`M` is the number of antenna elements.
+            :math:`M \\times 2` topology matrix,
+            where :math:`M` is the number of antenna elements.
         """
+        ...  # pragma: no cover
 
-        ...
+    @overload
+    def characteristics(self, direction: Direction, frame: Literal["global", "local"] = "local") -> np.ndarray:
+        """Sensor array polarizations towards a certain angle.
+
+        Args:
+
+            direction (Direction):
+                Direction of the angles of interest.
+
+            frame(Literal['local', 'global']):
+                Coordinate system reference frame.
+                `local` assumes `direction` to be in the antenna array's native coordiante system.
+                `global` assumes `direction` to be in the antenna array's root coordinate system.
+
+        Returns:
+
+            :math:`M \\times 2` topology matrix,
+            where :math:`M` is the number of antenna elements.
+        """
+        ...  # pragma: no cover
+
+    def characteristics(self, arg_0: np.ndarray | Direction, frame: Literal["global", "local"] = "local") -> np.ndarray:  # type: ignore
+        # Direction of interest with respect to the array's local coordinate system
+        global_direction: Direction
+
+        # Handle spherical parameters of function overload
+        if not isinstance(arg_0, Direction):
+            global_direction = Direction.From_Cartesian(arg_0 - self.global_position if frame == "global" else arg_0, True)
+
+        # Handle cartesian vector parameters of function overload
+        else:
+            global_direction = arg_0 if frame == "global" else self.forwards_transformation.transform_direction(arg_0)
+
+        antenna_characteristics = np.empty((self.num_antennas, 2), dtype=float)
+        for a, antenna in enumerate(self.antennas):
+            antenna_characteristics[a] = antenna.global_characteristics(global_direction)
+
+        return antenna_characteristics
 
     def plot_topology(self) -> plt.Figure:
         """Plot a scatter representation of the array topology.
-        
+
         Returns:
             plt.Figure:
                 The created figure.
@@ -427,22 +567,19 @@ class AntennaArrayBase(object):
         topology = self.topology
 
         with Executable.style_context():
-
             figure = plt.figure()
-            figure.suptitle('Antenna Array Topology')
+            figure.suptitle("Antenna Array Topology")
 
-            axes = figure.add_subplot(projection='3d')
+            axes = figure.add_subplot(projection="3d")
             axes.scatter(topology[:, 0], topology[:, 1], topology[:, 2])
-            axes.set_xlabel('X [m]')
-            axes.set_ylabel('Y [m]')
-            axes.set_zlabel('Z [m]')
+            axes.set_xlabel("X [m]")
+            axes.set_ylabel("Y [m]")
+            axes.set_zlabel("Z [m]")
 
             return figure
 
-    def cartesian_response(self,
-                           carrier_frequency: float,
-                           position: np.ndarray) -> np.ndarray:
-        """Response of the sensor array towards an impinging point source within its far-field.
+    def cartesian_phase_response(self, carrier_frequency: float, position: np.ndarray, frame: Literal["local", "global"] = "local") -> np.ndarray:
+        """Phase response of the sensor array towards an impinging point source within its far-field.
 
         Assuming a point source at position :math:`\\mathbf{t} \\in \\mathbb{R}^{3}` within the sensor array's
         far field, so that :math:`\\lVert \\mathbf{t} \\rVert_2 \\gg 0`,
@@ -454,7 +591,7 @@ class AntennaArrayBase(object):
                         \\lVert \\mathbf{t} - \\mathbf{q}_{m} \\rVert_2 }
 
         to an electromagnetic waveform emitted with center frequency :math:`f_\\mathrm{c}`.
-        The full array response vector is therefore
+        The full array response vector is the,refore
 
         .. math::
 
@@ -466,13 +603,18 @@ class AntennaArrayBase(object):
                 Center frequency :math:`f_\\mathrm{c}` of the assumed transmitted signal in Hz.
 
             position (np.ndarray):
-                Cartesian location :math:`\\mathbf{t}` of the impinging target within the array's local coordinate system.
+                Cartesian location :math:`\\mathbf{t}` of the impinging target.
+
+            frame(Literal['local', 'global']):
+                Coordinate system reference frame.
+                `local` by default.
+                `local` assumes `position` to be in the antenna array's native coordiante system.
+                `global` assumes `position` to be in the antenna array's root coordinate system.
 
         Returns:
 
-            np.ndarray:
-                The sensor array response vector :math:`\\mathbf{a}`.
-                A one-dimensional, complex-valued numpy array modeling the phase responses of each antenna element.
+            The sensor array response vector :math:`\\mathbf{a}`.
+            A one-dimensional, complex-valued numpy array modeling the phase responses of each antenna element.
 
         Raises:
 
@@ -483,6 +625,10 @@ class AntennaArrayBase(object):
         if len(position) != 3:
             raise ValueError("Target position must be a cartesian (three-dimensional) vector")
 
+        # Transform from global to local coordinates if required
+        if frame == "global":
+            position = self.backwards_transformation.transform_position(position)
+
         # Expand the position by a new dimension
         position = position[:, np.newaxis]
 
@@ -490,15 +636,52 @@ class AntennaArrayBase(object):
         distances = np.linalg.norm(self.topology.T - position, axis=0, keepdims=False)
 
         # Transform the distances to complex phases, i.e. the array response
-        response = np.exp(2j * pi * carrier_frequency * distances / speed_of_light)
+        phase_response = np.exp(2j * pi * carrier_frequency * distances / speed_of_light)
 
         # That's it
-        return response
+        return phase_response
 
-    def horizontal_response(self,
-                            carrier_frequency: float,
-                            azimuth: float,
-                            elevation: float) -> np.ndarray:
+    def cartesian_array_response(self, carrier_frequency: float, position: np.ndarray, frame: Literal["local", "global"] = "local") -> np.ndarray:
+        """Sensor array charactersitcis towards an impinging point source within its far-field.
+
+        Args:
+
+            carrier_frequency (float):
+                Center frequency :math:`f_\\mathrm{c}` of the assumed transmitted signal in Hz.
+
+            position (np.ndarray):
+                Cartesian location :math:`\\mathbf{t}` of the impinging target.
+
+            frame(Literal['local', 'global']):
+                Coordinate system reference frame.
+                `global` by default.
+                `local` assumes `position` to be in the antenna array's native coordiante system.
+                `global` assumes `position` to be in the antenna array's root coordinate system.
+
+        Returns:
+
+            The sensor array response matrix :math:`\\mathbf{A} \\in \\mathbb{C}^{M \\times 2}`.
+            A one-dimensional, complex-valued numpy matrix modeling the far-field charactersitics of each antenna element.
+
+        Raises:
+
+            ValueError: If `position` is not a cartesian vector.
+        """
+
+        position = position.flatten()
+        if len(position) != 3:
+            raise ValueError("Target position must be a cartesian (three-dimensional) vector")
+
+        # Query far-field phase response and antenna element polarizations
+        phase_response = self.cartesian_phase_response(carrier_frequency, position, frame)
+        polarization = self.characteristics(position, frame)
+
+        # The full array response is an element-wise multiplication of phase response and polarizations
+        # Towards the assumed far-field source's position
+        array_response = phase_response[:, None] * polarization
+        return array_response
+
+    def horizontal_phase_response(self, carrier_frequency: float, azimuth: float, elevation: float) -> np.ndarray:
         """Response of the sensor array towards an impinging point source within its far-field.
 
         Assuming a far-field point source impinges onto the sensor array from horizontal angles of arrival
@@ -548,9 +731,7 @@ class AntennaArrayBase(object):
         """
 
         # Compute the wave vector
-        k = np.array([cos(azimuth) * cos(elevation),
-                      sin(azimuth) * cos(elevation),
-                      sin(elevation)], dtype=float)
+        k = np.array([cos(azimuth) * cos(elevation), sin(azimuth) * cos(elevation), sin(elevation)], dtype=float)
 
         # Transform the distances to complex phases, i.e. the array response
         response = np.exp(2j * pi * carrier_frequency * np.inner(k, self.topology) / speed_of_light)
@@ -558,10 +739,7 @@ class AntennaArrayBase(object):
         # That's it
         return response
 
-    def spherical_response(self,
-                           carrier_frequency: float,
-                           azimuth: float,
-                           zenith: float) -> np.ndarray:
+    def spherical_phase_response(self, carrier_frequency: float, azimuth: float, zenith: float) -> np.ndarray:
         """Response of the sensor array towards an impinging point source within its far-field.
 
         Assuming a far-field point source impinges onto the sensor array from spherical angles of arrival
@@ -611,13 +789,11 @@ class AntennaArrayBase(object):
         """
 
         # Compute the wave vector
-        k = np.array([cos(azimuth) * sin(zenith),
-                      sin(azimuth) * sin(zenith),
-                      cos(zenith)], dtype=float)
+        k = np.array([cos(azimuth) * sin(zenith), sin(azimuth) * sin(zenith), cos(zenith)], dtype=float)
 
         # Transform the distances to complex phases, i.e. the array response
         response = np.exp(-2j * pi * carrier_frequency * np.inner(k, self.topology) / speed_of_light)
-    
+
         # That's it
         return response
 
@@ -625,31 +801,59 @@ class AntennaArrayBase(object):
 class UniformArray(AntennaArrayBase, Serializable):
     """Model of a Uniform Antenna Array."""
 
-    yaml_tag = u'UniformArray'
-    __antenna: Antenna                      # The assumed antenna model
-    __spacing: float                        # Spacing betwene the antenna elements
-    __dimensions: Tuple[int, int, int]    # Number of antennas in x-, y-, and z-direction
+    yaml_tag = "UniformArray"
+    property_blacklist = {"topology"}
+    __antenna: Type[Antenna] | Antenna
+    __antennas: List[Antenna]  # List of individual antenna elements
+    __spacing: float  # Spacing betwene the antenna elements
+    __dimensions: Tuple[int, int, int]  # Number of antennas in x-, y-, and z-direction
 
-    def __init__(self,
-                 antenna: Antenna,
-                 spacing: float,
-                 dimensions: Tuple[int, ...]) -> None:
+    def __init__(self, antenna: Type[Antenna] | Antenna, spacing: float, dimensions: Sequence[int], pose: Transformation | None = None) -> None:
         """
         Args:
 
-            antenna (Antenna):
+            antenna (Type[Antenna] | Antenna):
                 The anntenna model this uniform array assumes.
 
             spacing (float):
                 Spacing between the antenna elements in m.
 
-            dimensions (Tuple[int, ...]):
+            dimensions (Sequence[int]):
                 The number of antennas in x-, y-, and z-dimension.
+
+            pose (Tranformation, optional):
+                The anntena array's transformation with respect to its device.
         """
 
+        # Initialize base class
+        AntennaArrayBase.__init__(self, pose=pose)
+
         self.__antenna = antenna
+        self.__spacing = 0.0
+        self.__dimensions = (0, 0, 0)
+
         self.spacing = spacing
-        self.dimensions = dimensions
+        self.dimensions = tuple(dimensions)
+
+        self.__update_antennas()
+
+    def __update_antennas(self) -> None:
+        """Update antenna elements if the toplogy has changed in any way."""
+
+        grid = np.meshgrid(np.arange(self.__dimensions[0]), np.arange(self.__dimensions[1]), np.arange(self.__dimensions[2]))
+        positions = self.__spacing * np.vstack((grid[0].flat, grid[1].flat, grid[2].flat)).T
+
+        if isinstance(self.__antenna, type):
+            self.__antennas = [self.__antenna(pose=Transformation.From_Translation(pos)) for pos in positions]
+
+        else:
+            self.__antennas = [deepcopy(self.__antenna) for _ in range(self.num_antennas)]
+            for ant, pos in zip(self.__antennas, positions):
+                ant.position = pos
+
+        # Make sure the antennas recognize the antenna array as its cordinate system reference frame
+        for ant in self.__antennas:
+            ant.set_base(self)
 
     @property
     def spacing(self) -> float:
@@ -667,39 +871,38 @@ class UniformArray(AntennaArrayBase, Serializable):
 
     @spacing.setter
     def spacing(self, value: float) -> None:
-
-        if value <= 0.:
+        if value <= 0.0:
             raise ValueError("Spacing must be greater than zero")
 
         self.__spacing = value
+        self.__update_antennas()
 
     @property
     def num_antennas(self) -> int:
-
         return self.__dimensions[0] * self.__dimensions[1] * self.__dimensions[2]
 
     @property
-    def dimensions(self) -> Tuple[int, int, int]:
+    def dimensions(self) -> Tuple[int, ...]:
         """Number of antennas in x-, y-, and z-dimension.
 
-        Returns:
-            Tuple[int, int, int]:
-                Number of antennas in each direction.
+        Returns: Number of antennas in each direction.
         """
 
         return self.__dimensions
 
     @dimensions.setter
-    def dimensions(self, value: Tuple[int, int, int]) -> None:
-
+    def dimensions(self, value: Sequence[int] | int) -> None:
         if isinstance(value, int):
-            value = value,
+            value = (value,)
+
+        else:
+            value = tuple(value)
 
         if len(value) == 1:
             value += 1, 1
 
         elif len(value) == 2:
-            value += 1,
+            value += (1,)
 
         elif len(value) > 3:
             raise ValueError("Number of antennas must have three or less entries")
@@ -707,38 +910,53 @@ class UniformArray(AntennaArrayBase, Serializable):
         if any([num < 1 for num in value]):
             raise ValueError("Number of antenna elements must be greater than zero in every dimension")
 
-        self.__dimensions = value
+        self.__dimensions = value  # type: ignore
+        self.__update_antennas()
 
     @property
-    def topology(self) -> np.ndarray:
+    def antennas(self) -> List[Antenna]:
+        return self.__antennas
 
-        grid = np.meshgrid(np.arange(self.__dimensions[0]), np.arange(self.__dimensions[1]), np.arange(self.__dimensions[2]))
-        positions = self.__spacing * np.vstack((grid[0].flat, grid[1].flat, grid[2].flat)).T
-        return positions
+    @property
+    def antenna(self) -> Type[Antenna] | Antenna:
+        """The assumed antenna model.
 
-    def polarization(self,
-                     azimuth: float,
-                     elevation: float) -> np.ndarray:
+        Returns: The antenna model.
+        """
 
-        # Query polarization of the base antenna model
-        polarization = np.array(self.__antenna.polarization(azimuth, elevation), dtype=float)[np.newaxis, :]
-        polarization = np.tile(polarization, (self.num_antennas, 1))
-
-        return polarization
+        return self.__antenna
 
 
-class AntennaArray(Serializable):
+class AntennaArray(AntennaArrayBase, Serializable):
     """Model of a set of arbitrary antennas."""
 
-    __antennas: List[Antenna]           
-    __positions: List[np.ndarray]
-    __orientations: List[np.ndarray]
+    yaml_tag = "CustomArray"
 
-    def __init__(self) -> None:
+    __antennas: List[Antenna]
+
+    def __init__(self, antennas: List[Antenna] = None, pose: Transformation | None = None) -> None:
+        """
+        Args:
+
+            antennas (List[Antenna], optional):
+                Antenna models of each array element.
+
+            pose (Transformation, optional):
+                The anntena array's transformation with respect to its device.
+
+        Raises:
+
+            ValueError: If the argument lists contain an unequal amount of objects.
+        """
+
+        # Initialize base class
+        AntennaArrayBase.__init__(self, pose=pose)
 
         self.__antennas = []
-        self.__positions = []
-        self.__orientations = []
+
+        antennas = [] if antennas is None else antennas
+        for antenna in antennas:
+            self.add_antenna(antenna)
 
     @property
     def antennas(self) -> List[Antenna]:
@@ -762,48 +980,21 @@ class AntennaArray(Serializable):
 
         return len(self.__antennas)
 
-    def add_antenna(self,
-                    antenna: Antenna,
-                    position: np.ndarray,
-                    orientation: Optional[np.ndarray]) -> None:
+    def add_antenna(self, antenna: Antenna) -> None:
         """Add a new antenna element to this array.
 
         Args:
 
             antenna (Antenna):
                 The new antenna to be added.
-
-            position (np.ndarray):
-                Position of the antenna within the local coordinate system.
-
-            orientation (np.ndarray, optional):
-                Orientation of the antenna within the local coordinate system.
-
-        Raises:
-
-            ValueError:
-                If the `position` is not a three-dimensional vector.
-                If the specified `orientation` is not a tuple of azimuth and elevation angles.
         """
 
         # Do nothing if the antenna is already registered within this array
-        if antenna.array is self:
+        if antenna.array is self and antenna in self.antennas:
             return
-
-        # Raise exception if the position is not a cartesian vector
-        position = position.flatten()
-        if len(position) != 3:
-            raise ValueError("Antenna position must be a cartesian vector")
-
-        # Raise exception if the orientation is not 2D for azimuth and elevation
-        orientation = np.array([0., 0.], dtype=float) if orientation is None else orientation.flatten()
-        if len(orientation) != 2:
-            raise ValueError("Antenna orientation must contain azimuth and elevation angles information")
 
         # Add information to the internal lists
         self.__antennas.append(antenna)
-        self.__positions.append(position)
-        self.__orientations.append(orientation)
 
         # Register the antenna array at the antenna element
         antenna.array = self
@@ -823,14 +1014,3 @@ class AntennaArray(Serializable):
 
         self.__antennas.remove(antenna)
         antenna.array = None
-
-    @property
-    def topology(self) -> np.ndarray:
-
-        return np.array(self.__positions, dtype=float)
-
-    def polarization(self,
-                     azimuth: float,
-                     elevation: float) -> np.ndarray:
-        
-        return np.array([ant.polarization(azimuth, elevation) for ant in self.__antennas], dtype=float)
