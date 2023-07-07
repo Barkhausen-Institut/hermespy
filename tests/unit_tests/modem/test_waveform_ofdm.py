@@ -534,6 +534,25 @@ class TestOFDMWaveform(TestCase):
 
         assert_array_almost_equal(expected_symbols.raw, symbols.raw)
 
+    def test_modulate_demodulate_reference_only(self) -> None:
+        """Modulating and subsequently demodulating a frame of only reference symbols should yield a valid channel estimate"""
+
+        resources = [FrameResource(1, PrefixType.NONE, 0, [FrameElement(ElementType.REFERENCE, self.num_subcarriers)])]
+        structure = [FrameSymbolSection(1, [0])]
+
+        ofdm = OFDMWaveform(subcarrier_spacing=self.subcarrier_spacing, num_subcarriers=self.num_subcarriers, resources=resources, structure=structure)
+        ofdm.channel_estimation = OFDMLeastSquaresChannelEstimation()
+        
+        symbols = ofdm.map(np.empty(0, dtype=np.int_))
+        tx_signal = ofdm.modulate(symbols)
+        received_symbols = ofdm.demodulate(tx_signal.samples[0, :])
+
+        expected_state = np.ones((1, 1, 1, self.num_subcarriers), dtype=np.complex_)
+        stated_symbols, csi = ofdm.channel_estimation.estimate_channel(received_symbols)
+        
+        assert_array_almost_equal(expected_state, csi.state)
+        assert_array_almost_equal(expected_state, stated_symbols.states)
+
     def test_map_validation(self) -> None:
         """Mapping should raise ValueError on invalid arguments"""
         
@@ -578,14 +597,14 @@ class TestOFDMWaveform(TestCase):
 
     def test_resource_mask(self) -> None:
         """The resource mask should be the sum of the masks of all resources"""
-        
+
         resource_mask = self.ofdm._resource_mask
         self.assertSequenceEqual((3, self.ofdm.num_subcarriers, self.ofdm.words_per_frame), resource_mask.shape)
 
     def test_bit_energy(self) -> None:
         """The bit energy should be the sum of the bit energies of all sections"""
-        
-        self.assertEqual(1/4, self.ofdm.bit_energy)
+
+        self.assertEqual(.25, self.ofdm.bit_energy)
         
     def test_symbol_energy(self) -> None:
         """The symbol energy should be the sum of the symbol energies of all sections"""
@@ -609,7 +628,7 @@ class TestOFDMWaveform(TestCase):
                                  oversampling_factor=self.oversampling_factor)
         
         symbols = self.ofdm.map(self.rng.integers(0, 2, self.ofdm.bits_per_frame))
-        transmission = self.ofdm.modulate(symbols) 
+        transmission = self.ofdm.modulate(symbols)
         
         self.assertAlmostEqual(self.ofdm.power, transmission.power[0], places=2)
 
@@ -635,13 +654,13 @@ class TestPilotSection(TestCase):
     """Test the general base class for OFDM pilot sections."""
     
     def setUp(self) -> None:
-        
+
         self.rng = default_rng(42)
         self.subsymbols = Symbols(np.array([1., -1., 1.j, -1.j], dtype=complex))
         self.frame = OFDMWaveform(oversampling_factor=4)
-        
+
         self.pilot_section = PilotSection(pilot_elements=self.subsymbols, frame=self.frame)
-        
+
     def test_init(self) -> None:
         """Initialization arguments should be properly stored as class attributes"""
         
