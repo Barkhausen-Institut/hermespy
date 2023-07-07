@@ -132,7 +132,7 @@ class QuadrigaInterface:
         """
 
         if not os.path.exists(path):
-            raise ValueError("Provided path to Quadriga sources does not exist within filesystem")
+            raise ValueError(f"Provided path to Quadriga sources {path} does not exist within filesystem")
 
         self.__path_quadriga_src = path
 
