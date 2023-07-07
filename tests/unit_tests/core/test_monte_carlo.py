@@ -6,9 +6,10 @@ from io import StringIO
 from os import getenv
 from typing import Callable, List
 from unittest import TestCase
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import ray
+import matplotlib.pyplot as plt
 import numpy as np
 from numpy.random import default_rng
 from numpy.testing import assert_array_equal
@@ -22,7 +23,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -326,16 +327,11 @@ class TestScalarEvaluationResult(TestCase):
         evaluator = Mock()
         
         result = ScalarEvaluationResult(grid, scalar_data, evaluator)
-            
-        axes = Mock()
-        figure = Mock()
         
-        with patch('matplotlib.pyplot.subplots') as subplots_mock:
-            
-            subplots_mock.return_value = (figure, axes)
+        with patch('matplotlib.pyplot.figure') as figure_mock:
             _ = result.plot()
             
-        axes.plot_surface.assert_called_once()
+        figure_mock().add_subplot.assert_called()
         
     def test_multidim_plotting(self) -> None:
         """Multidimensional plotting should call the correct plotting routine"""

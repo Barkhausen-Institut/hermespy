@@ -27,7 +27,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -542,7 +542,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         processed_inputs = self.process_inputs(impinging_signals, cache=cache, trigger_realizations=trigger_realizations)
 
         # Generate operator receptions
-        operator_receptions = self.receive_operators([i.operator_inputs for i in processed_inputs])
+        operator_receptions = self.receive_operators([i.operator_inputs for i in processed_inputs], cache=cache)
 
         # Generate device receptions
         device_receptions = [SimulatedDeviceReception.From_ProcessedSimulatedDeviceInput(i, r) for i, r in zip(processed_inputs, operator_receptions)]  # type: ignore
@@ -554,28 +554,26 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
         # Generate device transmissions
         _ = self.transmit_operators()
-        device_outputs = self.transmit_devices()
-
-        trigger_realizations = [output.trigger_realization for output in device_outputs]
+        device_transmissions = self.transmit_devices()
 
         # Simulate channel propagation
-        propagation_matrix = self.propagate(device_outputs)
+        propagation_matrix = self.propagate(device_transmissions)
         csi = [[tx[1] for tx in rx] for rx in propagation_matrix]
 
         # Process receptions
-        device_inputs = self.receive_devices(propagation_matrix, trigger_realizations=trigger_realizations)
-        operator_receptions = self.receive_operators()
-        device_receptions = [SimulatedDeviceReception.From_ProcessedSimulatedDeviceInput(i, r) for i, r in zip(device_inputs, operator_receptions)]  # type: ignore
+        trigger_realizations = [t.trigger_realization for t in device_transmissions]
+        device_receptions = self.receive_devices(propagation_matrix, trigger_realizations=trigger_realizations)
 
         # Return finished drop
-        return SimulatedDrop(timestamp, device_outputs, csi, device_receptions)
+        return SimulatedDrop(timestamp, device_transmissions, csi, device_receptions)
 
 
 class SimulationRunner(object):
-    """Runner remote thread deployed by the monte carlo routines"""
+    """Runner remote thread deployed by Monte Carlo routines"""
 
     __scenario: SimulationScenario  # Scenario to be run
     __propagation: Sequence[Sequence[Tuple[Sequence[Signal], ChannelStateInformation]]] | None
+    __processed_inputs: Sequence[ProcessedSimulatedDeviceInput]
 
     def __init__(self, scenario: SimulationScenario) -> None:
         """
@@ -587,6 +585,7 @@ class SimulationRunner(object):
 
         self.__scenario = scenario
         self.__propagation = None
+        self.__processed_inputs = []
 
     def transmit_operators(self) -> None:
         """Generate base-band signal models emitted by all registered transmitting operators.
@@ -659,8 +658,9 @@ class SimulationRunner(object):
         if len(propagation_matrix) != self.__scenario.num_devices:
             raise RuntimeError(f"Number of arriving signals ({len(propagation_matrix)}) does not match " f"the number of receiving devices ({self.__scenario.num_devices})")
 
+        self.__processed_inputs: Sequence[ProcessedSimulatedDeviceInput] = []
         for device, impinging_signals in zip(self.__scenario.devices, propagation_matrix):
-            _ = device.process_input(impinging_signals=impinging_signals, snr=self.__scenario.snr, snr_type=self.__scenario.snr_type)
+            self.__processed_inputs.append(device.process_input(impinging_signals=impinging_signals, snr=self.__scenario.snr, snr_type=self.__scenario.snr_type))
 
     def receive_operators(self) -> None:
         """Demodulate base-band signal models received by all registered receiving operators.
@@ -669,11 +669,13 @@ class SimulationRunner(object):
         """
 
         # Resolve to the scenario's operator receive routine
-        self.__scenario.receive_operators()
+        _ = self.__scenario.receive_operators()
 
 
 @remote(num_cpus=1)
 class SimulationActor(MonteCarloActor[SimulationScenario], SimulationRunner):
+    """Remote ray actor generated from the simulation runner class."""
+
     def __init__(self, argument_tuple: Any, index: int, catch_exceptions: bool = True) -> None:
         """
         Args:
@@ -710,16 +712,14 @@ class Simulation(Serializable, Pipeline[SimulationScenario, SimulatedDevice], Mo
     dump_results: bool
     """Dump results to files after simulation runs."""
 
-    def __init__(
-        self, scenario: Optional[SimulationScenario] = None, num_drops: int = 100, drop_duration: float = 0.0, plot_results: bool = False, dump_results: bool = True, console_mode: ConsoleMode = ConsoleMode.INTERACTIVE, ray_address: Optional[str] = None, results_dir: Optional[str] = None, verbosity: Union[str, Verbosity] = Verbosity.INFO, seed: Optional[int] = None, num_actors: Optional[int] = None
-    ) -> None:
+    def __init__(self, scenario: SimulationScenario | None = None, num_samples: int = 100, drop_duration: float = 0.0, plot_results: bool = False, dump_results: bool = True, console_mode: ConsoleMode = ConsoleMode.INTERACTIVE, ray_address: str | None = None, results_dir: str | None = None, verbosity: str | Verbosity = Verbosity.INFO, seed: int | None = None, num_actors: int | None = None) -> None:
         """Args:
 
         scenario (SimulationScenario, optional):
             The simulated scenario.
             If none is provided, an empty one will be initialized.
 
-        num_drops (int, optional):
+        num_samples (int, optional):
             Number of drops generated per sweeping grid section.
             100 by default.
 
@@ -755,22 +755,20 @@ class Simulation(Serializable, Pipeline[SimulationScenario, SimulatedDevice], Mo
 
         # Initialize base classes
         Pipeline.__init__(self, scenario, results_dir=results_dir, verbosity=verbosity, console_mode=console_mode)
-        MonteCarlo.__init__(self, self.scenario, num_drops, console=self.console, console_mode=console_mode, ray_address=ray_address, num_actors=num_actors)
+        MonteCarlo.__init__(self, self.scenario, num_samples, console=self.console, console_mode=console_mode, ray_address=ray_address, num_actors=num_actors)
 
         self.plot_results = plot_results
         self.dump_results = dump_results
         self.drop_duration = drop_duration
-        self.num_drops = num_drops
+        self.num_drops = num_samples
 
-    @Pipeline.num_drops.setter  # type: ignore
-    def num_drops(self, value: int) -> None:  # type: ignore
-        Pipeline.num_drops.fset(self, value)  # type: ignore
-        MonteCarlo.num_samples.fset(self, value)  # type: ignore
+    @property
+    def num_samples(self) -> int:
+        return self.num_drops
 
-    @MonteCarlo.num_samples.setter  # type: ignore
-    def num_samples(self, value: int) -> None:  # type: ignore
-        Pipeline.num_drops.fset(self, value)  # type: ignore
-        MonteCarlo.num_samples.fset(self, value)  # type: ignore
+    @num_samples.setter
+    def num_samples(self, value: int) -> None:
+        self.num_drops = value
 
     @Pipeline.console_mode.setter  # type: ignore
     def console_mode(self, value: ConsoleMode) -> None:  # type: ignore

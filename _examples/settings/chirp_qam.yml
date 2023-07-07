@@ -25,7 +25,7 @@ Devices:
       # Power amplifier model
       power_amplifier: !<Rapp>
 
-        smoothness_factor: 1.     # Smoothness factor of Rapp's model
+        smoothness_factor: 6.     # Smoothness factor of Rapp's model
 
 
 # Operators transmitting or receiving signals over the devices
@@ -43,11 +43,11 @@ Operators:
       # Repetition encoding, repeating bit sections for redundancy
       - !<Repetition>
 
-        bit_block_size: 1000       # Block size
+        bit_block_size: 128        # Block size
         repetitions: 3             # Number of times the bits within the block get repeated
 
     # Waveform configuration
-    waveform: !<SC-RootRaisedCosine>
+    waveform: &waveform !<SC-RootRaisedCosine>
 
       # Symbol settings
       symbol_rate: 100e6
@@ -56,7 +56,7 @@ Operators:
 
       # Frame settings
       num_preamble_symbols: 10
-      num_data_symbols: 1000
+      num_data_symbols: 1024
       pilot_rate: 1e6
       guard_interval: 1e-6
 
@@ -72,17 +72,26 @@ Evaluators:
 
     transmitting_modem: *modem_alpha
     receiving_modem: *modem_alpha
-    confidence: .9
-    tolerance: .01
+    confidence: .95
+    tolerance: 1e-4
     plot_scale: log
+    plot_surface: False
 
 # Simulation parameters
-num_samples: 100                   # Number of samples per simulation grid section
-min_num_samples: 80                # Minimum number of samples per simulation grid section before premature stopping
+num_samples: 10000                 # Maximum number of samples per simulation grid section
+min_num_samples: 1000              # Minimum number of samples per simulation grid section before premature stopping
 snr_type: EBN0                     # SNR is defined as the ratio between bit energy and noise power
 plot_results: True                 # Visualize the evaluations after the simulation has finished
 
 # Scenario parameters over which the Monte-Carlo simulation sweeps
 Dimensions:
+  
+  # Sweep over the global receiver signal-to-noise ratio
+  - property: 'snr'
+    points: [0, 1, ..., 20] dB
 
-  snr: [0, 1, ..., 20] dB
+  # Sweep over the wavform's modulation order to check QPSK, 16-QAM and 64-QAM
+  - objects: [*waveform]
+    property: 'modulation_order'
+    points: [4, 16, 64]
+    title: 'Modulation'

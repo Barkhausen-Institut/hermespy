@@ -1,6 +1,6 @@
 [Setup]
 AppName=HermesPy
-AppVersion=0.3.0
+AppVersion=1.1.0
 AppPublisher=Barkhausen Institut gGmbH
 AppPublisherURL=https://www.barkhauseninstitut.org/
 AppSupportURL=https://github.com/Barkhausen-Institut/hermespy/issues
@@ -125,7 +125,7 @@ File: String;
 C: AnsiString;
 CU: String;
 begin
-        File := ExpandConstant('{tmp}\embedded\python39._pth')
+        File := ExpandConstant('{tmp}\embedded\python310._pth')
         LoadStringFromFile(File, C);
         CU := C;
         StringChangeEx(CU, '#import site', 'import site', False);
@@ -147,8 +147,8 @@ begin
   DownloadPage.Clear;
   
   case ProcessorArchitecture of
-    paX86: DownloadPage.Add('https://www.python.org/ftp/python/3.9.12/python-3.9.12-embed-win32.zip', 'embedded.zip', '');
-    paX64: DownloadPage.Add('https://www.python.org/ftp/python/3.9.12/python-3.9.12-embed-amd64.zip', 'embedded.zip', '');
+    paX86: DownloadPage.Add('https://www.python.org/ftp/python/3.10.9/python-3.10.9-embed-win32.zip', 'embedded.zip', '');
+    paX64: DownloadPage.Add('https://www.python.org/ftp/python/3.10.9/python-3.10.9-embed-amd64.zip', 'embedded.zip', '');
   end;   
   
   DownloadPage.Add('https://bootstrap.pypa.io/get-pip.py', 'get-pip.py', '');
