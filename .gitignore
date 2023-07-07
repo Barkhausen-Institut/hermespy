@@ -3,7 +3,7 @@
 .mypy_cache/
 __pycache__
 _results_*/
-documentation/
+/documentation/
 results/
 .idea/
 env*/
@@ -28,7 +28,7 @@ _skbuild/
 build/
 dist/
 .coverage
-MANIFEST
+MANIFEST*
 pip-wheel-metadata/
 
 # misc

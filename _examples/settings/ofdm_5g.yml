@@ -1,7 +1,7 @@
 # In this example we simulate a 5G signal.
 # 
 # We model the DL of a frame with a TDD slot format 57, DDDDFFUDDDDFFU,
-# with 30kHz subcarrier spacing, using 2400 subcarriers with 4-PSK.
+# with 30kHz subcarrier spacing, using 2100 subcarriers with 4-PSK.
 # 
 # In each drop, 2 time slots are transmitted.
 # 
@@ -20,7 +20,7 @@ Devices:
   # Representation of a single (virtual) device
   - &device_alpha !<SimulatedDevice>
 
-    carrier_frequency: 865e6        # Center frequency of Rf-band emitted signal
+    carrier_frequency: 3e9          # Center frequency of Rf-band emitted signal
     
     antennas: !<UniformArray>       # Uniform antenna array
       
@@ -34,10 +34,10 @@ Channels:
 
   # 5G TDL model at the self-interference channel of device_alpha
   - !<5GTDL>
-    devices: [*device_alpha, *device_alpha]
-    model_type: !<TDLType> E            # Type of the TDL model. A-E are available
-    rms_delay: 1e-9                     # root mean square delay in seconds    
-      
+    devices: [*device_alpha, *device_alpha] # Devices linked by the channel
+    model_type: !<TDLType> E                # Type of the TDL model. A-E are available
+    rms_delay: 100e-9                       # Root mean square delay in seconds    
+
 
 # Operators transmitting or receiving signals over the devices
 Operators:
@@ -61,10 +61,10 @@ Operators:
       - !<SingleCarrier>       # Spatial Multiplexing
 
     # Configuration of the waveform emitted by this transmitter
-    waveform: !<OFDM>
+    waveform: &ofdm !<OFDM>
 
       # Symbol modulation settings
-      modulation_order: 2               # Modulation order, in other words 1 / subcarrier / subsymbol
+      modulation_order: 4               # Modulation order, in other words 1 / subcarrier / subsymbol
       subcarrier_spacing: 30e3          # Spacing between the individual subcarrier center frequencies in Hz
       dc_suppression: False             # Do not ignore the DC component during the DFT
       num_subcarriers: 4096             # Number of subcarriers per communiction frame
@@ -81,13 +81,13 @@ Operators:
           elements:
             - !<FrameElement>
               type: !<ElementType> NULL
-              repetitions: 600
+              repetitions: 998
             - !<FrameElement>
               type: !<ElementType> DATA
               repetitions: 2100
             - !<FrameElement>
               type: !<ElementType> NULL
-              repetitions: 600
+              repetitions: 998
 
         - !<OFDM-Resource>
           repetitions: 1
@@ -96,29 +96,33 @@ Operators:
           elements:
             - !<FrameElement>
               type: !<ElementType> NULL
-              repetitions: 600
+              repetitions: 998
             - !<FrameElement>
               type: !<ElementType> DATA
               repetitions: 2100
             - !<FrameElement>
               type: !<ElementType> NULL
-              repetitions: 600
+              repetitions: 998
 
       # Frame configuration in time domain, i.e. the x-axis in the OFDM time-frequency grid
       structure:
 
+        # DDDDD
         - !<Symbol>
           num_repetitions: 1
           pattern: [1, 0, 0, 0]
 
+        # FFU
         - !<Guard>
           num_repetitions: 3
           duration: 35.677083e-6
 
+        # DDDD
         - !<Symbol>
           num_repetitions: 1
           pattern: [1, 0, 0, 0]
 
+        # FFU
         - !<Guard>
           num_repetitions: 3
           duration: 35.677083e-6
@@ -138,13 +142,15 @@ Evaluators:
 
 
 # Simulation parameters
-num_samples: 20                    # Number of samples per simulation grid section
-min_num_samples: 5                 # Minimum number of samples per simulation grid section before premature stopping
+num_samples: 1000                  # Number of samples per simulation grid section
+min_num_samples: 100               # Minimum number of samples per simulation grid section before premature stopping
 snr_type: EBN0                     # SNR is defined as the ratio between bit energy and noise power
 plot_results: True                 # Visualize the evaluations after the simulation has finished
-num_actors: 12                     # This simulation is quite memory demanding. It might be necessary to limit the number of actors.
+num_actors: 1                      # This simulation is quite memory demanding. It might be necessary to limit the number of actors.
 
 # Scenario parameters over which the Monte-Carlo simulation sweeps
 Dimensions:
 
-  snr: [24, 20, ..., -12] dB
+  # Sweep over the global receiver signal-to-noise ratio
+  - property: 'snr'
+    points: [0, 1, ..., 20] dB

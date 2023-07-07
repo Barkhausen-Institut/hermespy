@@ -20,7 +20,7 @@ __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -33,7 +33,7 @@ class DbConversionType(Enum):
     AMPLITUDE = 1
 
 
-@jit
+@jit(nopython=True)
 def db2lin(db_val: float, conversion_type: Optional[DbConversionType] = DbConversionType.POWER):  # pragma: no cover
     """
     Converts from dB to linear
@@ -56,7 +56,7 @@ def db2lin(db_val: float, conversion_type: Optional[DbConversionType] = DbConver
     return output
 
 
-@jit
+@jit(nopython=True)
 def lin2db(val: float, conversion_type: Optional[DbConversionType] = DbConversionType.POWER):  # pragma: no cover
     """
     Converts from linear to dB

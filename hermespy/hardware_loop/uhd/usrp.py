@@ -17,16 +17,18 @@ from hermespy.core import Serializable, Signal
 from ..physical_device import PhysicalDevice
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
 class UsrpDevice(PhysicalDevice, Serializable):
+    """Bindung to a USRP device via the UHD library."""
+
     yaml_tag = "USRP"
     """YAML serialization tag"""
 
@@ -41,44 +43,45 @@ class UsrpDevice(PhysicalDevice, Serializable):
     __num_appended_zeros: int
 
     def __init__(self, ip: str, port: int = 5555, carrier_frequency: float = 7e8, sampling_rate: float | None = None, tx_gain: float = 0.0, rx_gain: float = 0.0, scale_transmission: bool = False, num_prepended_zeros: int = 200, num_appended_zeros: int = 200, *args, **kwargs) -> None:
-        """Create a new USRP device.
+        """
+        Args:
 
-        ip (str):
-            The IP address of the USRP device.
+            ip (str):
+                The IP address of the USRP device.
 
-        port (int, optional):
-            The port of the USRP device.
+            port (int, optional):
+                The port of the USRP device.
 
-        carrier_frequency (float, optional):
-            Carrier frequency of the USRP device.
-            :math:`700 \\mathrm{MHz}` by default.
+            carrier_frequency (float, optional):
+                Carrier frequency of the USRP device.
+                :math:`700~\\mathrm{MHz}` by default.
 
-        sampling_rate (float, optional):
-            Sampling rate of the USRP device.
-            If not provided, the sampling rate is determined from the configured operators.
+            sampling_rate (float, optional):
+                Sampling rate of the USRP device.
+                If not provided, the sampling rate is determined from the configured operators.
 
-        tx_gain (float, optional):
-            The transmission gain of the USRP device.
-            Zero by default.
+            tx_gain (float, optional):
+                The transmission gain of the USRP device.
+                Zero by default.
 
-        rx_gain (float, optional):
-            The reception gain of the USRP device.
-            Zero by default.
+            rx_gain (float, optional):
+                The reception gain of the USRP device.
+                Zero by default.
 
-        scale_transmission (bool, optional):
-            If `True`, the transmission signal is scaled to the maximum floating point value of the USRP device.
-            This ensures a proper digital to analog conversion.
+            scale_transmission (bool, optional):
+                If `True`, the transmission signal is scaled to the maximum floating point value of the USRP device.
+                This ensures a proper digital to analog conversion.
 
-        num_prepended_zeros (int, optional):
-            The number of zeros prepended to the transmission signal.
-            :math:``200`` by default.
+            num_prepended_zeros (int, optional):
+                The number of zeros prepended to the transmission signal.
+                :math:`200` by default.
 
-        num_appended_zeros (int, optional):
-            The number of zeros appended to the transmission signal.
-            :math:``200`` by default.
+            num_appended_zeros (int, optional):
+                The number of zeros appended to the transmission signal.
+                :math:`200` by default.
 
-        *args, **kwargs:
-            Additional arguments passed to the :class:`.PhysicalDevice` parent class.
+            *args, **kwargs:
+                Additional arguments passed to the :class:`.PhysicalDevice` parent class.
         """
 
         self.__usrp_client = UsrpClient.create(ip, port)
@@ -253,6 +256,8 @@ class UsrpDevice(PhysicalDevice, Serializable):
 
     @property
     def tx_gain(self) -> float:
+        """Gain of the transmitting front-end in dB."""
+
         return self.__tx_gain
 
     @tx_gain.setter
@@ -261,6 +266,8 @@ class UsrpDevice(PhysicalDevice, Serializable):
 
     @property
     def rx_gain(self) -> float:
+        """Gain of the receiving front-end in dB."""
+
         return self.__rx_gain
 
     @rx_gain.setter

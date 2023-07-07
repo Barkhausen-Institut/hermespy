@@ -1,0 +1,15 @@
+recursive-include hermespy *.py *m *.mplstyle *.txt *.cpp *.hpp
+include LICENSE
+include CMakeLists.txt
+include README.md
+include requirements.txt
+include setup.py
+exclude MANIFEST.in
+
+# Include affe3ct sources
+recursive-include submodules/affect *.cpp *.hpp *.h *.hxx CMakeLists.txt *.in LICENSE* README*
+include submodules/affect/doc/strings.rst
+
+# Exclude the whole _skbuild folder and tests
+prune _skbuild
+prune tests

@@ -22,17 +22,23 @@ Install the package by executing the following commands within a terminal:
 
 .. tabs::
 
-   .. code-tab:: batch Windows
+   .. code-tab:: batch Windows Conda
 
-      conda create -n <envname> python=3.9
+      conda create -n <envname> python=3.10
       conda activate <envname>
       conda install pip
       pip install hermespy
 
-   .. code-tab:: bash Linux
+   .. code-tab:: batch Windows vEnv
+
+      python -m venv <envname>
+      <envname>\\Scripts\\activate
+      pip install hermespy
+
+   .. code-tab:: bash Linux vEnv
 
       python -m venv env
-      . env/bin/activate
+      source env/bin/activate
       pip install hermespy
 
 Executing these statements sequentially results in the following actions:
@@ -105,17 +111,23 @@ Build and install the package contained within the repository by executing the f
 
 .. tabs::
 
-   .. code-tab:: batch Windows
+   .. code-tab:: batch Windows Conda
 
-      conda create -n <envname> python=3.9
+      conda create -n <envname> python=3.10
       conda activate <envname>
       conda install pip
       pip install .
 
-   .. code-tab:: bash Linux
+   .. code-tab:: batch Windows vEnv
+
+      python -m venv <envname>
+      <envname>\\Scripts\\activate
+      pip install .
+
+   .. code-tab:: bash Linux vEnv
 
       python -m venv env
-      . env/bin/activate
+      source env/bin/activate
       pip install .
 
 Executing these statements sequentially results in the following actions:
@@ -132,7 +144,7 @@ As a result, all combined binaries and source files will remain within the repos
 
 .. tabs::
 
-   .. code-tab:: batch Windows
+   .. code-tab:: batch Windows Conda
 
       conda create -n <envname> python=3.9
       conda activate <envname>
@@ -140,10 +152,17 @@ As a result, all combined binaries and source files will remain within the repos
       pip install -e ".[develop]"
       python -m setup develop
 
-   .. code-tab:: bash Linux
+   .. code-tab:: batch Windows vEnv
+
+      python -m venv <envname>
+      <envname>\\Scripts\\activate
+      pip install -e ".[develop]"
+      python -m setup develop
+
+   .. code-tab:: bash Linux vEnv
 
       python -m venv env
-      . env/bin/activate
+      source env/bin/activate
       pip install -e ".[develop]"
       python -m setup develop
 

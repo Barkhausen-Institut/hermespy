@@ -134,10 +134,10 @@ from .logarithmic import LogarithmicSequence, ValueType
 from .visualize import Visualizable
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -371,13 +371,13 @@ class EvaluationResult(Visualizable, ABC):
         """
 
         # Configure axes labels and scales
-        axes.set(xlabel=grid[0].title, ylabel=grid[1].title, zlabel=evaluator.abbreviation, xscale=grid[0].plot_scale, yscale=grid[1].plot_scale, zscale=evaluator.plot_scale)
+        axes.set(xlabel=grid[0].title, ylabel=grid[1].title, zlabel=evaluator.abbreviation)
 
         EvaluationResult.__configure_axis(axes.xaxis, grid[0].tick_format)
         EvaluationResult.__configure_axis(axes.yaxis, grid[1].tick_format)
         EvaluationResult.__configure_axis(axes.zaxis, evaluator.tick_format)
 
-        y, x = np.meshgrid(grid[1].sample_points, sample_points)
+        y, x = np.meshgrid(np.asarray(grid[1].sample_points), np.asarray(sample_points))
         axes.plot_surface(x.astype(float), y.astype(float), data)
 
     @staticmethod
@@ -436,7 +436,7 @@ class EvaluationResult(Visualizable, ABC):
             # Plot the graph line
             axes.plot(grid[x_dimension].sample_points, line_scalars, label=line_label)
 
-        if len(section_magnitudes) > 1:
+        if len(section_magnitudes) > 0 and section_magnitudes[0] > 1:
             axes.legend()
 
     @staticmethod
@@ -487,7 +487,8 @@ class ScalarEvaluationResult(EvaluationResult):
     def _new_axes(self) -> Tuple[plt.Figure, plt.Axes]:
         # Generate 3D axes with surface plotting enabled
         if len(self.__grid) == 2 and self.plot_surface:
-            fig, axes = plt.subplots(projection="3d")
+            fig = plt.figure()
+            axes = fig.add_subplot(111, projection="3d")
 
         # Generate 2D axes otherwise
         else:
@@ -993,12 +994,12 @@ class GridSection(Persistent):
             self.__third_moments_abs[e] = updated_third_moment_abs
             self.__fourth_moments[e] = updated_fourth_moment
 
-            # Abort if the second moment indicates no variance
-            if updated_second_moment == 0.0:
+            # Abort if the second moment indicates no variance or not enough samples have been collected
+            if updated_second_moment == 0.0 or nn < 2:
                 self.__evaluator_confidences[e] = 1.0
                 continue
 
-            # Compute moments
+            # Compute moments (equation 4.1)
             deviance = sqrt(updated_second_moment / nn)
             beta_bar_moment = third_moment / (nn * deviance**3)
             beta_hat_moment = third_moment_abs / (nn * deviance**3)

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
+from os import getenv
 from unittest import TestCase
 from unittest.mock import patch
 from sys import gettrace
@@ -10,28 +11,38 @@ from typing import Any, List, Optional
 import ray as ray
 
 from hermespy.bin.hermes import hermes_simulation
-from hermespy.core.monte_carlo import MonteCarlo, GridDimension
+from hermespy.core import ConsoleMode, MonteCarlo, GridDimension, Verbosity
+from hermespy.simulation import Simulation
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
 monte_carlo_init = MonteCarlo.__init__
+simulation_init = Simulation.__init__
 
-def init_mock(cls: MonteCarlo, *args, **kwargs) -> None:
+
+def monte_carlo_init_mock(cls: MonteCarlo, *args, **kwargs) -> None:
     
     args = list(args)
     args[1] = 1
     kwargs['num_actors'] = 1            # Only spawn a single actor
     kwargs['catch_exceptions'] = False  # Don't catch exceptions during runtime
+    kwargs['min_num_samples'] = 1       # Only generate a single sample
 
     monte_carlo_init(cls, *args, **kwargs)
+
+
+def simulation_init_mock(self: Simulation, scenario, num_samples: int = 100, drop_duration: float = 0.0, plot_results: bool = False, dump_results: bool = True, console_mode: ConsoleMode = ConsoleMode.INTERACTIVE, ray_address = None, results_dir = None, verbosity = Verbosity.INFO, seed = None, num_actors = None) -> None:
+
+    num_samples = 1
+    simulation_init(self, scenario, num_samples, drop_duration, plot_results, dump_results, console_mode, ray_address, results_dir, verbosity, seed, num_actors)
 
 
 def new_dimension_mock(cls: MonteCarlo,
@@ -39,8 +50,10 @@ def new_dimension_mock(cls: MonteCarlo,
                        sample_points: List[Any],
                        considered_object: Optional[Any] = None) -> GridDimension:
 
+    _considered_object = cls.investigated_object if considered_object is None else considered_object
+
     # Only take a single sample point into account to speed up simulations
-    dimension = GridDimension(cls.investigated_object, dimension, [sample_points[0]])
+    dimension = GridDimension(_considered_object, dimension, [sample_points[0]])
     cls.add_dimension(dimension)
 
     return dimension
@@ -80,13 +93,13 @@ class TestConfigurationExamples(TestCase):
         """
 
         # Make sure we're not in debug mode
-        if gettrace() is None:
-            with patch('sys.stdout'), patch.object(MonteCarlo, '__init__', new=init_mock), patch.object(MonteCarlo, 'new_dimension', new=new_dimension_mock), patch('matplotlib.pyplot.figure'):
+        if getenv('HERMES_TEST_PLOT', 'False').lower() != 'true':
+            with patch('sys.stdout'), patch.object(MonteCarlo, '__init__', new=monte_carlo_init_mock), patch.object(Simulation, '__init__', new=simulation_init_mock), patch.object(MonteCarlo, 'new_dimension', new=new_dimension_mock), patch('matplotlib.pyplot.figure'):
 
                 hermes_simulation([path, '-o', self.tempdir.name])
                 
         else:
-            with patch.object(MonteCarlo, '__init__', new=init_mock):
+            with patch.object(MonteCarlo, '__init__', new=monte_carlo_init_mock), patch.object(Simulation, '__init__', new=simulation_init_mock):
                 hermes_simulation([path, '-o', self.tempdir.name])
     
     def test_chirp_fsk_lora(self) -> None:

@@ -11,7 +11,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
-from sys import path, argv
+from sys import path
 
 # Remove the source directory from path lookup to prevent aliasing
 repository = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -23,7 +23,7 @@ for dir in path:
 # -- Project information -----------------------------------------------------
 
 project = 'HermesPy'
-copyright = '2022, Barkhausen Institut gGmbH'
+copyright = '2023, Barkhausen Institut gGmbH'
 author = 'Barkhausen Institut gGmbH'
 
 
@@ -43,7 +43,6 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx_copybutton',                        # Copy script examples directly
     'sphinx_autodoc_typehints',                 # Type hinting support for the autodoc extension
-    'sphinx_rtd_dark_mode',                     # Dark theme
     'sphinx_tabs.tabs',                         # Multiple tabs
     'matplotlib.sphinxext.plot_directive',      # Directly rendering plots as images
     'sphinx.ext.mathjax',                       # Rendering math equations for nbsphinx
@@ -51,10 +50,14 @@ extensions = [
 
 autoclass_content = "both"
 add_module_names = False
+toc_object_entries = False
 
 # Bibtex
 bibtex_bibfiles = ['references.bib']
 bibtex_foot_reference_style = 'foot'
+
+# Notebook Sphinx
+nbsphinx_execute = 'never'  # Suppress notebook execution during documentation build
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -93,15 +96,21 @@ nbsphinx_prolog = """
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'furo'
 html_logo = 'images/bi.svg'
-html_title = 'HermesPy Documentation'
+html_title = 'HermesPy'
 
-# Sphinx RTD dark mode
-default_dark_mode = True
+html_theme_options = {
+    "light_css_variables": {
+        "color-brand-primary": "#4C8BC6",
+        "color-brand-content": "#4C8BC6",
+    },
+}
 
 # Carousel config
 carousel_bootstrap_add_css_js = True
+#carousel_bootstrap_prefix = ""
+
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

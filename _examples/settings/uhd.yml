@@ -7,7 +7,7 @@
 
 !<HardwareLoop>
 
-  system: !<UsrpSystem>
+  scenario: !<UsrpSystem>
 
   Devices:
 

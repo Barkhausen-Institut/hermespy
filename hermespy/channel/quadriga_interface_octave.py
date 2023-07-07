@@ -2,15 +2,19 @@
 """Octave interface to the Quadriga channel model."""
 
 from __future__ import annotations
+from contextlib import redirect_stdout
 from logging import getLogger, Logger
+from os import devnull
 from typing import Optional, Any
+
 
 import numpy as np
 
 try:  # pragma: no cover
-    from oct2py import Oct2Py, Oct2PyError, Struct
+    with redirect_stdout(open(devnull, "w")):
+        from oct2py import Oct2Py, Oct2PyError, Struct
 
-except ImportError:  # pragma: no cover
+except Exception:  # pragma: no cover
     Oct2Py = None
     Oct2PyError = RuntimeError
     Struct = Any
@@ -21,7 +25,7 @@ __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
