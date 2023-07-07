@@ -35,7 +35,23 @@ jobs:
         pip install .[test,documentation,quadriga,uhd,audio]
 
     - name: Run unit tests
-      run: python tests/test_install.py unit_tests
+      run: |
+        coverage run --include=hermespy/* ./tests/test_install.py ./tests/unit_tests/
+        coverage xml
+        coverage report -m --include=hermespy/* --skip-covered
+
+    - name: Code Coverage Report
+      uses: irongut/CodeCoverageSummary@v1.3.0
+      with:
+        filename: coverage.xml
+        badge: true
+        fail_below_min: true
+        format: markdown
+        hide_branch_rate: false
+        hide_complexity: true
+        indicators: true
+        output: both
+        thresholds: '60 80'
       
 
   Documentation:
