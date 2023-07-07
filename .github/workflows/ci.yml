@@ -3,8 +3,10 @@ name: hermespy
 # Execute tests if pushed to any branch
 on: [push, pull_request]
 
-jobs:
+env:
+  HERMES_QUADRIGA: ${{ github.workspace }}/submodules/quadriga/quadriga_src
 
+jobs:
 
   Testing:
   
@@ -22,20 +24,37 @@ jobs:
         lfs: true
         submodules: recursive
 
-    - name: Set up Python 3.9
+    - name: Set up Python 3.10
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: '3.10'
 
     - name: Install dependencies
       run: |
         sudo apt update
         sudo apt-get install -y build-essential octave
         export MAKEFLAGS="-j $(grep -c ^processor /proc/cpuinfo)"
-        pip install .[test,documentation,quadriga,uhd,audio]
+        pip install -e .[develop,test,documentation,quadriga,uhd,audio]
+        python -m setup develop
 
     - name: Run unit tests
-      run: python tests/test_install.py unit_tests
+      run: |
+        coverage run --include=hermespy/* ./tests/test_install.py ./tests/unit_tests/
+        coverage xml
+        coverage report -m --include=hermespy/* --skip-covered
+
+    - name: Code Coverage Report
+      uses: irongut/CodeCoverageSummary@v1.3.0
+      with:
+        filename: coverage.xml
+        badge: true
+        fail_below_min: true
+        format: markdown
+        hide_branch_rate: false
+        hide_complexity: true
+        indicators: true
+        output: both
+        thresholds: '60 80'
       
 
   Documentation:
@@ -50,10 +69,10 @@ jobs:
         lfs: true
         submodules: recursive
 
-    - name: Setup python 3.9
+    - name: Setup python 3.10
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: '3.10'
 
     - name: Install doc dependencies
       run: |
@@ -63,11 +82,11 @@ jobs:
         pip install -e .[test,documentation,quadriga,uhd,audio]
 
     - name: Build documentation
-      run: python -m setup build_sphinx
+      run: sphinx-build docssource/ documentation/
 
     - name: Create github pages
       if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
       uses: JamesIves/github-pages-deploy-action@4.1.2
       with:
         branch: gh-pages
-        folder: documentation/html
+        folder: documentation

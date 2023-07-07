@@ -1,0 +1,12 @@
+FROM quay.io/pypa/manylinux_2_28_x86_64
+
+# Copy build script into docker container
+COPY build_manylinux.sh /build.sh
+RUN chmod 777 /build.sh
+
+# Create and join the working directory
+RUN mkdir /dist/
+RUN mkdir /hermespy/
+
+# Run the build script
+CMD ./build.sh
