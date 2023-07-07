@@ -1,4 +1,5 @@
-from multiprocessing.sharedctypes import Value
+# -*- coding: utf-8 -*-
+
 from unittest import TestCase
 
 import numpy as np
@@ -7,20 +8,20 @@ from numpy.testing import assert_array_almost_equal
 
 from hermespy.core import DuplexOperator, Reception, Signal, Transmission
 from hermespy.hardware_loop.audio import AudioDevice
-from hermespy.hardware_loop.audio.device import AudioDeviceAntennas
+from hermespy.hardware_loop.audio.device import AudioAntenna, AudioDeviceAntennas
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class SineOperator(DuplexOperator):
+class SineOperator(DuplexOperator[Transmission, Reception]):
     """Operator transmitting a sine wave for testing purposes."""
     
     __duration: float
@@ -33,17 +34,15 @@ class SineOperator(DuplexOperator):
         
         DuplexOperator.__init__(self)
         
-    def transmit(self, duration: float = 0.) -> Transmission:
+    def _transmit(self, duration: float = 0.) -> Transmission:
         
         sine = np.exp(2j * np.pi * np.arange(int(self.__duration * self.sampling_rate)) / self.sampling_rate * self.__frequency)
         signal = Signal(sine[np.newaxis, :], self.sampling_rate, self.device.carrier_frequency)
         
         transmission = Transmission(signal=signal)
-        
-        self.device.transmitters.add_transmission(self, transmission)
         return transmission
 
-    def receive(self) -> Reception:
+    def _receive(self, *args) -> Reception:
         
         reception = Reception(signal=self.signal)
         return reception
@@ -63,9 +62,32 @@ class SineOperator(DuplexOperator):
 
         return 1.
     
-    def noise_power(self, strength: float, snr_type=...) -> float:
-        return 0.
+    def _noise_power(self, strength: float, snr_type=...) -> float:
+
+        return strength
+
+    def _recall_transmission(self, group) -> Transmission:
+
+        return Transmission.from_HDF(group)
+
+    def _recall_reception(self, group) -> Reception:
+
+        return Reception.from_HDF(group)
     
+    
+class TestAudioAntenna(TestCase):
+    """Test audio antenna model."""
+    
+    def setUp(self) -> None:
+        
+        self.antenna = AudioAntenna()
+        
+    def test_characteristics(self) -> None:
+        """Audio device antenna should always return ideal characteristics"""
+        
+        self.assertCountEqual(np.array([2**0.5, 2**0.5], dtype=float), self.antenna.local_characteristics(0., 0.))
+
+
 class TestAudioDeviceAntennas(TestCase):
     
     def setUp(self) -> None:
@@ -76,9 +98,14 @@ class TestAudioDeviceAntennas(TestCase):
         self.antennas = AudioDeviceAntennas(self.device)
         
     def test_num_antennas(self) -> None:
-        """Test numbero of transmit antennas calcualtion."""
+        """Test numbero of transmit antennas calcualtion"""
         
         self.assertEqual(5, self.antennas.num_antennas)
+        
+    def test_antennas(self) -> None:
+        """Antennas property should alwys return a list of antenna instances"""
+        
+        self.assertEqual(5, len(self.antennas.antennas))
 
 
 class TestAudioDevice(TestCase):
@@ -169,7 +196,7 @@ class TestAudioDevice(TestCase):
         
         self.device.transmit()
         self.device.trigger()
-        self.device.receive()
+        self.device.process_input()
         
         reception = operator.receive()
         

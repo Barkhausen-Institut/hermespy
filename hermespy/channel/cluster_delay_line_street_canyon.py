@@ -16,10 +16,10 @@ from ..core.factory import Serializable
 from .cluster_delay_lines import ClusterDelayLineBase
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -57,7 +57,7 @@ class StreetCanyonLineOfSight(ClusterDelayLineBase, Serializable):
 
     @property
     def aoa_spread_std(self) -> float:
-        return -0.014 * log10(1 + self._center_frequency * 1e-9) + 0.28
+        return 0.014 * log10(1 + self._center_frequency * 1e-9) + 0.28
 
     @property
     def zoa_spread_mean(self) -> float:
@@ -69,7 +69,6 @@ class StreetCanyonLineOfSight(ClusterDelayLineBase, Serializable):
 
     @property
     def zod_spread_mean(self) -> float:
-
         device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
         terminal_height = abs(self.transmitter.position[2] - self.receiver.position[2])
 
@@ -133,7 +132,7 @@ class StreetCanyonLineOfSight(ClusterDelayLineBase, Serializable):
 
     @property
     def _center_frequency(self) -> float:
-        return max(2e9, ClusterDelayLineBase._center_frequency.fget(self))
+        return max(2e9, ClusterDelayLineBase._center_frequency.fget(self))  # type: ignore
 
 
 class UrbanMicroCellsNoLineOfSight(ClusterDelayLineBase, metaclass=ABCMeta):
@@ -141,7 +140,6 @@ class UrbanMicroCellsNoLineOfSight(ClusterDelayLineBase, metaclass=ABCMeta):
 
     @property
     def zod_spread_mean(self) -> float:
-
         device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
         terminal_height = abs(self.transmitter.position[2] - self.receiver.position[2])
 
@@ -153,8 +151,7 @@ class UrbanMicroCellsNoLineOfSight(ClusterDelayLineBase, metaclass=ABCMeta):
 
     @property
     def zod_offset(self) -> float:
-
-        device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
+        device_distance = float(np.linalg.norm(self.receiver.position - self.transmitter.position, 2))
         return -(10 ** (-1.5 * log10(max(10, device_distance)) + 3.3))
 
 
@@ -182,7 +179,7 @@ class StreetCanyonNoLineOfSight(UrbanMicroCellsNoLineOfSight, Serializable):
 
     @property
     def aod_spread_std(self) -> float:
-        return 0.11 * log10(1 + self._center_frequency * 1e-9) - 0.33
+        return 0.11 * log10(1 + self._center_frequency * 1e-9) + 0.33
 
     @property
     def aoa_spread_mean(self) -> float:
@@ -250,7 +247,7 @@ class StreetCanyonNoLineOfSight(UrbanMicroCellsNoLineOfSight, Serializable):
 
     @property
     def _center_frequency(self) -> float:
-        return max(2e9, ClusterDelayLineBase._center_frequency.fget(self))
+        return max(2e9, ClusterDelayLineBase._center_frequency.fget(self))  # type: ignore
 
 
 class StreetCanyonOutsideToInside(UrbanMicroCellsNoLineOfSight, Serializable):
@@ -344,5 +341,5 @@ class StreetCanyonOutsideToInside(UrbanMicroCellsNoLineOfSight, Serializable):
         return 4.0
 
     @property
-    def _center_frequency(self) -> float:
-        return max(2e9, ClusterDelayLineBase._center_frequency.fget(self))
+    def _center_frequency(self) -> float:  # pragma: no cover
+        return max(2e9, ClusterDelayLineBase._center_frequency.fget(self))  # type: ignore

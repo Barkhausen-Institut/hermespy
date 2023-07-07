@@ -2,23 +2,24 @@
 """Test Physical Device functionalities."""
 
 from os import path
-from pickle import dump
 from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
 from tempfile import TemporaryDirectory
 
 import numpy as np
+from h5py import File
 from numpy.random import default_rng
 from numpy.testing import assert_array_equal
 
-from hermespy.core import Signal
-from hermespy.hardware_loop.physical_device import PhysicalDevice, StaticOperator, SilentTransmitter, SignalTransmitter, PowerReceiver, SignalReceiver
+from hermespy.core import DeviceInput, DeviceReception, ProcessedDeviceInput, Signal, SignalTransmitter
+from hermespy.hardware_loop import DelayCalibration, NoDelayCalibration, NoLeakageCalibration, PhysicalDevice, SelectiveLeakageCalibration
+from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -30,9 +31,10 @@ class PhysicalDeviceMock(PhysicalDevice):
     __sampling_rate: float
 
     def __init__(self,
-                 sampling_rate: float) -> None:
+                 sampling_rate: float,
+                 *args, **kwargs) -> None:
 
-        PhysicalDevice.__init__(self)
+        PhysicalDevice.__init__(self, *args, **kwargs)
         self.__sampling_rate = sampling_rate
 
     @property
@@ -55,138 +57,6 @@ class PhysicalDeviceMock(PhysicalDevice):
     @property
     def max_sampling_rate(self) -> float:
         return self.sampling_rate
-    
-    
-class TestStaticOperator(TestCase):
-    """Test the static device operator base class"""
-    
-    def setUp(self) -> None:
-        
-        self.device = PhysicalDeviceMock(1.)
-        
-        self.num_samples = 100
-        self.sampling_rate = self.device.sampling_rate
-        self.operator = StaticOperator(self.num_samples, self.sampling_rate)
-        self.device.transmitters.add(self.operator)
-        
-    def test_sampling_rate(self) -> None:
-        """Sampling rate should be the configured sampling rate"""
-        
-        self.assertEqual(self.sampling_rate, self.operator.sampling_rate)
-        
-    def test_frame_duration(self) -> None:
-        """Silent transmitter should report the correct frame duration"""
-        
-        expected_duration = self.num_samples / self.sampling_rate
-        self.assertEqual(expected_duration, self.operator.frame_duration)
-
-
-class TestSilentTransmitter(TestCase):
-    """Test static silent signal transmission."""
-    
-    def setUp(self) -> None:
-        
-        self.device = PhysicalDeviceMock(1.)
-        
-        self.num_samples = 100
-        self.sampling_rate = self.device.sampling_rate
-        self.transmitter = SilentTransmitter(self.num_samples, self.sampling_rate)
-        self.device.transmitters.add(self.transmitter)
-
-    def test_transmit(self) -> None:
-        """Silent transmission should generate a silent signal"""
-        
-        default_transmission = self.transmitter.transmit()
-        custom_transmission = self.transmitter.transmit(10)
-        
-        self.assertEqual(self.num_samples, default_transmission.signal.num_samples)
-        self.assertCountEqual([0] * 10, custom_transmission.signal.samples[0, :].tolist())
-
-
-class TestSignalTransmitter(TestCase):
-    """Test static arbitrary signal transmission."""
-    
-    def setUp(self) -> None:
-        
-        self.device = PhysicalDeviceMock(1.)
-        
-        self.num_samples = 100
-        self.sampling_rate = self.device.sampling_rate
-        self.transmitter = SignalTransmitter(self.num_samples, self.sampling_rate)
-        self.device.transmitters.add(self.transmitter)
-    
-    def test_transmit(self) -> None:
-        """Transmit routine should transmit the submitted signal samples"""
-        
-        signal = Signal(np.ones((1, 10)), sampling_rate=self.device.sampling_rate, carrier_frequency=self.device.carrier_frequency)
-        transmission = self.transmitter.transmit(signal)
-        
-        assert_array_equal(signal.samples, transmission.signal.samples)
-        
-
-class TestPowerReceiver(TestCase):
-    
-    def setUp(self) -> None:
-        
-        self.rng = default_rng(42)
-        self.device = PhysicalDeviceMock(1.)
-        
-        self.receiver = PowerReceiver()
-        self.device.receivers.add(self.receiver)
-        
-    def test_sampling_rate(self) -> None:
-        """Sampling rate should be identical to the device's sampling rate"""
-        
-        self.assertEqual(self.device.sampling_rate, self.receiver.sampling_rate)
-        
-    def test_energy(self) -> None:
-        """Reported energy should be zero"""
-        
-        self.assertEqual(0, self.receiver.energy)
-        
-    def test_frame_duration(self) -> None:
-        """Power receiver should report a zero frame duration"""
-        
-        self.assertEqual(0, self.receiver.frame_duration)
-
-    def test_receive(self) -> None:
-        """Reception should correctly estimate the received power"""
-        
-        power_signal = Signal(np.ones((1, 10)), sampling_rate=self.device.sampling_rate, carrier_frequency=self.device.carrier_frequency)
-        self.device.receive(power_signal)
-        
-        power_estimate = self.receiver.receive().signal.power
-        
-        assert_array_equal(power_signal.power, power_estimate)
-
-
-
-
-class TestSignalReceiver(TestCase):
-    
-    def setUp(self) -> None:
-        
-        self.device = PhysicalDeviceMock(1.)
-        
-        self.num_samples = 100
-        self.sampling_rate = self.device.sampling_rate
-        self.receiver = SignalReceiver(self.num_samples, self.sampling_rate)
-        self.device.receivers.add(self.receiver)
-
-    def test_energy(self) -> None:
-        """Reported energy should be zero"""
-        
-        self.assertEqual(0, self.receiver.energy)
-        
-    def test_receive(self) -> None:
-        """Receiver should receive a signal"""
-        
-        power_signal = Signal(np.ones((1, 10)), sampling_rate=self.device.sampling_rate, carrier_frequency=self.device.carrier_frequency)
-        self.device.receive(power_signal)
-        
-        received_signal = self.receiver.receive().signal
-        
-        assert_array_equal(received_signal.samples, power_signal.samples)
 
 
 class TestPhysicalDevice(TestCase):
@@ -198,6 +68,19 @@ class TestPhysicalDevice(TestCase):
         self.sampling_rate = 1e6
 
         self.device = PhysicalDeviceMock(sampling_rate=self.sampling_rate)
+
+    def test_calibration_init(self) -> None:
+        """Calibration attributes should be properly initialized"""
+        
+        leakage_calibration = NoLeakageCalibration()
+        delay_calibration = NoDelayCalibration()
+        
+        self.device = PhysicalDeviceMock(sampling_rate=self.sampling_rate, leakage_calibration=leakage_calibration, delay_calibration=delay_calibration)    
+        
+        self.assertIs(leakage_calibration, self.device.leakage_calibration)
+        self.assertIs(leakage_calibration.device, self.device)
+        self.assertIs(delay_calibration, self.device.delay_calibration)
+        self.assertIs(delay_calibration.device, self.device)
 
     def test_calibration_delay_setget(self) -> None:
         """Calibration delay property getter should return setter argument"""
@@ -265,8 +148,8 @@ class TestPhysicalDevice(TestCase):
         with self.assertRaises(NotImplementedError):
             _ = self.device.velocity
 
-    @patch.object(PhysicalDeviceMock, 'trigger')
-    def test_estimate_noise_power(self, mock_trigger) -> None:
+    @patch.object(PhysicalDeviceMock, '_download')
+    def test_estimate_noise_power(self, patch_download) -> None:
         """Noise power estimation should return the correct power estimate."""
 
         num_samples = 10000
@@ -274,56 +157,73 @@ class TestPhysicalDevice(TestCase):
         samples = 2 ** -.5 * (self.rng.normal(size=num_samples, scale=expected_noise_power ** .5) + 1j *
                               self.rng.normal(size=num_samples, scale=expected_noise_power ** .5))
         signal = Signal(samples, sampling_rate=self.sampling_rate)
-        mock_trigger.side_effect = lambda: [receiver.cache_reception(signal) for receiver in self.device.receivers]
+        patch_download.side_effect = lambda: signal
 
         noise_power = self.device.estimate_noise_power(num_samples)
+        
         self.assertAlmostEqual(expected_noise_power, noise_power[0], places=2)
+        assert_array_equal(noise_power, self.device.noise_power)
+
+    def test_noise_power_setget(self) -> None:
+        """Noise power property getter should return setter argument"""
+
+        expected_noise_power = np.array([1])
+        self.device.noise_power = expected_noise_power
+
+        assert_array_equal(expected_noise_power, self.device.noise_power)
+        
+        self.device.noise_power = None
+        self.assertIsNone(self.device.noise_power)
+
+    def test_noise_power_validation(self) -> None:
+        """Noise power property setter should raise ValueError on invalid arguments"""
+
+        with self.assertRaises(ValueError):
+            self.device.noise_power = np.array([-1, 0])
 
     @patch('hermespy.hardware_loop.physical_device.PhysicalDevice._upload')
     def test_transmit_no_adpative_sampling(self, _upload: MagicMock) -> None:
         """Test physical device extended transmit routine without adptive sampling"""
         
-        transmitter = SignalTransmitter(10, self.device.sampling_rate)
-        self.device.transmitters.add(transmitter)
-        
         transmitted_signal = Signal(np.zeros((self.device.num_antennas, 10)), self.device.sampling_rate, self.device.carrier_frequency)
-        _ = transmitter.transmit(transmitted_signal)
+        transmitter = SignalTransmitter(transmitted_signal)
+        self.device.transmitters.add(transmitter)
         
         self.device.adaptive_sampling = False
         transmission = self.device.transmit()
         
         _upload.assert_called_once()
-        assert_array_equal(transmitted_signal.samples, transmission.samples)
+        assert_array_equal(transmitted_signal.samples, transmission.mixed_signal.samples)
         
     @patch('hermespy.hardware_loop.physical_device.PhysicalDevice._upload')
     def test_transmit_adpative_sampling(self, _upload: MagicMock) -> None:
         """Test physical device extended transmit routine with adptive sampling"""
-        
-        transmitter_alpha = SignalTransmitter(10, self.device.sampling_rate)
-        transmitter_beta = SignalTransmitter(10, self.device.sampling_rate)
+
+        transmitted_signal = Signal(np.zeros((self.device.num_antennas, 10), dtype=complex), self.device.sampling_rate, self.device.carrier_frequency)
+
+        transmitter_alpha = SignalTransmitter(transmitted_signal)
+        transmitter_beta = SignalTransmitter(transmitted_signal)
         self.device.transmitters.add(transmitter_alpha)
         self.device.transmitters.add(transmitter_beta)
 
-        _ = transmitter_alpha.transmit(Signal(np.zeros((self.device.num_antennas, 10), dtype=complex), self.device.sampling_rate, self.device.carrier_frequency))
-        _ = transmitter_beta.transmit(Signal(np.zeros((self.device.num_antennas, 10), dtype=complex), self.device.sampling_rate, self.device.carrier_frequency))
-
+        self.device.adaptive_sampling = True
         transmission = self.device.transmit()
         
         _upload.assert_called_once()
-        assert_array_equal(np.zeros((self.device.num_antennas, 10), dtype=complex), transmission.samples)
+        assert_array_equal(transmitted_signal.samples, transmission.mixed_signal.samples)
         
     def test_transmit_validation(self) -> None:
         """Phyiscal device extended transmit routine should raise RuntimeErrors on invalid configurations"""
         
         self.device.adaptive_sampling = True
             
-        transmitter_alpha = SignalTransmitter(10, self.device.sampling_rate)
-        transmitter_beta = SignalTransmitter(10, self.device.sampling_rate)
+        signal_alpha = Signal(np.zeros((self.device.num_antennas, 10)), self.device.sampling_rate, self.device.carrier_frequency)
+        transmitter_alpha = SignalTransmitter(signal_alpha)
         self.device.transmitters.add(transmitter_alpha)
-        self.device.transmitters.add(transmitter_beta)
 
-        _ = transmitter_alpha.transmit(Signal(np.zeros((self.device.num_antennas, 10)), self.device.sampling_rate, self.device.carrier_frequency))
-        _ = transmitter_beta.transmit(Signal(np.zeros((self.device.num_antennas, 10)), 1 + self.device.sampling_rate, self.device.carrier_frequency))
+        signal_beta = Signal(np.zeros((self.device.num_antennas, 10)), 1 + self.device.sampling_rate, self.device.carrier_frequency)
+        transmitter_beta = SignalTransmitter(signal_beta)
+        self.device.transmitters.add(transmitter_beta)
 
         with self.assertRaises(RuntimeError):
             _ = self.device.transmit()
@@ -339,14 +239,14 @@ class TestPhysicalDevice(TestCase):
         self.device.lowpass_filter = True
         self.device.receivers.add(receiver)
         
-        _ = self.device.receive()
+        _ = self.device.process_input()
         receiver.cache_reception.assert_called_once()
         
         receiver.reset_mock()
         self.device.lowpass_bandwidth = 1.
         
-        _ = self.device.receive()
-        receiver.cache_reception.assert_called_once() 
+        _ = self.device.process_input()
+        receiver.cache_reception.assert_called_once()
         
     @patch('hermespy.hardware_loop.physical_device.PhysicalDevice._download')
     def test_receive_validation(self, _download: MagicMock) -> None:
@@ -355,76 +255,249 @@ class TestPhysicalDevice(TestCase):
         with self.assertRaises(ValueError):
             
             _download.return_value = Signal(np.zeros((3, 10)), self.device.sampling_rate, self.device.carrier_frequency)
-            _ = self.device.receive()
+            _ = self.device.process_input()
             
         with self.assertRaises(ValueError):
             
             _download.return_value = Signal(np.zeros((self.device.num_antennas, 10)), self.device.sampling_rate + 1, self.device.carrier_frequency)
-            _ = self.device.receive()
+            _ = self.device.process_input()
             
     def test_download(self) -> None:
         """The download subroutine should raise a NotImplementedError"""
         
         with self.assertRaises(NotImplementedError):
             _ = self.device._download()
-       
+            
+    def test_trigger_direct_validation(self) -> None:
+        """Trigger routine should raise a ValueError on invalid arguments"""
+        
+        with self.assertRaises(ValueError):
+            self.device.trigger_direct(Signal.empty(self.device.sampling_rate, self.device.num_antennas, carrier_frequency=1.))
+            
+        with self.assertRaises(ValueError):
+            self.device.trigger_direct(Signal.empty(566662, self.device.num_antennas, carrier_frequency=self.device.carrier_frequency))
+            
+    def test_process_device_input(self) -> None:
+        """Test processing of device inputs"""
+        
+        input = DeviceInput(Signal.empty(self.device.sampling_rate, self.device.num_antennas, carrier_frequency=self.device.carrier_frequency))
+        processed_input = self.device.process_input(input)
+            
+        self.assertIsInstance(processed_input, ProcessedDeviceInput)
+        
+    def test_process_signal_sequence(self) -> None:
+        """Test processing of a sequence of signals"""
+        
+        input = [Signal.empty(self.device.sampling_rate, self.device.num_antennas, carrier_frequency=self.device.carrier_frequency)]
+        processed_input = self.device.process_input(input)
+            
+        self.assertIsInstance(processed_input, ProcessedDeviceInput)
+        
+    def test_process_signal(self) -> None:
+        """Test processing of a single signal"""
+        
+        input = Signal.empty(self.device.sampling_rate, self.device.num_antennas, carrier_frequency=self.device.carrier_frequency)
+        processed_input = self.device.process_input(input)
+            
+        self.assertIsInstance(processed_input, ProcessedDeviceInput)
+        
     @patch('hermespy.hardware_loop.physical_device.PhysicalDevice._download')
-    @patch('hermespy.hardware_loop.physical_device.PhysicalDevice._upload')
-    def test_calibrate(self, _upload: MagicMock, _download: MagicMock) -> None:
-        """Test the physical device calibration routine"""
+    def test_lowpass_filter(self, _download: MagicMock) -> None:
+        """Test lowpass filtering during input processing"""
+        
+        input_samples = self.device._rng.standard_normal((self.device.num_antennas, 512)) + 1j * self.device._rng.standard_normal((self.device.num_antennas, 512))
+        _download.return_value = Signal(input_samples, self.device.sampling_rate, self.device.carrier_frequency)
+        
+        # Enable lowpass filter
+        self.device.lowpass_filter = True
+        
+        # Check with default cutoff frequency
+        self.device.lowpass_bandwidth = 0.
+        default_filtered_samples = self.device.process_input().impinging_signals[0].samples
+    
+        # Check with specific cutoff frequency
+        self.device.lowpass_bandwidth = .5 * self.device.sampling_rate
+        filtered_samples = self.device.process_input().impinging_signals[0].samples
 
-        for expected_delay_samples in [0, 10, 12]:
-            
-            expected_delay = expected_delay_samples / self.device.max_sampling_rate
+        assert_array_equal(default_filtered_samples, filtered_samples)
         
-            # Configure the download routine to mirror the uploaded samples back
-            # Results in a zero second calibration time of flight delay
-            def return_side_effect() -> Signal:
-                
-                # Prepend delay samples
-                delayed_signal: Signal = _upload.call_args[0][0].copy()
-                delayed_signal.samples = np.append(np.zeros((delayed_signal.num_streams, expected_delay_samples), dtype=complex), 
-                                                   delayed_signal.samples)
-                
-                return delayed_signal
-            
-            _download.side_effect = return_side_effect
-            
-            with TemporaryDirectory() as tempdir:
-                
-                file = path.join(tempdir, 'testfile')
-                _ = self.device.calibrate(12 / self.sampling_rate, file, 2)
-            
-                _download.assert_called()
-                self.assertAlmostEqual(-expected_delay, self.device.calibration_delay)
-                
-                self.device.load_calibration(file)
-                self.assertAlmostEqual(-expected_delay, self.device.calibration_delay)
+    def test_receive(self) -> None:
+        """Test receive routine"""
         
-    def test_calibrate_validation(self) -> None:
-        """The physical device calibration routine should raise ValueErrors on invalid arguments"""
+        input = DeviceInput(Signal.empty(self.device.sampling_rate, self.device.num_antennas, carrier_frequency=self.device.carrier_frequency))
+        reception = self.device.receive(input)
+            
+        self.assertIsInstance(reception, DeviceReception)
+            
+    def test_default_init(self) -> None:
+        """Calibration attributes should be properly initialized with default values"""
         
-        with self.assertRaises(ValueError):
-            self.device.calibrate(0., 'xxx')
-            
-        with self.assertRaises(ValueError):
-            self.device.calibrate(10, 'xxx', wait=-1)
-            
-        with self.assertRaises(ValueError):
-            self.device.calibrate(10, 'xxx', num_iterations=-1)
+        self.assertIsInstance(self.device.leakage_calibration, NoLeakageCalibration)
+        self.assertIs(self.device, self.device.leakage_calibration.device)
+        self.assertIsInstance(self.device.delay_calibration, NoDelayCalibration)
+        self.assertIs(self.device, self.device.delay_calibration.device)
         
-    def test_load_calibration(self) -> None:
-        """Test the loading of a calibration file"""
+    def test_specific_init(self) -> None:
+        """Calibration attributes should be properly initialized with specific values"""
         
-        expected_delay = 1.23456
+        expected_leakage_calibration = NoLeakageCalibration()
+        expected_delay_calibration = NoDelayCalibration()
         
-        with TemporaryDirectory() as tempdir:
+        self.device = PhysicalDeviceMock(1., leakage_calibration=expected_leakage_calibration, delay_calibration=expected_delay_calibration)
+        
+        self.assertIs(self.device, self.device.leakage_calibration.device)
+        self.assertIs(self.device, self.device.delay_calibration.device)
+        
+    def test_leakage_calibration_setget(self) -> None:
+        """Leakage calibration property getter should return properly configured setter argument"""
+        
+        expected_leakage_calibration = NoLeakageCalibration()
+        self.device.leakage_calibration = expected_leakage_calibration
+        
+        self.assertIs(expected_leakage_calibration, self.device.leakage_calibration)
+        self.assertIs(self.device, expected_leakage_calibration.device)
+
+    def test_delay_calibration_setget(self) -> None:
+        """Delay calibration property getter should return properly configured setter argument"""
+        
+        expected_delay_calibration = NoDelayCalibration()
+        self.device.delay_calibration = expected_delay_calibration
+        
+        self.assertIs(expected_delay_calibration, self.device.delay_calibration)
+        self.assertIs(self.device, expected_delay_calibration.device)
+
+    def test_save_load(self) -> None:
+        """Test save and subsequential load functionality from HDF"""
+        
+        expected_leakage_response = np.array([[[0, 0, 1, 0, 1j]]], dtype=np.complex_)
+        expected_leakage_calibration = SelectiveLeakageCalibration(expected_leakage_response, 1.0, 0.0)
+        self.device.leakage_calibration = expected_leakage_calibration
+        
+        exepected_delay = 1.2345
+        expected_delay_calibration = DelayCalibration(exepected_delay)
+        self.device.delay_calibration = expected_delay_calibration
+        
+        recalled_device = PhysicalDeviceMock(1.)
+        patched_recalled_device = PhysicalDeviceMock(1.)
+
+        with TemporaryDirectory() as tmp_dir:
             
-            file = path.join(tempdir, 'testfile')
+            file_path = path.join(tmp_dir, "test.hdf5")
+            self.device.save_calibration(file_path)
             
-            with open(file, 'wb') as file_stream:
-                dump(expected_delay, file_stream)
-                
-            self.device.load_calibration(file)
+            recalled_device.load_calibration(file_path)
             
-        self.assertEqual(expected_delay, self.device.calibration_delay)
+            with patch("hermespy.hardware_loop.physical_device.DelayCalibrationBase.hdf_group_name", "xxxxxxx"):
+                patched_recalled_device.load_calibration(file_path)
+            
+        self.assertIsInstance(recalled_device.leakage_calibration, SelectiveLeakageCalibration)
+        assert_array_equal(recalled_device.leakage_calibration.leakage_response, expected_leakage_response)
+
+        self.assertIsInstance(recalled_device.delay_calibration, DelayCalibration)
+        self.assertEqual(recalled_device.delay_calibration.delay, exepected_delay)
+
+        self.assertIsInstance(patched_recalled_device.delay_calibration, NoDelayCalibration)
+
+
+class TestCalibration(TestCase):
+    """Test calibration base class."""
+    
+    def setUp(self) -> None:
+        
+        self.calibration = NoDelayCalibration()
+        
+    def test_device_setget(self) -> None:
+        """Calibaratable property getter should return properly configured setter argument"""
+        
+        expected_device = PhysicalDeviceMock(1.)
+        self.calibration.device = expected_device
+        
+        self.assertIs(expected_device, self.calibration.device)
+        self.assertIs(self.calibration.device, expected_device)
+        
+        replaced_expected_device = PhysicalDeviceMock(1.)
+        self.calibration.device = replaced_expected_device
+        
+        self.assertIsNot(self.calibration, expected_device.delay_calibration)
+        self.assertIs(self.calibration, replaced_expected_device.delay_calibration)
+
+    def test_save_load(self) -> None:
+        """Test saving and loading from and to HDF files"""
+        
+        with TemporaryDirectory() as tmp_dir:
+            
+            file_path = path.join(tmp_dir, "test.hdf5")
+            self.calibration.save(file_path)
+            
+            recalled_file_calibration = self.calibration.Load(file_path)
+            recalled_group_calibration = self.calibration.Load(File(file_path, "r"))   
+            
+        self.assertIsInstance(recalled_file_calibration, NoDelayCalibration)
+        self.assertIsInstance(recalled_group_calibration, NoDelayCalibration)
+        
+        
+class TestNoDelayCalibration(TestCase):
+    """Test delay calibration stub class."""
+    
+    def setUp(self) -> None:
+        
+        self.calibration = NoDelayCalibration()
+        
+    def test_delay_get(self) -> None:
+        """Delay property should always return zero"""
+        
+        self.assertEqual(0., self.calibration.delay)
+
+    def test_correct_transmit_delay(self) -> None:
+        """Delays should be correctly corrected during transmission"""
+        
+        test_samples = np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 0]], dtype=np.complex_)
+        test_signal = Signal(test_samples, 1.)
+        
+        assert_array_equal(test_signal.samples, self.calibration.correct_transmit_delay(test_signal).samples)
+
+    def test_correct_receive_delay(self) -> None:
+        """Delays should be correctly corrected during reception"""
+        
+        test_samples = np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 0]], dtype=np.complex_)
+        test_signal = Signal(test_samples, 1.)
+        
+        assert_array_equal(test_signal.samples, self.calibration.correct_receive_delay(test_signal).samples)
+   
+    def test_yaml_serialization(self) -> None:
+        """Test YAML serialization and deserialization"""
+        
+        test_yaml_roundtrip_serialization(self, self.calibration)
+    
+    
+class TestNoLeakageCalibration(TestCase):
+    """Test leakage calibration stub class."""
+    
+    def setUp(self) -> None:
+        
+        self.leakage_calibration = NoLeakageCalibration()
+        
+    def test_remove_leakage(self) -> None:
+        """Nothing should be done to the signal during leakage removal"""
+        
+        transmitted_signal = Signal(np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 0]], dtype=np.complex_), 1.)
+        received_signal = Signal(np.array([[1, 2, 3, 4, 2], [6, 7, 8, 1, 0]], dtype=np.complex_), 1.)
+
+        assert_array_equal(received_signal.samples, self.leakage_calibration.remove_leakage(transmitted_signal, received_signal).samples)
+   
+    def test_yaml_serialization(self) -> None:
+        """Test YAML serialization and deserialization"""
+        
+        test_yaml_roundtrip_serialization(self, self.leakage_calibration)
+    
+    def test_save_load(self) -> None:
+        """Test saving and loading from and to HDF files"""
+        
+        with TemporaryDirectory() as tmp_dir:
+            
+            file_path = path.join(tmp_dir, "test.hdf5")
+            self.leakage_calibration.save(file_path)
+            
+            recalled_file_calibration = self.leakage_calibration.Load(file_path)
+            
+        self.assertIsInstance(recalled_file_calibration, NoLeakageCalibration)

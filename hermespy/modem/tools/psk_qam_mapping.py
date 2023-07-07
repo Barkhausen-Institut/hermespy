@@ -21,10 +21,10 @@ from typing import Union
 import numpy as np
 
 __author__ = "André Noll Barreto"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["André Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "André Noll Barreto"
 __email__ = "andre.nollbarreto@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -154,11 +154,7 @@ class PskQamMapping(object):
                 imag_part = self.generate_pam_symbol_3gpp(16, bits[[1, 3, 5, 7], :])
                 symbols = (real_part + 1j * imag_part) / np.sqrt(170)
             else:
-                if self.is_complex:
-                    modulation_type = "QAM"
-                else:
-                    modulation_type = "PAM"
-                raise ValueError(f"Modulation ({self.modulation_order}-{modulation_type}) not supported")
+                raise RuntimeError(f"Modulation ({self.modulation_order}-{'QAM' if self.is_complex else 'PAM'}) not supported")
 
         return np.ravel(symbols)
 
@@ -166,8 +162,10 @@ class PskQamMapping(object):
         """Returns either bits or LLR for the provided symbols.
 
         Args:
+
             rx_symbols(np.ndarray):
                 Vector of N received symbols, for which the bits/LLR will be estimated
+
             noise_variance (float or np.ndarray, optional):
                 vector with the noise variance in each received symbol. If a
                 scalar is given, then the same variance is assumed for all symbols.
@@ -180,6 +178,8 @@ class PskQamMapping(object):
         """
         number_of_bits = rx_symbols.size * self.bits_per_symbol
         llr = np.zeros(number_of_bits)
+
+        noise_variance = noise_variance * np.ones(rx_symbols.shape) if isinstance(noise_variance, float) else noise_variance
 
         # set starting index of encoded symbol (MSB)
         bits_idx = np.arange(0, number_of_bits, self.bits_per_symbol, dtype=int)
@@ -196,7 +196,7 @@ class PskQamMapping(object):
                     llr[bits_idx + bit_offset] = np.bitwise_and(min_index, power_of_2) > 0
                     llr = llr * 2 - 1
             else:
-                raise ValueError("soft output not yet supported for this modulation scheme")
+                raise RuntimeError("Soft output demodulation not implemented for custom constellation")
 
         # use 3GPP mapping for BPSK, QPSK, 16-,64- and 256-QAM
         elif self.modulation_order == 2:
@@ -236,13 +236,10 @@ class PskQamMapping(object):
             llr[1::2] = self.get_llr_3gpp(16, np.imag(rx_symbols), noise_variance, True)
 
         else:
-            raise ValueError("Unsupported modulation scheme")
+            raise RuntimeError("Unsupported modulation scheme")
 
-        if not self.soft_output:
-            bits = llr > 0
-            return bits
-        else:
-            return llr
+        # Return finished bit stream either as soft or hard detections
+        return llr if self.soft_output else llr > 0
 
     @staticmethod
     def generate_pam_symbol_3gpp(modulation_order, bits: np.ndarray) -> np.ndarray:
@@ -278,7 +275,7 @@ class PskQamMapping(object):
         return symbols
 
     @staticmethod
-    def get_llr_3gpp(modulation_order, rx_symbols: np.ndarray, noise_variance: np.ndarray, is_complex: bool) -> np.ndarray:
+    def get_llr_3gpp(modulation_order: int, rx_symbols: np.ndarray, noise_variance: np.ndarray, is_complex: bool) -> np.ndarray:
         """Returns LLR for each bit based on a received symbol, following 1D 3GPP modulation mapping.
 
         3GPP has defined in TS 36.211 mapping tables from bits into complex symbols.
@@ -451,7 +448,7 @@ class PskQamMapping(object):
 
         return llr.ravel("F")
 
-    def get_mapping(self) -> np.array:
+    def get_mapping(self) -> np.ndarray:
         """Returns current mapping table
 
         Returns:

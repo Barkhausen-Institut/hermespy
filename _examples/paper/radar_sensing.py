@@ -7,7 +7,7 @@ import numpy as np
 from scipy.io import savemat
 
 from hermespy.core import SNRType
-from hermespy.channel import RadarChannel
+from hermespy.channel import SingleTargetRadarChannel
 from hermespy.jcas import MatchedFilterJcas
 from hermespy.modem import OFDMWaveform, SchmidlCoxPilotSection
 from hermespy.radar import Radar, FMCW, ReceiverOperatingCharacteristic
@@ -15,7 +15,7 @@ from hermespy.simulation import Simulation
 from hermespy.tools import db2lin
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.3.0"
@@ -64,8 +64,8 @@ jcas_h1.reference = device_h1
 
 
 # Configure a radar channel
-channel_h1 = RadarChannel(target_range=(0.,100.), radar_cross_section = 1., attenuate=False, target_exists=True)
-channel_h0 = RadarChannel(target_range=25., radar_cross_section = 1., attenuate=False, target_exists=False)
+channel_h1 = SingleTargetRadarChannel(target_range=(0.,100.), radar_cross_section = 1., attenuate=False, target_exists=True)
+channel_h0 = SingleTargetRadarChannel(target_range=25., radar_cross_section = 1., attenuate=False, target_exists=False)
 simulation.scenario.set_channel(device_h1, device_h1, channel_h1)
 simulation.scenario.set_channel(device_h0, device_h0, channel_h0)
 simulation.scenario.channel(device_h1, device_h0).gain = 0.

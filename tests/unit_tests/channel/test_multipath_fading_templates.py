@@ -13,10 +13,10 @@ from hermespy.core.device import FloatingError
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -37,18 +37,7 @@ class TestStandardAntennaCorrelation(unittest.TestCase):
         
         self.correlation.device_type = DeviceType.BASE_STATION
         self.assertIs(DeviceType.BASE_STATION, self.correlation.device_type)
-        
-        self.correlation.device_type = 1
-        self.assertIs(DeviceType.TERMINAL, self.correlation.device_type)
-        
-        self.correlation.device_type = "BASE_STATION"
-        self.assertIs(DeviceType.BASE_STATION, self.correlation.device_type)
-        
-    def test_device_type_validation(self) -> None:
-        """Device type property setter should raise ValueErrors on invalid argument types"""
-        
-        with self.assertRaises(ValueError):
-            self.correlation.device_type = Mock()
+
     
     def test_correlation_setget(self) -> None:
         """Correlation type property getter should return setter argument"""
@@ -56,14 +45,8 @@ class TestStandardAntennaCorrelation(unittest.TestCase):
         self.correlation.correlation = CorrelationType.HIGH
         self.assertIs(CorrelationType.HIGH, self.correlation.correlation)
         
-        self.correlation.correlation = "MEDIUM"
+        self.correlation.correlation = CorrelationType.MEDIUM
         self.assertIs(CorrelationType.MEDIUM, self.correlation.correlation)
-        
-    def test_correlation_validation(self) -> None:
-        """Correlation type property setter should raise ValueErrors on invalid argument types"""
-        
-        with self.assertRaises(ValueError):
-            self.correlation.correlation = Mock()
     
     def test_covariance(self) -> None:
         """Test covariance matrix generation"""
@@ -247,10 +230,10 @@ class TestExponential(unittest.TestCase):
         """Object initialization should raise ValueErrors on negative tap intervals and rms delays."""
 
         with self.assertRaises(ValueError):
-            _ = MultipathFadingExponential(tap_interval=-1.0)
+            _ = MultipathFadingExponential(0., 1.)
 
         with self.assertRaises(ValueError):
-            _ = MultipathFadingExponential(rms_delay=-1.0)
+            _ = MultipathFadingExponential(1., 0.)
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""

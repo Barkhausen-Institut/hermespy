@@ -14,22 +14,29 @@ which is typically either :math:`44.1~\\mathrm{kHz}` or :math:`48~\\mathrm{kHz}`
 
 from __future__ import annotations
 from types import ModuleType
-from typing import List, Optional, Union
+from typing import List, Optional, Sequence
 
 import numpy as np
 from scipy.fft import fft, ifft
 
-from hermespy.core import Serializable, Signal, AntennaArrayBase
+from hermespy.core import Serializable, Signal, Antenna, AntennaArrayBase
 from ..physical_device import PhysicalDevice
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
+
+
+class AudioAntenna(Antenna):
+    """Antenna model for audio devices."""
+
+    def local_characteristics(self, azimuth: float, elevation) -> np.ndarray:
+        return np.array([2**0.5, 2**0.5], dtype=float)
 
 
 class AudioDeviceAntennas(AntennaArrayBase):
@@ -38,33 +45,35 @@ class AudioDeviceAntennas(AntennaArrayBase):
     __device: AudioDevice
 
     def __init__(self, device: AudioDevice) -> None:
+        # Initialize base class
+        AntennaArrayBase.__init__(self)
 
+        # Save attributes
         self.__device = device
 
     @property
     def num_antennas(self) -> int:
-
         return len(self.__device.playback_channels)
+
+    @property
+    def antennas(self) -> List[Antenna]:
+        return [AudioAntenna() for _ in range(self.num_antennas)]
 
 
 class AudioDevice(PhysicalDevice, Serializable):
     """HermesPy binding to an arbitrary audio device. Let's rock!"""
 
     yaml_tag = "AudioDevice"
-    property_blacklist = {"topology", "wavelength", "velocity", "orientation", "position", "random_mother"}
+    property_blacklist = {"topology", "wavelength", "velocity", "orientation", "position", "random_mother", "antennas"}
 
-    # Device over which audio streams are to be transmtited
-    __playback_device: int
-    # Device over which audio streams are to be received
-    __record_device: int
-    # List of audio channel for signal transmission
-    __playback_channels: List[int]
-    # List of audio channel for signal reception
-    __record_channels: List[int]
+    __playback_device: int  # Device over which audio streams are to be transmitted
+    __record_device: int  # Device over which audio streams are to be received
+    __playback_channels: Sequence[int]  # List of audio channel for signal transmission
+    __record_channels: Sequence[int]  # List of audio channel for signal reception
     __sampling_rate: float  # Configured sampling rate
     __transmission: Optional[np.ndarray]  # Configured transmission samples
 
-    def __init__(self, playback_device: int, record_device: int, playback_channels: Union[List[int], None] = None, record_channels: Union[List[int], None] = None, sampling_rate: float = 48000, **kwargs) -> None:
+    def __init__(self, playback_device: int, record_device: int, playback_channels: Sequence[int] | None = None, record_channels: Sequence[int] | None = None, sampling_rate: float = 48000, **kwargs) -> None:
         """
         Args:
 
@@ -112,7 +121,6 @@ class AudioDevice(PhysicalDevice, Serializable):
 
     @playback_device.setter
     def playback_device(self, value: int) -> None:
-
         if value < 0:
             raise ValueError("Playback device identifier must be greater or equal to zero")
 
@@ -132,17 +140,16 @@ class AudioDevice(PhysicalDevice, Serializable):
 
     @record_device.setter
     def record_device(self, value: int) -> None:
-
         if value < 0:
             raise ValueError("Record device identifier must be greater or equal to zero")
 
         self.__record_device = value
 
     @property
-    def playback_channels(self) -> List[int]:
+    def playback_channels(self) -> Sequence[int]:
         """Audio channels for signal transmission.
 
-        Returns: List of audio channel indices.
+        Returns: Sequence of audio channel indices.
 
         Raises:
             ValueError: On arguments not representing vectors.
@@ -151,18 +158,14 @@ class AudioDevice(PhysicalDevice, Serializable):
         return self.__playback_channels
 
     @playback_channels.setter
-    def playback_channels(self, value: Union[np.ndarray, List]):
-
-        if isinstance(value, np.ndarray):
-            value = value.tolist()
-
+    def playback_channels(self, value: Sequence[int]):
         self.__playback_channels = value
 
     @property
-    def record_channels(self) -> List[int]:
+    def record_channels(self) -> Sequence[int]:
         """Audio channels for signal reception.
 
-        Returns: List of audio channel indices.
+        Returns: Sequence of audio channel indices.
 
         Raises:
             ValueError: On arguments not representing vectors.
@@ -171,11 +174,7 @@ class AudioDevice(PhysicalDevice, Serializable):
         return self.__record_channels
 
     @record_channels.setter
-    def record_channels(self, value: Union[np.ndarray, List]):
-
-        if isinstance(value, np.ndarray):
-            value = value.tolist()
-
+    def record_channels(self, value: Sequence[int]):
         self.__record_channels = value
 
     @property
@@ -184,12 +183,10 @@ class AudioDevice(PhysicalDevice, Serializable):
 
     @property
     def sampling_rate(self) -> float:
-
         return self.__sampling_rate
 
     @sampling_rate.setter
     def sampling_rate(self, value: float) -> None:
-
         if value <= 0.0:
             raise ValueError("Sampling rate must be greater than zero")
 
@@ -197,11 +194,9 @@ class AudioDevice(PhysicalDevice, Serializable):
 
     @property
     def max_sampling_rate(self) -> float:
-
         return self.sampling_rate
 
     def _upload(self, signal: Signal) -> None:
-
         # Infer parameters
         delay_samples = int(self.max_receive_delay * self.sampling_rate)
 
@@ -216,7 +211,6 @@ class AudioDevice(PhysicalDevice, Serializable):
         self.__reception = np.empty((self.__transmission.shape[0], len(self.__record_channels)), dtype=float)
 
     def trigger(self) -> None:
-
         # Import sounddevice
         sd = self.__import_sd()
 
@@ -224,7 +218,6 @@ class AudioDevice(PhysicalDevice, Serializable):
         sd.playrec(self.__transmission, self.sampling_rate, out=self.__reception, input_mapping=self.__record_channels, output_mapping=self.__playback_channels, device=(self.__record_device, self.__playback_device), blocking=False)
 
     def _download(self) -> Signal:
-
         # Import sounddevice
         sd = self.__import_sd()
 

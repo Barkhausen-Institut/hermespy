@@ -1,26 +1,35 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
+import logging
+from io import StringIO
+from os import getenv
 from typing import Callable, List
 from unittest import TestCase
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import ray
+import matplotlib.pyplot as plt
 import numpy as np
 from numpy.random import default_rng
-from scipy.stats import norm, truncnorm
+from numpy.testing import assert_array_equal
+from rich.console import Console
 
+from hermespy.core import ConsoleMode, LogarithmicSequence
 from hermespy.core.monte_carlo import ActorRunResult, Evaluation, EvaluationTemplate, EvaluationResult, ScalarEvaluationResult, GridSection, MonteCarlo, MonteCarloActor, MonteCarloSample, \
-    Evaluator, ArtifactTemplate, MO, Artifact, GridDimension, RegisteredDimension, dimension
+    SampleGrid, Evaluator, ArtifactTemplate, GridDimension, register, RegisteredDimension, ScalarEvaluationResult, ValueType, MonteCarloResult
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
+
+
+GENERATE_OUTPUT = getenv('HERMES_TEST_PLOT', 'False').lower() == 'true'
 
 
 class EvaluationMock(EvaluationTemplate[float]):
@@ -31,7 +40,7 @@ class EvaluationMock(EvaluationTemplate[float]):
 
 
 class TestArtifactTemplate(TestCase):
-    """Test the template for scalar artifacts."""
+    """Test the template for scalar artifacts"""
     
     def setUp(self) -> None:
         
@@ -58,6 +67,7 @@ class TestArtifactTemplate(TestCase):
 
         self.assertEqual(self.artifact_value, self.artifact.to_scalar())
 
+
 class EvaluatorMock(Evaluator):
 
     def evaluate(self) -> Evaluation:
@@ -75,7 +85,7 @@ class EvaluatorMock(Evaluator):
         return Mock()
 
 class TestEvaluator(TestCase):
-    """Test base class for all evaluators."""
+    """Test base class for all evaluators"""
 
     def setUp(self) -> None:
 
@@ -84,13 +94,13 @@ class TestEvaluator(TestCase):
         self.evaluator.tolerance = .2
 
     def test_init(self) -> None:
-        """Initialization should set the proper default attributes."""
+        """Initialization should set the proper default attributes"""
 
         self.assertEqual(1., self.evaluator.confidence)
         self.assertEqual(.2, self.evaluator.tolerance)
 
     def test_confidence_setget(self) -> None:
-        """Confidence property getter should return setter argument."""
+        """Confidence property getter should return setter argument"""
 
         confidence = .5
         self.evaluator.confidence = confidence
@@ -98,7 +108,7 @@ class TestEvaluator(TestCase):
         self.assertEqual(confidence, self.evaluator.confidence)
 
     def test_confidence_validation(self) -> None:
-        """Confidence property setter should raise ValueError on invalid arguments."""
+        """Confidence property setter should raise ValueError on invalid arguments"""
 
         with self.assertRaises(ValueError):
             self.evaluator.confidence = -1.
@@ -115,7 +125,7 @@ class TestEvaluator(TestCase):
             self.fail()
 
     def test_tolerance_setget(self) -> None:
-        """Tolerance property getter should return setter argument."""
+        """Tolerance property getter should return setter argument"""
 
         tolerance = .5
         self.evaluator.tolerance = tolerance
@@ -123,7 +133,7 @@ class TestEvaluator(TestCase):
         self.assertEqual(tolerance, self.evaluator.tolerance)
 
     def test_tolerance_validation(self) -> None:
-        """Confidence margin property setter should raise ValueError on invalid arguments."""
+        """Confidence margin property setter should raise ValueError on invalid arguments"""
 
         with self.assertRaises(ValueError):
             self.evaluator.tolerance = -1.
@@ -150,7 +160,7 @@ class TestEvaluator(TestCase):
         self.assertTrue(cdf_low < cdf_high)
 
     def test_plot_scale_setget(self) -> None:
-        """Plot scale property getter should return setter argument."""
+        """Plot scale property getter should return setter argument"""
 
         plot_scale = 'abce'
         self.evaluator.plot_scale = plot_scale
@@ -220,8 +230,151 @@ class TestEvaluator(TestCase):
 #            self.assertTrue(np.any(confidence_level_low_tolerance <= confidence_level_high_tolerance))
 
 
+class MockEvaluationResult(EvaluationResult):
+    """Mock of an evaluation result"""
+
+    def to_array(self) -> np.ndarray:
+        return np.empty(0, dtype=np.float_)
+
+
+class TestEvaluationReuslt(TestCase):
+    """Test evaluation result base class"""
+
+    def setUp(self) -> None:
+        
+        self.result = MockEvaluationResult()
+        
+    def test_linear_plotting(self) -> None:
+        """Linear plotting should call the correct plotting routine"""
+        
+        grid = [GridDimension(TestObjectMock(), 'property_b', np.arange(10), tick_format=ValueType.DB)]
+        sample_points = np.arange(10)
+        scalar_data = np.arange(10)
+        evaluator = Mock()
+        axes = Mock()
+        
+        self.result._plot_linear(grid, sample_points, scalar_data, evaluator, axes)
+        axes.plot.assert_called_once()
+
+    def test_surface_plotting(self) -> None:
+        """Surface plotting should call the correct plotting routine"""
+        
+        grid = [GridDimension(TestObjectMock(), 'property_b', np.arange(10)) for _ in range(2)]
+        sample_points = np.arange(10)
+        scalar_data = np.random.uniform(size=(10, 10))
+        evaluator = Mock()
+        axes = Mock()
+        
+        self.result._plot_surface(grid, sample_points, scalar_data, evaluator, axes)
+        axes.plot_surface.assert_called_once()
+
+    def test_multidim_plotting(self) -> None:
+        """Multidimensional plotting should call the correct plotting routine"""
+
+        grid = [GridDimension(TestObjectMock(), 'property_b', np.arange(10)) for _ in range(3)]
+        scalar_data = np.random.uniform(size=(10, 10, 10))
+        axes = Mock()
+        
+        self.result._plot_multidim(grid, scalar_data, 0, 'lin', 'lin', 'lin', axes)
+        axes.plot.assert_called()
+
+    def test_multidim_plotting_no_labels(self) -> None:
+        """Multidimensional plotting should call the correct plotting routine"""
+        
+        grid = [GridDimension(TestObjectMock(), 'property_b', np.arange(10))]
+        scalar_data = np.random.uniform(size=(10))
+        axes = Mock()
+        
+        self.result._plot_multidim(grid, scalar_data, 0, 'lin', 'lin', 'lin', axes)
+        axes.plot.assert_called()
+        
+    def test_empty_plotting(self) -> None:
+        """Empty plotting should call the correct plotting routine"""
+        
+        axes = Mock()
+        
+        self.result._plot_empty(axes)
+        axes.text.assert_called_once()
+
+
+class TestScalarEvaluationResult(TestCase):
+    """Test processed scalar evaluation result class"""
+    
+    def test_linear_plotting(self) -> None:
+        """Linear plotting should call the correct plotting routine"""
+        
+        grid = [GridDimension(TestObjectMock(), 'property_b', np.arange(10)) for _ in range(1)]
+        scalar_data = np.random.uniform(size=(10, 10))
+        evaluator = Mock()
+        
+        result = ScalarEvaluationResult(grid, scalar_data, evaluator)
+            
+        axes = Mock()
+        figure = Mock()
+        
+        with patch('matplotlib.pyplot.subplots') as subplots_mock:
+            
+            subplots_mock.return_value = (figure, axes)
+            _ = result.plot()
+    
+        axes.plot.assert_called_once()
+                
+    def test_surface_plotting(self) -> None:
+        """Surface plotting should call the correct plotting routine"""
+        
+        grid = [GridDimension(TestObjectMock(), 'property_b', np.arange(10)) for _ in range(2)]
+        scalar_data = np.random.uniform(size=(10, 10))
+        evaluator = Mock()
+        
+        result = ScalarEvaluationResult(grid, scalar_data, evaluator)
+        
+        with patch('matplotlib.pyplot.figure') as figure_mock:
+            _ = result.plot()
+            
+        figure_mock().add_subplot.assert_called()
+        
+    def test_multidim_plotting(self) -> None:
+        """Multidimensional plotting should call the correct plotting routine"""
+        
+        grid = [GridDimension(TestObjectMock(), 'property_b', np.arange(10)) for _ in range(3)]
+        scalar_data = np.random.uniform(size=(10, 10))
+        evaluator = Mock()
+        
+        result = ScalarEvaluationResult(grid, scalar_data, evaluator)
+            
+        axes = Mock()
+        figure = Mock()
+        
+        with patch('matplotlib.pyplot.subplots') as subplots_mock:
+            
+            subplots_mock.return_value = (figure, axes)
+            _ = result.plot()
+            
+        axes.plot.assert_called()
+        
+    def test_plot_no_data(self) -> None:
+        """Even without grid dimensions an empty figure should be generated"""
+        
+        with patch('matplotlib.pyplot.figure'):
+    
+            evaluation_result = ScalarEvaluationResult([], np.empty(0, dtype=object), EvaluatorMock())
+            figure = evaluation_result.plot()
+            self.assertIsInstance(figure, Mock)   
+        
+    def test_to_array(self) -> None:
+        """Array conversion should return the correct array"""
+        
+        grid = [GridDimension(TestObjectMock(), 'property_b', np.arange(10)) for _ in range(1)]
+        scalar_data = np.random.uniform(size=(10, 10))
+        evaluator = Mock()
+        
+        result = ScalarEvaluationResult(grid, scalar_data, evaluator)
+        
+        assert_array_equal(scalar_data, result.to_array())
+    
+
 class TestObjectMock(object):
-    """Mock of a tested object."""
+    """Mock of a tested object"""
 
     def __init__(self) -> None:
 
@@ -229,11 +382,12 @@ class TestObjectMock(object):
         self.property_b = 0
         self.property_c = 0
 
-    @dimension
+    @register(first_impact='init_stage', last_impact='exit_stage')
+    @property
     def property_a(self):
         return self.__property_a
 
-    @property_a.setter(first_impact='init_stage', last_impact='exit_stage')
+    @property_a.setter
     def property_a(self, value) -> None:
         self.__property_a = value
 
@@ -258,7 +412,7 @@ class TestObjectMock(object):
 
 
 class SumEvaluator(Evaluator):
-    """An evaluator summing up object properties."""
+    """An evaluator summing up object properties"""
     
     __investigated_object: TestObjectMock
     
@@ -282,11 +436,11 @@ class SumEvaluator(Evaluator):
     
     def generate_result(self, grid: List[GridDimension], artifacts: np.ndarray) -> EvaluationResult:
         
-        return ScalarEvaluationResult(grid, artifacts)
+        return ScalarEvaluationResult.From_Artifacts(grid, artifacts, self)
 
 
 class ProductEvaluator(Evaluator):
-    """An evaluator multiplying object properties."""
+    """An evaluator multiplying object properties"""
     
     __investigated_object: TestObjectMock
     
@@ -310,10 +464,10 @@ class ProductEvaluator(Evaluator):
     
     def generate_result(self, grid: List[GridDimension], artifacts: np.ndarray) -> EvaluationResult:
         
-        return ScalarEvaluationResult(grid, artifacts)
+        return ScalarEvaluationResult.From_Artifacts(grid, artifacts, self)
 
 class TestMonteCarloSample(TestCase):
-    """Test the Monte Carlo sample class."""
+    """Test the Monte Carlo sample class"""
 
     def setUp(self) -> None:
 
@@ -330,7 +484,7 @@ class TestMonteCarloSample(TestCase):
         self.sample = MonteCarloSample(self.grid_section, self.sample_index, self.evaluation_artifacts)
 
     def test_init(self) -> None:
-        """Initialization arguments should be properly stored as object attributes."""
+        """Initialization arguments should be properly stored as object attributes"""
 
         self.assertCountEqual(self.grid_section, self.sample.grid_section)
         self.assertEqual(self.sample_index, self.sample.sample_index)
@@ -369,6 +523,21 @@ class TestGridSection(TestCase):
         """Number of samples property should return the correct amount of samples"""
 
         self.assertEqual(0, self.section.num_samples)
+        
+    def test_add_samples_validation(self) -> None:
+        """Adding samples with an non-matching number of artifacts and evaluators should raise a ValueError"""
+        
+        artifacts = []
+        for _ in range(self.num_evaluators - 1):
+            
+            artifact = Mock()
+            artifact.to_scalar.return_value = 0.
+            artifacts.append(artifact)
+            
+        sample = MonteCarloSample((0, 4, 2), 0, artifacts)
+        
+        with self.assertRaises(ValueError):
+            self.section.add_samples(sample, self.evaluators)
               
     def test_add_samples(self) -> None:
         """Adding samples should correctly update the confidences"""
@@ -385,11 +554,84 @@ class TestGridSection(TestCase):
         
         self.assertCountEqual([False, False], self.section.confidences)
         self.assertEqual(1, self.section.num_samples)
+        self.assertSequenceEqual([sample], self.section.samples)
+        
+    def test_confidence_status(self) -> None:
+        """Confidence status should return the correct status"""
+   
+        confidence = self.section.confidence_status(self.evaluators)
+        self.assertFalse(confidence)
+        
+        for evaluator in self.evaluators:
+            evaluator.confidence = 0.
+            
+        self.assertTrue(self.section.confidence_status(self.evaluators))
+
+    def test_update_confidences_validation(self) -> None:
+        """Updating confidences with an non-matching number of artifacts and evaluators should raise a ValueError"""
+        
+        with self.assertRaises(ValueError):
+            self.section._GridSection__update_confidences(np.zeros((1, 2)), self.evaluators)
+        
+        with self.assertRaises(ValueError):
+            self.section._GridSection__update_confidences(np.zeros(1 + len(self.evaluators)), self.evaluators)
+        
+    def test_update_confidences(self) -> None:
+        """Updating confidences should correctly update the confidences"""
+        
+        self.evaluators[0].tolerance = 0.
+        self.evaluators[1].tolerance = .1
+
+        samples = []
+        recent_confidence = 0.
+        for i in range(10):
+            
+            artifacts = []
+            for _ in range(self.num_evaluators):
+                
+                artifact = Mock()
+                artifact.to_scalar.return_value = np.random.standard_normal()
+                artifacts.append(artifact)
+                
+            samples.append(MonteCarloSample([], i, artifacts))
+            self.assertGreaterEqual(self.section.confidences[1], recent_confidence)
+            recent_confidence = self.section.confidences[1]
+
+        self.section.add_samples(samples, self.evaluators)
+        self.assertFalse(self.section.confidence_status(self.evaluators))
+
+
+class TestSampleGrid(TestCase):
+    """Test the sample grid class representation"""
+    
+    def setUp(self) -> None:
+        
+        self.investigated_object = TestObjectMock()
+        self.dimensions = [GridDimension(self.investigated_object, 'property_a', [1, 2, 6, 7, 8])]
+        self.evaluators = [SumEvaluator(self.investigated_object), ProductEvaluator(self.investigated_object)]
+        
+        self.grid = SampleGrid(self.dimensions, self.evaluators)
+        
+    def test_getitem(self) -> None:
+        """Getting an item should return the correct grid section"""
+        
+        section = self.grid[(0,)]
+        
+        self.assertIsInstance(section, GridSection)
+        self.assertSequenceEqual((0,), section.coordinates)
+
+    def test_iteration(self) -> None:
+        """Iteration should return the correct grid sections"""
+        
+        for s, section in enumerate(self.grid):
+            
+            self.assertIsInstance(section, GridSection)
+            self.assertSequenceEqual((s,), section.coordinates)
 
 
 @ray.remote(num_cpus=1)
 class MonteCarloActorMock(MonteCarloActor[TestObjectMock]):
-    """Mock of a Monte Carlo Actor."""
+    """Mock of a Monte Carlo Actor"""
     
     def init_stage(self) -> None:
         return
@@ -406,12 +648,12 @@ class MonteCarloActorMock(MonteCarloActor[TestObjectMock]):
 
          
 class TestMonteCarloActor(TestCase):
-    """Test the Monte Carlo actor."""
+    """Test the Monte Carlo actor"""
     
     @classmethod
     def setUpClass(cls) -> None:
 
-        ray.init(local_mode=True, num_cpus=1)
+        ray.init(local_mode=True, num_cpus=1, logging_level=logging.ERROR)
             
     @classmethod
     def tearDownClass(cls):
@@ -421,7 +663,7 @@ class TestMonteCarloActor(TestCase):
 
 @ray.remote(num_cpus=1)
 class MonteCarloActorMock(MonteCarloActor[TestObjectMock]):
-    """Mock of a Monte Carlo Actor."""
+    """Mock of a Monte Carlo Actor"""
     
     def init_stage(self) -> None:
         return
@@ -438,12 +680,12 @@ class MonteCarloActorMock(MonteCarloActor[TestObjectMock]):
 
          
 class TestMonteCarloActor(TestCase):
-    """Test the Monte Carlo actor."""
+    """Test the Monte Carlo actor"""
     
     @classmethod
     def setUpClass(cls) -> None:
 
-        ray.init(local_mode=True, num_cpus=1, ignore_reinit_error=True)
+        ray.init(local_mode=True, num_cpus=1, ignore_reinit_error=True, logging_level=logging.ERROR)
             
     @classmethod
     def tearDownClass(cls) -> None:
@@ -458,57 +700,221 @@ class TestMonteCarloActor(TestCase):
         self.dimensions = [GridDimension(self.investigated_object, 'property_a', [1, 2, 6, 7, 8])]
         self.evaluators = [SumEvaluator(self.investigated_object), ProductEvaluator(self.investigated_object)]
 
-        self.actor = MonteCarloActorMock.remote((self.investigated_object, self.dimensions, self.evaluators), 0)
-
     def test_run(self) -> None:
         """Running the actor should produce the expected result"""
+
+        actor = MonteCarloActorMock.remote((self.investigated_object, self.dimensions, self.evaluators), 0)
 
         for sample_idx in range(self.dimensions[0].num_sample_points - 1):
 
             program = [(sample_idx,), (1 + sample_idx,)]
 
-            result: ActorRunResult = ray.get(self.actor.run.remote(program))
+            result: ActorRunResult = ray.get(actor.run.remote(program))
             self.assertEqual(2, len(result.samples))
+
+    def test_run_exepction_handling(self) -> None:
+        """Running the actor should produce the expected result when throwing exepctions"""
+        
+        def throw_exepction(*args):
+            raise RuntimeError('test')
+        
+        with patch.object(self.dimensions[0], 'configure_point') as configure_point_mock:
+            
+            configure_point_mock.side_effect = throw_exepction  
+            patched_actor = MonteCarloActorMock.remote((self.investigated_object, self.dimensions, self.evaluators), 0)
+
+            result: ActorRunResult = ray.get(patched_actor.run.remote([(0,)]))
+            self.assertEqual('test', result.message)
 
 
 class TestMonteCarloResult(TestCase):
-    """Test the result class."""
+    """Test the result class"""
     
     def setUp(self) -> None:
-        ...
         
+        self.investigated_object = TestObjectMock()
+        self.dimensions = [GridDimension(self.investigated_object, 'property_a', [1, 2, 6, 7, 8])]
+        self.evaluators = [SumEvaluator(self.investigated_object), ProductEvaluator(self.investigated_object)]
+        self.grid = SampleGrid(self.dimensions, self.evaluators)
+        self.performance = 1.2345
+        
+        self.result = MonteCarloResult(self.dimensions, self.evaluators, self.grid, self.performance)
+        
+    def test_properties(self) -> None:
+        """Properties should return the correct values"""
+
+        self.assertEqual(self.performance, self.result.performance_time)
+        
+    def test_plot(self) -> None:
+        """Plotting should call the correct plotting routine"""
+        
+        with patch('matplotlib.pyplot.figure') as figure_mock:
+            
+            figure_mock.return_value = Mock()
+            self.result.plot()
+            
+            figure_mock.assert_called()
+        
+    def test_save_to_matlab(self) -> None:
+        """Saving to Matlab should call the correct routine"""
+        
+        with patch('hermespy.core.monte_carlo.savemat') as savemat_mock:
+            
+            self.result.save_to_matlab('test.mat')
+            savemat_mock.assert_called()
+            
+    def test_evaluation_results(self) -> None:
+        """Evaluation results should return the correct results"""
+        
+        self.assertEqual(len(self.evaluators), len(self.result.evaluation_results))
+
         
 class TestGridDimension(TestCase):
-    """Test the simulation grid dimension class."""
+    """Test the simulation grid dimension class"""
 
     def setUp(self) -> None:
         
         class MockObject(object):
             
-            dimension = 11234
+            def __init__(self) -> None:
+                
+                self.__dimension = 1234
+                
+            @register(first_impact='a', last_impact='b', title='testtitle')
+            @property
+            def dimension(self) -> int:
+                
+                return self.__dimension
+            
+            @dimension.setter
+            def dimension(self, value: float) -> None:
+                """Setter should raise a ValueError on invalid arguments"""
+                
+                self.__dimension = value
+            
+            def set_dimension(self, value: float) -> None:
+                self.dimension = value
 
         self.considered_object = MockObject()
         self.sample_points = [1, 2, 3, 4]
 
         self.dimension = GridDimension(self.considered_object, 'dimension', self.sample_points)
 
+    def test_logarithmic_init(self) -> None:
+        """Initialization with logarithmic sample points should configure the plot scale to logarithmic"""
+        
+        sample_points = LogarithmicSequence(self.sample_points)
+        dimension = GridDimension(self.considered_object, 'dimension', sample_points)
+
+        self.assertEqual('log', dimension.plot_scale)
+        
+    def test_plot_scale_init(self) -> None:
+        """Initialization with a plot scale should set the plot scale"""
+        
+        dimension = GridDimension(self.considered_object, 'dimension', self.sample_points, plot_scale='log', tick_format=ValueType.DB)
+        
+        self.assertEqual('log', dimension.plot_scale)
+        self.assertEqual(ValueType.DB, dimension.tick_format)
+        
+    def test_init_validation(self) -> None:
+        """Initialization should ra ise ValueErrors on invalid arguments"""
+        
+        with self.assertRaises(ValueError):
+            GridDimension(self.considered_object, 'nonexistentdimension', self.sample_points)
+
+        with self.assertRaises(ValueError):
+            GridDimension(self.considered_object, 'dimension', [])
+            
+    def test_registered_dimension_validation(self) -> None:
+        """Initialization should raise ValueError if multiple registered dimesions don't share impacts"""
+        
+        class MockObjetB(object):
+            
+            def __init__(self) -> None:
+                
+                self.__dimension = 1234
+                
+            @register(first_impact='c', last_impact='b')
+            @property
+            def dimension(self) -> int:
+                
+                return self.__dimension
+            
+            @dimension.setter
+            def dimension(self, value: float) -> None:
+                """Setter should raise a ValueError on invalid arguments"""
+                
+                self.__dimension = value
+            
+            def set_dimension(self, value: float) -> None:
+                self.dimension = value
+                
+        class MockObjetC(object):
+            
+            def __init__(self) -> None:
+                
+                self.__dimension = 1234
+                
+            @register(first_impact='a', last_impact='d')
+            @property
+            def dimension(self) -> int:
+                
+                return self.__dimension
+            
+            @dimension.setter
+            def dimension(self, value: float) -> None:
+                """Setter should raise a ValueError on invalid arguments"""
+                
+                self.__dimension = value
+            
+            def set_dimension(self, value: float) -> None:
+                self.dimension = value
+                
+        mock_b = MockObjetB()
+        mock_c = MockObjetC()
+        
+        with self.assertRaises(ValueError):
+            _ = GridDimension((self.considered_object, mock_b), 'dimension', self.sample_points)
+            
+        with self.assertRaises(ValueError):
+            _ = GridDimension((self.considered_object, mock_c), 'dimension', self.sample_points)
+            
+    def test_function_dimension(self) -> None:
+        """Test pointing to a function instead of a property"""
+        
+        self.dimension = GridDimension(self.considered_object, 'set_dimension', self.sample_points)
+
+        self.dimension.configure_point(0)
+        self.assertEqual(self.sample_points[0], self.considered_object.dimension)
+
     def test_considered_object(self) -> None:
-        """Considered object property should return considered object."""
+        """Considered object property should return considered object"""
 
         self.assertIs(self.considered_object, self.dimension.considered_objects[0])
 
+    def test_dimension(self) -> None:
+        """Dimension propertsy should return the correct dimension"""
+        
+        self.assertEqual('dimension', self.dimension.dimension)
+
     def test_sample_points(self) -> None:
-        """Sample points property should return sample points."""
+        """Sample points property should return sample points"""
 
         self.assertIs(self.sample_points, self.dimension.sample_points)
 
     def test_num_sample_points(self) -> None:
-        """Number of sample points property should return the correct amount of sample points."""
+        """Number of sample points property should return the correct amount of sample points"""
 
         self.assertEqual(4, self.dimension.num_sample_points)
+        
+    def test_configure_point_validation(self) -> None:
+        """Configuring a point with an invalid index should raise a ValueError"""
+
+        with self.assertRaises(ValueError):
+            self.dimension.configure_point(4)
 
     def test_configure_point(self) -> None:
-        """Configuring a point should set the property correctly."""
+        """Configuring a point should set the property correctly"""
 
         expected_value = self.sample_points[3]
         self.dimension.configure_point(3)
@@ -516,7 +922,7 @@ class TestGridDimension(TestCase):
         self.assertEqual(expected_value, self.considered_object.dimension)
 
     def test_title(self) -> None:
-        """Title property should infer the correct title."""
+        """Title property should infer the correct title"""
 
         self.dimension.title = None
         self.assertEqual("dimension", self.dimension.title)
@@ -525,7 +931,7 @@ class TestGridDimension(TestCase):
         self.assertEqual("xyz", self.dimension.title)
 
     def test_plot_scale_setget(self) -> None:
-        """Plot scale property getter should return setter argument."""
+        """Plot scale property getter should return setter argument"""
 
         scale = 'loglin'
         self.dimension.plot_scale = scale
@@ -535,6 +941,42 @@ class TestGridDimension(TestCase):
 
 class TestRegisteredDimension(TestCase):
     """Test the registered dimension"""
+    
+    def setUp(self) -> None:
+        
+        self.property = property(lambda: 10)
+        self.first_impact = 'a'
+        self.last_impact = 'b'
+        self.title = 'c'
+        
+        self.dimension = RegisteredDimension(self.property, self.first_impact, self.last_impact, self.title)
+    
+    def test_is_registered(self) -> None:
+        """Is registered should return the correct result"""
+        
+        self.assertTrue(RegisteredDimension.is_registered(self.dimension))
+        
+    def test_properties(self) -> None:
+        """Properties should return the correct values"""
+        
+        self.assertEqual(self.first_impact, self.dimension.first_impact)
+        self.assertEqual(self.last_impact, self.dimension.last_impact)
+        self.assertEqual(self.title, self.dimension.title)
+        
+    def test_getter(self) -> None:
+        """Getter should return the correct value"""
+        
+        self.assertIsInstance(self.dimension.getter(Mock()), RegisteredDimension)
+    
+    def test_setter(self) -> None:
+        """Setter should return the correct value"""
+        
+        self.assertIsInstance(self.dimension.setter(Mock()), RegisteredDimension)
+    
+    def test_deleter(self) -> None:
+        """Deleter should return the correct value"""
+        
+        self.assertIsInstance(self.dimension.deleter(Mock()), RegisteredDimension)
     
     def test_decoration(self) -> None:
         """The decorator should return a property registered within the simulation registry"""
@@ -550,11 +992,12 @@ class TestRegisteredDimension(TestCase):
             def __init__(self) -> None:
                 self.__value_a = 1.2345
             
-            @dimension
+            @register(first_impact=expected_first_impact_a, last_impact=expected_last_impact_a)
+            @property
             def test_dimension(self) -> float:
                 return self.__value_a
             
-            @test_dimension.setter(first_impact=expected_first_impact_a, last_impact=expected_last_impact_a)
+            @test_dimension.setter
             def test_dimension(self, value: float) -> None:
                 self.__value_a = value
                 
@@ -563,11 +1006,12 @@ class TestRegisteredDimension(TestCase):
             def __init__(self) -> None:
                 self.test_dimension = 6.789
                 
-            @dimension
+            @register(first_impact=expected_first_impact_b, last_impact=expected_last_impact_b)
+            @property
             def test_dimension(self) -> float:
                 return self.__value_b
             
-            @test_dimension.setter(first_impact=expected_first_impact_b, last_impact=expected_last_impact_b)
+            @test_dimension.setter
             def test_dimension(self, value: float) -> None:
                 self.__value_b = value
             
@@ -592,12 +1036,12 @@ class TestRegisteredDimension(TestCase):
 
 
 class TestMonteCarlo(TestCase):
-    """Test the simulation grid."""
+    """Test the simulation grid"""
     
     @classmethod
     def setUpClass(cls) -> None:
 
-        ray.init(local_mode=True, num_cpus=1, ignore_reinit_error=True)
+        ray.init(local_mode=True, num_cpus=1, ignore_reinit_error=True, logging_level=logging.ERROR)
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -611,21 +1055,40 @@ class TestMonteCarlo(TestCase):
         self.evaluators = [ProductEvaluator(self.investigated_object), SumEvaluator(self.investigated_object)]
         self.num_samples = 3
         self.num_actors = 2
+        
+        self.io = StringIO()
+        self.console = Console(file=None if GENERATE_OUTPUT else self.io)
 
         self.monte_carlo = MonteCarlo(investigated_object=self.investigated_object,
-                                        evaluators=self.evaluators,
-                                        num_samples=self.num_samples,
-                                        num_actors=self.num_actors)
+                                      evaluators=self.evaluators,
+                                      num_samples=self.num_samples,
+                                      num_actors=self.num_actors,
+                                      console=self.console,
+                                      console_mode=ConsoleMode.INTERACTIVE,
+                                      database_caching=True,
+                                      progress_log_interval=-1.)
 
     def test_init(self) -> None:
-        """Initialization arguments should be properly stored as class attributes."""
+        """Initialization arguments should be properly stored as class attributes"""
 
         self.assertIs(self.investigated_object, self.monte_carlo.investigated_object)
         self.assertEqual(self.num_samples, self.monte_carlo.num_samples)
         self.assertEqual(self.num_actors, self.monte_carlo.num_actors)
+        self.assertIs(self.console, self.monte_carlo.console)
+        
+    def test_ray_init(self) -> None:
+        """Ray should be initialized if not already initialized"""
+        
+        with patch('hermespy.core.monte_carlo.ray.is_initialized') as is_initialized_mock, \
+            patch('hermespy.core.monte_carlo.ray.init') as init_mock:
+                
+            is_initialized_mock.return_value = False
+            _ = MonteCarlo(self.investigated_object, 1)
+            
+            init_mock.assert_called_once()
 
     def test_new_dimension(self) -> None:
-        """Test adding a new grid dimension."""
+        """Test adding a new grid dimension"""
 
         dimension_str = 'property_a'
         sample_points = [1, 2, 3, 4]
@@ -634,13 +1097,14 @@ class TestMonteCarlo(TestCase):
         self.assertIs(self.investigated_object, dimension.considered_objects[0])
 
     def test_add_dimension(self) -> None:
-        """Test adding a grid dimension."""
+        """Test adding a grid dimension"""
 
         dimension = Mock()
         self.monte_carlo.add_dimension(dimension)
+        self.assertIn(dimension, self.monte_carlo.dimensions)
 
     def test_add_dimension_validation(self) -> None:
-        """Adding an already existing dimension should raise a ValueError."""
+        """Adding an already existing dimension should raise a ValueError"""
 
         dimension = Mock()
         self.monte_carlo.add_dimension(dimension)
@@ -649,7 +1113,7 @@ class TestMonteCarlo(TestCase):
             self.monte_carlo.add_dimension(dimension)
 
     def test_num_samples_setget(self) -> None:
-        """Number of samples property getter should return setter argument."""
+        """Number of samples property getter should return setter argument"""
 
         num_samples = 20
         self.monte_carlo.num_samples = num_samples
@@ -657,7 +1121,7 @@ class TestMonteCarlo(TestCase):
         self.assertEqual(num_samples, self.monte_carlo.num_samples)
 
     def test_num_samples_validation(self) -> None:
-        """Number of samples property setter should raise ValueError on arguments smaller than one."""
+        """Number of samples property setter should raise ValueError on arguments smaller than one"""
 
         with self.assertRaises(ValueError):
             self.monte_carlo.num_samples = 0
@@ -666,7 +1130,7 @@ class TestMonteCarlo(TestCase):
             self.monte_carlo.num_samples = -1
 
     def test_num_actors_setget(self) -> None:
-        """Number of actors property getter should return setter argument."""
+        """Number of actors property getter should return setter argument"""
 
         num_actors = 10
         self.monte_carlo.num_actors = num_actors
@@ -674,7 +1138,96 @@ class TestMonteCarlo(TestCase):
         self.assertEqual(num_actors, self.monte_carlo.num_actors)
 
     def test_num_actors_validation(self) -> None:
-        """Number of actors property setter should raise ValueError on arguments smaller than one."""
+        """Number of actors property setter should raise ValueError on arguments smaller than one"""
+
+        with self.assertRaises(ValueError):
+            self.monte_carlo.num_actors = -1
+
+        with self.assertRaises(ValueError):
+            self.monte_carlo.num_actors = 0
+            
+    def test_simulate(self) -> None:
+        """Test the simulation routine"""
+        
+        dimensions = {
+                'property_a': [1, Mock()],
+                'property_b': [1, 1e2],
+                'property_c': LogarithmicSequence([1, 2, 3]),
+            }
+        
+        dimensions = [self.monte_carlo.new_dimension(dimension, parameters) for dimension, parameters in dimensions.items()]
+        result = self.monte_carlo.simulate(MonteCarloActorMock)
+        
+        self.assertEqual(2, len(result.evaluation_results))
+        
+    def test_simulate_silent(self) -> None:
+        """The simulation routine should not print anything if in silent mode"""
+        
+        self.monte_carlo.console_mode = ConsoleMode.SILENT
+
+        _ = self.monte_carlo.new_dimension('property_a', [1, 2])
+        _ = self.monte_carlo.simulate(MonteCarloActorMock)
+        
+        if not GENERATE_OUTPUT:
+            self.assertEqual('', self.io.getvalue())
+            
+    def test_simulate_linear(self) -> None:
+        """Tes the linear printing simulation routine"""
+
+        self.monte_carlo.console_mode = ConsoleMode.LINEAR
+
+        _ = self.monte_carlo.new_dimension('property_a', [1, 2])
+        result = self.monte_carlo.simulate(MonteCarloActorMock)
+
+        self.assertEqual(2, len(result.evaluation_results))
+        
+    def test_simulate_strict_confidence(self) -> None:
+        """Test simulation with strict confidence criteria"""
+        
+        for evaluator in self.evaluators:
+            evaluator.tolerance = 0.    
+
+        _ = self.monte_carlo.new_dimension('property_a', [1, 2])
+        _ = self.monte_carlo.simulate(MonteCarloActorMock)
+        
+    def test_add_evaluator(self) -> None:
+        """Test adding an evaluator"""
+        
+        evaluator = Mock()
+        self.monte_carlo.add_evaluator(evaluator)
+        
+        self.assertIn(evaluator, self.monte_carlo.evaluators)
+        
+    def test_min_num_samples_validation(self) -> None:
+        """Minimum number of samples property setter should raise ValueError on negative arguments"""
+        
+        with self.assertRaises(ValueError):
+            self.monte_carlo.min_num_samples = -1
+        
+    def test_min_num_samples_setget(self) -> None:
+        """Minimum number of samples property getter should return setter argument"""
+        
+        min_num_samples = 10
+        self.monte_carlo.min_num_samples = min_num_samples
+        
+        self.assertEqual(min_num_samples, self.monte_carlo.min_num_samples)
+        
+    def test_max_num_samples(self) -> None:
+        """Maximum number of samples should return the correct value"""
+        
+        _ = self.monte_carlo.new_dimension('property_a', [1, 2])
+        self.assertEqual(6, self.monte_carlo.max_num_samples)
+
+    def test_section_block_size_setget(self) -> None:
+        """Section block size property getter should return setter argument"""
+
+        section_block_size = 10
+        self.monte_carlo.section_block_size = section_block_size
+
+        self.assertEqual(section_block_size, self.monte_carlo.section_block_size)
+
+    def test_num_actors_validation(self) -> None:
+        """Number of actors property should raise ValueError on arguments smaller than one"""
 
         with self.assertRaises(ValueError):
             self.monte_carlo.num_actors = -1
@@ -682,33 +1235,63 @@ class TestMonteCarlo(TestCase):
         with self.assertRaises(ValueError):
             self.monte_carlo.num_actors = 0
 
-#    def test_simulate(self) -> None:
-#        """Test the simulation routine."""
-#
-#        dimensions = {
-#            'property_a': [1],
-#            'property_b': [1, 2],
-#            'property_c': [1, 2, 3],
-#        }
-#        for dimension, parameters in dimensions.items():
-#            self.monte_carlo.new_dimension(dimension, parameters)
-#
-#        with self.monte_carlo.console.capture():
-#            self.monte_carlo.simulate(MonteCarloActorMock)
+    def test_num_actors(self) -> None:
+        """Number of actors property should return the correct number of actors"""
+        
+        self.assertEqual(self.num_actors, self.monte_carlo.num_actors)
+        
+        self.monte_carlo.num_actors = None
+        
+        with patch('hermespy.core.monte_carlo.ray.available_resources') as resources_mock:
+            
+            get_mock = Mock()
+            get_mock.side_effect = 1
+            resources_mock.available_resources.side_effect = get_mock
+            
+            self.assertEqual(1, self.monte_carlo.num_actors)
 
-    def test_section_block_size_setget(self) -> None:
-        """Section block size property getter should return setter argument."""
+    def test_console_setget(self) -> None:
+        """Console property getter should return setter argument"""
 
-        section_block_size = 10
-        self.monte_carlo.section_block_size = section_block_size
+        console = Mock()
+        self.monte_carlo.console = console
 
-        self.assertEqual(section_block_size, self.monte_carlo.section_block_size)
+        self.assertIs(console, self.monte_carlo.console)
 
     def test_section_block_size_validation(self) -> None:
-        """Section block size property setter should raise ValueError on arguments smaller than one."""
+        """Section block size property setter should raise ValueError on arguments smaller than one"""
 
         with self.assertRaises(ValueError):
             self.monte_carlo.section_block_size = -1
 
         with self.assertRaises(ValueError):
             self.monte_carlo.section_block_size = 0
+
+    def test_cpus_per_actor_validation(self) -> None:
+        """CPUs per actor property setter should raise ValueError on arguments smaller than one"""
+        
+        with self.assertRaises(ValueError):
+            self.monte_carlo.cpus_per_actor = -1
+        
+        with self.assertRaises(ValueError):
+            self.monte_carlo.cpus_per_actor = 0
+            
+    def test_cpus_per_actor_setget(self) -> None:
+        """CPUs per actor property getter should return setter argument"""
+        
+        cpus_per_actor = 10
+        self.monte_carlo.cpus_per_actor = cpus_per_actor
+        
+        self.assertEqual(cpus_per_actor, self.monte_carlo.cpus_per_actor)
+    
+    def test_console_mode_setget(self) -> None:
+        """Console mode property getter should return setter argument"""
+
+        console_mode = ConsoleMode.SILENT
+        self.monte_carlo.console_mode = console_mode
+
+        self.assertEqual(console_mode, self.monte_carlo.console_mode)
+        
+        self.monte_carlo.console_mode = 'INTERACTIVE'
+        self.assertEqual(ConsoleMode.INTERACTIVE, self.monte_carlo.console_mode)
+    

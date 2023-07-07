@@ -12,10 +12,10 @@ from hermespy.beamforming import CaponBeamformer
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -74,7 +74,7 @@ class TestCaponBeamformer(TestCase):
         
         for f, focus_angle in enumerate(focus_angles):
             
-            response = self.operator.device.antennas.spherical_response(carrier_frequency, focus_angle[0], focus_angle[1])
+            response = self.operator.device.antennas.spherical_phase_response(carrier_frequency, focus_angle[0], focus_angle[1])
             noiseless_spatial_samples = response[:, np.newaxis] @ expected_samples[np.newaxis, :]
             noisy_spatial_samples = noiseless_spatial_samples  + noise
 

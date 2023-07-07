@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
+from unittest.mock import Mock, patch, PropertyMock
 
 import numpy as np
 
@@ -8,10 +9,10 @@ from hermespy.modem.tools.psk_qam_mapping import PskQamMapping
 from matplotlib import pyplot as plt
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -25,6 +26,15 @@ class TestPskQamMapping(unittest.TestCase):
         for modulation_order in modulation_order_incorrect:
             self.assertRaises(ValueError,
                               lambda: PskQamMapping(modulation_order))
+            
+    def test_mapping_available_validation(self) -> None:
+        """Initialization should raise ValueError if mapping isn't available and not provided"""
+        
+        with self.assertRaises(ValueError):
+            PskQamMapping(1, mapping=None, is_complex=True)
+            
+        with self.assertRaises(ValueError):
+            PskQamMapping(1, mapping=None, is_complex=False)
 
     def test_verification_of_mapping_size(self) -> None:
         mapping = np.array([1, 1, 1])
@@ -40,6 +50,17 @@ class TestPskQamMapping(unittest.TestCase):
         psk_qam_mapping = PskQamMapping(8)
 
         np.testing.assert_array_almost_equal(psk8_map, psk_qam_mapping.mapping)
+
+    def test_get_symbols_validation(self) -> None:
+        """Fetching symbols should raise A ValueError for invalid internal states"""
+        
+        mapping = PskQamMapping(4)
+        
+        with patch.object(mapping, 'modulation_order', new_callable=PropertyMock) as order_mock:
+            order_mock.return_value = 1
+            
+            with self.assertRaises(RuntimeError):
+                mapping.get_symbols(np.array([0, 1, 1, 0]))
 
     def test_symbols_if_mapping_provided(self) -> None:
         # create mapping and normalize it by energy
@@ -142,6 +163,15 @@ class TestPskQamMapping(unittest.TestCase):
         symbols = psk_qam_mapping.get_symbols(bits)
 
         np.testing.assert_array_almost_equal(qam256_symbols, symbols)
+        
+    def test_demodulation_validation(self) -> None:
+        """Demodulating symbols should raise RuntimeError for invalid internal states"""
+
+        psk_qam_mapping = PskQamMapping(4)
+        with self.assertRaises(RuntimeError), patch.object(psk_qam_mapping, 'modulation_order', new_callable=PropertyMock) as order_mock:
+            
+            order_mock.return_value = 1
+            psk_qam_mapping.detect_bits(np.array([1, 1, 1, 1]))
 
     def test_demodulation_bpsk(self) -> None:
         self._demodulation_test(100, 2, False, 1 / 10, 1)
@@ -196,8 +226,57 @@ class TestPskQamMapping(unittest.TestCase):
         rx_bits = psk_qam_mapping.detect_bits(symbols)
 
         np.testing.assert_array_equal(bits == 1, rx_bits)
+        
+    def test_demodulation_custom_mapping_validation(self) -> None:
+        """Demodulating a custom mapping with soft output should raise ValueError"""
+        
+        mapping = np.array([1, 2, 3, 4])
+        mapping = mapping / np.linalg.norm(mapping)
+        
+        psk_qam_mapping = PskQamMapping(4, soft_output=True, mapping=mapping)
+        bits = np.array([0, 1, 1, 0])
+        modulated_symbols = psk_qam_mapping.get_symbols(bits)
+        
+        with self.assertRaises(RuntimeError):
+            psk_qam_mapping.detect_bits(modulated_symbols)
+        
+    def test_demodulation_custom_mapping(self) -> None:
+        """Test demodulation with custom mapping"""
+        
+        mapping = np.array([1, 2, 3, 4])
+        mapping = mapping / np.linalg.norm(mapping)
+        
+        psk_qam_mapping = PskQamMapping(4, mapping=mapping)
+        bits = np.array([0, 1, 1, 0])
+        modulated_symbols = psk_qam_mapping.get_symbols(bits)
+        demodulated_bits = psk_qam_mapping.detect_bits(modulated_symbols)
 
+        np.testing.assert_array_equal(bits, demodulated_bits)
+        
+    def test_generate_pam_symbol_validation(self) -> None:
+        """PAM symbol generation subroutine should raise ValueError on invalid arguments"""
 
+        with self.assertRaises(ValueError):
+            PskQamMapping.generate_pam_symbol_3gpp(1, Mock())
+            
+    def test_get_llr_validation(self) -> None:
+        """LLR calculation should raise ValueError on invalid arguments"""
+        
+        psk_qam_mapping = PskQamMapping(4)
+        
+        with self.assertRaises(ValueError):
+            psk_qam_mapping.get_llr_3gpp(1, np.random.normal(size=10), np.random.normal(size=10), True)
+            
+    def test_get_mapping(self) -> None:
+        """Get mapping routine should return the correct mapping"""
+        
+        mapping = np.array([1, 2, 3, 4])
+        mapping = mapping / np.linalg.norm(mapping)
+        
+        psk_qam_mapping = PskQamMapping(4, mapping=mapping)
+        
+        np.testing.assert_array_equal(psk_qam_mapping.mapping, psk_qam_mapping.get_mapping())
+            
 def _plot_constellation(modulation_order: np.ndarray,
                         is_complex: bool, soft_output: bool) -> None:
     mapper = PskQamMapping(modulation_order, soft_output=False, is_complex=is_complex)
@@ -208,30 +287,3 @@ def _plot_constellation(modulation_order: np.ndarray,
     for idx in range(modulation_order):
         bin_str = bin(idx)[2:].zfill(mapper.bits_per_symbol)
         plt.annotate(bin_str, (np.real(mapping[idx]), np.imag(mapping[idx])))
-
-
-if __name__ == '__main__':
-
-    # plot 16-QAM constellation
-    plt.figure()
-    _plot_constellation(16, True, False)
-    plt.title("16-QAM")
-
-    # plot 8-PSK constellation
-    plt.figure()
-    _plot_constellation(8, True, False)
-    plt.title("8-PSK")
-
-    # plot 8-PAM
-    plt.figure()
-    _plot_constellation(8, False, False)
-    plt.title("8-PAM")
-
-    # plot 64-QAM
-    plt.figure()
-    _plot_constellation(64, True, False)
-    plt.title("64-QAM")
-
-    plt.show()
-
-    unittest.main()

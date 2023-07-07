@@ -15,7 +15,6 @@ including noise and hardware modeling.
    simulation.simulated_device
    simulation.analog_digital_converter
    simulation.rf_chain
-   simulation.rf_chain.leakage
    simulation.rf_chain.power_amplifier
    simulation.rf_chain.phase_noise
    simulation.noise

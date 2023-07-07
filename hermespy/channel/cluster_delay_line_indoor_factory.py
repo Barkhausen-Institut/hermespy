@@ -15,10 +15,10 @@ from ..core.factory import Serializable
 from .cluster_delay_lines import ClusterDelayLineBase
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -62,7 +62,6 @@ class IndoorFactoryBase(ClusterDelayLineBase, metaclass=ABCMeta):
 
     @volume.setter
     def volume(self, value: float) -> None:
-
         if value <= 0.0:
             raise ValueError("Hall volume must be greater than zero")
 
@@ -85,7 +84,6 @@ class IndoorFactoryBase(ClusterDelayLineBase, metaclass=ABCMeta):
 
     @surface.setter
     def surface(self, value: float) -> None:
-
         if value <= 0.0:
             raise ValueError("Hall surface area must be greater than zero")
 
@@ -196,7 +194,7 @@ class IndoorFactoryLineOfSight(IndoorFactoryBase, Serializable):
 
     @property
     def _center_frequency(self) -> float:
-        return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))
+        return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))  # type: ignore
 
 
 class IndoorFactoryNoLineOfSight(IndoorFactoryBase, Serializable):
@@ -303,4 +301,4 @@ class IndoorFactoryNoLineOfSight(IndoorFactoryBase, Serializable):
 
     @property
     def _center_frequency(self) -> float:
-        return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))
+        return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))  # type: ignore

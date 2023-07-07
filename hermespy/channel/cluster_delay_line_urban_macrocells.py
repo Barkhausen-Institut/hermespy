@@ -16,10 +16,10 @@ from hermespy.core.factory import Serializable
 from .cluster_delay_lines import ClusterDelayLineBase
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -69,7 +69,6 @@ class UrbanMacrocellsLineOfSight(ClusterDelayLineBase, Serializable):
 
     @property
     def zod_spread_mean(self) -> float:
-
         device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
         terminal_height = min(self.transmitter.position[2], self.receiver.position[2])
 
@@ -133,7 +132,7 @@ class UrbanMacrocellsLineOfSight(ClusterDelayLineBase, Serializable):
 
     @property
     def _center_frequency(self) -> float:
-        return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))
+        return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))  # type: ignore
 
 
 class UrbanMacrocellsNoLineOfSightBase(ClusterDelayLineBase, metaclass=ABCMeta):
@@ -141,7 +140,6 @@ class UrbanMacrocellsNoLineOfSightBase(ClusterDelayLineBase, metaclass=ABCMeta):
 
     @property
     def zod_spread_mean(self) -> float:
-
         device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
         terminal_height = min(self.transmitter.position[2], self.receiver.position[2])
 
@@ -153,8 +151,7 @@ class UrbanMacrocellsNoLineOfSightBase(ClusterDelayLineBase, metaclass=ABCMeta):
 
     @property
     def zod_offset(self) -> float:
-
-        device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
+        device_distance = float(np.linalg.norm(self.receiver.position - self.transmitter.position, 2))
         terminal_height = min(self.transmitter.position[2], self.receiver.position[2])
         fc = log10(self._center_frequency)
 
@@ -258,7 +255,7 @@ class UrbanMacrocellsNoLineOfSight(UrbanMacrocellsNoLineOfSightBase, Serializabl
 
     @property
     def _center_frequency(self) -> float:
-        return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))
+        return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))  # type: ignore
 
 
 class UrbanMacrocellsOutsideToInside(UrbanMacrocellsNoLineOfSightBase, Serializable):
@@ -353,4 +350,4 @@ class UrbanMacrocellsOutsideToInside(UrbanMacrocellsNoLineOfSightBase, Serializa
 
     @property
     def _center_frequency(self) -> float:
-        return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))
+        return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))  # type: ignore

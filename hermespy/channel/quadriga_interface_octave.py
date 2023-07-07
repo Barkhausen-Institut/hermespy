@@ -2,21 +2,32 @@
 """Octave interface to the Quadriga channel model."""
 
 from __future__ import annotations
+from contextlib import redirect_stdout
 from logging import getLogger, Logger
-from typing import Optional, List, Any
+from os import devnull
+from typing import Optional, Any
+
 
 import numpy as np
-from oct2py import Oct2Py, Oct2PyError, Struct
+
+try:  # pragma: no cover
+    with redirect_stdout(open(devnull, "w")):
+        from oct2py import Oct2Py, Oct2PyError, Struct
+
+except Exception:  # pragma: no cover
+    Oct2Py = None
+    Oct2PyError = RuntimeError
+    Struct = Any
 
 from .quadriga_interface import QuadrigaInterface
 
 __author__ = "Tobias Kronauer"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
-__maintainer__ = "Tobias Kronauer"
-__email__ = "tobias.kronauer@barkhauseninstitut.org"
+__version__ = "1.1.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
@@ -51,11 +62,9 @@ class QuadrigaOctaveInterface(QuadrigaInterface):
         # Add launch script folder to octave loopkup paths
         self.__octave.addpath(self.path_launch_script)
 
-    def _run_quadriga(self, **parameters) -> List[Any]:
-
+    def _run_quadriga(self, **parameters) -> np.ndarray:
         # Push parameters to quadriga
         for key, value in parameters.items():
-
             # Convert numpy arrays to lists
             if isinstance(value, np.ndarray):
                 value = value.tolist()
@@ -66,13 +75,13 @@ class QuadrigaOctaveInterface(QuadrigaInterface):
         try:
             self.__octave.eval("launch_quadriga")
 
-        except Oct2PyError as error:
+        except Oct2PyError as error:  # pragma: no cover
             raise RuntimeError(error)
 
         # Pull & return results
         cirs = self.__octave.pull("cirs")
 
-        if isinstance(cirs, Struct):
+        if isinstance(cirs, Struct):  # pragma: no cover
             cirs = np.array([[cirs]])
 
         return cirs

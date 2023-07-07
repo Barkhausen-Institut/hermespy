@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 # Import required HermesPy modules
-from hermespy.channel import Channel
+from hermespy.channel import IdealChannel
 from hermespy.simulation import SimulatedDevice
 from hermespy.modem import TransmittingModem, ReceivingModem, RootRaisedCosineWaveform, BitErrorEvaluator
 
@@ -20,12 +20,12 @@ rx_operator.waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e6, num_p
 rx_device.receivers.add(rx_operator)
 
 # Simulate a channel between the two devices
-channel = Channel(tx_device, rx_device)
+channel = IdealChannel(tx_device, rx_device)
 
 # Simulate the signal transmission over the channel
 transmission = tx_operator.transmit()
 rx_signal, _, channel_state = channel.propagate(tx_device.transmit())
-rx_device.receive(rx_signal)
+rx_device.process_input(rx_signal)
 reception = rx_operator.receive()
 
 # Evaluate bit errors during transmission and visualize the received symbol constellation

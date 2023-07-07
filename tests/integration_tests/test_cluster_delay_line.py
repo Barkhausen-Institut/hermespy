@@ -1,4 +1,4 @@
-
+# -*- coding: utf-8 -*-
 from itertools import product
 from unittest import TestCase
 
@@ -12,10 +12,10 @@ from hermespy.simulation import Simulation
 from hermespy.core import IdealAntenna, UniformArray
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -67,7 +67,7 @@ class TestClusterDelayLine(TestCase):
         dictionary = np.empty((self.antennas.num_antennas, num_angle_candidates ** 2), dtype=complex)
         for i, (aoa, zoa) in enumerate(product(azimuth_angles, zenith_angles)):
 
-            dictionary[:, i] = self.device_a.antennas.spherical_response(self.frequency, aoa, zoa)
+            dictionary[:, i] = self.device_a.antennas.spherical_phase_response(self.frequency, aoa, zoa)
 
         beamformer = np.linalg.norm(dictionary.T @ samples, axis=1, keepdims=False).reshape((num_angle_candidates, num_angle_candidates))
         return

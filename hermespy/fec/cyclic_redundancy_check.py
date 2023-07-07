@@ -13,22 +13,22 @@ from __future__ import annotations
 from typing import Type
 
 import numpy as np
-from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
+from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, Node
 
-from hermespy.core import Serializable
+from hermespy.core import RandomNode, Serializable
 from .coding import Encoder
 
 __author__ = "Tobias Kronauer"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class CyclicRedundancyCheck(Encoder, Serializable):
+class CyclicRedundancyCheck(Encoder, RandomNode, Serializable):
     """Cyclic Redundancy Check Mock.
 
     This channel coding step mocks CRC algorithms by appending a random checksum of
@@ -56,16 +56,16 @@ class CyclicRedundancyCheck(Encoder, Serializable):
         """
 
         Encoder.__init__(self)
+        RandomNode.__init__(self)
+        Serializable.__init__(self)
 
         self.bit_block_size = bit_block_size
         self.check_block_size = check_block_size
 
     def encode(self, data: np.ndarray) -> np.ndarray:
-
-        return data.append(self.manager.modem._rng.randint(2, self.__check_block_size))
+        return np.append(data, self._rng.integers(0, 2, self.__check_block_size))
 
     def decode(self, code: np.ndarray) -> np.ndarray:
-
         return code[: -self.__check_block_size]
 
     @property
@@ -74,7 +74,6 @@ class CyclicRedundancyCheck(Encoder, Serializable):
 
     @bit_block_size.setter
     def bit_block_size(self, value: int) -> None:
-
         if value < 1:
             raise ValueError("CRC bit block size must be greater or equal to one")
 
@@ -96,7 +95,6 @@ class CyclicRedundancyCheck(Encoder, Serializable):
 
     @check_block_size.setter
     def check_block_size(self, value: int) -> None:
-
         if value < 0:
             raise ValueError("Number of check bits must be greater or equal to zero")
 
@@ -130,7 +128,7 @@ class CyclicRedundancyCheck(Encoder, Serializable):
         return representer.represent_mapping(cls.yaml_tag, state)
 
     @classmethod
-    def from_yaml(cls: Type[CyclicRedundancyCheck], constructor: SafeConstructor, node: MappingNode) -> CyclicRedundancyCheck:
+    def from_yaml(cls: Type[CyclicRedundancyCheck], constructor: SafeConstructor, node: Node) -> CyclicRedundancyCheck:
         """Recall a new `CyclicRedundancyCheck` from YAML.
 
         Args:

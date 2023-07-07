@@ -15,9 +15,8 @@ from numpy import cos, exp
 from scipy.constants import pi
 
 from hermespy.core import Serializable
-from hermespy.core.device import Device
 from hermespy.tools import delay_resampling_matrix
-from .channel import Channel
+from .channel import Channel, ChannelRealization
 
 if TYPE_CHECKING:
     from hermespy.simulation import SimulatedDevice  # pragma no cover
@@ -26,7 +25,7 @@ __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -35,11 +34,10 @@ __status__ = "Prototype"
 class AntennaCorrelation(ABC):
     """Base class for statistical modeling of antenna array correlations."""
 
-    __channel: Optional[MultipathFadingChannel]
-    __device: Optional[SimulatedDevice]
+    __channel: Channel | None
+    __device: SimulatedDevice | None
 
-    def __init__(self, channel: Optional[Channel] = None, device: Optional[Device] = None) -> None:
-
+    def __init__(self, channel: Channel | None = None, device: SimulatedDevice | None = None) -> None:
         self.channel = channel
         self.device = device
 
@@ -53,7 +51,7 @@ class AntennaCorrelation(ABC):
         ...  # pragma no cover
 
     @property
-    def channel(self) -> Optional[MultipathFadingChannel]:
+    def channel(self) -> Channel | None:
         """The channel this correlation model configures.
 
         Returns:
@@ -64,12 +62,11 @@ class AntennaCorrelation(ABC):
         return self.__channel
 
     @channel.setter
-    def channel(self, value: Optional[MultipathFadingChannel]) -> None:
-
+    def channel(self, value: Channel | None) -> None:
         self.__channel = value
 
     @property
-    def device(self) -> Optional[SimulatedDevice]:
+    def device(self) -> SimulatedDevice | None:
         """The device this correlation model is based upon.
 
         Returns:
@@ -80,8 +77,7 @@ class AntennaCorrelation(ABC):
         return self.__device
 
     @device.setter
-    def device(self, value: Optional[SimulatedDevice]) -> None:
-
+    def device(self, value: SimulatedDevice | None) -> None:
         self.__device = value
 
 
@@ -105,7 +101,6 @@ class CustomAntennaCorrelation(Serializable, AntennaCorrelation):
 
     @property
     def covariance(self) -> np.ndarray:
-
         if self.device is not None and self.device.num_antennas != self.__covariance_matrix.shape[0]:
             raise RuntimeError(f"Device with {self.device.num_antennas} antennas does not match covariance matrix of magnitude {self.__covariance_matrix.shape[0]}")
 
@@ -113,7 +108,6 @@ class CustomAntennaCorrelation(Serializable, AntennaCorrelation):
 
     @covariance.setter
     def covariance(self, value: np.ndarray) -> None:
-
         if value.ndim != 2 or not np.allclose(value, value.T.conj()):
             raise ValueError("Antenna correlation must be a hermitian matrix")
 
@@ -187,7 +181,7 @@ class MultipathFadingChannel(Channel, Serializable):
         delays: Union[np.ndarray, List[float]],
         power_profile: Union[np.ndarray, List[float]],
         rice_factors: Union[np.ndarray, List[float]],
-        num_sinusoids: Optional[float] = None,
+        num_sinusoids: Optional[int] = None,
         los_angle: Optional[float] = None,
         doppler_frequency: Optional[float] = None,
         los_doppler_frequency: Optional[float] = None,
@@ -453,42 +447,38 @@ class MultipathFadingChannel(Channel, Serializable):
 
         self.__los_angle = angle
 
-    def impulse_response(self, num_samples: int, sampling_rate: float) -> np.ndarray:
-
+    def realize(self, num_samples: int, sampling_rate: float) -> ChannelRealization:
         max_delay_in_samples = int(self.__delays[-1] * sampling_rate)
         timestamps = np.arange(num_samples) / sampling_rate
 
-        impulse_response = np.zeros((num_samples, self.receiver.antennas.num_antennas, self.transmitter.antennas.num_antennas, max_delay_in_samples + 1), dtype=complex)
+        impulse_response = np.zeros((self.receiver.antennas.num_antennas, self.transmitter.antennas.num_antennas, num_samples, max_delay_in_samples + 1), dtype=complex)
 
         interpolation_filter: Optional[np.ndarray] = None
         if self.impulse_response_interpolation:
             interpolation_filter = self.interpolation_filter(sampling_rate)
 
         for power, path_idx, los_gain, nlos_gain in zip(self.__power_profile, range(self.num_resolvable_paths), self.los_gains, self.non_los_gains):
-
             for rx_idx, tx_idx in product(range(self.transmitter.antennas.num_antennas), range(self.receiver.antennas.num_antennas)):
                 signal_weights = power**0.5 * self.__tap(timestamps, los_gain, nlos_gain)
 
                 if interpolation_filter is not None:
-                    impulse_response[:, rx_idx, tx_idx, :] += np.outer(signal_weights, interpolation_filter[path_idx, :])
+                    impulse_response[rx_idx, tx_idx, :, :] += np.outer(signal_weights, interpolation_filter[path_idx, :])
 
                 else:
                     delay_idx = int(self.__delays[path_idx] * sampling_rate)
-                    impulse_response[:, rx_idx, tx_idx, delay_idx] += signal_weights
+                    impulse_response[rx_idx, tx_idx, :, delay_idx] += signal_weights
 
         # Force a signal covariance at the transmitter if configured
         if self.alpha_correlation is not None:
-
             alpha_covariance = self.alpha_correlation.covariance
-            impulse_response = np.tensordot(alpha_covariance, impulse_response, (0, 2)).transpose((1, 2, 0, 3))
+            impulse_response = np.tensordot(alpha_covariance, impulse_response, (0, 1)).transpose((1, 0, 2, 3))
 
         # Force a signal covariance at the receiver if configured
         if self.beta_correlation is not None:
-
             beta_covariance = self.beta_correlation.covariance
-            impulse_response = np.tensordot(beta_covariance, impulse_response, (0, 1)).transpose((1, 0, 2, 3))
+            impulse_response = np.tensordot(beta_covariance, impulse_response, (0, 0))
 
-        return self.gain * impulse_response
+        return ChannelRealization(self, np.sqrt(self.gain) * impulse_response)
 
     def __tap(self, timestamps: np.ndarray, los_gain: complex, nlos_gain: complex) -> np.ndarray:
         """Generate a single fading sequence tap.
@@ -548,7 +538,6 @@ class MultipathFadingChannel(Channel, Serializable):
         filter_instances = np.empty((self.num_resolvable_paths, num_delay_samples + 1), float)
 
         for path_idx, delay in enumerate(self.__delays):
-
             resampling_matrix = delay_resampling_matrix(sampling_rate, 1, delay, num_delay_samples + 1)
             filter_instances[path_idx, :] = resampling_matrix[:, 0] / np.linalg.norm(resampling_matrix)
 
@@ -567,9 +556,7 @@ class MultipathFadingChannel(Channel, Serializable):
 
     @alpha_correlation.setter
     def alpha_correlation(self, value: AntennaCorrelation) -> None:
-
         if value is not None:
-
             value.channel = self
             value.device = self.transmitter
 
@@ -588,27 +575,23 @@ class MultipathFadingChannel(Channel, Serializable):
 
     @beta_correlation.setter
     def beta_correlation(self, value: AntennaCorrelation) -> None:
-
         if value is not None:
-
             value.channel = self
             value.device = self.receiver
 
         self.__beta_correlation = value
 
-    @Channel.transmitter.setter
+    @Channel.transmitter.setter  # type: ignore
     def transmitter(self, value: SimulatedDevice) -> None:
-
-        Channel.transmitter.fset(self, value)
+        Channel.transmitter.fset(self, value)  # type: ignore
 
         # Register new device at correlation model
         if self.alpha_correlation is not None:
             self.alpha_correlation.device = value
 
-    @Channel.receiver.setter
+    @Channel.receiver.setter  # type: ignore
     def receiver(self, value: SimulatedDevice) -> None:
-
-        Channel.receiver.fset(self, value)
+        Channel.receiver.fset(self, value)  # type: ignore
 
         # Register new device at correlation model
         if self.beta_correlation is not None:

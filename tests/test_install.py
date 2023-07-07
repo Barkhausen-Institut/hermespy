@@ -23,15 +23,21 @@ if __name__ == '__main__':
     
     # Run all tests as usual
     test_loader = TestLoader()
-    test_runner = TextTestRunner(verbosity=2, failfast=True)
+    test_runner = TextTestRunner(verbosity=2, failfast=False)
     
     if len(argv) < 2:
         start_dir = '.'
         
     else:
         start_dir = argv[1]
+
+    if os.path.isfile(start_dir):
+        module_name = start_dir.replace('.py', '').replace('.\\', '').replace('./', '').replace('/', '.').replace('\\', '.')
+        tests = test_loader.loadTestsFromName(module_name)
+   
+    else:
+        tests = test_loader.discover(start_dir, top_level_dir=os.path.join(repository, 'tests'))
     
-    tests = test_loader.discover(start_dir)
     test_result = test_runner.run(tests)
 
     # Return with a proper exit code indicating test success / failure

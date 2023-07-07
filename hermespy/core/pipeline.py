@@ -12,16 +12,16 @@ from .executable import Executable
 from .scenario import ScenarioType
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class Pipeline(Executable, Generic[ScenarioType]):
+class Pipeline(Executable, Generic[ScenarioType, DeviceType]):
     """Base class of HermesPy simulation pipelines."""
 
     __scenario: ScenarioType  # The simulated scenario.
@@ -71,7 +71,6 @@ class Pipeline(Executable, Generic[ScenarioType]):
 
     @num_drops.setter
     def num_drops(self, value: int) -> None:
-
         if value < 1:
             raise ValueError("Number of drops must be greater than zero")
 
@@ -84,7 +83,7 @@ class Pipeline(Executable, Generic[ScenarioType]):
 
         Args:
 
-            device (DeviceType):
+            device:
                 New device to be added to the scenario.
 
         Raises:
@@ -111,3 +110,22 @@ class Pipeline(Executable, Generic[ScenarioType]):
         """
 
         return self.scenario.new_device(*args, **kwargs)
+
+    def device_index(self, device: DeviceType) -> int:
+        """Get the index of a device in the scenario.
+
+        Convenience function pointing to :meth:`hermespy.core.scenario.Scenario.device_index`.
+
+        Args:
+
+            device:
+                Device to be searched for.
+
+        Returns: The index of the device.
+
+        Raises:
+
+            ValueError: If the device does not exist.
+        """
+
+        return self.scenario.device_index(device)

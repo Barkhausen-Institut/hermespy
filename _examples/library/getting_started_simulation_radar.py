@@ -3,12 +3,12 @@ This script simulates a monostatic radar detector using FMCW pulses and generate
 """
 
 import matplotlib.pyplot as plt
-import numpy as np
 
 # Import required HermesPy modules
+from hermespy.core import dB
 from hermespy.simulation import Simulation
 from hermespy.radar import Radar, FMCW, ReceiverOperatingCharacteristic, MaxDetector, RootMeanSquareError
-from hermespy.channel import RadarChannel
+from hermespy.channel import SingleTargetRadarChannel
 from hermespy.tools.math import db2lin
 
 
@@ -51,8 +51,8 @@ operator_h0.device = device_h0
 # channel_h0 is the radar channel without a target, from device_h0 to device_h0
 # channel_h1 is the radar channel with a target, from device_h1 to device_h1
 # A "blockage channel" is created between device_h0 and device_h1 to ensure that they don't interfere with each other
-channel_h1 = RadarChannel(target_range=(operator_h1.waveform.max_range * .1, operator_h1.waveform.max_range * .9), radar_cross_section=1, target_exists=True, attenuate=False)
-channel_h0 = RadarChannel(target_range=50, radar_cross_section=1, target_exists=False, attenuate=False)
+channel_h1 = SingleTargetRadarChannel(target_range=(operator_h1.waveform.max_range * .1, operator_h1.waveform.max_range * .9), radar_cross_section=1, target_exists=True, attenuate=False)
+channel_h0 = SingleTargetRadarChannel(target_range=50, radar_cross_section=1, target_exists=False, attenuate=False)
 
 simulation.scenario.set_channel(device_h1, device_h1, channel_h1)
 simulation.scenario.set_channel(device_h0, device_h0, channel_h0)
@@ -64,13 +64,8 @@ simulation.add_evaluator(ReceiverOperatingCharacteristic(receiving_radar=operato
 simulation.add_evaluator(RootMeanSquareError(operator_h1, channel_h1))
 simulation.num_samples = number_of_drops
 
-snr_db = np.asarray([-15, -12, -9, 0])  # SNR in dB
-snr = db2lin(snr_db)
-
-# convert SNR to Ep/N0, which is expected in noise function
-EpN0 = snr * chirp_duration * bandwidth
-
-simulation.new_dimension('snr', snr)
+simulation.new_dimension('snr', dB(-15, -12, -9, 0))
+simulation.num_samples = 10000
 
 # Launch simulation campaign
 result = simulation.run()

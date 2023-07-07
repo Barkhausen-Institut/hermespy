@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from unittest import TestCase
 
 import numpy as np
@@ -5,17 +6,17 @@ from numpy.testing import assert_array_equal
 from numpy.random import default_rng
 
 
-from hermespy.channel import RadarChannel
+from hermespy.channel import SingleTargetRadarChannel
 from hermespy.jcas import MatchedFilterJcas
 from hermespy.modem import RootRaisedCosineWaveform, CustomPilotSymbolSequence
 from hermespy.modem.waveform_single_carrier import SingleCarrierCorrelationSynchronization, SingleCarrierLeastSquaresChannelEstimation, SingleCarrierZeroForcingChannelEqualization
 from hermespy.simulation import SimulatedDevice
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "Jan Adler"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -32,7 +33,7 @@ class TestSCMatchedFilterJcas(TestCase):
         
         self.target_range = 5
         self.max_range = 10
-        self.channel = RadarChannel(target_range=self.target_range,
+        self.channel = SingleTargetRadarChannel(target_range=self.target_range,
                                     transmitter=self.device,
                                     receiver=self.device,
                                     radar_cross_section=1.)
@@ -53,15 +54,13 @@ class TestSCMatchedFilterJcas(TestCase):
         for _ in range(5):
             
             # Generate transmitted signal
-            transmission = self.operator.transmit()
-            rf_signals = self.device.transmit()
+            transmission = self.device.transmit()
             
             # Propagate signal over the radar channel
-            propagetd_signals, _, _ = self.channel.propagate(rf_signals)
-            self.device.receive(propagetd_signals)
+            propagetd_signals, _, _ = self.channel.propagate(transmission)
             
             # Receive signal
-            reception = self.operator.receive()
+            self.device.receive(propagetd_signals)
             
             # The bits should be recovered correctly
-            assert_array_equal(transmission.bits, reception.bits)
+            assert_array_equal(self.operator.transmission.bits, self.operator.reception.bits)

@@ -9,18 +9,18 @@ Implementations of basic maths equations.
 """
 
 from enum import Enum
-from math import cos, sin
 from typing import Optional
 
 import numpy as np
 from scipy import stats
+from scipy.constants import speed_of_light
 from numba import jit
 
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -31,11 +31,10 @@ class DbConversionType(Enum):
 
     POWER = 0
     AMPLITUDE = 1
-    HILLY = 2
 
 
-@jit
-def db2lin(db_val: float, conversion_type: Optional[DbConversionType] = DbConversionType.POWER):
+@jit(nopython=True)
+def db2lin(db_val: float, conversion_type: Optional[DbConversionType] = DbConversionType.POWER):  # pragma: no cover
     """
     Converts from dB to linear
 
@@ -57,8 +56,8 @@ def db2lin(db_val: float, conversion_type: Optional[DbConversionType] = DbConver
     return output
 
 
-@jit
-def lin2db(val: float, conversion_type: Optional[DbConversionType] = DbConversionType.POWER):
+@jit(nopython=True)
+def lin2db(val: float, conversion_type: Optional[DbConversionType] = DbConversionType.POWER):  # pragma: no cover
     """
     Converts from linear to dB
 
@@ -83,7 +82,7 @@ def lin2db(val: float, conversion_type: Optional[DbConversionType] = DbConversio
 def marcum_q(a: float, b: np.ndarray, m: Optional[float] = 1):
     """Calculates the Marcum-Q function Q_m(a, b)
 
-    This method uses the relationship between Marcum-Q function and the chi-squared distribution
+    This method uses the relationship between Marcum-Q function and the chi-squared distribution.
 
     Args:
         a (float):
@@ -99,31 +98,35 @@ def marcum_q(a: float, b: np.ndarray, m: Optional[float] = 1):
     return q
 
 
-def rotation_matrix(orientation: np.ndarray) -> np.ndarray:
-
-    a = orientation[2]  # Pitch: Rotation around the z-axis
-    b = orientation[1]  # Yaw:   Rotation around the y-axis
-    c = orientation[0]  # Roll:  Rotation around the x-axis
-
-    R = np.array([[cos(a) * cos(b), cos(a) * sin(b) * sin(c) - sin(a) * cos(c), cos(a) * sin(b) * cos(c) + sin(a) * sin(c)], [sin(a) * cos(b), sin(a) * sin(b) * sin(c) + cos(a) * cos(c), sin(a) * sin(b) * cos(c) - cos(a) * sin(c)], [-sin(b), cos(b) * sin(c), cos(b) * cos(c)]])
-
-    return R
-
-
-def transform_vector(vector: np.ndarray, position: np.ndarray, orientation: np.ndarray) -> np.ndarray:
-
-    R = rotation_matrix(orientation)
-    return R @ vector + position
-
-
-def transform_coordinates(coordinates: np.ndarray, position: np.ndarray, orientation: np.ndarray) -> np.ndarray:
-
-    R = rotation_matrix(orientation)
-    return (R @ coordinates.T + position[:, np.newaxis]).T
-
-
 @jit(nopython=True)
-def rms_value(x: np.ndarray) -> float:
+def rms_value(x: np.ndarray) -> float:  # pragma: no cover
     """Returns the root-mean-square value of a given input vector"""
 
     return np.linalg.norm(x, 2) / np.sqrt(x.size)
+
+
+def amplitude_path_loss(carrier_frequency: float, distance: float) -> float:
+    """Compute the free space propagation loss of a wave in vacuum.
+
+    Args:
+
+        carrier_frequency (float):
+            The wave's carrier frequency in Hz.
+
+        distance (float):
+            The traveled distance in m.
+
+    Raises:
+
+        ValueError: If the absolute value of `carrier_frequency` is zero.
+    """
+
+    absolute_carrier = abs(carrier_frequency)
+
+    if absolute_carrier == 0.0:
+        raise ValueError("Carrier frequency may not be zero for free space propagation path loss modeling")
+
+    wavelength = speed_of_light / absolute_carrier
+    amplitude_scale = wavelength / (4 * np.pi * distance)
+
+    return amplitude_scale

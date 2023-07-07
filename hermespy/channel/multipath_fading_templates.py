@@ -15,10 +15,10 @@ from hermespy.core import FloatingError, Serializable, SerializableEnum
 from .multipath_fading_channel import AntennaCorrelation, MultipathFadingChannel
 
 __author__ = "Tobias Kronauer"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -59,7 +59,7 @@ class StandardAntennaCorrelation(Serializable, AntennaCorrelation):
     __device_type: DeviceType  # The assumed device
     __correlation: CorrelationType  # The assumed correlation
 
-    def __init__(self, device_type: Union[DeviceType, int, str], correlation: Union[CorrelationType, str], **kwargs) -> None:
+    def __init__(self, device_type: DeviceType | int | str, correlation: Union[CorrelationType, str], **kwargs) -> None:
         """
         Args:
 
@@ -70,8 +70,8 @@ class StandardAntennaCorrelation(Serializable, AntennaCorrelation):
                 The assumed correlation.
         """
 
-        self.device_type = device_type
-        self.correlation = correlation
+        self.device_type = DeviceType.from_parameters(device_type)
+        self.correlation = CorrelationType.from_parameters(correlation)
 
         AntennaCorrelation.__init__(self, **kwargs)
 
@@ -89,19 +89,8 @@ class StandardAntennaCorrelation(Serializable, AntennaCorrelation):
         return self.__device_type
 
     @device_type.setter
-    def device_type(self, value: Union[DeviceType, int, str]) -> None:
-
-        if isinstance(value, DeviceType):
-            self.__device_type = value
-
-        elif isinstance(value, int):
-            self.__device_type = DeviceType(value)
-
-        elif isinstance(value, str):
-            self.__device_type = DeviceType[value]
-
-        else:
-            raise ValueError("Unknown device_type type")
+    def device_type(self, value: DeviceType) -> None:
+        self.__device_type = value
 
     @property
     def correlation(self) -> CorrelationType:
@@ -117,20 +106,11 @@ class StandardAntennaCorrelation(Serializable, AntennaCorrelation):
         return self.__correlation
 
     @correlation.setter
-    def correlation(self, value: Union[CorrelationType, str]) -> None:
-
-        if isinstance(value, CorrelationType):
-            self.__correlation = value
-
-        elif isinstance(value, str):
-            self.__correlation = CorrelationType[value]
-
-        else:
-            raise ValueError("Unsupported correlation type conversion")
+    def correlation(self, value: CorrelationType) -> None:
+        self.__correlation = value
 
     @property
     def covariance(self) -> np.ndarray:
-
         if self.device is None:
             raise FloatingError("Error trying to compute the covariance matrix of an unknown device")
 
@@ -191,19 +171,16 @@ class MultipathFadingCost256(MultipathFadingChannel):
         """
 
         if model_type == Cost256Type.URBAN:
-
             delays = 1e-6 * np.array([0, 0.217, 0.512, 0.514, 0.517, 0.674, 0.882, 1.230, 1.287, 1.311, 1.349, 1.533, 1.535, 1.622, 1.818, 1.836, 1.884, 1.943, 2.048, 2.140])
             power_db = np.array([-5.7, -7.6, -10.1, -10.2, -10.2, -11.5, -13.4, -16.3, -16.9, -17.1, -17.4, -19.0, -19.0, -19.8, -21.5, -21.6, -22.1, -22.6, -23.5, -24.3])
             rice_factors = np.zeros(delays.shape)
 
         elif model_type == Cost256Type.RURAL:
-
             delays = 1e-6 * np.array([0, 0.042, 0.101, 0.129, 0.149, 0.245, 0.312, 0.410, 0.469, 0.528])
             power_db = np.array([-5.2, -6.4, -8.4, -9.3, -10.0, -13.1, -15.3, -18.5, -20.4, -22.4])
             rice_factors = np.zeros(delays.shape)
 
         elif model_type == Cost256Type.HILLY:
-
             if los_angle is not None:
                 raise ValueError("Model type HILLY does not support line of sight angle configuration")
 
@@ -303,25 +280,21 @@ class MultipathFading5GTDL(MultipathFadingChannel):
         self.__rms_delay = rms_delay
 
         if model_type == TDLType.A:
-
             normalized_delays = np.array([0, 0.3819, 0.4025, 0.5868, 0.4610, 0.5375, 0.6708, 0.5750, 0.7618, 1.5375, 1.8978, 2.2242, 2.1717, 2.4942, 2.5119, 3.0582, 4.0810, 4.4579, 4.5695, 4.7966, 5.0066, 5.3043, 9.6586])
             power_db = np.array([-13.4, 0, -2.2, -4, -6, -8.2, -9.9, -10.5, -7.5, -15.9, -6.6, -16.7, -12.4, -15.2, -10.8, -11.3, -12.7, -16.2, -18.3, -18.9, -16.6, -19.9, -29.7])
             rice_factors = np.zeros(normalized_delays.shape)
 
         elif model_type == TDLType.B:
-
             normalized_delays = np.array([0, 0.1072, 0.2155, 0.2095, 0.2870, 0.2986, 0.3752, 0.5055, 0.3681, 0.3697, 0.5700, 0.5283, 1.1021, 1.2756, 1.5474, 1.7842, 2.0169, 2.8294, 3.0219, 3.6187, 4.1067, 4.2790, 4.7834])
             power_db = np.array([0, -2.2, -4, -3.2, -9.8, -3.2, -3.4, -5.2, -7.6, -3, -8.9, -9, -4.8, -5.7, -7.5, -1.9, -7.6, -12.2, -9.8, -11.4, -14.9, -9.2, -11.3])
             rice_factors = np.zeros(normalized_delays.shape)
 
         elif model_type == TDLType.C:
-
             normalized_delays = np.array([0, 0.2099, 0.2219, 0.2329, 0.2176, 0.6366, 0.6448, 0.6560, 0.6584, 0.7935, 0.8213, 0.9336, 1.2285, 1.3083, 2.1704, 2.7105, 4.2589, 4.6003, 5.4902, 5.6077, 6.3065, 6.6374, 7.0427, 8.6523])
             power_db = np.array([-4.4, -1.2, -3.5, -5.2, -2.5, 0, -2.2, -3.9, -7.4, -7.1, -10.7, -11.1, -5.1, -6.8, -8.7, -13.2, -13.9, -13.9, -15.8, -17.1, -16, -15.7, -21.6, -22.8])
             rice_factors = np.zeros(normalized_delays.shape)
 
         elif model_type == TDLType.D:
-
             if los_doppler_frequency is not None:
                 raise ValueError("Model type D does not support line of sight doppler frequency configuration")
 
@@ -332,7 +305,6 @@ class MultipathFading5GTDL(MultipathFadingChannel):
             los_doppler_frequency = 0.7
 
         elif model_type == TDLType.E:
-
             if los_doppler_frequency is not None:
                 raise ValueError("Model type E does not support line of sight doppler frequency configuration")
 
@@ -386,15 +358,15 @@ class MultipathFadingExponential(MultipathFadingChannel):
     __tap_interval: float
     __rms_delay: float
 
-    def __init__(self, tap_interval: float = 0.0, rms_delay: float = 0.0, **kwargs: Any) -> None:
+    def __init__(self, tap_interval: float, rms_delay: float, **kwargs: Any) -> None:
         """Exponential Multipath Channel Model initialization.
 
         Args:
 
-            tap_interval (float, optional):
+            tap_interval (float):
                 Tap interval in seconds.
 
-            rms_delay (float, optional):
+            rms_delay (float):
                 Root-Mean-Squared delay in seconds.
 
             kwargs (Any):

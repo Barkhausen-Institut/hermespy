@@ -7,22 +7,27 @@ Wireless Scenario
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 from enum import IntEnum
+from itertools import chain
 from os import path, remove
-from typing import Generic, List, Optional, TypeVar
+from typing import Generic, List, Optional, overload, Set, Tuple, Type, TypeVar, Union
 
-from h5py import File
+from h5py import File, Group
 
-from .device import DeviceType, Reception, Transmission, Transmitter, Receiver, Operator
-from .drop import Drop
+from .channel_state_information import ChannelStateInformation
+from .device import DeviceInput, DeviceOutput, DeviceReception, DeviceTransmission, DeviceType, ProcessedDeviceInput, Reception, Transmission, Transmitter, Receiver, Operator
+from .drop import Drop, RecalledDrop
+from .factory import Factory
 from .random_node import RandomNode
 from .signal_model import Signal
+from .transformation import TransformableBase
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -50,42 +55,55 @@ class ScenarioMode(IntEnum):
     """
 
 
-class Scenario(ABC, RandomNode, Generic[DeviceType]):
-    """A simulation scenario.
+class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
+    """A wireless scenario.
 
     Scenarios consist of several devices transmitting and receiving electromagnetic signals.
     Each device can be operated by multiple operators simultaneously.
     """
 
+    yaml_tag = "Scenario"
+    serialized_attributes = {"devices"}
+
+    @classmethod
+    def _arg_signature(cls: Type[Scenario]) -> Set[str]:
+        return {"seed", "devices"}
+
     __mode: ScenarioMode  # Current scenario operating mode
-    # Registered devices within this scenario.
-    __devices: List[DeviceType]
+    __devices: List[DeviceType]  # Registered devices within this scenario.
     __drop_duration: float  # Drop duration in seconds.
     __file: Optional[File]  # HDF5 file handle
-    __file_location: Optional[str]  # HDF5 file location
     __drop_counter: int  # Internal drop counter
+    __campaign: str  # Measurement campaign name
 
-    def __init__(self, seed: Optional[int] = None) -> None:
+    def __init__(self, seed: Optional[int] = None, devices: Optional[Sequence[DeviceType]] = None) -> None:
         """
         Args:
 
             seed (int, optional):
                 Random seed used to initialize the pseudo-random number generator.
+
+            devices (List[Device], optional):
+                Devices to be added to the scenario during initialization.
+
         """
 
+        # Initialize base classes
         RandomNode.__init__(self, seed=seed)
+        TransformableBase.__init__(self)
+
+        # Initialize attributes
         self.__mode = ScenarioMode.DEFAULT
         self.__devices = []
         self.drop_duration = 0.0
         self.__file = None
-        self.__file_location = None
         self.__drop_counter = 0
+        self.__campaign = "default"
 
-    def __del__(self) -> None:
-
-        # Stop recording / playing if not in default mode
-        if self.mode != ScenarioMode.DEFAULT:
-            self.stop()
+        # Add devices if specified
+        if devices is not None:
+            for device in devices:
+                self.add_device(device)
 
     @property
     def mode(self) -> ScenarioMode:
@@ -101,7 +119,7 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
 
         Args:
 
-            device (DeviceType):
+            device (Device):
                 New device to be added to the scenario.
 
         Raises:
@@ -121,7 +139,9 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
 
         # Register scenario at the device
         device.random_mother = self
-        device.scenario = self
+
+        # Assign the scenario as the device's coordinate system base
+        device.set_base(self)
 
     def new_device(self, *args, **kwargs) -> DeviceType:
         """Add a new device to the scenario.
@@ -143,7 +163,7 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
         """Check if an device is registered in this scenario.
 
         Args:
-            device (DeviceType): The device to be checked.
+            device (Device): The device to be checked.
 
         Returns:
             bool: The device's registration status.
@@ -151,12 +171,30 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
 
         return device in self.__devices
 
+    def device_index(self, device: DeviceType) -> int:
+        """Index of device
+
+        Args:
+
+            device (Device): Device for which to lookup the index.
+
+        Returns: The device index.
+
+        Raises:
+
+            ValueError: If `device` is not registered in this scenario.
+        """
+
+        if not self.device_registered(device):
+            raise ValueError("Device not registered")
+
+        return self.devices.index(device)
+
     @property
     def devices(self) -> List[DeviceType]:
         """Devices registered in this scenario.
 
-        Returns:
-            List[DeviceType]: List of devices.
+        Returns: List of devices.
         """
 
         return self.__devices.copy()
@@ -230,19 +268,18 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
         return num
 
     @property
-    def operators(self) -> List[Operator]:
+    def operators(self) -> Set[Operator]:
         """All operators within this scenario.
 
-        Returns:
-            List[Operator]: List of all operators.
+        Returns: A set containing all unique operators within this scenario
         """
 
-        operators: List[Receiver] = []
+        operators: Set[Operator] = set()
 
-        for device in self.__devices:
-
-            operators.extend(device.receivers)
-            operators.extend(device.transmitters)
+        # Iterate over all devices and collect operators
+        for device in self.devices:
+            for operator in chain(device.transmitters, device.receivers):
+                operators.add(operator)  # type: ignore
 
         return operators
 
@@ -277,7 +314,6 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
 
         # Return the largest frame length as default drop duration
         if self.__drop_duration == 0.0:
-
             duration = 0.0
 
             for device in self.__devices:
@@ -290,7 +326,6 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
 
     @drop_duration.setter
     def drop_duration(self, value: float) -> None:
-
         if value < 0.0:
             raise ValueError("Drop duration must be greater or equal to zero")
 
@@ -299,7 +334,89 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
 
         self.__drop_duration = value
 
-    def record(self, file: str, override: bool = False) -> None:
+    @property
+    def campaign(self) -> str:
+        """Measurement campaign identifier.
+
+        If not specified, the scenario will assume the campaign name to be `default`.
+
+        Returns:
+            Name of the current measurement campaign.
+
+        Raises:
+
+            ValueError: If in replay mode and the requested campaign name is not available.
+        """
+
+        return self.__campaign
+
+    @campaign.setter
+    def campaign(self, value: str) -> None:
+        # Do nothing if value matches the current campaign
+        if value == self.__campaign:
+            return
+
+        # If in replay mode, make sure the campaign exists
+        if self.mode == ScenarioMode.REPLAY:
+            if not self.__campaign_exists(value, self.__file):
+                raise ValueError(f"The requested measurement campaign '{value}' does not exists within the currently replayed savefile")
+
+            self.__drop_counter = 0
+
+        elif self.mode == ScenarioMode.RECORD:
+            # Create the campaign if it doesn't exists
+            if not self.__campaign_exists(value, self.__file):
+                self.__file.create_group("/campaigns/" + value)
+
+            self.__drop_counter = self.__file["/campaigns/" + value].len
+
+        # Update the campaign identifier
+        self.__campaign = value
+
+    def _state_to_HDF(self, factory: Factory, group: Group) -> None:
+        """Serialize the scenario's state to an HDF5 group.
+
+        Args:
+
+            factory (Factory):
+                Reference to the serialization factory.
+
+            group (Group):
+                Reference to an empty HDF5 group.
+        """
+
+        # Serialize required attributes
+        group.attrs["num_devices"] = self.num_devices
+        group.attrs["num_operators"] = self.num_operators
+
+        # Serialize device states
+        for d, device in enumerate(self.devices):
+            group.attrs[f"device_{d:02d}"] = factory.to_str(device)
+
+            # Serialize operator states
+            for o, operator in enumerate(self.operators):
+                group.attrs[f"operator_{o:02d}"] = factory.to_str(operator)
+
+        # Serialize full state
+        group.attrs["state"] = factory.to_str({"devices": self.devices, "operators": self.operators})
+
+    @classmethod
+    def _state_from_HDF(cls: Type[Scenario], factory: Factory, group: Group) -> Scenario:
+        # Initialize class
+        scenario = cls()
+
+        # Recall serialization
+        state: dict = factory.from_str(group.attrs["state"])  # type: ignore
+
+        # Add devices to the scenario
+        device: DeviceType
+        for device in state["devices"]:
+            scenario.add_device(device)
+
+        # Return initialize scenario
+        return scenario
+
+    def record(self, file: str, overwrite: bool = False, campaign: str = "default", state: Scenario | None = None) -> None:
         """Start recording drop information generated from this scenario.
 
         After the scenario starts recording, changing the device and operator configuration
@@ -310,9 +427,16 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
             file (str):
                 The system path where to store the generated recording data.
 
-            override (bool, optional):
-                Override the file if a recording already exists.
+            overwrite (bool, optional):
+                Overwrite the file if a recording already exists.
                 Disabled by default.
+
+            campaign (str, optional):
+                Name of the measurement campaign.
+
+            state (scenario, optional):
+                Scenario to be used for state serialization.
+                By default, this scenario is assumed.
 
         Raises:
 
@@ -322,38 +446,145 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
         if self.mode != ScenarioMode.DEFAULT:
             raise RuntimeError("Initialize a recording is only possible in default mode. Please stop before starting a new recording.")
 
-        if override and path.exists(file):
+        # Check wether the specified file already exists within the filesystem
+        file_exists = path.exists(file)
+
+        # Remove the existing file if the overwrite flag is enabled
+        if overwrite and file_exists:
             remove(file)
+            file_exists = False
 
         # Compute drop duration
         drop_duration = self.drop_duration
 
         # Initialize dataset
-        self.__file = File(file, "w-")
-        self.__file_location = file
+        file_mode = "w-" if overwrite else "a"
+        self.__file = File(file, file_mode)
         self.__drop_counter = 0
+        self.__campaign = campaign
 
         # Switch mode
         self.__mode = ScenarioMode.RECORD
 
-        # ToDo: Write scenario state to the set
-        # factory = Factory()
-        # self.__file.attrs['serialization'] = factory.to_str(self)
+        # Write required attributes
         self.__file.attrs["drop_duration"] = drop_duration
-        self.__file.attrs["num_devices"] = self.num_devices
 
-    def replay(self, path: Optional[str] = None) -> None:
+        # Write required groups
+        if "/campaigns" not in self.__file:
+            self.__file.create_group("/campaigns")
 
-        if self.mode != ScenarioMode.DEFAULT:
-            raise RuntimeError("Initializing a replay is only possible in default mode. Please stop before starting a new replay.")
+        if "/state" not in self.__file:
+            self.__file.create_group("state")
+
+        # Write scenario state to the dataset for easy recollection
+        # Future feature: Write a locking mechanism during recording
+        factory = Factory()
+
+        if state is None:
+            self._state_to_HDF(factory, self.__file["/state"])
+
+        else:
+            state._state_to_HDF(factory, self.__file["/state"])
+
+        # Write meta-information
+        self.__file.attrs["hermes_version"] = __version__
+        self.__file.attrs["hermes_status"] = __status__
+
+        # Update the campaign, will create the respective group if it doesn't exist yet
+        self.campaign = campaign
+
+    def __campaign_exists(self, campaign: str, file: File) -> bool:
+        """Check whether a campaign identifier exists within the current dataset.
+
+        Args:
+
+            campaign (str):
+                The campaign identifier string.
+
+            file (File):
+                The HDF5 file to check for campaign existence.
+
+        Returns: Boolean indicator.
+
+        Raises:
+
+            RuntimeError: If the scenario is currently in default mode and `file` was not specified.
+        """
+
+        return "/campaigns/" + campaign in file
+
+    def replay(self, file: str | File | None = None, campaign: str = "default") -> None:
+        """Replay the scenario from and HDF5 savefile.
+
+        Args:
+
+            file (Union[None, str, File], optional):
+                File from which the scenario should be replayed.
+                May be a file system location or an HDF5 `File` handle.
+
+            campaign (str, optional):
+                Identifier of the campaign to replay.
+                If not specified, the assumed campaign name is `default`.
+
+        Raises:
+
+            RuntimeError: If `file` is not specified and can't be inferred from previous record executions.
+            ValueError: If `campaign` is specified and is not contained within the savefile.
+        """
+
+        if file is None:
+            if self.__file is None:
+                raise ValueError("A file location must be specified or the scenario most be in record or replay mode")
+
+            file = self.__file.filename
+
+        # If only a file system location was specified, open the file
+        _file = File(file, "r") if isinstance(file, str) else file
+
+        # Check if the campaign is available (if a campaign was specified)
+        if not self.__campaign_exists(campaign, _file):
+            _file.close()
+            raise ValueError(f"The requested measurement campaign '{campaign}' does not exists within the savefile '{_file.filename}'")
+
+        # Stop any action and close file handles if required
+        self.stop()
 
         # Initialize dataset
-        self.__file = File(path, "r")
-        self.__file_location = path
+        self.__file = _file
         self.__drop_counter = 0
+        self.__campaign = campaign
 
         # Switch mode
         self.__mode = ScenarioMode.REPLAY
+
+    @classmethod
+    def Replay(cls: Type[Scenario], file: Union[str, File], campaign: str = "default") -> Scenario:
+        """Replay a scenario from an HDF5 save file.
+
+        Args:
+
+            file (str):
+                File system location of the HDF5 save file.
+
+
+            campaign (str, optional):
+                Identifier of the campaign to replay.
+                If not specified, the assumed campaign name is `default`.
+        """
+
+        # Load the dataset
+        if isinstance(file, str):
+            file = File(file, "r")
+
+        # Recall the class state from the respective HDF5 group
+        factory = Factory()
+        scenario = cls._state_from_HDF(factory, file["state"])
+
+        # Enable the replay mode
+        scenario.replay(file, campaign)
+
+        # Return the scenario (initialized and in replay mode)
+        return scenario
 
     def stop(self) -> None:
         """Stop a running recording / playback session."""
@@ -364,7 +595,6 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
 
         # Save the overall number of recorder drops if in record mode
         if self.mode == ScenarioMode.RECORD:
-
             self.__file.attrs["num_drops"] = self.__drop_counter
 
         # Close HDF5 file handle properly
@@ -375,7 +605,7 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
         # Reset the mode
         self.__mode = ScenarioMode.DEFAULT
 
-    def transmit_operators(self) -> List[List[Transmission]]:
+    def transmit_operators(self) -> Sequence[Sequence[Transmission]]:
         """Generate information transmitted by all registered device operators.
 
         Returns:
@@ -385,43 +615,180 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
         transmissions = [[o.transmit() for o in d.transmitters] for d in self.devices]
         return transmissions
 
-    def transmit_devices(self) -> List[Signal]:
-        """Generated information transmitted by all registered devices.
-
-        Returns:
-            The generated information.
-        """
-
-        transmissions = [device.transmit(False) for device in self.devices]
-        return transmissions
-
-    def receive_devices(self, receptions: List[Signal]) -> List[Signal]:
-        """Receive over all devices.
+    def generate_outputs(self, transmissions: Optional[List[List[Transmission]]] = None) -> Sequence[DeviceOutput]:
+        """Generate signals emitted by devices.
 
         Args:
 
-            receptions (List[Signal]):
-                The signal models to be received be each device.
+            transmissions ([List[List[Transmission]], optional):
+                Transmissions by operators.
+                If none were provided, cached operator transmissions are assumed.
 
-        Returns:
-            The signal models after device processing.
+        Returns: List of device outputs.
         """
 
-        if len(receptions) != len(self.__devices):
-            raise ValueError(f"Number of receptions must be equal to number of devices ({len(receptions)} != {len(self.__devices)})")
+        transmissions = [None] * self.num_devices if transmissions is None else transmissions
 
-        device_receptions = [d.receive(r) for d, r in zip(self.devices, receptions)]
+        if len(transmissions) != self.num_devices:
+            raise ValueError(f"Number of device transmissions ({len(transmissions)}) does not match number of registered devices ({self.num_devices}")
+
+        outputs = [d.generate_output(t) for d, t in zip(self.devices, transmissions)]
+        return outputs
+
+    def transmit_devices(self) -> Sequence[DeviceTransmission]:
+        """Generated information transmitted by all registered devices.
+
+        Returns: List of generated information transmitted by each device.
+        """
+
+        # Note that devices are required to cache so that the leaking signal is available during reception
+        transmissions = [device.transmit() for device in self.devices]
+        return transmissions
+
+    @overload
+    def process_inputs(self, impinging_signals: Sequence[DeviceInput], cache: bool = True) -> Sequence[ProcessedDeviceInput]:
+        ...  # pragma: no cover
+
+    @overload
+    def process_inputs(self, impinging_signals: Sequence[Signal], cache: bool = True) -> Sequence[ProcessedDeviceInput]:
+        ...  # pragma: no cover
+
+    @overload
+    def process_inputs(self, impinging_signals: Sequence[Sequence[Signal]], cache: bool = True) -> Sequence[ProcessedDeviceInput]:
+        ...  # pragma: no cover
+
+    def process_inputs(self, impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]], cache: bool = True) -> Sequence[ProcessedDeviceInput]:
+        """Process input signals impinging onto the scenario's devices.
+
+        Args:
+
+            impinging_signals (Sequence[DeviceInput | Signal | Sequence[Signal]]):
+                List of signals impinging onto the devices.
+
+            cache (bool, optional):
+                Cache the operator inputs at the registered receive operators for further processing.
+                Enabled by default.
+
+        Returns: List of the processed device input information.
+
+        Raises:
+
+            ValueError: If the number of `impinging_signals` does not match the number of registered devices.
+        """
+
+        if len(impinging_signals) != self.num_devices:
+            raise ValueError(f"Number of impinging signals ({len(impinging_signals)}) does not match the number if registered devices ({self.num_devices}) within this scenario")
+
+        # Call the process input method for each device
+        processed_inputs = [d.process_input(i, cache) for d, i in zip(self.devices, impinging_signals)]  # type: ignore
+
+        return processed_inputs
+
+    @overload
+    def receive_operators(self, operator_inputs: Sequence[ProcessedDeviceInput], cache: bool = True) -> Sequence[Sequence[Reception]]:
+        ...  # pragma: no cover
+
+    @overload
+    def receive_operators(self, operator_inputs: Sequence[Sequence[Tuple[Signal, ChannelStateInformation]]], cache: bool = True) -> Sequence[Sequence[Reception]]:
+        ...  # pragma: no cover
+
+    @overload
+    def receive_operators(self) -> Sequence[Sequence[Reception]]:
+        ...  # pragma: no cover
+
+    def receive_operators(self, operator_inputs: Sequence[ProcessedDeviceInput] | Sequence[Sequence[Tuple[Signal, ChannelStateInformation]]] | None = None, cache: bool = True) -> Sequence[Sequence[Reception]]:
+        """Receive over the registered operators.
+
+        Args:
+
+            operator_inputs (Sequence[Sequence[Tuple[Signal, ChannelStateInformation]]] | ProcessedDeviceInput, optional):
+                Signal models fed to the receive operators of each device.
+                If not provided, the operatores are expected to have inputs cached
+
+            cache (bool, optional):
+                Cache the generated received information at the device's receive operators.
+                Enabled by default.
+
+        Returns: List of information generated by receiving over the device's operators.
+
+        Raises:
+
+            ValueError: If the number of operator inputs does not match the number of receive devices.
+            RuntimeError: If no operator inputs were specified and an operator has no cached inputs.
+        """
+
+        _operator_inputs = [None for _ in range(self.num_devices)] if operator_inputs is None else operator_inputs
+
+        if len(_operator_inputs) != self.num_devices:
+            raise ValueError(f"Number of operator inputs ({len(_operator_inputs)}) does not match the number of registered scenario devices ({self.num_devices})")
+
+        # Generate receptions
+        receptions = [d.receive_operators(i, cache) for d, i in zip(self.devices, _operator_inputs)]  # type: ignore
+        return receptions
+
+    @overload
+    def receive_devices(self, impinging_signals: Sequence[DeviceInput], cache: bool = True) -> Sequence[DeviceReception]:
+        ...  # pragma: no cover
+
+    @overload
+    def receive_devices(self, impinging_signals: Sequence[Signal], cache: bool = True) -> Sequence[DeviceReception]:
+        ...  # pragma: no cover
+
+    @overload
+    def receive_devices(self, impinging_signals: Sequence[Sequence[Signal]], cache: bool = True) -> Sequence[DeviceReception]:
+        ...  # pragma: no cover
+
+    def receive_devices(self, impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]], cache: bool = True) -> Sequence[DeviceReception]:
+        """Receive over all scenario devices.
+
+        Internally calls :meth:`Scenario.process_inputs` and :meth:`Scenario.receive_operators`.
+
+        Args:
+
+            impinging_signals (List[Union[DeviceInput, Signal, Iterable[Signal]]]):
+                List of signals impinging onto the devices.
+
+            cache (bool, optional):
+                Cache the operator inputs at the registered receive operators for further processing.
+                Enabled by default.
+
+        Returns: List of the processed device input information.
+
+        Raises:
+
+            ValueError: If the number of `impinging_signals` does not match the number of registered devices.
+        """
+
+        # Generate inputs
+        processed_inputs = self.process_inputs(impinging_signals, cache)
+
+        # Generate operator receptions
+        operator_receptions = self.receive_operators([i.operator_inputs for i in processed_inputs])
+
+        # Generate device receptions
+        device_receptions = [DeviceReception.From_ProcessedDeviceInput(i, r) for i, r in zip(processed_inputs, operator_receptions)]
         return device_receptions
 
-    def receive_operators(self) -> List[List[Reception]]:
-        """Generate information received by all registered device operators.
+    @property
+    def num_drops(self) -> int | None:
+        """Number of drops within the scenario.
 
-        Returns:
-            The generated information sorted into devices and their respective operators.
+        If the scenario is in replay mode, this property represents the
+        recorded number of drops
+
+        If the scenario is in record mode, this property represnts the
+        current number of recorded drops.
+
+        Returns: Number of drops. `None` if not applicable.
         """
 
-        receptions = [[o.receive() for o in d.receivers] for d in self.devices]
-        return receptions
+        if self.mode == ScenarioMode.RECORD:
+            return self.__drop_counter
+
+        if self.mode == ScenarioMode.REPLAY:
+            return self.__file.attrs["num_drops"]
+
+        return None
 
     @abstractmethod
     def _drop(self) -> Drop:
@@ -440,37 +807,43 @@ class Scenario(ABC, RandomNode, Generic[DeviceType]):
         Return: The generated drop information.
         """
 
-        if self.mode == ScenarioMode.REPLAY:
+        drop: Drop
 
+        if self.mode == ScenarioMode.REPLAY:
             # Recall the drop from the savefile
-            drop = Drop.from_HDF(self.__file[f"drop_{self.__drop_counter:02d}"])
-            self.__drop_counter = (self.__drop_counter + 1) % self.__file.attrs["num_drops"]
+            for _ in range(self.__file.attrs["num_drops"]):
+                drop_path = f"/campaigns/{self.__campaign}/drop_{self.__drop_counter:02d}"
+                self.__drop_counter = (self.__drop_counter + 1) % self.__file.attrs["num_drops"]
+
+                if drop_path in self.__file:
+                    drop = RecalledDrop(self.__file[drop_path], self)
+                    break
 
             # Replay device operator transmissions
             for device, device_transmission in zip(self.devices, drop.device_transmissions):
-
-                for transmitter, transmission in zip(device.transmitters, device_transmission.operator_transmissions):
-                    device.transmitters.add_transmission(transmitter, transmission)
+                device.cache_transmission(device_transmission)
 
             # Replay device operator receptions
-            for device, device_reception in zip(self.devices, drop.device_receptions):
-
-                for receiver, reception in zip(device.receivers, device_reception.operator_receptions):
-                    receiver.cache_reception(reception.signal, device_reception.csi)
+            _ = self.receive_operators(drop.operator_inputs, cache=True)
 
         else:
-
             # Generate a new drop
             drop = self._drop()
 
             # Serialize the drop to HDF if in record mode
             if self.mode == ScenarioMode.RECORD:
-
-                drop.to_HDF(self.__file.create_group(f"drop_{self.__drop_counter:02d}"))
+                drop.to_HDF(self.__file.create_group(f"campaigns/{self.__campaign}/drop_{self.__drop_counter:02d}"))
                 self.__drop_counter += 1
 
         return drop
 
 
-ScenarioType = TypeVar("ScenarioType", bound=Scenario)
+ScenarioType = TypeVar("ScenarioType", bound="Scenario")
 """Type of scenario."""
+
+
+class ReplayScenario(Scenario):
+    """Scenario which is unable to generate drops."""
+
+    def _drop(self) -> Drop:
+        raise RuntimeError("Replay scenario may not generate data drops.")

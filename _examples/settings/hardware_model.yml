@@ -16,14 +16,20 @@ Devices:
     # RF-Chain hardware model
     rf_chain: !<RfChain>           
 
-      amplitude_imbalance: 1e-3          # I/Q amplitude imbalance
-      phase_offset: 1e-2                 # I/Q phase imbalance
-      power_amplifier: !<Rapp>           # Power amplifier model
+      amplitude_imbalance: 1e-3             # I/Q amplitude imbalance
+      phase_offset: 1e-2                    # I/Q phase imbalance
+      power_amplifier: !<Rapp>              # Power amplifier model
+      phase_noise: !<OscillatorPhaseNoise>  # Phase noise model
+
+        K0: 1e-11
+        K2: 10
+        K3: 1e4
 
     # AD-Conversion hardware model
     adc: !<ADC> 
 
-      quantizer_type: mid_riser
+      quantizer_type: !<QuantizerType> MID_RISER
+      num_quantization_bits: 16
       gain: !<AutomaticGainControl>
 
 # Operators transmitting or receiving signals over the devices
@@ -69,4 +75,4 @@ plot_results: True                 # Visualize the evaluations after the simulat
 # Scenario parameters over which the Monte-Carlo simulation sweeps
 Dimensions:
 
-  snr: [0, 1, ..., 20] dB
+  snr: [0, 4, ..., 20] dB

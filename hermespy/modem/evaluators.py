@@ -49,20 +49,20 @@ Configuring :class:`CommunicationEvaluators<.CommunicationEvaluator>` to evaluat
 
 from __future__ import annotations
 from abc import ABC
-from typing import List
+from collections.abc import Sequence
 
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import uniform
 
-from hermespy.core import ArtifactTemplate, Executable, Serializable, Evaluator, EvaluationResult, EvaluationTemplate, GridDimension, ScalarEvaluationResult
+from hermespy.core import ArtifactTemplate, Serializable, Evaluator, EvaluationTemplate, GridDimension, ScalarEvaluationResult
 from .modem import TransmittingModem, ReceivingModem
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -73,8 +73,9 @@ class CommunicationEvaluator(Evaluator, ABC):
 
     __transmitting_modem: TransmittingModem  # Handle to the transmitting modem
     __receiving_modem: ReceivingModem  # Handle to the receiving modem
+    __plot_surface: bool
 
-    def __init__(self, transmitting_modem: TransmittingModem, receiving_modem: ReceivingModem) -> None:
+    def __init__(self, transmitting_modem: TransmittingModem, receiving_modem: ReceivingModem, plot_surface: bool = True) -> None:
         """
         Args:
 
@@ -83,10 +84,15 @@ class CommunicationEvaluator(Evaluator, ABC):
 
             receiving_modem (ReceivingModem):
                 Modem receiving information.
+
+            plot_surface (bool, optional):
+                Plot the surface of the evaluation result in two-dimensional grids.
+                Defaults to True.
         """
 
         self.__transmitting_modem = transmitting_modem
         self.__receiving_modem = receiving_modem
+        self.__plot_surface = plot_surface
 
         # Initialize base class
         Evaluator.__init__(self)
@@ -111,43 +117,29 @@ class CommunicationEvaluator(Evaluator, ABC):
 
         return self.__receiving_modem
 
-    def generate_result(self, grid: List[GridDimension], artifacts: np.ndarray) -> EvaluationResult:
+    def generate_result(self, grid: Sequence[GridDimension], artifacts: np.ndarray) -> ScalarEvaluationResult:
+        return ScalarEvaluationResult.From_Artifacts(grid, artifacts, self, self.__plot_surface)
 
-        return ScalarEvaluationResult(grid, artifacts, self)
 
-
-class BitErrorArtifact(ArtifactTemplate[float]):
+class BitErrorArtifact(ArtifactTemplate[np.float_]):
     """Artifact of a bit error evaluation between two modems exchanging information."""
 
-    def to_scalar(self) -> float:
-
-        return self.artifact
+    ...  # pragma: no cover
 
 
 class BitErrorEvaluation(EvaluationTemplate[np.ndarray]):
     """Bit error evaluation of a single communication process between modems."""
 
-    def plot(self, axes: plt.Axes = None) -> List[plt.Figure]:
+    @property
+    def title(self) -> str:
+        return "Bit Error Evaluation"
 
-        with Executable.style_context():
-
-            if not axes:
-
-                figure, axes = plt.subplots()
-                figure.suptitle("Bit Error Evaluation")
-
-            else:
-
-                figure = None
-
-            axes.stem(self.evaluation)
-            axes.set_xlabel("Bit Index")
-            axes.set_ylabel("Bit Error Indicator")
-
-            return [figure]
+    def _plot(self, axes: plt.Axes) -> None:
+        axes.stem(self.evaluation)
+        axes.set_xlabel("Bit Index")
+        axes.set_ylabel("Bit Error Indicator")
 
     def artifact(self) -> BitErrorArtifact:
-
         ber = np.mean(self.evaluation)
         return BitErrorArtifact(ber)
 
@@ -158,7 +150,7 @@ class BitErrorEvaluator(CommunicationEvaluator, Serializable):
     yaml_tag = "BitErrorEvaluator"
     """YAML serialization tag"""
 
-    def __init__(self, transmitting_modem: TransmittingModem, receiving_modem: ReceivingModem) -> None:
+    def __init__(self, transmitting_modem: TransmittingModem, receiving_modem: ReceivingModem, plot_surface: bool = True) -> None:
         """
         Args:
 
@@ -167,13 +159,16 @@ class BitErrorEvaluator(CommunicationEvaluator, Serializable):
 
             receiving_modem (ReceivingModem):
                 Modem receiving information.
+
+            plot_surface (bool, optional):
+                Plot the surface of the evaluation result in two-dimensional grids.
+                Defaults to True.
         """
 
-        CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem)
+        CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem, plot_surface)
         self.plot_scale = "log"  # Plot logarithmically by default
 
     def evaluate(self) -> BitErrorEvaluation:
-
         # Retrieve transmitted and received bits
         transmitted_bits = self.transmitting_modem.transmission.bits
         received_bits = self.receiving_modem.reception.bits
@@ -202,32 +197,25 @@ class BitErrorEvaluator(CommunicationEvaluator, Serializable):
         return uniform.cdf(scalar)
 
 
-class BlockErrorArtifact(ArtifactTemplate[float]):
+class BlockErrorArtifact(ArtifactTemplate[np.float_]):
     """Artifact of a block error evaluation between two modems exchanging information."""
 
-    def to_scalar(self) -> float:
-
-        return self.artifact
+    ...  # pragma: no cover
 
 
 class BlockErrorEvaluation(EvaluationTemplate[np.ndarray]):
     """Block error evaluation of a single communication process between modems."""
 
-    def plot(self) -> List[plt.Figure]:
+    @property
+    def title(self) -> str:
+        return "Block Error Evaluation"
 
-        with Executable.style_context():
-
-            figure, axes = plt.subplots()
-            figure.suptitle("Block Error Evaluation")
-
-            axes.stem(self.evaluation)
-            axes.set_xlabel("Block Index")
-            axes.set_ylabel("Block Error Indicator")
-
-            return [figure]
+    def _plot(self, axes: plt.Axes) -> None:
+        axes.stem(self.evaluation)
+        axes.set_xlabel("Block Index")
+        axes.set_ylabel("Block Error Indicator")
 
     def artifact(self) -> BitErrorArtifact:
-
         bler = np.mean(self.evaluation)
         return BlockErrorArtifact(bler)
 
@@ -238,7 +226,7 @@ class BlockErrorEvaluator(CommunicationEvaluator, Serializable):
     yaml_tag = "BlockErrorEvaluator"
     """YAML serialization tag"""
 
-    def __init__(self, transmitting_modem: TransmittingModem, receiving_modem: ReceivingModem) -> None:
+    def __init__(self, transmitting_modem: TransmittingModem, receiving_modem: ReceivingModem, plot_surface: bool = True) -> None:
         """
         Args:
 
@@ -247,13 +235,16 @@ class BlockErrorEvaluator(CommunicationEvaluator, Serializable):
 
             receiving_modem (ReceivingModem):
                 Modem receiving information.
+
+            plot_surface (bool, optional):
+                Plot the surface of the evaluation result in two-dimensional grids.
+                Defaults to True.
         """
 
-        CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem)
+        CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem, plot_surface)
         self.plot_scale = "log"  # Plot logarithmically by default
 
     def evaluate(self) -> BlockErrorEvaluation:
-
         # Retrieve transmitted and received bits
         transmitted_bits = self.transmitting_modem.transmission.bits
         received_bits = self.receiving_modem.reception.bits
@@ -263,11 +254,9 @@ class BlockErrorEvaluator(CommunicationEvaluator, Serializable):
         received_bits = np.append(received_bits, np.zeros(received_bits.shape[0] % block_size))
 
         if transmitted_bits.shape[0] >= received_bits.shape[0]:
-
             transmitted_bits = transmitted_bits[: received_bits.shape[0]]
 
         else:
-
             transmitted_bits = np.append(transmitted_bits, -np.ones(received_bits.shape[0] - transmitted_bits.shape[0]))
 
         # Compute bit errors as the positions where both sequences differ.
@@ -279,12 +268,10 @@ class BlockErrorEvaluator(CommunicationEvaluator, Serializable):
 
     @property
     def title(self) -> str:
-
         return "Block Error Rate"
 
     @property
     def abbreviation(self) -> str:
-
         return "BLER"
 
     @staticmethod
@@ -295,30 +282,23 @@ class BlockErrorEvaluator(CommunicationEvaluator, Serializable):
 class FrameErrorArtifact(ArtifactTemplate[float]):
     """Artifact of a frame error evaluation between two modems exchanging information."""
 
-    def to_scalar(self) -> float:
-
-        return self.artifact
+    ...  # pragma: no cover
 
 
 class FrameErrorEvaluation(EvaluationTemplate[np.ndarray]):
     """Frame error evaluation of a single communication process between modems."""
 
-    def plot(self) -> List[plt.Figure]:
+    @property
+    def title(self) -> str:
+        return "Frame Error Evaluation"
 
-        with Executable.style_context():
-
-            figure, axes = plt.subplots()
-            figure.suptitle("Frame Error Evaluation")
-
-            axes.stem(self.evaluation)
-            axes.set_xlabel("Frame Index")
-            axes.set_ylabel("Frame Error Indicator")
-
-            return [figure]
+    def _plot(self, axes: plt.Axes) -> None:
+        axes.stem(self.evaluation)
+        axes.set_xlabel("Frame Index")
+        axes.set_ylabel("Frame Error Indicator")
 
     def artifact(self) -> FrameErrorArtifact:
-
-        bler = np.mean(self.evaluation)
+        bler = float(np.mean(self.evaluation))
         return FrameErrorArtifact(bler)
 
 
@@ -328,7 +308,7 @@ class FrameErrorEvaluator(CommunicationEvaluator, Serializable):
     yaml_tag = "FrameErrorEvaluator"
     """YAML serialization tag"""
 
-    def __init__(self, transmitting_modem: TransmittingModem, receiving_modem: ReceivingModem) -> None:
+    def __init__(self, transmitting_modem: TransmittingModem, receiving_modem: ReceivingModem, plot_surface: bool = True) -> None:
         """
         Args:
 
@@ -337,30 +317,31 @@ class FrameErrorEvaluator(CommunicationEvaluator, Serializable):
 
             receiving_modem (ReceivingModem):
                 Modem receiving information.
+
+            plot_surface (bool, optional):
+                Plot the surface of the evaluation result in two-dimensional grids.
+                Defaults to True.
         """
 
-        CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem)
+        CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem, plot_surface)
         self.plot_scale = "log"  # Plot logarithmically by default
 
     def evaluate(self) -> FrameErrorEvaluation:
-
         # Retrieve transmitted and received bits
         transmitted_bits = self.transmitting_modem.transmission.bits
         received_bits = self.receiving_modem.reception.bits
         frame_size = self.receiving_modem.num_data_bits_per_frame
 
         if frame_size < 1:
-            return FrameErrorArtifact(np.empty(0, dtype=np.unit8))
+            return FrameErrorEvaluation(np.empty(0, dtype=np.int_))
 
         # Pad bit sequences (if required)
         received_bits = np.append(received_bits, np.zeros(received_bits.shape[0] % frame_size))
 
         if transmitted_bits.shape[0] >= received_bits.shape[0]:
-
             transmitted_bits = transmitted_bits[: received_bits.shape[0]]
 
         else:
-
             transmitted_bits = np.append(transmitted_bits, -np.ones(received_bits.shape[0] - transmitted_bits.shape[0]))
 
         # Compute bit errors as the positions where both sequences differ.
@@ -372,12 +353,10 @@ class FrameErrorEvaluator(CommunicationEvaluator, Serializable):
 
     @property
     def title(self) -> str:
-
         return "Frame Error Rate"
 
     @property
     def abbreviation(self) -> str:
-
         return "FER"
 
     @staticmethod
@@ -388,16 +367,11 @@ class FrameErrorEvaluator(CommunicationEvaluator, Serializable):
 class ThroughputArtifact(ArtifactTemplate[float]):
     """Artifact of a throughput evaluation between two modems exchanging information."""
 
-    def to_scalar(self) -> float:
-
-        return self.artifact
+    ...  # pragma: no cover
 
 
-class ThroughputEvaluation(EvaluationTemplate[np.ndarray]):
+class ThroughputEvaluation(EvaluationTemplate[float]):
     """Throughput evaluation between two modems exchanging information."""
-
-    __bits_per_frame: int  # Number of bits per communication frame
-    __frame_duration: float  # Duration of a single communication frame in seconds
 
     def __init__(self, bits_per_frame: int, frame_duration: float, frame_errors: np.ndarray) -> None:
         """
@@ -413,30 +387,29 @@ class ThroughputEvaluation(EvaluationTemplate[np.ndarray]):
                 Frame error indicators
         """
 
-        EvaluationTemplate.__init__(self, frame_errors)
+        num_frames = len(frame_errors)
+        num_correct_frames = np.sum(np.invert(frame_errors))
 
-        self.__bits_per_frame = bits_per_frame
-        self.__frame_duration = frame_duration
+        throughput = num_correct_frames * bits_per_frame / (num_frames * frame_duration)
+        EvaluationTemplate.__init__(self, throughput)
 
-    def __str__(self) -> str:
-        return f"{self.to_scalar():.3f}"
+    @property
+    def title(self) -> str:
+        return "Data Throughput"
 
     def artifact(self) -> ThroughputArtifact:
-
-        num_frames = len(self.evaluation)
-        num_correct_frames = np.sum(np.invert(self.evaluation))
-        throughput = num_correct_frames * self.__bits_per_frame / (num_frames * self.__frame_duration)
-
-        return ThroughputArtifact(throughput)
+        return ThroughputArtifact(self.evaluation)
 
 
-class ThroughputEvaluator(FrameErrorEvaluator, Serializable):
+class ThroughputEvaluator(CommunicationEvaluator, Serializable):
     """Evaluate data throughput between two modems exchanging information."""
 
     yaml_tag = "ThroughputEvaluator"
     """YAML serialization tag"""
 
-    def __init__(self, transmitting_modem: TransmittingModem, receiving_modem: ReceivingModem) -> None:
+    __framer_error_evaluator: FrameErrorEvaluator
+
+    def __init__(self, transmitting_modem: TransmittingModem, receiving_modem: ReceivingModem, plot_surface: bool = True) -> None:
         """
         Args:
 
@@ -445,14 +418,21 @@ class ThroughputEvaluator(FrameErrorEvaluator, Serializable):
 
             receiving_modem (ReceivingModem):
                 Modem receiving information.
+
+            plot_surface (bool, optional):
+                Plot the surface of the evaluation result in two-dimensional grids.
+                Defaults to True.
         """
 
-        FrameErrorEvaluator.__init__(self, transmitting_modem, receiving_modem)
+        # Initialize base class
+        CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem, plot_surface)
+
+        # Initialize class attributes
+        self.__framer_error_evaluator = FrameErrorEvaluator(transmitting_modem, receiving_modem)
 
     def evaluate(self) -> ThroughputEvaluation:
-
         # Get the frame errors
-        frame_errors = FrameErrorEvaluator.evaluate(self).evaluation.flatten()
+        frame_errors = self.__framer_error_evaluator.evaluate().evaluation.flatten()
 
         # Transform frame errors to data throughput
         bits_per_frame = self.receiving_modem.num_data_bits_per_frame
@@ -462,10 +442,8 @@ class ThroughputEvaluator(FrameErrorEvaluator, Serializable):
 
     @property
     def title(self) -> str:
-
         return "Data Throughput"
 
     @property
     def abbreviation(self) -> str:
-
         return "DRX"

@@ -51,20 +51,22 @@ Radar Device Operation
 
 from __future__ import annotations
 from abc import abstractmethod
-from typing import Optional
+from typing import Optional, Type
 
 import numpy as np
+from h5py import Group
+from scipy.constants import speed_of_light
 
 from hermespy.beamforming import ReceiveBeamformer, TransmitBeamformer
-from hermespy.core import DuplexOperator, Signal, Serializable, SNRType, Transmission, Reception
+from hermespy.core import ChannelStateInformation, DuplexOperator, FloatingError, Signal, Serializable, SNRType, Transmission, Reception
 from .cube import RadarCube
 from .detection import RadarDetector, RadarPointCloud
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "André Noll Barreto"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -98,23 +100,75 @@ class RadarWaveform(object):
 
     @property
     @abstractmethod
-    def range_bins(self) -> np.ndarray:
-        """Sample bins of the depth sensing.
+    def frame_duration(self) -> float:
+        """Duration of the radar frame.
 
-        Returns:
-            np.ndarray: Ranges in m.
+        Returns: Frame duration in seconds.
         """
         ...  # pragma: no cover
 
     @property
     @abstractmethod
-    def velocity_bins(self) -> np.ndarray:
-        """Sample bins of the radial velocity sensing.
+    def max_range(self) -> float:
+        """Maximum detectable radial range of the radar waveform.
+
+        Returns: Maximum range in m.
+        """
+        ...  # pragma: no cover
+
+    @property
+    @abstractmethod
+    def range_resolution(self) -> float:
+        """Resolution of the radial range sensing in m.
+
+        Returns: Range resolution in m.
+        """
+        ...  # pragma: no cover
+
+    @property
+    def range_bins(self) -> np.ndarray:
+        """Discrete sample bins of the radial range sensing.
 
         Returns:
-            np.ndarray: Doppler shift in Hz.
+            np.ndarray: Ranges in m.
         """
-        ...  # pragma no cover
+
+        return np.arange(int(self.max_range / self.range_resolution)) * self.range_resolution
+
+    @property
+    @abstractmethod
+    def max_relative_doppler(self) -> float:
+        """Maximum relative detectable radial doppler frequency shift in Hz.
+
+        .. math::
+
+           \\math{\Delta f_\\mathrm{Max}} = \\frac{v_\\mathrm{Max}}{\\lambda}
+
+        Returns: Shift frequency delta in Hz.
+        """
+        ...  # pragma: no cover
+
+    @property
+    @abstractmethod
+    def relative_doppler_resolution(self) -> float:
+        """Relative resolution of the radial doppler frequency shift sensing in Hz.
+
+        .. math::
+
+           \\math{\Delta f_\\mathrm{Res}} = \\frac{v_\\mathrm{Res}}{\\lambda}
+
+        Returns: Doppler resolution in Hz.
+        """
+        ...  # pragma: no cover
+
+    @property
+    def relative_doppler_bins(self) -> np.ndarray:
+        """Realtive discrete sample bins of the radial doppler frequency shift sensing.
+
+        Returns:
+            np.ndarray: Doppler shift bins in Hz.
+        """
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -154,10 +208,10 @@ class RadarReception(Reception, RadarCube):
     cube: RadarCube
     """Processed raw radar data."""
 
-    cloud: Optional[RadarPointCloud]
+    cloud: RadarPointCloud | None
     """Radar point cloud."""
 
-    def __init__(self, signal: Signal, cube: RadarCube, cloud: Optional[RadarPointCloud] = None) -> None:
+    def __init__(self, signal: Signal, cube: RadarCube, cloud: RadarPointCloud | None = None) -> None:
         """
         Args:
 
@@ -171,8 +225,23 @@ class RadarReception(Reception, RadarCube):
         self.cube = cube
         self.cloud = cloud
 
+    def to_HDF(self, group: Group) -> None:
+        # Serialize base class
+        Reception.to_HDF(self, group)
 
-class Radar(Serializable, DuplexOperator):
+        # Serialize class attributes
+        self.cube.to_HDF(self._create_group(group, "cube"))
+        return
+
+    @classmethod
+    def from_HDF(cls: Type[RadarReception], group: Group) -> RadarReception:
+        signal = Signal.from_HDF(group["signal"])
+        cube = RadarCube.from_HDF(group["cube"])
+
+        return RadarReception(signal, cube)
+
+
+class Radar(DuplexOperator[RadarTransmission, RadarReception], Serializable):
     """HermesPy representation of a mono-static radar sensing its environment."""
 
     yaml_tag = "Radar"
@@ -182,17 +251,12 @@ class Radar(Serializable, DuplexOperator):
     __receive_beamformer: Optional[ReceiveBeamformer]
     __waveform: Optional[RadarWaveform]
     __detector: Optional[RadarDetector]
-    __cloud: Optional[RadarPointCloud]
-    __cube: Optional[RadarCube]
 
     def __init__(self) -> None:
-
         self.waveform = None
         self.receive_beamformer = None
         self.transmit_beamformer = None
         self.__waveform = None
-        self.__cloud = None
-        self.__cube = None
         self.detector = None
 
         DuplexOperator.__init__(self)
@@ -211,13 +275,10 @@ class Radar(Serializable, DuplexOperator):
 
     @transmit_beamformer.setter
     def transmit_beamformer(self, value: Optional[TransmitBeamformer]) -> None:
-
         if value is None:
-
             self.__transmit_beamformer = None
 
         else:
-
             value.operator = self
             self.__transmit_beamformer = value
 
@@ -235,29 +296,25 @@ class Radar(Serializable, DuplexOperator):
 
     @receive_beamformer.setter
     def receive_beamformer(self, value: Optional[ReceiveBeamformer]) -> None:
-
         if value is None:
-
             self.__receive_beamformer = None
 
         else:
-
             value.operator = self
             self.__receive_beamformer = value
 
     @property
     def sampling_rate(self) -> float:
-
         return self.waveform.sampling_rate
 
     @property
     def frame_duration(self) -> float:
+        if self.waveform is None:
+            return 0.0
 
-        # ToDo: Support frame duration
-        return 1.0
+        return self.waveform.frame_duration
 
-    def noise_power(self, strength: float, snr_type=SNRType) -> float:
-
+    def _noise_power(self, strength: float, snr_type=SNRType) -> float:
         # No waveform configured equals no noise required
         if self.waveform is None:
             return 0.0
@@ -284,8 +341,33 @@ class Radar(Serializable, DuplexOperator):
 
     @waveform.setter
     def waveform(self, value: Optional[RadarWaveform]) -> None:
-
         self.__waveform = value
+
+    @property
+    def max_range(self) -> float:
+        """Maximum detectable range in m.
+
+        Raises:
+
+            FloatingError: If no waveform is configured.
+        """
+
+        if self.waveform is None:
+            raise FloatingError("Cannot compute maximum range without a waveform")
+
+        return self.waveform.max_range
+
+    @property
+    def velocity_resolution(self) -> float:
+        """Velocity sensing resulution in m/s."""
+
+        if self.waveform is None:
+            raise FloatingError("Cannot compute velocity resolution without a waveform")
+
+        if self.carrier_frequency == 0.0:
+            raise RuntimeError("Cannot compute velocity resolution in base-band carrier frequency")
+
+        return 0.5 * self.waveform.relative_doppler_resolution * speed_of_light / self.carrier_frequency
 
     @property
     def detector(self) -> Optional[RadarDetector]:
@@ -301,35 +383,9 @@ class Radar(Serializable, DuplexOperator):
 
     @detector.setter
     def detector(self, value: Optional[RadarDetector]) -> None:
-
         self.__detector = value
 
-    @property
-    def cloud(self) -> Optional[RadarPointCloud]:
-        """The resulting point cloud of the most recent reception.
-
-        Returns:
-
-            Point cloud object.
-            `None` if no detection algorithm was configured.
-        """
-
-        return self.__cloud
-
-    @property
-    def cube(self) -> Optional[RadarCube]:
-        """The resulting radar cube of the most recent reception.
-
-        Returns:
-
-           Radar cube object.
-            `None` if no detection algorithm was configured.
-        """
-
-        return self.__cube
-
-    def transmit(self, duration: float = 0.0) -> RadarTransmission:
-
+    def _transmit(self, duration: float = 0.0) -> RadarTransmission:
         if not self.__waveform:
             raise RuntimeError("Radar waveform not specified")
 
@@ -341,10 +397,8 @@ class Radar(Serializable, DuplexOperator):
 
         # If the device has more than one antenna, a beamforming strategy is required
         if self.device.antennas.num_antennas > 1:
-
             # If no beamformer is configured, only the first antenna will transmit the ping
             if self.transmit_beamformer is None:
-
                 additional_streams = Signal(np.zeros((self.device.antennas.num_antennas - signal.num_streams, signal.num_samples), dtype=complex), signal.sampling_rate)
                 signal.append_streams(additional_streams)
 
@@ -361,25 +415,20 @@ class Radar(Serializable, DuplexOperator):
         signal.carrier_frequency = self.carrier_frequency
         transmission = RadarTransmission(signal)
 
-        if self.attached:
-            self.device.transmitters.add_transmission(self, transmission)
-
         return transmission
 
-    def receive(self) -> RadarReception:
-
+    def _receive(self, signal: Signal, _: ChannelStateInformation) -> RadarReception:
         if not self.waveform:
             raise RuntimeError("Radar waveform not specified")
 
         if not self.device:
             raise RuntimeError("Error attempting to receive over a floating radar operator")
 
-        # Retrieve signal from receiver slot
-        signal: Signal = self.signal.resample(self.__waveform.sampling_rate)
+        # Resample signal properly
+        signal = signal.resample(self.__waveform.sampling_rate)
 
         # If the device has more than one antenna, a beamforming strategy is required
         if self.device.antennas.num_antennas > 1:
-
             if self.receive_beamformer is None:
                 raise RuntimeError("Receiving over a device with more than one antenna requires a beamforming configuration")
 
@@ -392,19 +441,17 @@ class Radar(Serializable, DuplexOperator):
             beamformed_samples = self.receive_beamformer.probe(signal)[:, 0, :]
 
         else:
-
             beamformed_samples = signal.samples
 
         # Build the radar cube by generating a beam-forming line over all angles of interest
         angles_of_interest = np.array([[0.0, 0.0]], dtype=float) if self.receive_beamformer is None else self.receive_beamformer.probe_focus_points[:, 0, :]
 
         range_bins = self.waveform.range_bins
-        velocity_bins = self.waveform.velocity_bins
+        doppler_bins = self.waveform.relative_doppler_bins
 
-        cube_data = np.empty((len(angles_of_interest), len(velocity_bins), len(range_bins)), dtype=float)
+        cube_data = np.empty((len(angles_of_interest), len(doppler_bins), len(range_bins)), dtype=float)
 
         for angle_idx, line in enumerate(beamformed_samples):
-
             # Process the single angular line by the waveform generator
             line_signal = Signal(line, signal.sampling_rate, carrier_frequency=signal.carrier_frequency)
             line_estimate = self.waveform.estimate(line_signal)
@@ -412,17 +459,16 @@ class Radar(Serializable, DuplexOperator):
             cube_data[angle_idx, ::] = line_estimate
 
         # Create radar cube object
-        cube = RadarCube(cube_data, angles_of_interest, velocity_bins, range_bins)
+        cube = RadarCube(cube_data, angles_of_interest, doppler_bins, range_bins, self.carrier_frequency)
 
         # Infer the point cloud, if a detector has been configured
         cloud = None if self.detector is None else self.detector.detect(cube)
 
         reception = RadarReception(signal, cube, cloud)
-        self._cache_reception(reception)
-
         return reception
 
-    def _cache_reception(self, reception: RadarReception) -> None:
+    def _recall_transmission(self, group: Group) -> RadarTransmission:
+        return RadarTransmission.from_HDF(group)
 
-        self.__cube = reception.cube
-        self.__cloud = reception.cloud
+    def _recall_reception(self, group: Group) -> RadarReception:
+        return RadarReception.from_HDF(group)

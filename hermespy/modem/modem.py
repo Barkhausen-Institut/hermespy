@@ -200,19 +200,19 @@ from typing import List, Set, Tuple, Type, Optional
 import numpy as np
 from h5py import Group
 
-from hermespy.channel import ChannelStateInformation
 from hermespy.fec import EncoderManager
-from hermespy.core import RandomNode, Transmission, Reception, Serializable, Signal, Device, Transmitter, Receiver, SNRType
-from hermespy.precoding import SymbolPrecoding, ReceiveStreamCoding, TransmitStreamCoding
+from hermespy.core import ChannelStateInformation, RandomNode, Transmission, Reception, Serializable, Signal, Device, Transmitter, Receiver, SNRType
+from hermespy.precoding import ReceiveStreamCoding, TransmitStreamCoding
+from .precoding import SymbolPrecoding
 from .bits_source import BitsSource, RandomBitsSource
-from .symbols import Symbols
-from .waveform_generator import WaveformGenerator
+from .symbols import StatedSymbols, Symbols
+from .waveform import WaveformGenerator
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -270,8 +270,7 @@ class CommunicationTransmissionFrame(Transmission):
         self.timestamp = timestamp
 
     @classmethod
-    def from_HDF(cls: Type[CommunicationTransmissionFrame], group: Group) -> CommunicationTransmissionFrame:
-
+    def from_HDF(cls: Type[CommunicationTransmissionFrame], group: Group, transmitter: Transmitter | None = None) -> CommunicationTransmissionFrame:
         # Recall groups
         signal = Signal.from_HDF(group["signal"])
         symbols = Symbols.from_HDF(group["symbols"])
@@ -288,7 +287,6 @@ class CommunicationTransmissionFrame(Transmission):
         return cls(signal=signal, bits=bits, encoded_bits=encoded_bits, symbols=symbols, encoded_symbols=encoded_symbols, timestamp=timestamp)
 
     def to_HDF(self, group: Group) -> None:
-
         # Serialize base class
         self.signal.to_HDF(group.create_group("signal"))
 
@@ -349,7 +347,6 @@ class CommunicationTransmission(Transmission):
 
     @cached_property
     def symbols(self) -> Symbols:
-
         symbols = Symbols()
         for frame in self.frames:
             symbols.append_symbols(frame.symbols)
@@ -357,8 +354,7 @@ class CommunicationTransmission(Transmission):
         return symbols
 
     @classmethod
-    def from_HDF(cls: Type[CommunicationTransmission], group: Group) -> Type[CommunicationTransmission]:
-
+    def from_HDF(cls: Type[CommunicationTransmission], group: Group) -> CommunicationTransmission:
         # Recall base signal
         signal = Signal.from_HDF(group["signal"])
 
@@ -369,7 +365,6 @@ class CommunicationTransmission(Transmission):
         return cls(signal=signal, frames=frames)
 
     def to_HDF(self, group: Group) -> None:
-
         # Serialize attributes
         group.attrs["num_frames"] = self.num_frames
 
@@ -412,7 +407,6 @@ class CommunicationReceptionFrame(object):
     """Estimated channel state."""
 
     def __init__(self, signal: Signal, decoded_signal: Signal, symbols: Symbols, decoded_symbols: Symbols, timestamp: float, equalized_symbols: Symbols, encoded_bits: np.ndarray, decoded_bits: np.ndarray, csi: ChannelStateInformation) -> None:
-
         self.signal = signal
         self.decoded_signal = decoded_signal
         self.symbols = symbols
@@ -424,8 +418,7 @@ class CommunicationReceptionFrame(object):
         self.csi = csi
 
     @classmethod
-    def from_HDF(cls: Type[CommunicationReceptionFrame], group: Group) -> Type[CommunicationReceptionFrame]:
-
+    def from_HDF(cls: Type[CommunicationReceptionFrame], group: Group) -> CommunicationReceptionFrame:
         # Recall groups
         signal = Signal.from_HDF(group["signal"])
         decoded_signal = Signal.from_HDF(group["decoded_signal"])
@@ -445,7 +438,6 @@ class CommunicationReceptionFrame(object):
         return cls(signal=signal, decoded_signal=decoded_signal, symbols=symbols, decoded_symbols=decoded_symbols, equalized_symbols=equalized_symbols, csi=csi, encoded_bits=encoded_bits, decoded_bits=decoded_bits, timestamp=timestamp)
 
     def to_HDF(self, group: Group) -> None:
-
         # Serialize groups
         self.signal.to_HDF(group.create_group("signal"))
         self.decoded_signal.to_HDF(group.create_group("decoded_signal"))
@@ -543,8 +535,7 @@ class CommunicationReception(Reception):
         return symbols
 
     @classmethod
-    def from_HDF(cls: Type[CommunicationReception], group: Group) -> Type[CommunicationReception]:
-
+    def from_HDF(cls: Type[CommunicationReception], group: Group) -> CommunicationReception:
         # Recall base signal
         signal = Signal.from_HDF(group["signal"])
 
@@ -555,7 +546,6 @@ class CommunicationReception(Reception):
         return cls(signal=signal, frames=frames)
 
     def to_HDF(self, group: Group) -> None:
-
         # Serialize attributes
         group.attrs["num_frames"] = self.num_frames
 
@@ -576,7 +566,6 @@ class BaseModem(RandomNode, ABC):
 
     @staticmethod
     def _arg_signature() -> Set[str]:
-
         return {"encoding", "precoding", "waveform", "seed"}
 
     def __init__(self, encoding: Optional[EncoderManager] = None, precoding: Optional[SymbolPrecoding] = None, waveform: Optional[WaveformGenerator] = None, seed: Optional[int] = None) -> None:
@@ -705,6 +694,7 @@ class BaseModem(RandomNode, ABC):
 
         if value is not None:
             value.modem = self
+            value.random_mother = self
 
     @property
     def precoding(self) -> SymbolPrecoding:
@@ -740,16 +730,13 @@ class BaseModem(RandomNode, ABC):
 
     @property
     def frame_duration(self) -> float:
-
         return self.waveform_generator.frame_duration
 
     @property
     def sampling_rate(self) -> float:
-
         return self.waveform_generator.sampling_rate
 
-    def noise_power(self, strength: float, snr_type: SNRType) -> float:
-
+    def _noise_power(self, strength: float, snr_type: SNRType) -> float:
         # No waveform configured equals no noise required
         if self.waveform_generator is None:
             return 0.0
@@ -767,24 +754,20 @@ class BaseModem(RandomNode, ABC):
 
     @property
     def csi(self) -> Optional[ChannelStateInformation]:
-
         return None
 
 
-class TransmittingModem(Serializable, BaseModem, Transmitter):
+class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Serializable):
     """Representation of a wireless modem exclusively transmitting."""
 
     yaml_tag = "TxModem"
-    """YAML serialization tag"""
 
     # Source configuration of the transmitted bits
     __bits_source: BitsSource
     # Stream MIMO coding configuration
     __transmit_stream_coding: TransmitStreamCoding
-    # Cache of recently transmitted information
-    __cached_transmission: Optional[CommunicationTransmission]
 
-    def __init__(self, bits_source: Optional[BitsSource] = None, *args, **kwargs) -> None:
+    def __init__(self, bits_source: BitsSource | None = None, device: Device | None = None, *args, **kwargs) -> None:
         """
         Args:
 
@@ -793,23 +776,31 @@ class TransmittingModem(Serializable, BaseModem, Transmitter):
                 Bits are randomly generated by default.
         """
 
-        self.bits_source = RandomBitsSource() if bits_source is None else bits_source
-        self.__transmit_stream_coding = TransmitStreamCoding(modem=self)
-        self.__cached_transmission = None
-
+        # Initialize base classes
         BaseModem.__init__(self, *args, **kwargs)
         Transmitter.__init__(self)
 
+        # Initialize clas attributes
+        self.bits_source = RandomBitsSource() if bits_source is None else bits_source
+        self.__transmit_stream_coding = TransmitStreamCoding(modem=self)
+        self.device = device
+
     @property
     def transmitting_device(self) -> Optional[Device]:
-
         # The transmitting device resolves to the operated device
         return self.device
 
     @property
     def receiving_device(self) -> Optional[Device]:
-
         return None
+
+    @Transmitter.device.setter  # type: ignore
+    def device(self, value: Device) -> None:
+        if Transmitter.device.fget(self) is not None:  # type: ignore
+            self.device.transmitters.remove(self)
+
+        if value is not None and self not in value.transmitters:
+            value.transmitters.add(self)
 
     @property
     def bits_source(self) -> BitsSource:
@@ -822,7 +813,6 @@ class TransmittingModem(Serializable, BaseModem, Transmitter):
 
     @bits_source.setter
     def bits_source(self, value: BitsSource):
-
         value.random_mother = self
         self.__bits_source = value
 
@@ -837,7 +827,6 @@ class TransmittingModem(Serializable, BaseModem, Transmitter):
 
     @transmit_stream_coding.setter
     def transmit_stream_coding(self, value: TransmitStreamCoding) -> None:
-
         self.__transmit_stream_coding = value
         value.modem = self
 
@@ -883,19 +872,7 @@ class TransmittingModem(Serializable, BaseModem, Transmitter):
 
         return signal
 
-    @property
-    def transmission(self) -> Optional[CommunicationTransmission]:
-        """The most recently transmitted information.
-
-        Returns:
-
-            A handle to the transmitted information.
-            `None` if no information has been transmitted yet.
-        """
-
-        return self.__cached_transmission
-
-    def transmit(self, duration: float = -1.0) -> CommunicationTransmission:
+    def _transmit(self, duration: float = -1.0) -> CommunicationTransmission:
         """Returns an array with the complex base-band samples of a waveform generator.
 
         The signal may be distorted by RF impairments.
@@ -909,7 +886,7 @@ class TransmittingModem(Serializable, BaseModem, Transmitter):
         """
 
         # By default, the drop duration will be exactly one frame
-        if duration < 0.0:
+        if duration <= 0.0:
             duration = self.frame_duration
 
         # Infer required parameters
@@ -931,19 +908,15 @@ class TransmittingModem(Serializable, BaseModem, Transmitter):
         if self.device is not None and num_output_streams != self.device.num_antennas:
             raise ValueError(f"Modem MIMO configuration generates invalid number of antenna streams ({num_output_streams} instead of {self.device.num_antennas})")
 
-        signal = Signal.empty(self.sampling_rate, num_output_streams)
+        signal = Signal.empty(self.waveform_generator.sampling_rate, num_output_streams)
 
         # Abort if no frame is to be transmitted within the current duration
         if num_mimo_frames < 1:
-
             transmission = CommunicationTransmission(signal)
-            self.__cached_transmission = transmission
-
             return transmission
 
         frames: List[CommunicationTransmissionFrame] = []
         for n in range(num_mimo_frames):
-
             # Generate plain data bits
             data_bits = self.bits_source.generate_bits(data_bits_per_mimo_frame)
 
@@ -954,7 +927,7 @@ class TransmittingModem(Serializable, BaseModem, Transmitter):
             symbols = self.__map(encoded_bits, self.precoding.num_input_streams)
 
             # Apply precoding cofiguration
-            encoded_symbols = self.precoding.encode(symbols)
+            encoded_symbols = self.precoding.encode(StatedSymbols(symbols.raw, np.ones((symbols.num_streams, 1, symbols.num_blocks, symbols.num_symbols), dtype=complex)))
 
             # Modulate to base-band signal representation
             frame_signal = self.__modulate(encoded_symbols)
@@ -971,16 +944,13 @@ class TransmittingModem(Serializable, BaseModem, Transmitter):
 
         # Save the transmitted information
         transmission = CommunicationTransmission(signal, frames)
-        self.__cached_transmission = transmission
-
-        # Transmit signal over the occupied device slot (if the modem is attached to a device)
-        if self.attached:
-            self.transmitting_device.transmitters.add_transmission(self, transmission)
-
         return transmission
 
+    def _recall_transmission(self, group: Group) -> CommunicationTransmission:
+        return CommunicationTransmission.from_HDF(group)
 
-class ReceivingModem(Serializable, BaseModem, Receiver):
+
+class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
     """Representation of a wireless modem exclusively receiving."""
 
     yaml_tag = "RxModem"
@@ -988,30 +958,31 @@ class ReceivingModem(Serializable, BaseModem, Receiver):
 
     # MIMO stream configuration during signal rececption
     __receive_stream_coding: ReceiveStreamCoding
-    # Cache of recently received information
-    __cached_reception: Optional[CommunicationReception]
-    # Cache of the most recent channel state estimation
-    __cached_channel_state: Optional[ChannelStateInformation]
 
-    def __init__(self, *args, **kwargs) -> None:
-
+    def __init__(self, device: Device | None = None, *args, **kwargs) -> None:
         self.__receive_stream_coding = ReceiveStreamCoding(modem=self)
-        self.__cached_reception = None
-        self.__cached_channel_state = None
 
         BaseModem.__init__(self, *args, **kwargs)
         Receiver.__init__(self)
 
+        self.device = device
+
     @property
     def transmitting_device(self) -> Optional[Device]:
-
         return None
 
     @property
     def receiving_device(self) -> Optional[Device]:
-
         # The receiving device resolves to the operated device
         return self.device
+
+    @Receiver.device.setter  # type: ignore
+    def device(self, value: Device) -> None:
+        if Receiver.device.fget(self) is not None:  # type: ignore
+            self.device.receivers.remove(self)
+
+        if value is not None and self not in value.receivers:
+            value.receivers.add(self)
 
     @property
     def receive_stream_coding(self) -> ReceiveStreamCoding:
@@ -1023,8 +994,7 @@ class ReceivingModem(Serializable, BaseModem, Receiver):
         return self.__receive_stream_coding
 
     @receive_stream_coding.setter
-    def transmit_stream_coding(self, value: ReceiveStreamCoding) -> None:
-
+    def receive_stream_coding(self, value: ReceiveStreamCoding) -> None:
         self.__receive_stream_coding = value
         value.modem = self
 
@@ -1047,7 +1017,14 @@ class ReceivingModem(Serializable, BaseModem, Receiver):
         frame_start_indices = self.waveform_generator.synchronization.synchronize(received_signal.samples)
         frame_length = self.waveform_generator.samples_in_frame
 
-        synchronized_signals = [Signal(received_signal.samples[:, i : i + frame_length], received_signal.sampling_rate) for i in frame_start_indices]
+        synchronized_signals = []
+        for frame_start in frame_start_indices:
+            frame_stop = frame_start + frame_length
+            frame_samples = received_signal.samples[:, frame_start:frame_stop]
+            frame_signal = Signal(frame_samples, received_signal.sampling_rate)
+
+            synchronized_signals.append(frame_signal)
+
         return frame_start_indices, synchronized_signals
 
     def __demodulate(self, frame: Signal) -> Symbols:
@@ -1065,7 +1042,6 @@ class ReceivingModem(Serializable, BaseModem, Receiver):
 
         symbols = Symbols()
         for stream in frame.samples:
-
             stream_symbols = self.waveform_generator.demodulate(stream)
             symbols.append_stream(stream_symbols)
 
@@ -1089,27 +1065,16 @@ class ReceivingModem(Serializable, BaseModem, Receiver):
 
         return bits
 
-    def receive(self) -> CommunicationReception:
-
-        # Abort if no reception has been submitted to the operator
-        if self.signal is None:
-
-            reception = CommunicationReception(Signal.empty(self.sampling_rate))
-            self.__cached_reception = reception
-
-            return reception
-
-        signal = self.signal.resample(self.waveform_generator.sampling_rate)
+    def _receive(self, signal: Signal, csi: ChannelStateInformation) -> CommunicationReception:
+        # Resample the signal to match the waveform's requirements
+        signal = signal.resample(self.waveform_generator.sampling_rate)
 
         # Synchronize incoming signals
         frame_start_indices, synchronized_signals = self.__synchronize(signal)
 
         # Abort if no frame has been detected
         if len(synchronized_signals) < 1:
-
             reception = CommunicationReception(signal)
-            self.__cached_reception = reception
-
             return reception
 
         # Infer required parameters
@@ -1119,7 +1084,6 @@ class ReceivingModem(Serializable, BaseModem, Receiver):
         # Process each frame independently
         frames: List[CommunicationReceptionFrame] = []
         for frame_index, frame_signal in zip(frame_start_indices, synchronized_signals):
-
             # Apply the stream transmit decoding configuration
             decoded_frame_signal = self.__receive_stream_coding.decode(frame_signal)
 
@@ -1128,7 +1092,6 @@ class ReceivingModem(Serializable, BaseModem, Receiver):
 
             # Estimate the channel from each frame demodulation
             stated_symbols, channel_estimate = self.waveform_generator.estimate_channel(symbols)
-            self.__cached_channel_state = stated_symbols.states
 
             # Decode the pre-equalization symbol precoding stage
             decoded_symbols = self.precoding.decode(stated_symbols)
@@ -1147,27 +1110,14 @@ class ReceivingModem(Serializable, BaseModem, Receiver):
 
         # Store the received information of all frames
         reception = CommunicationReception(signal=signal, frames=frames)
-        self.__cached_reception = reception
-
-        # Return reception processing result
         return reception
 
-    @property
-    def reception(self) -> Optional[CommunicationReception]:
-        """The most recently received information.
-
-        Returns:
-
-            A handle to the received information.
-            `None` if no information has been received yet.
-        """
-
-        return self.__cached_reception
+    def _recall_reception(self, group: Group) -> CommunicationReception:
+        return CommunicationReception.from_HDF(group)
 
     @property
     def csi(self) -> Optional[ChannelStateInformation]:
-
-        return Receiver.csi.fget(self)
+        return Receiver.csi.fget(self)  # type: ignore
 
 
 class DuplexModem(TransmittingModem, ReceivingModem):
@@ -1177,40 +1127,25 @@ class DuplexModem(TransmittingModem, ReceivingModem):
     """YAML serialization tag"""
 
     def __init__(self, *args, **kwargs) -> None:
-
         ReceivingModem.__init__(self)
         TransmittingModem.__init__(self, *args, **kwargs)
 
     @property
     def transmitting_device(self) -> Optional[Device]:
-
-        return TransmittingModem.transmitting_device.fget(self)
+        return TransmittingModem.transmitting_device.fget(self)  # type: ignore
 
     @property
     def receiving_device(self) -> Optional[Device]:
+        return ReceivingModem.receiving_device.fget(self)  # type: ignore
 
-        return ReceivingModem.receiving_device.fget(self)
-
-    @TransmittingModem.device.setter
+    @TransmittingModem.device.setter  # type: ignore
     def device(self, value: Device) -> None:
-
-        if value is self.device:
-            return
-
-        if self.device is not None:
-
-            self.device.transmitters.remove(self)
-            self.device.receivers.remove(self)
-
-        if value is not None and self not in value.transmitters:
-
-            value.transmitters.add(self)
-            value.receivers.add(self)
+        TransmittingModem.device.fset(self, value)
+        ReceivingModem.device.fset(self, value)
 
     @property
     def csi(self) -> Optional[ChannelStateInformation]:
-
-        return Receiver.csi.fget(self)
+        return Receiver.csi.fget(self)  # type: ignore
 
 
 class SimplexLink(TransmittingModem, ReceivingModem, Serializable):
@@ -1240,10 +1175,6 @@ class SimplexLink(TransmittingModem, ReceivingModem, Serializable):
             ValueError: If `transmitting_device` and `receiving_device` are identical.
         """
 
-        # Make sure the link is established between two dedicated devices
-        if transmitting_device is receiving_device:
-            raise ValueError("Transmitter and receiver must be two independent device instances")
-
         self.__transmitting_device = transmitting_device
         self.__receiving_device = receiving_device
 
@@ -1263,6 +1194,15 @@ class SimplexLink(TransmittingModem, ReceivingModem, Serializable):
         """
 
         return self.__transmitting_device
+
+    @property
+    def reference(self) -> Device | None:
+        return self.transmitting_device
+
+    @reference.setter
+    def reference(self, value: Device | None) -> None:
+        if value is not self.transmitting_device and value is not None:
+            raise RuntimeError("Specifying the reference device of a simplex link is not supported")
 
     @property
     def receiving_device(self) -> Device:

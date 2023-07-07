@@ -16,7 +16,6 @@ Within this package, this process is referred to as :func:`probing <hermespy.bea
 
 .. toctree::
    :maxdepth: 0
-   :caption: Module Content:
    :titlesonly:
    
    beamforming.beamformer

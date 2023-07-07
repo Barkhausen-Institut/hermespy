@@ -15,10 +15,10 @@ from ..core.factory import Serializable
 from .cluster_delay_lines import ClusterDelayLineBase
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -68,7 +68,6 @@ class RuralMacrocellsLineOfSight(ClusterDelayLineBase, Serializable):
 
     @property
     def zod_spread_mean(self) -> float:
-
         device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
         terminal_height = abs(self.transmitter.position[2] - self.receiver.position[2])
 
@@ -131,8 +130,8 @@ class RuralMacrocellsLineOfSight(ClusterDelayLineBase, Serializable):
         return 3.0
 
     @property
-    def _center_frequency(self) -> float:
-        return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))
+    def _center_frequency(self) -> float:  # pragma: no cover
+        return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))  # type: ignore
 
 
 class RuralMacrocellsNoLineOfSight(ClusterDelayLineBase, Serializable):
@@ -179,7 +178,6 @@ class RuralMacrocellsNoLineOfSight(ClusterDelayLineBase, Serializable):
 
     @property
     def zod_spread_mean(self) -> float:
-
         device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
         terminal_height = abs(self.transmitter.position[2] - self.receiver.position[2])
 
@@ -191,7 +189,6 @@ class RuralMacrocellsNoLineOfSight(ClusterDelayLineBase, Serializable):
 
     @property
     def zod_offset(self) -> float:
-
         device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
 
         return atan((35 - 0.35) / device_distance) - atan((35 - 1.5) / device_distance)
@@ -245,8 +242,8 @@ class RuralMacrocellsNoLineOfSight(ClusterDelayLineBase, Serializable):
         return 3.0
 
     @property
-    def _center_frequency(self) -> float:
-        return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))
+    def _center_frequency(self) -> float:  # pragma: no cover
+        return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))  # type: ignore
 
 
 class RuralMacrocellsOutsideToInside(ClusterDelayLineBase, Serializable):
@@ -293,7 +290,6 @@ class RuralMacrocellsOutsideToInside(ClusterDelayLineBase, Serializable):
 
     @property
     def zod_spread_mean(self) -> float:
-
         device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
         terminal_height = abs(self.transmitter.position[2] - self.receiver.position[2])
 
@@ -305,7 +301,6 @@ class RuralMacrocellsOutsideToInside(ClusterDelayLineBase, Serializable):
 
     @property
     def zod_offset(self) -> float:
-
         device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
 
         return atan((35 - 0.35) / device_distance) - atan((35 - 1.5) / device_distance)
@@ -359,5 +354,5 @@ class RuralMacrocellsOutsideToInside(ClusterDelayLineBase, Serializable):
         return 3.0
 
     @property
-    def _center_frequency(self) -> float:
-        return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))
+    def _center_frequency(self) -> float:  # pragma: no cover
+        return max(6e9, ClusterDelayLineBase._center_frequency.fget(self))  # type: ignore

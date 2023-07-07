@@ -17,10 +17,10 @@ from .beamformer import TransmitBeamformer, ReceiveBeamformer
 
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -61,44 +61,37 @@ class ConventionalBeamformer(Serializable, TransmitBeamformer, ReceiveBeamformer
     """YAML serialization tag."""
 
     def __init__(self, operator: Optional[DuplexOperator] = None) -> None:
-
         TransmitBeamformer.__init__(self, operator=operator)
         ReceiveBeamformer.__init__(self, operator=operator)
 
     @property
     def num_receive_focus_angles(self) -> int:
-
         # The conventional beamformer focuses a single angle
         return 1
 
     @property
     def num_receive_input_streams(self) -> int:
-
         # The conventional beamformer will allways consider all antennas streams
         return self.operator.device.antennas.num_antennas
 
     @property
     def num_receive_output_streams(self) -> int:
-
         # The convetional beamformer will always return a single stream,
         # combining all antenna signals into one
         return 1
 
     @property
     def num_transmit_focus_angles(self) -> int:
-
         # The conventional beamformer focuses a single angle
         return 1
 
     @property
     def num_transmit_output_streams(self) -> int:
-
         # The conventional beamformer will allways consider all antennas streams
         return self.operator.device.antennas.num_antennas
 
     @property
     def num_transmit_input_streams(self) -> int:
-
         # The convetional beamformer will always return a single stream,
         # combining all antenna signals into one
         return 1
@@ -125,16 +118,15 @@ class ConventionalBeamformer(Serializable, TransmitBeamformer, ReceiveBeamformer
 
         book = np.empty((angles.shape[0], self.operator.device.antennas.num_antennas), dtype=complex)
         for n, (azimuth, zenith) in enumerate(angles):
-            book[n, :] = self.operator.device.antennas.spherical_response(carrier_frequency, azimuth, zenith).conj()
+            book[n, :] = self.operator.device.antennas.spherical_phase_response(carrier_frequency, azimuth, zenith).conj()
 
         return book / self.operator.device.antennas.num_antennas
 
     def _encode(self, samples: np.ndarray, carrier_frequency: float, focus_angles: np.ndarray) -> np.ndarray:
-
         azimuth, zenith = focus_angles[0, :]
 
         # Compute conventional beamformer weights
-        weights = self.operator.device.antennas.spherical_response(carrier_frequency, azimuth, zenith).conj()
+        weights = self.operator.device.antennas.spherical_phase_response(carrier_frequency, azimuth, zenith).conj()
 
         # Weight the streams accordingly
         samples = weights[:, np.newaxis] @ samples
@@ -145,7 +137,6 @@ class ConventionalBeamformer(Serializable, TransmitBeamformer, ReceiveBeamformer
     @staticmethod
     @jit(nopython=True)
     def _beamform(codebook: np.ndarray, samples: np.ndarray, conjugate: bool = False) -> np.ndarray:  # pragma: no cover
-
         if conjugate:
             return codebook.conj() @ samples
 
@@ -153,7 +144,6 @@ class ConventionalBeamformer(Serializable, TransmitBeamformer, ReceiveBeamformer
             return codebook @ samples
 
     def _decode(self, samples: np.ndarray, carrier_frequency: float, angles: np.ndarray) -> np.ndarray:
-
         codebook = self._codebook(carrier_frequency, angles[:, 0, :])
         beamformed_samples = self._beamform(codebook, samples, True)
 

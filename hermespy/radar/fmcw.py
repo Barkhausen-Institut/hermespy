@@ -16,10 +16,10 @@ from hermespy.core import Signal, Serializable
 from .radar import RadarWaveform
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -65,7 +65,6 @@ class FMCW(RadarWaveform, Serializable):
     __adc_sampling_rate: float  # sampling rate of ADC after mixing
 
     def __init__(self, num_chirps: int = 10, bandwidth: float = 0.1e9, chirp_duration: float = 1.5e-6, pulse_rep_interval: float = 1.5e-6, sampling_rate: float = None, adc_sampling_rate: float = None) -> None:
-
         self.num_chirps = num_chirps
         self.bandwidth = bandwidth
         self.chirp_duration = chirp_duration
@@ -77,18 +76,20 @@ class FMCW(RadarWaveform, Serializable):
         return Signal(self.__frame_prototype(), self.sampling_rate)
 
     def estimate(self, input_signal: Signal) -> np.ndarray:
+        num_pulse_samples = int(self.pulse_rep_interval * self.sampling_rate)
+        num_frame_samples = self.num_chirps * num_pulse_samples
 
-        pulse_len = int(self.pulse_rep_interval * self.sampling_rate)
-        input_signal = input_signal.resample(self.sampling_rate).samples[0, : pulse_len * self.num_chirps]
-        chirp_stack = np.reshape(input_signal, (-1, pulse_len))
+        resampled_input_signal = input_signal.resample(self.sampling_rate)
+        input_samples = resampled_input_signal.samples[0, :num_frame_samples] if resampled_input_signal.num_samples >= num_frame_samples else np.append(resampled_input_signal.samples[0, :], np.zeros(num_frame_samples - resampled_input_signal.num_samples))
+
+        chirp_stack = np.reshape(input_samples, (-1, num_pulse_samples))
 
         chirp_prototype = self.__chirp_prototype()
         chirp_stack = chirp_stack[:, : len(chirp_prototype)]
         baseband_samples = chirp_stack.conj() * chirp_prototype
 
         if self.adc_sampling_rate < self.sampling_rate:
-            downsampling_rate = Fraction(self.adc_sampling_rate / self.sampling_rate).limit_denominator(100)
-
+            downsampling_rate = Fraction(self.adc_sampling_rate / self.sampling_rate).limit_denominator(1000)
             baseband_samples = signal.resample_poly(baseband_samples, up=downsampling_rate.numerator, down=downsampling_rate.denominator, axis=1)
 
         transform = fft2(baseband_samples)
@@ -99,24 +100,31 @@ class FMCW(RadarWaveform, Serializable):
 
     @property
     def max_range(self) -> float:
-
         max_range = self.adc_sampling_rate * speed_of_light / (2 * self.slope)
         return max_range
 
     @property
-    def range_bins(self) -> np.ndarray:
-
-        return np.arange(int(self.max_range / self.range_resolution)) * self.range_resolution
+    def range_resolution(self) -> float:
+        return speed_of_light / (2 * self.bandwidth)
 
     @property
-    def velocity_bins(self) -> np.ndarray:
+    def max_relative_doppler(self) -> float:
+        # The maximum velocity is the wavelength divided by four times the pulse repetition interval
+        max_doppler = 1 / (4 * self.pulse_rep_interval)
+        return max_doppler
 
-        bins = (np.arange(self.num_chirps) - np.ceil(self.num_chirps / 2)) * self.doppler_resolution
-        return bins
+    @property
+    def relative_doppler_resolution(self) -> float:
+        # The doppler resolution is the inverse of twice the frame duration
+        resolution = 1 / (2 * self.frame_duration)
+        return resolution
+
+    @property
+    def relative_doppler_bins(self) -> np.ndarray:
+        return np.arange(self.num_chirps) * self.relative_doppler_resolution - self.max_relative_doppler
 
     @property
     def frame_duration(self) -> float:
-
         return self.pulse_rep_interval * self.num_chirps
 
     @property
@@ -134,7 +142,6 @@ class FMCW(RadarWaveform, Serializable):
 
     @num_chirps.setter
     def num_chirps(self, value: int) -> None:
-
         if value < 1:
             raise ValueError("Number of chirps must be greater or equal to one")
 
@@ -155,7 +162,6 @@ class FMCW(RadarWaveform, Serializable):
 
     @bandwidth.setter
     def bandwidth(self, value: float) -> None:
-
         if value <= 0.0:
             raise ValueError("Bandwidth must be greater than zero")
 
@@ -176,7 +182,6 @@ class FMCW(RadarWaveform, Serializable):
 
     @chirp_duration.setter
     def chirp_duration(self, value: float) -> None:
-
         if value <= 0.0:
             raise ValueError("FMCW chirp duration must be greater than zero")
 
@@ -196,46 +201,17 @@ class FMCW(RadarWaveform, Serializable):
 
     @adc_sampling_rate.setter
     def adc_sampling_rate(self, value: float) -> None:
-
         if value <= 0.0:
             raise ValueError("ADC Sampling rate must be greater than zero")
 
         self.__adc_sampling_rate = value
 
     @property
-    def range_resolution(self) -> float:
-        """Depth sensing resolution.
-
-        Returns:
-            float: Range resolution in m.
-
-        Raises:
-            ValueError: If resolution is smaller or equal to zero.
-        """
-
-        return speed_of_light / (2 * self.bandwidth)
-
-    @property
-    def doppler_resolution(self) -> float:
-        """Doppler sensing resolution.
-
-        Returns:
-            float: Doppler resolution in Hz.
-
-        Raises:
-            ValueError: If resolution is smaller or equal to zero.
-        """
-
-        return 1.0 / self.pulse_rep_interval / self.num_chirps
-
-    @property
     def sampling_rate(self) -> float:
-
         return self.__sampling_rate
 
     @sampling_rate.setter
     def sampling_rate(self, value: float) -> None:
-
         if value <= 0.0:
             raise ValueError("Sampling rate must be greater than zero")
 
@@ -256,22 +232,10 @@ class FMCW(RadarWaveform, Serializable):
 
     @pulse_rep_interval.setter
     def pulse_rep_interval(self, value: float) -> None:
-
         if value <= 0.0:
             raise ValueError("Pulse repetition interval must be greater than zero")
 
         self.__pulse_rep_interval = value
-
-    @property
-    def max_velocity(self) -> float:
-        """Maximum relative target velocity detectable.
-
-        Returns:
-
-            float: Maximum target velocity in m/s.
-        """
-
-        raise NotImplementedError  # pragma no cover
 
     @property
     def slope(self) -> float:
@@ -298,11 +262,9 @@ class FMCW(RadarWaveform, Serializable):
 
     @property
     def power(self) -> float:
-
         return 1.0
 
     def __chirp_prototype(self) -> np.ndarray:
-
         num_samples = int(self.chirp_duration * self.sampling_rate)
 
         timestamps = np.arange(num_samples) / self.sampling_rate
@@ -312,16 +274,14 @@ class FMCW(RadarWaveform, Serializable):
         return chirp
 
     def __pulse_prototype(self) -> np.ndarray:
-
         num_zero_samples = int((self.pulse_rep_interval - self.chirp_duration) * self.sampling_rate)
 
         if num_zero_samples < 0:
-            raise ValueError("Pulse repetition interval cannot be less than chirp duration in FMCW radar")
+            raise RuntimeError("Pulse repetition interval cannot be less than chirp duration in FMCW radar")
 
         pulse = np.concatenate((self.__chirp_prototype(), np.zeros(num_zero_samples)))
         return pulse
 
     def __frame_prototype(self) -> np.ndarray:
-
         frame = np.tile(self.__pulse_prototype(), self.num_chirps)
         return frame

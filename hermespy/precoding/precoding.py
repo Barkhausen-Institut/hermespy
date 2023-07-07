@@ -7,7 +7,8 @@ Precoding Configuration
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Optional, List, Type, TYPE_CHECKING, TypeVar, Generic
+from collections.abc import Sequence
+from typing import Optional, overload, List, Type, TYPE_CHECKING, TypeVar, Generic
 from fractions import Fraction
 
 from ruamel.yaml import SafeRepresenter, SafeConstructor, Node
@@ -15,13 +16,13 @@ from ruamel.yaml import SafeRepresenter, SafeConstructor, Node
 from hermespy.core.factory import Serializable
 
 if TYPE_CHECKING:
-    from hermespy.modem.modem import BaseModem
+    from hermespy.modem.modem import BaseModem  # pragma: no cover
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -39,12 +40,10 @@ class Precoder(ABC):
     __precoding: Optional[Precoding]
 
     def __init__(self) -> None:
-        """Symbol Precoder initialization."""
-
         self.__precoding = None
 
     @property
-    def precoding(self) -> Optional[Precoding]:
+    def precoding(self) -> Precoding | None:
         """Access the precoding configuration this precoder is attached to.
 
         Returns:
@@ -76,7 +75,7 @@ class Precoder(ABC):
             int:
                 The number of symbol streams.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -87,7 +86,7 @@ class Precoder(ABC):
             int:
                 The number of symbol streams.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     @property
     def required_num_output_streams(self) -> int:
@@ -138,7 +137,7 @@ PrecoderType = TypeVar("PrecoderType", bound=Precoder)
 """Type of precoder."""
 
 
-class Precoding(Generic[PrecoderType], Serializable):
+class Precoding(Sequence, Serializable, Generic[PrecoderType]):
     """Channel Precoding configuration for wireless transmission of modulated data symbols.
 
     Symbol precoding may occur as an intermediate step between bit-mapping and base-band symbol modulations.
@@ -207,14 +206,14 @@ class Precoding(Generic[PrecoderType], Serializable):
         """
 
         state: List[Precoder] = constructor.construct_sequence(node, deep=True)
-        symbol_precoding = cls()
+        precoding = cls()
 
-        symbol_precoding.__precoders = state
+        precoding.__precoders = state
 
         for precoder in state:
-            precoder.precoding = symbol_precoding
+            precoder.precoding = precoding
 
-        return symbol_precoding
+        return precoding
 
     @property
     def modem(self) -> Optional[BaseModem]:
@@ -258,12 +257,11 @@ class Precoding(Generic[PrecoderType], Serializable):
         precoder_index = self.__precoders.index(precoder)
 
         if precoder_index >= len(self.__precoders) - 1:
-
-            if self.modem.transmitting_device:
-                return self.modem.transmitting_device.num_antennas
+            if self.modem.transmitting_device is not None:
+                return self.modem.transmitting_device.antennas.num_transmit_antennas
 
             else:
-                return self.modem.receiving_device.num_antennas
+                return self.modem.receiving_device.antennas.num_receive_antennas
 
         return self.__precoders[precoder_index + 1].num_input_streams
 
@@ -330,11 +328,19 @@ class Precoding(Generic[PrecoderType], Serializable):
 
         return self.__precoders[-1].num_output_streams
 
+    @overload
     def __getitem__(self, index: int) -> PrecoderType:
+        ...  # pragma: no cover
+
+    @overload
+    def __getitem__(self, index: slice) -> List[PrecoderType]:
+        ...  # pragma: no cover
+
+    def __getitem__(self, index: int | slice) -> PrecoderType | List[PrecoderType]:
         """Access a precoder at a given index.
 
         Args:
-            index (int):
+            index (int | slice):
                 Precoder index.
 
         Raises:

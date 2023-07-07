@@ -9,10 +9,10 @@ from hermespy.fec import CyclicRedundancyCheck
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Tobias Kronauer"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -23,7 +23,7 @@ class TestCrcEncoder(unittest.TestCase):
 
     def setUp(self) -> None:
 
-        self.generator = np.random.default_rng(42)
+        self.rng = np.random.default_rng(42)
         self.bit_block_size = 10
         self.check_block_size = 3
 
@@ -36,11 +36,21 @@ class TestCrcEncoder(unittest.TestCase):
         self.assertEqual(self.bit_block_size, self.encoder.bit_block_size)
         self.assertEqual(self.check_block_size, self.encoder.check_block_size)
 
-    def test_encoding(self) -> None:
-        pass
+    def test_encode(self) -> None:
+        """Cyclic redundancy check should properly pad the input block with bits"""
+
+        data = self.rng.integers(0, 2, self.bit_block_size)
+        code = self.encoder.encode(data)
+
+        self.assertEqual(self.bit_block_size + self.check_block_size, len(code))
 
     def test_decoding(self) -> None:
-        pass
+        """Cyclic redundancy check should properly remove checksum"""
+
+        code = self.rng.integers(0, 2, self.encoder.code_block_size)
+        data = self.encoder.decode(code)
+
+        self.assertEqual(self.encoder.bit_block_size, len(data))
 
     def test_bit_block_size_setget(self) -> None:
         """Bit block size property getter should return setter argument."""

@@ -33,17 +33,16 @@ from any context.
 from __future__ import annotations
 
 import re
-from abc import ABCMeta, abstractclassmethod, abstractmethod
+from abc import ABCMeta, abstractmethod
 from collections.abc import Iterable
 from enum import Enum
-from functools import partial
 from inspect import getmembers, isclass, signature
 from importlib import import_module
 from io import TextIOBase, StringIO
 import os
 from pkgutil import iter_modules
 from re import compile, Pattern, Match
-from typing import Any, Dict, Set, Sequence, Mapping, Union, List, Optional, Tuple, Type
+from typing import Any, Dict, Set, Sequence, Mapping, Union, KeysView, List, Optional, Type, TypeVar, ValuesView
 
 import numpy as np
 from h5py import Group
@@ -51,16 +50,20 @@ from ruamel.yaml import YAML, SafeConstructor, SafeRepresenter, ScalarNode, Node
 from ruamel.yaml.constructor import ConstructorError
 
 import hermespy
-from ..tools import db2lin
+from .logarithmic import Logarithmic, LogarithmicSequence
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
+
+
+SerializableType = TypeVar("SerializableType", bound="Serializable")
+"""Type of Serializable Class."""
 
 
 class Serializable(object):
@@ -85,7 +88,7 @@ class Serializable(object):
         Returns: Additional arguments not inferable from the init signature.
         """
 
-        return {}
+        return set()
 
     @classmethod
     def _serializable_attributes(cls: Type[Serializable], blacklist: Optional[Set[str]] = None) -> Set[str]:
@@ -111,7 +114,6 @@ class Serializable(object):
         # Query serializable properties
         attributes = set()
         for attribute_key, attribute_type in getmembers(cls):
-
             # Prevent the access to protected or private attributes
             if attribute_key.startswith("_"):
                 continue
@@ -136,7 +138,7 @@ class Serializable(object):
         return attributes
 
     @classmethod
-    def to_yaml(cls: Type[Serializable], representer: SafeRepresenter, node: Serializable) -> Node:
+    def to_yaml(cls: Type[SerializableType], representer: SafeRepresenter, node: SerializableType) -> Node:
         """Serialize a serializable object to YAML.
 
         Args:
@@ -173,7 +175,6 @@ class Serializable(object):
         # Construct state dictionary by querying serializable attributes
         state: Dict[str, Any] = {}
         for attribute_key in serializable_atrributes:
-
             attribute_value = getattr(self, attribute_key)
 
             # Don't serialize attribute if it is None
@@ -190,7 +191,7 @@ class Serializable(object):
         return representer.represent_mapping(self.yaml_tag, state)
 
     @classmethod
-    def from_yaml(cls: Type[Serializable], constructor: SafeConstructor, node: Node) -> Serializable:
+    def from_yaml(cls: Type[SerializableType], constructor: SafeConstructor, node: Node) -> SerializableType:
         """Recall a new serializable class instance from YAML.
 
         Args:
@@ -211,7 +212,7 @@ class Serializable(object):
         return cls.InitializationWrapper(constructor.construct_mapping(node, deep=True))
 
     @classmethod
-    def InitializationWrapper(cls, configuration: Dict[str, Any]) -> Serializable:
+    def InitializationWrapper(cls: Type[SerializableType], configuration: Dict[str, Any]) -> SerializableType:
         """Conveniently initializes serializable classes.
 
         Args:
@@ -235,26 +236,21 @@ class Serializable(object):
         init_properties: Dict[str, Any] = {}
 
         for configuration_key in list(configuration.keys()):
-
             if configuration_key in init_signature or configuration_key in arg_signature:
-
                 init_parameters[configuration_key] = configuration.pop(configuration_key)
                 continue
 
             lower_key = configuration_key.lower()
 
-            if lower_key in init_signature or lower_key in arg_signature:
-
+            if lower_key in init_signature or lower_key in arg_signature:  # pragma: no cover
                 init_parameters[lower_key] = configuration.pop(configuration_key)
                 continue
 
             if configuration_key in properties:
-
                 init_properties[configuration_key] = configuration.pop(configuration_key)
                 continue
 
-            if lower_key in properties:
-
+            if lower_key in properties:  # pragma: no cover
                 init_properties[lower_key] = configuration.pop(configuration_key)
                 continue
 
@@ -270,7 +266,6 @@ class Serializable(object):
 
         # Configure properties
         for property_name, property_value in init_properties.items():
-
             try:
                 setattr(instance, property_name, property_value)
 
@@ -281,70 +276,65 @@ class Serializable(object):
         return instance
 
 
+SET = TypeVar("SET", bound="SerializableEnum")
+"""Type of serializable enumeration."""
+
+
 class SerializableEnum(Serializable, Enum):
     """Base class for serializable enumerations."""
 
     @classmethod
-    def from_yaml(cls: Type[SerializableEnum], _: SafeConstructor, node: ScalarNode) -> SerializableEnum:
+    def from_parameters(cls: Type[SET], enum: SET | int | str) -> SET:
+        """Initialize enumeration from multiple parameters.
 
+        Args:
+
+            enum (SET | int | str):
+                The parameter from which the enum should be initialized.
+
+        Returns: The initialized enumeration.
+        """
+
+        if isinstance(enum, cls):
+            return enum
+
+        elif isinstance(enum, int):
+            return cls(enum)
+
+        elif isinstance(enum, str):
+            return cls[enum]
+
+        else:
+            raise ValueError("Unknown serializable enumeration type")
+
+    @classmethod
+    def from_yaml(cls: Type[SerializableEnum], _: SafeConstructor, node: Node) -> SerializableEnum:
         # Convert scalar string representation back to enum
         return cls[node.value]
 
     @classmethod
     def to_yaml(cls: Type[SerializableEnum], representer: SafeRepresenter, node: SerializableEnum) -> ScalarNode:
-
         # Convert enum to scalar string representation
         return representer.represent_scalar(cls.yaml_tag, "{.name}".format(node))
 
-    @classmethod
+    @classmethod  # type: ignore
     @property
-    def yaml_tag(cls) -> str:
-
+    def yaml_tag(cls) -> str:  # type: ignore
         return cls.__name__
-
-
-class SerializableArray(Serializable, metaclass=ABCMeta):
-    """Base class for serializable classes within an array-like structure.
-
-    Only classes inheriting from `Serializable` will be serialized by the factory.
-    Additionally, `SerializableArray` nodes may be annotated with a tuple of non-negative
-    integers indicating their location within the array grid.
-    """
-
-    @staticmethod
-    def Set_Array(matrix: Union[Mapping, Sequence], deserialized_data: List[Tuple[SerializableArray, Tuple[int, ...]]]) -> None:
-        """Set matrix fields from deserialized array data.
-
-        Args:
-
-            matrix (Union[Mapping, Sequence]):
-                The matrix to be set.
-
-            deserialized_data (
-        """
-
-        # Skip if no data was provided
-        if not deserialized_data or len(deserialized_data) < 1:
-            return
-
-        for deserialized_object, position in deserialized_data:
-            matrix[position] = deserialized_object
 
 
 class Factory:
     """Helper class to load HermesPy simulation scenarios from YAML configuration files."""
 
-    extensions: Set[str] = [".yml", ".yaml", ".cfg"]
+    extensions: Set[str] = {".yml", ".yaml", ".cfg"}
     """List of recognized filename extensions for serialization files."""
 
     __yaml: YAML
     __clean: bool
     __db_regex: Pattern
-    __registered_classes: Set[Type[Serializable]]
-    __registered_tags: Set[str]
+    __tag_registry: Mapping[str, Type[Serializable]]
 
     def __init__(self) -> None:
-
         # YAML dumper configuration
         self.__yaml = YAML(typ="safe", pure=True)
         self.__yaml.default_flow_style = False
@@ -352,48 +342,38 @@ class Factory:
         self.__yaml.encoding = None
         self.__yaml.indent(mapping=4, sequence=4, offset=2)
         self.__clean = True
-        self.__registered_classes = set()
-        self.__registered_tags = set()
+        self.__tag_registry = {}
 
         # Add custom representers
         self.__yaml.representer.add_representer(complex, Factory.__complex_representer)
         self.__yaml.representer.add_representer(np.ndarray, Factory.__array_representer)
+        self.__yaml.representer.add_representer(np.float_, Factory.__numpy_float_representer)
 
         # Add custom constructors
         self.__yaml.constructor.add_constructor("complex", Factory.__complex_constructor)
         self.__yaml.constructor.add_constructor("array", Factory.__array_constructor)
+        self.__yaml.constructor.add_constructor("dB", Factory.__logarithmic_constructor)
 
         # Iterate over all modules within the hermespy namespace
         # Scan for serializable classes
 
         lookup_paths = list(hermespy.__path__) + [os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))]
         for _, name, is_module in iter_modules(lookup_paths, hermespy.__name__ + "."):
-
             if not is_module:
-                continue
+                continue  # pragma: no cover
 
             module = import_module(name)
 
             for _, serializable_class in getmembers(module):
-
                 if not isclass(serializable_class) or not issubclass(serializable_class, Serializable):
                     continue
 
-                self.__registered_classes.add(serializable_class)
+                # Register serializable class at the YAML factory
                 self.__yaml.register_class(serializable_class)
 
+                # Remember tag for tagged classes
                 if serializable_class.yaml_tag is not None:
-
-                    self.__registered_tags.add(serializable_class.yaml_tag)
-
-                    if issubclass(serializable_class, SerializableArray):
-
-                        array_constructor = partial(Factory.__construct_matrix, serializable_class)
-                        self.__yaml.constructor.add_multi_constructor(serializable_class.yaml_tag, array_constructor)
-
-        # Add constructors for untagged classes
-        self.__yaml.constructor.add_constructor("tag:yaml.org,2002:map", self.__construct_map)
-        # self.__yaml.constructor.add_constructor('tag:yaml.org,2002:seq', self.__construct_sequence)
+                    self.__tag_registry[serializable_class.yaml_tag] = serializable_class
 
         # Construct regular expressions for purging
         self.__range_regex = compile(r"([0-9.e-]*)[ ]*,[ ]*([0-9.e-]*)[ ]*,[ ]*\.\.\.[ ]*,[ ]*([0-9.e-]*)")
@@ -414,52 +394,25 @@ class Factory:
 
     @clean.setter
     def clean(self, flag: bool) -> None:
-
         self.__clean = flag
 
     @property
-    def registered_classes(self) -> Set[Type[Serializable]]:
+    def registered_classes(self) -> ValuesView[Type[Serializable]]:
         """Classes registered for serialization within the factory."""
 
-        return self.__registered_classes.copy()
+        return self.__tag_registry.values()
 
     @property
-    def registered_tags(self) -> Set[str]:
-        """Read registered YAML tags.
+    def registered_tags(self) -> KeysView[str]:
+        """Read registered YAML tags."""
 
-        Returns:
-            Set[str]: Set of registered YAML tags.
-        """
+        return self.__tag_registry.keys()
 
-        return self.__registered_tags
+    @property
+    def tag_registry(self) -> Mapping[str, Type[Serializable]]:
+        """Read registered YAML tags."""
 
-    def load(self, path: str) -> List[Serializable]:
-        """Load a serialized executable configuration from a filesystem location.
-
-        Args:
-            path (str): Path to a file or a folder featuring serialization files.
-
-        Returns:
-            executables (List[Serializable]):
-                Serializable HermesPy objects.
-
-        Raises:
-            RuntimeError: If `path` does not contain an executable object.
-            RuntimeError: If `path` contains more than one executable object.
-        """
-
-        # Recover serialized objects
-        hermes_objects: List[Any] = self.from_path(path)
-
-        executables: List[Serializable] = []
-
-        for hermes_object in hermes_objects:
-
-            if isinstance(hermes_object, Serializable):
-                executables.append(hermes_object)
-
-        # Return fully configured executable
-        return executables
+        return self.__tag_registry
 
     @staticmethod
     def __complex_representer(representer: SafeRepresenter, value: complex) -> ScalarNode:
@@ -506,10 +459,9 @@ class Factory:
 
         # Transform complex numpy arrays to their string representation
         if array.dtype in [np.complex64, np.complex128]:
-
             object_array = np.empty(array.shape, dtype=object)
             for index, number in np.ndenumerate(array):
-                object_array[index] = str(number)[1:-1]
+                object_array[index] = str(number).replace("(", "").replace(")", "")
 
             list = object_array.tolist()
 
@@ -518,6 +470,20 @@ class Factory:
 
         sequence = representer.represent_sequence("array", list, flow_style=True)
         return sequence
+
+    @staticmethod
+    def __numpy_float_representer(representer: SafeRepresenter, value: np.float_) -> ScalarNode:
+        """Represent numy floating point scalar numbers as strings.
+
+        Args:
+
+            representer (SafeRepresenter): YAML representer.
+            value (np.float_): The number to be transformed to a string.
+
+        Returns: Scalar yaml node.
+        """
+
+        return representer.represent_float(float(value))
 
     @staticmethod
     def __array_constructor(constructor: SafeConstructor, node: SequenceNode) -> np.ndarray:
@@ -541,30 +507,26 @@ class Factory:
             return constructor.construct_object(node)
 
     @staticmethod
-    def __construct_map(constructor: SafeConstructor, node: MappingNode) -> Mapping[MappingNode, Any]:
-        """A custom map generator.
-
-        Hacks ruamel to accept node names as tags.
+    def __logarithmic_constructor(constructor: SafeConstructor, node: Union[ScalarNode, SequenceNode]) -> Union[Logarithmic, LogarithmicSequence]:
+        """Construct a logarithmic value or sequence from YAML.
 
         Args:
-            constructor (SafeConstructor): Handle to the constructor.
-            node (MappingNode): A YAML map node.
 
-        Returns:
-            Mapping[MappingNode, Any]: A sequence of objects created from `node`.
+            constructor (SafeConstructor): YAML constructor.
+            node (Union[ScalarNode, SequenceNode]): The YAML node representing the array.
+
+        Returns: A logarithmic representation.
         """
 
-        tag = node.value[0][0].value
+        if isinstance(node, ScalarNode):
+            return Logarithmic(float(constructor.construct_scalar(node)))
 
-        if tag in constructor.yaml_constructors:
-            return constructor.yaml_constructors[tag](constructor, node.value[0][1])
-
-        else:
-            return constructor.construct_mapping(node, deep=True)
+        if isinstance(node, SequenceNode):
+            return LogarithmicSequence(constructor.construct_sequence(node))
 
     @staticmethod
     def __decibel_conversion(match: re.Match) -> str:
-        """Convert linear series to decibel series.
+        """Convert YAML sequences with dB annotations to tagged sequences.
 
         Args:
             match (re.Match): The serialization sequence to be converted.
@@ -573,23 +535,22 @@ class Factory:
             str: The purged sequence.
         """
 
-        linear_values = [db2lin(float(str_rep)) for str_rep in match[1].replace(" ", "").split(",")]
+        linear_values = [float(str_rep) for str_rep in match[1].replace(" ", "").split(",")]
 
-        string_replacement = "["
+        string_replacement = "!<dB> ["
         for linear_value in linear_values:
             string_replacement += str(linear_value) + ", "
 
         string_replacement += "]"
         return string_replacement
 
-    def from_path(self, paths: Union[str, Set[str]]) -> List[Any]:
+    def from_path(self, paths: Union[str, Set[str]]) -> Sequence[Any]:
         """Load a configuration from an arbitrary file system path.
 
         Args:
             paths (Union[str, Set[str]]): Paths to a file or a folder featuring .yml config files.
 
-        Returns:
-            List[Any]: List of serializable objects recalled from `paths`.
+        Returns: Serializable objects recalled from `paths`.
 
         Raises:
             ValueError: If the provided `path` does not exist on the filesystem.
@@ -597,26 +558,28 @@ class Factory:
 
         # Convert single path to a set if required
         if isinstance(paths, str):
-            paths = [paths]
+            paths = {paths}
 
         hermes_objects = []
         for path in paths:
-
             if not os.path.exists(path):
                 raise ValueError(f"Lookup path '{path}' not found")
 
             if os.path.isdir(path):
-                hermes_objects += self.from_folder(path)
-
-            elif os.path.isfile(path):
-                hermes_objects += self.from_file(path)
+                deserialization = self.from_folder(path)
 
             else:
-                raise ValueError("Lookup location '{}' not recognized".format(path))
+                deserialization = self.from_file(path)
+
+            if isinstance(deserialization, list):
+                hermes_objects += deserialization
+
+            else:
+                hermes_objects.append(deserialization)  # pragma: no cover
 
         return hermes_objects
 
-    def from_folder(self, path: str, recurse: bool = True, follow_links: bool = False) -> List[Any]:
+    def from_folder(self, path: str, recurse: bool = True, follow_links: bool = False) -> Sequence[Any] | Any:
         """Load a configuration from a folder.
 
         Args:
@@ -624,8 +587,7 @@ class Factory:
             recurse (bool, optional): Recurse into sub-folders within `path`.
             follow_links (bool, optional): Follow links within `path`.
 
-        Returns:
-            List[Any]: List of serializable objects recalled from `path`.
+        Returns: Serializable objects recalled from `path`.
 
         Raises:
             ValueError: If `path` is not a directory.
@@ -641,10 +603,10 @@ class Factory:
 
         for directory, _, files in os.walk(path, followlinks=follow_links):
             for file in files:
-
                 _, extension = os.path.splitext(file)
                 if extension in self.extensions:
-                    hermes_objects += self.from_file(os.path.join(directory, file))
+                    deserialization = self.from_file(os.path.join(directory, file))
+                    hermes_objects += deserialization if isinstance(deserialization, list) else [deserialization]
 
             if not recurse:
                 break
@@ -659,16 +621,15 @@ class Factory:
             *args (Any):
                 Configuration objects to be dumped.
         """
-        pass
+        pass  # pragma: no cover
 
-    def from_str(self, config: str) -> List[Any]:
+    def from_str(self, config: str) -> Sequence[Any] | Any:
         """Load a configuration from a string object.
 
         Args:
             config (str): The configuration to be loaded.
 
-        Returns:
-            List[Any]: List of serialized objects within `path`.
+        Returns: List of objects or object from `config`.
         """
 
         stream = StringIO(config)
@@ -691,24 +652,21 @@ class Factory:
         self.to_stream(stream, args)
         return stream.getvalue()
 
-    def from_file(self, file: str) -> List[Any]:
+    def from_file(self, file: str) -> Sequence[Any] | Any:
         """Load a configuration from a single YAML file.
 
         Args:
             file (str): Path to the folder configuration.
 
-        Returns:
-            List[Any]: List of serialized objects within `path`.
+        Returns: Serialized objects within `path`.
         """
 
         with open(file, mode="r") as file_stream:
-
             try:
                 return self.from_stream(file_stream)
 
             # Re-raise constructor errors with the correct file name
             except ConstructorError as constructor_error:
-
                 constructor_error.problem_mark.name = file
                 raise constructor_error
 
@@ -722,7 +680,7 @@ class Factory:
         Raises:
             RepresenterError: If objects in ``*args`` are unregistered classes.
         """
-        pass
+        pass  # pragma: no cover
 
     @staticmethod
     def __range_restore_callback(m: Match) -> str:
@@ -749,14 +707,14 @@ class Factory:
         replacement += str(range[-1])
         return replacement
 
-    def from_stream(self, stream: TextIOBase) -> List[Any]:
+    def from_stream(self, stream: TextIOBase) -> Sequence[Any] | Any:
         """Load a configuration from an arbitrary text stream.
 
         Args:
             stream (TextIOBase): Text stream containing the configuration.
 
         Returns:
-            List[Any]: List of serialized objects within `stream`.
+            List of deserialized objects or object within `stream`.
 
         Raises:
             ConstructorError: If YAML parsing fails.
@@ -767,23 +725,23 @@ class Factory:
 
         clean_stream = ""
         for line in stream.readlines():
-
             clean_line = self.__range_regex.sub(self.__range_restore_callback, line)
             clean_line = self.__db_regex.sub(self.__decibel_conversion, clean_line)
             clean_stream += clean_line
 
         hermes_objects = self.__yaml.load(StringIO(clean_stream))
 
+        # If the deserialization is empty, return an empty list
         if hermes_objects is None:
             return []
 
-        if isinstance(hermes_objects, Iterable):
-            return hermes_objects
+        # If the deserialization is a single item, return just the item
+        if isinstance(hermes_objects, Sequence) and len(hermes_objects) == 1:
+            return hermes_objects[0]
 
-        else:
-            return [hermes_objects]
+        return hermes_objects
 
-    def to_stream(self, stream: TextIOBase, *args: Any) -> None:
+    def to_stream(self, stream: TextIOBase, *args: Iterable[Any]) -> None:
         """Dump a configuration to an arbitrary text stream.
 
         Args:
@@ -795,11 +753,15 @@ class Factory:
         """
 
         for serializable_object in args:
-            self.__yaml.dump(*serializable_object, stream)
+            self.__yaml.dump(serializable_object, stream)
+
+
+HDFSerializableType = TypeVar("HDFSerializableType", bound="HDFSerializable")
+"""Type of HDF Serializable Class"""
 
 
 class HDFSerializable(metaclass=ABCMeta):
-    """Base class for object serializble to the HDF5 format.
+    """Base class for object serializable to the HDF5 format.
 
     Structures are serialized to HDF5 files by the :meth:`.to_HDF` routine and
     de-serialized by the :meth:`.from_HDF` method, respectively.
@@ -818,8 +780,9 @@ class HDFSerializable(metaclass=ABCMeta):
         """
         ...  # pragma no cover
 
-    @abstractclassmethod
-    def from_HDF(cls: Type[HDFSerializable], group: Group) -> HDFSerializable:
+    @classmethod
+    @abstractmethod
+    def from_HDF(cls: Type[HDFSerializableType], group: Group) -> HDFSerializableType:
         """De-Serialized the object state from HDF5.
 
         Recalls the object's state from a HDF5 group.
@@ -832,3 +795,45 @@ class HDFSerializable(metaclass=ABCMeta):
         Returns: The object initialized from the HDF5 group state.
         """
         ...  # pragma no cover
+
+    @staticmethod
+    def _create_group(group: Group, name: str) -> Group:
+        """Create an HDF5 group if it does not exist yet.
+
+        Args:
+
+            group (Group):
+                The HDF5 group from which the object state is recalled.
+
+            name (str):
+                Name of the group to be created.
+
+        Returns: A handle to group `name`.
+        """
+
+        if name not in group:
+            return group.create_group(name)
+
+        else:
+            return group[name]
+
+    @staticmethod
+    def _write_dataset(group: Group, dataset: str, data: Any | None) -> None:
+        """Write to a dataset.
+
+        Args:
+
+            group (Group):
+                The HDF5 group from which the object state is recalled.
+
+            dataset (str):
+                The dataset name.
+
+            data (Any | None):
+                The data to be written to `dataset`.
+        """
+
+        if dataset in group:
+            del group[dataset]
+
+        group.create_dataset(dataset, data=data)

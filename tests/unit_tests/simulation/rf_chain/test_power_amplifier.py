@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock, Mock
 
 import numpy as np
 from numpy.testing import assert_array_almost_equal, assert_array_equal, assert_array_less
@@ -11,17 +11,17 @@ from hermespy.simulation.rf_chain.power_amplifier import \
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
 class TestPowerAmplifier(unittest.TestCase):
-    """Test power amplifier model base class."""
+    """Test power amplifier model base class"""
 
     def setUp(self) -> None:
 
@@ -32,12 +32,12 @@ class TestPowerAmplifier(unittest.TestCase):
         self.pa = PowerAmplifier(saturation_amplitude=self.saturation_amplitude)
 
     def test_init(self) -> None:
-        """Initialization arguments should be properly stored as object attributes."""
+        """Initialization arguments should be properly stored as object attributes"""
 
         self.assertEqual(self.saturation_amplitude, self.pa.saturation_amplitude)
 
     def test_saturation_amplitude_setget(self) -> None:
-        """Saturation amplitude property getter should return setter argument."""
+        """Saturation amplitude property getter should return setter argument"""
 
         saturation_amplitude = 100
         self.pa.saturation_amplitude = saturation_amplitude
@@ -45,7 +45,7 @@ class TestPowerAmplifier(unittest.TestCase):
         self.assertEqual(saturation_amplitude, self.pa.saturation_amplitude)
 
     def test_saturation_amplitude_validation(self) -> None:
-        """Saturation amplitude property setter should raise ValueError on negative arguments."""
+        """Saturation amplitude property setter should raise ValueError on negative arguments"""
 
         with self.assertRaises(ValueError):
             self.pa.saturation_amplitude = -1.0
@@ -57,13 +57,13 @@ class TestPowerAmplifier(unittest.TestCase):
             self.fail()
 
     def test_adjust_power_setget(self) -> None:
-        """Adjust power flag get should return set value."""
+        """Adjust power flag get should return set value"""
 
         self.pa.adjust_power = True
         self.assertEqual(True, self.pa.adjust_power)
 
     def test_send_no_adjust(self) -> None:
-        """Sending a signal without adjustment should not alter the signal in any way."""
+        """Sending a signal without adjustment should not alter the signal in any way"""
 
         expected_signal = self.rng.normal(size=self.num_samples) + 1j*self.rng.normal(size=self.num_samples)
         signal = self.pa.send(expected_signal)
@@ -71,7 +71,7 @@ class TestPowerAmplifier(unittest.TestCase):
         assert_array_equal(expected_signal, signal)
 
     def test_send_adjust(self) -> None:
-        """Power loss should be adjusted if the respective flag is enabled."""
+        """Power loss should be adjusted if the respective flag is enabled"""
 
         number_of_samples = 1000
         signal = np.random.normal(size=number_of_samples) + 1j*np.random.normal(size=number_of_samples)
@@ -87,12 +87,28 @@ class TestPowerAmplifier(unittest.TestCase):
         self.assertAlmostEqual(power_in, power_out)
 
     def test_model(self) -> None:
-        """Model function should be a stub directly returning the input as output."""
+        """Model function should be a stub directly returning the input as output"""
 
         expected_signal = self.rng.normal(size=self.num_samples) + 1j*self.rng.normal(size=self.num_samples)
         signal = self.pa.send(expected_signal)
 
         assert_array_equal(expected_signal, signal)
+
+    def test_plot(self) -> None:
+        """The plotting routine should generate matplotlib plots"""
+
+        figure = Mock()
+        axes = MagicMock()
+
+        with patch('matplotlib.pyplot.subplots') as subplots_patch:
+
+            subplots_patch.return_value = figure, axes
+
+            self.pa.plot()
+            subplots_patch.assert_called_once()
+
+            self.pa.plot(axes=axes)
+
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""
@@ -100,8 +116,10 @@ class TestPowerAmplifier(unittest.TestCase):
         test_yaml_roundtrip_serialization(self, self.pa)
 
 
+
+
 class TestRappPowerAmplifier(unittest.TestCase):
-    """Test the Rapp power amplifier model."""
+    """Test the Rapp power amplifier model"""
 
     def setUp(self) -> None:
 
@@ -115,13 +133,13 @@ class TestRappPowerAmplifier(unittest.TestCase):
                                      smoothness_factor=self.smoothness_factor)
 
     def test_init(self) -> None:
-        """Initialization arguments should be properly stored as object attributes."""
+        """Initialization arguments should be properly stored as object attributes"""
 
         self.assertEqual(self.saturation_amplitude, self.pa.saturation_amplitude)
         self.assertEqual(self.smoothness_factor, self.pa.smoothness_factor)
 
     def test_smoothness_factor_setget(self) -> None:
-        """Smoothness factor property getter should return setter argument."""
+        """Smoothness factor property getter should return setter argument"""
 
         smoothness_factor = 1.23
         self.pa.smoothness_factor = 1.23
@@ -129,7 +147,7 @@ class TestRappPowerAmplifier(unittest.TestCase):
         self.assertEqual(smoothness_factor, self.pa.smoothness_factor)
 
     def test_smoothness_factor_validation(self) -> None:
-        """Smoothness factor property setter should raise ValueError on arguments smaller than one."""
+        """Smoothness factor property setter should raise ValueError on arguments smaller than one"""
 
         with self.assertRaises(ValueError):
             self.pa.smoothness_factor = 0.
@@ -144,7 +162,7 @@ class TestRappPowerAmplifier(unittest.TestCase):
             self.fail()
 
     def test_model(self) -> None:
-        """Signal should be properly distorted."""
+        """Signal should be properly distorted"""
 
         signal = self.rng.normal(size=self.num_samples) + 1j*self.rng.normal(size=self.num_samples)
         output = self.pa.model(signal)
@@ -161,7 +179,7 @@ class TestRappPowerAmplifier(unittest.TestCase):
 
 
 class TestClippingPowerAmplifier(unittest.TestCase):
-    """Test the Clipping power amplifier model."""
+    """Test the Clipping power amplifier model"""
 
     def setUp(self) -> None:
 
@@ -173,12 +191,12 @@ class TestClippingPowerAmplifier(unittest.TestCase):
         self.pa = ClippingPowerAmplifier(saturation_amplitude=self.saturation_amplitude)
 
     def test_init(self) -> None:
-        """Initialization arguments should be properly stored as object attributes."""
+        """Initialization arguments should be properly stored as object attributes"""
 
         self.assertEqual(self.saturation_amplitude, self.pa.saturation_amplitude)
 
     def test_model(self) -> None:
-        """Signal should be properly clipped."""
+        """Signal should be properly clipped"""
 
         signal = np.random.normal(size=self.num_samples) + 1j*np.random.normal(size=self.num_samples)
         output = self.pa.model(signal)
@@ -195,7 +213,7 @@ class TestClippingPowerAmplifier(unittest.TestCase):
 
 
 class TestSalehPowerAmplifier(unittest.TestCase):
-    """Test the Saleh power amplifier model."""
+    """Test the Saleh power amplifier model"""
 
     def setUp(self) -> None:
 
@@ -215,7 +233,7 @@ class TestSalehPowerAmplifier(unittest.TestCase):
                                       phase_beta=self.phase_beta)
 
     def test_init(self) -> None:
-        """Initialization arguments should be properly stored as object attributes."""
+        """Initialization arguments should be properly stored as object attributes"""
 
         self.assertEqual(self.saturation_amplitude, self.pa.saturation_amplitude)
         self.assertEqual(self.amplitude_alpha, self.pa.amplitude_alpha)
@@ -224,7 +242,7 @@ class TestSalehPowerAmplifier(unittest.TestCase):
         self.assertEqual(self.phase_beta, self.pa.phase_beta)
         
     def test_amplitude_alpha_setget(self) -> None:
-        """Amplitude alpha property getter should return setter argument."""
+        """Amplitude alpha property getter should return setter argument"""
 
         amplitude_alpha = 1.23
         self.pa.amplitude_alpha = 1.23
@@ -232,7 +250,7 @@ class TestSalehPowerAmplifier(unittest.TestCase):
         self.assertEqual(amplitude_alpha, self.pa.amplitude_alpha)
 
     def test_amplitude_alpha_validation(self) -> None:
-        """Amplitude alpha property setter should raise ValueError on arguments smaller than one."""
+        """Amplitude alpha property setter should raise ValueError on arguments smaller than one"""
 
         with self.assertRaises(ValueError):
             self.pa.amplitude_alpha = -1.0
@@ -244,7 +262,7 @@ class TestSalehPowerAmplifier(unittest.TestCase):
             self.fail()
             
     def test_amplitude_beta_setget(self) -> None:
-        """Amplitude beta property getter should return setter argument."""
+        """Amplitude beta property getter should return setter argument"""
 
         amplitude_beta = 1.23
         self.pa.amplitude_beta = 1.23
@@ -252,7 +270,7 @@ class TestSalehPowerAmplifier(unittest.TestCase):
         self.assertEqual(amplitude_beta, self.pa.amplitude_beta)
 
     def test_amplitude_beta_validation(self) -> None:
-        """Amplitude beta property setter should raise ValueError on arguments smaller than one."""
+        """Amplitude beta property setter should raise ValueError on arguments smaller than one"""
 
         with self.assertRaises(ValueError):
             self.pa.amplitude_beta = -1.0
@@ -264,7 +282,7 @@ class TestSalehPowerAmplifier(unittest.TestCase):
             self.fail()
             
     def test_phase_alpha_setget(self) -> None:
-        """Phase alpha property getter should return setter argument."""
+        """Phase alpha property getter should return setter argument"""
 
         phase_alpha = 1.23
         self.pa.phase_alpha = 1.23
@@ -272,7 +290,7 @@ class TestSalehPowerAmplifier(unittest.TestCase):
         self.assertEqual(phase_alpha, self.pa.phase_alpha)
         
     def test_phase_beta_setget(self) -> None:
-        """Phase beta property getter should return setter argument."""
+        """Phase beta property getter should return setter argument"""
 
         phase_beta = 1.23
         self.pa.phase_beta = 1.23
@@ -280,7 +298,7 @@ class TestSalehPowerAmplifier(unittest.TestCase):
         self.assertEqual(phase_beta, self.pa.phase_beta)
 
     def test_model(self) -> None:
-        """Signal should be properly distorted."""
+        """Signal should be properly distorted"""
 
         self.rng = np.random.default_rng(42)
         self.num_samples = 1000
@@ -303,7 +321,7 @@ class TestSalehPowerAmplifier(unittest.TestCase):
 
 
 class TestCustomPowerAmplifier(unittest.TestCase):
-    """Test the custom power amplifier model."""
+    """Test the custom power amplifier model"""
 
     def setUp(self) -> None:
 
@@ -331,8 +349,24 @@ class TestCustomPowerAmplifier(unittest.TestCase):
                                        gain=self.gain,
                                        phase=self.phase)
 
+    def test_init_validation(self) -> None:
+        """Initialization should raise ValueErrors on invalid arguments"""
+
+        with self.assertRaises(ValueError):
+            _ = CustomPowerAmplifier(np.zeros((2, 1)), np.zeros(2), np.zeros(2))
+
+        with self.assertRaises(ValueError):
+            _ = CustomPowerAmplifier(np.zeros(2), np.zeros((2, 1)), np.zeros(2))
+
+        with self.assertRaises(ValueError):
+            _ = CustomPowerAmplifier(np.zeros(2), np.zeros(2), np.zeros((2, 1)))
+
+        with self.assertRaises(ValueError):
+            _ = CustomPowerAmplifier(np.zeros(1), np.zeros(2), np.zeros(3))
+
+
     def test_model(self) -> None:
-        """Signal should be properly distorted."""
+        """Signal should be properly distorted"""
 
         rnd_indices = self.rng.integers(self.input.size, size=self.num_samples)
         phases = 2 * np.pi * self.rng.random(self.num_samples)

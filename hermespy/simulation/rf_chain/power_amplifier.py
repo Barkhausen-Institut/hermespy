@@ -37,10 +37,10 @@ from scipy.constants import pi
 from hermespy.core import Serializable
 
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -173,7 +173,6 @@ class PowerAmplifier(Serializable):
 
         figure: Optional[plt.figure] = None
         if axes is None:
-
             figure, amplitude_axes = plt.subplots()
             figure.suptitle(self.__class__.__name__ + " Characteristics")
 
@@ -185,7 +184,6 @@ class PowerAmplifier(Serializable):
             phase_axes.set_ylim([-pi, pi])
 
         else:
-
             amplitude_axes = axes[0]
             phase_axes = axes[1]
 
@@ -222,7 +220,6 @@ class ClippingPowerAmplifier(PowerAmplifier):
         PowerAmplifier.__init__(self, **kwargs)
 
     def model(self, input_signal: np.ndarray) -> np.ndarray:
-
         output_signal = input_signal.copy()
 
         clip_idx = np.nonzero(np.abs(input_signal) > self.saturation_amplitude)
@@ -292,7 +289,6 @@ class RappPowerAmplifier(PowerAmplifier):
         self.__smoothness_factor = value
 
     def model(self, input_signal: np.ndarray) -> np.ndarray:
-
         p = self.smoothness_factor
         gain = (1 + (np.abs(input_signal) / self.saturation_amplitude) ** (2 * p)) ** (-1 / (2 * p))
 
@@ -418,7 +414,6 @@ class SalehPowerAmplifier(PowerAmplifier):
         self.__amplitude_beta = value
 
     def model(self, input_signal: np.ndarray) -> np.ndarray:
-
         amp = np.abs(input_signal) / self.saturation_amplitude
         gain = self.__amplitude_alpha / (1 + self.__amplitude_beta * amp**2)
         phase_shift = self.phase_alpha * amp**2 / (1 + self.phase_beta * amp**2)
@@ -470,7 +465,6 @@ class CustomPowerAmplifier(PowerAmplifier):
         PowerAmplifier.__init__(self, **kwargs)
 
     def model(self, input_signal: np.ndarray) -> np.ndarray:
-
         amp = np.abs(input_signal) / self.saturation_amplitude
         gain = np.interp(amp, self.__input, self.__gain)
         phase_shift = np.interp(amp, self.__input, self.__phase)
@@ -479,15 +473,12 @@ class CustomPowerAmplifier(PowerAmplifier):
 
     @property
     def input(self) -> np.ndarray:
-
         return self.__input.copy()
 
     @property
     def gain(self) -> np.ndarray:
-
         return self.__gain.copy()
 
     @property
     def phase(self) -> np.ndarray:
-
         return self.__phase.copy()

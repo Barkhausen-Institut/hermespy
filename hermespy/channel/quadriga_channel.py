@@ -6,18 +6,17 @@ Quadriga Channel Model
 """
 
 from __future__ import annotations
-from typing import Type, Optional
+from typing import Optional
 
 import numpy as np
-from ruamel.yaml import SafeRepresenter, SafeConstructor, ScalarNode, MappingNode
 
-from hermespy.channel import Channel, QuadrigaInterface
+from hermespy.channel import Channel, ChannelRealization, QuadrigaInterface
 
 __author__ = "Tobias Kronauer"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -30,7 +29,7 @@ class QuadrigaChannel(Channel):
     """
 
     yaml_tag = "Quadriga"
-    yaml_matrix = True
+    serialized_attributes = Channel.serialized_attributes.union({"active", "gain"})
 
     # Reference to the interface class
     __interface: Optional[QuadrigaInterface]
@@ -69,16 +68,15 @@ class QuadrigaChannel(Channel):
             QuadrigaInterface: Global Quadriga interface.
         """
 
-        return QuadrigaInterface.GlobalInstance() if self.__interface is None else self.__interface
+        return QuadrigaInterface.GlobalInstance() if self.__interface is None else self.__interface  # type: ignore
 
-    def impulse_response(self, num_samples: int, sampling_rate: float) -> np.ndarray:
-
+    def realize(self, num_samples: int, sampling_rate: float) -> ChannelRealization:
         # Query the quadriga interface for a new impulse response
         path_gains, path_delays = self.__quadriga_interface.get_impulse_response(self)
 
         max_delay_in_samples = np.around(np.max(path_delays) * sampling_rate).astype(int)
 
-        impulse_response = np.zeros((num_samples, self.receiver.num_antennas, self.transmitter.num_antennas, max_delay_in_samples + 1), dtype=complex)
+        impulse_response = np.zeros((self.receiver.num_antennas, self.transmitter.num_antennas, num_samples, max_delay_in_samples + 1), dtype=complex)
 
         for tx_antenna in range(self.transmitter.num_antennas):
             for rx_antenna in range(self.receiver.num_antennas):
@@ -90,52 +88,6 @@ class QuadrigaChannel(Channel):
                 time_delay_in_samples_vec = np.around(tau_txa_rxa * sampling_rate).astype(int)
 
                 for delay_idx, delay_in_samples in enumerate(time_delay_in_samples_vec):
+                    impulse_response[rx_antenna, tx_antenna, :, delay_in_samples] += cir_txa_rxa[delay_idx]
 
-                    impulse_response[:, rx_antenna, tx_antenna, delay_in_samples] += cir_txa_rxa[delay_idx]
-        return impulse_response
-
-    @classmethod
-    def to_yaml(cls: Type[QuadrigaChannel], representer: SafeRepresenter, node: QuadrigaChannel) -> MappingNode:
-        """Serialize a QuadrigaChannel object to YAML.
-
-        Args:
-            representer (SafeRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
-
-            node (QuadrigaChannel):
-                The QuadrigaChannel instance to be serialized.
-
-        Returns:
-            Node:
-                The serialized YAML node.
-        """
-
-        state = {"active": node.active, "gain": node.gain, "sync_offset_low": node.sync_offset_low, "sync_offset_high": node.sync_offset_high}
-
-        return representer.represent_mapping(cls.yaml_tag, state)
-
-    @classmethod
-    def from_yaml(cls: Type[QuadrigaChannel], constructor: SafeConstructor, node: MappingNode) -> QuadrigaChannel:
-        """Recall a new `QuadrigaChannel` instance from YAML.
-
-        Args:
-            constructor (SafeConstructor):
-                A handle to the constructor extracting the YAML information.
-
-            node (Node):
-                YAML node representing the `QuadrigaChannel` serialization.
-
-        Returns:
-            QuadrigaChannel:
-                Newly created `QuadrigaChannel` instance. The internal references to modems will be `None` and need to be
-                initialized by the `scenario` YAML constructor.
-
-        """
-
-        # Handle empty yaml nodes
-        if isinstance(node, ScalarNode):
-            return cls()
-
-        state = constructor.construct_mapping(node)
-        return cls(**state)
+        return ChannelRealization(self, np.sqrt(self.gain) * impulse_response)

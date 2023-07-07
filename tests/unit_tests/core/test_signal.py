@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 """Test the HermesPy Signal Model."""
 
-import unittest
+from contextlib import nullcontext
+from os import getenv
 from tempfile import TemporaryDirectory
+from unittest import TestCase
+from unittest.mock import patch
 
 import numpy as np
 from h5py import File
@@ -10,7 +13,7 @@ from os import path
 from numpy.random import default_rng
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.constants import pi
-from scipy.fft import fft, fftshift, ifft, ifftshift
+from scipy.fft import ifft, ifftshift
 
 from hermespy.core.signal_model import Signal
 
@@ -24,7 +27,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class TestSignal(unittest.TestCase):
+class TestSignal(TestCase):
     """Test the signal model base class."""
 
     def setUp(self) -> None:
@@ -50,6 +53,11 @@ class TestSignal(unittest.TestCase):
         self.assertEqual(self.sampling_rate, self.signal.sampling_rate)
         self.assertEqual(self.carrier_frequency, self.signal.carrier_frequency)
         self.assertEqual(self.delay, self.signal.delay)
+
+    def test_title(self) -> None:
+        """Title property should return the correct string representation."""
+        
+        self.assertEqual('Signal Model', self.signal.title)
 
     def test_empty(self) -> None:
         """Using the empty initializer should result in an empty signal model."""
@@ -124,6 +132,35 @@ class TestSignal(unittest.TestCase):
 
         except ValueError:
             self.fail()
+            
+    def test_noise_power_validation(self) -> None:
+        """Noise power setter should raise ValueError on invalid arguments."""
+        
+        with self.assertRaises(ValueError):
+            self.signal.noise_power = -1.
+            
+        try:
+            self.signal.noise_power = 0.
+            
+        except ValueError:
+            self.fail()
+            
+    def test_noise_power_setget(self) -> None:
+        """Noise power property getter should return setter argument."""
+        
+        noise_power = 1.123
+        self.signal.noise_power = noise_power
+        
+        self.assertEqual(noise_power, self.signal.noise_power)
+        
+    def test_power(self) -> None:
+        """Power property should return the correct power."""
+
+        expected_power = np.mean(abs(self.samples) ** 2, axis=1)
+        assert_array_almost_equal(expected_power, self.signal.power)
+        
+        self.signal.samples = np.empty((self.num_streams, 0))
+        assert_array_equal(np.zeros(self.num_streams), self.signal.power)
 
     def test_copy(self) -> None:
         """Copying a signal model should result in a completely independent instance."""
@@ -133,6 +170,18 @@ class TestSignal(unittest.TestCase):
         signal_copy.samples += 1j
 
         assert_array_equal(samples, self.signal.samples)
+        
+    def test_energy(self) -> None:
+        """Energy property should return the correct energy."""
+        
+        expected_energy = np.sum(abs(self.samples) ** 2, axis=1)
+        assert_array_almost_equal(expected_energy, self.signal.energy)
+
+    def test_resample_validation(self) -> None:
+        """Resampling should raise a ValueError on invalid arguments."""
+        
+        with self.assertRaises(ValueError):
+            self.signal.resample(-1.)
 
     def test_resampling_power_up(self) -> None:
         """Resampling to a higher sampling rate should not affect the signal power."""
@@ -206,6 +255,27 @@ class TestSignal(unittest.TestCase):
         assert_array_almost_equal(abs(samples[:, 10:]), abs(down_signal.samples[:, 10:]), decimal=1)
         self.assertEqual(self.sampling_rate, down_signal.sampling_rate)
 
+    def test_superimpose_validation(self) -> None:
+        """Superimposing should raise a ValueError on invalid arguments."""
+        
+        with self.assertRaises(ValueError):
+            self.signal.superimpose(Signal.empty(self.sampling_rate, self.num_streams + 1, 0))
+            
+        with self.assertRaises(NotImplementedError):
+            self.signal.superimpose(Signal.empty(self.sampling_rate, self.num_streams, 0, delay=1.))
+            
+        with self.assertRaises(RuntimeError):
+            self.signal.superimpose(Signal.empty(.5 * self.sampling_rate, self.num_streams), resample=False)
+            
+    def test_superimpose_no_overlap(self) -> None:
+        """Superimposing two non-overlapping signal models should yield the original signal"""
+        
+        copied_signal = self.signal.copy()
+        copied_signal.carrier_frequency = self.signal.carrier_frequency + 4 * self.signal.sampling_rate
+        self.signal.superimpose(copied_signal)
+        
+        assert_array_equal(self.signal.samples, self.samples)
+
     def test_superimpose_power_full(self) -> None:
         """Superimposing two full overlapping signal models should yield approximately the sum of both model's individual power"""
 
@@ -239,15 +309,75 @@ class TestSignal(unittest.TestCase):
         
         assert_array_almost_equal(expected_added_power, self.signal.power - initial_power, decimal=3)
 
+    def test_superimpose_resample(self) -> None:
+        """Superimposing two signal models with different sampling rates should yield the correct result"""
+
+        added_signal = self.signal.copy()
+        added_signal.sampling_rate = .5 * self.sampling_rate
+        
+        self.signal.superimpose(added_signal)
+        self.assertEqual(2* self.num_samples, self.signal.num_samples)
+
     def test_timestamps(self) -> None:
         """Timestamps property should return the correct sampling times"""
 
         expected_timestamps = np.arange(self.num_samples) / self.sampling_rate
         assert_array_equal(expected_timestamps, self.signal.timestamps)
 
+    def test_frequencies(self) -> None:
+        """Frequencies property should return the correct frequencies"""
+
+        expected_frequencies = np.fft.fftfreq(self.num_samples, 1 / self.sampling_rate)
+        assert_array_equal(expected_frequencies, self.signal.frequencies)
+
     def test_plot(self) -> None:
         """The plot routine should not raise any exceptions"""
-        pass
+        
+        with patch('matplotlib.pyplot.figure') if getenv('HERMES_TEST_PLOT', 'False').lower() == 'true' else nullcontext():
+            
+            try:
+                
+                _ = self.signal.plot(space='time')
+                _ = self.signal.plot(space='frequency', angle=True)
+                _ = self.signal.plot(space='both')
+                
+                # Empty plotting
+                _ = Signal.empty(1, 1, 0).plot(space='both')
+                
+            except Exception as e:
+                self.fail(e)
+                
+        return
+    
+    def test_plot_eye(self) -> None:
+        """Visualizing eye diagrams in time-dime domain should yield a plot"""
+        
+        with patch('matplotlib.pyplot.figure') if getenv('HERMES_TEST_PLOT', 'False').lower() == 'true' else nullcontext():
+            
+            try:
+                
+                _ = self.signal.plot_eye(1e-3, domain='time')    
+                _ = self.signal.plot_eye(1e-3, domain='complex')
+                
+            except Exception as e:
+                self.fail(e)
+                
+        return
+
+    def test_plot_eye_validation(self) -> None:
+        """The eye plotting routine should raise ValueErrors on invalid arguments"""
+
+        with self.assertRaises(ValueError):
+            _ = self.signal.plot_eye(-1.)
+
+        with self.assertRaises(ValueError):
+            _ = self.signal.plot_eye(1e-3, domain='blablabla')
+
+        with self.assertRaises(ValueError):
+            _ = self.signal.plot_eye(1e-3, linewidth=0.)
+
+        with self.assertRaises(ValueError):
+            _ = self.signal.plot_eye(1e-3, symbol_cutoff=2.)
 
     def test_append_samples(self) -> None:
         """Appending a signal model should yield the proper result"""
@@ -257,10 +387,13 @@ class TestSignal(unittest.TestCase):
         append_signal = Signal(append_samples, self.signal.sampling_rate, self.signal.carrier_frequency)
 
         self.signal.append_samples(append_signal)
-
         assert_array_equal(np.append(samples, append_samples, axis=1), self.signal.samples)
 
-    def test_append_samples_assert(self) -> None:
+        test_signal = Signal.empty(self.sampling_rate, 0, 0, carrier_frequency=self.carrier_frequency)
+        test_signal.append_samples(self.signal)
+        assert_array_equal(self.signal.samples, test_signal.samples)
+
+    def test_append_samples_validation(self) -> None:
         """Appending to a signal model should raise a ValueError if the models don't match."""
 
         with self.assertRaises(ValueError):
@@ -274,6 +407,12 @@ class TestSignal(unittest.TestCase):
             samples = self.signal.samples
             append_signal = Signal(samples, self.signal.sampling_rate, 0.)
             self.signal.append_samples(append_signal)
+            
+        with self.assertRaises(NotImplementedError):
+            
+            appended_signal = self.signal.copy()
+            appended_signal.sampling_rate = .5 * self.sampling_rate
+            self.signal.append_samples(appended_signal)
 
     def test_append_streams(self) -> None:
         """Appending a signal model should yield the proper result."""
@@ -283,10 +422,13 @@ class TestSignal(unittest.TestCase):
         append_signal = Signal(append_samples, self.signal.sampling_rate, self.signal.carrier_frequency)
 
         self.signal.append_streams(append_signal)
-
         assert_array_equal(np.append(samples, append_samples, axis=0), self.signal.samples)
 
-    def test_append_stream_assert(self) -> None:
+        test_signal = Signal.empty(self.sampling_rate, 0, 0, carrier_frequency=self.carrier_frequency)
+        test_signal.append_streams(self.signal)
+        assert_array_equal(self.signal.samples, test_signal.samples)
+
+    def test_append_stream_validation(self) -> None:
         """Appending to a signal model should raise a ValueError if the models don't match."""
 
         with self.assertRaises(ValueError):
@@ -300,7 +442,28 @@ class TestSignal(unittest.TestCase):
             samples = self.signal.samples
             append_signal = Signal(samples, self.signal.sampling_rate, 0.)
             self.signal.append_streams(append_signal)
-
+            
+        with self.assertRaises(NotImplementedError):
+            
+            appended_signal = self.signal.copy()
+            appended_signal.sampling_rate = .5 * self.sampling_rate
+            self.signal.append_streams(appended_signal)
+            
+    def test_duration(self) -> None:
+        """Duration property should return the correct duration"""
+        
+        self.assertEqual(self.num_samples / self.sampling_rate, self.signal.duration)
+            
+    def test_to_from_interleaved(self) -> None:
+        """Interleaving and de-interleaving should yield the original signal"""
+        
+        interleaved_signal = self.signal.to_interleaved()
+        deinterleaved_signal = Signal.from_interleaved(interleaved_signal, sampling_rate=self.sampling_rate, carrier_frequency=self.carrier_frequency)
+        
+        assert_array_almost_equal(np.angle(self.samples), np.angle(deinterleaved_signal.samples), decimal=3)
+        self.assertEqual(self.signal.sampling_rate, deinterleaved_signal.sampling_rate)
+        self.assertEqual(self.signal.carrier_frequency, deinterleaved_signal.carrier_frequency)
+            
     def test_hdf_serialization(self) -> None:
         """Serialization to and from HDF5 should yield the correct object reconstruction"""
         

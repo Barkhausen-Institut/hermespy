@@ -12,13 +12,13 @@ import numpy as np
 from scipy.signal import correlate, find_peaks
 
 from hermespy.core import Serializable
-from .waveform_generator import PilotWaveformGenerator, Synchronization
+from .waveform import PilotWaveformGenerator, Synchronization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -107,7 +107,6 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT], Serializabl
         self.__guard_ratio = value
 
     def synchronize(self, signal: np.ndarray) -> List[int]:
-
         # Expand the dimensionality for flat signal streams
         if signal.ndim == 1:
             signal = signal[np.newaxis, :]

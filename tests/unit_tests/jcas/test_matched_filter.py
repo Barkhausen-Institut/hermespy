@@ -1,21 +1,26 @@
 # -*- coding: utf-8 -*-
 
+from os import path
+from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import patch, PropertyMock
 
 import numpy as np
+from h5py import File
+from numpy.testing import assert_array_equal
 
 from hermespy.core import Signal
-from hermespy.modem import Symbols, WaveformGenerator
+from hermespy.modem import CommunicationReception, CommunicationTransmission, DuplexModem, Symbols, WaveformGenerator
+from hermespy.radar import Radar, RadarCube, RadarReception
 from hermespy.simulation import SimulatedDevice
-from hermespy.jcas import MatchedFilterJcas
+from hermespy.jcas import JCASTransmission, JCASReception, MatchedFilterJcas
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "Jan Adler"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -24,7 +29,7 @@ __status__ = "Prototype"
 class MockWaveformGenerator(WaveformGenerator):
     """Mock communication waveform for modem testing."""
 
-    symbol_rate = 1e4
+    symbol_rate = 1e9
 
     @property
     def samples_in_frame(self) -> int:
@@ -89,6 +94,67 @@ class MockWaveformGenerator(WaveformGenerator):
         return self.symbol_rate * self.oversampling_factor
 
 
+class TestJCASTransmission(TestCase):
+    """Test JCAS transmission"""
+
+    def setUp(self) -> None:
+
+        self.signal = Signal(np.empty((1, 0), dtype=np.complex_), 1.)
+        self.transmission = JCASTransmission(CommunicationTransmission(self.signal, []))
+
+    def test_hdf_serialization(self) -> None:
+        """Test proper serialization to HDF"""
+
+        transmission: JCASTransmission
+
+        with TemporaryDirectory() as tempdir:
+            
+            file_location = path.join(tempdir, 'testfile.hdf5')
+            
+            with File(file_location, 'a') as file:
+                
+                group = file.create_group('testgroup')
+                self.transmission.to_HDF(group)
+                
+            with File(file_location, 'r') as file:
+                
+                group = file['testgroup']
+                transmission = self.transmission.from_HDF(group)
+
+        assert_array_equal(self.signal.samples, transmission.signal.samples)
+
+
+class TestJCASReception(TestCase):
+    """Test JCAS reception"""
+
+    def setUp(self) -> None:
+
+        self.signal = Signal(np.zeros((1, 10), dtype=np.complex_), 1.)
+        self.communication_reception = CommunicationReception(self.signal)
+        self.cube = RadarCube(np.zeros((1, 1, 10)))
+        self.radar_reception = RadarReception(self.signal, self.cube)
+        self.reception = JCASReception(self.communication_reception, self.radar_reception)
+
+    def test_hdf_serialization(self) -> None:
+        """Test proper serialization to HDF"""
+
+        with TemporaryDirectory() as tempdir:
+            
+            file_location = path.join(tempdir, 'testfile.hdf5')
+            
+            with File(file_location, 'a') as file:
+                
+                group = file.create_group('testgroup')
+                self.reception.to_HDF(group)
+                
+            with File(file_location, 'r') as file:
+                
+                group = file['testgroup']
+                reception = JCASReception.from_HDF(group)
+
+        assert_array_equal(self.signal.samples, reception.signal.samples)
+
+
 class TestMatchedFilterJoint(TestCase):
     """Matched filter joint testing."""
     
@@ -105,6 +171,12 @@ class TestMatchedFilterJoint(TestCase):
         self.device._rng = self.rng
         self.device.transmitters.add(self.joint)
         self.device.receivers.add(self.joint)
+
+    def test_receive_validation(self) -> None:
+        """Receiving should raise a RuntimeError if there's no cached transmission"""
+
+        with self.assertRaises(RuntimeError):
+            self.joint.receive(Signal(np.zeros((1, 10)), 1.))
         
     def test_transmit_receive(self) -> None:
         
@@ -119,6 +191,9 @@ class TestMatchedFilterJoint(TestCase):
         
         reception = self.joint.receive()
         self.assertTrue(10, reception.cube.data.argmax)
+
+        padded_reception = self.joint.receive(transmission.signal)
+        self.assertTrue(10, padded_reception.cube.data.argmax)
             
     def test_range_resolution_setget(self) -> None:
         """Range resolution property getter should return setter argument."""
@@ -136,7 +211,75 @@ class TestMatchedFilterJoint(TestCase):
             
         with self.assertRaises(ValueError):
             self.joint.range_resolution = 0.
+
+    def test_sampling_rate_validation(self) -> None:
+        """Sampling rate property setter should raise ValueError on invalid arguments"""
+
+        with self.assertRaises(ValueError):
+            self.joint.sampling_rate = 0.
+
+    def test_sampling_rate_setget(self) -> None:
+        """Sampling rate property getter should return setter argument"""
+
+        self.joint.sampling_rate = 1.234e10
+        self.assertEqual(1.234e10, self.joint.sampling_rate)
+
+        self.joint.sampling_rate = None
+        self.assertEqual(self.waveform.sampling_rate, self.joint.sampling_rate)
+
+    def test_max_range_validation(self) -> None:
+        """Max range property setter should raise ValueError on invalid arguments"""
+
+        with self.assertRaises(ValueError):
+            self.joint.max_range = 0.
+
+    def test_device_setget(self) -> None:
+        """Device property getter should return setter argument"""
+
+        expected_device = SimulatedDevice()
+        self.joint.device = expected_device
+
+        self.assertIs(expected_device, self.joint.device)
+        self.assertIs(expected_device, DuplexModem.device.fget(self.joint))
+        self.assertIs(expected_device, Radar.device.fget(self.joint))
             
+    def test_recall_transmission(self) -> None:
+        """Test joint transmission recall from HDF"""
+        
+        transmission = self.joint.transmit()
+        
+        with TemporaryDirectory() as tempdir:
+            
+            file_location = path.join(tempdir, 'testfile.hdf5')
+
+            with File(file_location, 'w') as file:
+                group = file.create_group('testgroup')
+                transmission.to_HDF(group)
+            
+            with File(file_location, 'r') as file:
+                recalled_transmission = self.joint._recall_transmission(file['testgroup'])
+                
+        self.assertEqual(transmission.signal.num_samples, recalled_transmission.signal.num_samples)
+
+    def test_recall_reception(self) -> None:
+        """Test joint reception recall from HDF"""
+        
+        transmission = self.joint.transmit()
+        reception = self.joint.receive(transmission.signal)
+        
+        with TemporaryDirectory() as tempdir:
+            
+            file_location = path.join(tempdir, 'testfile.hdf5')
+
+            with File(file_location, 'w') as file:
+                group = file.create_group('testgroup')
+                reception.to_HDF(group)
+            
+            with File(file_location, 'r') as file:
+                recalled_reception = self.joint._recall_reception(file['testgroup'])
+                
+        self.assertEqual(reception.signal.num_samples, recalled_reception.signal.num_samples)
+        
     def test_serialization(self) -> None:
         """Test YAML serialization"""
 

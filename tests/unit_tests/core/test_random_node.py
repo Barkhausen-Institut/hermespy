@@ -1,19 +1,44 @@
 # -*- coding: utf-8 -*-
 
+from sys import maxsize
 from unittest import TestCase
 from unittest.mock import Mock
 
-from hermespy.core.random_node import RandomNode
+from numpy.random import Generator
+
+from hermespy.core.random_node import RandomNode, RandomRealization
 
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
+
+
+class TestRandomRealization(TestCase):
+    """Test a single randim realization"""
+
+    def setUp(self) -> None:
+        
+        self.node = RandomNode(seed=42)
+        self.realization = RandomRealization(self.node)
+        
+    def test_seed(self) -> None:
+        """The seed property should return the correct seed"""
+        
+        self.assertEqual(RandomRealization(RandomNode(seed=42)).seed, self.realization.seed)
+
+    def test_generator(self) -> None:
+        """The generator property should provide a reproducible generator"""
+        
+        test_generator = RandomRealization(RandomNode(seed=42)).generator()
+        generator = self.realization.generator()
+        
+        self.assertEqual(test_generator.integers(maxsize), generator.integers(maxsize))
 
 
 class TestRandomNode(TestCase):
@@ -33,6 +58,14 @@ class TestRandomNode(TestCase):
         mother_node = RandomNode()
         self.node.random_mother = mother_node
         self.assertIs(mother_node._RandomNode__generator, self.node._rng)
+        
+    def test_rng_setget(self) -> None:
+        """The Random Number Generator property getter should return the setter argument"""
+        
+        expected_rng = Mock()
+        self.node._rng = expected_rng
+        
+        self.assertIs(expected_rng, self.node._rng)
         
     def test_random_root(self) -> None:
         """Random root property should correctly report if the nood is a root."""

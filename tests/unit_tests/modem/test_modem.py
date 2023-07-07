@@ -5,7 +5,7 @@ from os import path
 from tempfile import TemporaryDirectory
 from typing import Type
 from unittest import TestCase
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock, patch
 
 import numpy as np
 from h5py import File
@@ -15,17 +15,16 @@ from numpy.testing import assert_array_almost_equal
 from hermespy.core import UniformArray, IdealAntenna, Signal, Device, ChannelStateFormat, ChannelStateInformation, SNRType
 from hermespy.fec import EncoderManager
 from hermespy.modem import Symbols, CommunicationReceptionFrame, CommunicationTransmission, CommunicationTransmissionFrame, CommunicationReception, \
-                           BaseModem, TransmittingModem, ReceivingModem, DuplexModem, SimplexLink, RandomBitsSource
-from hermespy.precoding import SymbolPrecoding
+                           BaseModem, TransmittingModem, ReceivingModem, DuplexModem, SimplexLink, RandomBitsSource, SymbolPrecoding
 from hermespy.simulation import SimulatedDevice
 
-from .test_waveform_generator import MockWaveformGenerator
+from .test_waveform import MockWaveformGenerator
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -41,10 +40,10 @@ class TestCommunicationReception(TestCase):
         self.base_signal = Signal(self.rng.uniform(size=(2,10)) + 1j * self.rng.uniform(size=(2,10)), 1)
         self.frames = [CommunicationReceptionFrame(Signal(self.rng.uniform(size=(2,10)) + 1j * self.rng.uniform(size=(2,10)), 1),
                                                    Signal(self.rng.uniform(size=(2,10)) + 1j * self.rng.uniform(size=(2,10)), 1),
-                                                   Symbols(self.rng.uniform(size=(2,5)) + 1j * self.rng.uniform(size=(2,5))),
-                                                   Symbols(self.rng.uniform(size=(2,5)) + 1j * self.rng.uniform(size=(2,5))),
+                                                   Symbols(self.rng.uniform(size=(2,1,5)) + 1j * self.rng.uniform(size=(2,1,5))),
+                                                   Symbols(self.rng.uniform(size=(2,1,5)) + 1j * self.rng.uniform(size=(2,1,5))),
                                                    1.2345,
-                                                   Symbols(self.rng.uniform(size=(2,5)) + 1j * self.rng.uniform(size=(2,5))),
+                                                   Symbols(self.rng.uniform(size=(2,1,5)) + 1j * self.rng.uniform(size=(2,1,5))),
                                                    self.rng.integers(0, 2, 20), self.rng.integers(0, 2, 10),
                                                    ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE,
                                                                            self.rng.uniform(size=(2,1,10,2)) + 1j * self.rng.uniform(size=(2,1,10,2)))) for _ in range(2)]
@@ -65,6 +64,22 @@ class TestCommunicationReception(TestCase):
         """Bits property should return a concatenation of all decoded bits"""
 
         self.assertEqual(20, self.reception.bits.shape[0])
+
+    def test_symbols(self) -> None:
+        """Symbols property should return a concatenation of all symbols"""
+        
+        symbols = self.reception.symbols
+        self.assertEqual(symbols.num_blocks, 2)
+        self.assertEqual(symbols.num_streams, 2)
+        self.assertEqual(symbols.num_symbols, 5)
+        
+    def test_equalized_symbols(self) -> None:
+        """Equalized symbols property should return a concatenation of all equalized symbols"""
+        
+        symbols = self.reception.equalized_symbols
+        self.assertEqual(symbols.num_blocks, 2)
+        self.assertEqual(symbols.num_streams, 2)
+        self.assertEqual(symbols.num_symbols, 5)
 
     def test_hdf_serialization(self) -> None:
         """Serialization to and from HDF5 should yield the correct object reconstruction"""
@@ -110,11 +125,19 @@ class TestCommunicationTransmission(TestCase):
         self.base_signal = Signal(self.rng.uniform(size=(2,10)) + 1j * self.rng.uniform(size=(2,10)), 1)
         self.frames = [CommunicationTransmissionFrame(Signal(self.rng.uniform(size=(2,10)) + 1j * self.rng.uniform(size=(2,10)), 1),
                                                       self.rng.integers(0, 2, 10), self.rng.integers(0, 2, 20),
-                                                      Symbols(self.rng.uniform(size=(2,5)) + 1j * self.rng.uniform(size=(2,5))),
-                                                      Symbols(self.rng.uniform(size=(2,5)) + 1j * self.rng.uniform(size=(2,5))),
+                                                      Symbols(self.rng.uniform(size=(2,1,5)) + 1j * self.rng.uniform(size=(2,1,5))),
+                                                      Symbols(self.rng.uniform(size=(2,1,5)) + 1j * self.rng.uniform(size=(2,1,5))),
                                                       1.2345) for _ in range(2)]
         
         self.transmission = CommunicationTransmission(self.base_signal, self.frames)
+        
+    def test_symbols(self) -> None:
+        """Symbols property should return a concatenation of all symbols"""
+        
+        symbols = self.transmission.symbols
+        self.assertEqual(symbols.num_blocks, 2)
+        self.assertEqual(symbols.num_streams, 2)
+        self.assertEqual(symbols.num_symbols, 5)
         
     def test_hdf_serialization(self) -> None:
         """Serialization to and from HDF5 should yield the correct object reconstruction"""
@@ -197,6 +220,11 @@ class TestBaseModem(TestCase):
         
         self._init_base_modem(BaseModemMock, transmitting_device=self.transmit_device, receiving_device=self.receive_device)
 
+    def test_arg_signature(self) -> None:
+        """Test base modem serialization argument signature"""
+        
+        self.assertCountEqual(['encoding', 'precoding', 'waveform', 'seed'], self.modem._arg_signature())
+
     def test_initialization(self) -> None:
         """Initialization parameters should be properly stored as class attributes"""
 
@@ -253,16 +281,29 @@ class TestBaseModem(TestCase):
 
         self.assertIs(precoding, self.modem.precoding)
         self.assertIs(precoding.modem, self.modem)
+        
+    def test_num_data_bits_per_frame(self) -> None:
+        """Number of data bits per frame property should return the correct number of bits"""
+        
+        self.assertEqual(100, self.modem.num_data_bits_per_frame)
 
     def test_noise_power(self) -> None:
         """Noise power estiamtor should report the correct noise powers"""
 
-        self.assertEqual(1., self.modem.noise_power(1., SNRType.EBN0))
-        self.assertEqual(1., self.modem.noise_power(1., SNRType.ESN0))
-        self.assertEqual(1., self.modem.noise_power(1., SNRType.PN0))
+        self.assertEqual(1., self.modem._noise_power(1., SNRType.EBN0))
+        self.assertEqual(1., self.modem._noise_power(1., SNRType.ESN0))
+        self.assertEqual(1., self.modem._noise_power(1., SNRType.PN0))
         
         with self.assertRaises(ValueError):
-            _ = self.modem.noise_power(1., SNRType.EN0)
+            _ = self.modem._noise_power(1., SNRType.EN0)
+            
+        self.modem.waveform_generator = None
+        self.assertEqual(0, self.modem._noise_power(1., SNRType.EBN0))
+
+    def test_csi(self) -> None:
+        """Channel state information estimator should report the correct CSI"""
+        
+        self.assertIsNone(self.modem.csi)
 
 
 class TestTransmittingModem(TestBaseModem):
@@ -297,11 +338,58 @@ class TestTransmittingModem(TestBaseModem):
         expected_transmission = self.modem.transmit()
         self.assertIs(expected_transmission, self.modem.transmission)
 
-    def test_transmit_stream_coding(self) -> None:
+    def test_transmit_stream_coding_setget(self) -> None:
         """Transmit stream coding property should return correct configuration"""
 
-        self.assertIs(self.modem, self.modem.transmit_stream_coding.modem)
+        transmit_stream_coding = Mock()
+        self.modem.transmit_stream_coding = transmit_stream_coding
+        
+        self.assertIs(transmit_stream_coding, self.modem.transmit_stream_coding)
+        self.assertIs(transmit_stream_coding.modem, self.modem)
 
+    def test_transmit_validation(self) -> None:
+        """Modem transmission should raise ValueError on invalid configurations"""
+    
+        precoding = MagicMock()
+        precoding.__len__.side_effect = lambda: 2
+        precoding.num_output_streams = 14
+        self.modem.precoding = precoding
+        
+        with self.assertRaises(ValueError):
+            self.modem.transmit()
+
+    def test_transmit_mimo(self) -> None:
+        """Test modem MIMO transmission"""
+        
+        self.transmit_device.antennas = UniformArray(IdealAntenna(), spacing=1., dimensions=(2,))
+
+        precoding = MagicMock()
+        precoding.__len__.side_effect = lambda: 2
+        precoding.num_output_streams = 2
+        self.modem.precoding = precoding
+        
+        precoding_transmission = self.modem.transmit(.5 * self.modem.frame_duration)
+        self.assertEqual(2, precoding_transmission.signal.num_streams)
+
+    
+        transmit_stream_coding = MagicMock()
+        transmit_stream_coding.__len__.side_effect = lambda: 2
+        transmit_stream_coding.num_output_streams = 2
+        self.modem.transmit_stream_coding = transmit_stream_coding
+        
+        stream_coding_transmission = self.modem.transmit(.5 * self.modem.frame_duration)
+        self.assertEqual(2, stream_coding_transmission.signal.num_streams)
+
+    def test_transmit_no_streams(self) -> None:
+        """Test modem transmission without streams"""
+        
+        with patch('hermespy.modem.precoding.symbol_precoding.SymbolPrecoding.encode') as encode_mock:
+            
+            encode_mock.return_value = Symbols(np.empty((0, 100, 1)))
+
+            transmission = self.modem.transmit()
+            self.assertEqual(1, transmission.frames[0].symbols.num_streams)
+            
     def test_transmit(self) -> None:
         """Test modem data transmission"""
         
@@ -311,12 +399,31 @@ class TestTransmittingModem(TestBaseModem):
         self.assertEqual(2, transmission.num_frames)
         self.assertEqual(2 * self.waveform.samples_in_frame, transmission.signal.num_samples)
 
-    def test_empty_transmit(self) -> None:
-        """Test modem data reception over an empty frame"""
+    def test_device_setget(self) -> None:
+        """Device property getter should return setter argument"""
 
-        transmission = self.modem.transmit(0.)
+        expected_device = SimulatedDevice()
+        self.modem.device = expected_device
 
-        self.assertEqual(0, transmission.signal.num_samples)
+        self.assertIs(expected_device, self.modem.device)
+        
+    def test_recall_transmission(self) -> None:
+        """Test modem transmission recall from HDF"""
+        
+        transmission = self.modem.transmit()
+        
+        with TemporaryDirectory() as tempdir:
+            
+            file_location = path.join(tempdir, 'testfile.hdf5')
+
+            with File(file_location, 'w') as file:
+                group = file.create_group('testgroup')
+                transmission.to_HDF(group)
+            
+            with File(file_location, 'r') as file:
+                recalled_transmission = self.modem._recall_transmission(file['testgroup'])
+                
+        self.assertEqual(transmission.signal.num_samples, recalled_transmission.signal.num_samples)
 
 
 class TestReceivingModem(TestBaseModem):
@@ -333,19 +440,51 @@ class TestReceivingModem(TestBaseModem):
         
         self.assertEqual(0, self.modem.num_transmit_streams)
 
-    def test_receive_stream_coding(self) -> None:
+    def test_receive_stream_coding_setget(self) -> None:
         """Receive stream coding property should return correct configuration"""
+        
+        receive_stream_coding = Mock()
+        self.modem.receive_stream_coding = receive_stream_coding
+        
+        self.assertIs(receive_stream_coding, self.modem.receive_stream_coding)
+        self.assertIs(receive_stream_coding.modem, self.modem)
 
-        self.assertIs(self.modem, self.modem.receive_stream_coding.modem)
+    def test_device_setget(self) -> None:
+        """Device property getter should return setter argument"""
 
-    def test_reception(self) -> None:
-        """Reception property should return the recently received information"""
+        expected_device = SimulatedDevice()
+        self.modem.device = expected_device
 
-        # Initially None should be returned
-        self.assertIsNone(self.modem.reception)
+        self.assertIs(expected_device, self.modem.device)
+        
+        replaced_device = SimulatedDevice()
+        self.modem.device = replaced_device
+        
+        self.assertEqual(0, expected_device.receivers.num_operators)
+        self.assertIs(replaced_device, self.modem.device)
 
-        expected_reception = self.modem.receive()
-        self.assertIs(expected_reception, self.modem.reception)
+    def test_recall_reception(self) -> None:
+        """Test modem reception recall from HDF"""
+        
+        transmit_device = SimulatedDevice()
+        transmitting_modem = TransmittingModem(device=transmit_device)
+        transmitting_modem.waveform_generator = MockWaveformGenerator(oversampling_factor=4)
+        transmission = transmitting_modem.transmit()
+        
+        reception = self.modem.receive(transmission.signal)
+        
+        with TemporaryDirectory() as tempdir:
+            
+            file_location = path.join(tempdir, 'testfile.hdf5')
+
+            with File(file_location, 'w') as file:
+                group = file.create_group('testgroup')
+                reception.to_HDF(group)
+            
+            with File(file_location, 'r') as file:
+                recalled_reception = self.modem._recall_reception(file['testgroup'])
+                
+        self.assertEqual(reception.signal.num_samples, recalled_reception.signal.num_samples)
 
 
 class TestDuplexModem(TestBaseModem):
@@ -365,67 +504,42 @@ class TestDuplexModem(TestBaseModem):
 
     def test_transmit_receive(self) -> None:
         """Test modem data transmission and subsequent reception"""
+
+        device_transmission = self.device.transmit()
+        modem_transmission = device_transmission.operator_transmissions[0]
+
+        device_reception = self.device.receive(device_transmission)
+        modem_reception = device_reception.operator_receptions[0]
         
-        transmission = self.modem.transmit()
-        
-        device_signals = self.device.transmit()
-        self.device.receive(device_signals)
-        
-        reception = self.modem.receive()
-        
-        assert_array_almost_equal(transmission.bits, reception.bits)
-        self.assertIs(transmission, self.modem.transmission)
-
-    def test_empty_receive(self) -> None:
-        """Test modem data reception over an empty slot"""
-
-        reception = self.modem.receive()
-
-        self.assertEqual(0, reception.signal.num_samples)
-        self.assertIs(reception, self.modem.reception)
-
-    def test_receive_synchronization_fail(self) -> None:
-        """A failed synchronization should result in an empty reception"""
-
-        _ = self.modem.transmit()
-        self.device.receive(self.device.transmit())
-
-        self.waveform.synchronization.synchronize = lambda s: []
-        
-        reception = self.modem.receive()
-        self.assertEqual(0, reception.num_frames)
+        assert_array_almost_equal(modem_transmission.bits, modem_reception.bits)
+        self.assertIs(modem_transmission, self.modem.transmission)
+        self.assertIs(modem_reception, self.modem.reception)
                                                                                                                                                                            
-    def test_receive(self) -> None:
-        """Test modem data reception"""
-        
-        transmission = self.modem.transmit()
-        
-        device_signals = self.device.transmit()
-        self.device.receive(device_signals)
-        
-        reception = self.modem.receive()
-        
-        assert_array_almost_equal(transmission.bits, reception.bits)
-        self.assertIs(transmission, self.modem.transmission)
-
-    def test_empty_receive(self) -> None:
-        """Test modem data reception over an empty slot"""
-
-        reception = self.modem.receive()
-
-        self.assertEqual(0, reception.signal.num_samples)
-        self.assertIs(reception, self.modem.reception)
-
     def test_receive_synchronization_fail(self) -> None:
         """A failed synchronization should result in an empty reception"""
 
         _ = self.modem.transmit()
-        self.device.receive(self.device.transmit())
+        self.device.process_input(self.device.transmit())
 
         self.waveform.synchronization.synchronize = lambda s: []
         
         reception = self.modem.receive()
         self.assertEqual(0, reception.num_frames)
+
+    def test_device_setget(self) -> None:
+        """Device property getter should return setter argument"""
+
+        expected_device = SimulatedDevice()
+        self.modem.device = expected_device
+
+        self.assertIs(expected_device, self.modem.device)
+        self.assertIs(expected_device, TransmittingModem.device.fget(self.modem))
+        self.assertIs(expected_device, ReceivingModem.device.fget(self.modem))
+        self.assertTrue(self.modem in expected_device.transmitters)
+        self.assertTrue(self.modem in expected_device.receivers)
+        
+        new_device = SimulatedDevice()
+        self.modem.device = new_device
 
 
 class TestSimplexLink(TestCase):
@@ -436,6 +550,17 @@ class TestSimplexLink(TestCase):
         self.receiver = SimulatedDevice()
 
         self.link = SimplexLink(self.transmitter, self.receiver)
+        
+    def test_reference_validation(self) -> None:
+        """Specifying the reference of a simplex link is not supported"""
+        
+        with self.assertRaises(RuntimeError):
+            self.link.reference = Mock()
+            
+    def test_reference(self) -> None:
+        """Reference should always be the transmitting device"""
+        
+        self.assertIs(self.transmitter, self.link.reference)
 
     def test_transmitting_device(self) -> None:
         """Transmitting device property should return the correct device"""

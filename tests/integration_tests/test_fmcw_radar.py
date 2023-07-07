@@ -3,23 +3,24 @@
 FMCW radar evaluation with radar channel simulation.
 """
 
+from __future__ import annotations
 from unittest import TestCase
 
 import numpy as np
 
 from hermespy.beamforming import ConventionalBeamformer
-from hermespy.core import UniformArray, IdealAntenna
-from hermespy.channel import RadarChannel
+from hermespy.core import Direction, UniformArray, IdealAntenna, Transformation
+from hermespy.channel import MultiTargetRadarChannel, VirtualRadarTarget, FixedCrossSection
 from hermespy.radar.radar import Radar
 from hermespy.radar.fmcw import FMCW
-from hermespy.simulation import Simulation
+from hermespy.simulation import SimulationScenario
 from scipy.constants import speed_of_light
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -29,10 +30,10 @@ class FMCWRadarSimulation(TestCase):
 
     def setUp(self) -> None:
 
-        self.simulation = Simulation()
-        self.device = self.simulation.scenario.new_device()
+        self.scenario = SimulationScenario()
+        self.device = self.scenario.new_device()
         self.device.carrier_frequency = 1e8
-        self.device.antennas = UniformArray(IdealAntenna(), .5 * speed_of_light / self.device.carrier_frequency, (3, 3))
+        self.device.antennas = UniformArray(IdealAntenna(), .5 * speed_of_light / self.device.carrier_frequency, (5, 5))
 
         self.waveform = FMCW()
         self.beamformer = ConventionalBeamformer()
@@ -45,10 +46,13 @@ class FMCWRadarSimulation(TestCase):
         self.device.transmitters.add(self.radar)
         self.device.receivers.add(self.radar)
 
-        self.target_range = int(.5 * self.waveform.max_range) * self.waveform.range_resolution
-        self.channel = RadarChannel(target_range=self.target_range,
-                                    radar_cross_section=1.)
-        self.simulation.scenario.set_channel(self.device, self.device, self.channel)
+        self.target_range = .5 * self.waveform.max_range
+        self.channel = MultiTargetRadarChannel(attenuate=False)
+        
+        self.virtual_target = VirtualRadarTarget(FixedCrossSection(1.), velocity=np.array([0., 0., 0.]), pose=Transformation.From_Translation(np.array([0, 0, self.target_range])))
+        self.channel.add_target(self.virtual_target)
+
+        self.scenario.set_channel(self.device, self.device, self.channel)
 
     def test_beamforming(self) -> None:
         """The radar channel target located should be estimated correctly by the beamformer"""
@@ -65,26 +69,24 @@ class FMCWRadarSimulation(TestCase):
 
         for angle_index, (azimuth, zenith) in enumerate(self.radar.receive_beamformer.probe_focus_points[:, 0, :]):
 
-            # Configure the channel
-            self.channel.target_range = self.target_range
-            self.channel.target_azimuth = azimuth
-            self.channel.target_zenith = zenith
+            # Configure the channel's only target
+            self.virtual_target.pose = Transformation.From_Translation(Direction.From_Spherical(azimuth, zenith) * self.target_range)
 
             # Generate the radar cube
             self.radar.transmit()
             tx_signals = self.device.transmit()
             rx_signals, _, _ = self.channel.propagate(tx_signals)
-            self.device.receive(rx_signals)
+            self.device.process_input(rx_signals)
             reception = self.radar.receive()
 
             directive_powers = np.linalg.norm(reception.cube.data, axis=(1, 2))
             self.assertEqual(angle_index, directive_powers.argmax())
 
     def test_detection(self) -> None:
+        """Test FMCW detection"""
 
-        _ = self.radar.transmit()
         rx_signals, _, _ = self.channel.propagate(self.device.transmit())
-        self.device.receive(rx_signals)
+        self.device.process_input(rx_signals)
         reception = self.radar.receive()
 
         expected_velocity_peak = 5
@@ -94,3 +96,23 @@ class FMCWRadarSimulation(TestCase):
 
         self.assertAlmostEqual(self.target_range / self.waveform.range_resolution, np.argmax(range_profile), -1)
         self.assertEqual(expected_velocity_peak, np.argmax(velocity_profile))
+
+    def test_doppler(self) -> None:
+        """Test doppler shift generation"""
+        
+        velocity_candidates = [-self.radar.velocity_resolution, 0, self.radar.velocity_resolution]
+        expected_bin_indices = [4, 5, 6]
+        
+        for expected_bin_index, target_velocity in zip(expected_bin_indices, velocity_candidates):
+            
+            self.virtual_target.velocity = np.array([0, 0, -target_velocity], dtype=np.float_)
+
+            transmission = self.device.transmit()
+            rx_signals, _, _ = self.channel.propagate(transmission)
+            self.device.process_input(rx_signals)
+            reception = self.radar.receive()
+
+            velocity_bins = np.sum(reception.cube.data, axis=(0, 2))
+            bin_index = np.argmax(velocity_bins)
+            
+            self.assertEqual(expected_bin_index, bin_index)

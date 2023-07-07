@@ -6,7 +6,6 @@ Communication Symbols
 """
 
 from __future__ import annotations
-from copy import deepcopy
 from enum import Enum
 from typing import Optional, Union, Iterable, Type
 
@@ -20,7 +19,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -77,7 +76,7 @@ class Symbols(HDFSerializable):
                 A three-dimensional array of complex-valued communication symbols.
                 The first dimension denotes the number of streams,
                 the second dimension the number of symbol blocks per stream,
-                the the dimension the number of symbols per block.
+                the third dimension the number of symbols per block.
         """
 
         symbols = np.empty((0, 0, 0), dtype=complex) if symbols is None else symbols
@@ -154,11 +153,9 @@ class Symbols(HDFSerializable):
             raise ValueError("Symbols must be matrix (an array of dimension two)")
 
         if self.num_symbols < 1 and self.num_streams <= 1:
-
             self.__symbols = symbols
 
         else:
-
             if self.num_symbols != symbols.shape[2]:
                 raise ValueError("Symbol models to be concatenated do not match in time-domain")
 
@@ -195,11 +192,9 @@ class Symbols(HDFSerializable):
             raise ValueError("Symbols must contain three dimensions")
 
         if self.num_symbols < 1 and self.num_streams <= 1:
-
             self.__symbols = symbols
 
         else:
-
             if self.num_streams != symbols.shape[0]:
                 raise ValueError("Symbol models to be concatenated do not match in stream-domain")
 
@@ -217,7 +212,6 @@ class Symbols(HDFSerializable):
 
     @raw.setter
     def raw(self, value: np.ndarray) -> None:
-
         if value.ndim != 3:
             raise ValueError("Raw symbols must be a three-dimensionall array")
 
@@ -230,7 +224,7 @@ class Symbols(HDFSerializable):
             Symbols: Copied sequence.
         """
 
-        return deepcopy(self)
+        return Symbols(self.__symbols.copy())
 
     def __getitem__(self, section: slice) -> Symbols:
         """Slice this symbol series.
@@ -258,12 +252,10 @@ class Symbols(HDFSerializable):
         """
 
         if isinstance(value, Symbols):
-
-            self.__symbols[slice] = value.__symbols
+            self.__symbols[section] = value.__symbols
 
         else:
-
-            self.__symbols[slice] = value
+            self.__symbols[section] = value
 
     def plot_constellation(self, axes: Optional[plt.axes.Axes] = None, title: str = "Symbol Constellation") -> Optional[plt.Figure]:
         """Plot the symbol constellation.
@@ -292,9 +284,7 @@ class Symbols(HDFSerializable):
 
         # Create a new figure and the respective axes if none were provided
         if axes is None:
-
             with Executable.style_context():
-
                 figure, axes = plt.subplots()
                 figure.suptitle(title)
 
@@ -309,15 +299,14 @@ class Symbols(HDFSerializable):
 
     @classmethod
     def from_HDF(cls: Type[Symbols], group: Group) -> Symbols:
-
         # Recall datasets
-        symbols = np.array(group["symbols"], dtype=complex)
+
+        symbols = np.array(group["symbols"])  # dtype=complex
 
         # Initialize object from recalled state
         return cls(symbols=symbols)
 
     def to_HDF(self, group: Group) -> None:
-
         # Serialize datasets
         group.create_dataset("symbols", data=self.__symbols)
 
@@ -332,7 +321,7 @@ class StatedSymbols(Symbols):
 
     __states: np.ndarray  # Symbol states, four-dimensional array
 
-    def __init__(self, symbols: Optional[Union[Iterable, np.ndarray]], states: Optional[np.ndarray]) -> None:
+    def __init__(self, symbols: Iterable | np.ndarray, states: np.ndarray) -> None:
         """
         Args:
 
@@ -369,7 +358,6 @@ class StatedSymbols(Symbols):
 
     @states.setter
     def states(self, value: np.ndarray) -> None:
-
         if value.ndim != 4:
             raise ValueError("State must be a four-dimensional numpy array")
 
@@ -394,12 +382,10 @@ class StatedSymbols(Symbols):
         return self.__states.shape[1]
 
     def copy(self) -> StatedSymbols:
-
         return StatedSymbols(self.raw.copy(), self.states.copy())
 
     @classmethod
     def from_HDF(cls: Type[StatedSymbols], group: Group) -> StatedSymbols:
-
         # Recall datasets
         symbols = np.array(group["symbols"], dtype=complex)
         states = np.array(group["states"], dtype=complex)
@@ -408,7 +394,6 @@ class StatedSymbols(Symbols):
         return cls(symbols=symbols, states=states)
 
     def to_HDF(self, group: Group) -> None:
-
         # Serialize base class
         Symbols.to_HDF(self, group)
 

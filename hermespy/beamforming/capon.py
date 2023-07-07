@@ -11,10 +11,10 @@ from hermespy.core import Serializable
 from .beamformer import ReceiveBeamformer
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -98,14 +98,12 @@ class CaponBeamformer(Serializable, ReceiveBeamformer):
 
     @loading.setter
     def loading(self, value: float) -> None:
-
         if value < 0.0:
             raise ValueError("Diagonal loading coefficient must be greater or equal to zero")
 
         self.__loading = value
 
     def _decode(self, samples: np.ndarray, carrier_frequency: float, angles: np.ndarray) -> np.ndarray:
-
         # Compute the inverse sample covariance matrix R
         # In order to avoid algebra exceptions on decodings without noise, we will resort to the pseudo-inverse,
         # which is able to invert rank-deficient matrices
@@ -114,8 +112,7 @@ class CaponBeamformer(Serializable, ReceiveBeamformer):
         # Query the sensor array response vectors for the angles of interest and create a dictionary from it
         dictionary = np.empty((self.num_receive_input_streams, angles.shape[0]), dtype=complex)
         for d, focus in enumerate(angles):
-
-            array_response = self.operator.device.antennas.spherical_response(carrier_frequency, focus[0, 0], focus[0, 1])
+            array_response = self.operator.device.antennas.spherical_phase_response(carrier_frequency, focus[0, 0], focus[0, 1])
             dictionary[:, d] = sample_covariance @ array_response / (array_response.T.conj() @ sample_covariance @ array_response)
 
         beamformed_samples = dictionary.T.conj() @ samples

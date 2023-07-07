@@ -12,18 +12,16 @@ i.e. the code rate is :math:`R = 1`.
 """
 
 from __future__ import annotations
-from typing import Type
-from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode
 import numpy as np
 
 from hermespy.core import Serializable
 from .coding import Encoder
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -84,68 +82,18 @@ class BlockInterleaver(Encoder, Serializable):
         if self.block_size % self.interleave_blocks != 0:
             raise ValueError("The block size must be an integer multiple of the number of interleave blocks")
 
-    @classmethod
-    def to_yaml(cls: Type[BlockInterleaver], representer: SafeRepresenter, node: BlockInterleaver) -> MappingNode:
-        """Serialize a `Interleaver` encoder to YAML.
-
-        Args:
-            representer (SafeRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
-
-            node (BlockInterleaver):
-                The `Interleaver` instance to be serialized.
-
-        Returns:
-            Node:
-                The serialized YAML node.
-
-        :meta private:
-        """
-
-        state = {"block_size": node.block_size, "interleave_blocks": node.interleave_blocks}
-
-        return representer.represent_mapping(cls.yaml_tag, state)
-
-    @classmethod
-    def from_yaml(cls: Type[BlockInterleaver], constructor: SafeConstructor, node: MappingNode) -> BlockInterleaver:
-        """Recall a new `Interleaver` encoder from YAML.
-
-        Args:
-            constructor (SafeConstructor):
-                A handle to the constructor extracting the YAML information.
-
-            node (Node):
-                YAML node representing the `Interleaver` serialization.
-
-        Returns:
-            BlockInterleaver:
-                Newly created `Interleaver` instance.
-
-        Note that the created instance is floating by default.
-
-        :meta private:
-        """
-
-        state = constructor.construct_mapping(node)
-        return cls(**state)
-
     def encode(self, bits: np.ndarray) -> np.ndarray:
-
         return bits.reshape((self.interleave_blocks, -1)).T.flatten()
 
     def decode(self, encoded_bits: np.ndarray) -> np.ndarray:
-
         return encoded_bits.reshape((-1, self.interleave_blocks)).T.flatten()
 
     @property
     def bit_block_size(self) -> int:
-
         return self.block_size
 
     @property
     def code_block_size(self) -> int:
-
         return self.block_size
 
     @property
@@ -189,7 +137,6 @@ class BlockInterleaver(Encoder, Serializable):
 
     @interleave_blocks.setter
     def interleave_blocks(self, num_blocks: int) -> None:
-
         if num_blocks < 1:
             raise ValueError("The number of interleaved sections must be at least one")
 
@@ -197,5 +144,4 @@ class BlockInterleaver(Encoder, Serializable):
 
     @property
     def rate(self) -> float:
-
         return 1.0

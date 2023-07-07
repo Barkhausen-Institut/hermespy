@@ -6,13 +6,13 @@ import numpy as np
 
 from hermespy.modem import DuplexModem, RootRaisedCosineWaveform, BitErrorEvaluator, BlockErrorEvaluator, FrameErrorEvaluator, ThroughputEvaluator
 from hermespy.simulation import SimulatedDevice
-from hermespy.core.monte_carlo import EvaluationResult, Evaluator, GridDimension, dimension
+from hermespy.core.monte_carlo import Evaluator, GridDimension, register
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -54,7 +54,7 @@ class TestEvaluators(TestCase):
         """Generate a result from a given evaluator and test its plotting routine."""
         
         transmission = self.modem.transmit()
-        self.device.receive(transmission.signal)
+        self.device.process_input(transmission.signal)
         _ = self.modem.receive()
         
         try:

@@ -15,10 +15,10 @@ from hermespy.core import Serializable, Signal
 from .precoding import Precoder, Precoding
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "André Noll Barreto"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -39,7 +39,7 @@ class TransmitStreamEncoder(Precoder, ABC):
 
         Returns: The encoded signal stream.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     @abstractproperty
     def num_transmit_input_streams(self) -> int:
@@ -47,7 +47,7 @@ class TransmitStreamEncoder(Precoder, ABC):
 
         Returns: Number of input streams.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     @abstractproperty
     def num_transmit_output_streams(self) -> int:
@@ -55,16 +55,14 @@ class TransmitStreamEncoder(Precoder, ABC):
 
         Returns: Number of output streams.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     @property
     def num_input_streams(self) -> int:
-
         return self.num_transmit_input_streams
 
     @property
     def num_output_streams(self) -> int:
-
         return self.num_transmit_output_streams
 
 
@@ -83,7 +81,7 @@ class ReceiveStreamDecoder(Precoder, ABC):
 
         Returns: The decoded signal stream.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     @abstractproperty
     def num_receive_input_streams(self) -> int:
@@ -91,7 +89,7 @@ class ReceiveStreamDecoder(Precoder, ABC):
 
         Returns: Number of input streams.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     @abstractproperty
     def num_receive_output_streams(self) -> int:
@@ -99,16 +97,14 @@ class ReceiveStreamDecoder(Precoder, ABC):
 
         Returns: Number of output streams.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     @property
     def num_input_streams(self) -> int:
-
         return self.num_receive_output_streams
 
     @property
     def num_output_streams(self) -> int:
-
         return self.num_input_streams
 
 

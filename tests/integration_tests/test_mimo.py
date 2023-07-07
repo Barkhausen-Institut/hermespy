@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from unittest import TestCase
 from typing import Tuple
 
@@ -6,18 +7,17 @@ from numpy.testing import assert_array_equal
 from scipy.constants import speed_of_light, pi
 
 from hermespy.beamforming import ConventionalBeamformer
-from hermespy.core.antennas import UniformArray, IdealAntenna
-from hermespy.modem import  TransmittingModem, ReceivingModem, ChannelEqualization, CommunicationReception, CommunicationTransmission
-from hermespy.modem.waveform_single_carrier import RootRaisedCosineWaveform, SingleCarrierIdealChannelEstimation, SingleCarrierLeastSquaresChannelEstimation, SingleCarrierZeroForcingChannelEqualization
-from hermespy.precoding.space_time_block_coding import SpaceTimeBlockCoding
+from hermespy.core import UniformArray, IdealAntenna
+from hermespy.modem import Alamouti, TransmittingModem, ReceivingModem, ChannelEqualization, CommunicationReception, CommunicationTransmission, \
+    RootRaisedCosineWaveform, SingleCarrierIdealChannelEstimation, SingleCarrierLeastSquaresChannelEstimation, SingleCarrierZeroForcingChannelEqualization
 from hermespy.simulation import SimulatedDevice
 from hermespy.channel import RuralMacrocellsLineOfSight
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -45,8 +45,7 @@ class TestMIMOLink(TestCase):
         self.tx_modem = TransmittingModem()
         self.tx_modem.waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e8, num_preamble_symbols=16, num_data_symbols=51, 
                                                                     pilot_rate=5, oversampling_factor=4, modulation_order=4)
-        
-        
+
         self.rx_modem = ReceivingModem()
         self.rx_modem.waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e8, num_preamble_symbols=16, num_data_symbols=51,
                                                                     pilot_rate=5, oversampling_factor=4, modulation_order=4)
@@ -58,18 +57,14 @@ class TestMIMOLink(TestCase):
     
     def __propagate(self) -> Tuple[CommunicationTransmission, CommunicationReception]:
         
-        communication_transmission = self.tx_modem.transmit()
         device_transmission = self.tx_device.transmit()
         
-        device_reception, _, csi = self.channel.propagate(device_transmission)
+        propagation, _, csi = self.channel.propagate(device_transmission)
+        propagation[0].samples = propagation[0].samples[:, :self.rx_modem.waveform_generator.samples_in_frame]
         
-        device_reception[0].samples = device_reception[0].samples[:, :self.rx_modem.waveform_generator.samples_in_frame]
-        self.rx_device.receive(device_reception)
+        device_reception = self.rx_device.receive(propagation, channel_state=csi)
         
-        self.rx_modem.cache_reception(self.rx_modem.signal, csi)
-        communication_reception = self.rx_modem.receive()
-        
-        return communication_transmission, communication_reception
+        return device_transmission.operator_transmissions[0], device_reception.operator_receptions[0]
         
     def test_conventional_beamforming(self) -> None:
         """Test valid data transmission using conventional beamformers"""
@@ -87,10 +82,10 @@ class TestMIMOLink(TestCase):
         """Test valid data tansmission via Alamouti precoding"""
         
         self.tx_device.antennas = UniformArray(IdealAntenna(), .5 * self.wavelength, [2])
-        self.rx_device.antennas = UniformArray(IdealAntenna(), .5 * self.wavelength, [2])
+        self.rx_device.antennas = UniformArray(IdealAntenna(), .5 * self.wavelength, [1])
         
-        self.tx_modem.precoding[0] = SpaceTimeBlockCoding()
-        self.rx_modem.precoding[0] = SpaceTimeBlockCoding()
+        self.tx_modem.precoding[0] = Alamouti()
+        self.rx_modem.precoding[0] = Alamouti()
         self.rx_modem.waveform_generator.channel_estimation = SingleCarrierIdealChannelEstimation()
         self.rx_modem.waveform_generator.channel_equalization = ChannelEqualization()
 

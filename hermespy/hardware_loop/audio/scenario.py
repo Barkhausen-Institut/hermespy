@@ -5,27 +5,25 @@ Audio Device Scenario
 =====================
 """
 
-from hermespy.core import Serializable
 from ..scenario import PhysicalScenario
 from .device import AudioDevice
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class AudioScenario(Serializable, PhysicalScenario[AudioDevice]):
+class AudioScenario(PhysicalScenario[AudioDevice]):
     """Scenario of phyical device bindings to sound cards."""
 
     yaml_tag = "AudioSystem"
 
     def __init__(self, *args, **kwargs) -> None:
-
         PhysicalScenario.__init__(self, *args, **kwargs)
 
     def new_device(self, *args, **kwargs) -> AudioDevice:
@@ -33,8 +31,9 @@ class AudioScenario(Serializable, PhysicalScenario[AudioDevice]):
 
         Args:
 
-            Device initialization parameters.
-            Refer to :class:.AudioDevice for further details.
+            *args, **kwargs:
+                Device initialization parameters.
+                Refer to :class:`AudioDevice` for further details.
 
         Returns: A handle to the initialized device.
         """
@@ -45,6 +44,5 @@ class AudioScenario(Serializable, PhysicalScenario[AudioDevice]):
         return device
 
     def _trigger(self) -> None:
-
         # Trigger of the audio scenario is not implemented
         return
