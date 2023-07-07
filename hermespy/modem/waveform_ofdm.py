@@ -905,13 +905,14 @@ class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
         if self.pilot_section:
             sample_index += self.pilot_section.num_samples
 
-        symbols = Symbols()
+        symbols = Symbols(np.empty((1, 0, self.num_subcarriers), dtype=np.complex_))
         for section in self.structure:
             appended_symbols = np.zeros((1, section.num_words, self.num_subcarriers), dtype=complex)
 
             num_samples = section.num_samples
 
-            if section.num_symbols < 1:
+            # Skip unmodulated sections
+            if (section.num_symbols + section.num_references) < 1:
                 sample_index += num_samples
                 continue
 
