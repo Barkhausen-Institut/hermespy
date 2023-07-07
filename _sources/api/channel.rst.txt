@@ -19,6 +19,7 @@ The following statistical channel models are currently supported:
 
 .. toctree::
 
+   channel.ideal
    channel.multipath_fading_channel
    channel.multipath_fading_templates
 
@@ -32,5 +33,6 @@ The following spatial channel models are currently supported:
    channel.cluster_delay_line_rural_macrocells
    channel.cluster_delay_line_street_canyon
    channel.cluster_delay_line_urban_macrocells
+   channel.delay
    channel.radar_channel
    channel.quadriga

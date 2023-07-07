@@ -1,251 +1,370 @@
-<!DOCTYPE html>
-<html class="writer-html5" lang="en" >
-<head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+<!doctype html>
+<html class="no-js" lang="en">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="General Definitions" href="core.definitions.html" /><link rel="prev" title="Executable" href="core.executable.html" />
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Serialization Factory &mdash; HermesPy Documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/dark_mode_css/dark.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
+        <title>Serialization Factory - HermesPy</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/tweaks.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #eeffcc;
+  --color-code-foreground: black;
+  --color-brand-primary: #4C8BC6;
+  --color-brand-content: #4C8BC6;
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
-        <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script>
-        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
-        <script>mermaid.initialize({startOnLoad:true});</script>
-        <script src="../_static/dark_mode_js/default_dark.js"></script>
-        <script src="../_static/dark_mode_js/theme_switcher.js"></script>
-    <script src="../_static/js/theme.js"></script>
-    <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="General Definitions" href="core.definitions.html" />
-    <link rel="prev" title="Executable" href="core.executable.html" /> 
-</head>
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
 
-<body class="wy-body-for-nav"> 
-  <div class="wy-grid-for-nav">
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> HermesPy
-            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
-          </a>
-              <div class="version">
-                1.0.0
-              </div>
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
-        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <ul class="current">
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">HermesPy</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../_static/bi.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">HermesPy</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
-<li class="toctree-l2 current"><a class="reference internal" href="core.html">Core</a><ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials.html">Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/channel.html">Implementing Channels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/fec_coding.html">Implementing FEC codings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/beamformer.html">Implementing Beamformers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/waveform.html">Implementing Communication Waveforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/precoding.html">Implementing Precodings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/roc.html">Receiver Operating Characteristics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/datasets.html">Recording Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/audio.html">Using Audio Equipment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/evaluator.html">Implementing Evaluators</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Configuration Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../examples/chirp_fsk_lora.html">Chirp FSK LORA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/chirp_qam.html">Chirp QAM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/hardware_model.html">Hardware Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/interference_ofdm_single_carrier.html">OFDM Interference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/jcas.html">JCAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/ofdm_5g.html">OFDM 5G</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/ofdm_single_carrier.html">OFDM Single Carrier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/operator_separation.html">Operator Separation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/uhd.html">USRP Hardware Driver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/audio.html">Audio Hardware Binding</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="api.html">HermesPy API</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of HermesPy API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 current has-children"><a class="reference internal" href="core.html">Core</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html">PyMonte</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.ConsoleMode"><code class="docutils literal notranslate"><span class="pre">ConsoleMode</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.Artifact"><code class="docutils literal notranslate"><span class="pre">Artifact</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.ArtifactTemplate"><code class="docutils literal notranslate"><span class="pre">ArtifactTemplate</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.Evaluation"><code class="docutils literal notranslate"><span class="pre">Evaluation</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.EvaluationTemplate"><code class="docutils literal notranslate"><span class="pre">EvaluationTemplate</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.EvaluationResult"><code class="docutils literal notranslate"><span class="pre">EvaluationResult</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.ProcessedScalarEvaluationResult"><code class="docutils literal notranslate"><span class="pre">ProcessedScalarEvaluationResult</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.ScalarEvaluationResult"><code class="docutils literal notranslate"><span class="pre">ScalarEvaluationResult</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.Evaluator"><code class="docutils literal notranslate"><span class="pre">Evaluator</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.MonteCarloSample"><code class="docutils literal notranslate"><span class="pre">MonteCarloSample</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.GridSection"><code class="docutils literal notranslate"><span class="pre">GridSection</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.ActorRunResult"><code class="docutils literal notranslate"><span class="pre">ActorRunResult</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.SampleGrid"><code class="docutils literal notranslate"><span class="pre">SampleGrid</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.MonteCarloActor"><code class="docutils literal notranslate"><span class="pre">MonteCarloActor</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.MonteCarloResult"><code class="docutils literal notranslate"><span class="pre">MonteCarloResult</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.GridDimension"><code class="docutils literal notranslate"><span class="pre">GridDimension</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.RegisteredDimension"><code class="docutils literal notranslate"><span class="pre">RegisteredDimension</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.dimension"><code class="docutils literal notranslate"><span class="pre">dimension()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html#hermespy.core.monte_carlo.MonteCarlo"><code class="docutils literal notranslate"><span class="pre">MonteCarlo</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.executable.html">Executable</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.executable.html#hermespy.core.executable.Verbosity"><code class="docutils literal notranslate"><span class="pre">Verbosity</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.executable.html#hermespy.core.executable.Executable"><code class="docutils literal notranslate"><span class="pre">Executable</span></code></a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Serialization Factory</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.factory.Serializable"><code class="docutils literal notranslate"><span class="pre">Serializable</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.factory.Serializable.yaml_tag"><code class="docutils literal notranslate"><span class="pre">Serializable.yaml_tag</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.factory.Serializable.property_blacklist"><code class="docutils literal notranslate"><span class="pre">Serializable.property_blacklist</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.factory.Serializable.serialized_attributes"><code class="docutils literal notranslate"><span class="pre">Serializable.serialized_attributes</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.factory.Serializable.to_yaml"><code class="docutils literal notranslate"><span class="pre">Serializable.to_yaml()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.factory.Serializable.from_yaml"><code class="docutils literal notranslate"><span class="pre">Serializable.from_yaml()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.factory.Serializable.InitializationWrapper"><code class="docutils literal notranslate"><span class="pre">Serializable.InitializationWrapper()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.factory.SerializableEnum"><code class="docutils literal notranslate"><span class="pre">SerializableEnum</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.factory.SerializableEnum.yaml_tag"><code class="docutils literal notranslate"><span class="pre">SerializableEnum.yaml_tag</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.factory.SerializableEnum.property_blacklist"><code class="docutils literal notranslate"><span class="pre">SerializableEnum.property_blacklist</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.factory.SerializableEnum.serialized_attributes"><code class="docutils literal notranslate"><span class="pre">SerializableEnum.serialized_attributes</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.factory.SerializableArray"><code class="docutils literal notranslate"><span class="pre">SerializableArray</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.factory.SerializableArray.Set_Array"><code class="docutils literal notranslate"><span class="pre">SerializableArray.Set_Array()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.factory.Factory"><code class="docutils literal notranslate"><span class="pre">Factory</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.factory.Factory.extensions"><code class="docutils literal notranslate"><span class="pre">Factory.extensions</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.factory.Factory.clean"><code class="docutils literal notranslate"><span class="pre">Factory.clean</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.factory.Factory.registered_classes"><code class="docutils literal notranslate"><span class="pre">Factory.registered_classes</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.factory.Factory.registered_tags"><code class="docutils literal notranslate"><span class="pre">Factory.registered_tags</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.factory.Factory.load"><code class="docutils literal notranslate"><span class="pre">Factory.load()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.factory.Factory.from_path"><code class="docutils literal notranslate"><span class="pre">Factory.from_path()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.factory.Factory.from_folder"><code class="docutils literal notranslate"><span class="pre">Factory.from_folder()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.factory.Factory.to_folder"><code class="docutils literal notranslate"><span class="pre">Factory.to_folder()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.factory.Factory.from_str"><code class="docutils literal notranslate"><span class="pre">Factory.from_str()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.factory.Factory.to_str"><code class="docutils literal notranslate"><span class="pre">Factory.to_str()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.factory.Factory.from_file"><code class="docutils literal notranslate"><span class="pre">Factory.from_file()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.factory.Factory.to_file"><code class="docutils literal notranslate"><span class="pre">Factory.to_file()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.factory.Factory.from_stream"><code class="docutils literal notranslate"><span class="pre">Factory.from_stream()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.factory.Factory.to_stream"><code class="docutils literal notranslate"><span class="pre">Factory.to_stream()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#hermespy.core.factory.HDFSerializable"><code class="docutils literal notranslate"><span class="pre">HDFSerializable</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.factory.HDFSerializable.to_HDF"><code class="docutils literal notranslate"><span class="pre">HDFSerializable.to_HDF()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.core.factory.HDFSerializable.from_HDF"><code class="docutils literal notranslate"><span class="pre">HDFSerializable.from_HDF()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">Serialization Factory</a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.definitions.html">General Definitions</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.definitions.html#hermespy.core.definitions.SNRType"><code class="docutils literal notranslate"><span class="pre">SNRType</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.device.html">Device Modeling</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.FloatingError"><code class="docutils literal notranslate"><span class="pre">FloatingError</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.SlotType"><code class="docutils literal notranslate"><span class="pre">SlotType</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.OperatorType"><code class="docutils literal notranslate"><span class="pre">OperatorType</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.Operator"><code class="docutils literal notranslate"><span class="pre">Operator</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.OperationResult"><code class="docutils literal notranslate"><span class="pre">OperationResult</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.Transmission"><code class="docutils literal notranslate"><span class="pre">Transmission</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.Reception"><code class="docutils literal notranslate"><span class="pre">Reception</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.DeviceTransmission"><code class="docutils literal notranslate"><span class="pre">DeviceTransmission</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.DeviceReception"><code class="docutils literal notranslate"><span class="pre">DeviceReception</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.SecondSlotType"><code class="docutils literal notranslate"><span class="pre">SecondSlotType</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.MixingOperator"><code class="docutils literal notranslate"><span class="pre">MixingOperator</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.Receiver"><code class="docutils literal notranslate"><span class="pre">Receiver</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.OperatorSlot"><code class="docutils literal notranslate"><span class="pre">OperatorSlot</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.Transmitter"><code class="docutils literal notranslate"><span class="pre">Transmitter</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.TransmitterSlot"><code class="docutils literal notranslate"><span class="pre">TransmitterSlot</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.ReceiverSlot"><code class="docutils literal notranslate"><span class="pre">ReceiverSlot</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.UnsupportedSlot"><code class="docutils literal notranslate"><span class="pre">UnsupportedSlot</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.Device"><code class="docutils literal notranslate"><span class="pre">Device</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.DeviceType"><code class="docutils literal notranslate"><span class="pre">DeviceType</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.html#hermespy.core.device.DuplexOperator"><code class="docutils literal notranslate"><span class="pre">DuplexOperator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.operators.html">Extra Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.logarithmic.html">Logarithmics</a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.pipeline.html">Pipeline</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.pipeline.html#hermespy.core.pipeline.Pipeline"><code class="docutils literal notranslate"><span class="pre">Pipeline</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.random_node.html">Random Graph</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.random_node.html#hermespy.core.random_node.RandomNode"><code class="docutils literal notranslate"><span class="pre">RandomNode</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.scenario.html">Wireless Scenario</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.scenario.html#hermespy.core.scenario.ScenarioMode"><code class="docutils literal notranslate"><span class="pre">ScenarioMode</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.scenario.html#hermespy.core.scenario.Scenario"><code class="docutils literal notranslate"><span class="pre">Scenario</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.scenario.html#hermespy.core.scenario.ScenarioType"><code class="docutils literal notranslate"><span class="pre">ScenarioType</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.signal_model.html">Signal Modeling</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.signal_model.html#hermespy.core.signal_model.Signal"><code class="docutils literal notranslate"><span class="pre">Signal</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.channel_state_information.html">Channel State Information Model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateFormat"><code class="docutils literal notranslate"><span class="pre">ChannelStateFormat</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateDimension"><code class="docutils literal notranslate"><span class="pre">ChannelStateDimension</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.channel_state_information.html#hermespy.core.channel_state_information.ChannelStateInformation"><code class="docutils literal notranslate"><span class="pre">ChannelStateInformation</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.antennas.html">Antenna Configuration</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.antennas.html#hermespy.core.antennas.Antenna"><code class="docutils literal notranslate"><span class="pre">Antenna</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.antennas.html#hermespy.core.antennas.IdealAntenna"><code class="docutils literal notranslate"><span class="pre">IdealAntenna</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.antennas.html#hermespy.core.antennas.PatchAntenna"><code class="docutils literal notranslate"><span class="pre">PatchAntenna</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.antennas.html#hermespy.core.antennas.Dipole"><code class="docutils literal notranslate"><span class="pre">Dipole</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.antennas.html#hermespy.core.antennas.AntennaArrayBase"><code class="docutils literal notranslate"><span class="pre">AntennaArrayBase</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.antennas.html#hermespy.core.antennas.UniformArray"><code class="docutils literal notranslate"><span class="pre">UniformArray</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.antennas.html#hermespy.core.antennas.AntennaArray"><code class="docutils literal notranslate"><span class="pre">AntennaArray</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.transformation.html">Coordinate System Transformations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.animation.html">Animation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.visualize.html">Visualization</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a></li>
-<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication</a></li>
-<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming</a></li>
-<li class="toctree-l2"><a class="reference internal" href="radar.html">Sensing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="simulation.html">Simulation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="channel.html">Channel Modeling</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Channel Modeling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="channel.channel.html">Channel Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.ideal.html">Ideal Channel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_channel.html">Multipath Fading</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_templates.html">Multipath Fading Standard Templates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_lines.html">3GPP Cluster Delay Line Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.html">3GPP Cluster Delay Line Indoor Factory Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_indoor_office.html">3GPP Cluster Delay Line Indoor Office Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.html">3GPP Rural Macrocells Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_street_canyon.html">3GPP Street Canyon (Urban Microcells) Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.html">3GPP Urban Macrocells Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.delay.html">Delay Channel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.radar_channel.html">Single-Target Radar Channel Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.quadriga.html">Quadriga Channel Model</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="fec.html">Error Correction</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Error Correction</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="fec.coding.html">Coding Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fec.block_interleaver.html">Interleaving</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fec.crc.html">Cyclic Redundancy Checks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fec.repetition.html">Repetition Coding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fec.scrambler.html">Scrambling</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Hardware Loop</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device.html">Physical Devices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.scenario.html">Physical Device Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device_dummy.html">Physical Device Dummy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.visualizers.html">Visualizers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.usrp.html">UHD System</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.usrp.html#uhd-device">UHD Device</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.audio.device.html">Audio Device Binding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.audio.scenario.html">Audio Device Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.calibration.delay.html">Delay Calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.calibration.leakage.html">Leakage Calibration</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="jcas.html">JCAS</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of JCAS</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="jcas.matched_filtering.html">Matched Filter JCAS</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="modem.html">Communication</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Communication</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html">Modem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.bits_source.html">Bit Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.symbols.html">Communication Symbols</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform.html">Communication Waveform Base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html">Communication Evaluators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html">Filtered Single Carrier Waveforms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_chirp_fsk.html">Chirp Frequency Shift Keying</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_ofdm.html">Orthogonal Frequency Division Multiplexing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_correlation_synchronization.html">Correlation-Based Waveform Synchronization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.precoding.symbol_precoding.html">Symbol Precoding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.precoding.dft.html">Discrete Fourier Transform Precoding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.precoding.single_carrier.html">Single Carrier Encoding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.precoding.spatial_multiplexing.html">Spatial Multiplexing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.precoding.ratio_combining.html">Maximum Ratio Combining</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.precoding.space_time_block_coding.html">Space-Time Block Coding</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="precoding.html">Precoding</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of Precoding</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="precoding.precoding.html">Precoding Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="precoding.stream_precoding.html">Stream Precoding</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="beamforming.html">Beamforming</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Beamforming</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="beamforming.beamformer.html">Beamformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="beamforming.conventional.html">Conventional Beamformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="beamforming.capon.html">Capon Beamformer</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="radar.html">Sensing</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of Sensing</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="radar.radar.html">Radar Device Operation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.cube.html">Radar Cube</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.detection.html">Radar Detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html">Radar Evaluation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.fmcw.html">Frequency Modulated Continuous Waveform Radar</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="simulation.html">Simulation</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Simulation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="simulation.simulation.html">Simulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.simulated_device.html">Simulated Devices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.analog_digital_converter.html">Analog-to-Digital Converter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.html">Hardware Radio Frequency Chain Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html">Power Amplifier Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.phase_noise.html">Phase Noise Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.noise.html">Noise Modeling</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="simulation.coupling.html">Mutual Coupling</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Mutual Coupling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="simulation.coupling.perfect.html">Perfect Coupling</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.coupling.impedance.html">Impedance Coupling</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="simulation.isolation.html">Antenna Isolation Modeling</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of Antenna Isolation Modeling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="simulation.isolation.perfect.html">Perfect Isolation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.isolation.impedance.html">Impedance Isolation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.isolation.specific.html">Specific Isolation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="bin.html">Entry Points</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of Entry Points</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="bin.hermes.html">Hermes Command Line Interface</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tools.html">Tools</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of Tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="tools.math.html">Math Tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tools.resampling.html">Resampling Routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tools.tile.html">Tile Figures</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
 </ul>
 
-        </div>
-      </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">HermesPy</a>
-      </nav>
-
-      <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="Page navigation">
-  <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a></li>
-          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
-          <li class="breadcrumb-item"><a href="core.html">Core</a></li>
-      <li class="breadcrumb-item active">Serialization Factory</li>
-      <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/api/core.factory.rst.txt" rel="nofollow"> View page source</a>
-      </li>
-  </ul>
-  <hr/>
 </div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
-             
-  
-<style>
-/* CSS overrides for sphinx_rtd_theme */
+</div>
 
-/* 24px margin */
-.nbinput.nblast.container,
-.nboutput.nblast.container {
-    margin-bottom: 19px;  /* padding has already 5px */
-}
-
-/* ... except between code cells! */
-.nblast.container + .nbinput.container {
-    margin-top: -19px;
-}
-
-.admonition > p:before {
-    margin-right: 4px;  /* make room for the exclamation icon */
-}
-
-/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
-.math {
-    text-align: unset;
-}
-</style>
-<span class="target" id="module-hermespy.core.factory"></span><section id="serialization-factory">
-<h1>Serialization Factory<a class="headerlink" href="#serialization-factory" title="Permalink to this heading"></a></h1>
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <span class="target" id="module-hermespy.core.factory"></span><section id="serialization-factory">
+<h1>Serialization Factory<a class="headerlink" href="#serialization-factory" title="Permalink to this heading">#</a></h1>
 <p>This module implements the main interface for loading / dumping HermesPy configurations from / to <a class="reference external" href="https://yaml.org/">YAML</a> files.
 Every mutable object that is expected to have its state represented as a text-section within configuration files
 must inherit from the <a class="reference internal" href="#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a> base class.</p>
@@ -264,284 +383,216 @@ As a result, dumping any <a class="reference internal" href="#hermespy.core.fact
 <p>from any context.</p>
 </section>
 <dl class="py class">
+<dt class="sig sig-object py" id="hermespy.core.factory.SerializableType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SerializableType</span></span><a class="headerlink" href="#hermespy.core.factory.SerializableType" title="Permalink to this definition">#</a></dt>
+<dd><p>Type of Serializable Class.</p>
+<p>alias of TypeVar(‘SerializableType’, bound=<a class="reference internal" href="#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a>)</p>
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="hermespy.core.factory.Serializable">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Serializable</span></span><a class="headerlink" href="#hermespy.core.factory.Serializable" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Serializable</span></span><a class="headerlink" href="#hermespy.core.factory.Serializable" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Base class for serializable classes.</p>
 <p>Only classes inheriting from <cite>Serializable</cite> will be serialized by the factory.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hermespy.core.factory.Serializable.yaml_tag">
-<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#hermespy.core.factory.Serializable.yaml_tag" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#hermespy.core.factory.Serializable.yaml_tag" title="Permalink to this definition">#</a></dt>
 <dd><p>YAML serialization tag.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hermespy.core.factory.Serializable.property_blacklist">
-<span class="sig-name descname"><span class="pre">property_blacklist</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#hermespy.core.factory.Serializable.property_blacklist" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">property_blacklist</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">Set</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#hermespy.core.factory.Serializable.property_blacklist" title="Permalink to this definition">#</a></dt>
 <dd><p>Set of properties to be ignored during serialization.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hermespy.core.factory.Serializable.serialized_attributes">
-<span class="sig-name descname"><span class="pre">serialized_attributes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#hermespy.core.factory.Serializable.serialized_attributes" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">serialized_attributes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">Set</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#hermespy.core.factory.Serializable.serialized_attributes" title="Permalink to this definition">#</a></dt>
 <dd><p>Set of object attributes to be serialized.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.core.factory.Serializable.to_yaml">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">representer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.Serializable.to_yaml" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">representer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.Serializable.to_yaml" title="Permalink to this definition">#</a></dt>
 <dd><p>Serialize a serializable object to YAML.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>representer</strong> (<em>SafeRepresenter</em>) – A handle to a representer used to generate valid YAML code.
 The representer gets passed down the serialization tree to each node.</p></li>
 <li><p><strong>node</strong> (<a class="reference internal" href="#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><em>Serializable</em></a>) – The channel instance to be serialized.</p></li>
 </ul>
 </dd>
-</dl>
-<p>Returns: The serialized YAML node.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Node</span></code></p>
 </dd>
 </dl>
+<p>Returns: The serialized YAML node.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.core.factory.Serializable.from_yaml">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constructor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.Serializable.from_yaml" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_yaml</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">constructor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.Serializable.from_yaml" title="Permalink to this definition">#</a></dt>
 <dd><p>Recall a new serializable class instance from YAML.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>constructor</strong> (<em>SafeConstructor</em>) – A handle to the constructor extracting the YAML information.</p></li>
 <li><p><strong>node</strong> (<em>Node</em>) – YAML node representing the <cite>Serializable</cite> serialization.</p></li>
 </ul>
 </dd>
-</dl>
-<p>Returns: The de-serialized object.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code>(<code class="docutils literal notranslate"><span class="pre">SerializableType</span></code>, bound= Serializable)</p>
 </dd>
 </dl>
+<p>Returns: The de-serialized object.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.core.factory.Serializable.InitializationWrapper">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InitializationWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configuration</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.Serializable.InitializationWrapper" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">InitializationWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configuration</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.Serializable.InitializationWrapper" title="Permalink to this definition">#</a></dt>
 <dd><p>Conveniently initializes serializable classes.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>configuration</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – Configuration parameter dictionary.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Initialized class instance.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#hermespy.core.factory.SerializableArray" title="hermespy.core.factory.SerializableArray">SerializableArray</a></p>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>SerializableArray</p>
 </dd>
 </dl>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="hermespy.core.factory.SET">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SET</span></span><a class="headerlink" href="#hermespy.core.factory.SET" title="Permalink to this definition">#</a></dt>
+<dd><p>Type of serializable enumeration.</p>
+<p>alias of TypeVar(‘SET’, bound=<a class="reference internal" href="#hermespy.core.factory.SerializableEnum" title="hermespy.core.factory.SerializableEnum"><code class="xref py py-class docutils literal notranslate"><span class="pre">SerializableEnum</span></code></a>)</p>
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.core.factory.SerializableEnum">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SerializableEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.SerializableEnum" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SerializableEnum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.SerializableEnum" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
 <p>Base class for serializable enumerations.</p>
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.core.factory.SerializableEnum.yaml_tag">
-<em class="property"><span class="pre">class</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#hermespy.core.factory.SerializableEnum.yaml_tag" title="Permalink to this definition"></a></dt>
-<dd><p>str(object=’’) -&gt; str
-str(bytes_or_buffer[, encoding[, errors]]) -&gt; str</p>
-<p>Create a new string object from the given object. If encoding or
-errors is specified, then the object must expose a data buffer
-that will be decoded using the given encoding and error handler.
-Otherwise, returns the result of object.__str__() (if defined)
-or repr(object).
-encoding defaults to sys.getdefaultencoding().
-errors defaults to ‘strict’.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="hermespy.core.factory.SerializableEnum.property_blacklist">
-<span class="sig-name descname"><span class="pre">property_blacklist</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#hermespy.core.factory.SerializableEnum.property_blacklist" title="Permalink to this definition"></a></dt>
-<dd><p>Set of properties to be ignored during serialization.</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="hermespy.core.factory.SerializableEnum.serialized_attributes">
-<span class="sig-name descname"><span class="pre">serialized_attributes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{}</span></em><a class="headerlink" href="#hermespy.core.factory.SerializableEnum.serialized_attributes" title="Permalink to this definition"></a></dt>
-<dd><p>Set of object attributes to be serialized.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="hermespy.core.factory.SerializableArray">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SerializableArray</span></span><a class="headerlink" href="#hermespy.core.factory.SerializableArray" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
-<p>Base class for serializable classes within an array-like structure.</p>
-<p>Only classes inheriting from <cite>Serializable</cite> will be serialized by the factory.
-Additionally, <cite>SerializableArray</cite> nodes may be annotated with a tuple of non-negative
-integers indicating their location within the array grid.</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="hermespy.core.factory.SerializableArray.Set_Array">
-<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Set_Array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deserialized_data</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.SerializableArray.Set_Array" title="Permalink to this definition"></a></dt>
-<dd><p>Set matrix fields from deserialized array data.</p>
+<dt class="sig sig-object py" id="hermespy.core.factory.SerializableEnum.from_parameters">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">enum</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.SerializableEnum.from_parameters" title="Permalink to this definition">#</a></dt>
+<dd><p>Initialize enumeration from multiple parameters.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>matrix</strong> (<em>Union</em><em>[</em><em>Mapping</em><em>, </em><em>Sequence</em><em>]</em>) – The matrix to be set.</p></li>
-<li><p><strong>(</strong> (<em>deserialized_data</em>) – </p></li>
-</ul>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>enum</strong> (<a class="reference internal" href="#hermespy.core.factory.SET" title="hermespy.core.factory.SET"><em>SET</em></a><em> | </em><em>int</em><em> | </em><em>str</em>) – The parameter from which the enum should be initialized.</p>
 </dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code>(<code class="docutils literal notranslate"><span class="pre">SET</span></code>, bound= SerializableEnum)</p>
 </dd>
 </dl>
+<p>Returns: The initialized enumeration.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.core.factory.Factory">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Factory</span></span><a class="headerlink" href="#hermespy.core.factory.Factory" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Factory</span></span><a class="headerlink" href="#hermespy.core.factory.Factory" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Helper class to load HermesPy simulation scenarios from YAML configuration files.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hermespy.core.factory.Factory.extensions">
-<span class="sig-name descname"><span class="pre">extensions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['.yml',</span> <span class="pre">'.yaml',</span> <span class="pre">'.cfg']</span></em><a class="headerlink" href="#hermespy.core.factory.Factory.extensions" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">extensions</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><code class="xref py py-class docutils literal notranslate"><span class="pre">Set</span></code><span class="pre">[</span><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code><span class="pre">]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'.cfg',</span> <span class="pre">'.yaml',</span> <span class="pre">'.yml'}</span></em><a class="headerlink" href="#hermespy.core.factory.Factory.extensions" title="Permalink to this definition">#</a></dt>
 <dd><p>List of recognized filename extensions for serialization files.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.core.factory.Factory.clean">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">clean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.core.factory.Factory.clean" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">clean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.core.factory.Factory.clean" title="Permalink to this definition">#</a></dt>
 <dd><p>Use clean YAML standard.</p>
 <p>Disabling the clean flag will deactivate additional text processing
 to the YAML configuration files done by Hermes, such as dB conversion or linear
 number spaces.</p>
 <p>Returns: Clean flag.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.core.factory.Factory.registered_classes">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">registered_classes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><span class="pre">Serializable</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.factory.Factory.registered_classes" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">registered_classes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ValuesView</span><span class="p"><span class="pre">[</span></span><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><span class="pre">Serializable</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.factory.Factory.registered_classes" title="Permalink to this definition">#</a></dt>
 <dd><p>Classes registered for serialization within the factory.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Set</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code>[<a class="reference internal" href="#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a>]]</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.core.factory.Factory.registered_tags">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">registered_tags</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.factory.Factory.registered_tags" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">registered_tags</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">KeysView</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.factory.Factory.registered_tags" title="Permalink to this definition">#</a></dt>
 <dd><p>Read registered YAML tags.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p>Set of registered YAML tags.</p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>Set[str]</p>
-</dd>
-</dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="hermespy.core.factory.Factory.load">
-<span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.Factory.load" title="Permalink to this definition"></a></dt>
-<dd><p>Load a serialized executable configuration from a filesystem location.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>path</strong> (<em>str</em>) – Path to a file or a folder featuring serialization files.</p>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Serializable HermesPy objects.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>executables (List[<a class="reference internal" href="#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable">Serializable</a>])</p>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><ul class="simple">
-<li><p><strong>RuntimeError</strong> – If <cite>path</cite> does not contain an executable object.</p></li>
-<li><p><strong>RuntimeError</strong> – If <cite>path</cite> contains more than one executable object.</p></li>
-</ul>
-</dd>
-</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="hermespy.core.factory.Factory.tag_registry">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tag_registry</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Mapping</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><span class="pre">Serializable</span></a><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.core.factory.Factory.tag_registry" title="Permalink to this definition">#</a></dt>
+<dd><p>Read registered YAML tags.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.core.factory.Factory.from_path">
-<span class="sig-name descname"><span class="pre">from_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">paths</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.Factory.from_path" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">from_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">paths</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.Factory.from_path" title="Permalink to this definition">#</a></dt>
 <dd><p>Load a configuration from an arbitrary file system path.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>paths</strong> (<em>Union</em><em>[</em><em>str</em><em>, </em><em>Set</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Paths to a file or a folder featuring .yml config files.</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>List of serializable objects recalled from <cite>paths</cite>.</p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>List[Any]</p>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If the provided <cite>path</cite> does not exist on the filesystem.</p>
+</dl>
+<p>Returns: Serializable objects recalled from <cite>paths</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the provided <cite>path</cite> does not exist on the filesystem.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.core.factory.Factory.from_folder">
-<span class="sig-name descname"><span class="pre">from_folder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recurse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">follow_links</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.Factory.from_folder" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">from_folder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recurse</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">follow_links</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.Factory.from_folder" title="Permalink to this definition">#</a></dt>
 <dd><p>Load a configuration from a folder.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>path</strong> (<em>str</em>) – Path to the folder configuration.</p></li>
 <li><p><strong>recurse</strong> (<em>bool</em><em>, </em><em>optional</em>) – Recurse into sub-folders within <cite>path</cite>.</p></li>
 <li><p><strong>follow_links</strong> (<em>bool</em><em>, </em><em>optional</em>) – Follow links within <cite>path</cite>.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>List of serializable objects recalled from <cite>path</cite>.</p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>], <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>List[Any]</p>
-</dd>
-<dt class="field-even">Raises</dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If <cite>path</cite> is not a directory.</p>
+</dl>
+<p>Returns: Serializable objects recalled from <cite>path</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If <cite>path</cite> is not a directory.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.core.factory.Factory.to_folder">
-<span class="sig-name descname"><span class="pre">to_folder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.Factory.to_folder" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">to_folder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.Factory.to_folder" title="Permalink to this definition">#</a></dt>
 <dd><p>Dump a configuration to a folder.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>path</strong> (<em>str</em>) – Path to the folder configuration.</p></li>
 <li><p><strong>*args</strong> (<em>Any</em>) – Configuration objects to be dumped.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
@@ -549,36 +600,34 @@ number spaces.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.core.factory.Factory.from_str">
-<span class="sig-name descname"><span class="pre">from_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.Factory.from_str" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">from_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.Factory.from_str" title="Permalink to this definition">#</a></dt>
 <dd><p>Load a configuration from a string object.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>config</strong> (<em>str</em>) – The configuration to be loaded.</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>List of serialized objects within <cite>path</cite>.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>List[Any]</p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>], <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</p>
 </dd>
 </dl>
+<p>Returns: List of objects or object from <cite>config</cite>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.core.factory.Factory.to_str">
-<span class="sig-name descname"><span class="pre">to_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.Factory.to_str" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">to_str</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.Factory.to_str" title="Permalink to this definition">#</a></dt>
 <dd><p>Dump a configuration to a folder.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>*args</strong> (<em>Any</em>) – Configuration objects to be dumped.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>String containing full YAML configuration.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>RepresenterError</strong> – If objects in <code class="docutils literal notranslate"><span class="pre">*args</span></code> are unregistered classes.</p>
 </dd>
 </dl>
@@ -586,36 +635,34 @@ number spaces.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.core.factory.Factory.from_file">
-<span class="sig-name descname"><span class="pre">from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.Factory.from_file" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.Factory.from_file" title="Permalink to this definition">#</a></dt>
 <dd><p>Load a configuration from a single YAML file.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>file</strong> (<em>str</em>) – Path to the folder configuration.</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>List of serialized objects within <cite>path</cite>.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>List[Any]</p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>], <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</p>
 </dd>
 </dl>
+<p>Returns: Serialized objects within <cite>path</cite>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.core.factory.Factory.to_file">
-<span class="sig-name descname"><span class="pre">to_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.Factory.to_file" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">to_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.Factory.to_file" title="Permalink to this definition">#</a></dt>
 <dd><p>Dump a configuration to a single YML file.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>path</strong> (<em>str</em>) – Path to the configuration file.</p></li>
 <li><p><strong>*args</strong> (<em>Any</em>) – Configuration objects to be dumped.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>RepresenterError</strong> – If objects in <code class="docutils literal notranslate"><span class="pre">*args</span></code> are unregistered classes.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
@@ -623,19 +670,19 @@ number spaces.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.core.factory.Factory.from_stream">
-<span class="sig-name descname"><span class="pre">from_stream</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stream</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.Factory.from_stream" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">from_stream</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stream</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.Factory.from_stream" title="Permalink to this definition">#</a></dt>
 <dd><p>Load a configuration from an arbitrary text stream.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>stream</strong> (<em>TextIOBase</em>) – Text stream containing the configuration.</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>List of serialized objects within <cite>stream</cite>.</p>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code>[<code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>], <code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code>]</p>
 </dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>List[Any]</p>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List of deserialized objects or object within <cite>stream</cite>.</p>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>ConstructorError</strong> – If YAML parsing fails.</p>
 </dd>
 </dl>
@@ -643,19 +690,19 @@ number spaces.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.core.factory.Factory.to_stream">
-<span class="sig-name descname"><span class="pre">to_stream</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stream</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.Factory.to_stream" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">to_stream</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stream</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.Factory.to_stream" title="Permalink to this definition">#</a></dt>
 <dd><p>Dump a configuration to an arbitrary text stream.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>stream</strong> (<em>TextIOBase</em>) – Text stream to the configuration.</p></li>
 <li><p><strong>*args</strong> (<em>Any</em>) – Configuration objects to be dumped.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>RepresenterError</strong> – If objects in <code class="docutils literal notranslate"><span class="pre">*args</span></code> are unregistered classes.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
@@ -664,22 +711,29 @@ number spaces.</p>
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="hermespy.core.factory.HDFSerializableType">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">HDFSerializableType</span></span><a class="headerlink" href="#hermespy.core.factory.HDFSerializableType" title="Permalink to this definition">#</a></dt>
+<dd><p>Type of HDF Serializable Class</p>
+<p>alias of TypeVar(‘HDFSerializableType’, bound=<a class="reference internal" href="#hermespy.core.factory.HDFSerializable" title="hermespy.core.factory.HDFSerializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">HDFSerializable</span></code></a>)</p>
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="hermespy.core.factory.HDFSerializable">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">HDFSerializable</span></span><a class="headerlink" href="#hermespy.core.factory.HDFSerializable" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">HDFSerializable</span></span><a class="headerlink" href="#hermespy.core.factory.HDFSerializable" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Base class for object serializble to the HDF5 format.</p>
+<p>Base class for object serializable to the HDF5 format.</p>
 <p>Structures are serialized to HDF5 files by the <a class="reference internal" href="#hermespy.core.factory.HDFSerializable.to_HDF" title="hermespy.core.factory.HDFSerializable.to_HDF"><code class="xref py py-meth docutils literal notranslate"><span class="pre">to_HDF()</span></code></a> routine and
 de-serialized by the <a class="reference internal" href="#hermespy.core.factory.HDFSerializable.from_HDF" title="hermespy.core.factory.HDFSerializable.from_HDF"><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_HDF()</span></code></a> method, respectively.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.core.factory.HDFSerializable.to_HDF">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_HDF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.HDFSerializable.to_HDF" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">to_HDF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.HDFSerializable.to_HDF" title="Permalink to this definition">#</a></dt>
 <dd><p>Serialize the object state to HDF5.</p>
 <p>Dumps the object’s state and additional information to a HDF5 group.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>group</strong> (<em>Group</em>) – The HDF5 group to which the object is serialized.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
@@ -687,59 +741,77 @@ de-serialized by the <a class="reference internal" href="#hermespy.core.factory.
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.core.factory.HDFSerializable.from_HDF">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_HDF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.HDFSerializable.from_HDF" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_HDF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">group</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.core.factory.HDFSerializable.from_HDF" title="Permalink to this definition">#</a></dt>
 <dd><p>De-Serialized the object state from HDF5.</p>
 <p>Recalls the object’s state from a HDF5 group.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>group</strong> (<em>Group</em>) – The HDF5 group from which the object state is recalled.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code>(<code class="docutils literal notranslate"><span class="pre">HDFSerializableType</span></code>, bound= HDFSerializable)</p>
 </dd>
 </dl>
 <p>Returns: The object initialized from the HDF5 group state.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference internal" href="#hermespy.core.factory.HDFSerializable" title="hermespy.core.factory.HDFSerializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">HDFSerializable</span></code></a></p>
-</dd>
-</dl>
 </dd></dl>
 
 </dd></dl>
 
 
-
-           </div>
-          </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="core.executable.html" class="btn btn-neutral float-left" title="Executable" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="core.definitions.html" class="btn btn-neutral float-right" title="General Definitions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-    </div>
-
-  <hr/>
-
-  <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f9e7db02550>
-<p>
-    <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
-    <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>
-</p>
-
-  </div>
-
-  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
-
-</footer>
-        </div>
+        </article>
       </div>
-    </section>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="core.definitions.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">General Definitions</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="core.executable.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Executable</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2023, Barkhausen Institut gGmbH
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
   </div>
-  <script>
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script> 
-
-</body>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/scripts/furo.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    </body>
 </html>

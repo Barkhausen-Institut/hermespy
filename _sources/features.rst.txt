@@ -20,7 +20,7 @@ Full releases with a new set of features will be provided on a bi-anual basis in
 
    * - Conventional Beamformer
      - :doc:`api/beamforming.conventional`
-     - 
+     - :doc:`notebooks/beamformer`
 
 .. list-table:: **Forward Error Correction**
    :header-rows: 1
@@ -37,11 +37,11 @@ Full releases with a new set of features will be provided on a bi-anual basis in
      - :doc:`api/fec.crc`
      -
 
-   * - **Low Differential Parity Checks**
+   * - Low Differential Parity Checks
      - :doc:`api/fec.ldpc`
      - :doc:`examples/ofdm_5g`
 
-   * - **Polar Codes**
+   * - Polar Codes
      - :doc:`api/fec.polar`
      -
 
@@ -49,11 +49,11 @@ Full releases with a new set of features will be provided on a bi-anual basis in
      - :doc:`api/fec.repetition`
      - :doc:`examples/chirp_fsk_lora`, :doc:`getting_started`
 
-   * - **Reed Solomon Codes**
+   * - Reed Solomon Codes
      - :doc:`api/fec.rs`
      -
 
-   * - **Recursive Systematic Convolutional Codes**
+   * - Recursive Systematic Convolutional Codes
      - :doc:`api/fec.rsc`
      - 
 
@@ -61,7 +61,7 @@ Full releases with a new set of features will be provided on a bi-anual basis in
      - :doc:`api/fec.scrambler`
      -
 
-   * - **Turbo Coding**
+   * - Turbo Coding
      - :doc:`api/fec.turbo`
      - 
 
@@ -112,9 +112,21 @@ Full releases with a new set of features will be provided on a bi-anual basis in
      - :doc:`api/channel.quadriga`
      -
 
+   * - **Spatial Delay Channel**
+     - :class:`SpatialDelayChannel<hermespy.channel.delay.SpatialDelayChannel>`
+     - 
+
+   * - **Random Delay Channel**
+     - :class:`RandomDelayChannel<hermespy.channel.delay.RandomDelayChannel>`
+     - 
+
    * - **Radar Single Reflector**
-     - :doc:`api/channel.radar_channel`
+     - :class:`SingleTargetRadarChannel<hermespy.channel.radar_channel.SingleTargetRadarChannel>`
      - :doc:`examples/jcas`
+
+   * - **Radar Multi Reflector**
+     - :class:`MultiTargetRadarChannel<hermespy.channel.radar_channel.MultiTargetRadarChannel>`
+     -
 
 .. list-table:: **Communication Modulation**
    :header-rows: 1
@@ -124,11 +136,11 @@ Full releases with a new set of features will be provided on a bi-anual basis in
      - Examples
 
    * - Chirp FSK
-     - :doc:`api/modem.waveform_generator_chirp_fsk`
+     - :doc:`api/modem.waveform_chirp_fsk`
      - :doc:`examples/chirp_fsk_lora`
  
    * - OFDM
-     - :doc:`api/modem.waveform_generator_ofdm`
+     - :doc:`api/modem.waveform_ofdm`
      - :doc:`examples/interference_ofdm_single_carrier`,
        :doc:`examples/ofdm_5g`,
        :doc:`examples/ofdm_single_carrier`
@@ -207,19 +219,19 @@ Full releases with a new set of features will be provided on a bi-anual basis in
      - Examples
 
    * - Alamouti
-     - :doc:`api/precoding.space_time_block_coding`
+     - :doc:`api/modem.precoding.space_time_block_coding`
      - 
 
    * - 
-     - :doc:`api/precoding.single_carrier`
+     - :doc:`api/modem.precoding.single_carrier`
      - :doc:`examples/ofdm_5g`
 
    * - 
-     - :doc:`api/precoding.spatial_multiplexing`
+     - :doc:`api/modem.precoding.spatial_multiplexing`
      - 
 
    * - Maximum Ratio Combining
-     - :doc:`api/precoding.ratio_combining`
+     - :doc:`api/modem.precoding.ratio_combining`
      - 
 
 
@@ -231,7 +243,7 @@ Full releases with a new set of features will be provided on a bi-anual basis in
      - Examples
 
    * - DFT
-     - :doc:`api/precoding.dft`
+     - :doc:`api/modem.precoding.dft`
      - 
 
 

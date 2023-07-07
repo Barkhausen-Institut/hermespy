@@ -22,17 +22,23 @@ Install the package by executing the following commands within a terminal:
 
 .. tabs::
 
-   .. code-tab:: batch Windows
+   .. code-tab:: batch Windows Conda
 
-      conda create -n <envname> python=3.9
+      conda create -n <envname> python=3.10
       conda activate <envname>
       conda install pip
       pip install hermespy
 
-   .. code-tab:: bash Linux
+   .. code-tab:: batch Windows vEnv
+
+      python -m venv <envname>
+      <envname>\\Scripts\\activate
+      pip install hermespy
+
+   .. code-tab:: bash Linux vEnv
 
       python -m venv env
-      . env/bin/activate
+      source env/bin/activate
       pip install hermespy
 
 Executing these statements sequentially results in the following actions:
@@ -43,6 +49,37 @@ Executing these statements sequentially results in the following actions:
 
 Note that if you plan on utilizing HermesPy within an already existing Python environment,
 you may omit step one and replace `<envname>` by the title of the existing environment.
+
+Hermes' setup lists a set of optional features requiring the installation of additional dependencies.
+In order for those features to function properly, the respective identifiers have to be appended to the installation command
+
+.. code:: bash
+
+   pip install "hermespy[feature,feature,feature]"
+
+The following feature identifiers are available:
+
+.. list-table:: Optional Features
+   :header-rows: 1
+
+   * - Feature
+     - Description
+
+   * - quadriga
+     - Support for the `Quadriga`_ channel model
+
+   * - uhd
+     - Support for the USRP Hardware Driver
+
+   * - audio
+     - Support for audio hardware
+
+   * - documentation
+     - Dependencies to build the documentation from source
+
+   * - develop
+     - Dependencies to build binaries from source
+
 
 Install from Source
 -------------------
@@ -74,17 +111,23 @@ Build and install the package contained within the repository by executing the f
 
 .. tabs::
 
-   .. code-tab:: batch Windows
+   .. code-tab:: batch Windows Conda
 
-      conda create -n <envname> python=3.9
+      conda create -n <envname> python=3.10
       conda activate <envname>
       conda install pip
       pip install .
 
-   .. code-tab:: bash Linux
+   .. code-tab:: batch Windows vEnv
+
+      python -m venv <envname>
+      <envname>\\Scripts\\activate
+      pip install .
+
+   .. code-tab:: bash Linux vEnv
 
       python -m venv env
-      . env/bin/activate
+      source env/bin/activate
       pip install .
 
 Executing these statements sequentially results in the following actions:
@@ -101,19 +144,26 @@ As a result, all combined binaries and source files will remain within the repos
 
 .. tabs::
 
-   .. code-tab:: batch Windows
+   .. code-tab:: batch Windows Conda
 
       conda create -n <envname> python=3.9
       conda activate <envname>
       conda install pip
-      pip install -e .[develop]
+      pip install -e ".[develop]"
       python -m setup develop
 
-   .. code-tab:: bash Linux
+   .. code-tab:: batch Windows vEnv
+
+      python -m venv <envname>
+      <envname>\\Scripts\\activate
+      pip install -e ".[develop]"
+      python -m setup develop
+
+   .. code-tab:: bash Linux vEnv
 
       python -m venv env
-      . env/bin/activate
-      pip install -e .[develop]
+      source env/bin/activate
+      pip install -e ".[develop]"
       python -m setup develop
 
 

@@ -1,244 +1,405 @@
-<!DOCTYPE html>
-<html class="writer-html5" lang="en" >
-<head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+<!doctype html>
+<html class="no-js" lang="en">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Phase Noise Modeling" href="simulation.rf_chain.phase_noise.html" /><link rel="prev" title="Hardware Radio Frequency Chain Modeling" href="simulation.rf_chain.html" />
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Power Amplifier Modeling &mdash; HermesPy Documentation</title>
-      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/copybutton.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/plot_directive.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/tweaks.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/tabs.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/dark_mode_css/general.css" type="text/css" />
-      <link rel="stylesheet" href="../_static/dark_mode_css/dark.css" type="text/css" />
-  <!--[if lt IE 9]>
-    <script src="../_static/js/html5shiv.min.js"></script>
-  <![endif]-->
+    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
+        <title>Power Amplifier Modeling - HermesPy</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/tweaks.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #eeffcc;
+  --color-code-foreground: black;
+  --color-brand-primary: #4C8BC6;
+  --color-brand-content: #4C8BC6;
   
-        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script src="../_static/doctools.js"></script>
-        <script src="../_static/sphinx_highlight.js"></script>
-        <script src="../_static/clipboard.min.js"></script>
-        <script src="../_static/copybutton.js"></script>
-        <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
-        <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
-        <script>mermaid.initialize({startOnLoad:true});</script>
-        <script src="../_static/dark_mode_js/default_dark.js"></script>
-        <script src="../_static/dark_mode_js/theme_switcher.js"></script>
-    <script src="../_static/js/theme.js"></script>
-    <link rel="index" title="Index" href="../genindex.html" />
-    <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Phase Noise Modeling" href="simulation.rf_chain.phase_noise.html" />
-    <link rel="prev" title="Transmit-Receive Leakage Modeling" href="simulation.rf_chain.leakage.html" /> 
-</head>
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
 
-<body class="wy-body-for-nav"> 
-  <div class="wy-grid-for-nav">
-    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> HermesPy
-            <img src="../_static/bi.svg" class="logo" alt="Logo"/>
-          </a>
-              <div class="version">
-                1.0.0
-              </div>
-<div role="search">
-  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
-    <input type="hidden" name="check_keywords" value="yes" />
-    <input type="hidden" name="area" value="default" />
-  </form>
-</div>
-        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <ul class="current">
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../index.html"><div class="brand">HermesPy</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../_static/bi.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">HermesPy</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="api.html">HermesPy API</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="core.html">Core</a></li>
-<li class="toctree-l2"><a class="reference internal" href="channel.html">Channel Modeling</a></li>
-<li class="toctree-l2"><a class="reference internal" href="fec.html">Error Correction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a></li>
-<li class="toctree-l2"><a class="reference internal" href="jcas.html">JCAS</a></li>
-<li class="toctree-l2"><a class="reference internal" href="modem.html">Communication</a></li>
-<li class="toctree-l2"><a class="reference internal" href="precoding.html">Precoding</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamforming.html">Beamforming</a></li>
-<li class="toctree-l2"><a class="reference internal" href="radar.html">Sensing</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="simulation.html">Simulation</a><ul class="current">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials.html">Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/channel.html">Implementing Channels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/fec_coding.html">Implementing FEC codings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/beamformer.html">Implementing Beamformers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/waveform.html">Implementing Communication Waveforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/precoding.html">Implementing Precodings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/roc.html">Receiver Operating Characteristics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/datasets.html">Recording Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/audio.html">Using Audio Equipment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/evaluator.html">Implementing Evaluators</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Configuration Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../examples/chirp_fsk_lora.html">Chirp FSK LORA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/chirp_qam.html">Chirp QAM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/hardware_model.html">Hardware Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/interference_ofdm_single_carrier.html">OFDM Interference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/jcas.html">JCAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/ofdm_5g.html">OFDM 5G</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/ofdm_single_carrier.html">OFDM Single Carrier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/operator_separation.html">Operator Separation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/uhd.html">USRP Hardware Driver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../examples/audio.html">Audio Hardware Binding</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="api.html">HermesPy API</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of HermesPy API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="core.html">Core</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html">PyMonte</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.executable.html">Executable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.factory.html">Serialization Factory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.definitions.html">General Definitions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.html">Device Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.operators.html">Extra Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.logarithmic.html">Logarithmics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.pipeline.html">Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.random_node.html">Random Graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.scenario.html">Wireless Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.signal_model.html">Signal Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.channel_state_information.html">Channel State Information Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.antennas.html">Antenna Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.transformation.html">Coordinate System Transformations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.animation.html">Animation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.visualize.html">Visualization</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="channel.html">Channel Modeling</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Channel Modeling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="channel.channel.html">Channel Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.ideal.html">Ideal Channel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_channel.html">Multipath Fading</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_templates.html">Multipath Fading Standard Templates</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_lines.html">3GPP Cluster Delay Line Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.html">3GPP Cluster Delay Line Indoor Factory Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_indoor_office.html">3GPP Cluster Delay Line Indoor Office Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.html">3GPP Rural Macrocells Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_street_canyon.html">3GPP Street Canyon (Urban Microcells) Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.html">3GPP Urban Macrocells Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.delay.html">Delay Channel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.radar_channel.html">Single-Target Radar Channel Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.quadriga.html">Quadriga Channel Model</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="fec.html">Error Correction</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Error Correction</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="fec.coding.html">Coding Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fec.block_interleaver.html">Interleaving</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fec.crc.html">Cyclic Redundancy Checks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fec.repetition.html">Repetition Coding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fec.scrambler.html">Scrambling</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Hardware Loop</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.hardware_loop.html">Hardware Loop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device.html">Physical Devices</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.scenario.html">Physical Device Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device_dummy.html">Physical Device Dummy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.visualizers.html">Visualizers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.usrp.html">UHD System</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.usrp.html#uhd-device">UHD Device</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.audio.device.html">Audio Device Binding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.audio.scenario.html">Audio Device Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.calibration.delay.html">Delay Calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.calibration.leakage.html">Leakage Calibration</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="jcas.html">JCAS</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of JCAS</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="jcas.matched_filtering.html">Matched Filter JCAS</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="modem.html">Communication</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Communication</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.html">Modem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.bits_source.html">Bit Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.symbols.html">Communication Symbols</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform.html">Communication Waveform Base</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html">Communication Evaluators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html">Filtered Single Carrier Waveforms</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_chirp_fsk.html">Chirp Frequency Shift Keying</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_ofdm.html">Orthogonal Frequency Division Multiplexing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.waveform_correlation_synchronization.html">Correlation-Based Waveform Synchronization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.precoding.symbol_precoding.html">Symbol Precoding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.precoding.dft.html">Discrete Fourier Transform Precoding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.precoding.single_carrier.html">Single Carrier Encoding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.precoding.spatial_multiplexing.html">Spatial Multiplexing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.precoding.ratio_combining.html">Maximum Ratio Combining</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.precoding.space_time_block_coding.html">Space-Time Block Coding</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="precoding.html">Precoding</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of Precoding</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="precoding.precoding.html">Precoding Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="precoding.stream_precoding.html">Stream Precoding</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="beamforming.html">Beamforming</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Beamforming</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="beamforming.beamformer.html">Beamformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="beamforming.conventional.html">Conventional Beamformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="beamforming.capon.html">Capon Beamformer</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="radar.html">Sensing</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of Sensing</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="radar.radar.html">Radar Device Operation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.cube.html">Radar Cube</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.detection.html">Radar Detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html">Radar Evaluation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.fmcw.html">Frequency Modulated Continuous Waveform Radar</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current has-children"><a class="reference internal" href="simulation.html">Simulation</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Simulation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="simulation.simulation.html">Simulation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.SimulationScenario"><code class="docutils literal notranslate"><span class="pre">SimulationScenario</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.SimulationRunner"><code class="docutils literal notranslate"><span class="pre">SimulationRunner</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.simulation.html#hermespy.simulation.simulation.Simulation"><code class="docutils literal notranslate"><span class="pre">Simulation</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="simulation.simulated_device.html">Simulated Devices</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice"><code class="docutils literal notranslate"><span class="pre">SimulatedDevice</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="simulation.analog_digital_converter.html">Analog-to-Digital Converter</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.GainControlType"><code class="docutils literal notranslate"><span class="pre">GainControlType</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.Gain"><code class="docutils literal notranslate"><span class="pre">Gain</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.AutomaticGainControl"><code class="docutils literal notranslate"><span class="pre">AutomaticGainControl</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.QuantizerType"><code class="docutils literal notranslate"><span class="pre">QuantizerType</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter"><code class="docutils literal notranslate"><span class="pre">AnalogDigitalConverter</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.html">Hardware Radio Frequency Chain Modeling</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.html#hermespy.simulation.rf_chain.rf_chain.RfChain"><code class="docutils literal notranslate"><span class="pre">RfChain</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.leakage.html">Transmit-Receive Leakage Modeling</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.leakage.html#hermespy.simulation.rf_chain.leakage.Leakage"><code class="docutils literal notranslate"><span class="pre">Leakage</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.leakage.html#hermespy.simulation.rf_chain.leakage.LinearLeakage"><code class="docutils literal notranslate"><span class="pre">LinearLeakage</span></code></a></li>
-<li class="toctree-l3 current"><a class="current reference internal" href="#">Power Amplifier Modeling</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier"><code class="docutils literal notranslate"><span class="pre">PowerAmplifier</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.yaml_tag"><code class="docutils literal notranslate"><span class="pre">PowerAmplifier.yaml_tag</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.serialized_attributes"><code class="docutils literal notranslate"><span class="pre">PowerAmplifier.serialized_attributes</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.adjust_power"><code class="docutils literal notranslate"><span class="pre">PowerAmplifier.adjust_power</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.saturation_amplitude"><code class="docutils literal notranslate"><span class="pre">PowerAmplifier.saturation_amplitude</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.send"><code class="docutils literal notranslate"><span class="pre">PowerAmplifier.send()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.model"><code class="docutils literal notranslate"><span class="pre">PowerAmplifier.model()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.plot"><code class="docutils literal notranslate"><span class="pre">PowerAmplifier.plot()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier"><code class="docutils literal notranslate"><span class="pre">ClippingPowerAmplifier</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier.yaml_tag"><code class="docutils literal notranslate"><span class="pre">ClippingPowerAmplifier.yaml_tag</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier.model"><code class="docutils literal notranslate"><span class="pre">ClippingPowerAmplifier.model()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier.adjust_power"><code class="docutils literal notranslate"><span class="pre">ClippingPowerAmplifier.adjust_power</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier"><code class="docutils literal notranslate"><span class="pre">RappPowerAmplifier</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier.yaml_tag"><code class="docutils literal notranslate"><span class="pre">RappPowerAmplifier.yaml_tag</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier.smoothness_factor"><code class="docutils literal notranslate"><span class="pre">RappPowerAmplifier.smoothness_factor</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier.model"><code class="docutils literal notranslate"><span class="pre">RappPowerAmplifier.model()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier.adjust_power"><code class="docutils literal notranslate"><span class="pre">RappPowerAmplifier.adjust_power</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier"><code class="docutils literal notranslate"><span class="pre">SalehPowerAmplifier</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.yaml_tag"><code class="docutils literal notranslate"><span class="pre">SalehPowerAmplifier.yaml_tag</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.serialized_attributes"><code class="docutils literal notranslate"><span class="pre">SalehPowerAmplifier.serialized_attributes</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.phase_alpha"><code class="docutils literal notranslate"><span class="pre">SalehPowerAmplifier.phase_alpha</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.phase_beta"><code class="docutils literal notranslate"><span class="pre">SalehPowerAmplifier.phase_beta</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.amplitude_alpha"><code class="docutils literal notranslate"><span class="pre">SalehPowerAmplifier.amplitude_alpha</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.amplitude_beta"><code class="docutils literal notranslate"><span class="pre">SalehPowerAmplifier.amplitude_beta</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.model"><code class="docutils literal notranslate"><span class="pre">SalehPowerAmplifier.model()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier"><code class="docutils literal notranslate"><span class="pre">CustomPowerAmplifier</span></code></a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.yaml_tag"><code class="docutils literal notranslate"><span class="pre">CustomPowerAmplifier.yaml_tag</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.serialized_attributes"><code class="docutils literal notranslate"><span class="pre">CustomPowerAmplifier.serialized_attributes</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.model"><code class="docutils literal notranslate"><span class="pre">CustomPowerAmplifier.model()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.input"><code class="docutils literal notranslate"><span class="pre">CustomPowerAmplifier.input</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.gain"><code class="docutils literal notranslate"><span class="pre">CustomPowerAmplifier.gain</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.phase"><code class="docutils literal notranslate"><span class="pre">CustomPowerAmplifier.phase</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">Power Amplifier Modeling</a></li>
 <li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.phase_noise.html">Phase Noise Modeling</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.phase_noise.html#hermespy.simulation.rf_chain.phase_noise.PhaseNoise"><code class="docutils literal notranslate"><span class="pre">PhaseNoise</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.phase_noise.html#hermespy.simulation.rf_chain.phase_noise.NoPhaseNoise"><code class="docutils literal notranslate"><span class="pre">NoPhaseNoise</span></code></a></li>
 <li class="toctree-l3"><a class="reference internal" href="simulation.noise.html">Noise Modeling</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.noise.html#hermespy.simulation.noise.noise.Noise"><code class="docutils literal notranslate"><span class="pre">Noise</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.noise.html#hermespy.simulation.noise.noise.AWGN"><code class="docutils literal notranslate"><span class="pre">AWGN</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.coupling.html">Mutual Coupling</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.coupling.html#hermespy.simulation.coupling.coupling.Coupling"><code class="docutils literal notranslate"><span class="pre">Coupling</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.isolation.html">Antenna Isolation Modeling</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.isolation.html#hermespy.simulation.isolation.isolation.Isolation"><code class="docutils literal notranslate"><span class="pre">Isolation</span></code></a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="simulation.coupling.html">Mutual Coupling</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Mutual Coupling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="simulation.coupling.perfect.html">Perfect Coupling</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.coupling.impedance.html">Impedance Coupling</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="bin.html">Entry Points</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tools.html">Tools</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="simulation.isolation.html">Antenna Isolation Modeling</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of Antenna Isolation Modeling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="simulation.isolation.perfect.html">Perfect Isolation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.isolation.impedance.html">Impedance Isolation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.isolation.specific.html">Specific Isolation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="bin.html">Entry Points</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of Entry Points</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="bin.hermes.html">Hermes Command Line Interface</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tools.html">Tools</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of Tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="tools.math.html">Math Tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tools.resampling.html">Resampling Routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tools.tile.html">Tile Figures</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
 </ul>
 
-        </div>
-      </div>
-    </nav>
-
-    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
-          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">HermesPy</a>
-      </nav>
-
-      <div class="wy-nav-content">
-        <div class="rst-content">
-          <div role="navigation" aria-label="Page navigation">
-  <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a></li>
-          <li class="breadcrumb-item"><a href="api.html">HermesPy API</a></li>
-          <li class="breadcrumb-item"><a href="simulation.html">Simulation</a></li>
-      <li class="breadcrumb-item active">Power Amplifier Modeling</li>
-      <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/api/simulation.rf_chain.power_amplifier.rst.txt" rel="nofollow"> View page source</a>
-      </li>
-  </ul>
-  <hr/>
 </div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
-             
-  
-<style>
-/* CSS overrides for sphinx_rtd_theme */
+</div>
 
-/* 24px margin */
-.nbinput.nblast.container,
-.nboutput.nblast.container {
-    margin-bottom: 19px;  /* padding has already 5px */
-}
-
-/* ... except between code cells! */
-.nblast.container + .nbinput.container {
-    margin-top: -19px;
-}
-
-.admonition > p:before {
-    margin-right: 4px;  /* make room for the exclamation icon */
-}
-
-/* Fix math alignment, see https://github.com/rtfd/sphinx_rtd_theme/pull/686 */
-.math {
-    text-align: unset;
-}
-</style>
-<span class="target" id="module-hermespy.simulation.rf_chain.power_amplifier"></span><section id="power-amplifier-modeling">
-<h1>Power Amplifier Modeling<a class="headerlink" href="#power-amplifier-modeling" title="Permalink to this heading"></a></h1>
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          
+<div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <span class="target" id="module-hermespy.simulation.rf_chain.power_amplifier"></span><section id="power-amplifier-modeling">
+<h1>Power Amplifier Modeling<a class="headerlink" href="#power-amplifier-modeling" title="Permalink to this heading">#</a></h1>
 <p>Power amplification modeling represents a single processing step within the radio-frequency hardware model of
 transmitting modems.</p>
 <div class="mermaid">
             classDiagram
   PowerAmplifier &lt;|-- ClippingPowerAmplifier
   PowerAmplifier &lt;|-- CustomPowerAmplifier
-  Serializable &lt;|-- PowerAmplifier
-  PowerAmplifier &lt;|-- SalehPowerAmplifier
   PowerAmplifier &lt;|-- RappPowerAmplifier
+  PowerAmplifier &lt;|-- SalehPowerAmplifier
+  Serializable &lt;|-- PowerAmplifier
         </div><p>Each power amplifier model instance implements an equation</p>
+<div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
 \[s'(t) = f\lbrace s(t), t \rbrace \in \mathbb{C}\]</div>
+</div>
 <p>distorting complex-valued signal samples <span class="math notranslate nohighlight">\(s(t) \in \mathbb{C}\)</span> feeding into the power amplifier.
 For time-invariant (i.e. memoryless) models <span class="math notranslate nohighlight">\(f\lbrace s(t), t \rbrace = f\lbrace s(t) \rbrace\)</span>.
 The following figure visualizes the gain characteristics for the implemented amplification models for a saturation point <span class="math notranslate nohighlight">\(s_\mathrm{sat} = 1\)</span>.</p>
-<p>(<a class="reference external" href="../scripts/plot_pa_characteristics.py">Source code</a>, <a class="reference external" href="../scripts/plot_pa_characteristics.png">png</a>, <a class="reference external" href="../scripts/plot_pa_characteristics.hires.png">hires.png</a>, <a class="reference external" href="../scripts/plot_pa_characteristics.pdf">pdf</a>)</p>
+<p>(<a class="reference download internal" download="" href="../_downloads/418b59c9453b1e47078ecd59a98e32c6/plot_pa_characteristics.py"><code class="xref download docutils literal notranslate"><span class="pre">Source</span> <span class="pre">code</span></code></a>, <a class="reference download internal" download="" href="../_downloads/d333c145e10eafd03c0c67878f7fb0f3/plot_pa_characteristics.png"><code class="xref download docutils literal notranslate"><span class="pre">png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/826c55303d82782676b4f4e6b4c279bd/plot_pa_characteristics.hires.png"><code class="xref download docutils literal notranslate"><span class="pre">hires.png</span></code></a>, <a class="reference download internal" download="" href="../_downloads/bb6300dce4b3fe395c3f86c605b37ead/plot_pa_characteristics.pdf"><code class="xref download docutils literal notranslate"><span class="pre">pdf</span></code></a>)</p>
 <figure class="align-center">
 <img alt="../_images/plot_pa_characteristics.png" class="plot-directive" src="../_images/plot_pa_characteristics.png" />
 </figure>
 </section>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PowerAmplifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">saturation_amplitude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjust_power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">PowerAmplifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">saturation_amplitude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjust_power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
 <p>Base class of a power-amplifier model.</p>
 <p>Implements a distortion-less amplification model</p>
+<div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
 \[s'(t) = s(t) \text{,}\]</div>
+</div>
 <p>which may be overwritten by classes inheriting from this base.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>saturation_amplitude</strong> (<em>float</em><em>, </em><em>optional</em>) – Cut-off point for the linear behaviour of the amplification in Volt.</p></li>
 <li><p><strong>adjust_power</strong> (<em>bool</em><em>, </em><em>optional</em>) – Power adjustment flag.</p></li>
@@ -247,36 +408,36 @@ The following figure visualizes the gain characteristics for the implemented amp
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.yaml_tag">
-<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Distortionless'</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.yaml_tag" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Distortionless'</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.yaml_tag" title="Permalink to this definition">#</a></dt>
 <dd><p>YAML serialization tag.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.serialized_attributes">
-<span class="sig-name descname"><span class="pre">serialized_attributes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'adjust_power'}</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.serialized_attributes" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">serialized_attributes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set[str]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'adjust_power'}</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.serialized_attributes" title="Permalink to this definition">#</a></dt>
 <dd><p>Set of object attributes to be serialized.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.adjust_power">
-<span class="sig-name descname"><span class="pre">adjust_power</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.adjust_power" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">adjust_power</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.adjust_power" title="Permalink to this definition">#</a></dt>
 <dd><p>Power adjustment flag.</p>
 <p>If enabled, the power amplifier will normalize the distorted signal after propagation modeling.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.saturation_amplitude">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">saturation_amplitude</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.saturation_amplitude" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">saturation_amplitude</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.saturation_amplitude" title="Permalink to this definition">#</a></dt>
 <dd><p>Cut-off point for the linear behaviour of the amplification.</p>
 <p>Referred to as <span class="math notranslate nohighlight">\(s_\mathrm{sat} \ \mathbb{R}_{+}\)</span> in equations.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Saturation amplitude in Volt.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>float</p>
 </dd>
-<dt class="field-odd">Raises</dt>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>ValueError</strong> – If amplitude is smaller than zero.</p>
 </dd>
 </dl>
@@ -284,17 +445,17 @@ The following figure visualizes the gain characteristics for the implemented amp
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.send">
-<span class="sig-name descname"><span class="pre">send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.send" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">send</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.send" title="Permalink to this definition">#</a></dt>
 <dd><p>Model signal amplification characteristics.</p>
 <p>Internally calls the model subroutine of power-amplifier models implementing this prototype-class.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>input_signal</strong> (<em>np.ndarray</em>) – Sample vector of the signal feeding into the power amplifier.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Distorted signal after amplification modeling.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
@@ -302,16 +463,16 @@ The following figure visualizes the gain characteristics for the implemented amp
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.model">
-<span class="sig-name descname"><span class="pre">model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.model" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.model" title="Permalink to this definition">#</a></dt>
 <dd><p>Model signal amplification characteristics.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>input_signal</strong> (<em>np.ndarray</em>) – Sample vector of the signal feeding into the power amplifier.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Distorted signal after amplification modeling.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
@@ -319,11 +480,11 @@ The following figure visualizes the gain characteristics for the implemented amp
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.plot">
-<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.plot" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier.plot" title="Permalink to this definition">#</a></dt>
 <dd><p>Plot the power amplifier distortion characteristics.</p>
 <p>Generates a matplotlib plot depicting the phase/amplitude.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>samples</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Sample points at which to evaluate the characteristics.
 In other words, the x-axis of the resulting characteristics plot.</p></li>
@@ -331,7 +492,7 @@ In other words, the x-axis of the resulting characteristics plot.</p></li>
 By default, a new figure is created.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
@@ -341,66 +502,63 @@ By default, a new figure is created.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ClippingPowerAmplifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ClippingPowerAmplifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier" title="hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">PowerAmplifier</span></code></a></p>
 <p>Model of a clipping power amplifier.</p>
 <p>Complex signal samples with amplitudes above <span class="math notranslate nohighlight">\(s_\mathrm{sat} \in \mathbb{R}\)</span> will be clipped
 to the maximum amplitude value.
 In case of clipping, the respective sample angles will be preserved, so that</p>
+<div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
 \[s'(t) = \frac{s(t)}{|s(t)|} \cdot \min{(|s(t)|, s_\mathrm{sat})} \text{.}\]</div>
+</div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>kwargs</strong> (<em>Any</em>) – PowerAmplifier base class initialization arguments.</p>
 </dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier.yaml_tag">
-<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Clipping'</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier.yaml_tag" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Clipping'</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier.yaml_tag" title="Permalink to this definition">#</a></dt>
 <dd><p>YAML serialization tag.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier.model">
-<span class="sig-name descname"><span class="pre">model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier.model" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier.model" title="Permalink to this definition">#</a></dt>
 <dd><p>Model signal amplification characteristics.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>input_signal</strong> (<em>np.ndarray</em>) – Sample vector of the signal feeding into the power amplifier.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Distorted signal after amplification modeling.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier.adjust_power">
-<span class="sig-name descname"><span class="pre">adjust_power</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.ClippingPowerAmplifier.adjust_power" title="Permalink to this definition"></a></dt>
-<dd><p>Power adjustment flag.</p>
-<p>If enabled, the power amplifier will normalize the distorted signal after propagation modeling.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RappPowerAmplifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">smoothness_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">RappPowerAmplifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">smoothness_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier" title="hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">PowerAmplifier</span></code></a></p>
 <p>Model of a power amplifier according to Rapp’s model.</p>
 <p>Implements a saturation characteristic according to</p>
+<div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
 \[s'(t) = s(t) \cdot \left( 1 + \left( \frac{|s(t)|}{s_\mathrm{sat}} \right)^{2p_\mathrm{Rapp}} \right)^{-\frac{1}{2p_\mathrm{Rapp}}}
 \text{,}\]</div>
+</div>
 <p>where <span class="math notranslate nohighlight">\(p_\mathrm{Rapp} \in \lbrace x \in \mathbb{R} | x \geq 1 \rbrace\)</span>
 denotes the smoothness factor of the saturation curve.</p>
-<p>See Rapp<a class="footnote-reference brackets" href="#footcite-1991-rapp" id="id1">1</a> for further details.</p>
+<p>See Rapp<a class="footnote-reference brackets" href="#footcite-1991-rapp" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a> for further details.</p>
 <p>Clipping Power Amplifier object initialization.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>smoothness_factor</strong> (<em>float</em><em>, </em><em>optional</em>) – Smoothness factor of the amplification saturation characteristics.</p></li>
 <li><p><strong>kwargs</strong> (<em>Any</em>) – PowerAmplifier base class initialization arguments.</p></li>
@@ -409,23 +567,23 @@ denotes the smoothness factor of the saturation curve.</p>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier.yaml_tag">
-<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Rapp'</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier.yaml_tag" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Rapp'</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier.yaml_tag" title="Permalink to this definition">#</a></dt>
 <dd><p>YAML serialization tag.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier.smoothness_factor">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">smoothness_factor</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier.smoothness_factor" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">smoothness_factor</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier.smoothness_factor" title="Permalink to this definition">#</a></dt>
 <dd><p>Smoothness factor of the amplification saturation characteristics.</p>
 <p>Also referred to as Rapp-factor <span class="math notranslate nohighlight">\(p_\mathrm{Rapp}\)</span>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Smoothness factor.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>float</p>
 </dd>
-<dt class="field-odd">Raises</dt>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>ValueError</strong> – If smoothness factor is smaller than one.</p>
 </dd>
 </dl>
@@ -433,55 +591,54 @@ denotes the smoothness factor of the saturation curve.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier.model">
-<span class="sig-name descname"><span class="pre">model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier.model" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier.model" title="Permalink to this definition">#</a></dt>
 <dd><p>Model signal amplification characteristics.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>input_signal</strong> (<em>np.ndarray</em>) – Sample vector of the signal feeding into the power amplifier.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Distorted signal after amplification modeling.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier.adjust_power">
-<span class="sig-name descname"><span class="pre">adjust_power</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier.adjust_power" title="Permalink to this definition"></a></dt>
-<dd><p>Power adjustment flag.</p>
-<p>If enabled, the power amplifier will normalize the distorted signal after propagation modeling.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SalehPowerAmplifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amplitude_alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amplitude_beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase_alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase_beta</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SalehPowerAmplifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">amplitude_alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amplitude_beta</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase_alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase_beta</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier" title="hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">PowerAmplifier</span></code></a></p>
 <p>Model of a power amplifier according to Saleh.</p>
 <p>Implements a saturation characteristic according to</p>
+<div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
 \[s'(t) = s(t) \cdot A\lbrace s(t) \rbrace e^{\mathrm{j} \Phi\lbrace s(t) \rbrace}\]</div>
+</div>
 <p>where</p>
+<div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
 \[A\lbrace s \rbrace =
 \frac{ \alpha_\mathrm{a} \frac{|s|}{s_\mathrm{sat}} }
       { 1 + \beta_\mathrm{a} \frac{|s|^2}{s_\mathrm{sat}^2} }\]</div>
+</div>
 <p>describes the amplitude model depending on two parameters
 <span class="math notranslate nohighlight">\(\alpha_\mathrm{a}, \beta_\mathrm{a} \in \mathbb{R}_{+}\)</span>
 and</p>
+<div class="math-wrapper docutils container">
 <div class="math notranslate nohighlight">
 \[\Phi\lbrace s \rbrace =
 \frac{ \alpha_\Phi \frac{|s|}{s_\mathrm{sat}} }
       { 1 + \beta_\Phi \frac{|s|^2}{s_\mathrm{sat}^2} }\]</div>
+</div>
 <p>describes the phase model depending on
 <span class="math notranslate nohighlight">\(\alpha_\Phi, \beta_\Phi \in \mathbb{R}\)</span>, respectively.</p>
-<p>See Saleh<a class="footnote-reference brackets" href="#footcite-1981-saleh" id="id2">2</a> for further details.</p>
+<p>See Saleh<a class="footnote-reference brackets" href="#footcite-1981-saleh" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a> for further details.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>amplitude_alpha</strong> (<em>float</em>) – Amplitude model factor alpha.</p></li>
 <li><p><strong>amplitude_beta</strong> (<em>float</em>) – Amplitude model factor beta.</p></li>
@@ -493,40 +650,40 @@ and</p>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.yaml_tag">
-<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Saleh'</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.yaml_tag" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Saleh'</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.yaml_tag" title="Permalink to this definition">#</a></dt>
 <dd><p>YAML serialization tag.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.serialized_attributes">
-<span class="sig-name descname"><span class="pre">serialized_attributes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'adjust_power',</span> <span class="pre">'phase_alpha',</span> <span class="pre">'phase_beta'}</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.serialized_attributes" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">serialized_attributes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set[str]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'adjust_power',</span> <span class="pre">'phase_alpha',</span> <span class="pre">'phase_beta'}</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.serialized_attributes" title="Permalink to this definition">#</a></dt>
 <dd><p>Set of object attributes to be serialized.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.phase_alpha">
-<span class="sig-name descname"><span class="pre">phase_alpha</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.phase_alpha" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">phase_alpha</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.phase_alpha" title="Permalink to this definition">#</a></dt>
 <dd><p>Phase model factor <span class="math notranslate nohighlight">\(\alpha_\Phi\)</span>.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.phase_beta">
-<span class="sig-name descname"><span class="pre">phase_beta</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.phase_beta" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">phase_beta</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.phase_beta" title="Permalink to this definition">#</a></dt>
 <dd><p>Phase model factor <span class="math notranslate nohighlight">\(\beta_\Phi\)</span>.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.amplitude_alpha">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">amplitude_alpha</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.amplitude_alpha" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">amplitude_alpha</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.amplitude_alpha" title="Permalink to this definition">#</a></dt>
 <dd><p>Amplitude model factor <span class="math notranslate nohighlight">\(\alpha_\mathrm{a}\)</span>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Amplitude factor.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>float</p>
 </dd>
-<dt class="field-odd">Raises</dt>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>ValueError</strong> – If the factor is smaller than zero.</p>
 </dd>
 </dl>
@@ -534,16 +691,16 @@ and</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.amplitude_beta">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">amplitude_beta</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.amplitude_beta" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">amplitude_beta</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.amplitude_beta" title="Permalink to this definition">#</a></dt>
 <dd><p>Amplitude model factor <span class="math notranslate nohighlight">\(\beta_\mathrm{a}\)</span>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Amplitude factor.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>float</p>
 </dd>
-<dt class="field-odd">Raises</dt>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>ValueError</strong> – If the factor is smaller than zero.</p>
 </dd>
 </dl>
@@ -551,16 +708,16 @@ and</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.model">
-<span class="sig-name descname"><span class="pre">model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.model" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.SalehPowerAmplifier.model" title="Permalink to this definition">#</a></dt>
 <dd><p>Model signal amplification characteristics.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>input_signal</strong> (<em>np.ndarray</em>) – Sample vector of the signal feeding into the power amplifier.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Distorted signal after amplification modeling.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
@@ -570,11 +727,11 @@ and</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">CustomPowerAmplifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">CustomPowerAmplifier</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phase</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier" title="Permalink to this definition">#</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier" title="hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">PowerAmplifier</span></code></a></p>
 <p>Model of a customized power amplifier.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>input</strong> (<em>np.ndarray</em>) – </p></li>
 <li><p><strong>gain</strong> (<em>np.ndarray</em>) – </p></li>
@@ -582,34 +739,34 @@ and</p>
 <li><p><strong>kwargs</strong> (<em>Any</em>) – PowerAmplifier base class initialization arguments.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><strong>ValueError</strong> – If <cite>input</cite>, <cite>gain</cite>, and <cite>phase</cite> are not vectors of identical length.</p>
 </dd>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.yaml_tag">
-<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Custom'</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.yaml_tag" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'Custom'</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.yaml_tag" title="Permalink to this definition">#</a></dt>
 <dd><p>YAML serialization tag.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.serialized_attributes">
-<span class="sig-name descname"><span class="pre">serialized_attributes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'adjust_power',</span> <span class="pre">'gain',</span> <span class="pre">'input',</span> <span class="pre">'phase'}</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.serialized_attributes" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">serialized_attributes</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Set[str]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'adjust_power',</span> <span class="pre">'gain',</span> <span class="pre">'input',</span> <span class="pre">'phase'}</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.serialized_attributes" title="Permalink to this definition">#</a></dt>
 <dd><p>Set of object attributes to be serialized.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.model">
-<span class="sig-name descname"><span class="pre">model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.model" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_signal</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.model" title="Permalink to this definition">#</a></dt>
 <dd><p>Model signal amplification characteristics.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>input_signal</strong> (<em>np.ndarray</em>) – Sample vector of the signal feeding into the power amplifier.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Distorted signal after amplification modeling.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>np.ndarray</p>
 </dd>
 </dl>
@@ -617,81 +774,91 @@ and</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.input">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.input" title="Permalink to this definition"></a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
-</dd>
-</dl>
-</dd></dl>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.input" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.gain">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gain</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.gain" title="Permalink to this definition"></a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
-</dd>
-</dl>
-</dd></dl>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">gain</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.gain" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.phase">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">phase</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.phase" title="Permalink to this definition"></a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></p>
-</dd>
-</dl>
-</dd></dl>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">phase</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#hermespy.simulation.rf_chain.power_amplifier.CustomPowerAmplifier.phase" title="Permalink to this definition">#</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 
 <div class="docutils container" id="id3">
-<dl class="footnote brackets">
-<dt class="label" id="footcite-1991-rapp"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
-<dd><p>Ch. Rapp. Effects of HPA-nonlinearity on a 4-DPSK/OFDM-signal for a digital sound broadcasting system. In <em>Second European Conf. on Sat. Comm., 22. - 24.10.91, Liege, Belgium.</em>, 179–184. 1991. URL: <a class="reference external" href="https://elib.dlr.de/33776/">https://elib.dlr.de/33776/</a>.</p>
-</dd>
-<dt class="label" id="footcite-1981-saleh"><span class="brackets"><a class="fn-backref" href="#id2">2</a></span></dt>
-<dd><p>A.A.M. Saleh. Frequency-independent and frequency-dependent nonlinear models of TWT amplifiers. <em>IEEE Transactions on Communications</em>, 29(11):1715–1720, November 1981. <a class="reference external" href="https://doi.org/10.1109/TCOM.1981.1094911">doi:10.1109/TCOM.1981.1094911</a>.</p>
-</dd>
-</dl>
+<aside class="footnote brackets" id="footcite-1991-rapp" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>Ch. Rapp. Effects of HPA-nonlinearity on a 4-DPSK/OFDM-signal for a digital sound broadcasting system. In <em>Second European Conf. on Sat. Comm., 22. - 24.10.91, Liege, Belgium.</em>, 179–184. 1991. URL: <a class="reference external" href="https://elib.dlr.de/33776/">https://elib.dlr.de/33776/</a>.</p>
+</aside>
+<aside class="footnote brackets" id="footcite-1981-saleh" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">2</a><span class="fn-bracket">]</span></span>
+<p>A.A.M. Saleh. Frequency-independent and frequency-dependent nonlinear models of TWT amplifiers. <em>IEEE Transactions on Communications</em>, 29(11):1715–1720, November 1981. <a class="reference external" href="https://doi.org/10.1109/TCOM.1981.1094911">doi:10.1109/TCOM.1981.1094911</a>.</p>
+</aside>
+</aside>
 </div>
 
-
-           </div>
-          </div>
-          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="simulation.rf_chain.leakage.html" class="btn btn-neutral float-left" title="Transmit-Receive Leakage Modeling" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="simulation.rf_chain.phase_noise.html" class="btn btn-neutral float-right" title="Phase Noise Modeling" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
-    </div>
-
-  <hr/>
-
-  <div role="contentinfo">
-<jinja2.runtime.BlockReference object at 0x7f9e7ac04b50>
-<p>
-    <a href="https://www.barkhauseninstitut.org/en/impressum">Imprint</a> <br/>
-    <a href="https://www.barkhauseninstitut.org/en/data-privacy">Data Privacy</a>
-</p>
-
-  </div>
-
-  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
-    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
-    provided by <a href="https://readthedocs.org">Read the Docs</a>.
-   
-
-</footer>
-        </div>
+        </article>
       </div>
-    </section>
+      <footer>
+        
+        <div class="related-pages">
+          <a class="next-page" href="simulation.rf_chain.phase_noise.html">
+              <div class="page-info">
+                <div class="context">
+                  <span>Next</span>
+                </div>
+                <div class="title">Phase Noise Modeling</div>
+              </div>
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+            </a>
+          <a class="prev-page" href="simulation.rf_chain.html">
+              <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
+              <div class="page-info">
+                <div class="context">
+                  <span>Previous</span>
+                </div>
+                
+                <div class="title">Hardware Radio Frequency Chain Modeling</div>
+                
+              </div>
+            </a>
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2023, Barkhausen Institut gGmbH
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
   </div>
-  <script>
-      jQuery(function () {
-          SphinxRtdTheme.Navigation.enable(true);
-      });
-  </script> 
-
-</body>
+</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/sphinx_highlight.js"></script>
+    <script src="../_static/scripts/furo.js"></script>
+    <script src="../_static/clipboard.min.js"></script>
+    <script src="../_static/copybutton.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://unpkg.com/mermaid@10.2.0/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({startOnLoad:true});</script>
+    </body>
 </html>
