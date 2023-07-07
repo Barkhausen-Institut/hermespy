@@ -3,8 +3,10 @@ name: hermespy
 # Execute tests if pushed to any branch
 on: [push, pull_request]
 
-jobs:
+env:
+  HERMES_QUADRIGA: ${{ github.workspace }}/submodules/quadriga/quadriga_src
 
+jobs:
 
   Testing:
   
