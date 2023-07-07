@@ -34,7 +34,8 @@ jobs:
         sudo apt update
         sudo apt-get install -y build-essential octave
         export MAKEFLAGS="-j $(grep -c ^processor /proc/cpuinfo)"
-        pip install -e .[test,documentation,quadriga,uhd,audio]
+        pip install -e .[develop,test,documentation,quadriga,uhd,audio]
+        python -m setup develop
 
     - name: Run unit tests
       run: |
