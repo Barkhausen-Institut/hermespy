@@ -62,7 +62,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -73,8 +73,9 @@ class CommunicationEvaluator(Evaluator, ABC):
 
     __transmitting_modem: TransmittingModem  # Handle to the transmitting modem
     __receiving_modem: ReceivingModem  # Handle to the receiving modem
+    __plot_surface: bool
 
-    def __init__(self, transmitting_modem: TransmittingModem, receiving_modem: ReceivingModem) -> None:
+    def __init__(self, transmitting_modem: TransmittingModem, receiving_modem: ReceivingModem, plot_surface: bool = True) -> None:
         """
         Args:
 
@@ -83,10 +84,15 @@ class CommunicationEvaluator(Evaluator, ABC):
 
             receiving_modem (ReceivingModem):
                 Modem receiving information.
+
+            plot_surface (bool, optional):
+                Plot the surface of the evaluation result in two-dimensional grids.
+                Defaults to True.
         """
 
         self.__transmitting_modem = transmitting_modem
         self.__receiving_modem = receiving_modem
+        self.__plot_surface = plot_surface
 
         # Initialize base class
         Evaluator.__init__(self)
@@ -112,7 +118,7 @@ class CommunicationEvaluator(Evaluator, ABC):
         return self.__receiving_modem
 
     def generate_result(self, grid: Sequence[GridDimension], artifacts: np.ndarray) -> ScalarEvaluationResult:
-        return ScalarEvaluationResult.From_Artifacts(grid, artifacts, self)
+        return ScalarEvaluationResult.From_Artifacts(grid, artifacts, self, self.__plot_surface)
 
 
 class BitErrorArtifact(ArtifactTemplate[np.float_]):
@@ -144,7 +150,7 @@ class BitErrorEvaluator(CommunicationEvaluator, Serializable):
     yaml_tag = "BitErrorEvaluator"
     """YAML serialization tag"""
 
-    def __init__(self, transmitting_modem: TransmittingModem, receiving_modem: ReceivingModem) -> None:
+    def __init__(self, transmitting_modem: TransmittingModem, receiving_modem: ReceivingModem, plot_surface: bool = True) -> None:
         """
         Args:
 
@@ -153,9 +159,13 @@ class BitErrorEvaluator(CommunicationEvaluator, Serializable):
 
             receiving_modem (ReceivingModem):
                 Modem receiving information.
+
+            plot_surface (bool, optional):
+                Plot the surface of the evaluation result in two-dimensional grids.
+                Defaults to True.
         """
 
-        CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem)
+        CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem, plot_surface)
         self.plot_scale = "log"  # Plot logarithmically by default
 
     def evaluate(self) -> BitErrorEvaluation:
@@ -216,7 +226,7 @@ class BlockErrorEvaluator(CommunicationEvaluator, Serializable):
     yaml_tag = "BlockErrorEvaluator"
     """YAML serialization tag"""
 
-    def __init__(self, transmitting_modem: TransmittingModem, receiving_modem: ReceivingModem) -> None:
+    def __init__(self, transmitting_modem: TransmittingModem, receiving_modem: ReceivingModem, plot_surface: bool = True) -> None:
         """
         Args:
 
@@ -225,9 +235,13 @@ class BlockErrorEvaluator(CommunicationEvaluator, Serializable):
 
             receiving_modem (ReceivingModem):
                 Modem receiving information.
+
+            plot_surface (bool, optional):
+                Plot the surface of the evaluation result in two-dimensional grids.
+                Defaults to True.
         """
 
-        CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem)
+        CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem, plot_surface)
         self.plot_scale = "log"  # Plot logarithmically by default
 
     def evaluate(self) -> BlockErrorEvaluation:
@@ -294,7 +308,7 @@ class FrameErrorEvaluator(CommunicationEvaluator, Serializable):
     yaml_tag = "FrameErrorEvaluator"
     """YAML serialization tag"""
 
-    def __init__(self, transmitting_modem: TransmittingModem, receiving_modem: ReceivingModem) -> None:
+    def __init__(self, transmitting_modem: TransmittingModem, receiving_modem: ReceivingModem, plot_surface: bool = True) -> None:
         """
         Args:
 
@@ -303,9 +317,13 @@ class FrameErrorEvaluator(CommunicationEvaluator, Serializable):
 
             receiving_modem (ReceivingModem):
                 Modem receiving information.
+
+            plot_surface (bool, optional):
+                Plot the surface of the evaluation result in two-dimensional grids.
+                Defaults to True.
         """
 
-        CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem)
+        CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem, plot_surface)
         self.plot_scale = "log"  # Plot logarithmically by default
 
     def evaluate(self) -> FrameErrorEvaluation:
@@ -391,7 +409,7 @@ class ThroughputEvaluator(CommunicationEvaluator, Serializable):
 
     __framer_error_evaluator: FrameErrorEvaluator
 
-    def __init__(self, transmitting_modem: TransmittingModem, receiving_modem: ReceivingModem) -> None:
+    def __init__(self, transmitting_modem: TransmittingModem, receiving_modem: ReceivingModem, plot_surface: bool = True) -> None:
         """
         Args:
 
@@ -400,10 +418,14 @@ class ThroughputEvaluator(CommunicationEvaluator, Serializable):
 
             receiving_modem (ReceivingModem):
                 Modem receiving information.
+
+            plot_surface (bool, optional):
+                Plot the surface of the evaluation result in two-dimensional grids.
+                Defaults to True.
         """
 
         # Initialize base class
-        CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem)
+        CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem, plot_surface)
 
         # Initialize class attributes
         self.__framer_error_evaluator = FrameErrorEvaluator(transmitting_modem, receiving_modem)

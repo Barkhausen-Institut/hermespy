@@ -16,7 +16,7 @@ __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -132,7 +132,7 @@ class QuadrigaInterface:
         """
 
         if not os.path.exists(path):
-            raise ValueError("Provided path to Quadriga sources does not exist within filesystem")
+            raise ValueError(f"Provided path to Quadriga sources {path} does not exist within filesystem")
 
         self.__path_quadriga_src = path
 

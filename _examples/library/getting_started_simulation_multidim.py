@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 
+from hermespy.core import dB
 from hermespy.simulation.simulation import Simulation
 from hermespy.modem import TransmittingModem, ReceivingModem, BitErrorEvaluator, ThroughputEvaluator, RootRaisedCosineWaveform
 from hermespy.fec import RepetitionEncoder
@@ -30,11 +31,11 @@ receiver.encoder_manager.add_encoder(RepetitionEncoder(repetitions=3))
 terminal.receivers.add(receiver)
 
 # Configure simulation evaluators
-simulation.add_evaluator(BitErrorEvaluator(transmitter, receiver))
-simulation.add_evaluator(ThroughputEvaluator(transmitter, receiver))
+simulation.add_evaluator(BitErrorEvaluator(transmitter, receiver, plot_surface=False))
+simulation.add_evaluator(ThroughputEvaluator(transmitter, receiver, plot_surface=True))
 
 # Configure simulation sweep dimensions
-snr_dimension = simulation.new_dimension('snr', [10, 9, 8, 7, 6, 5, 4, 3, 2, 1])
+snr_dimension = simulation.new_dimension('snr', dB(12, 10, 8, 6, 5, 4, 3, 2, 1, 0))
 rep_dimension = simulation.new_dimension('repetitions', [1, 3, 5, 7, 9], transmitter.encoder_manager[0], receiver.encoder_manager[0])
 snr_dimension.title = 'SNR'
 rep_dimension.title = 'Code Repetitions'
