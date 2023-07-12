@@ -374,7 +374,7 @@
 <p>This tutorial will outline how to operate Hermes’ API in order to estimate receiver operating characteristics of sensing detectors within Monte Carlo simulations and using software defined radios.</p>
 <p>Let’s start by configuring a simulated scenario consisting of a single device transmitting an <a class="reference internal" href="../api/radar.fmcw.html#hermespy.radar.fmcw.FMCW"><span class="std std-ref">FMCW</span></a> waveform at a carrier frequency of <span class="math notranslate nohighlight">\(10~\mathrm{GHz}\)</span>. The transmitted chirps sweep a bandwidth of <span class="math notranslate nohighlight">\(3.072~\mathrm{Ghz}\)</span> during <span class="math notranslate nohighlight">\(20~\mathrm{ms}\)</span>, with each frame consisting of <span class="math notranslate nohighlight">\(10\)</span> identical chirps.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">hermespy.core</span> <span class="kn">import</span> <span class="n">ConsoleMode</span>
@@ -401,7 +401,7 @@
 </div>
 <p>We can inspect the <a class="reference internal" href="../api/radar.radar.html#hermespy.radar.radar.Radar"><span class="std std-ref">Radar’s</span></a> transmitted waveform by plotting a single chirp and the full frame:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">radar</span><span class="o">.</span><span class="n">waveform</span><span class="o">.</span><span class="n">num_chirps</span> <span class="o">=</span> <span class="mi">1</span>
@@ -416,14 +416,14 @@
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_roc_3_0.png" src="../_images/notebooks_roc_3_0.png" />
+<img alt="../_images/notebooks_roc_4_0.png" src="../_images/notebooks_roc_4_0.png" />
 </div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_roc_3_1.png" src="../_images/notebooks_roc_3_1.png" />
+<img alt="../_images/notebooks_roc_4_1.png" src="../_images/notebooks_roc_4_1.png" />
 </div>
 </div>
 <p>Typical hardware impairments limiting the performance of monostatic radars are isolation between transmitting and receiving RF chains and the base hardware noise.</p>
@@ -431,7 +431,7 @@
 between with an isolation <span class="math notranslate nohighlight">\(30~\mathrm{dB}\)</span> and <span class="math notranslate nohighlight">\(10~\mathrm{dB}\)</span>. Additionally, we’ll consider an <a class="reference internal" href="../api/simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.AnalogDigitalConverter"><span class="std std-ref">analog to digital conversion</span></a> with <span class="math notranslate nohighlight">\(8~\mathrm{Bit}\)</span> quantization and <a class="reference internal" href="../api/simulation.analog_digital_converter.html#hermespy.simulation.analog_digital_converter.AutomaticGainControl"><span class="std std-ref">automatic gain control</span></a> at the receiver.</p>
 <p>The following lines configure our system assumptions and run a simulation estimating the expected operating characteristcs:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">hermespy.core</span> <span class="kn">import</span> <span class="n">ConsoleMode</span><span class="p">,</span> <span class="n">SNRType</span><span class="p">,</span> <span class="n">dB</span>
@@ -474,14 +474,14 @@ between with an isolation <span class="math notranslate nohighlight">\(30~\mathr
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_roc_5_0.png" src="../_images/notebooks_roc_5_0.png" />
+<img alt="../_images/notebooks_roc_6_0.png" src="../_images/notebooks_roc_6_0.png" />
 </div>
 </div>
 <p>All parameter combinations perform reasonably well. Notably, at the most favorable parameter combination (a low noise floor of <span class="math notranslate nohighlight">\(10~\mathrm{dB}\)</span> and a high isolation of <span class="math notranslate nohighlight">\(30~\mathrm{dB}\)</span>), the radar is an almost perfect detector.</p>
 <p>Receiver operating characteristics may not only be predicted by means of simulation but can also be estimated from real-world measurements of hardware testbeds operated by Hermes.</p>
 <p>Let’s mock a measurement configuration with identical parameters to the Monte Carlo simulation:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">hermespy.hardware_loop</span> <span class="kn">import</span> <span class="n">HardwareLoop</span><span class="p">,</span> <span class="n">SimulatedPhysicalScenario</span>
@@ -514,7 +514,7 @@ between with an isolation <span class="math notranslate nohighlight">\(30~\mathr
 </div>
 <p>Now, we may run two measurement campaigns, collecting measurment data with the radar target present and the radar target missing from the signal impinging onto the device after channel propagation:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># First measurement campaign with the target in front of the device</span>
@@ -529,7 +529,7 @@ between with an isolation <span class="math notranslate nohighlight">\(30~\mathr
 </div>
 <p>The measurement data and all device parameterizations will be saved to a binary file on the user’s drive. The data can be inspected offline, and information such as the operating charactersitics may be computed by a single command:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[14]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">path</span>
@@ -543,12 +543,48 @@ between with an isolation <span class="math notranslate nohighlight">\(30~\mathr
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
+<div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_roc_11_0.png" src="../_images/notebooks_roc_11_0.png" />
+<img alt="../_images/notebooks_roc_12_0.png" src="../_images/notebooks_roc_12_0.png" />
 </div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+2023-07-12 12:17:23,006 ERROR import_thread.py:80 -- ImportThread: &lt;_MultiThreadedRendezvous of RPC that terminated with:
+        status = StatusCode.UNKNOWN
+        details = &#34;Stream removed&#34;
+        debug_error_string = &#34;UNKNOWN:Error received from peer ipv4:127.0.0.1:63539 {created_time:&#34;2023-07-12T10:17:23.005852994+00:00&#34;, grpc_status:2, grpc_message:&#34;Stream removed&#34;}&#34;
+&gt;
+Exception in thread ray_listen_error_messages:
+Traceback (most recent call last):
+  File &#34;C:\Users\Stealth\AppData\Local\Programs\Python\Python310\lib\threading.py&#34;, line 1016, in _bootstrap_inner
+    self.run()
+  File &#34;C:\Users\Stealth\AppData\Local\Programs\Python\Python310\lib\threading.py&#34;, line 953, in run
+2023-07-12 12:17:23,007 ERROR worker.py:914 -- print_logs: &lt;_MultiThreadedRendezvous of RPC that terminated with:
+        status = StatusCode.UNKNOWN
+        details = &#34;Stream removed&#34;
+        debug_error_string = &#34;UNKNOWN:Error received from peer ipv4:127.0.0.1:63539 {grpc_message:&#34;Stream removed&#34;, grpc_status:2, created_time:&#34;2023-07-12T10:17:23.005866971+00:00&#34;}&#34;
+&gt;
+    self._target(*self._args, **self._kwargs)
+  File &#34;d:\envs\hermes-310\lib\site-packages\ray\_private\worker.py&#34;, line 2004, in listen_error_messages
+    _, error_data = worker.gcs_error_subscriber.poll()
+  File &#34;d:\envs\hermes-310\lib\site-packages\ray\_private\gcs_pubsub.py&#34;, line 300, in poll
+    self._poll_locked(timeout=timeout)
+  File &#34;d:\envs\hermes-310\lib\site-packages\ray\_private\gcs_pubsub.py&#34;, line 217, in _poll_locked
+    fut.result(timeout=1)
+  File &#34;d:\envs\hermes-310\lib\site-packages\grpc\_channel.py&#34;, line 744, in result
+    raise self
+grpc._channel._MultiThreadedRendezvous: &lt;_MultiThreadedRendezvous of RPC that terminated with:
+        status = StatusCode.UNKNOWN
+        details = &#34;Stream removed&#34;
+        debug_error_string = &#34;UNKNOWN:Error received from peer ipv4:127.0.0.1:63539 {created_time:&#34;2023-07-12T10:17:23.005598227+00:00&#34;, grpc_status:2, grpc_message:&#34;Stream removed&#34;}&#34;
+&gt;
+</pre></div></div>
 </div>
 </section>
 

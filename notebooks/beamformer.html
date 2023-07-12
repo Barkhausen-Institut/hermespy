@@ -372,9 +372,9 @@
 <section id="Implementing-Beamformers">
 <h1>Implementing Beamformers<a class="headerlink" href="#Implementing-Beamformers" title="Permalink to this heading">#</a></h1>
 <p>This Jupyter notebook will outline the step-by-step process of implementing a new receiving beamformer within the HermesPy framework, using the Minimum Variance Distortionless Response (MVDR, also known as <span id="id1">[<a class="reference internal" href="../references.html#id26" title="J. Capon. High-resolution frequency-wavenumber spectrum analysis. Proceedings of the IEEE, 57(8):1408-1418, 1969. doi:10.1109/PROC.1969.7278.">Cap69</a>]</span>) beamformer as a working example.</p>
-<p>As an initial step, we will import all required modules from HermesPy:</p>
+<p>As an initial step we will import all required modules:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -408,7 +408,7 @@
 <li><p><a class="reference internal" href="../api/beamforming.beamformer.html#hermespy.beamforming.beamformer.ReceiveBeamformer._decode"><span class="std std-ref">_decode()</span></a> - <em>This subroutine performs the actual beamforming, given an array of baseband samples, assumed carrier frequency and the angles of interest.</em> This is where the Capon algorithm is being implemented.</p></li>
 </ul>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">CaponBeamformer</span><span class="p">(</span><span class="n">ReceiveBeamformer</span><span class="p">):</span>
@@ -451,7 +451,7 @@
 <p>And that’s it, by specifying three properties and the decode routine a new beamformer has been implemented within HermesPy. We can now plot the beamforming characteristics towards a signal impinging from <span class="math notranslate nohighlight">\((\theta = 0, \phi = 0)\)</span> by calling <a class="reference internal" href="../api/beamforming.beamformer.html#hermespy.beamforming.beamformer.ReceiveBeamformer.PlotReceivePattern"><span class="std std-ref">PlotReceivePattern()</span></a> and compare it to the
 <a class="reference internal" href="../api/beamforming.conventional.html#hermespy.beamforming.conventional.ConventionalBeamformer"><span class="std std-ref">CoventionalBeamformer</span></a>:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">hermespy.beamforming</span> <span class="kn">import</span> <span class="n">ConventionalBeamformer</span>
@@ -465,19 +465,19 @@
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_beamformer_5_0.png" src="../_images/notebooks_beamformer_5_0.png" />
+<img alt="../_images/notebooks_beamformer_6_0.png" src="../_images/notebooks_beamformer_6_0.png" />
 </div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_beamformer_5_1.png" src="../_images/notebooks_beamformer_5_1.png" />
+<img alt="../_images/notebooks_beamformer_6_1.png" src="../_images/notebooks_beamformer_6_1.png" />
 </div>
 </div>
 <p>We may now use the newly created beamforming class to configure receive signal processing chains within HermesPy. For example, within an imaging radar application simulation:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -503,7 +503,7 @@
 <span class="n">radar</span><span class="o">.</span><span class="n">receive_beamformer</span> <span class="o">=</span> <span class="n">ConventionalBeamformer</span><span class="p">()</span>
 
 <span class="n">simulation</span><span class="o">.</span><span class="n">add_evaluator</span><span class="p">(</span><span class="n">ReceiverOperatingCharacteristic</span><span class="p">(</span><span class="n">radar</span><span class="p">,</span> <span class="n">radar_channel</span><span class="p">))</span>
-<span class="n">simulation</span><span class="o">.</span><span class="n">new_dimension</span><span class="p">(</span><span class="s1">&#39;snr&#39;</span><span class="p">,</span>  <span class="n">dB</span><span class="p">(</span><span class="o">-</span><span class="mi">18</span><span class="p">,</span> <span class="o">-</span><span class="mi">21</span><span class="p">,</span> <span class="o">-</span><span class="mi">25</span><span class="p">))</span>
+<span class="n">simulation</span><span class="o">.</span><span class="n">new_dimension</span><span class="p">(</span><span class="s1">&#39;snr&#39;</span><span class="p">,</span> <span class="n">dB</span><span class="p">(</span><span class="o">-</span><span class="mi">18</span><span class="p">,</span> <span class="o">-</span><span class="mi">21</span><span class="p">,</span> <span class="o">-</span><span class="mi">25</span><span class="p">))</span>
 <span class="n">simulation</span><span class="o">.</span><span class="n">num_samples</span> <span class="o">=</span> <span class="mi">1000</span>
 
 <span class="n">radar</span><span class="o">.</span><span class="n">receive_beamformer</span><span class="o">.</span><span class="n">probe_focus_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">]])</span>
@@ -520,15 +520,51 @@
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_beamformer_7_0.png" src="../_images/notebooks_beamformer_7_0.png" />
+<img alt="../_images/notebooks_beamformer_8_0.png" src="../_images/notebooks_beamformer_8_0.png" />
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_beamformer_8_1.png" src="../_images/notebooks_beamformer_8_1.png" />
 </div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
-<div class="output_area docutils container">
-<img alt="../_images/notebooks_beamformer_7_1.png" src="../_images/notebooks_beamformer_7_1.png" />
-</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+2023-07-12 12:17:15,153 ERROR import_thread.py:80 -- ImportThread: &lt;_MultiThreadedRendezvous of RPC that terminated with:
+        status = StatusCode.UNKNOWN
+        details = &#34;Stream removed&#34;
+        debug_error_string = &#34;UNKNOWN:Error received from peer ipv4:127.0.0.1:65423 {grpc_message:&#34;Stream removed&#34;, grpc_status:2, created_time:&#34;2023-07-12T10:17:15.152759853+00:00&#34;}&#34;
+&gt;
+Exception in thread ray_listen_error_messages:
+Traceback (most recent call last):
+  File &#34;C:\Users\Stealth\AppData\Local\Programs\Python\Python310\lib\threading.py&#34;, line 1016, in _bootstrap_inner
+2023-07-12 12:17:15,155 ERROR worker.py:914 -- print_logs: &lt;_MultiThreadedRendezvous of RPC that terminated with:
+        status = StatusCode.UNKNOWN
+        details = &#34;Stream removed&#34;
+        debug_error_string = &#34;UNKNOWN:Error received from peer ipv4:127.0.0.1:65423 {grpc_message:&#34;Stream removed&#34;, grpc_status:2, created_time:&#34;2023-07-12T10:17:15.153007658+00:00&#34;}&#34;
+&gt;
+    self.run()
+  File &#34;C:\Users\Stealth\AppData\Local\Programs\Python\Python310\lib\threading.py&#34;, line 953, in run
+    self._target(*self._args, **self._kwargs)
+  File &#34;d:\envs\hermes-310\lib\site-packages\ray\_private\worker.py&#34;, line 2004, in listen_error_messages
+    _, error_data = worker.gcs_error_subscriber.poll()
+  File &#34;d:\envs\hermes-310\lib\site-packages\ray\_private\gcs_pubsub.py&#34;, line 300, in poll
+    self._poll_locked(timeout=timeout)
+  File &#34;d:\envs\hermes-310\lib\site-packages\ray\_private\gcs_pubsub.py&#34;, line 217, in _poll_locked
+    fut.result(timeout=1)
+  File &#34;d:\envs\hermes-310\lib\site-packages\grpc\_channel.py&#34;, line 744, in result
+    raise self
+grpc._channel._MultiThreadedRendezvous: &lt;_MultiThreadedRendezvous of RPC that terminated with:
+        status = StatusCode.UNKNOWN
+        details = &#34;Stream removed&#34;
+        debug_error_string = &#34;UNKNOWN:Error received from peer ipv4:127.0.0.1:65423 {grpc_message:&#34;Stream removed&#34;, grpc_status:2, created_time:&#34;2023-07-12T10:17:15.152992559+00:00&#34;}&#34;
+&gt;
+</pre></div></div>
 </div>
 </section>
 

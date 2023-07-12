@@ -378,7 +378,7 @@ Mapping converts a sequence of communication bits to communication symbols on th
 synchronization and equalization, but for the sake of simplicity the implementation of these routines will be skipped in this tutorial.</p>
 <p>The waveform we will implement is a amplitude shift keying (ASK) modulation of variable modulation orders (number of modulation symbols). Initially, we will import all required Hermes classes:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -391,7 +391,7 @@ synchronization and equalization, but for the sake of simplicity the implementat
 <p><a class="reference internal" href="../api/core.signal_model.html#hermespy.core.signal_model.Signal"><span class="std std-ref">Signal</span></a> is Hermes base class describing sampled MIMO signals in time-domain. <a class="reference internal" href="../api/modem.symbols.html#hermespy.modem.symbols.Symbols"><span class="std std-ref">Symbols</span></a> is the signal model’s equivalent on the demodulated symbol abstraction level, describing multiple streams of symbols in time-domain. The WaveformGenerator represents, as already mentioned, the abstract base class of all communication waveforms. It features several abstract methods and
 properties to be implemented by the specific waveforms:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">AmplitudeShiftKeying</span><span class="p">(</span><span class="n">WaveformGenerator</span><span class="p">):</span>
@@ -473,7 +473,7 @@ properties to be implemented by the specific waveforms:</p>
 <p><em>sampling_rate</em> - sampling rate required to properly modulate and demodulate the waveform. For convenience we have chosen <span class="math notranslate nohighlight">\(1\)</span> Hz. Of course this value is variable in practice.</p>
 <p>We can now instantiate our newly defined communication waveform and inspect the mapping and modulation routines:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create pseudo-random number generator</span>
@@ -497,19 +497,19 @@ properties to be implemented by the specific waveforms:</p>
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_waveform_5_0.png" src="../_images/notebooks_waveform_5_0.png" />
+<img alt="../_images/notebooks_waveform_6_0.png" src="../_images/notebooks_waveform_6_0.png" />
 </div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_waveform_5_1.png" src="../_images/notebooks_waveform_5_1.png" />
+<img alt="../_images/notebooks_waveform_6_1.png" src="../_images/notebooks_waveform_6_1.png" />
 </div>
 </div>
 <p>We can now model the effects of hardware noise by adding a normally distributed noise signal to the baseband signal and observe the effects on the demodulated symbol constellation:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="c1"># Generate additive white gaussian noise</span>
@@ -542,19 +542,19 @@ Received data bits: [0 1 1 0 0 1 0 1 0 0 1 1 1 1 1 1 1 0 1 0]
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_waveform_7_1.png" src="../_images/notebooks_waveform_7_1.png" />
+<img alt="../_images/notebooks_waveform_8_1.png" src="../_images/notebooks_waveform_8_1.png" />
 </div>
 </div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_waveform_7_2.png" src="../_images/notebooks_waveform_7_2.png" />
+<img alt="../_images/notebooks_waveform_8_2.png" src="../_images/notebooks_waveform_8_2.png" />
 </div>
 </div>
 <p>Now, the newly added waveform is available to be configured to modems and used within the context of a simulation campaign:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">hermespy.modem</span> <span class="kn">import</span> <span class="n">BitErrorEvaluator</span><span class="p">,</span> <span class="n">DuplexModem</span>
@@ -574,12 +574,48 @@ Received data bits: [0 1 1 0 0 1 0 1 0 0 1 1 1 1 1 1 1 0 1 0]
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
+<div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_waveform_9_0.png" src="../_images/notebooks_waveform_9_0.png" />
+<img alt="../_images/notebooks_waveform_10_0.png" src="../_images/notebooks_waveform_10_0.png" />
 </div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+2023-07-12 12:17:23,966 ERROR import_thread.py:80 -- ImportThread: &lt;_MultiThreadedRendezvous of RPC that terminated with:
+        status = StatusCode.UNKNOWN
+        details = &#34;Stream removed&#34;
+        debug_error_string = &#34;UNKNOWN:Error received from peer ipv4:127.0.0.1:63657 {grpc_message:&#34;Stream removed&#34;, grpc_status:2, created_time:&#34;2023-07-12T10:17:23.965801815+00:00&#34;}&#34;
+&gt;
+Exception in thread ray_listen_error_messages:
+Traceback (most recent call last):
+  File &#34;C:\Users\Stealth\AppData\Local\Programs\Python\Python310\lib\threading.py&#34;, line 1016, in _bootstrap_inner
+2023-07-12 12:17:23,968 ERROR worker.py:914 -- print_logs: &lt;_MultiThreadedRendezvous of RPC that terminated with:
+        status = StatusCode.UNKNOWN
+        details = &#34;Stream removed&#34;
+        debug_error_string = &#34;UNKNOWN:Error received from peer ipv4:127.0.0.1:63657 {created_time:&#34;2023-07-12T10:17:23.966120062+00:00&#34;, grpc_status:2, grpc_message:&#34;Stream removed&#34;}&#34;
+&gt;
+    self.run()
+  File &#34;C:\Users\Stealth\AppData\Local\Programs\Python\Python310\lib\threading.py&#34;, line 953, in run
+    self._target(*self._args, **self._kwargs)
+  File &#34;d:\envs\hermes-310\lib\site-packages\ray\_private\worker.py&#34;, line 2004, in listen_error_messages
+    _, error_data = worker.gcs_error_subscriber.poll()
+  File &#34;d:\envs\hermes-310\lib\site-packages\ray\_private\gcs_pubsub.py&#34;, line 300, in poll
+    self._poll_locked(timeout=timeout)
+  File &#34;d:\envs\hermes-310\lib\site-packages\ray\_private\gcs_pubsub.py&#34;, line 217, in _poll_locked
+    fut.result(timeout=1)
+  File &#34;d:\envs\hermes-310\lib\site-packages\grpc\_channel.py&#34;, line 744, in result
+    raise self
+grpc._channel._MultiThreadedRendezvous: &lt;_MultiThreadedRendezvous of RPC that terminated with:
+        status = StatusCode.UNKNOWN
+        details = &#34;Stream removed&#34;
+        debug_error_string = &#34;UNKNOWN:Error received from peer ipv4:127.0.0.1:63657 {grpc_message:&#34;Stream removed&#34;, grpc_status:2, created_time:&#34;2023-07-12T10:17:23.966104202+00:00&#34;}&#34;
+&gt;
+</pre></div></div>
 </div>
 </section>
 

@@ -374,7 +374,7 @@
 <p>This Jupyter notebook will outline the step-by-step process of implementing a new coding scheme for the forward error correction in communication modems. The selected algorithm is a repetition encoder, since it is arguably the most basic error correction coding.</p>
 <p>As an initial step, we will import all required modules from HermesPy:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -393,7 +393,7 @@
 \mathbf{R} = \frac{K}{N} = \frac{1}{3}
 \end{equation}</span> for the full encoding. During decoding, the repetition coding decides by majority voting which bit has been transmitted. So, our coding implementation is</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">RepetitionCoding</span><span class="p">(</span><span class="n">Encoder</span><span class="p">):</span>
@@ -416,7 +416,7 @@
 </div>
 <p>Now we can inspect our coding implementation:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">coding</span> <span class="o">=</span> <span class="n">RepetitionCoding</span><span class="p">()</span>
@@ -443,15 +443,15 @@
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Our coding rate is 0.3333333333333333 with an input block size of 4 and an output block size of 12
-Let&#39;s assume we transmit the following data block: [0 1 0 1]
-After encoding the respective code block is: [0 1 0 1 0 1 0 1 0 1 0 1]
-After channel propagation the first bit has flipped: [1 1 0 1 0 1 0 1 0 1 0 1]
-But the coding can correct a single bit flip to: [0 1 0 1]
+Let&#39;s assume we transmit the following data block: [1 0 1 0]
+After encoding the respective code block is: [1 0 1 0 1 0 1 0 1 0 1 0]
+After channel propagation the first bit has flipped: [0 0 1 0 1 0 1 0 1 0 1 0]
+But the coding can correct a single bit flip to: [1 0 1 0]
 </pre></div></div>
 </div>
 <p>We may now investigate our newly created forward error correction coding within a full Hermes simulation capaign.</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">hermespy.core</span> <span class="kn">import</span> <span class="n">ConsoleMode</span><span class="p">,</span> <span class="n">dB</span>
@@ -479,19 +479,55 @@ But the coding can correct a single bit flip to: [0 1 0 1]
 </div>
 <p>This allows us to visualize the achieved bit error rates for given linear signal to noise ratios:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="n">_</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
+<div class="nboutput docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_fec_coding_9_0.png" src="../_images/notebooks_fec_coding_9_0.png" />
+<img alt="../_images/notebooks_fec_coding_10_0.png" src="../_images/notebooks_fec_coding_10_0.png" />
 </div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+Exception in thread ray_listen_error_messages:
+Traceback (most recent call last):
+  File &#34;C:\Users\Stealth\AppData\Local\Programs\Python\Python310\lib\threading.py&#34;, line 1016, in _bootstrap_inner
+2023-07-12 12:17:21,973 ERROR worker.py:914 -- print_logs: &lt;_MultiThreadedRendezvous of RPC that terminated with:
+        status = StatusCode.UNKNOWN
+        details = &#34;Stream removed&#34;
+        debug_error_string = &#34;UNKNOWN:Error received from peer ipv4:127.0.0.1:61812 {grpc_message:&#34;Stream removed&#34;, grpc_status:2, created_time:&#34;2023-07-12T10:17:21.971775063+00:00&#34;}&#34;
+&gt;
+2023-07-12 12:17:21,975 ERROR import_thread.py:80 -- ImportThread: &lt;_MultiThreadedRendezvous of RPC that terminated with:
+        status = StatusCode.UNKNOWN
+        details = &#34;Stream removed&#34;
+        debug_error_string = &#34;UNKNOWN:Error received from peer ipv4:127.0.0.1:61812 {grpc_message:&#34;Stream removed&#34;, grpc_status:2, created_time:&#34;2023-07-12T10:17:21.971759664+00:00&#34;}&#34;
+&gt;
+    self.run()
+  File &#34;C:\Users\Stealth\AppData\Local\Programs\Python\Python310\lib\threading.py&#34;, line 953, in run
+    self._target(*self._args, **self._kwargs)
+  File &#34;d:\envs\hermes-310\lib\site-packages\ray\_private\worker.py&#34;, line 2004, in listen_error_messages
+    _, error_data = worker.gcs_error_subscriber.poll()
+  File &#34;d:\envs\hermes-310\lib\site-packages\ray\_private\gcs_pubsub.py&#34;, line 300, in poll
+    self._poll_locked(timeout=timeout)
+  File &#34;d:\envs\hermes-310\lib\site-packages\ray\_private\gcs_pubsub.py&#34;, line 217, in _poll_locked
+    fut.result(timeout=1)
+  File &#34;d:\envs\hermes-310\lib\site-packages\grpc\_channel.py&#34;, line 744, in result
+    raise self
+grpc._channel._MultiThreadedRendezvous: &lt;_MultiThreadedRendezvous of RPC that terminated with:
+        status = StatusCode.UNKNOWN
+        details = &#34;Stream removed&#34;
+        debug_error_string = &#34;UNKNOWN:Error received from peer ipv4:127.0.0.1:61812 {created_time:&#34;2023-07-12T10:17:21.971524624+00:00&#34;, grpc_status:2, grpc_message:&#34;Stream removed&#34;}&#34;
+&gt;
+</pre></div></div>
 </div>
 </section>
 

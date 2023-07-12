@@ -376,7 +376,7 @@
 <p>Adding a new channel model to the set of provided implementations is rather straightfoward. On the most fundamental level, each channel model class is expected to provide only a <a class="reference internal" href="../api/channel.channel.html#hermespy.channel.channel.Channel.realization"><span class="std std-ref">realize</span></a> method generating a <a class="reference internal" href="../api/channel.channel.html#hermespy.channel.channel.ChannelRealization"><span class="std std-ref">realization</span></a> of the channel’s random variables and impulse response. To demonstrate the API workflow, we will implement a basic channel only
 introducing a random phase shift to the propagated waveform, no time of flight delays or multiple antenna scenarios are considered:</p>
 <div class="nbinput nblast docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -402,7 +402,7 @@ introducing a random phase shift to the propagated waveform, no time of flight d
 dimension the impulse response of each sample instance, respectively.</p>
 <p>We can now plug the newly generated channel model into a simulation scenario evaluating an <a class="reference internal" href="../api/modem.waveform_ofdm.html"><span class="doc">OFDM waveform</span></a> with access to ideal channel state information, equalizing the channel by <a class="reference internal" href="../api/modem.waveform_ofdm.html#hermespy.modem.waveform_ofdm.OFDMZeroForcingChannelEqualization"><span class="std std-ref">zero forcing</span></a>:</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
@@ -448,13 +448,13 @@ dimension the impulse response of each sample instance, respectively.</p>
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_channel_3_0.png" src="../_images/notebooks_channel_3_0.png" />
+<img alt="../_images/notebooks_channel_4_0.png" src="../_images/notebooks_channel_4_0.png" />
 </div>
 </div>
 <p>We can highlight the channel effect by disabling the zero-forcing channel equalization routine for the configured OFDM waveform.</p>
 <p>In this case, the communication bit error rate should roughly approximate <span class="math notranslate nohighlight">\(\tfrac{1}{2}\)</span>, indicating that no information is exchanged and the bits are esentially random at the receiver.</p>
 <div class="nbinput docutils container">
-<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">hermespy.modem</span> <span class="kn">import</span> <span class="n">OFDMChannelEqualization</span>
@@ -469,12 +469,20 @@ dimension the impulse response of each sample instance, respectively.</p>
 </pre></div>
 </div>
 </div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="../_images/notebooks_channel_6_0.png" src="../_images/notebooks_channel_6_0.png" />
+</div>
+</div>
 <div class="nboutput nblast docutils container">
 <div class="prompt empty docutils container">
 </div>
 <div class="output_area docutils container">
-<img alt="../_images/notebooks_channel_5_0.png" src="../_images/notebooks_channel_5_0.png" />
-</div>
+<div class="highlight"><pre>
+<span class="ansi-red-intense-fg ansi-bold">The Kernel crashed while executing code in the the current cell or a previous cell. Please review the code in the cell(s) to identify a possible cause of the failure. Click &lt;a href=&#39;https://aka.ms/vscodeJupyterKernelCrash&#39;&gt;here&lt;/a&gt; for more info. View Jupyter &lt;a href=&#39;command:jupyter.viewOutput&#39;&gt;log&lt;/a&gt; for further details.</span>
+</pre></div></div>
 </div>
 </section>
 
