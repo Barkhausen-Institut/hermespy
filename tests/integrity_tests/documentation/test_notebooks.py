@@ -109,9 +109,9 @@ class TestNotebooks(TestCase):
         """Test the audio device loop example notebook"""
         
         notebook = self.__load_notebook("audio.ipynb")
-        self.__patch_notebook(notebook, 1,
+        self.__patch_notebook(notebook, 2,
                               patches={0: "from hermespy.hardware_loop import PhysicalDeviceDummy"})
-        self.__patch_notebook(notebook, 3,
+        self.__patch_notebook(notebook, 4,
                               patches={0: "device = PhysicalDeviceDummy()"})            
         self.__test_notebook(notebook)
 
@@ -119,7 +119,7 @@ class TestNotebooks(TestCase):
         """Test the beamforming example notebook"""
         
         notebook = self.__load_notebook("beamformer.ipynb")
-        self.__patch_notebook(notebook, 7,
+        self.__patch_notebook(notebook, 8,
                               inserts={2: "import ray as ray\n", 9: "ray.init(local_mode=True)"},
                               patches={9: "simulation = Simulation(console_mode=ConsoleMode.SILENT, num_actors=1)",
                                        24: "simulation.num_samples = 1"})
@@ -129,7 +129,7 @@ class TestNotebooks(TestCase):
         """Test the channel implementation example notebook"""
         
         notebook = self.__load_notebook("channel.ipynb")
-        self.__patch_notebook(notebook, 3,
+        self.__patch_notebook(notebook, 4,
                               patches={9: "simulation = Simulation(console_mode=ConsoleMode.SILENT, num_samples=1, num_actors=1)"},
                               inserts={1: "import ray as ray", 8: "ray.init(local_mode=True)"})
         self.__test_notebook(notebook)
@@ -144,7 +144,7 @@ class TestNotebooks(TestCase):
         """Test the evaluator implementation example notebook"""
         
         notebook = self.__load_notebook("evaluator.ipynb")
-        self.__patch_notebook(notebook, 3,
+        self.__patch_notebook(notebook, 4,
                               inserts={0: "import ray as ray\n", 6: "ray.init(local_mode=True)"},
                               patches={6: "simulation = Simulation(console_mode=ConsoleMode.SILENT, num_actors=1, num_samples=1)"})
         self.__test_notebook(notebook)
@@ -153,7 +153,7 @@ class TestNotebooks(TestCase):
         """Test the forward error correction implementation example notebook"""
         
         notebook = self.__load_notebook("fec_coding.ipynb")
-        self.__patch_notebook(notebook, 7,
+        self.__patch_notebook(notebook, 8,
                               inserts={0: "import ray as ray\n", 5: "ray.init(local_mode=True)"},
                               patches={5: "simulation = Simulation(console_mode=ConsoleMode.SILENT, num_actors=1)",
                                        17: "simulation.num_samples = 1"})
@@ -163,7 +163,7 @@ class TestNotebooks(TestCase):
         """Test the MIMO precoding implementation example notebook"""
         
         notebook = self.__load_notebook("precoding.ipynb")
-        self.__patch_notebook(notebook, 3,
+        self.__patch_notebook(notebook, 4,
                               inserts={0: "import ray as ray\n", 5: "ray.init(local_mode=True)"},
                               patches={5: "simulation = Simulation(console_mode=ConsoleMode.SILENT, num_actors=1, num_samples=1)"})
         self.__test_notebook(notebook)
@@ -172,11 +172,11 @@ class TestNotebooks(TestCase):
         """Test the receiver operation characteristics example notebook"""
         
         notebook = self.__load_notebook("roc.ipynb")
-        self.__patch_notebook(notebook, 1,
+        self.__patch_notebook(notebook, 2,
                               inserts={0: "import ray as ray\n", 16: "ray.init(local_mode=True)"})
-        self.__patch_notebook(notebook, 5,
+        self.__patch_notebook(notebook, 6,
                               patches={22: "simulation.num_samples = 1"})
-        self.__patch_notebook(notebook, 7,
+        self.__patch_notebook(notebook, 8,
                               patches={11: "hardware_loop.num_samples = 1"})
         self.__test_notebook(notebook)
         
@@ -184,7 +184,7 @@ class TestNotebooks(TestCase):
         """Test the communication waveform implementation example notebook"""
         
         notebook = self.__load_notebook("waveform.ipynb")
-        self.__patch_notebook(notebook, 9,
+        self.__patch_notebook(notebook, 10,
                               patches={3: "simulation = Simulation(console_mode=ConsoleMode.SILENT, num_actors=1)",
                                        11: "simulation.num_samples = 1"},
                               inserts={0: "import ray as ray", 3: "ray.init(local_mode=True)"})
