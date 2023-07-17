@@ -25,7 +25,7 @@ tutorials and a full API documentation, please consult the official
 * [Tobias Kronauer](https://github.com/tokr-bit)
 * [Jan Adler](https://github.com/adlerjan)
 * [Maximilian Matthé](https://github.com/mmatthebi)
-* Egor Achkasov
+* [Egor Achkasov](https://github.com/egor-achkasov)
 
 ## Copyright
 Copyright (C) 2022 Barkhausen Institut gGmbH
