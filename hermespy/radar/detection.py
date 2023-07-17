@@ -13,13 +13,14 @@ from typing import List, Tuple, Type
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.ndimage import generate_binary_structure, maximum_filter
+from scipy.signal import convolve
 
 from hermespy.core import Serializable, Visualizable
 from .cube import RadarCube
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
-__credits__ = ["Jan Adler"]
+__credits__ = ["Jan Adler", "Egor Achkasov"]
 __license__ = "AGPLv3"
 __version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
@@ -125,6 +126,11 @@ class PointDetection(object):
         """
 
         return self.__power
+
+    def __eq__(self, __value: object) -> bool:
+        if not isinstance(__value, PointDetection):
+            return NotImplemented
+        return bool(np.all(self.position == __value.position)) and bool(np.all(self.velocity == __value.velocity)) and self.power == __value.power
 
 
 class RadarPointCloud(Visualizable):
@@ -366,5 +372,153 @@ class MaxDetector(RadarDetector, Serializable):
 
         cloud = RadarPointCloud(cube.range_bins.max())
         cloud.add_point(PointDetection.FromSpherical(angles_of_arrival[0], angles_of_arrival[1], range, velocity, point_power))
+
+        return cloud
+
+
+class CFARDetector(RadarDetector, Serializable):
+    """Constant False Alarm Rate Detector.
+
+    Performs a two-dimensional detection over a :class:`RadarCube<hermespy.radar.cube.RadarCube>`'s range and doppler-frequency domain.
+    Refer to :footcite:t:`1983:Rohling` for more information.
+
+    The implemented detection kernel is of size
+
+    .. math::
+
+        \\left(1 + 2 N_{\\mathrm{T, R}} + 2 N_{\\mathrm{G, R}}\\right) \\times \\left(1 + 2 N_{\\mathrm{T, D}} + 2 N_{\\mathrm{G, D}}\\right)
+
+    as depicted in the following figure
+
+    .. figure:: /images/cfardetector_kernel_example.png
+        :alt: CFAR Detector kernel window example
+        :scale: 45%
+
+    where `c` indicates the cell under test, `g` the guard cells and `t` the training cells.
+    For each cell under test, the detector calculates the noise threshold over the available training cells
+
+    .. math::
+
+        P_{r,d} = \sum_{\\substack{
+            i \\in \\lbrace \\mathbb{Z} | N_\\mathrm{G, R} < \\lVert r + i \\rVert \\leq N_{\\mathrm{T, R}} \\rbrace \\\\
+            j \\in \\lbrace \\mathbb{Z} | N_\\mathrm{G, D} < \\lVert d + j \\rVert \\leq N_{\\mathrm{T, D}} \\rbrace
+        }}
+        x_{r+i,d+j}
+
+    and makes a detection descision
+
+    .. math::
+
+        x_{r,d} > \\left( P_{\\mathrm{Fa}}^{\\frac{-1}{2 N_{\\mathrm{T, R}}+ 2 N_{\\mathrm{T, D}}}} - 1 \\right) P_{r,d}
+
+    based on the configured probability of false alarm :math:`P_{\\mathrm{Fa}}`.
+    """
+
+    yaml_tag = "CFAR"
+    """YAML serialization tag."""
+
+    def __init__(self, num_training_cells: tuple, num_guard_cells: tuple, pfa: float) -> None:
+        """
+        CFAR Detector over the radar cube.
+
+        Args:
+
+            num_training_cells (tuple):
+                Number of training cells in a kernel slice. Must be a pair of even ints.
+
+            num_guard_cells (int):
+                Number of guard cells in a kernel slice. Must be a pair of even ints.
+
+            pfa (float):
+                Probability of False Alarm. Must be in the interval of [0, 1].
+        """
+
+        self.num_training_cells = num_training_cells
+        self.num_guard_cells = num_guard_cells
+        self.pfa = pfa
+
+    @property
+    def num_training_cells(self) -> tuple:
+        """Number of training cells in the detection kernel slice.
+
+        Denoted by :math:`N_{\\mathrm{T, R}}` and :math:`N_{\\mathrm{T, D}}`.
+        """
+
+        return self.__num_training_cells
+
+    @num_training_cells.setter
+    def num_training_cells(self, value: tuple) -> None:
+        if not isinstance(value, tuple) or (len(value) != 2) or not isinstance(value[0], int) or not isinstance(value[1], int):
+            raise ValueError("num_training_cells must be a tuple of two ints")
+        if (value[0] <= 0) or (value[1] <= 0):
+            raise ValueError("Number of training cells must be greater than zero")
+
+        self.__num_training_cells = value
+
+    @property
+    def num_guard_cells(self) -> tuple:
+        """Number of guard cells in the detection kernel slice.
+
+        Denoted by :math:`N_{\\mathrm{G, R}}` and :math:`N_{\\mathrm{G, D}}`.
+        """
+
+        return self.__num_guard_cells
+
+    @num_guard_cells.setter
+    def num_guard_cells(self, value: tuple) -> None:
+        if not isinstance(value, tuple) or (len(value) != 2) or not isinstance(value[0], int) or not isinstance(value[1], int):
+            raise ValueError("num_guard_cells must be a tuple of two ints")
+        if (value[0] < 0) or (value[1] < 0):
+            raise ValueError("Number of training cells must be non-negative")
+
+        self.__num_guard_cells = value
+
+    @property
+    def pfa(self) -> float:
+        """Probability of False Alarm.
+
+        Denoted by :math:`P_{\\mathrm{Fa}}`.
+        """
+
+        return self.__pfa
+
+    @pfa.setter
+    def pfa(self, value: float) -> None:
+        if (value < 0) or (value > 1):
+            raise ValueError("Probability of false alarm must be in [0, 1]")
+
+        self.__pfa = value
+
+    def detect(self, cube: RadarCube) -> RadarPointCloud:
+        # window is
+        # [half of training cells][half of guard cells][CUT][half of guard cells][half of training cells]
+        window_size_x = 2 * self.num_training_cells[0] + 2 * self.num_guard_cells[0] + 1
+        window_size_y = 2 * self.num_training_cells[1] + 2 * self.num_guard_cells[1] + 1
+
+        # check if data is bigger then the window
+        if (cube.data.shape[1] < window_size_x) or (cube.data.shape[2] < window_size_y):
+            raise ValueError("Radar cube 2nd and 3rd dimensions must be bigger then num_training_cells + num_guard_cells + 1")
+
+        # prepare convolution kernel
+        kernel = np.ones((1, window_size_x, window_size_y))
+        kernel[:, self.num_training_cells[0] : -self.num_training_cells[0], self.num_training_cells[1] : -self.num_training_cells[1]] = 0
+
+        # calculate noise threshold matrix
+        noise_threshold = convolve(cube.data, kernel, mode="same", method="direct")
+        threshold_normalization = convolve(np.ones(cube.data.shape), kernel, mode="same", method="direct")
+
+        # detect
+        threshold_factor = self.pfa ** (-1 / threshold_normalization) - 1
+        detection_point_indices = np.argwhere(np.abs(cube.data) > np.abs(noise_threshold) * threshold_factor)
+
+        # Transform the detections to a point cloud
+        cloud = RadarPointCloud(cube.range_bins.max())
+        for point_indices in detection_point_indices:
+            azimuth, zenith = cube.angle_bins[point_indices[0]]
+            velocity = cube.velocity_bins[point_indices[1]]
+            range = cube.range_bins[point_indices[2]]
+            power_indicator = cube.data[tuple(point_indices)]
+
+            cloud.add_point(PointDetection.FromSpherical(zenith, azimuth, velocity, range, power_indicator))
 
         return cloud
