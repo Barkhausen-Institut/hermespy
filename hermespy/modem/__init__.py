@@ -8,7 +8,7 @@ from .waveform_chirp_fsk import ChirpFSKWaveform, ChirpFSKSynchronization, Chirp
 from .waveform_correlation_synchronization import CorrelationSynchronization
 from .waveform_single_carrier import FilteredSingleCarrierWaveform, SingleCarrierLeastSquaresChannelEstimation, SingleCarrierZeroForcingChannelEqualization, SingleCarrierMinimumMeanSquareChannelEqualization, SingleCarrierCorrelationSynchronization, RaisedCosineWaveform, RootRaisedCosineWaveform, FMCWWaveform, RectangularWaveform, SingleCarrierIdealChannelEstimation
 from .waveform_ofdm import OFDMWaveform, FrameGuardSection, FrameSymbolSection, FrameResource, PilotSection, SchmidlCoxPilotSection, FrameElement, ElementType, PrefixType, OFDMCorrelationSynchronization, SchmidlCoxSynchronization, OFDMChannelEqualization, OFDMZeroForcingChannelEqualization, OFDMIdealChannelEstimation, OFDMLeastSquaresChannelEstimation, ReferencePosition
-from .precoding import Alamouti, SymbolPrecoding, SymbolPrecoder, SingleCarrier, SpatialMultiplexing, DFT, MaximumRatioCombining
+from .precoding import Alamouti, Ganesan, SymbolPrecoding, SymbolPrecoder, SingleCarrier, SpatialMultiplexing, DFT, MaximumRatioCombining
 from .evaluators import BitErrorEvaluator, BlockErrorEvaluator, FrameErrorEvaluator, ThroughputEvaluator
 from .tools import PskQamMapping
 
@@ -92,6 +92,7 @@ __all__ = [
     "ReferencePosition",
     "Synchronization",
     "Alamouti",
+    "Ganesan",
     "SymbolPrecoding",
     "SymbolPrecoder",
     "SingleCarrier",
