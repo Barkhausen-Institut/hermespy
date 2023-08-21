@@ -208,10 +208,10 @@ class StaticTrigger(TriggerModel, Serializable):
         return TriggerRealization(0, sampling_rate)
 
 
-class OffsetTrigger(TriggerModel, Serializable):
-    """Model of a trigger that generates a constant offset between drop start and frame start"""
+class SampleOffsetTrigger(TriggerModel, Serializable):
+    """Model of a trigger that generates a constant offset of samples between drop start and frame start"""
 
-    yaml_tag = "OffsetTrigger"
+    yaml_tag = "TimeOffsetTrigger"
     __num_offset_samples: int
 
     def __init__(self, num_offset_samples: int) -> None:
@@ -251,6 +251,54 @@ class OffsetTrigger(TriggerModel, Serializable):
 
         sampling_rate = list(self.devices)[0].sampling_rate
         return TriggerRealization(self.num_offset_samples, sampling_rate)
+
+
+class TimeOffsetTrigger(TriggerModel, Serializable):
+    """Model of a trigger that generates a constant time offset between drop start and frame start
+
+    Note that the offset is rounded to the nearest smaller integer number of samples,
+    depending on the sampling rate of the first controlled device's sampling rate.
+    """
+
+    yaml_tag = "TimeOffsetTrigger"
+    __offset: float
+
+    def __init__(self, offset: float) -> None:
+        """
+        Args:
+
+            offset (float):
+                Offset between drop start and frame start in seconds.
+        """
+
+        # Initialize base classes
+        TriggerModel.__init__(self)
+        Serializable.__init__(self)
+
+        # Initialize class attributes
+        self.offset = offset
+
+    @property
+    def offset(self) -> float:
+        """Offset between drop start and frame start in seconds."""
+
+        return self.__offset
+
+    @offset.setter
+    def offset(self, value: float) -> None:
+        if value < 0.0:
+            raise ValueError(f"Synchronization offset must be non-negatve (not {value})")
+
+        self.__offset = value
+
+    def realize(self) -> TriggerRealization:
+        if self.num_devices < 1:
+            raise RuntimeError("Realizing a static trigger requires the trigger to control at least one device")
+
+        sampling_rate = list(self.devices)[0].sampling_rate
+        num_offset_samples = int(self.offset * sampling_rate)
+
+        return TriggerRealization(num_offset_samples, sampling_rate)
 
 
 class RandomTrigger(TriggerModel, Serializable):

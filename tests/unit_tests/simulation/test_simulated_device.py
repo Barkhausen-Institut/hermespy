@@ -8,7 +8,7 @@ import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 from hermespy.core import dB, DeviceInput, RandomNode, Signal, SignalReceiver, SignalTransmitter, IdealAntenna, Transformation, UniformArray
-from hermespy.simulation import ProcessedSimulatedDeviceInput, SimulatedDevice, SimulatedDeviceOutput, SpecificIsolation, TriggerModel, TriggerRealization, RandomTrigger, StaticTrigger, OffsetTrigger
+from hermespy.simulation import ProcessedSimulatedDeviceInput, SimulatedDevice, SimulatedDeviceOutput, SpecificIsolation, TriggerModel, TriggerRealization, RandomTrigger, StaticTrigger, SampleOffsetTrigger, TimeOffsetTrigger
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
@@ -119,12 +119,12 @@ class TestStaticTrigger(TestCase):
         self.assertEqual(0, trigger_realization.num_offset_samples)
         self.assertEqual(1.234, trigger_realization.sampling_rate)
 
-class TestOffsetTrigger(TestCase):
-    """Test the offset trigger implementation"""
+class TestSampleOffsetTrigger(TestCase):
+    """Test the sample offset trigger implementation"""
 
     def setUp(self) -> None:
         
-        self.trigger_model = OffsetTrigger(3)
+        self.trigger_model = SampleOffsetTrigger(3)
         self.trigger_model.add_device(SimulatedDevice(sampling_rate=1.234))
 
     def test_realize(self) -> None:
@@ -136,9 +136,9 @@ class TestOffsetTrigger(TestCase):
         self.assertEqual(1.234, realization.sampling_rate)
 
     def test_realize_validation(self) -> None:
-        """Realizing the offset trigger without a controlled dveice should raise a RuntimeError"""
+        """Realizing the offset trigger without a controlled device should raise a RuntimeError"""
 
-        trigger_model = OffsetTrigger(3)
+        trigger_model = SampleOffsetTrigger(3)
 
         with self.assertRaises(RuntimeError):
             _ = trigger_model.realize()
@@ -154,6 +154,47 @@ class TestOffsetTrigger(TestCase):
 
         with self.assertRaises(ValueError):
             self.trigger_model.num_offset_samples = -1
+
+
+class TestTimeOffsetTrigger(TestCase):
+    """Test the time offset trigger implementation"""
+
+    def setUp(self) -> None:
+        
+        self.sampling_rate = 1.2345
+        self.offset = 6.789
+        self.num_offset_samples = int(self.offset * self.sampling_rate)
+
+        self.trigger_model = TimeOffsetTrigger(self.offset)
+        self.trigger_model.add_device(SimulatedDevice(sampling_rate=self.sampling_rate))
+
+    def test_realize(self) -> None:
+        """Realizing the offset trigger should always return the offset value"""
+
+        realization = self.trigger_model.realize()
+
+        self.assertEqual(self.num_offset_samples, realization.num_offset_samples)
+        self.assertEqual(self.sampling_rate, realization.sampling_rate)
+
+    def test_realize_validation(self) -> None:
+        """Realizing the offset trigger without a controlled device should raise a RuntimeError"""
+
+        trigger_model = TimeOffsetTrigger(3)
+
+        with self.assertRaises(RuntimeError):
+            _ = trigger_model.realize()
+
+    def test_offset_setget(self) -> None:
+        """Offset property getter should return setter argument"""
+
+        self.trigger_model.offset = 11
+        self.assertEqual(11, self.trigger_model.offset)
+
+    def test_offset_validation(self) -> None:
+        """Offset property setter should raise ValueError on negative arguments"""
+
+        with self.assertRaises(ValueError):
+            self.trigger_model.offset = -1
 
 
 class TestRandomTrigger(TestCase):
