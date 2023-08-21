@@ -222,6 +222,10 @@ Full releases with a new set of features will be provided on a bi-anual basis in
      - :doc:`api/modem.precoding.space_time_block_coding`
      - 
 
+   * - Ganesan
+     - :doc:`api/modem.precoding.space_time_block_coding`
+     - 
+
    * - 
      - :doc:`api/modem.precoding.single_carrier`
      - :doc:`examples/ofdm_5g`
