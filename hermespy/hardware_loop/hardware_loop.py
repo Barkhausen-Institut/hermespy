@@ -416,20 +416,26 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PDT], Pipeline[Ph
         if self.results_dir:
             file_location = path.join(self.results_dir, "drops.h5")
 
-            state = PhysicalScenarioDummy()
-            for device in self.scenario.devices:
-                state.new_device(carrier_frequency=device.carrier_frequency, sampling_rate=device.sampling_rate)
+            # Workaround for scenarios which might not be serializable:
+            # Create a dummy scenario and patch the operators for recording
+            if not isinstance(self.scenario, Serializable):
+                state = PhysicalScenarioDummy()
+                for device in self.scenario.devices:
+                    state.new_device(carrier_frequency=device.carrier_frequency, sampling_rate=device.sampling_rate)
 
-            # Patch operators for recording
-            operator_devices = [(operator.device, self.scenario.device_index(operator.device)) for operator in self.scenario.operators]
+                # Patch operators for recording
+                operator_devices = [(operator.device, self.scenario.device_index(operator.device)) for operator in self.scenario.operators]
 
-            for (_, device_idx), operator in zip(operator_devices, self.scenario.operators):
-                operator.device = state.devices[device_idx]  # type: ignore
+                for (_, device_idx), operator in zip(operator_devices, self.scenario.operators):
+                    operator.device = state.devices[device_idx]  # type: ignore
 
-            self.scenario.record(file_location, overwrite=overwrite, campaign=campaign, state=state)
+                self.scenario.record(file_location, overwrite=overwrite, campaign=campaign, state=state)
 
-            for (_, device_idx), operator in zip(operator_devices, state.operators):
-                operator.device = self.scenario.devices[device_idx]  # type: ignore
+                for (_, device_idx), operator in zip(operator_devices, state.operators):
+                    operator.device = self.scenario.devices[device_idx]  # type: ignore
+
+            else:
+                self.scenario.record(file_location, overwrite=overwrite, campaign=campaign)
 
         # Run internally
         self.__run()
