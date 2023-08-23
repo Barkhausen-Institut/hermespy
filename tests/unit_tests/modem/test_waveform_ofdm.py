@@ -12,8 +12,8 @@ from numpy.random import default_rng
 from scipy.constants import pi
 from scipy.fft import fft, fftshift
 
-from hermespy.core import ChannelStateInformation, ChannelStateFormat
-from hermespy.modem import OFDMWaveform, FrameSymbolSection, FrameGuardSection, FrameResource, Symbols, CustomPilotSymbolSequence
+from hermespy.core import ChannelStateInformation, ChannelStateFormat, Signal
+from hermespy.modem import OFDMWaveform, FrameSymbolSection, FrameGuardSection, FrameResource, StatedSymbols, Symbols, CustomPilotSymbolSequence
 from hermespy.modem.waveform_ofdm import FrameElement, ElementType, PrefixType, FrameSection, OFDMCorrelationSynchronization, OFDMIdealChannelEstimation, PilotSection, SchmidlCoxPilotSection, SchmidlCoxSynchronization, OFDMLeastSquaresChannelEstimation, OFDMChannelEqualization, OFDMZeroForcingChannelEqualization
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
@@ -367,15 +367,15 @@ class TestFrameGuardSection(TestCase):
     def test_modulate(self) -> None:
         """Modulation should return a zero-vector."""
 
-        expected_signal = np.zeros(self.section.num_samples, dtype=complex)
-        signal = self.section.modulate(np.empty(0, dtype=complex))
+        expected_signal = np.zeros(self.section.num_samples, dtype=np.complex_)
+        signal = self.section.modulate(np.empty(0, dtype=np.complex_))
 
         assert_array_equal(expected_signal, signal)
 
     def test_demodulate(self) -> None:
         """Demodulation should return an empty tuple."""
 
-        _ = self.section.demodulate(np.empty(0, dtype=complex))
+        _ = self.section.demodulate(np.empty(0, dtype=np.complex_))
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""
@@ -477,7 +477,7 @@ class TestOFDMWaveform(TestCase):
         self.assertEqual(0, empty_pilot_signal.num_samples)
         self.assertEqual(self.ofdm.sampling_rate, empty_pilot_signal.sampling_rate)
 
-        expected_samples = np.arange(100, dtype=complex)
+        expected_samples = np.arange(100, dtype=np.complex_)
         pilot_mock = Mock()
         pilot_mock.modulate.return_value = expected_samples
         self.ofdm.pilot_section = pilot_mock
@@ -502,23 +502,71 @@ class TestOFDMWaveform(TestCase):
 
         with self.assertRaises(ValueError):
             self.ofdm.subcarrier_spacing = 0.
-            
-    def test_modulate_no_blocks(self) -> None:
-        """Modulating an empty data frame should return a zero-vector."""
         
-        expected_signal = np.zeros((1, 0), dtype=complex)
-        signal = self.ofdm.modulate(Symbols(np.empty((1, 0, 10), dtype=complex)))
-        
-        assert_array_equal(expected_signal, signal.samples)
+    def test_symbols_per_frame(self) -> None:
+        """Symbols per frame property should return the correct number of symbols per frame."""
 
+        self.assertEqual(90, self.ofdm.symbols_per_frame)
+        
+    def test_num_data_symbols(self) -> None:
+        """Number of data symbols property should report the correct number of data symbols."""
+
+        self.assertEqual(42, self.ofdm.num_data_symbols)
+        
+    def test_words_per_frame(self) -> None:
+        """The number of words per frame should be the sum of the number of words of all sections"""
+        
+        self.assertEqual(self.section_a.num_words + self.section_b.num_words + self.section_c.num_words, self.ofdm.words_per_frame)
+        
+    def test_references_per_frame(self) -> None:
+        """The number of references per frame should be the sum of the number of references of all sections"""
+        
+        self.assertEqual(self.section_a.num_references + self.section_b.num_references + self.section_c.num_references, self.ofdm.references_per_frame)
+
+    def test_samples_per_frame(self) -> None:
+        """Samples per frame property should return the correct sample count."""
+
+        expected_bits = self.rng.integers(0, 2, self.ofdm.bits_per_frame(self.ofdm.num_data_symbols))
+        mapped_symbols = self.ofdm.map(expected_bits)
+        placed_symbols = self.ofdm.place(mapped_symbols)
+        signal = self.ofdm.modulate(placed_symbols)
+        
+        self.assertEqual(signal.size, self.ofdm.samples_per_frame)
+        
+    def test_symbol_duration(self) -> None:
+        """Symbol duration property should report the correct symbol duration."""
+
+        self.assertEqual(1 / self.ofdm.bandwidth, self.ofdm.symbol_duration)
+    
+    def test_map_validation(self) -> None:
+        """Mapping should raise ValueError on invalid arguments"""
+        
+        with self.assertRaises(ValueError):
+            self.ofdm.map(np.random.standard_normal(2))
+        
+    def test_map_unmap(self) -> None:
+        """Mappding and numapping should result in identical bit sequences"""
+        
+        expected_bits = self.rng.integers(0, 2, self.ofdm.bits_per_frame(self.ofdm.num_data_symbols))
+        symbols = self.ofdm.map(expected_bits)
+        bits = self.ofdm.unmap(symbols)
+                
+        assert_array_equal(expected_bits, bits)
+        
+    def test_place_validation(self) -> None:
+        """Placing should raise ValueError on invalid arguments"""
+            
+        with self.assertRaises(ValueError):
+            self.ofdm.place(Symbols(np.random.standard_normal(2)))
+    
     def test_modulate_demodulate(self) -> None:
         """Modulating and subsequently de-modulating a data frame should yield identical symbols."""
 
-        bits = self.rng.integers(0, 2, self.ofdm.bits_per_frame)
-        expected_symbols = self.ofdm.map(bits)
+        bits = self.rng.integers(0, 2, self.ofdm.bits_per_frame(self.ofdm.num_data_symbols))
+        expected_symbols = self.ofdm.place(self.ofdm.map(bits))
 
         baseband_signal = self.ofdm.modulate(expected_symbols)
-        symbols = self.ofdm.demodulate(baseband_signal.samples[0, :])
+        symbols = self.ofdm.demodulate(baseband_signal)
 
         assert_array_almost_equal(expected_symbols.raw, symbols.raw)
         
@@ -526,11 +574,11 @@ class TestOFDMWaveform(TestCase):
         """Modulating and subsequently de-modulating a data frame with pilot section should yield identical symbols."""
 
         self.ofdm.pilot_section = SchmidlCoxPilotSection()
-        bits = self.rng.integers(0, 2, self.ofdm.bits_per_frame)
-        expected_symbols = self.ofdm.map(bits)
+        bits = self.rng.integers(0, 2, self.ofdm.bits_per_frame(self.ofdm.num_data_symbols))
+        expected_symbols = self.ofdm.place(self.ofdm.map(bits))
 
         baseband_signal = self.ofdm.modulate(expected_symbols)
-        symbols = self.ofdm.demodulate(baseband_signal.samples[0, :])
+        symbols = self.ofdm.demodulate(baseband_signal)
 
         assert_array_almost_equal(expected_symbols.raw, symbols.raw)
 
@@ -544,56 +592,35 @@ class TestOFDMWaveform(TestCase):
         ofdm.channel_estimation = OFDMLeastSquaresChannelEstimation()
         
         symbols = ofdm.map(np.empty(0, dtype=np.int_))
-        tx_signal = ofdm.modulate(symbols)
-        received_symbols = ofdm.demodulate(tx_signal.samples[0, :])
+        tx_signal = ofdm.modulate(ofdm.place(symbols))
+        received_symbols = ofdm.demodulate(tx_signal)
 
         expected_state = np.ones((1, 1, 1, self.num_subcarriers), dtype=np.complex_)
         stated_symbols, csi = ofdm.channel_estimation.estimate_channel(received_symbols)
         
         assert_array_almost_equal(expected_state, csi.state)
         assert_array_almost_equal(expected_state, stated_symbols.states)
-
-    def test_map_validation(self) -> None:
-        """Mapping should raise ValueError on invalid arguments"""
-        
-        with self.assertRaises(ValueError):
-            self.ofdm.map(np.random.standard_normal(2))
-        
-    def test_map_unmap(self) -> None:
-        """Mappding and numapping should result in identical bit sequences"""
-        
-        expected_bits = self.rng.integers(0, 2, self.ofdm.bits_per_frame)
-        symbols = self.ofdm.map(expected_bits)
-        bits = self.ofdm.unmap(symbols)
-                
-        assert_array_equal(expected_bits, bits)
         
     def test_transmit_receive(self) -> None:
         """Mapping and modulation should resultin a correct information transmission"""
 
-        expected_bits = self.rng.integers(0, 2, self.ofdm.bits_per_frame)
+        expected_bits = self.rng.integers(0, 2, self.ofdm.bits_per_frame(self.ofdm.num_data_symbols))
         
-        symbols = self.ofdm.map(expected_bits)
-        signal = self.ofdm.modulate(symbols)
-        demodulated_symbols = self.ofdm.demodulate(signal.samples[0, :])
-        bits = self.ofdm.unmap(demodulated_symbols)
+        mapped_symbols = self.ofdm.map(expected_bits)
+        placed_symbols = self.ofdm.place(mapped_symbols)
+        signal = self.ofdm.modulate(placed_symbols)
+        
+        demodulated_symbols = self.ofdm.demodulate(signal)
+        stated_symbols = StatedSymbols(demodulated_symbols.raw, np.ones((1, 1, demodulated_symbols.num_blocks, demodulated_symbols.num_symbols)))
+        picked_symbols = self.ofdm.pick(stated_symbols)
+        bits = self.ofdm.unmap(picked_symbols)
         
         assert_array_equal(expected_bits, bits)
-        
-    def test_words_per_frame(self) -> None:
-        """The number of words per frame should be the sum of the number of words of all sections"""
-        
-        self.assertEqual(self.section_a.num_words + self.section_b.num_words + self.section_c.num_words, self.ofdm.words_per_frame)
-        
-    def test_references_per_frame(self) -> None:
-        """The number of references per frame should be the sum of the number of references of all sections"""
-        
-        self.assertEqual(self.section_a.num_references + self.section_b.num_references + self.section_c.num_references, self.ofdm.references_per_frame)
 
-    def test_frame_duration(self) -> None:
+    def test_frame_duration(self) -> None: 
         """The frame duration should be the sum of the durations of all sections"""
         
-        self.assertEqual(self.ofdm.samples_in_frame / self.ofdm.sampling_rate, self.ofdm.frame_duration)
+        self.assertEqual(self.ofdm.samples_per_frame / self.ofdm.sampling_rate, self.ofdm.frame_duration)
 
     def test_resource_mask(self) -> None:
         """The resource mask should be the sum of the masks of all resources"""
@@ -627,10 +654,10 @@ class TestOFDMWaveform(TestCase):
                                  resources=[self.resource_a], structure=[self.section_a], num_subcarriers=self.num_subcarriers,
                                  oversampling_factor=self.oversampling_factor)
         
-        symbols = self.ofdm.map(self.rng.integers(0, 2, self.ofdm.bits_per_frame))
-        transmission = self.ofdm.modulate(symbols)
+        symbols = self.ofdm.map(self.rng.integers(0, 2, self.ofdm.bits_per_frame(self.ofdm.num_data_symbols)))
+        frame_samples = self.ofdm.modulate(symbols)
         
-        self.assertAlmostEqual(self.ofdm.power, transmission.power[0], places=2)
+        self.assertAlmostEqual(self.ofdm.power, Signal(frame_samples, self.ofdm.sampling_rate).power[0], places=2)
 
     def test_num_subcarriers_validation(self) -> None:
         """Number of subcarries property setter should raise ValueError on arguments smaller than one."""
@@ -656,7 +683,7 @@ class TestPilotSection(TestCase):
     def setUp(self) -> None:
 
         self.rng = default_rng(42)
-        self.subsymbols = Symbols(np.array([1., -1., 1.j, -1.j], dtype=complex))
+        self.subsymbols = Symbols(np.array([1., -1., 1.j, -1.j], dtype=np.complex_))
         self.frame = OFDMWaveform(oversampling_factor=4)
 
         self.pilot_section = PilotSection(pilot_elements=self.subsymbols, frame=self.frame)
@@ -709,7 +736,7 @@ class TestPilotSection(TestCase):
     def test_configured_pilot_sequence(self) -> None:
         """Specified subsymbols should result in the generation of a valid pilot sequence"""
         
-        self.pilot_section.pilot_elements = Symbols(np.array([[[1., -1., 1.j, -1.j]]], dtype=complex))
+        self.pilot_section.pilot_elements = Symbols(np.array([[[1., -1., 1.j, -1.j]]], dtype=np.complex_))
         pilot_sequence = self.pilot_section._pilot_sequence()
         
         self.assertEqual(1, pilot_sequence.num_streams)
@@ -807,7 +834,7 @@ class TestCorrelationSynchronization(TestCase):
 
         self.rng = default_rng(42)
 
-        test_resource = FrameResource(repetitions=1, elements=[FrameElement(ElementType.DATA, repetitions=1200)])
+        test_resource = FrameResource(repetitions=1, elements=[FrameElement(ElementType.DATA, repetitions=1024)])
         test_payload = FrameSymbolSection(num_repetitions=3, pattern=[0])
         self.frame = OFDMWaveform(oversampling_factor=4, resources=[test_resource], structure=[test_payload])
         self.frame.pilot_section = PilotSection()
@@ -824,17 +851,16 @@ class TestCorrelationSynchronization(TestCase):
 
         for d, n in product(self.delays_in_samples, self.num_frames):
 
-            symbols = np.exp(2j * pi * self.rng.uniform(0, 1, (n, self.frame.symbols_per_frame)))
-            frames = [np.exp(2j * pi * self.rng.uniform(0, 1, (self.num_streams, 1))) @ self.frame.modulate(Symbols(symbols[f, :])).samples for f in range(n)]
+            symbols = np.exp(2j * pi * self.rng.uniform(0, 1, (n, self.frame.num_data_symbols)))
+            frames = [np.outer(np.exp(2j * pi * self.rng.uniform(0, 1, self.num_streams)), self.frame.modulate(self.frame.place(Symbols(symbols[f, :])))) for f in range(n)]
             
-            signal = np.empty((self.num_streams, 0), dtype=complex)
+            signal = np.empty((self.num_streams, 0), dtype=np.complex_)
             for frame in frames:
-
-                signal = np.concatenate((signal, np.zeros((self.num_streams, d), dtype=complex), frame), axis=1)
+                signal = np.concatenate((signal, np.zeros((self.num_streams, d), dtype=np.complex_), frame), axis=1)
             
             frame_delays = self.synchronization.synchronize(signal)
 
-            self.assertCountEqual(d + (d + self.frame.samples_in_frame) * np.arange(n), frame_delays)
+            self.assertCountEqual(d + (d + self.frame.samples_per_frame) * np.arange(n), frame_delays)
     
     def test_serialization(self) -> None:
         """Test YAML serialization"""
@@ -865,7 +891,7 @@ class TestSchmidlCoxSynchronization(TestCase):
     def test_synchronize_empty_signal(self) -> None:
         """Test the proper estimation of delays during correlation synchronization for an empty signal"""
         
-        signal = np.empty((self.num_streams, 0), dtype=complex)
+        signal = np.empty((self.num_streams, 0), dtype=np.complex_)
         frame_delays = self.synchronization.synchronize(signal)
         
         self.assertEqual(0, len(frame_delays))
@@ -875,20 +901,20 @@ class TestSchmidlCoxSynchronization(TestCase):
 
         for d, n in product(self.delays_in_samples, self.num_frames):
 
-            symbols = [self.frame.map(self.rng.integers(0, 2, size=self.frame.bits_per_frame)) for _ in range(n)]
-            frames = [np.exp(2j * pi * self.rng.uniform(0, 1, (self.num_streams, 1))) @ self.frame.modulate(symbols[f]).samples for f in range(n)]
+            symbols = [self.frame.map(self.rng.integers(0, 2, size=self.frame.bits_per_frame(self.frame.num_data_symbols))) for _ in range(n)]
+            frames = [np.outer(np.exp(2j * pi * self.rng.uniform(0, 1, (self.num_streams, 1))), self.frame.modulate(symbols[f])) for f in range(n)]
             
-            signal = np.empty((self.num_streams, 0), dtype=complex)
+            signal = np.empty((self.num_streams, 0), dtype=np.complex_)
             for frame in frames:
 
-                signal = np.concatenate((signal, np.zeros((self.num_streams, d), dtype=complex), frame), axis=1)
+                signal = np.concatenate((signal, np.zeros((self.num_streams, d), dtype=np.complex_), frame), axis=1)
             
             estimated_delays = self.synchronization.synchronize(signal)
             self.assertEqual(n, len(estimated_delays))
             
             for f, estimated_delay in enumerate(estimated_delays):
                 
-                expected_delay = f * self.frame.samples_in_frame + (1 + f) * d
+                expected_delay = f * self.frame.samples_per_frame + (1 + f) * d
                 
                 if abs(estimated_delay - expected_delay) > self.max_delay_offset:
                     self.fail(f"Estimated delay {estimated_delay} too far off (should be {expected_delay})")
@@ -948,7 +974,7 @@ class TestIdealChannelEstimation(TestCase):
     def test_estimate_channel(self) -> None:
         """Ideal channel estimation should correctly fetch the channel estimate"""
         
-        symbols = self.ofdm.map(self.rng.integers(0, 2, self.ofdm.bits_per_frame))
+        symbols = self.ofdm.map(self.rng.integers(0, 2, self.ofdm.bits_per_frame(self.ofdm.num_data_symbols)))
         
         with patch('hermespy.modem.waveform.IdealChannelEstimation._csi') as csi_mock:
             
@@ -1003,12 +1029,12 @@ class TestLeastSquaresChannelEstimation(TestCase):
         """Least squares channel estimation should raise a NotImplementedError on invalid arguments"""
         
         with self.assertRaises(NotImplementedError):
-            self.estimation.estimate_channel(Symbols(np.empty((2, 0, 10), dtype=complex)))
+            self.estimation.estimate_channel(Symbols(np.empty((2, 0, 10), dtype=np.complex_)))
             
     def test_estimate_channel(self) -> None:
         """Least squares channel estimation should correctly compute the channel estimate"""
         
-        symbols = self.ofdm.map(self.rng.integers(0, 2, self.ofdm.bits_per_frame))
+        symbols = self.ofdm.place(self.ofdm.map(self.rng.integers(0, 2, self.ofdm.bits_per_frame(self.ofdm.num_data_symbols))))
         
         with patch('hermespy.modem.waveform.IdealChannelEstimation._csi') as csi_mock:
             

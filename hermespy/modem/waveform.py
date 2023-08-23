@@ -308,17 +308,6 @@ class WaveformGenerator(ABC, Serializable):
             self.modulation_order = modulation_order
 
     @property
-    @abstractmethod
-    def samples_in_frame(self) -> int:
-        """The number of discrete samples per generated frame.
-
-        Returns:
-            int:
-                The number of samples.
-        """
-        ...  # pragma: no cover
-
-    @property
     def oversampling_factor(self) -> int:
         """Access the oversampling factor.
 
@@ -388,35 +377,41 @@ class WaveformGenerator(ABC, Serializable):
 
         return int(np.log2(self.modulation_order))
 
-    @property
-    @abstractmethod
-    def bits_per_frame(self) -> int:
+    def bits_per_frame(self, num_data_symbols: int) -> int:
         """Number of bits required to generate a single data frame.
 
-        Returns:
-            int: Number of bits
+        Args:
+
+            num_data_symbols (int):
+                Number of unique data symbols contained within the frame.
+
+        Returns: Number of bits.
         """
+        return num_data_symbols * self.bits_per_symbol
+
+    @property
+    @abstractmethod
+    def num_data_symbols(self) -> int:
+        """Number of bit-mapped symbols contained within each communication frame."""
         ...  # pragma: no cover
 
     @property
     @abstractmethod
-    def symbols_per_frame(self) -> int:
-        """Number of dat symbols per transmitted frame.
-
-        Returns:
-            int: Number of data symbols
-        """
+    def samples_per_frame(self) -> int:
+        """Number of time-domain samples per processed communication frame."""
         ...  # pragma: no cover
 
     @property
     def frame_duration(self) -> float:
-        """Length of one data frame in seconds.
+        """Duration a single communication frame in seconds."""
 
-        Returns:
-            float: Frame length in seconds.
-        """
+        return self.samples_per_frame / self.sampling_rate
 
-        return self.samples_in_frame / self.sampling_rate
+    @property
+    @abstractmethod
+    def symbol_duration(self) -> float:
+        """Duration of a single symbol block."""
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -480,7 +475,37 @@ class WaveformGenerator(ABC, Serializable):
         ...  # pragma: no cover
 
     @abstractmethod
-    def modulate(self, data_symbols: Symbols) -> Signal:
+    def place(self, symbols: Symbols) -> Symbols:
+        """Place the mapped symbols within the communicaton frame.
+
+        Additionally interleaves pilot symbols.
+
+        Args:
+
+            symbols (Symbols):
+                The mapped symbols.
+
+        Returns: The symbols with the mapped symbols placed within the frame.
+        """
+        ...  # pragma: no cover
+
+    @abstractmethod
+    def pick(self, placed_symbols: StatedSymbols) -> StatedSymbols:
+        """Pick the mapped symbols from the communicaton frame.
+
+        Additionally removes interleaved pilot symbols.
+
+        Args:
+
+            placed_symbols (StatedSymbols):
+                The placed symbols.
+
+        Returns: The symbols with the mapped symbols picked from the frame.
+        """
+        ...  # pragma: no cover
+
+    @abstractmethod
+    def modulate(self, data_symbols: Symbols) -> np.ndarray:
         """Modulate a stream of data symbols to a base-band signal containing a single data frame.
 
         Args:
@@ -488,12 +513,9 @@ class WaveformGenerator(ABC, Serializable):
             data_symbols (Symbols):
                 Singular stream of data symbols to be modulated by this waveform.
 
-        Returns:
-            Signal: Signal model of a single modulate data frame.
+        Returns: Samples of the modulated base-band signal.
         """
         ...  # pragma: no cover
-
-    # Hint: Channel propagation occurs here
 
     @abstractmethod
     def demodulate(self, signal: np.ndarray) -> Symbols:
@@ -528,17 +550,19 @@ class WaveformGenerator(ABC, Serializable):
         """
         ...  # pragma: no cover
 
-    @property
-    def data_rate(self) -> float:
+    def data_rate(self, num_data_symbols: int) -> float:
         """Data rate theoretically achieved by this waveform configuration.
 
-        Returns:
+        Args:
 
-            Bits per second.
+            num_data_symbols (int):
+                Number of data symbols contained within the frame.
+
+        Returns: Bits per second.
         """
 
         time = self.frame_duration  # ToDo: Consider guard interval
-        bits = self.bits_per_frame
+        bits = self.bits_per_frame(num_data_symbols)
 
         return bits / time
 

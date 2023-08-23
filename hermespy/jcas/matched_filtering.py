@@ -114,7 +114,8 @@ class MatchedFilterJcas(Radar, DuplexModem, Transmitter[JCASTransmission], Recei
             signal.append_samples(Signal(np.zeros((1, required_num_received_samples - signal.num_samples), dtype=complex), self.sampling_rate, signal.carrier_frequency))
 
         # Remove possible overhead samples if signal is too long
-        # resampled_signal.samples = resampled_signal.samples[:, :num_samples]
+        # resampled_signal.samples = re
+        # sampled_signal.samples[:, :num_samples]
 
         correlation = abs(correlate(signal.samples, self.transmission.signal.samples, mode="valid", method="fft").flatten()) / self.transmission.signal.num_samples
         lags = correlation_lags(signal.num_samples, self.transmission.signal.num_samples, mode="valid")

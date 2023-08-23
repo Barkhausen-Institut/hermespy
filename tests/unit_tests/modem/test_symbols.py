@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import numpy as np
 from h5py import File
+from numpy.testing import assert_array_equal
 
 from hermespy.modem import Symbol, Symbols, StatedSymbols
 from hermespy.modem.symbols import SymbolType
@@ -71,6 +72,16 @@ class TestSymbols(TestCase):
 
         with self.assertRaises(ValueError):
             self.symbols.append_stream(np.zeros((3, 5, 5)))
+            
+    def test_append_symbols_vector(self) -> None:
+        """Append a vector of symbols should yield the correct object"""
+        
+        initial_symbols = Symbols(self.raw_symbols.flatten())
+        
+        appended_symbols = self.raw_symbols[0, :, 0]
+        initial_symbols.append_symbols(appended_symbols)
+        
+        assert_array_equal(appended_symbols, initial_symbols.raw[0, -appended_symbols.size:, 0])
 
     def test_append_symbols(self) -> None:
         """Appending symbols should yield the correct object"""
