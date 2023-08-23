@@ -124,7 +124,7 @@ class EyePlot(HardwareLoopPlot):
         self.axes.clear()
 
         # Plot eye diagram
-        symbol_duration = self.__modem.waveform_generator.frame_duration / self.__modem.waveform_generator.symbols_per_frame
+        symbol_duration = self.__modem.symbol_duration
         self.__modem.reception.signal.plot_eye(symbol_duration=symbol_duration, axes=self.axes)
 
         # Update plot

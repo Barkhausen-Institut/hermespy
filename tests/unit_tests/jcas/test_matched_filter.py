@@ -15,6 +15,7 @@ from hermespy.radar import Radar, RadarCube, RadarReception
 from hermespy.simulation import SimulatedDevice
 from hermespy.jcas import JCASTransmission, JCASReception, MatchedFilterJcas
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.modem.test_waveform import MockWaveformGenerator
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -25,73 +26,6 @@ __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
-
-class MockWaveformGenerator(WaveformGenerator):
-    """Mock communication waveform for modem testing."""
-
-    symbol_rate = 1e9
-
-    @property
-    def samples_in_frame(self) -> int:
-        
-        return self.oversampling_factor * self.symbols_per_frame
-    
-    @property
-    def bits_per_frame(self) -> int:
-        
-        return self.symbols_per_frame * 1
-    
-    @property
-    def symbols_per_frame(self) -> int:
-        
-        return 100
-    
-    @property
-    def bit_energy(self) -> float:
-    
-        return 1.
-    
-    @property
-    def symbol_energy(self) -> float:
-        
-        return 1.
-    
-    @property
-    def power(self) -> float:
-        
-        return 1.
-
-    @property
-    def carrier_frequency(self) -> float:
-        
-        return 1.
-    
-    def map(self, data_bits: np.ndarray) -> Symbols:
-        
-        return Symbols(data_bits[np.newaxis, np.newaxis, :])
-    
-    def unmap(self, symbols: Symbols) -> np.ndarray:
-        
-        return symbols.raw.real.flatten()
-    
-    def modulate(self, data_symbols: Symbols) -> Signal:
-        
-        return Signal(data_symbols.raw.flatten().repeat(self.oversampling_factor), self.sampling_rate)
-
-    def demodulate(self, signal: np.ndarray) -> Symbols:
-        
-        symbols = Symbols(signal[np.newaxis, np.newaxis, :self.oversampling_factor * self.symbols_per_frame:self.oversampling_factor])
-        return symbols
-    
-    @property
-    def bandwidth(self) -> float:
-        
-        return self.sampling_rate
-    
-    @property
-    def sampling_rate(self) -> float:
-        
-        return self.symbol_rate * self.oversampling_factor
 
 
 class TestJCASTransmission(TestCase):

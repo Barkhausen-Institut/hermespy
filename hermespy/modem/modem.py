@@ -717,6 +717,25 @@ class BaseModem(RandomNode, ABC):
         self.__precoding = coding
         self.__precoding.modem = self
 
+    def _bit_requirements(self) -> Tuple[int, int]:
+        """Compute the bit generation requirements of the modem for the given configuration.
+
+        Returns: Tuple of required data bits and required code bits.
+
+        Raises:
+
+            RuntimeError: If the symbol precoding rate does not match the waveform configuration.
+        """
+
+        if self.waveform_generator.num_data_symbols % self.precoding.rate.denominator != 0:
+            raise RuntimeError(f"Symbol precoding rate does not match the waveform configuration ({self.waveform_generator.num_data_symbols} % {self.precoding.rate.denominator} != 0)")
+
+        required_num_data_symbols = int(self.waveform_generator.num_data_symbols * self.precoding.rate)
+        required_num_code_bits = self.waveform_generator.bits_per_frame(required_num_data_symbols) * self.precoding.num_input_streams
+        required_num_data_bits = self.encoder_manager.required_num_data_bits(required_num_code_bits)
+
+        return required_num_data_bits, required_num_code_bits
+
     @property
     def num_data_bits_per_frame(self) -> int:
         """Compute the number of required data bits to generate a single frame.
@@ -725,12 +744,21 @@ class BaseModem(RandomNode, ABC):
             int: The number of data bits.
         """
 
-        num_code_bits = self.waveform_generator.bits_per_frame
-        return self.encoder_manager.required_num_data_bits(num_code_bits)
+        required_num_data_bits, _ = self._bit_requirements()
+        return required_num_data_bits
+
+    @property
+    def samples_per_frame(self) -> int:
+        """Number time-domain samples per processed communication frame."""
+        return self.waveform_generator.samples_per_frame
 
     @property
     def frame_duration(self) -> float:
         return self.waveform_generator.frame_duration
+
+    @property
+    def symbol_duration(self) -> float:
+        return self.waveform_generator.symbol_duration
 
     @property
     def sampling_rate(self) -> float:
@@ -861,16 +889,18 @@ class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Seria
             The modualted base-band communication frame.
         """
 
-        signal = Signal.empty(self.waveform_generator.sampling_rate)
+        # For each stream resulting from the initial encoding stage
+        # Place and encode the symbols according to the stream transmit coding configuration
+        frame_samples = np.empty((symbols.num_streams, self.waveform_generator.samples_per_frame), dtype=np.complex_)
+        for s, stream_symbols in enumerate(symbols.raw):
+            placed_symbols = self.waveform_generator.place(Symbols(stream_symbols[np.newaxis, :, :]))
 
-        if symbols.num_streams < 1:
-            signal.append_streams(self.waveform_generator.modulate(Symbols()))
+            # Modulate each placed symbol stream individually to its base-band signal representation
+            frame_samples[s, :] = self.waveform_generator.modulate(placed_symbols)
 
-        else:
-            for symbol_stream in symbols.raw:
-                signal.append_streams(self.waveform_generator.modulate(Symbols(symbol_stream[np.newaxis, :, :])))
-
-        return signal
+        # Apply the stream transmit coding configuration
+        frame_signal = Signal(frame_samples, self.waveform_generator.sampling_rate, self.carrier_frequency)
+        return frame_signal
 
     def _transmit(self, duration: float = -1.0) -> CommunicationTransmission:
         """Returns an array with the complex base-band samples of a waveform generator.
@@ -892,23 +922,25 @@ class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Seria
         # Infer required parameters
         frame_duration = self.frame_duration
         num_mimo_frames = int(duration / frame_duration)
-        code_bits_per_mimo_frame = int(self.waveform_generator.bits_per_frame * self.precoding.num_input_streams)
-        data_bits_per_mimo_frame = self.encoder_manager.required_num_data_bits(code_bits_per_mimo_frame)
+        required_num_data_bits, required_num_code_bits = self._bit_requirements()
 
+        # Ultimately, the number of resulting output streams is determined by the stream coding configuration
         if len(self.transmit_stream_coding) > 0:
             num_output_streams = self.transmit_stream_coding.num_output_streams
 
+        # If not stream coding configuration is available, the number of output streams is determined by the precoding configuration
         elif len(self.precoding) > 0:
             num_output_streams = self.precoding.num_output_streams
 
+        # The default number of output streams is one
         else:
             num_output_streams = 1
 
         # Assert that the number of output streams matches the antenna count
         if self.device is not None and num_output_streams != self.device.num_antennas:
-            raise ValueError(f"Modem MIMO configuration generates invalid number of antenna streams ({num_output_streams} instead of {self.device.num_antennas})")
+            raise RuntimeError(f"Modem MIMO configuration generates invalid number of antenna streams ({num_output_streams} instead of {self.device.num_antennas})")
 
-        signal = Signal.empty(self.waveform_generator.sampling_rate, num_output_streams)
+        signal = Signal.empty(self.waveform_generator.sampling_rate, num_output_streams, carrier_frequency=self.carrier_frequency)
 
         # Abort if no frame is to be transmitted within the current duration
         if num_mimo_frames < 1:
@@ -918,26 +950,26 @@ class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Seria
         frames: List[CommunicationTransmissionFrame] = []
         for n in range(num_mimo_frames):
             # Generate plain data bits
-            data_bits = self.bits_source.generate_bits(data_bits_per_mimo_frame)
+            data_bits = self.bits_source.generate_bits(required_num_data_bits)
 
             # Apply forward error correction
-            encoded_bits = self.encoder_manager.encode(data_bits, code_bits_per_mimo_frame)
+            encoded_bits = self.encoder_manager.encode(data_bits, required_num_code_bits)
 
             # Map bits to communication symbols
-            symbols = self.__map(encoded_bits, self.precoding.num_input_streams)
+            mapped_symbols = self.__map(encoded_bits, self.precoding.num_input_streams)
 
-            # Apply precoding cofiguration
-            encoded_symbols = self.precoding.encode(StatedSymbols(symbols.raw, np.ones((symbols.num_streams, 1, symbols.num_blocks, symbols.num_symbols), dtype=complex)))
+            # Apply the first symbol precoding cofiguration
+            encoded_symbols = self.precoding.encode(StatedSymbols(mapped_symbols.raw, np.ones((mapped_symbols.num_streams, 1, mapped_symbols.num_blocks, mapped_symbols.num_symbols), dtype=np.complex_)))
 
-            # Modulate to base-band signal representation
+            # Modulate symbols to a base-band signal
             frame_signal = self.__modulate(encoded_symbols)
 
-            # Apply the stream transmit coding configuration
+            # Apply stream encoding configuration
             encoded_frame_signal = self.__transmit_stream_coding.encode(frame_signal)
 
             # Save results
             signal.append_samples(encoded_frame_signal)
-            frames.append(CommunicationTransmissionFrame(signal=frame_signal, bits=data_bits, encoded_bits=encoded_bits, symbols=symbols, encoded_symbols=encoded_symbols, timestamp=n * frame_duration))
+            frames.append(CommunicationTransmissionFrame(signal=frame_signal, bits=data_bits, encoded_bits=encoded_bits, symbols=mapped_symbols, encoded_symbols=encoded_symbols, timestamp=n * frame_duration))
 
         # Update the assumed signal carrier frequency to RF band
         signal.carrier_frequency = self.carrier_frequency
@@ -1015,7 +1047,7 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
 
         # Synchronize raw MIMO data into frames
         frame_start_indices = self.waveform_generator.synchronization.synchronize(received_signal.samples)
-        frame_length = self.waveform_generator.samples_in_frame
+        frame_length = self.waveform_generator.samples_per_frame
 
         synchronized_signals = []
         for frame_start in frame_start_indices:
@@ -1077,9 +1109,8 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
             reception = CommunicationReception(signal)
             return reception
 
-        # Infer required parameters
-        code_bits_per_mimo_frame = int(self.waveform_generator.bits_per_frame * self.precoding.num_input_streams)
-        data_bits_per_mimo_frame = self.encoder_manager.required_num_data_bits(code_bits_per_mimo_frame)
+        # Compute the bit generation requirements
+        required_num_data_bits, _ = self._bit_requirements()
 
         # Process each frame independently
         frames: List[CommunicationReceptionFrame] = []
@@ -1093,8 +1124,10 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
             # Estimate the channel from each frame demodulation
             stated_symbols, channel_estimate = self.waveform_generator.estimate_channel(symbols)
 
+            picked_symbols = self.waveform_generator.pick(stated_symbols)
+
             # Decode the pre-equalization symbol precoding stage
-            decoded_symbols = self.precoding.decode(stated_symbols)
+            decoded_symbols = self.precoding.decode(picked_symbols)
 
             # Equalize the received symbols for each frame given the estimated channel state
             equalized_symbols = self.waveform_generator.equalize_symbols(decoded_symbols)
@@ -1103,7 +1136,7 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
             encoded_bits = self.__unmap(equalized_symbols)
 
             # Apply inverse FEC configuration to correct errors and remove redundancies
-            decoded_bits = self.encoder_manager.decode(encoded_bits, data_bits_per_mimo_frame)
+            decoded_bits = self.encoder_manager.decode(encoded_bits, required_num_data_bits)
 
             # Store the received information
             frames.append(CommunicationReceptionFrame(signal=frame_signal, decoded_signal=decoded_frame_signal, symbols=symbols, decoded_symbols=decoded_symbols, timestamp=frame_index * signal.sampling_rate, equalized_symbols=equalized_symbols, encoded_bits=encoded_bits, decoded_bits=decoded_bits, csi=channel_estimate))
