@@ -126,7 +126,7 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT], Serializabl
         correlation /= correlation.max()  # Normalize correlation
 
         # Determine the pilot sequence locations by performing a peak search over the correlation profile
-        frame_length = self.waveform_generator.samples_in_frame
+        frame_length = self.waveform_generator.samples_per_frame
         pilot_indices, _ = find_peaks(abs(correlation), height=0.9, distance=int(0.8 * frame_length))
 
         # Abort if no pilot section has been detected

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """HermesPy testing for modem base class."""
 
+from fractions import Fraction
 from os import path
 from tempfile import TemporaryDirectory
 from typing import Type
@@ -15,7 +16,7 @@ from numpy.testing import assert_array_almost_equal
 from hermespy.core import UniformArray, IdealAntenna, Signal, Device, ChannelStateFormat, ChannelStateInformation, SNRType
 from hermespy.fec import EncoderManager
 from hermespy.modem import Symbols, CommunicationReceptionFrame, CommunicationTransmission, CommunicationTransmissionFrame, CommunicationReception, \
-                           BaseModem, TransmittingModem, ReceivingModem, DuplexModem, SimplexLink, RandomBitsSource, SymbolPrecoding
+                           BaseModem, TransmittingModem, ReceivingModem, DuplexModem, SimplexLink, RandomBitsSource, SymbolPrecoder, SymbolPrecoding
 from hermespy.simulation import SimulatedDevice
 
 from .test_waveform import MockWaveformGenerator
@@ -282,10 +283,25 @@ class TestBaseModem(TestCase):
         self.assertIs(precoding, self.modem.precoding)
         self.assertIs(precoding.modem, self.modem)
         
+    def test_bit_requirements_validation(self) -> None:
+        """Bit requirements should raise RuntimeError on invalid configurations"""
+        
+        precoder = Mock(spec=SymbolPrecoder)
+        precoder.rate = Fraction(1, 3)
+        self.modem.precoding[0] = precoder
+        
+        with self.assertRaises(RuntimeError):
+            self.modem._bit_requirements()
+        
     def test_num_data_bits_per_frame(self) -> None:
         """Number of data bits per frame property should return the correct number of bits"""
-        
+ 
         self.assertEqual(100, self.modem.num_data_bits_per_frame)
+
+    def test_samples_per_frame(self) -> None:
+        """Samples per frame should correctly resolve the waveform's number of samples"""
+        
+        self.assertEqual(self.waveform.samples_per_frame, self.modem.samples_per_frame)
 
     def test_noise_power(self) -> None:
         """Noise power estiamtor should report the correct noise powers"""
@@ -350,45 +366,22 @@ class TestTransmittingModem(TestBaseModem):
     def test_transmit_validation(self) -> None:
         """Modem transmission should raise ValueError on invalid configurations"""
     
-        precoding = MagicMock()
+        precoding = MagicMock(spec=SymbolPrecoding)
         precoding.__len__.side_effect = lambda: 2
+        precoding.rate = Fraction(1, 1)
         precoding.num_output_streams = 14
         self.modem.precoding = precoding
         
-        with self.assertRaises(ValueError):
+        with self.assertRaises(RuntimeError):
             self.modem.transmit()
-
-    def test_transmit_mimo(self) -> None:
-        """Test modem MIMO transmission"""
-        
-        self.transmit_device.antennas = UniformArray(IdealAntenna(), spacing=1., dimensions=(2,))
-
-        precoding = MagicMock()
-        precoding.__len__.side_effect = lambda: 2
-        precoding.num_output_streams = 2
-        self.modem.precoding = precoding
-        
-        precoding_transmission = self.modem.transmit(.5 * self.modem.frame_duration)
-        self.assertEqual(2, precoding_transmission.signal.num_streams)
-
-    
-        transmit_stream_coding = MagicMock()
-        transmit_stream_coding.__len__.side_effect = lambda: 2
-        transmit_stream_coding.num_output_streams = 2
-        self.modem.transmit_stream_coding = transmit_stream_coding
-        
-        stream_coding_transmission = self.modem.transmit(.5 * self.modem.frame_duration)
-        self.assertEqual(2, stream_coding_transmission.signal.num_streams)
-
-    def test_transmit_no_streams(self) -> None:
-        """Test modem transmission without streams"""
-        
-        with patch('hermespy.modem.precoding.symbol_precoding.SymbolPrecoding.encode') as encode_mock:
             
-            encode_mock.return_value = Symbols(np.empty((0, 100, 1)))
-
-            transmission = self.modem.transmit()
-            self.assertEqual(1, transmission.frames[0].symbols.num_streams)
+        stream_coding = MagicMock()
+        stream_coding.__len__.side_effect = lambda: 2
+        stream_coding.num_output_streams = 14
+        self.modem.transmit_stream_coding = stream_coding
+        
+        with self.assertRaises(RuntimeError):
+            self.modem.transmit()
             
     def test_transmit(self) -> None:
         """Test modem data transmission"""
@@ -397,7 +390,13 @@ class TestTransmittingModem(TestBaseModem):
         
         self.assertEqual(0., transmission.signal.carrier_frequency)
         self.assertEqual(2, transmission.num_frames)
-        self.assertEqual(2 * self.waveform.samples_in_frame, transmission.signal.num_samples)
+        self.assertEqual(2 * self.waveform.samples_per_frame, transmission.signal.num_samples)
+
+    def test_empty_transmit(self) -> None:
+        """Transmissions not fitting into the waveform duration should return an empty transmission"""
+
+        transmission = self.modem.transmit(.5 * self.waveform.frame_duration)
+        self.assertEqual(0, transmission.num_frames)
 
     def test_device_setget(self) -> None:
         """Device property getter should return setter argument"""

@@ -184,7 +184,7 @@ class TestNotebooks(TestCase):
         """Test the communication waveform implementation example notebook"""
         
         notebook = self.__load_notebook("waveform.ipynb")
-        self.__patch_notebook(notebook, 10,
+        self.__patch_notebook(notebook, 9,
                               patches={3: "simulation = Simulation(console_mode=ConsoleMode.SILENT, num_actors=1)",
                                        11: "simulation.num_samples = 1"},
                               inserts={0: "import ray as ray", 3: "ray.init(local_mode=True)"})
