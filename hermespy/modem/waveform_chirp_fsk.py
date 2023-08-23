@@ -14,7 +14,7 @@ import numpy as np
 from scipy import integrate
 
 from hermespy.core.factory import Serializable
-from hermespy.modem.waveform import PilotWaveformGenerator, WaveformGenerator, Synchronization
+from hermespy.modem.waveform import PilotWaveformGenerator, StatedSymbols, WaveformGenerator, Synchronization
 from hermespy.core.signal_model import Signal
 from .symbols import Symbols
 from .waveform_correlation_synchronization import CorrelationSynchronization
@@ -276,11 +276,7 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
         return int(np.log2(self.modulation_order))
 
     @property
-    def bits_per_frame(self) -> int:
-        return self.num_data_chirps * self.bits_per_symbol
-
-    @property
-    def symbols_per_frame(self) -> int:
+    def num_data_symbols(self) -> int:
         return self.num_data_chirps
 
     @property
@@ -306,15 +302,12 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
         return self.num_pilot_chirps + self.num_data_chirps
 
     @property
-    def samples_in_frame(self) -> int:
-        """The number of discrete samples per generated frame.
-
-        Returns:
-            int:
-                The number of samples.
-        """
-
+    def samples_per_frame(self) -> int:
         return self.samples_in_chirp * self.chirps_in_frame + int((np.around(self.__guard_interval * self.sampling_rate)))
+
+    @property
+    def symbol_duration(self) -> float:
+        return self.chirp_duration
 
     @property
     def symbol_energy(self) -> float:
@@ -337,9 +330,25 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
         offset = self._calculate_frequency_offsets(data_bits)
         return Symbols(offset[np.newaxis, np.newaxis, :])
 
-    def modulate(self, symbols: Symbols) -> Signal:
+    def unmap(self, symbols: Symbols) -> np.ndarray:
+        bits_per_symbol = self.bits_per_symbol
+        bits = np.empty(symbols.num_symbols * self.bits_per_symbol)
+
+        for s, symbol in enumerate(symbols.raw[0, ::].flat):
+            symbol_bits = [int(x) for x in list(np.binary_repr(int(symbol.real), width=bits_per_symbol))]
+            bits[s * bits_per_symbol : (s + 1) * bits_per_symbol] = symbol_bits
+
+        return bits
+
+    def place(self, symbols: Symbols) -> Symbols:
+        return symbols
+
+    def pick(self, symbols: StatedSymbols) -> StatedSymbols:
+        return symbols
+
+    def modulate(self, symbols: Symbols) -> np.ndarray:
         prototypes, _ = self._prototypes()
-        samples = np.empty(self.samples_in_frame, dtype=complex)
+        frame_samples = np.empty(self.samples_per_frame, dtype=complex)
 
         sample_idx = 0
         samples_in_chirp = self.samples_in_chirp
@@ -347,15 +356,15 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
         # Add pilot samples
         pilot_samples = self.pilot_signal.samples.flatten()
         num_pilot_samples = len(pilot_samples)
-        samples[:num_pilot_samples] = pilot_samples
+        frame_samples[:num_pilot_samples] = pilot_samples
         sample_idx += num_pilot_samples
 
         # Modulate data symbols
         for symbol in symbols.raw[0, ::].flat:
-            samples[sample_idx : sample_idx + samples_in_chirp] = prototypes[int(symbol.real), :]
+            frame_samples[sample_idx : sample_idx + samples_in_chirp] = prototypes[int(symbol.real), :]
             sample_idx += samples_in_chirp
 
-        return Signal(samples, self.sampling_rate)
+        return frame_samples
 
     def demodulate(self, baseband_signal: np.ndarray) -> Symbols:
         # Assess number of frames contained within this signal
@@ -371,16 +380,6 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
         # ToDo: Unfortunately the demodulation-scheme is non-linear. Is there a better way?
         symbols = np.argmax(symbol_metrics, axis=1)
         return Symbols(symbols[np.newaxis, np.newaxis, :])
-
-    def unmap(self, symbols: Symbols) -> np.ndarray:
-        bits_per_symbol = self.bits_per_symbol
-        bits = np.empty(symbols.num_symbols * self.bits_per_symbol)
-
-        for s, symbol in enumerate(symbols.raw[0, ::].flat):
-            symbol_bits = [int(x) for x in list(np.binary_repr(int(symbol.real), width=bits_per_symbol))]
-            bits[s * bits_per_symbol : (s + 1) * bits_per_symbol] = symbol_bits
-
-        return bits
 
     @property
     def bandwidth(self) -> float:

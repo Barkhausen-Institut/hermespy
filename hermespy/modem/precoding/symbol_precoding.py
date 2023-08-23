@@ -7,6 +7,7 @@ Symbol Precoding
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
+from fractions import Fraction
 from typing import TYPE_CHECKING
 
 from hermespy.core import Serializable
@@ -142,3 +143,21 @@ class SymbolPrecoding(Precoding[SymbolPrecoder], Serializable):
             decoded_symbols = precoder.decode(decoded_symbols)
 
         return decoded_symbols
+
+    def num_encoded_blocks(self, num_input_blocks: int) -> int:
+        """Number of blocks after encoding.
+
+        Args:
+
+            num_input_blocks (int):
+                Number of blocks before encoding.
+
+        Returns: Number of blocks after encoding.
+        """
+
+        num_blocks = Fraction(num_input_blocks, 1)
+
+        for precoder in self:
+            num_blocks /= precoder.rate
+
+        return int(num_blocks)

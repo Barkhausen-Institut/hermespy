@@ -6,6 +6,7 @@ Space-Time Block Coding
 """
 
 from __future__ import annotations
+from fractions import Fraction
 
 import numpy as np
 
@@ -212,17 +213,11 @@ class Ganesan(SymbolPrecoder, Serializable):
         # R' = {r1.real, r2.real, r3.real, r4.real, r1.imag, r2.imag, r3.imag, r4.imag}, where
         # s' = {s1.real, s2.real, s3.real, s1.imag, s2.imag, s3.imag}
         # Then matrix A can be constructed with the following sings and index matrices
-        signs_matrix_real = np.array([[1, -1,  1, -1, -1,  1],
-                                      [1, -1, -1, -1,  1,  1],
-                                      [1,  1,  1,  1, -1,  1],
-                                      [1,  1, -1,  1,  1,  1]])
+        signs_matrix_real = np.array([[1, -1, 1, -1, -1, 1], [1, -1, -1, -1, 1, 1], [1, 1, 1, 1, -1, 1], [1, 1, -1, 1, 1, 1]])
         signs_matrix_imag = signs_matrix_real.copy()
         signs_matrix_imag[:, 3:] *= -1
         signs_matrix = np.concatenate((signs_matrix_real, signs_matrix_imag), axis=0)
-        index_matrix = np.array([[0, 2, 3],
-                                 [1, 3, 2],
-                                 [2, 0, 1],
-                                 [3, 1, 0]])
+        index_matrix = np.array([[0, 2, 3], [1, 3, 2], [2, 0, 1], [3, 1, 0]])
 
         # Init result(decoded_symbols), matrix A(an) and estimator with lhs(b) of the linear system
         decoded_symbols = np.empty((num_rx, symbols.num_blocks * 3 // 4, symbols.num_symbols), dtype=np.complex_)
@@ -231,27 +226,27 @@ class Ganesan(SymbolPrecoder, Serializable):
         b = np.empty((num_rx, 8, symbols.num_symbols), dtype=np.float_)
 
         # Init einsum paths to optimize einsum in the future
-        an_path = np.einsum_path('ikjl,jk->lijk', an, signs_matrix, optimize='optimal')[0]
-        estimation_path = np.einsum_path('ijkl,jli->jki', estimator, b, optimize='optimal')[0]
+        an_path = np.einsum_path("ikjl,jk->lijk", an, signs_matrix, optimize="optimal")[0]
+        estimation_path = np.einsum_path("ijkl,jli->jki", estimator, b, optimize="optimal")[0]
 
         # For each symbol period (which is 4 blocks) decode 3 encoded symbol blocks
         for n in range(symbols.num_blocks // 4):
             # Assemble matrix A'
             for n_ in range(4):
-                an[:, 3:, n_+4, :] = an[:, :3, n_, :] = symbols.states.real[:, index_matrix[n_], n*4+n_, :]
-                an[:, :3, n_+4, :] = an[:, 3:, n_, :] = symbols.states.imag[:, index_matrix[n_], n*4+n_, :]
+                an[:, 3:, n_ + 4, :] = an[:, :3, n_, :] = symbols.states.real[:, index_matrix[n_], n * 4 + n_, :]
+                an[:, :3, n_ + 4, :] = an[:, 3:, n_, :] = symbols.states.imag[:, index_matrix[n_], n * 4 + n_, :]
 
             # Calculate estimator such that estimator @ R' = s'
             # this einsum applies the signs matrix to A' and transposes it
-            estimator = np.linalg.pinv(np.einsum('ikjl,jk->lijk', an, signs_matrix, optimize=an_path))
+            estimator = np.linalg.pinv(np.einsum("ikjl,jk->lijk", an, signs_matrix, optimize=an_path))
 
             # Init R' for this symbol period
-            received_symbols_blocks = symbols.raw[:, n*4:n*4+4, :]
+            received_symbols_blocks = symbols.raw[:, n * 4 : n * 4 + 4, :]
             b = np.concatenate((received_symbols_blocks.real, received_symbols_blocks.imag), axis=1)
 
             # Solve the system and assemble extended results from 6 floats back to 3 complex
-            estimated_split_symbols = np.einsum('ijkl,jli->jki', estimator, b, optimize=estimation_path)
-            decoded_symbols[:, n*3:n*3+3, :] = estimated_split_symbols[:, :3, :] + 1j * estimated_split_symbols[:, 3:, :]
+            estimated_split_symbols = np.einsum("ijkl,jli->jki", estimator, b, optimize=estimation_path)
+            decoded_symbols[:, n * 3 : n * 3 + 3, :] = estimated_split_symbols[:, :3, :] + 1j * estimated_split_symbols[:, 3:, :]
 
         # Construct ideal channel states to cast result to StatedSymbols
         ideal_states = np.ones((num_rx, 1, decoded_symbols.shape[1], decoded_symbols.shape[2]))
@@ -264,3 +259,7 @@ class Ganesan(SymbolPrecoder, Serializable):
     @property
     def num_output_streams(self) -> int:
         return 4
+
+    @property
+    def rate(self) -> Fraction:
+        return Fraction(3, 4)

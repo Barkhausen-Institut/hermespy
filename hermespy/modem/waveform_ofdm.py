@@ -318,18 +318,17 @@ class FrameSection:
 
         return grid
 
-    def pick_symbols(self, grid: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    def pick_symbols(self, grid: np.ndarray) -> np.ndarray:
         # Collect resource masks
         mask = self.resource_mask[:, : self.num_subcarriers, :]
 
         # Select correct subgrid
-        subgrid = grid[: self.num_subcarriers, :]
+        subgrid = grid[: self.num_subcarriers, ::]
 
         # Pick symbols
-        reference_symbols = subgrid[mask[ElementType.REFERENCE.value]]
-        data_symbols = subgrid[mask[ElementType.DATA.value]]
-
-        return data_symbols, reference_symbols
+        # reference_symbols = subgrid[mask[ElementType.REFERENCE.value]]
+        picked_symbols = subgrid[mask[ElementType.DATA.value], ::]
+        return picked_symbols
 
     @abstractmethod
     def modulate(self, symbols: np.ndarray) -> np.ndarray:
@@ -793,6 +792,14 @@ class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
         return num_symbols
 
     @property
+    def num_data_symbols(self) -> int:
+        num_symbols = 0
+        for section in self.structure:
+            num_symbols += section.num_symbols
+
+        return num_symbols
+
+    @property
     def words_per_frame(self) -> int:
         """Number of words per OFDM frame."""
 
@@ -813,11 +820,7 @@ class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
         return num_symbols
 
     @property
-    def frame_duration(self) -> float:
-        return self.samples_in_frame / self.sampling_rate
-
-    @property
-    def samples_in_frame(self) -> int:
+    def samples_per_frame(self) -> int:
         num = 0
         for section in self.structure:
             num += section.num_samples
@@ -827,18 +830,27 @@ class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
 
         return num
 
+    @property
+    def symbol_duration(self) -> float:
+        return 1 / self.bandwidth
+
     def map(self, data_bits: np.ndarray) -> Symbols:
-        if len(data_bits) != self.bits_per_frame:
-            raise ValueError("Incorrect number of information bits provided for mapping")
+        return Symbols(self._mapping.get_symbols(data_bits)[None, :, None])
 
-        # Map data bits to data symbols
-        data_symbols = self._mapping.get_symbols(data_bits)
+    def unmap(self, symbols: Symbols) -> np.ndarray:
+        return self._mapping.detect_bits(symbols.raw.flatten()).astype(int)
 
-        # Query reference symbols
+    def place(self, placed_symbols: Symbols) -> Symbols:
+        # Prepare symbols to be placed
+        data_symbols = placed_symbols.raw.flatten()
         reference_symbols = self.pilot_symbols(self.references_per_frame)
 
+        # Make sure the number of provided symbols matches the number of symbols in the frame
+        if data_symbols.size != self.num_data_symbols:
+            raise ValueError(f"Number of provided data symbols does not match the number of symbols in the frame ({data_symbols.size} != {self.num_data_symbols})")
+
         # Generate the symbol sequence for a full OFDM frame
-        symbols = Symbols()
+        placed_symbols = Symbols()
 
         data_idx = 0
         reference_idx = 0
@@ -852,37 +864,41 @@ class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
             reference = reference_symbols[reference_idx : reference_idx + num_reference_symbols]
 
             appended_symbols[0, :, : section.num_subcarriers] = section.place_symbols(data, reference).T
-            symbols.append_symbols(Symbols(appended_symbols))
+            placed_symbols.append_symbols(Symbols(appended_symbols))
 
             data_idx += num_data_symbols
             reference_idx += num_reference_symbols
 
-        return symbols
+        return placed_symbols
 
-    def unmap(self, symbols: Symbols) -> np.ndarray:
-        raw_symbols = symbols.raw[0, :, :].T
-        data_symbols = Symbols()
+    def pick(self, placed_symbols: StatedSymbols) -> StatedSymbols:
+        raw_symbols = placed_symbols.raw.transpose((2, 1, 0))
+        raw_states = placed_symbols.states.transpose((3, 2, 0, 1))
+        raw_picked_symbols = np.empty((placed_symbols.num_streams, self.num_data_symbols, 1), dtype=np.complex_)
+        raw_picked_states = np.empty((placed_symbols.num_streams, placed_symbols.num_transmit_streams, self.num_data_symbols, 1), dtype=np.complex_)
+
         block_idx = 0
+        symbol_idx = 0
         for section in self.structure:
-            section_data_symbols, _ = section.pick_symbols(raw_symbols[:, block_idx : block_idx + section.num_words])
+            section_symbols = section.pick_symbols(raw_symbols[:, block_idx : block_idx + section.num_words, ::])
+            section_states = section.pick_symbols(raw_states[:, block_idx : block_idx + section.num_words, ::])
 
-            data_symbols.append_symbols(section_data_symbols)
+            raw_picked_symbols[:, symbol_idx : symbol_idx + section.num_symbols, 0] = section_symbols.T
+            raw_picked_states[:, :, symbol_idx : symbol_idx + section.num_symbols, 0] = section_states.transpose((1, 2, 0))
+
             block_idx += section.num_words
+            symbol_idx += section.num_symbols
 
-        detected_bits = self._mapping.detect_bits(data_symbols.raw.flatten()).astype(int)
-        return detected_bits
+        return StatedSymbols(raw_picked_symbols, raw_picked_states)
 
-    def modulate(self, symbols: Symbols) -> Signal:
+    def modulate(self, symbols: Symbols) -> np.ndarray:
+        frame_samples = np.empty(self.samples_per_frame, dtype=np.complex_)
+        sample_idx = 0
+
         # Start the frame with a pilot section, if configured
         if self.pilot_section:
-            output_signal = self.pilot_section.modulate()
-
-        else:
-            output_signal = np.empty(0, dtype=complex)
-
-        # Abort here if no symbols were provided, returning only a pilot section
-        if symbols.num_blocks < 1:
-            return Signal(output_signal, self.sampling_rate)
+            frame_samples[: self.pilot_section.num_samples] = self.pilot_section.modulate()
+            sample_idx += self.pilot_section.num_samples
 
         # Convert symbols
         symbol_blocks = symbols.raw[0, :, :]
@@ -891,19 +907,19 @@ class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
         for section in self.structure:
             # Modulate the signal
             section_signal = section.modulate(symbol_blocks[block_idx : block_idx + section.num_words, : section.num_subcarriers])
-            output_signal = np.append(output_signal, section_signal)
+            frame_samples[sample_idx : sample_idx + section.num_samples] = section_signal
 
             block_idx += section.num_words
+            sample_idx += section.num_samples
 
-        signal_model = Signal(output_signal, self.sampling_rate)
-        return signal_model
+        return frame_samples
 
     def demodulate(self, signal: np.ndarray) -> Symbols:
-        sample_index = 0
+        sample_idx = 0
 
         # If the frame contains a pilot section, skip the respective samples
         if self.pilot_section:
-            sample_index += self.pilot_section.num_samples
+            sample_idx += self.pilot_section.num_samples
 
         symbols = Symbols(np.empty((1, 0, self.num_subcarriers), dtype=np.complex_))
         for section in self.structure:
@@ -913,15 +929,15 @@ class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
 
             # Skip unmodulated sections
             if (section.num_symbols + section.num_references) < 1:
-                sample_index += num_samples
+                sample_idx += num_samples
                 continue
 
-            signal_section = signal[sample_index : sample_index + num_samples]
+            signal_section = signal[sample_idx : sample_idx + num_samples]
 
             appended_symbols[0, :, : section.num_subcarriers] = section.demodulate(signal_section)
             symbols.append_symbols(Symbols(appended_symbols))
 
-            sample_index += num_samples
+            sample_idx += num_samples
 
         return symbols
 
@@ -948,14 +964,6 @@ class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
         # OFDM bandwidth currently is identical to the number of subcarriers times the subcarrier spacing
         b = self.num_subcarriers * self.subcarrier_spacing
         return b
-
-    @property
-    def bits_per_frame(self) -> int:
-        num_data_symbols = 0
-        for section in self.structure:
-            num_data_symbols += section.num_symbols
-
-        return num_data_symbols * self._mapping.bits_per_symbol
 
     @property
     def bit_energy(self) -> float:
@@ -1258,7 +1266,7 @@ class SchmidlCoxSynchronization(OFDMSynchronization):
         for d in range(0, num_delay_candidates - 1):
             delay_powers[1 + d] = np.sum(abs(np.sum(signal[:, d : d + half_symbol_length].conj() * signal[:, d + half_symbol_length : d + 2 * half_symbol_length], axis=1)))
 
-        num_samples = self.waveform_generator.samples_in_frame
+        num_samples = self.waveform_generator.samples_per_frame
         min_height = 0.75 * np.max(delay_powers)
         peaks, _ = find_peaks(delay_powers, distance=int(0.9 * num_samples), height=min_height)
         frame_indices = peaks - 1  # Correct for the first delay bin being prepended
