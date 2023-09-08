@@ -12,7 +12,7 @@ from typing import Optional
 from numpy.random import default_rng, Generator
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.1.0"
@@ -70,7 +70,6 @@ class RandomNode(object):
 
             seed (int, optional):
                 Random seed used to initialize the pseudo-random number generator.
-
         """
 
         self.seed = seed
@@ -100,17 +99,18 @@ class RandomNode(object):
     def is_random_root(self) -> bool:
         """Is this random node a root node?
 
-        Return:
-            is_root (bool): Boolean root node indicator.
+        :meta private:
         """
 
         return self.__generator is not None
 
     @property
-    def seed(self) -> Optional[int]:
+    def seed(self) -> int | None:
         """Random seed of this node.
 
-        Returns: Random seed. `None` if no seed was specified.
+        :obj:`None` if no seed has been set.
+
+        :meta private:
         """
 
         return self.__seed
@@ -121,15 +121,13 @@ class RandomNode(object):
         self.__generator = default_rng(value)
 
     @property
-    def random_mother(self) -> Optional[RandomNode]:
+    def random_mother(self) -> RandomNode | None:
         """The mother node of this random number generator.
 
+        :obj:`None` if this random node is considered a root node.
         Note that setting the mother node will convert any random node to a child node!
 
-        Returns:
-
-            mother_node (Optional[RandomNode]):
-                The mother node. `None` if this node is a root.
+        :meta private:
         """
 
         return self.__mother_node

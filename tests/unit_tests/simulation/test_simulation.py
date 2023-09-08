@@ -455,6 +455,14 @@ class TestSimulation(TestCase):
         
         if not GENERATE_OUTPUT:
             self.assertEqual('', self.io.getvalue())
+            
+    def test_set_channel(self) -> None:
+        """Test the channel set convenience method"""
+        
+        expected_channel = Mock()
+        self.simulation.set_channel(self.device, self.device, expected_channel)
+        
+        self.assertIs(expected_channel, self.simulation.scenario.channels[0, 0])
        
     def test_serialization(self) -> None:
         """Test YAML serialization"""

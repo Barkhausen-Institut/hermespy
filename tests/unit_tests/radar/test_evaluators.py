@@ -7,7 +7,6 @@ from unittest import TestCase
 from unittest.mock import PropertyMock, patch, Mock
 
 import numpy as np
-from h5py import File
 from numpy.random import default_rng
 from numpy.testing import assert_array_equal
 
@@ -267,15 +266,30 @@ class TestReciverOperatingCharacteristics(TestCase):
         evaluation = self._generate_evaluation()
         self.assertCountEqual(evaluation.data_h0.shape, evaluation.data_h1.shape)
 
-    def test_generate_result(self) -> None:
-        """Test result generation"""
+    def test_generate_result_empty_grid(self) -> None:
+        """Test result generation over an empty grid"""
         
         artifacts = np.empty(1, dtype=np.object_)
         artifacts[0] = [self._generate_evaluation().artifact() for _ in range(3)]
         
         result = self.evaluator.generate_result([], artifacts)
         self.assertIsInstance(result, RocEvaluationResult)
+        
+    def test_generate_result_full_grid(self) -> None:
+        """Test result generation over a full grid"""
+        
+        grid = []
+        artifacts = np.empty((1, 2, 3), dtype=np.object_)
+        for g in range(3):
+            dimension = Mock(spec=GridDimension)
+            dimension.num_sample_points = g
+            grid.append(dimension)
 
+        for x in np.ndindex(artifacts.shape):
+            artifacts[x] = [self._generate_evaluation().artifact() for _ in range(3)]
+
+        result = self.evaluator.generate_result(grid, artifacts)
+        self.assertIsInstance(result, RocEvaluationResult)
 
     def test_from_scenarios_validation(self) -> None:
         """Recall ROC from scenarios should raise ValueError for invalid configurations"""
