@@ -45,6 +45,13 @@ class TestLibraryExamples(TestCase):
         mock_figure.assert_called()
         
     @patch('matplotlib.pyplot.figure')
+    def test_getting_started_loop(self, mock_figure) -> None:
+        """Test getting started library loop example"""
+
+        import getting_started_loop  # type: ignore
+        mock_figure.assert_called()
+        
+    @patch('matplotlib.pyplot.figure')
     def test_getting_started_ofdm_link(self, mock_figure) -> None:
         """Test getting started library OFDM link example execution"""
 
@@ -74,23 +81,6 @@ class TestLibraryExamples(TestCase):
             import getting_started_simulation  # type: ignore
 
         mock_figure.assert_called()
-
-    @patch('matplotlib.pyplot.figure')
-    def test_getting_started(self, mock_figure) -> None:
-        """Test getting started library example execution"""
-
-        import getting_started  # type: ignore
-        mock_figure.assert_called()
-        
-    def test_getting_started_radarlink(self) -> None:
-        """Test getting started radar link example"""
-        
-        with ExitStack() as stack:
-            
-            if gettrace() is None:
-                stack.enter_context(patch('matplotlib.pyplot.figure'))
-                
-            import getting_started_radarlink  # type: ignore
 
     def test_usrp_loop(self) -> None:
         """Test USRP loop example execution"""

@@ -13,15 +13,17 @@ The base class of all channel model implementations is defined within
 
 .. toctree::
 
-   channel.channel
+   channel.channel.Channel
+   channel.channel.ChannelRealization
 
 The following statistical channel models are currently supported:
 
 .. toctree::
 
-   channel.ideal
+   channel.ideal.IdealChannel
    channel.multipath_fading_channel
    channel.multipath_fading_templates
+   channel.multipath_fading_templates.MultipathFading5GTDL
 
 The following spatial channel models are currently supported:
 

@@ -11,8 +11,10 @@ including noise and hardware modeling.
 
 .. toctree::
 
-   simulation.simulation
-   simulation.simulated_device
+   simulation.simulation.Simulation
+   simulation.simulation.SimulationScenario
+   simulation.simulation.SimulatedDrop
+   simulation.simulated_device.SimulatedDevice
    simulation.analog_digital_converter
    simulation.rf_chain
    simulation.rf_chain.power_amplifier

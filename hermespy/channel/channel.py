@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-================
-Channel Modeling
-================
-"""
 
 from __future__ import annotations
 from abc import ABC, abstractmethod

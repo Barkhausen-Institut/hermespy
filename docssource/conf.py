@@ -46,6 +46,7 @@ extensions = [
     'sphinx_tabs.tabs',                         # Multiple tabs
     'matplotlib.sphinxext.plot_directive',      # Directly rendering plots as images
     'sphinx.ext.mathjax',                       # Rendering math equations for nbsphinx
+    'sphinx.ext.intersphinx',                   # Linking to other documentations
 ]
 
 autoclass_content = "both"
@@ -72,12 +73,25 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 pygments_style = 'sphinx'
 
+
+# Autodoc configuration
+autodoc_typehints = 'signature'
 autodoc_default_options = {
     'members': True,
     'undoc-members': True,
-    'member-order': 'bysource',
+    'member-order': 'groupwise',
     'show-inheritance': True,
-    'exclude-members': '__weakref__'
+    'exclude-members': '__weakref__',
+    'inherited-members': True,
+}
+
+# Intersphinx configuration
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3/', None),
+    'h5py': ('https://docs.h5py.org/en/latest/', None),
+    'matplotlib': ('https://matplotlib.org/stable/', None),
+    'numpy': ('https://numpy.org/doc/stable/', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy/', None),
 }
 
 nbsphinx_requirejs_path = ""

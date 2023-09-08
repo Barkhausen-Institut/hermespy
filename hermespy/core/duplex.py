@@ -45,19 +45,15 @@ class DuplexOperator(Transmitter[TransmissionType], Receiver[ReceptionType], Gen
 
     @property
     def device(self) -> Device | None:
-        """Device this operator is operating.
+        """Device this object is assigned to.
 
-        Returns:
-            Handle to the operated device.
-            `None` if the operator is currently operating no device and considered floating.
+        :obj:`None` if this object is currently considered floating / unassigned.
         """
 
         return self.__device
 
     @device.setter
     def device(self, value: Device | None) -> None:
-        """Set the device this operator is operating."""
-
         if self.__device is not None:
             self.__device.transmitters.remove(self)
             self.__device.receivers.remove(self)

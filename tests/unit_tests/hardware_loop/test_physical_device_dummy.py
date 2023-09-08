@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 
 from unittest import TestCase
+from unittest.mock import patch
 
 import numpy as np
 from numpy.random import default_rng
 from numpy.testing import assert_array_almost_equal
 
 from hermespy.core import Signal, SignalReceiver, SignalTransmitter
-from hermespy.hardware_loop.physical_device_dummy import PhysicalDeviceDummy
+from hermespy.hardware_loop.physical_device_dummy import PhysicalDeviceDummy, PhysicalScenarioDummy
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -73,3 +74,36 @@ class TestPhysicalDeviceDummy(TestCase):
         direction_reception = self.dummy.trigger_direct(expected_signal)
 
         assert_array_almost_equal(expected_signal.samples, direction_reception.samples)
+
+
+class TestPhysicalScenarioDummy(TestCase):
+    """Test Physical scenario dummy"""
+    
+    def setUp(self) -> None:
+        
+        self.scenario = PhysicalScenarioDummy()
+        
+    def test_new_device(self) -> None:
+        """Test new device creation"""
+        
+        device = self.scenario.new_device()
+        self.assertIn(device, self.scenario.devices)
+    
+    def test_add_device(self) -> None:
+        """Test adding a device"""
+        
+        device = PhysicalDeviceDummy()
+        self.scenario.add_device(device)
+        self.assertIn(device, self.scenario.devices)
+        
+    def test_receive_devices(self) -> None:
+        
+        device_reception = self.scenario.receive_devices()
+        self.assertSequenceEqual([], device_reception)
+
+    def test_trigger(self) -> None:
+        
+        with patch('hermespy.simulation.SimulationScenario.drop') as drop_mock:
+            
+            self.scenario._trigger()
+            drop_mock.assert_called()

@@ -14,7 +14,7 @@ from typing import Tuple
 import numpy as np
 
 from hermespy.core import AntennaArrayBase, ChannelStateInformation, DeviceInput, Serializable, Signal, SNRType
-from hermespy.simulation import ProcessedSimulatedDeviceInput, SimulatedDevice, SimulatedDeviceOutput, SimulatedDeviceReception, SimulatedDeviceTransmission, TriggerRealization
+from hermespy.simulation import ProcessedSimulatedDeviceInput, SimulatedDevice, SimulatedDeviceOutput, SimulatedDeviceReception, SimulatedDeviceTransmission, SimulationScenario, TriggerRealization
 from .physical_device import PhysicalDevice
 from .scenario import PhysicalScenario
 
@@ -123,16 +123,34 @@ class PhysicalDeviceDummy(SimulatedDevice, PhysicalDevice, Serializable):
         return self.sampling_rate
 
 
-class PhysicalScenarioDummy(PhysicalScenario[PhysicalDeviceDummy], Serializable):
+class PhysicalScenarioDummy(SimulationScenario, PhysicalScenario[PhysicalDeviceDummy], Serializable):
     """Physical scenario for testing and demonstration."""
 
     yaml_tag = "PhysicalScenarioDummy"
 
-    def _trigger(self) -> None:
-        return
+    def __init__(self, seed: int | None = None, devices: Sequence[PhysicalDeviceDummy] | None = None) -> None:
+        # Initialize base classes
+        SimulationScenario.__init__(self, seed=seed, devices=devices)
+        PhysicalScenario.__init__(self, seed=seed, devices=devices)
 
     def new_device(self, *args, **kwargs) -> PhysicalDeviceDummy:
         device = PhysicalDeviceDummy(*args, **kwargs)
         self.add_device(device)
 
         return device
+
+    def add_device(self, device: SimulatedDevice | PhysicalDeviceDummy) -> None:
+        # Adding a device resolves to the simulation scenario's add device method
+        SimulationScenario.add_device(self, device)
+
+    def receive_devices(self, impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]] | Sequence[Sequence[Tuple[Signal, ChannelStateInformation | None]]] | None = None, cache: bool = True, trigger_realizations: Sequence[TriggerRealization] | None = None) -> Sequence[SimulatedDeviceReception]:
+
+        if impinging_signals is None:
+            physical_device_receptions = PhysicalScenario.receive_devices(self, None, cache)
+            impinging_signals = [r.impinging_signals for r in physical_device_receptions]
+
+        return SimulationScenario.receive_devices(self, impinging_signals, cache, trigger_realizations)
+
+    def _trigger(self) -> None:
+        # Triggering is equivalent to generating a new simulation drop
+        SimulationScenario.drop(self)  # type: ignore
