@@ -601,10 +601,8 @@ class Evaluator(ABC):
 
         Implements the process of extracting an arbitrary performance indicator, represented by
         the returned :class:`.Artifact` :math:`X_m`.
-        Returns:
 
-            Artifact:
-                Artifact :math:`X_m` resulting from the evaluation.
+        Returns: Artifact :math:`X_m` resulting from the evaluation.
         """
         ...  # pragma: no cover
 
@@ -614,9 +612,6 @@ class Evaluator(ABC):
         """Short string representation of this evaluator.
 
         Used as a label for console output and plot axes annotations.
-
-        Returns:
-            str: String representation
         """
         ...  # pragma: no cover
 
@@ -626,9 +621,6 @@ class Evaluator(ABC):
         """Long string representation of this evaluator.
 
         Used as plot title.
-
-        Returns:
-            str: String representation
         """
         ...  # pragma: no cover
 
@@ -643,10 +635,7 @@ class Evaluator(ABC):
 
             \\mathrm{P}\\left(\\left\\| \\bar{X}_M - \\mathrm{E}\\left[ X \\right] \\right\\| > \\mathrm{TOL} \\right)
 
-        at which the sample collection for a single :class:`.GridSection` may be prematurely aborted.
-
-        Returns:
-            float: Confidence :math:`\\delta` between zero and one.
+        at which the sample collection for a single :class:`.GridSection` may be prematurely aborted :footcite:p:`2014:bayer`.
 
         Raises:
             ValueError: If confidence is lower than zero or greater than one.

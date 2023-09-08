@@ -13,16 +13,19 @@ It consists of the base configuration classes for communication modems
 .. toctree::
 
    modem.modem
+   modem.modem.SimplexLink
    modem.bits_source
    modem.symbols
    modem.waveform
    modem.evaluators
+   modem.evaluators.BitErrorEvaluator
 
 as well as multiple communication waveform implementations
 
 .. toctree::
 
    modem.waveform_single_carrier
+   modem.waveform_single_carrier.RootRaisedCosine
    modem.waveform_chirp_fsk
    modem.waveform_ofdm
    modem.waveform_correlation_synchronization

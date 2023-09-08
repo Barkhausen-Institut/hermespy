@@ -166,7 +166,7 @@ class OperationResult(HDFSerializable):
     """Base class for outputs of device operators."""
 
     signal: Signal
-    """Base-band waveform."""
+    """Base-band model of the processed signal."""
 
     def __init__(self, signal: Signal) -> None:
         """
@@ -200,7 +200,7 @@ class Reception(OperationResult):
 
 
 ReceptionType = TypeVar("ReceptionType", bound=Reception)
-"""Type of operator reception"""
+"""Type variable of a :class:`Reception`."""
 
 
 SlotType = TypeVar("SlotType", bound="OperatorSlot")
@@ -235,14 +235,14 @@ class Operator(Generic[SlotType], Serializable):
         Returns:
             Handle to the device slot.
             `None` if the operator is currently considered floating.
+
+        :meta private:
         """
 
         return self.__slot
 
     @slot.setter
     def slot(self, value: Optional[SlotType]) -> None:
-        """Set device slot this operator operates on."""
-
         # A None argument indicates the slot should be unbound
         if value is None:
             if hasattr(self, "_Operator__slot") and self.__slot is not None:
@@ -278,6 +278,8 @@ class Operator(Generic[SlotType], Serializable):
         Returns:
             Index of the operator.
             `None` if the operator is currently considered floating.
+
+        :meta private:
         """
 
         if self.__slot is None:
@@ -286,13 +288,10 @@ class Operator(Generic[SlotType], Serializable):
         return self.__slot.operator_index(self)
 
     @property
-    def device(self) -> Optional[Device]:
-        """Device this operator is attached to.
+    def device(self) -> Device | None:
+        """Device this object is assigned to.
 
-        Returns:
-            device (Optional[Device]):
-                Handle to the operated device.
-                `None` if the operator is currently considered floating.
+        :obj:`None` if this object is currently considered floating / unassigned.
         """
 
         if self.__slot is None:
@@ -304,8 +303,7 @@ class Operator(Generic[SlotType], Serializable):
     def attached(self) -> bool:
         """Attachment state of the operator.
 
-        Returns:
-            bool: Boolean attachment indicator
+        Indicates whether this object is currently assigned a :class:`.Device` instance.
         """
 
         return self.__slot is not None
@@ -313,21 +311,18 @@ class Operator(Generic[SlotType], Serializable):
     @property
     @abstractmethod
     def frame_duration(self) -> float:
-        """Duration of a single sample frame.
+        """Duration of a single sample frame in seconds.
 
-        Returns:
-            duration (float): Frame duration in seconds.
+        Denoted as :math:`T_{\\mathrm{F}}` of unit :math:`\\left[ T_{\\mathrm{F}} \\right] = \\mathrm{s}` in literature.
         """
         ...  # pragma: no cover
 
     @property
     @abstractmethod
     def sampling_rate(self) -> float:
-        """The operator's preferred sampling rate.
+        """The operator's preferred sampling rate in Hz.
 
-        Returns:
-
-            Sampling rate in Hz.
+        Denoted as :math:`f_{\\mathrm{S}}` of unit :math:`\\left[ f_{\\mathrm{S}} \\right] = \\mathrm{Hz} = \\tfrac{1}{\\mathrm{s}}` in literature.
         """
         ...  # pragma: no cover
 
@@ -743,13 +738,11 @@ class MixingOperator(Generic[SlotType], Operator[SlotType], ABC):
 
     @property
     def carrier_frequency(self) -> float:
-        """Central frequency of the mixed signal in radio-frequency transmission band.
+        """Central frequency of the mixed signal in radio-frequency transmission band in Hz.
 
-        By default, the carrier frequency of the operated device is returned.
-        If no device is being operated, we assume a base band, i.e. carrier frequency of zero.
-
-        Returns:
-            float: Carrier frequency in Hz.
+        Denoted by :math:`f_c` with unit :math:`\\left[ f_c \\right] = \\mathrm{Hz} = \\tfrac{1}{\\mathrm{s}}` in the literature.
+        By default, the carrier frequency of the assigned :class:`.Device` is returned.
+        If no device is assigned, we assume a base band, i.e. :math:`f_c = 0`.
 
         Raises:
             ValueError: If the carrier frequency is smaller than zero.
@@ -766,8 +759,6 @@ class MixingOperator(Generic[SlotType], Operator[SlotType], ABC):
 
     @carrier_frequency.setter
     def carrier_frequency(self, value: Optional[float]) -> None:
-        """Set the central frequency of the mixed signal in radio-frequency transmission band."""
-
         if value is None:
             self.__carrier_frequency = None
             return
@@ -837,19 +828,16 @@ class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType
         self.__reference = value
 
     @property
-    def reception(self) -> Optional[ReceptionType]:
-        """Information generated from the recent reception.
+    def reception(self) -> ReceptionType | None:
+        """Information inferred from the most recent reception.
 
-        Updated when calling :meth:`.receive`.
-
-        Returns:
-            The cached information.
-            `None` if :meth:`.receive` has not been called yet.
+        Updated during the :meth:`.receive` routine.
+        :obj:`None` if the cache has been cleared or :meth:`.receive` has not been called yet.
         """
 
         return self.__reception
 
-    def receive(self, signal: Optional[Signal] = None, csi: Optional[ChannelStateInformation] = None, cache: bool = True) -> ReceptionType:
+    def receive(self, signal: Signal | None = None, csi: ChannelStateInformation | None = None, cache: bool = True) -> ReceptionType:
         """Process a received signal by the receiver.
 
         Wrapper around the abstract :meth:`._receive` method.
@@ -858,7 +846,7 @@ class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType
 
             signal (Signal, optional): Signal model to be processed.
             csi (ChannelStateInformation, optional): Channel state information.
-            cache (bool, optional): Cache the received information
+            cache (bool, optional): Cache the received information. Enabled by default.
 
         Returns: Information rceived by this operator.
 
@@ -887,53 +875,54 @@ class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType
 
     @abstractmethod
     def _receive(self, signal: Signal, csi: ChannelStateInformation) -> ReceptionType:
-        """Process a received signal by the receiver.
+        """Process a received signal.
 
-        Pulls the required signal model and channel state information from the underlying device.
+        Subroutine of the public :meth:`.receive` method that performs the pipeline-specific receive processing
+        and consolidates the inferred information into a single :class:`.Reception` object.
 
         Args:
+            signal (Signal): Multi-stream signal model to be processed.
+            csi (ChannelStateInformation): Available channel state information.
 
-            signal (Signal, optional): Signal model to be processed.
-            csi (ChannelStateInformation, optional): Channel state information.
-
-        Returns: Information rceived by this operator.
+        Returns:
+            Information inferred from the received signal.
         """
         ...  # pragma: no cover
 
     @property
-    def signal(self) -> Optional[Signal]:
-        """Cached recently received signal model.
+    def signal(self) -> Signal | None:
+        """Cached signal model to be received.
 
-        Returns:
-            signal (Optional[Signal]):
-                Signal model.
-                `None` if no signal model is cached.
+        Signal model assumed by :meth:`.receive` if no signal model is provided.
+        Updated with :meth:`.cache_reception`.
+        :obj:`None` if cache has been cleared or :meth:`.receive` has not been called yet.
         """
 
         return self.__signal
 
     @property
-    def csi(self) -> Optional[ChannelStateInformation]:
-        """Cached recently received channel state information
+    def csi(self) -> ChannelStateInformation | None:
+        """Cached channel state information to be used for reception.
 
-        Returns:
-            csi (Optional[ChannelStateInformation]):
-                Channel state information.
-                `None` if no state information is cached.
+        Channel state information assumed by :meth:`.receive` if no channel state information is provided.
+        Updated with :meth:`.cache_reception`.
+        :obj:`None` if cache has been cleared, :meth:`.receive` has not been called yet or channel state is considered unknown.
         """
 
         return self.__csi
 
-    def cache_reception(self, signal: Optional[Signal], csi: Optional[ChannelStateInformation] = None) -> None:
-        """Cache recent reception at this receiver.
+    def cache_reception(self, signal: Signal | None, csi: ChannelStateInformation | None = None) -> None:
+        """Update the information cached for the next reception.
+
+        Updates :meth:`signal<.signal>` and :meth:`csi<.csi>` with the provided parameters.
 
         Args:
 
-            signal (Optional[Signal]):
-                Recently received signal.
+            signal (Signal | None):
+                Signal model to be cached for the next reception.
 
-            csi (Optional[ChannelStateInformation]):
-                Recently received channel state.
+            csi (ChannelStateInformation, optional):
+                Channel state information to be cached for the next reception.
         """
 
         self.__signal = signal
@@ -955,6 +944,8 @@ class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType
                 Enabled by default.
 
         Returns: The recalled reception.
+
+        :meta private:
         """
 
         recalled_reception = self._recall_reception(group)
@@ -980,7 +971,7 @@ class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType
     def noise_power(self, strength: float, snr_type: SNRType) -> float:
         """Compute noise power for a given signal strength.
 
-        Internally calls :meth:`._noise_power` for some :meth:`.snr_type` .
+        Internally calls :meth:`._noise_power` for some :class:`SNRTypes<hermespy.core.definitions.SNRType>`.
 
         Args:
 
@@ -1189,6 +1180,7 @@ class OperatorSlot(Generic[OperatorType], Sequence[OperatorType]):
 
 
 TransmissionType = TypeVar("TransmissionType", bound="Transmission")
+"""Type variable of a :class:`Transmission`."""
 
 
 class Transmitter(Generic[TransmissionType], RandomNode, MixingOperator["TransmitterSlot"]):
@@ -1252,13 +1244,18 @@ class Transmitter(Generic[TransmissionType], RandomNode, MixingOperator["Transmi
 
     @abstractmethod
     def _transmit(self, duration: float) -> TransmissionType:
-        """Generate information transmitted by the transmitter.
+        """Generate information to be transmitted.
 
-        duration (float, optional):
-            Duration of the transmitted signal.
-            If not specified, the duration will be inferred by the transmitter.
+        Subroutine of the public :meth:`.transmit` method that performs the pipeline-specific transmit-processing
+        and consolidates the generated information into a single :class:`.Transmission` object.
 
-        Returns: The transmitted information.
+        Args:
+
+            duration (float, optional):
+                Duration of the transmitted signal in seconds.
+                If not specified, the duration of a single frame will be assumed.
+
+        Returns: Information to be transmitted.
         """
         ...  # pragma: no cover
 
@@ -1267,16 +1264,15 @@ class Transmitter(Generic[TransmissionType], RandomNode, MixingOperator["Transmi
         """Recent transmission of the transmitter.
 
         Updated during the :meth:`.transmit` routine.
-
-        Returns:
-            The recent transmission.
-            `None` if the cache has been cleared or :meth:`.transmit` has not been called yet.
+        :obj:`None` if the cache has been cleared or :meth:`.transmit` has not been called yet.
         """
 
         return self.__transmission
 
     def cache_transmission(self, transmission: TransmissionType) -> None:
-        """Cache a transmission for this transmitter.
+        """Update the information resulting from the latest transmission.
+
+        Called by the :meth:`.transmit` routine.
 
         Args:
 
@@ -1302,6 +1298,8 @@ class Transmitter(Generic[TransmissionType], RandomNode, MixingOperator["Transmi
                 Enabled by default.
 
         Returns: The recalled transmission
+
+        :meta private:
         """
 
         recalled_transmission = self._recall_transmission(group)
@@ -1470,7 +1468,6 @@ class Device(ABC, Transformable, RandomNode, Serializable):
         self.receivers = ReceiverSlot(self)
 
         self.power = power
-        self.__received_signal = None
 
     @property
     def antennas(self) -> AntennaArrayBase:

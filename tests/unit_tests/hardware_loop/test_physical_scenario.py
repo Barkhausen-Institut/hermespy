@@ -54,7 +54,7 @@ class TestPhysicalScenario(TestCase):
         _trigger.assert_called_once()
 
 
-class TestSimualtedPhysicalScenario(TestCase):
+class TestSimulatedPhysicalScenario(TestCase):
     """Test the simulated physical scenario"""
     
     def setUp(self) -> None:
