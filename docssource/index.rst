@@ -13,7 +13,7 @@ Users of HermesPy may formulate their own wireless research questions and invest
 
    * Spatially distributed heterogeneous communication in up-, down- and side-link
    * Spatially distributed heterogeneous sensing
-   * Inteference between multi-antenna heterogeneous devices
+   * Interference between multi-antenna heterogeneous devices
    * Communication performance indicators such as bit, block and frame error rates and throughput
    * Sensing performance indicators such as detection probabilities, false alarm rates and estimation errors
 
@@ -89,7 +89,6 @@ or directly contact the current `maintainer`_.
    :glob:
 
    self
-   features
    installation
    getting_started
    tutorials
@@ -97,6 +96,7 @@ or directly contact the current `maintainer`_.
    api/api
    matlab
    references
+   features
    developer_hints
    license
 

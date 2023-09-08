@@ -12,10 +12,6 @@ span.brackets > a:after {
     content: "]"; 
 }
 
-div.mermaid {
-    margin-bottom: 42px;
-}
-
 .sidebar-logo {
     max-width: 60%;
 }

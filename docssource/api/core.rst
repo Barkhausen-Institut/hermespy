@@ -17,8 +17,13 @@ It is split into several interdependent sub-modules:
    core.executable
    core.factory
    core.definitions
-   core.device
+   core.device.Device
+   core.device.Transmitter
+   core.device.Receiver
+   core.drop.Drop
+   core.monte_carlo.Evaluator
    core.operators
+   core.duplex
    core.logarithmic
    core.pipeline
    core.random_node

@@ -812,6 +812,25 @@ class Simulation(Serializable, Pipeline[SimulationScenario, SimulatedDevice], Mo
         # Return result object
         return result
 
+    def set_channel(self, alpha: int | SimulatedDevice, beta: int | SimulatedDevice, channel: Channel | None) -> None:
+        """Specify a channel within the channel matrix.
+
+        Convenience method resolving to :meth:`.SimulationScenario.set_channel`.
+
+        Args:
+
+            receiver (int | SimulatedDevice):
+                Index of the receiver within the channel matrix.
+
+            transmitter (int | SimulatedDevice):
+                Index of the transmitter within the channel matrix.
+
+            channel (Channel | None):
+                The channel instance to be set at position (`transmitter_index`, `receiver_index`).
+        """
+
+        self.scenario.set_channel(alpha, beta, channel)
+
     @classmethod
     def to_yaml(cls: Type[Simulation], representer: SafeRepresenter, node: Simulation) -> MappingNode:
         """Serialize an `Simulation` object to YAML.

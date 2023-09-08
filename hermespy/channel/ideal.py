@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-=============
-Ideal Channel
-=============
-"""
 
 from __future__ import annotations
 
