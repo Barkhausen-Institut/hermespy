@@ -9,7 +9,7 @@ from h5py import Group
 from scipy.constants import speed_of_light
 
 from hermespy.beamforming import ReceiveBeamformer, TransmitBeamformer
-from hermespy.core import ChannelStateInformation, Device, DuplexOperator, FloatingError, Signal, Serializable, SNRType, Transmission, Reception
+from hermespy.core import Device, DuplexOperator, FloatingError, Signal, Serializable, SNRType, Transmission, Reception
 from .cube import RadarCube
 from .detection import RadarDetector, RadarPointCloud
 
@@ -564,7 +564,7 @@ class Radar(DuplexOperator[RadarTransmission, RadarReception], Serializable):
 
         return transmission
 
-    def _receive(self, signal: Signal, csi: ChannelStateInformation) -> RadarReception:
+    def _receive(self, signal: Signal) -> RadarReception:
         if not self.waveform:
             raise RuntimeError("Radar waveform not specified")
 

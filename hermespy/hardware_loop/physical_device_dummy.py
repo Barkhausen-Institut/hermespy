@@ -9,11 +9,11 @@ Implements a physical device dummy for testing and demonstration purposes.
 
 from __future__ import annotations
 from collections.abc import Sequence
-from typing import Tuple
 
 import numpy as np
 
-from hermespy.core import AntennaArrayBase, ChannelStateInformation, DeviceInput, Serializable, Signal, SNRType
+from hermespy.core import AntennaArrayBase, DeviceInput, Serializable, Signal, SNRType
+from hermespy.channel import ChannelPropagation
 from hermespy.simulation import ProcessedSimulatedDeviceInput, SimulatedDevice, SimulatedDeviceOutput, SimulatedDeviceReception, SimulatedDeviceTransmission, SimulationScenario, TriggerRealization
 from .physical_device import PhysicalDevice
 from .scenario import PhysicalScenario
@@ -75,20 +75,11 @@ class PhysicalDeviceDummy(SimulatedDevice, PhysicalDevice, Serializable):
 
         return device_transmission
 
-    def process_input(
-        self,
-        impinging_signals: DeviceInput | Signal | Sequence[Signal] | Sequence[Tuple[Sequence[Signal], ChannelStateInformation | None]] | SimulatedDeviceOutput | None = None,
-        cache: bool = True,
-        trigger_realization: TriggerRealization | None = None,
-        snr: float = float("inf"),
-        snr_type: SNRType = SNRType.PN0,
-        leaking_signal: Signal | None = None,
-        channel_state: ChannelStateInformation | None = None,
-    ) -> ProcessedSimulatedDeviceInput:
+    def process_input(self, impinging_signals: DeviceInput | Signal | Sequence[Signal] | ChannelPropagation | Sequence[ChannelPropagation] | SimulatedDeviceOutput | None = None, cache: bool = True, trigger_realization: TriggerRealization | None = None, snr: float = float("inf"), snr_type: SNRType = SNRType.PN0, leaking_signal: Signal | None = None) -> ProcessedSimulatedDeviceInput:
         _impinging_signals = self.__uploaded_signal if impinging_signals is None else impinging_signals
-        return SimulatedDevice.process_input(self, _impinging_signals, cache, trigger_realization, snr, snr_type, leaking_signal, channel_state)
+        return SimulatedDevice.process_input(self, _impinging_signals, cache, trigger_realization, snr, snr_type, leaking_signal)
 
-    def receive(self, impinging_signals: DeviceInput | Signal | Sequence[Signal] | None = None, *args, **kwargs) -> SimulatedDeviceReception:
+    def receive(self, impinging_signals: DeviceInput | Signal | Sequence[Signal] | ChannelPropagation | Sequence[ChannelPropagation] | SimulatedDeviceOutput | None = None, *args, **kwargs) -> SimulatedDeviceReception:
         if impinging_signals is None:
             impinging_signals = self._download()
 
@@ -143,8 +134,7 @@ class PhysicalScenarioDummy(SimulationScenario, PhysicalScenario[PhysicalDeviceD
         # Adding a device resolves to the simulation scenario's add device method
         SimulationScenario.add_device(self, device)
 
-    def receive_devices(self, impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]] | Sequence[Sequence[Tuple[Signal, ChannelStateInformation | None]]] | None = None, cache: bool = True, trigger_realizations: Sequence[TriggerRealization] | None = None) -> Sequence[SimulatedDeviceReception]:
-
+    def receive_devices(self, impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]] | Sequence[Sequence[ChannelPropagation]] | None = None, cache: bool = True, trigger_realizations: Sequence[TriggerRealization] | None = None) -> Sequence[SimulatedDeviceReception]:
         if impinging_signals is None:
             physical_device_receptions = PhysicalScenario.receive_devices(self, None, cache)
             impinging_signals = [r.impinging_signals for r in physical_device_receptions]

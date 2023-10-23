@@ -12,9 +12,9 @@ from numpy.random import default_rng
 from scipy.constants import pi
 from scipy.fft import fft, fftshift
 
-from hermespy.core import ChannelStateInformation, ChannelStateFormat, Signal
+from hermespy.core import ChannelStateInformation, Signal
 from hermespy.modem import OFDMWaveform, FrameSymbolSection, FrameGuardSection, FrameResource, StatedSymbols, Symbols, CustomPilotSymbolSequence
-from hermespy.modem.waveform_ofdm import FrameElement, ElementType, PrefixType, FrameSection, OFDMCorrelationSynchronization, OFDMIdealChannelEstimation, PilotSection, SchmidlCoxPilotSection, SchmidlCoxSynchronization, OFDMLeastSquaresChannelEstimation, OFDMChannelEqualization, OFDMZeroForcingChannelEqualization
+from hermespy.modem.waveform_ofdm import FrameElement, ElementType, PrefixType, FrameSection, OFDMCorrelationSynchronization, PilotSection, ReferencePosition, SchmidlCoxPilotSection, SchmidlCoxSynchronization, OFDMLeastSquaresChannelEstimation, OFDMChannelEqualization, OFDMZeroForcingChannelEqualization
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "André Noll Barreto"
@@ -288,6 +288,15 @@ class TestFrameSymbolSection(TestCase):
 
         assert_array_almost_equal(expected_symbols, demodulated_symbols)
 
+    def test_extract_channel(self) -> None:
+        """Test channel extraction"""
+        
+        csi = self.rnd.standard_normal((1,2, 544, 18)) + 1j * self.rnd.standard_normal((1,2, 544, 18))
+        
+        ideal_csi = self.section.extract_channel(csi, ReferencePosition.IDEAL)
+        midamble_csi = self.section.extract_channel(csi, ReferencePosition.IDEAL_MIDAMBLE)
+        postamble_csi = self.section.extract_channel(csi, ReferencePosition.IDEAL_POSTAMBLE)
+        
     def test_resource_mask(self) -> None:
         _ = self.section.resource_mask
 
@@ -596,9 +605,8 @@ class TestOFDMWaveform(TestCase):
         received_symbols = ofdm.demodulate(tx_signal)
 
         expected_state = np.ones((1, 1, 1, self.num_subcarriers), dtype=np.complex_)
-        stated_symbols, csi = ofdm.channel_estimation.estimate_channel(received_symbols)
+        stated_symbols = ofdm.channel_estimation.estimate_channel(received_symbols)
         
-        assert_array_almost_equal(expected_state, csi.state)
         assert_array_almost_equal(expected_state, stated_symbols.states)
         
     def test_transmit_receive(self) -> None:
@@ -925,72 +933,6 @@ class TestSchmidlCoxSynchronization(TestCase):
         test_yaml_roundtrip_serialization(self, self.synchronization)
 
 
-class TestIdealChannelEstimation(TestCase):
-    """Test ideal channel estimation for OFDM waveforms."""
-    
-    def setUp(self) -> None:
-        
-        self.subcarrier_spacing = 1e3
-        self.num_subcarriers = 100
-        self.oversampling_factor = 2
-
-        self.rng = default_rng(42)
-
-        self.modem = Mock()
-        self.modem.random_generator = self.rng
-        self.modem.carrier_frequency = 100e6
-
-        self.repetitions_a = 2
-        self.prefix_type_a = PrefixType.CYCLIC
-        self.prefix_ratio_a = 0.1
-        self.elements_a = [FrameElement(ElementType.DATA, 2),
-                           FrameElement(ElementType.REFERENCE, 1),
-                           FrameElement(ElementType.NULL, 3)]
-        self.resource_a = FrameResource(self.repetitions_a, self.prefix_type_a, self.prefix_ratio_a, self.elements_a)
-
-        self.repetitions_b = 3
-        self.prefix_type_b = PrefixType.ZEROPAD
-        self.prefix_ratio_b = 0.2
-        self.elements_b = [FrameElement(ElementType.REFERENCE, 2),
-                           FrameElement(ElementType.DATA, 1),
-                           FrameElement(ElementType.NULL, 3)]
-        self.resource_b = FrameResource(self.repetitions_b, self.prefix_type_b, self.prefix_ratio_b, self.elements_b)
-
-        self.section_a = FrameSymbolSection(2, [1, 0, 1])
-        self.section_b = FrameGuardSection(1e-3)
-        self.section_c = FrameSymbolSection(2, [0, 1, 0])
-
-        self.resources = [self.resource_a, self.resource_b]
-        self.sections = [self.section_a, self.section_b, self.section_c]
-
-        self.ofdm = OFDMWaveform(subcarrier_spacing=self.subcarrier_spacing, modem=self.modem,
-                                 resources=self.resources, structure=self.sections,
-                                 num_subcarriers=self.num_subcarriers,
-                                 oversampling_factor=self.oversampling_factor)
-        
-        self.estimation = OFDMIdealChannelEstimation()
-        self.ofdm.channel_estimation = self.estimation
-        
-    def test_estimate_channel(self) -> None:
-        """Ideal channel estimation should correctly fetch the channel estimate"""
-        
-        symbols = self.ofdm.map(self.rng.integers(0, 2, self.ofdm.bits_per_frame(self.ofdm.num_data_symbols)))
-        
-        with patch('hermespy.modem.waveform.IdealChannelEstimation._csi') as csi_mock:
-            
-            expected_csi = self.rng.standard_normal((1, 1, symbols.num_blocks, symbols.num_symbols))
-            state = ChannelStateInformation(ChannelStateFormat.FREQUENCY_SELECTIVITY, expected_csi)
-            csi_mock.return_value = state
-            
-            _, csi = self.estimation.estimate_channel(symbols)
-            assert_array_almost_equal(expected_csi, csi.state)
-                
-    def test_serialization(self) -> None:
-        """Test YAML serialization"""
-        
-        test_yaml_roundtrip_serialization(self, self.estimation)
-
-
 class TestLeastSquaresChannelEstimation(TestCase):
     
     def setUp(self) -> None:
@@ -1007,8 +949,8 @@ class TestLeastSquaresChannelEstimation(TestCase):
 
         self.prefix_type_a = PrefixType.CYCLIC
         self.prefix_ratio_a = 0.1
-        self.elements_a = [FrameElement(ElementType.REFERENCE, self.num_subcarriers)]
-        self.resource_a = FrameResource(1, self.prefix_type_a, self.prefix_ratio_a, self.elements_a)
+        self.elements_a = [FrameElement(ElementType.REFERENCE), FrameElement(ElementType.DATA)]
+        self.resource_a = FrameResource(50, self.prefix_type_a, self.prefix_ratio_a, self.elements_a)
 
         self.section_a = FrameSymbolSection(2, [0])
 
@@ -1035,18 +977,14 @@ class TestLeastSquaresChannelEstimation(TestCase):
         """Least squares channel estimation should correctly compute the channel estimate"""
         
         symbols = self.ofdm.place(self.ofdm.map(self.rng.integers(0, 2, self.ofdm.bits_per_frame(self.ofdm.num_data_symbols))))
-        
-        with patch('hermespy.modem.waveform.IdealChannelEstimation._csi') as csi_mock:
+
+        expected_state = np.ones(symbols.num_blocks * symbols.num_symbols).reshape((1, 1, symbols.num_blocks, symbols.num_symbols), order='F')
+        propagated_symbols_raw = symbols.raw * expected_state[:, 0, : ,:]
+        propagated_symbols = Symbols(propagated_symbols_raw)
+
             
-            expected_csi = 1 / np.arange(1, 1 + symbols.num_blocks * symbols.num_symbols).reshape((1, 1, symbols.num_blocks, symbols.num_symbols), order='F')
-            propagated_symbols_raw = symbols.raw * expected_csi[:, 0, : ,:]
-            propagated_symbols = Symbols(propagated_symbols_raw)
-            
-            state = ChannelStateInformation(ChannelStateFormat.FREQUENCY_SELECTIVITY, expected_csi)
-            csi_mock.return_value = state
-            
-            _, csi = self.estimation.estimate_channel(propagated_symbols)
-            assert_array_almost_equal(expected_csi, csi.state)
+        stated_symbols = self.estimation.estimate_channel(propagated_symbols)
+        assert_array_almost_equal(expected_state, stated_symbols.states)
     
     def test_serialization(self) -> None:
         """Test YAML serialization"""

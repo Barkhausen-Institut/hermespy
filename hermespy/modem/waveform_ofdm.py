@@ -8,7 +8,7 @@ Orthogonal Frequency Division Multiplexing
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from math import ceil
-from typing import List, Tuple, Optional, Type, Union, Any, Set
+from typing import List, Optional, Type, Union, Any, Set
 
 import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, Node
@@ -16,9 +16,9 @@ from scipy.fft import fft, fftshift, ifft, ifftshift
 from scipy.interpolate import griddata
 from scipy.signal import find_peaks
 
-from hermespy.core import ChannelStateFormat, ChannelStateInformation, Serializable, SerializableEnum, Signal
+from hermespy.core import Serializable, SerializableEnum, Signal
 from .symbols import StatedSymbols, Symbols
-from .waveform import ChannelEqualization, ChannelEstimation, IdealChannelEstimation, ConfigurablePilotWaveform, Synchronization, WaveformGenerator, ZeroForcingChannelEqualization, MappedPilotSymbolSequence
+from .waveform import ChannelEqualization, ChannelEstimation, ConfigurablePilotWaveform, Synchronization, WaveformGenerator, ZeroForcingChannelEqualization, MappedPilotSymbolSequence
 from .waveform_correlation_synchronization import CorrelationSynchronization
 from .tools import PskQamMapping
 
@@ -356,6 +356,18 @@ class FrameSection:
         """
         ...  # pragma: no cover
 
+    @abstractmethod
+    def extract_channel(self, csi: np.ndarray, reference_position: ReferencePosition) -> np.ndarray:
+        """Extract the channel state information relevant to this section given perfect CSI.
+        Args:
+
+            csi (np.ndarray): Channel state information.
+            reference_position (ReferencePosition): Position of the reference within the OFDM grid.
+
+        Returns: Extracted channel state information.
+        """
+        ...  # pragma: no cover
+
 
 class FrameSymbolSection(FrameSection, Serializable):
     yaml_tag: str = "Symbol"
@@ -399,6 +411,15 @@ class FrameSymbolSection(FrameSection, Serializable):
 
         return num
 
+    @property
+    def _padded_num_subcarriers(self) -> int:
+        """Number of subcarriers required to represent this section in time-domain."""
+
+        return self.frame.num_subcarriers * self.frame.oversampling_factor
+
+    def _subgrid_start_idx(self) -> int:
+        return self._padded_num_subcarriers // 2 - self.num_subcarriers // 2
+
     def _add_prefix(self, resource_signals: np.ndarray) -> np.ndarray:
         """Add prefixes to time-domain resource signals.
 
@@ -412,7 +433,6 @@ class FrameSymbolSection(FrameSection, Serializable):
         """
 
         # Compute the number of required samples per resource
-        padded_num_subcarriers = self.frame.num_subcarriers * self.frame.oversampling_factor
 
         signals = []
         for resource_idx, resource_samples in enumerate(resource_signals.T):
@@ -423,7 +443,7 @@ class FrameSymbolSection(FrameSection, Serializable):
             prefix_ratio = self.frame.resources[self.pattern[pattern_idx]].prefix_ratio
             prefix_type = self.frame.resources[self.pattern[pattern_idx]].prefix_type
 
-            num_prefix_samples = int(padded_num_subcarriers * prefix_ratio)
+            num_prefix_samples = int(self._padded_num_subcarriers * prefix_ratio)
 
             # Only add a prefix if required
             if num_prefix_samples > 0 and prefix_type != PrefixType.NONE:
@@ -457,14 +477,12 @@ class FrameSymbolSection(FrameSection, Serializable):
         Returns: Two-dimensional numpy array representing signal samples of individual sections.
         """
 
-        # Compute the number of required samples per resource
-        padded_num_subcarriers = self.frame.num_subcarriers * self.frame.oversampling_factor
-
         sample_index = 0
-        num_resources = len(self.pattern) * self.num_repetitions
-        resource_samples = np.empty((padded_num_subcarriers, num_resources), dtype=complex)
+        num_symbols = len(self.pattern) * self.num_repetitions
+        resource_samples = np.empty((*signal_samples.shape[:-1], num_symbols, self._padded_num_subcarriers), dtype=complex)
+        prefix_slice = [slice(None)] * (resource_samples.ndim - 2)
 
-        for resource_idx in range(num_resources):
+        for resource_idx in range(num_symbols):
             # Infer pattern index
             pattern_idx = resource_idx % len(self.pattern)
 
@@ -473,7 +491,7 @@ class FrameSymbolSection(FrameSection, Serializable):
             prefix_ratio = resource.prefix_ratio
             prefix_type = resource.prefix_type
 
-            num_prefix_samples = int(padded_num_subcarriers * prefix_ratio)
+            num_prefix_samples = int(self._padded_num_subcarriers * prefix_ratio)
 
             # Only add a prefix if required
             if num_prefix_samples > 0 and prefix_type != PrefixType.NONE:
@@ -481,26 +499,27 @@ class FrameSymbolSection(FrameSection, Serializable):
                 sample_index += num_prefix_samples
 
             # Sort resource samples into their respective matrix sections
-            resource_samples[:, resource_idx] = signal_samples[sample_index : sample_index + padded_num_subcarriers]
+            resource_slicing = (*prefix_slice, resource_idx, slice(None))
+            signal_slicing = (*prefix_slice, slice(sample_index, sample_index + self._padded_num_subcarriers))
+            resource_samples[resource_slicing] = signal_samples[signal_slicing]
 
             # Advance sample index by resource length
-            sample_index += padded_num_subcarriers
+            sample_index += self._padded_num_subcarriers
 
         return resource_samples
 
     def modulate(self, symbols: np.ndarray) -> np.ndarray:
         # Generate the resource grid of the oversampled OFDM frame
-        padded_num_subcarriers = self.frame.num_subcarriers * self.frame.oversampling_factor
-        grid = np.zeros((padded_num_subcarriers, self.num_words), dtype=complex)
+        grid = np.zeros((self._padded_num_subcarriers, self.num_words), dtype=complex)
 
         # Select the subgrid onto which to project this symbol section's resource configuration
-        subgrid_start_idx = int(0.5 * (padded_num_subcarriers - self.num_subcarriers))
+        subgrid_start_idx = self._subgrid_start_idx()
         grid[subgrid_start_idx : subgrid_start_idx + self.num_subcarriers, :] = symbols.T
 
         # Shift in order to suppress the dc component
         # Note that for configurations without any oversampling the DC component will not be suppressed
         if self.frame.dc_suppression:
-            dc_index = int(0.5 * padded_num_subcarriers)
+            dc_index = int(0.5 * self._padded_num_subcarriers)
             grid[dc_index:, :] = np.roll(grid[dc_index:, :], 1, axis=0)
 
         # By convention, the length of each time slot is the inverse of the sub-carrier spacing
@@ -511,25 +530,88 @@ class FrameSymbolSection(FrameSection, Serializable):
 
         return signal_samples
 
-    def demodulate(self, signal: np.ndarray) -> np.ndarray:
-        padded_num_subcarriers = self.frame.num_subcarriers * self.frame.oversampling_factor
+    def __transform_resource_signals(self, resource_signals: np.ndarray) -> np.ndarray:
+        """Transform time-domain resource signals into frequency domain.
 
-        # Remove the cyclic prefixes before transformation into time-domain
-        resource_signals = self._remove_prefix(signal)
+        Used as a common subroutine in both :meth:`.demodulate` and :meth:`.extract_channel`.
 
-        # Transform grid back to data symbols
-        grid = fftshift(fft(resource_signals, axis=0, norm="ortho"), axes=0)
+        Args:
+
+            resource_signals (np.ndarray):
+                Multidimensional array of resource signals.
+                The transformation will always be performed over the last dimension.
+
+        Returns: The transformed resource signals.
+        """
+
+        # Transform the time-domain resource signals to frequency-domain data symbols
+        grid = fftshift(fft(resource_signals, self._padded_num_subcarriers, axis=-1, norm="ortho"), axes=-1)
 
         # Account for the DC suppression
         if self.frame.dc_suppression:
-            dc_index = int(0.5 * padded_num_subcarriers)
-            grid[dc_index:, :] = np.roll(grid[dc_index:, :], -1, axis=0)
+            dc_index = int(0.5 * self._padded_num_subcarriers)
+            selector = (slice(None),) * (resource_signals.ndim - 1) + (slice(dc_index, None),)
+
+            grid[selector] = np.roll(grid[selector], -1, axis=-1)
+
+        return grid
+
+    def __extract_subgrids(self, grid: np.ndarray) -> np.ndarray:
+        """Estimate and extract the subgrid relevant to this section.
+
+        Subroutine of :meth:`.demodulate`.
+
+        Args:
+
+            resource_signals (np.ndarray):
+                Numpy matrix (two-dimensional array) of resource signals.
+
+        Returns:
+            Numpy matrix (two-dimensional array) of the extracted subgrid.
+        """
+
+        subgrid_start_idx = self._subgrid_start_idx()
+        selector = (slice(None),) * (grid.ndim - 1) + (slice(subgrid_start_idx, subgrid_start_idx + self.num_subcarriers),)
+
+        subgrid = grid[selector]
+        return subgrid
+
+    def demodulate(self, signal: np.ndarray) -> np.ndarray:
+        # Remove the cyclic prefixes before transformation into time-domain
+        resource_signals = self._remove_prefix(signal)
 
         # Extract the subgrid relevant to this section
-        subgrid_start_idx = int(0.5 * (padded_num_subcarriers - self.num_subcarriers))
-        subgrid = grid[subgrid_start_idx : subgrid_start_idx + self.num_subcarriers, :]
+        grid = self.__transform_resource_signals(resource_signals)
+        subgrid = self.__extract_subgrids(grid)
 
-        return subgrid.T
+        # Return the result
+        return subgrid
+
+    def extract_channel(self, csi: np.ndarray, reference_position: ReferencePosition) -> np.ndarray:
+        # Remove the cyclic prefixes before transformation into time-domain
+        _csi = self._remove_prefix(csi.transpose((0, 1, 3, 2)))
+
+        if reference_position == ReferencePosition.IDEAL:
+            selected_csi = np.mean(_csi, axis=4, keepdims=False).transpose((0, 1, 3, 2))
+
+        else:
+            reference_index = 0
+
+            if reference_position == ReferencePosition.IDEAL_MIDAMBLE:
+                reference_index = _csi.shape[4] // 2
+
+            elif reference_position == ReferencePosition.IDEAL_POSTAMBLE:
+                reference_index = _csi.shape[4] - 1
+
+            selected_csi = _csi[:, :, :, :, reference_index].transpose((0, 1, 3, 2))
+
+        # Extract the subgrid relevant to this section
+        selected_grid_csi = self.__transform_resource_signals(selected_csi)
+
+        grid_start_idx = self._padded_num_subcarriers // 2 - self.frame.num_subcarriers // 2
+        grid_stop_idx = grid_start_idx + self.frame.num_subcarriers
+        grid_csi = selected_grid_csi[:, :, :, grid_start_idx:grid_stop_idx]
+        return grid_csi
 
     @property
     def resource_mask(self) -> np.ndarray:
@@ -602,6 +684,9 @@ class FrameGuardSection(FrameSection, Serializable):
     def demodulate(self, baseband_signal: np.ndarray) -> np.ndarray:
         # Guard sections naturally don't encode anything
         return np.empty(0, dtype=complex)
+
+    def extract_channel(self, csi: np.ndarray, reference_position: ReferencePosition) -> np.ndarray:
+        return np.empty((csi.shape[0], csi.shape[1], 0, self.frame.num_subcarriers), dtype=np.complex_)
 
 
 class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
@@ -873,7 +958,7 @@ class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
 
     def pick(self, placed_symbols: StatedSymbols) -> StatedSymbols:
         raw_symbols = placed_symbols.raw.transpose((2, 1, 0))
-        raw_states = placed_symbols.states.transpose((3, 2, 0, 1))
+        raw_states = placed_symbols.dense_states().transpose((3, 2, 0, 1))
         raw_picked_symbols = np.empty((placed_symbols.num_streams, self.num_data_symbols, 1), dtype=np.complex_)
         raw_picked_states = np.empty((placed_symbols.num_streams, placed_symbols.num_transmit_streams, self.num_data_symbols, 1), dtype=np.complex_)
 
@@ -1283,38 +1368,13 @@ class ReferencePosition(SerializableEnum):
     IDEAL_POSTAMBLE = 3
 
 
-class OFDMIdealChannelEstimation(IdealChannelEstimation[OFDMWaveform], Serializable):
-    """Ideal channel state estimation for OFDM waveforms."""
-
-    yaml_tag = "OFDM-Ideal"
-    serialized_attributes = {"reference_position"}
-
-    reference_position: ReferencePosition
-    """Assumed position of the reference symbol within the frame."""
-
-    def __init__(self, reference_position: ReferencePosition = ReferencePosition.IDEAL, *args, **kwargs) -> None:
-        """
-        Args:
-
-            reference_position (ReferencPosition, optional):
-                Assumed location of the reference symbols within the ofdm frame.
-        """
-
-        self.reference_position = reference_position
-        IdealChannelEstimation.__init__(self, *args, **kwargs)  # type: ignore
-
-    def estimate_channel(self, symbols: Symbols) -> Tuple[StatedSymbols, ChannelStateInformation]:
-        csi = self._csi().to_frequency_selectivity(self.waveform_generator.num_subcarriers)
-        return StatedSymbols(symbols.raw, csi.state[:, :, : symbols.num_blocks, :]), csi
-
-
 class OFDMLeastSquaresChannelEstimation(ChannelEstimation[OFDMWaveform], Serializable):
     """Least-Squares channel estimation for OFDM waveforms."""
 
     yaml_tag = "OFDM-LS"
     """YAML serializtion tag"""
 
-    def estimate_channel(self, symbols: Symbols) -> Tuple[StatedSymbols, ChannelStateInformation]:
+    def estimate_channel(self, symbols: Symbols, delay: float = 0.0) -> StatedSymbols:
         if symbols.num_streams != 1:
             raise NotImplementedError("Least-Squares channel estimation is only implemented for SISO links")
 
@@ -1328,13 +1388,19 @@ class OFDMLeastSquaresChannelEstimation(ChannelEstimation[OFDMWaveform], Seriali
         channel_estimation[0, 0, resource_mask[ElementType.REFERENCE.value, ::]] = reference_channel_estimation
         channel_estimation = channel_estimation.transpose((0, 1, 3, 2))
 
-        interpolation_stems = np.where(resource_mask[ElementType.REFERENCE.value, ::])
+        # Interpolate over the holes, if there are any
         holes = np.where(np.invert(resource_mask[ElementType.REFERENCE.value, ::]))
+        if holes[0].size != 0:
+            interpolation_stems = np.where(resource_mask[ElementType.REFERENCE.value, ::])
+            interpolated_holes = griddata(interpolation_stems, reference_channel_estimation, holes, method="linear")
+            channel_estimation[0, 0, holes[1], holes[0]] = interpolated_holes
 
-        # ToDo: Check with group what to do about missing values outside the convex hull
-        interpolated_holes = griddata(interpolation_stems, reference_channel_estimation, holes, method="nearest")
-        channel_estimation[0, 0, holes[1], holes[0]] = interpolated_holes
-        return StatedSymbols(symbols.raw, channel_estimation), ChannelStateInformation(ChannelStateFormat.FREQUENCY_SELECTIVITY, channel_estimation)
+        # Fill nan values with nearest neighbor
+        nan_indices = np.where(np.isnan(channel_estimation))
+        stem_indices = np.where(np.invert(np.isnan(channel_estimation)))
+        channel_estimation[nan_indices] = griddata(stem_indices, channel_estimation[stem_indices], nan_indices, method="nearest")
+
+        return StatedSymbols(symbols.raw, channel_estimation)
 
 
 class OFDMChannelEqualization(ChannelEqualization[OFDMWaveform], ABC):

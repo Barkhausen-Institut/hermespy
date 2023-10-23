@@ -1,8 +1,10 @@
+# -*- coding: utf-8 -*-
+
 from .antennas import Antenna, IdealAntenna, Dipole, LinearAntenna, PatchAntenna, AntennaArrayBase, AntennaArray, UniformArray
 from .definitions import ConsoleMode, SNRType
 from .logarithmic import dB, Logarithmic, LogarithmicSequence, ValueType
 from .operators import StaticOperator, SilentTransmitter, SignalTransmitter, SignalReceiver
-from .channel_state_information import ChannelStateFormat, ChannelStateInformation, ChannelStateDimension
+from .channel import ChannelStateFormat, ChannelStateInformation, ChannelStateDimension
 from .transformation import Direction, Transformable, TransformableBase, Transformation
 from .animation import Moveable
 from .device import Operator, OperatorSlot, MixingOperator, ProcessedDeviceInput, TransmitterSlot, ReceiverSlot, Transmitter, Receiver, Device, FloatingError, Transmission, Reception, ReceptionType, DeviceReception, DeviceTransmission, DeviceInput, DeviceOutput

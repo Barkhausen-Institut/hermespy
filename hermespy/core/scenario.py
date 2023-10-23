@@ -11,11 +11,10 @@ from collections.abc import Sequence
 from enum import IntEnum
 from itertools import chain
 from os import path, remove
-from typing import Generic, List, Optional, overload, Set, Tuple, Type, TypeVar, Union
+from typing import Generic, List, Optional, overload, Set, Type, TypeVar, Union
 
 from h5py import File, Group
 
-from .channel_state_information import ChannelStateInformation
 from .device import DeviceInput, DeviceOutput, DeviceReception, DeviceTransmission, DeviceType, ProcessedDeviceInput, Reception, Transmission, Transmitter, Receiver, Operator
 from .drop import Drop, RecalledDrop
 from .factory import Factory
@@ -543,8 +542,9 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
 
         # Check if the campaign is available (if a campaign was specified)
         if not self.__campaign_exists(campaign, _file):
+            filename = _file.filename
             _file.close()
-            raise ValueError(f"The requested measurement campaign '{campaign}' does not exists within the savefile '{_file.filename}'")
+            raise ValueError(f"The requested measurement campaign '{campaign}' does not exists within the savefile '{filename}'")
 
         # Stop any action and close file handles if required
         self.stop()
@@ -689,19 +689,19 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
         ...  # pragma: no cover
 
     @overload
-    def receive_operators(self, operator_inputs: Sequence[Sequence[Tuple[Signal, ChannelStateInformation]]], cache: bool = True) -> Sequence[Sequence[Reception]]:
+    def receive_operators(self, operator_inputs: Sequence[Sequence[Signal]], cache: bool = True) -> Sequence[Sequence[Reception]]:
         ...  # pragma: no cover
 
     @overload
     def receive_operators(self) -> Sequence[Sequence[Reception]]:
         ...  # pragma: no cover
 
-    def receive_operators(self, operator_inputs: Sequence[ProcessedDeviceInput] | Sequence[Sequence[Tuple[Signal, ChannelStateInformation]]] | None = None, cache: bool = True) -> Sequence[Sequence[Reception]]:
+    def receive_operators(self, operator_inputs: Sequence[ProcessedDeviceInput] | Sequence[Sequence[Signal]] | None = None, cache: bool = True) -> Sequence[Sequence[Reception]]:
         """Receive over the registered operators.
 
         Args:
 
-            operator_inputs (Sequence[Sequence[Tuple[Signal, ChannelStateInformation]]] | ProcessedDeviceInput, optional):
+            operator_inputs (Sequence[Sequence[Signal]] | ProcessedDeviceInput, optional):
                 Signal models fed to the receive operators of each device.
                 If not provided, the operatores are expected to have inputs cached
 

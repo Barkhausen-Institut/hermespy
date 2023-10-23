@@ -1,11 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-===========================
-3GPP Urban Macrocells Model
-===========================
-
-Implements several parameter sets defined within the 3GPP standard modeling specific scenarios.
-"""
 
 from abc import ABCMeta
 from math import log10
@@ -26,7 +19,19 @@ __status__ = "Prototype"
 
 
 class UrbanMacrocellsLineOfSight(ClusterDelayLineBase, Serializable):
-    """Parameter Preset for the 3GPP Cluster Delay Line Urban Macrocells Model."""
+    """3GPP cluster delay line preset modeling an urban macrocell scenario with direct
+    line of sight between the linked wireless devices.
+
+    Refer to the :footcite:t:`3GPP:TR38901` for detailed information.
+
+    The following minimal example outlines how to configure the channel model
+    within the context of a :doc:`simulation.simulation.Simulation`:
+
+    .. literalinclude:: ../scripts/examples/channel_cdl_urban_macrocells_los.py
+       :language: python
+       :linenos:
+       :lines: 12-40
+    """
 
     yaml_tag = "UMaLOS"
     """YAML serialization tag."""
@@ -69,8 +74,8 @@ class UrbanMacrocellsLineOfSight(ClusterDelayLineBase, Serializable):
 
     @property
     def zod_spread_mean(self) -> float:
-        device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
-        terminal_height = min(self.transmitter.position[2], self.receiver.position[2])
+        device_distance = np.linalg.norm(self.beta_device.position - self.alpha_device.position, 2)
+        terminal_height = min(self.alpha_device.position[2], self.beta_device.position[2])
 
         return max(-0.5, -2.1e-3 * device_distance - 1e-2 * (terminal_height - 1.5) + 0.75)
 
@@ -112,7 +117,7 @@ class UrbanMacrocellsLineOfSight(ClusterDelayLineBase, Serializable):
 
     @property
     def cluster_delay_spread(self) -> float:
-        return max(0.25, 6.5622 - 3.4084 * log10(self._center_frequency * 1e-9))
+        return max(0.25, 6.5622 - 3.4084 * log10(self._center_frequency * 1e-9)) * 1e-9
 
     @property
     def cluster_aod_spread(self) -> float:
@@ -140,8 +145,8 @@ class UrbanMacrocellsNoLineOfSightBase(ClusterDelayLineBase, metaclass=ABCMeta):
 
     @property
     def zod_spread_mean(self) -> float:
-        device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
-        terminal_height = min(self.transmitter.position[2], self.receiver.position[2])
+        device_distance = np.linalg.norm(self.beta_device.position - self.alpha_device.position, 2)
+        terminal_height = min(self.alpha_device.position[2], self.beta_device.position[2])
 
         return max(-0.5, -2.1e-3 * device_distance - 1e-2 * (terminal_height - 1.5) + 0.9)
 
@@ -151,8 +156,8 @@ class UrbanMacrocellsNoLineOfSightBase(ClusterDelayLineBase, metaclass=ABCMeta):
 
     @property
     def zod_offset(self) -> float:
-        device_distance = float(np.linalg.norm(self.receiver.position - self.transmitter.position, 2))
-        terminal_height = min(self.transmitter.position[2], self.receiver.position[2])
+        device_distance = float(np.linalg.norm(self.beta_device.position - self.alpha_device.position, 2))
+        terminal_height = min(self.alpha_device.position[2], self.beta_device.position[2])
         fc = log10(self._center_frequency)
 
         a = 0.208 * fc - 0.782
@@ -164,7 +169,19 @@ class UrbanMacrocellsNoLineOfSightBase(ClusterDelayLineBase, metaclass=ABCMeta):
 
 
 class UrbanMacrocellsNoLineOfSight(UrbanMacrocellsNoLineOfSightBase, Serializable):
-    """Parameter Preset for the 3GPP Cluster Delay Line Urban Macrocells Model."""
+    """3GPP cluster delay line preset modeling an urban macrocell scenario without direct
+    line of sight between the linked wireless devices.
+
+    Refer to the :footcite:t:`3GPP:TR38901` for detailed information.
+
+    The following minimal example outlines how to configure the channel model
+    within the context of a :doc:`simulation.simulation.Simulation`:
+
+    .. literalinclude:: ../scripts/examples/channel_cdl_urban_macrocells_nlos.py
+       :language: python
+       :linenos:
+       :lines: 12-40
+    """
 
     yaml_tag = "UMaNLOS"
     """YAML serialization tag."""
@@ -235,7 +252,7 @@ class UrbanMacrocellsNoLineOfSight(UrbanMacrocellsNoLineOfSightBase, Serializabl
 
     @property
     def cluster_delay_spread(self) -> float:
-        return max(0.25, 6.5622 - 3.4084 * log10(self._center_frequency * 1e-9))
+        return max(0.25, 6.5622 - 3.4084 * log10(self._center_frequency * 1e-9)) * 1e-9
 
     @property
     def cluster_aod_spread(self) -> float:
@@ -259,7 +276,19 @@ class UrbanMacrocellsNoLineOfSight(UrbanMacrocellsNoLineOfSightBase, Serializabl
 
 
 class UrbanMacrocellsOutsideToInside(UrbanMacrocellsNoLineOfSightBase, Serializable):
-    """Parameter Preset for the 3GPP Cluster Delay Line Urban Macrocells Model."""
+    """3GPP cluster delay line preset modeling an urban macrocell scenario with
+    the linked wireless devices being outside and inside a building, respectively.
+
+    Refer to the :footcite:t:`3GPP:TR38901` for detailed information.
+
+    The following minimal example outlines how to configure the channel model
+    within the context of a :doc:`simulation.simulation.Simulation`:
+
+    .. literalinclude:: ../scripts/examples/channel_cdl_urban_macrocells_o2i.py
+       :language: python
+       :linenos:
+       :lines: 12-40
+    """
 
     yaml_tag = "UMa02I"
     """YAML serialization tag."""
@@ -330,7 +359,7 @@ class UrbanMacrocellsOutsideToInside(UrbanMacrocellsNoLineOfSightBase, Serializa
 
     @property
     def cluster_delay_spread(self) -> float:
-        return 11.0
+        return 11e-9
 
     @property
     def cluster_aod_spread(self) -> float:

@@ -1,18 +1,16 @@
 # -*- coding: utf-8 -*-
-"""
-===================================
-Multipath Fading Standard Templates
-===================================
-"""
 
 from __future__ import annotations
-from typing import Any, Optional, Type, Union
+from typing import Any, Optional, Type, Union, TYPE_CHECKING
 
 import numpy as np
 from ruamel.yaml import SafeRepresenter, MappingNode
 
 from hermespy.core import FloatingError, Serializable, SerializableEnum
 from .multipath_fading_channel import AntennaCorrelation, MultipathFadingChannel
+
+if TYPE_CHECKING:
+    from hermespy.simulation import SimulatedDevice  # pragma: no cover
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -77,14 +75,7 @@ class StandardAntennaCorrelation(Serializable, AntennaCorrelation):
 
     @property
     def device_type(self) -> DeviceType:
-        """Assumed 3GPP device type.
-
-        Returns: The device type.
-
-        Raises:
-
-            ValuError: On unsupported type conversions.
-        """
+        """Assumed 3GPP device type."""
 
         return self.__device_type
 
@@ -94,14 +85,7 @@ class StandardAntennaCorrelation(Serializable, AntennaCorrelation):
 
     @property
     def correlation(self) -> CorrelationType:
-        """Assumed 3GPP standard correlation type.
-
-        Returns: The correlation type.
-
-        Raises:
-
-            ValuError: On unsupported type conversions.
-        """
+        """Assumed 3GPP standard correlation type."""
 
         return self.__correlation
 
@@ -129,7 +113,7 @@ class StandardAntennaCorrelation(Serializable, AntennaCorrelation):
         raise RuntimeError(f"3GPP standard antenna covariance is only defined for 1, 2 and 4 antennas, device has {n} antennas")
 
 
-class Cost256Type(SerializableEnum):
+class Cost259Type(SerializableEnum):
     """Supported model types of the Cost256 channel model"""
 
     URBAN = 0
@@ -142,18 +126,41 @@ class Cost256Type(SerializableEnum):
     """Hilly terrain"""
 
 
-class MultipathFadingCost256(MultipathFadingChannel):
-    """COST256 Multipath Fading Channel models."""
+class MultipathFadingCost259(MultipathFadingChannel):
+    """Cost Action 259 Multipath Fading Channel models.
 
-    yaml_tag = "COST256"
-    __model_type: Cost256Type
+    Refer to :footcite:t:`2006:MolischA` and :footcite:t:`2006:MolischB` for more information.
+    Parametrizations can be found in the standard :footcite:t:`3GPP:TR125943`.
 
-    def __init__(self, model_type: Cost256Type = Cost256Type.URBAN, los_angle: Optional[float] = None, doppler_frequency: Optional[float] = None, los_doppler_frequency: Optional[float] = None, **kwargs: Any) -> None:
-        """Model initialization.
+    The following minimal example outlines how to configure the channel model
+    within the context of a :doc:`simulation.simulation.Simulation`:
 
+    .. literalinclude:: ../scripts/examples/channel_MultipathFadingCost259.py
+       :language: python
+       :linenos:
+       :lines: 11-36
+
+    """
+
+    yaml_tag = "COST259"
+    __model_type: Cost259Type
+
+    def __init__(self, model_type: Cost259Type = Cost259Type.URBAN, alpha_device: SimulatedDevice | None = None, beta_device: SimulatedDevice | None = None, gain: float = 1.0, los_angle: Optional[float] = None, doppler_frequency: Optional[float] = None, los_doppler_frequency: Optional[float] = None, **kwargs: Any) -> None:
+        """
         Args:
 
-            model_type (Cost256Type): The model type.
+            model_type (Cost256Type):
+                The model type.
+
+            alpha_device (SimulatedDevice, optional):
+                First device linked by the :class:`.MultipathFadingCost259` instance that generated this realization.
+
+            beta_device (SimulatedDevice, optional):
+                Second device linked by the :class:`.MultipathFadingCost259` instance that generated this realization.
+
+            gain (float, optional):
+                Linear power gain factor a signal experiences when being propagated over this realization.
+                :math:`1.0` by default.
 
             los_angle (float, optional):
                 Angle phase of the line of sight component within the statistical distribution.
@@ -170,17 +177,17 @@ class MultipathFadingCost256(MultipathFadingChannel):
                 If `los_angle` is defined in HILLY model type.
         """
 
-        if model_type == Cost256Type.URBAN:
+        if model_type == Cost259Type.URBAN:
             delays = 1e-6 * np.array([0, 0.217, 0.512, 0.514, 0.517, 0.674, 0.882, 1.230, 1.287, 1.311, 1.349, 1.533, 1.535, 1.622, 1.818, 1.836, 1.884, 1.943, 2.048, 2.140])
             power_db = np.array([-5.7, -7.6, -10.1, -10.2, -10.2, -11.5, -13.4, -16.3, -16.9, -17.1, -17.4, -19.0, -19.0, -19.8, -21.5, -21.6, -22.1, -22.6, -23.5, -24.3])
             rice_factors = np.zeros(delays.shape)
 
-        elif model_type == Cost256Type.RURAL:
+        elif model_type == Cost259Type.RURAL:
             delays = 1e-6 * np.array([0, 0.042, 0.101, 0.129, 0.149, 0.245, 0.312, 0.410, 0.469, 0.528])
             power_db = np.array([-5.2, -6.4, -8.4, -9.3, -10.0, -13.1, -15.3, -18.5, -20.4, -22.4])
             rice_factors = np.zeros(delays.shape)
 
-        elif model_type == Cost256Type.HILLY:
+        elif model_type == Cost259Type.HILLY:
             if los_angle is not None:
                 raise ValueError("Model type HILLY does not support line of sight angle configuration")
 
@@ -192,17 +199,17 @@ class MultipathFadingCost256(MultipathFadingChannel):
         else:
             raise ValueError("Requested model type not supported")
 
-        self.__model_type = Cost256Type(model_type)
+        self.__model_type = Cost259Type(model_type)
 
         # Convert power and normalize
         power_profile = 10 ** (power_db / 10)
         power_profile /= sum(power_profile)
 
         # Init base class with pre-defined model parameters
-        MultipathFadingChannel.__init__(self, delays=delays, power_profile=power_profile, rice_factors=rice_factors, los_angle=los_angle, doppler_frequency=doppler_frequency, los_doppler_frequency=los_doppler_frequency, **kwargs)
+        MultipathFadingChannel.__init__(self, alpha_device=alpha_device, beta_device=beta_device, gain=gain, delays=delays, power_profile=power_profile, rice_factors=rice_factors, los_angle=los_angle, doppler_frequency=doppler_frequency, los_doppler_frequency=los_doppler_frequency, **kwargs)
 
     @property
-    def model_type(self) -> Cost256Type:
+    def model_type(self) -> Cost259Type:
         """Access the configured model type.
 
         Returns: The configured model type.
@@ -211,7 +218,7 @@ class MultipathFadingCost256(MultipathFadingChannel):
         return self.__model_type
 
     @classmethod
-    def to_yaml(cls: Type[MultipathFadingCost256], representer: SafeRepresenter, node: MultipathFadingCost256) -> MappingNode:
+    def to_yaml(cls: Type[MultipathFadingCost259], representer: SafeRepresenter, node: MultipathFadingCost259) -> MappingNode:
         """Serialize a serializable object to YAML.
 
         Args:
@@ -228,7 +235,7 @@ class MultipathFadingCost256(MultipathFadingChannel):
 
         blacklist = set()
 
-        if node.model_type == Cost256Type.HILLY:
+        if node.model_type == Cost259Type.HILLY:
             blacklist.add("los_angle")
 
         return node._mapping_serialization_wrapper(representer, blacklist=blacklist)
@@ -245,18 +252,52 @@ class TDLType(SerializableEnum):
 
 
 class MultipathFading5GTDL(MultipathFadingChannel):
-    """5G TDL Multipath Fading Channel models."""
+    """5G TDL Multipath Fading Channel models.
+
+    Implementation of the 3GPP standard parameterizations as stated in ETSI TR 38.900 :footcite:p:`3GPP:TR38901`.
+    Five scenario types A-E are defined, differing in the number of considered paths and the path's
+    respective delay and power.
+
+    The following minimal example outlines how to configure the channel model
+    within the context of a :doc:`simulation.simulation.Simulation`:
+
+    .. literalinclude:: ../scripts/examples/channel_MultipathFading5GTDL.py
+       :language: python
+       :linenos:
+       :lines: 11-37
+
+    """
 
     yaml_tag = "5GTDL"
     __rms_delay: float
 
-    def __init__(self, model_type: TDLType = TDLType.A, rms_delay: float = 0.0, doppler_frequency: Optional[float] = None, los_doppler_frequency: Optional[float] = None, **kwargs: Any) -> None:
-        """Model initialization.
-
+    def __init__(self, model_type: TDLType = TDLType.A, rms_delay: float = 0.0, alpha_device: SimulatedDevice | None = None, beta_device: SimulatedDevice | None = None, gain: float = 1.0, doppler_frequency: float | None = None, los_doppler_frequency: float | None = None, **kwargs: Any) -> None:
+        """
         Args:
 
-            model_type (TYPE): The model type.
-            rms_delay (float): Root-Mean-Squared delay in seconds.
+            model_type (TYPE):
+                The model type.
+                Initializes the :attr:`.model_type` attribute.
+
+            rms_delay (float):
+                Root-Mean-Squared delay in seconds.
+                Initializes the :attr:`.rms_delay` attribute.
+
+            alpha_device (SimulatedDevice, optional):
+                First device linked by this :class:`.MultipathFading5GTDL` channel instance.
+                Initializes the :attr:`.alpha_device` property.
+                If not specified the channel is considered floating,
+                meaning a call to :meth:`.realize` will raise an exception.
+
+            beta_device (SimulatedDevice, optional):
+                Second device linked by this :class:`.MultipathFading5GTDL` channel.
+                Initializes the :attr:`.beta_device` property.
+                If not specified the channel is considered floating,
+                meaning a call to :meth:`.realize` will raise an exception.
+
+            gain (float, otional):
+                Linear power gain factor a signal experiences when being propagated over this realization.
+                :math:`1.0` by default.
 
             num_sinusoids (int, optional):
                 Number of sinusoids used to sample the statistical distribution.
@@ -265,13 +306,12 @@ class MultipathFading5GTDL(MultipathFadingChannel):
                 Doppler frequency shift of the statistical distribution.
 
             kwargs (Any):
-                `MultipathFadingChannel` initialization parameters.
+                Additional `MultipathFadingChannel` initialization parameters.
 
         Raises:
-            ValueError:
-                If `model_type` is not supported.
-                If `rms_delay` is smaller than zero.
-                If `los_angle` is specified in combination with `model_type` D or E.
+
+            ValueError: If `rms_delay` is smaller than zero.
+            ValueError: If `los_angle` is specified in combination with `model_type` D or E.
         """
 
         if rms_delay < 0.0:
@@ -327,7 +367,7 @@ class MultipathFading5GTDL(MultipathFadingChannel):
         delays = rms_delay * normalized_delays
 
         # Init base class with pre-defined model parameters
-        MultipathFadingChannel.__init__(self, delays=delays, power_profile=power_profile, rice_factors=rice_factors, doppler_frequency=doppler_frequency, los_doppler_frequency=los_doppler_frequency, **kwargs)
+        MultipathFadingChannel.__init__(self, alpha_device=alpha_device, beta_device=beta_device, gain=gain, delays=delays, power_profile=power_profile, rice_factors=rice_factors, doppler_frequency=doppler_frequency, los_doppler_frequency=los_doppler_frequency, **kwargs)
 
     @property
     def model_type(self) -> TDLType:
@@ -350,7 +390,17 @@ class MultipathFading5GTDL(MultipathFadingChannel):
 
 
 class MultipathFadingExponential(MultipathFadingChannel):
-    """Exponential Multipath Fading Channel models."""
+    """Exponential Multipath Fading Channel models.
+
+    The following minimal example outlines how to configure the channel model
+    within the context of a :doc:`simulation.simulation.Simulation`:
+
+    .. literalinclude:: ../scripts/examples/channel_MultipathFadingExponential.py
+       :language: python
+       :linenos:
+       :lines: 11-36
+
+    """
 
     yaml_tag = "Exponential"
 
@@ -358,9 +408,8 @@ class MultipathFadingExponential(MultipathFadingChannel):
     __tap_interval: float
     __rms_delay: float
 
-    def __init__(self, tap_interval: float, rms_delay: float, **kwargs: Any) -> None:
-        """Exponential Multipath Channel Model initialization.
-
+    def __init__(self, tap_interval: float, rms_delay: float, alpha_device: SimulatedDevice | None = None, beta_device: SimulatedDevice | None = None, gain: float = 1.0, **kwargs: Any) -> None:
+        """
         Args:
 
             tap_interval (float):
@@ -368,6 +417,16 @@ class MultipathFadingExponential(MultipathFadingChannel):
 
             rms_delay (float):
                 Root-Mean-Squared delay in seconds.
+
+            alpha_device (SimulatedDevice, optional):
+                First device linked by the :class:`.MultipathFadingExponential` instance that generated this realization.
+
+            beta_device (SimulatedDevice, optional):
+                Second device linked by the :class:`.MultipathFadingExponential` instance that generated this realization.
+
+            gain (float, optional):
+                Linear power gain factor a signal experiences when being propagated over this realization.
+                :math:`1.0` by default.
 
             kwargs (Any):
                 `MultipathFadingChannel` initialization parameters.
@@ -391,16 +450,15 @@ class MultipathFadingExponential(MultipathFadingChannel):
         # rms_delay = exp(-alpha/2)/(1-exp(-alpha)), cf. geometric distribution.
         # Truncate the distributions for paths whose average power is very
         # small (less than exponential_truncation).
-
         alpha = -2 * np.log((-1 + np.sqrt(1 + 4 * rms_norm**2)) / (2 * rms_norm))
-        max_delay_in_samples = int(np.ceil(np.log(MultipathFadingExponential.__exponential_truncation) / alpha))
+        max_delay_in_samples = int(-np.ceil(np.log(MultipathFadingExponential.__exponential_truncation) / alpha))
 
         delays = np.arange(max_delay_in_samples + 1) * tap_interval
         power_profile = np.exp(-alpha * np.arange(max_delay_in_samples + 1))
         rice_factors = np.zeros(delays.shape)
 
         # Init base class with pre-defined model parameters
-        MultipathFadingChannel.__init__(self, delays=delays, power_profile=power_profile, rice_factors=rice_factors, **kwargs)
+        MultipathFadingChannel.__init__(self, alpha_device=alpha_device, beta_device=beta_device, gain=gain, delays=delays, power_profile=power_profile, rice_factors=rice_factors, **kwargs)
 
     @property
     def tap_interval(self) -> float:

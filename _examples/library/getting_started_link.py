@@ -24,8 +24,8 @@ channel = IdealChannel(tx_device, rx_device)
 
 # Simulate the signal transmission over the channel
 transmission = tx_operator.transmit()
-rx_signal, _, channel_state = channel.propagate(tx_device.transmit())
-rx_device.process_input(rx_signal)
+propagation = channel.propagate(tx_device.transmit())
+rx_device.process_input(propagation)
 reception = rx_operator.receive()
 
 # Evaluate bit errors during transmission and visualize the received symbol constellation

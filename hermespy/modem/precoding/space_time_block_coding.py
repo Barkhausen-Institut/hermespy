@@ -9,6 +9,7 @@ from __future__ import annotations
 from fractions import Fraction
 
 import numpy as np
+from sparse import SparseArray  # type: ignore
 
 from hermespy.core import Serializable
 from ..symbols import StatedSymbols
@@ -84,6 +85,8 @@ class Alamouti(SymbolPrecoder, Serializable):
             raise ValueError("Alamouti decoding must contain an even amount of data symbols blocks")
 
         channel_state = symbols.states[:, :2, 0::2, :]
+        channel_state = channel_state.todense() if isinstance(channel_state, SparseArray) else channel_state
+
         weight_norms = np.sum(np.abs(channel_state) ** 2, axis=1, keepdims=False)
 
         decoded_symbols = np.empty((symbols.num_streams, symbols.num_blocks, symbols.num_symbols), dtype=complex)
@@ -194,6 +197,8 @@ class Ganesan(SymbolPrecoder, Serializable):
         if symbols.num_transmit_streams != 4:
             raise ValueError(f"Ganesan decoding must be given 4 transmit antennas ({symbols.num_transmit_streams} were given)")
 
+        states = symbols.dense_states()
+
         # Init the decoded symbols ndarray. Notice that num_blocks is reduced because of the 3/4 symbol rate.
         num_rx = symbols.num_streams
         decoded_symbols = np.empty((num_rx, symbols.num_blocks // 4 * 3, symbols.num_symbols), dtype=np.complex_)
@@ -233,8 +238,8 @@ class Ganesan(SymbolPrecoder, Serializable):
         for n in range(symbols.num_blocks // 4):
             # Assemble matrix A'
             for n_ in range(4):
-                an[:, 3:, n_ + 4, :] = an[:, :3, n_, :] = symbols.states.real[:, index_matrix[n_], n * 4 + n_, :]
-                an[:, :3, n_ + 4, :] = an[:, 3:, n_, :] = symbols.states.imag[:, index_matrix[n_], n * 4 + n_, :]
+                an[:, 3:, n_ + 4, :] = an[:, :3, n_, :] = states.real[:, index_matrix[n_], n * 4 + n_, :]
+                an[:, :3, n_ + 4, :] = an[:, 3:, n_, :] = states.imag[:, index_matrix[n_], n * 4 + n_, :]
 
             # Calculate estimator such that estimator @ R' = s'
             # this einsum applies the signs matrix to A' and transposes it

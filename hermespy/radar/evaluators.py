@@ -64,6 +64,7 @@ from hermespy.radar import Radar, RadarReception
 from hermespy.channel import RadarChannelBase
 from hermespy.radar.cube import RadarCube
 from hermespy.radar.detection import RadarPointCloud
+from hermespy.simulation import SimulatedDevice
 
 
 __author__ = "André Noll Barreto"
@@ -94,27 +95,55 @@ class RadarEvaluator(Evaluator, ABC):
 
     __receiving_radar: Radar  # Handle to the radar receiver
     __radar_channel: RadarChannelBase  # Handle to the radar channel
+    __receiving_device: SimulatedDevice
+    __transmitting_device: SimulatedDevice
 
-    def __init__(self, receiving_radar: Radar, radar_channel: RadarChannelBase | None = None) -> None:
+    def __init__(self, receiving_radar: Radar, radar_channel: RadarChannelBase) -> None:
         """
         Args:
 
             receiving_radar (Radar): Radar under test.
-            radar_channel (RadarChannelBase, optional): Radar channel modeling a desired target.
+            radar_channel (RadarChannelBase): Radar channel modeling a desired target.
 
         Raises:
 
             ValueError: If the receiving radar is not an operator of the radar_channel receiver.
         """
 
-        if radar_channel is not None and (radar_channel.receiver is None or receiving_radar not in radar_channel.receiver.receivers):
-            raise ValueError("The radar operator is not a receiver within the radar channel receiving device")
+        if radar_channel.alpha_device is None or radar_channel.beta_device is None:
+            raise ValueError("Radar channel must be configured within a simulation scenario")
+
+        if receiving_radar.device is None:
+            raise ValueError("Radar must be assigned a device within a simulation scenario")
 
         self.__receiving_radar = receiving_radar
         self.__radar_channel = radar_channel
 
+        if receiving_radar.device is radar_channel.alpha_device:
+            self.__receiving_device = radar_channel.alpha_device
+            self.__transmitting_device = radar_channel.beta_device
+
+        elif receiving_radar.device is radar_channel.beta_device:
+            self.__receiving_device = radar_channel.beta_device
+            self.__transmitting_device = radar_channel.alpha_device
+
+        else:
+            raise ValueError("Recieving radar to be evaluated must be assigned to the radar channel")
+
         # Initialize base class
         Evaluator.__init__(self)
+
+    @property
+    def receiving_device(self) -> SimulatedDevice:
+        """Device receiving from the evaluated channel."""
+
+        return self.__receiving_device
+
+    @property
+    def transmitting_device(self) -> SimulatedDevice:
+        """Device transmitting into the evaluated channel."""
+
+        return self.__transmitting_device
 
     @property
     def receiving_radar(self) -> Radar:
@@ -153,7 +182,7 @@ class DetectionProbabilityEvaluation(EvaluationTemplate[bool]):
         return DetectionProbArtifact(self.evaluation)
 
 
-class DetectionProbEvaluator(RadarEvaluator, Serializable):
+class DetectionProbEvaluator(Evaluator, Serializable):
     """Estimates the probability of detection for a given radar detector.
 
     Assumes a successful detection if the :class:`Radar's<hermespy.radar.radar.Radar>` :meth:`reception<hermespy.radar.radar.Radar.reception>` contains a non-empty point cloud.
@@ -171,15 +200,28 @@ class DetectionProbEvaluator(RadarEvaluator, Serializable):
 
     yaml_tag = "DetectionProbEvaluator"
 
-    def __init__(self, receiving_radar: Radar) -> None:
+    __radar: Radar
+
+    def __init__(self, radar: Radar) -> None:
         """
         Args:
-            receiving_radar (Radar):
-                Radar detector
+
+            radar (Radar):
+                Radar detector to be evaluated.
         """
 
-        RadarEvaluator.__init__(self, receiving_radar)
+        # Initialize base class
+        Evaluator.__init__(self)
+
+        # Initialize class attributes
+        self.__radar = radar
         self.plot_scale = "log"  # Plot logarithmically by default
+
+    @property
+    def radar(self) -> Radar:
+        """Radar detector to be evaluated."""
+
+        return self.__radar
 
     @property
     def abbreviation(self) -> str:
@@ -198,7 +240,7 @@ class DetectionProbEvaluator(RadarEvaluator, Serializable):
 
     def evaluate(self) -> DetectionProbabilityEvaluation:
         # Retrieve transmitted and received bits
-        cloud = self.receiving_radar.reception.cloud
+        cloud = self.radar.reception.cloud
 
         if cloud is None:
             raise RuntimeError("Detection evaluation requires a detector to be configured at the radar")
@@ -340,18 +382,18 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
 
     yaml_tag = "ROC"
 
+    _title = "Receiver Operating Characteristics"
     __num_thresholds: int
 
-    def __init__(self, radar: Radar, radar_channel: RadarChannelBase | None = None, num_thresholds=101) -> None:
+    def __init__(self, radar: Radar, radar_channel: RadarChannelBase, num_thresholds=101) -> None:
         """
         Args:
 
             radar (Radar):
                 Radar under test.
 
-            radar_channel (RadarChannelBase, optional):
+            radar_channel (RadarChannelBase):
                 Radar channel containing a desired target.
-                If the radar channel is not specified, the :meth:`.evaluate` routine will not be available.
 
             num_thresholds (int, optional)
                 Number of different thresholds to be considered in ROC curve
@@ -359,7 +401,7 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
 
         # Make sure the channel belongs to a simulation scenario
         if radar_channel is not None:
-            if radar_channel.transmitter is None or radar_channel.receiver is None:
+            if radar_channel.alpha_device is None or radar_channel.beta_device is None:
                 raise ValueError("ROC evaluator must be defined within a simulation scenario")
 
         RadarEvaluator.__init__(self, receiving_radar=radar, radar_channel=radar_channel)
@@ -388,35 +430,34 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
         return RocEvaluation(radar_cube_h0, radar_cube_h1)
 
     def evaluate(self) -> RocEvaluation:
-        if self.radar_channel is None:
-            raise RuntimeError("Radar channel must be specified in order to evaluate during rutime")
-
         # Collect required information from the simulation
         one_hypothesis_channel_realization = self.radar_channel.realization
-        device_output = self.radar_channel.transmitter.output
-        device_input = self.radar_channel.receiver.input
-        device_index = self.radar_channel.scenario.device_index(self.radar_channel.transmitter)
-        operator_index = self.receiving_radar.device.receivers.operator_index(self.receiving_radar)
+        device_output = self.transmitting_device.output
+        device_input = self.receiving_device.input
+        device_index = self.radar_channel.scenario.device_index(self.transmitting_device)
+        operator_index = self.receiving_device.receivers.operator_index(self.receiving_radar)
 
+        # Check if the channel has been realized yet
         if one_hypothesis_channel_realization is None:
             raise RuntimeError("Channel has not been realized yet")
 
+        # Check if the devices have been realized yet
         if device_output is None or device_input is None:
             raise RuntimeError("Channel devices lack cached transmission / reception information")
 
         # Generate the null hypothesis detection radar cube by re-running the radar detection routine
-        null_hypothesis_channel_realization = self.radar_channel.null_hypothesis(device_output.mixed_signal.num_samples, device_output.sampling_rate, one_hypothesis_channel_realization)
+        null_hypothesis_channel_realization = one_hypothesis_channel_realization.null_hypothesis()
 
         # Propagate again over the radar channel
-        null_hypothesis_propagation = self.radar_channel.Propagate(device_output.mixed_signal, null_hypothesis_channel_realization)
+        null_hypothesis_propagation = null_hypothesis_channel_realization.propagate(device_output)
 
         # Exchange the respective propagated signal
         impinging_signals = list(device_input.impinging_signals).copy()
-        impinging_signals[device_index] = null_hypothesis_propagation
+        impinging_signals[device_index] = null_hypothesis_propagation.signal
 
         # Receive again
-        null_hypothesis_device_reception = self.radar_channel.receiver.process_from_realization(impinging_signals, device_input, device_output.trigger_realization, device_input.leaking_signal, False, channel_state=null_hypothesis_channel_realization)
-        null_hypothesis_radar_reception = self.receiving_radar.receive(null_hypothesis_device_reception.operator_inputs[operator_index][0], None, False)
+        null_hypothesis_device_reception = self.receiving_device.process_from_realization(impinging_signals, device_input, device_output.trigger_realization, device_input.leaking_signal, False)
+        null_hypothesis_radar_reception = self.receiving_radar.receive(null_hypothesis_device_reception.operator_inputs[operator_index], False)
 
         # Generate evaluation
         return self.__evaluation_from_receptions(null_hypothesis_radar_reception, self.receiving_radar.reception)
@@ -427,9 +468,10 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
 
     @property
     def title(self) -> str:
-        return "Operating Characteristics"  # pragma: no cover
+        return ReceiverOperatingCharacteristic._title  # pragma: no cover
 
-    def generate_result(self, grid: Sequence[GridDimension], artifacts: np.ndarray) -> RocEvaluationResult:
+    @staticmethod
+    def Generate_Result(grid: Sequence[GridDimension], artifacts: np.ndarray, num_thresholds: int) -> RocEvaluationResult:
         # Prepare result containers
         if len(grid) > 0:
             dimensions = tuple(g.num_sample_points for g in grid)
@@ -437,23 +479,26 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
             dimensions = (1,)
             artifacts = artifacts.reshape(dimensions)
 
-        detection_probabilities = np.empty((*dimensions, self.__num_thresholds), dtype=float)
-        false_alarm_probabilities = np.empty((*dimensions, self.__num_thresholds), dtype=float)
+        detection_probabilities = np.empty((*dimensions, num_thresholds), dtype=float)
+        false_alarm_probabilities = np.empty((*dimensions, num_thresholds), dtype=float)
 
         # Convert artifacts to raw data array
         for grid_coordinates in np.ndindex(dimensions):
             artifact_line = artifacts[grid_coordinates]
             roc_data = np.array([[a.h0_value, a.h1_value] for a in artifact_line])
 
-            for t, threshold in enumerate(np.linspace(roc_data.min(), roc_data.max(), self.__num_thresholds, endpoint=True)):
+            for t, threshold in enumerate(np.linspace(roc_data.min(), roc_data.max(), num_thresholds, endpoint=True)):
                 threshold_coordinates = grid_coordinates + (t,)
                 detection_probabilities[threshold_coordinates] = np.mean(roc_data[:, 1] >= threshold)
                 false_alarm_probabilities[threshold_coordinates] = np.mean(roc_data[:, 0] >= threshold)
 
-        return RocEvaluationResult(grid, detection_probabilities, false_alarm_probabilities, self.title)
+        return RocEvaluationResult(grid, detection_probabilities, false_alarm_probabilities, ReceiverOperatingCharacteristic._title)
+
+    def generate_result(self, grid: Sequence[GridDimension], artifacts: np.ndarray) -> RocEvaluationResult:
+        return self.Generate_Result(grid, artifacts, self.__num_thresholds)
 
     @classmethod
-    def From_Scenarios(cls: Type[ReceiverOperatingCharacteristic], h0_scenario: Scenario, h1_scenario: Scenario, h0_operator: Optional[Radar] = None, h1_operator: Optional[Radar] = None) -> RocEvaluationResult:
+    def From_Scenarios(cls: Type[ReceiverOperatingCharacteristic], h0_scenario: Scenario, h1_scenario: Scenario, h0_operator: Optional[Radar] = None, h1_operator: Optional[Radar] = None, num_thresholds: int = 101) -> RocEvaluationResult:
         # Assert that both scenarios are in replay mode
         if h0_scenario.mode != ScenarioMode.REPLAY:
             raise ValueError("Null hypothesis scenario is not in replay mode")
@@ -522,7 +567,7 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
 
         # Generate results
         grid: Sequence[GridDimension] = []
-        result = cls(h1_operator).generate_result(grid, artifacts)
+        result = cls.Generate_Result(grid, artifacts, num_thresholds)
         return result
 
     @classmethod

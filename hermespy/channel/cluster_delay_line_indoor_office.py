@@ -1,11 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-===========================================
-3GPP Cluster Delay Line Indoor Office Model
-===========================================
-
-Implements several parameter sets defined within the 3GPP standard modeling specific scenarios.
-"""
 
 from math import log10
 
@@ -23,7 +16,19 @@ __status__ = "Prototype"
 
 
 class IndoorOfficeLineOfSight(ClusterDelayLineBase, Serializable):
-    """Parameter Preset for the 3GPP Cluster Indoor-Office Model."""
+    """3GPP cluster delay line preset modeling an indoor office scenario with direct line of sight
+    between the linked wireless devices.
+
+    Refer to the :footcite:t:`3GPP:TR38901` for detailed information.
+
+    The following minimal example outlines how to configure the channel model
+    within the context of a :doc:`simulation.simulation.Simulation`:
+
+    .. literalinclude:: ../scripts/examples/channel_cdl_indoor_office_los.py
+       :language: python
+       :linenos:
+       :lines: 12-40
+    """
 
     yaml_tag = "IndoorOfficeLOS"
     """YAML serialization tag."""
@@ -130,7 +135,19 @@ class IndoorOfficeLineOfSight(ClusterDelayLineBase, Serializable):
 
 
 class IndoorOfficeNoLineOfSight(ClusterDelayLineBase, Serializable):
-    """Parameter Preset for the 3GPP Cluster Indoor-Office Model."""
+    """3GPP cluster delay line preset modeling an indoor office scenario without direct line of sight
+    between the linked wireless devices.
+
+    Refer to the :footcite:t:`3GPP:TR38901` for detailed information.
+
+    The following minimal example outlines how to configure the channel model
+    within the context of a :doc:`simulation.simulation.Simulation`:
+
+    .. literalinclude:: ../scripts/examples/channel_cdl_indoor_office_nlos.py
+       :language: python
+       :linenos:
+       :lines: 12-40
+    """
 
     yaml_tag = "IndoorOfficeNLOS"
     """YAML serialization tag."""
