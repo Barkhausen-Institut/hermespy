@@ -20,7 +20,3 @@ span.brackets > a:after {
     width: 80% !important;
     margin: 0 auto !important;
 }
-
-.docutils.container {
-    margin-top: 42px !important;
-}

@@ -303,6 +303,9 @@ class Signal(HDFSerializable, Visualizable):
         if sampling_rate <= 0.0:
             raise ValueError("Sampling rate for resampling must be greater than zero.")
 
+        if self.num_samples < 1:
+            return Signal(np.empty((self.num_streams, 0), dtype=np.complex_), sampling_rate, carrier_frequency=self.__carrier_frequency, delay=self.delay, noise_power=self.noise_power)
+
         # Resample the internal samples
         if self.__sampling_rate != sampling_rate:
             # Apply an anti-aliasing filter if the respective flag is enabled

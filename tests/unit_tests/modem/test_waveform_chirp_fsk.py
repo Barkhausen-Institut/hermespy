@@ -482,9 +482,7 @@ class TestChirpFskCorrelationSynchronization(unittest.TestCase):
             expected_frames.append(samples[:, p:p+self.waveform.samples_per_frame])
 
         synchronized_frames = self.synchronization.synchronize(samples)
-
-        if len(synchronized_frames) != len(expected_frames):
-            self.fail()
+        self.assertSequenceEqual(list(pilot_indices), synchronized_frames[:self.num_frames])
 
     def test_synchronization_validation(self) -> None:
         """Synchronization should raise RuntimeError if no pilot signal is available"""

@@ -40,7 +40,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
     'sphinx.ext.ifconfig',
-    'sphinx.ext.napoleon',
+    'sphinx.ext.napoleon',                      # Support for google-style docstrings
     'sphinx_copybutton',                        # Copy script examples directly
     'sphinx_autodoc_typehints',                 # Type hinting support for the autodoc extension
     'sphinx_tabs.tabs',                         # Multiple tabs
@@ -125,6 +125,8 @@ html_theme_options = {
 carousel_bootstrap_add_css_js = True
 #carousel_bootstrap_prefix = ""
 
+# Mermaid config
+mermaid_d3_zoom = True
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

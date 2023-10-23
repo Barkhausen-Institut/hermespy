@@ -9,13 +9,11 @@ import numpy as np
 import numpy.random as rnd
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.constants import pi
-from math import floor
 
-from hermespy.modem import ChannelEstimation, ConfigurablePilotWaveform, CustomPilotSymbolSequence, WaveformGenerator, UniformPilotSymbolSequence, StatedSymbols, Synchronization, Symbols, IdealChannelEstimation, ChannelEqualization, ZeroForcingChannelEqualization
 from hermespy.core import ChannelStateFormat, ChannelStateInformation, Signal
-from hermespy.modem.modem import BaseModem
 from hermespy.modem.symbols import StatedSymbols, Symbols
 from hermespy.modem.waveform import ChannelEqualization, ChannelEstimation
+from hermespy.modem import ChannelEstimation, ConfigurablePilotWaveform, CustomPilotSymbolSequence, WaveformGenerator, UniformPilotSymbolSequence, StatedSymbols, Synchronization, Symbols, ChannelEqualization, ZeroForcingChannelEqualization
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
@@ -176,12 +174,19 @@ class TestChannelEstimation(unittest.TestCase):
         """Initialization should properly set class properties"""
         
         self.assertIs(self.waveform, self.estimation.waveform_generator)
+
+    def test_waveform_generator(self) -> None:
+        """Waveform generator property should properly rebind estimations"""
         
-    def test_waveform_generator_validation(self) -> None:
-        """Waveform generator setter should raise RuntimeError if already assigned to a waveform"""
+        new_waveform = MockWaveformGenerator()
         
-        with self.assertRaises(RuntimeError):
-            self.estimation.waveform_generator = MockWaveformGenerator()
+        self.estimation.waveform_generator = new_waveform
+        self.assertIsNot(self.waveform.channel_estimation, self.estimation)
+        self.assertIs(new_waveform, self.estimation.waveform_generator)
+        
+        self.estimation.waveform_generator = None
+        self.assertIsNot(new_waveform, self.estimation.waveform_generator)
+        self.assertIsNone(self.estimation.waveform_generator)
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""
@@ -190,42 +195,6 @@ class TestChannelEstimation(unittest.TestCase):
         
             blacklist.return_value  = {'waveform_generator',}
             test_yaml_roundtrip_serialization(self, self.estimation)
-
-class TestIdealChannelEstimation(unittest.TestCase):
-    """Test ideal channel estimation"""
-    
-    def setUp(self) -> None:
-        
-        self.waveform = MockWaveformGenerator()
-        self.estimation = IdealChannelEstimation(self.waveform)
-
-    def test_csi_validation(self) -> None:
-        """Fetching the CSI should raise RuntimeErrors on invalid internal states"""
-        
-        floating_estimation = IdealChannelEstimation()
-        with self.assertRaises(RuntimeError):
-            floating_estimation._csi()
-            
-        floating_estimation.waveform_generator = self.waveform
-        with self.assertRaises(RuntimeError):
-            floating_estimation._csi()
-        
-        mock_modem = Mock()
-        mock_modem.csi = None    
-        self.waveform.modem = mock_modem
-        
-        with self.assertRaises(RuntimeError):
-            floating_estimation._csi()
-            
-    def test_csi(self) -> None:
-        """Fetching a CSI should return the correct information"""
-        
-        mock_modem = Mock()
-        self.waveform.modem = mock_modem
-        
-        csi = self.estimation._csi()
-        
-        self.assertIs(mock_modem.csi, csi)
 
 
 class TestChannelEqualization(unittest.TestCase):
@@ -339,8 +308,9 @@ class TestWaveformGenerator(unittest.TestCase):
 
         num_streams = 3
         num_samples_test = [50, 100, 150, 200]
+        expected_num_frames_candidates = [0, 1, 1, 1]
 
-        for num_samples in num_samples_test:
+        for num_samples, expected_num_frames in zip(num_samples_test, expected_num_frames_candidates):
 
             signal = np.exp(2j * self.rnd.uniform(0, pi, (num_streams, 1))) @ np.exp(2j * self.rnd.uniform(0, pi, (1, num_samples)))
 
@@ -348,7 +318,6 @@ class TestWaveformGenerator(unittest.TestCase):
 
             # Number of frames is the number of frames that fit into the samples
             num_frames = len(synchronized_frames)
-            expected_num_frames = 1
             self.assertEqual(expected_num_frames, num_frames)
 
     def test_synchronize_validation(self) -> None:
@@ -390,6 +359,11 @@ class TestWaveformGenerator(unittest.TestCase):
 
         self.assertIs(self.waveform_generator, modem.waveform_generator)
         self.assertIs(self.waveform_generator.modem, modem)
+        
+        self.waveform_generator.modem = None
+        
+        self.assertIsNone(modem.waveform_generator)
+        self.assertIsNone(self.waveform_generator.modem)
         
     def test_symbol_precoding_support(self) -> None:
         """Symbol precoding should be supported"""

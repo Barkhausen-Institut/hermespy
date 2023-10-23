@@ -11,7 +11,7 @@ from scipy.constants import pi
 
 from hermespy.core import Signal
 from hermespy.modem import FilteredSingleCarrierWaveform, StatedSymbols, Symbols, RaisedCosineWaveform, RootRaisedCosineWaveform, RectangularWaveform, FMCWWaveform, \
-    SingleCarrierCorrelationSynchronization, SingleCarrierIdealChannelEstimation, SingleCarrierZeroForcingChannelEqualization, SingleCarrierMinimumMeanSquareChannelEqualization
+    SingleCarrierCorrelationSynchronization, SingleCarrierMinimumMeanSquareChannelEqualization
 from hermespy.modem.waveform_single_carrier import SingleCarrierLeastSquaresChannelEstimation, RolledOffSingleCarrierWaveform
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
@@ -61,7 +61,7 @@ class MockRolledOfSingleCarrierWaveform(RolledOffSingleCarrierWaveform):
         return filter
     
 
-class FilteredSingleCarrierWaveform(TestCase):
+class TestFilteredSingleCarrierWaveform(TestCase):
     """Test the Phase-Shift-Keying / Quadrature Amplitude Modulation Waveform Generator"""
 
     def setUp(self) -> None:
@@ -266,7 +266,7 @@ class FilteredSingleCarrierWaveform(TestCase):
         bits_per_frame = self.waveform.bits_per_frame(self.waveform.num_data_symbols)
         data_bits = self.rng.integers(0, 2, bits_per_frame)
         data_symbols = self.waveform.map(data_bits)
-        signal = self.waveform.modulate(data_symbols)
+        signal = self.waveform.modulate(self.waveform.place(data_symbols))
 
         energy = np.linalg.norm(signal) ** 2 / bits_per_frame
         self.assertAlmostEqual(energy, self.waveform.bit_energy, places=2)
@@ -279,7 +279,7 @@ class FilteredSingleCarrierWaveform(TestCase):
 
         data_bits = self.rng.integers(0, 2, self.waveform.bits_per_frame(self.waveform.num_data_symbols))
         data_symbols = self.waveform.map(data_bits)
-        signal = self.waveform.modulate(data_symbols)
+        signal = self.waveform.modulate(self.waveform.place(data_symbols))
 
         energy = np.linalg.norm(signal) ** 2 / self.waveform._num_frame_symbols
         self.assertAlmostEqual(energy, self.waveform.symbol_energy, places=1)
@@ -290,9 +290,9 @@ class FilteredSingleCarrierWaveform(TestCase):
         self.waveform.pilot_rate = 0.
         self.waveform.guard_interval = 0.
 
-        data_bits = self.rng.integers(0, 2, self.waveform.num_data_symbols)
+        data_bits = self.rng.integers(0, 2, self.waveform.bits_per_frame(self.waveform.num_data_symbols))
         data_symbols = self.waveform.map(data_bits)
-        signal_samples = self.waveform.modulate(data_symbols)
+        signal_samples = self.waveform.modulate(self.waveform.place(data_symbols))
 
         self.assertAlmostEqual(Signal(signal_samples, self.waveform.sampling_rate).power[0], self.waveform.power, places=2)
 
@@ -354,7 +354,7 @@ class TestSingleCarrierCorrelationSynchronization(TestCase):
             samples = np.append(np.zeros((1, offset), dtype=complex), signal)
 
             pilot_indices = self.synchronization.synchronize(samples)
-            self.assertCountEqual([offset], pilot_indices)
+            self.assertSequenceEqual([offset], pilot_indices)
 
     def test_phase_shift_synchronization(self) -> None:
         """Test synchronization with arbitrary sample offset and phase shift"""
@@ -366,10 +366,10 @@ class TestSingleCarrierCorrelationSynchronization(TestCase):
         padded_samples = np.append(np.zeros((1, 15), dtype=complex), samples)
 
         pilot_indices = self.synchronization.synchronize(padded_samples,)
-        self.assertCountEqual([15], pilot_indices)
+        self.assertSequenceEqual([15], pilot_indices)
 
 
-class TestSingleCarrierChannelEstimation(TestCase):
+class TestLeastSquaresChannelEstimation(TestCase):
     """Test channel estimation of single carrier waveforms"""
     
     def setUp(self) -> None:
@@ -382,41 +382,24 @@ class TestSingleCarrierChannelEstimation(TestCase):
                                                   num_data_symbols=100,
                                                   pilot_rate=10)
         
-        mapped_data_symbols = self.waveform.map(self.rng.uniform(0, 2, self.waveform.bits_per_frame(self.waveform.num_data_symbols)))
-        self.symbols = self.waveform.place(mapped_data_symbols)
+        self.symbols = self.waveform.place(self.waveform.map(self.rng.uniform(0, 2, self.waveform.bits_per_frame(self.waveform.num_data_symbols))))
+        
+        self.estimation = SingleCarrierLeastSquaresChannelEstimation()
+        self.waveform.channel_estimation = self.estimation
         
     def test_least_squares_validation(self) -> None:
         """Least squares channel estimation should raise FloatingError if not assigned to a waveform"""
         
-        estimation = SingleCarrierLeastSquaresChannelEstimation()
+        self.estimation.waveform_generator = None
+        
         with self.assertRaises(RuntimeError):
-            estimation.estimate_channel(self.symbols)
+            self.estimation.estimate_channel(self.symbols)
         
     def test_least_squares(self) -> None:
         """Least squares channel estimation"""
-        
-        estimation = SingleCarrierLeastSquaresChannelEstimation()
-        self.waveform.channel_estimation = estimation
-        
-        stated_symbols, _ = estimation.estimate_channel(self.symbols)
-        self.assertEqual(self.waveform._num_frame_symbols, stated_symbols.num_blocks)
-        
-    def test_ideal(self) -> None:
-        """Ideal channel estimation"""
 
-        estimation = SingleCarrierIdealChannelEstimation()
-        self.waveform.channel_estimation = estimation
-        
-        
-        with patch('hermespy.modem.waveform.IdealChannelEstimation._csi') as csi_mock:
-            
-            expected_csi = self.rng.standard_normal((1, 1, self.waveform._filter_delay + self.waveform.samples_per_frame, 1))
-            state_mock = Mock()
-            state_mock.state = expected_csi
-            csi_mock.return_value = state_mock
-            
-            symbols, csi = estimation.estimate_channel(self.symbols)
-            #self.assertEqual(self.waveform.num_data_symbols, csi.num_samples)
+        stated_symbols = self.estimation.estimate_channel(self.symbols)
+        self.assertEqual(self.waveform._num_frame_symbols, stated_symbols.num_blocks)
 
 
 class TestChannelEqualization(TestCase):

@@ -8,14 +8,13 @@ Filtered Single Carrier Waveforms
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Any, Optional, Set, Tuple
+from typing import Any, Optional, Set
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-from hermespy.core import ChannelStateInformation, Executable, FloatingError, Serializable, Signal
-from hermespy.core.channel_state_information import ChannelStateFormat
-from .waveform import ConfigurablePilotWaveform, MappedPilotSymbolSequence, WaveformGenerator, ChannelEstimation, ChannelEqualization, PilotSymbolSequence, IdealChannelEstimation, ZeroForcingChannelEqualization
+from hermespy.core import Executable, FloatingError, Serializable, Signal
+from .waveform import ConfigurablePilotWaveform, MappedPilotSymbolSequence, WaveformGenerator, ChannelEstimation, ChannelEqualization, PilotSymbolSequence, ZeroForcingChannelEqualization
 from hermespy.modem.tools.psk_qam_mapping import PskQamMapping
 from .symbols import StatedSymbols, Symbols
 from .waveform_correlation_synchronization import CorrelationSynchronization
@@ -251,13 +250,11 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
         return StatedSymbols(picked_symbol_blocks, picked_state_blocks)
 
     def modulate(self, symbols: Symbols) -> np.ndarray:
-        # Place the symbols to be modulated within the frame, distanced by the oversampling factor
-        flattened_symbols = symbols.raw.flatten()
-        modulated_symbols = np.zeros(1 + (flattened_symbols.shape[0] - 1) * self.oversampling_factor, dtype=np.complex_)
-        modulated_symbols[:: self.oversampling_factor] = flattened_symbols
+        frame = np.zeros(1 + (self._num_frame_symbols - 1) * self.oversampling_factor, dtype=complex)
+        frame[:: self.oversampling_factor] = symbols.raw.flatten()
 
         # Generate waveforms by treating the frame as a comb and convolving with the impulse response
-        output_signal = np.convolve(modulated_symbols, self._transmit_filter())
+        output_signal = np.convolve(frame, self._transmit_filter())
         return output_signal
 
     def demodulate(self, signal: np.ndarray) -> Symbols:
@@ -387,23 +384,14 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
     def num_data_symbols(self) -> int:
         """Number of data symbols per frame.
 
-        Returns:
-            int: Number of data symbols.
+        Raises:
+            ValueError: If `num` is smaller than zero.
         """
 
         return self.__num_data_symbols
 
     @num_data_symbols.setter
     def num_data_symbols(self, num: int) -> None:
-        """Modify number of data symbols per frame.
-
-        Args:
-            num (int): Number of data symbols.
-
-        Raises:
-            ValueError: If `num` is smaller than zero.
-        """
-
         if num < 0:
             raise ValueError("Number of data symbols must be greater or equal to zero")
 
@@ -492,22 +480,6 @@ class SingleCarrierChannelEstimation(ChannelEstimation[FilteredSingleCarrierWave
         ChannelEstimation.__init__(self, waveform_generator)
 
 
-class SingleCarrierIdealChannelEstimation(IdealChannelEstimation[FilteredSingleCarrierWaveform], Serializable):
-    """Ideal channel estimation for single carrier waveforms"""
-
-    yaml_tag = "SC-Ideal"
-    """YAML serialization tag"""
-
-    def estimate_channel(self, symbols: Symbols) -> Tuple[StatedSymbols, ChannelStateInformation]:
-        filter_characteristics = self.waveform_generator._transmit_filter() * self.waveform_generator._receive_filter()
-        csi = self._csi().state[:, :, :, [0]]
-        filtered_state = np.apply_along_axis(lambda c: np.convolve(c, filter_characteristics), axis=2, arr=csi)
-
-        delay = self.waveform_generator._filter_delay
-        demodulated_state = filtered_state[:, :, delay : delay + symbols.num_blocks * self.waveform_generator.oversampling_factor : self.waveform_generator.oversampling_factor, [0]]
-        return StatedSymbols(symbols.raw, demodulated_state), ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE, demodulated_state)
-
-
 class SingleCarrierLeastSquaresChannelEstimation(SingleCarrierChannelEstimation):
     """Least-Squares channel estimation for Psk Qam waveforms."""
 
@@ -519,12 +491,12 @@ class SingleCarrierLeastSquaresChannelEstimation(SingleCarrierChannelEstimation)
         Args:
 
             waveform_generator (WaveformGenerator, optional):
-                The waveform generator this synchronization routine is attached to.
+                The waveform generator this channel estimation routine is attached to.
         """
 
         SingleCarrierChannelEstimation.__init__(self, waveform_generator)
 
-    def estimate_channel(self, symbols: Symbols) -> Tuple[StatedSymbols, ChannelStateInformation]:
+    def estimate_channel(self, symbols: Symbols, delay: float = 0.0) -> StatedSymbols:
         if self.waveform_generator is None:
             raise FloatingError("Error trying to fetch the pilot section of a floating channel estimator")
 
@@ -552,7 +524,7 @@ class SingleCarrierLeastSquaresChannelEstimation(SingleCarrierChannelEstimation)
         for s, stems in enumerate(channel_estimation_stems):
             channel_estimation[s, :] = np.interp(channel_estimation_indices, channel_estimation_stem_indices, stems)
 
-        return StatedSymbols(symbols.raw, channel_estimation[:, np.newaxis, :, np.newaxis]), ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE, channel_estimation[:, np.newaxis, :, np.newaxis])
+        return StatedSymbols(symbols.raw, channel_estimation[:, np.newaxis, :, np.newaxis])
 
 
 class SingleCarrierChannelEqualization(ChannelEqualization[FilteredSingleCarrierWaveform], ABC):

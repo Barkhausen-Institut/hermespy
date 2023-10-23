@@ -18,6 +18,7 @@ It is split into several interdependent sub-modules:
    core.factory
    core.definitions
    core.device.Device
+   core.device.DeviceOutput
    core.device.Transmitter
    core.device.Receiver
    core.drop.Drop
@@ -28,7 +29,7 @@ It is split into several interdependent sub-modules:
    core.pipeline
    core.random_node
    core.scenario
-   core.signal_model
+   core.signal_model.Signal
    core.channel_state_information
    core.antennas
    core.transformation

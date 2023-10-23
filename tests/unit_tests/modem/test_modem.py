@@ -45,9 +45,7 @@ class TestCommunicationReception(TestCase):
                                                    Symbols(self.rng.uniform(size=(2,1,5)) + 1j * self.rng.uniform(size=(2,1,5))),
                                                    1.2345,
                                                    Symbols(self.rng.uniform(size=(2,1,5)) + 1j * self.rng.uniform(size=(2,1,5))),
-                                                   self.rng.integers(0, 2, 20), self.rng.integers(0, 2, 10),
-                                                   ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE,
-                                                                           self.rng.uniform(size=(2,1,10,2)) + 1j * self.rng.uniform(size=(2,1,10,2)))) for _ in range(2)]
+                                                   self.rng.integers(0, 2, 20), self.rng.integers(0, 2, 10)) for _ in range(2)]
         
         self.reception = CommunicationReception(self.base_signal, self.frames)
 
@@ -114,7 +112,6 @@ class TestCommunicationReception(TestCase):
             np.testing.assert_array_equal(initial_frame.equalized_symbols.raw, serialized_frame.equalized_symbols.raw)
             np.testing.assert_array_equal(initial_frame.encoded_bits, serialized_frame.encoded_bits)
             np.testing.assert_array_equal(initial_frame.decoded_bits, serialized_frame.decoded_bits)
-            np.testing.assert_array_equal(initial_frame.csi.state, serialized_frame.csi.state)
         
         
 class TestCommunicationTransmission(TestCase):
@@ -315,11 +312,6 @@ class TestBaseModem(TestCase):
             
         self.modem.waveform_generator = None
         self.assertEqual(0, self.modem._noise_power(1., SNRType.EBN0))
-
-    def test_csi(self) -> None:
-        """Channel state information estimator should report the correct CSI"""
-        
-        self.assertIsNone(self.modem.csi)
 
 
 class TestTransmittingModem(TestBaseModem):
