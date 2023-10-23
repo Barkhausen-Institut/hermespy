@@ -203,10 +203,7 @@ class Encoder(ABC, Serializable):
         or the number of output bits during receive decoding.
         Referred to as :math:`K_n` within the respective equations.
 
-        Returns:
-
-            int:
-                Number of bits :math:`K_n`.
+        Returns: Number of bits :math:`K_n`.
         """
         ...  # pragma: no cover
 
@@ -219,10 +216,7 @@ class Encoder(ABC, Serializable):
         or the number of output bits during transmit encoding.
         Referred to as :math:`L_n` within the respective equations.
 
-        Returns:
-
-            int:
-                Number of bits :math:`L_n`.
+        Returns: Number of bits :math:`L_n`.
         """
         ...  # pragma: no cover
 

@@ -796,7 +796,7 @@ class HDFSerializable(metaclass=ABCMeta):
 
         Args:
 
-            group (Group):
+            group (h5py.Group):
                 The HDF5 group to which the object is serialized.
 
         :meta private:
@@ -812,7 +812,7 @@ class HDFSerializable(metaclass=ABCMeta):
 
         Args:
 
-            group (Group):
+            group (h5py.Group):
                 The HDF5 group from which the object state is recalled.
 
         Returns: The object initialized from the HDF5 group state.
@@ -827,7 +827,7 @@ class HDFSerializable(metaclass=ABCMeta):
 
         Args:
 
-            group (Group):
+            group (h5py.Group):
                 The HDF5 group from which the object state is recalled.
 
             name (str):
@@ -850,7 +850,7 @@ class HDFSerializable(metaclass=ABCMeta):
 
         Args:
 
-            group (Group):
+            group (h5py.Group):
                 The HDF5 group from which the object state is recalled.
 
             dataset (str):

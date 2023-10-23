@@ -94,12 +94,3 @@ class TestDuplexOperator(TestCase):
         # Verify that the duplex operator has been dropped as an operator by the old device
         self.assertNotIn(self.operator, self.device.transmitters)
         self.assertNotIn(self.operator, self.device.receivers)
-
-    def test_csi_get(self) -> None:
-        """Channel state information getter should return the channel state information of the device"""
-        
-        signal = Mock()
-        csi = Mock()
-        self.operator.cache_reception(signal, csi)
-        
-        self.assertIs(csi, self.operator.csi)

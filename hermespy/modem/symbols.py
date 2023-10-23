@@ -12,6 +12,7 @@ from typing import Optional, Union, Iterable, Type
 import matplotlib.pyplot as plt
 import numpy as np
 from h5py import Group
+from sparse import SparseArray  # type: ignore
 
 from hermespy.core import Executable, HDFSerializable
 
@@ -321,7 +322,7 @@ class StatedSymbols(Symbols):
 
     __states: np.ndarray  # Symbol states, four-dimensional array
 
-    def __init__(self, symbols: Iterable | np.ndarray, states: np.ndarray) -> None:
+    def __init__(self, symbols: Iterable | np.ndarray, states: np.ndarray | SparseArray) -> None:
         """
         Args:
 
@@ -331,7 +332,7 @@ class StatedSymbols(Symbols):
                 the second dimension the number of symbol blocks per stream,
                 the the dimension the number of symbols per block.
 
-            states (np.ndarray):
+            states (np.ndarray | SparseArray):
                 Four-dimensional numpy array with the first two dimensions indicating the
                 MIMO receive and transmit streams, respectively and the last two dimensions
                 indicating the number of symbol blocks and symbols per block.
@@ -341,7 +342,7 @@ class StatedSymbols(Symbols):
         self.states = states
 
     @property
-    def states(self) -> np.ndarray:
+    def states(self) -> np.ndarray | SparseArray:
         """Symbol state information.
 
         Four-dimensional numpy array with the first two dimensions indicating the
@@ -357,7 +358,7 @@ class StatedSymbols(Symbols):
         return self.__states
 
     @states.setter
-    def states(self, value: np.ndarray) -> None:
+    def states(self, value: np.ndarray | SparseArray) -> None:
         if value.ndim != 4:
             raise ValueError("State must be a four-dimensional numpy array")
 
@@ -371,6 +372,17 @@ class StatedSymbols(Symbols):
             raise ValueError(f"Symbol block sizes don't match, expected {self.num_symbols} instead of {value.shape[3]}")
 
         self.__states = value.copy()
+
+    def dense_states(self) -> np.ndarray:
+        """Return the channel state in dense format.
+
+        Note that this method will convert the channel state to dense format if it is currently in sparse format.
+        This operation may be computationally expensive and should be avoided if possible.
+
+        Returns: The channel state tensor in dense format.
+        """
+
+        return self.__states.todense() if isinstance(self.__states, SparseArray) else self.__states
 
     @property
     def num_transmit_streams(self) -> int:
@@ -398,4 +410,4 @@ class StatedSymbols(Symbols):
         Symbols.to_HDF(self, group)
 
         # Serialize datasets
-        group.create_dataset("states", data=self.__states)
+        group.create_dataset("states", data=self.dense_states())

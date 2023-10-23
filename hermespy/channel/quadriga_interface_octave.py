@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-"""Octave interface to the Quadriga channel model."""
 
 from __future__ import annotations
 from contextlib import redirect_stdout

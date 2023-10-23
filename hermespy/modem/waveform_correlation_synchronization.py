@@ -39,8 +39,9 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT], Serializabl
 
     __threshold: float  # Correlation threshold at which a pilot signal is detected
     __guard_ratio: float  # Guard ratio of frame duration
+    __peak_prominence: float  # Minimum peak prominence for peak detection
 
-    def __init__(self, threshold: float = 0.9, guard_ratio: float = 0.8, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, threshold: float = 0.9, guard_ratio: float = 0.8, peak_prominence: float = 0.2, *args: Any, **kwargs: Any) -> None:
         """
         Args:
 
@@ -49,6 +50,10 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT], Serializabl
 
             guard_ratio (float, optional):
                 Guard ratio of frame duration.
+
+            peak_prominence (float, optional):
+                Minimum peak prominence for peak detection in the interval (0, 1].
+                :math:`0.2` is a good default value for most applications.
 
             *args:
                 Synchronization base class initialization parameters.

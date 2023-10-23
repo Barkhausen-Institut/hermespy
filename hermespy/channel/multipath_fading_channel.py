@@ -1,28 +1,24 @@
 # -*- coding: utf-8 -*-
-"""
-=================
-Multipath Fading
-=================
-"""
 
 from __future__ import annotations
 from abc import abstractmethod, ABC
-from itertools import product
-from typing import Any, Optional, TYPE_CHECKING, Union, List
+from typing import Any, Sequence, Type, TYPE_CHECKING, List
 
+import matplotlib.pyplot as plt
 import numpy as np
+from h5py import Group
 from numpy import cos, exp
 from scipy.constants import pi
+from sparse import GCXS  # type: ignore
 
-from hermespy.core import Serializable
-from hermespy.tools import delay_resampling_matrix
-from .channel import Channel, ChannelRealization
+from hermespy.core import ChannelStateInformation, ChannelStateFormat, Device, HDFSerializable, Serializable, Signal, Visualizable
+from .channel import Channel, ChannelRealization, InterpolationMode
 
 if TYPE_CHECKING:
-    from hermespy.simulation import SimulatedDevice  # pragma no cover
+    from hermespy.simulation import SimulatedDevice  # pragma: no cover
 
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.1.0"
@@ -48,7 +44,7 @@ class AntennaCorrelation(ABC):
 
         Returns: Two-dimensional numpy array representing the covariance matrix.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     @property
     def channel(self) -> Channel | None:
@@ -93,7 +89,7 @@ class CustomAntennaCorrelation(Serializable, AntennaCorrelation):
         """
         Args:
 
-            covariance (np.ndarray):
+            covariance (numpy.ndarray):
                 Postive definte square antenna covariance matrix.
         """
 
@@ -117,116 +113,601 @@ class CustomAntennaCorrelation(Serializable, AntennaCorrelation):
         self.__covariance_matrix = value
 
 
-class MultipathFadingChannel(Channel, Serializable):
-    """Implements a stochastic fading multipath channel.
+class PathRealization(HDFSerializable):
+    """A single delay path of a Multipath Fading channel realization.
 
-    For MIMO systems, the received signal is the addition of the signal transmitted
-    at all antennas.
-    The channel model is defined in the parameters, which should have the following fields:
-    - param.delays - numpy.ndarray containing the delays of all significant paths (in s)
-    - param.power_delay_profile - numpy.ndarray containing the average power of each path
-    (in linear scale). It must have the same number of elements as 'param.delays'
-    - param.k_factor_rice: numpy.ndarray containing the K-factor of the Ricean
-    distribution for each path (in linear scale). It must have the same number of
-    elements as 'param.delays'
+    Represents the single propagation path equation
 
-    The channel is time-variant, with the auto-correlation depending on  its maximum
-    'doppler_frequency' (in Hz).
-    Realizations in different drops are independent.
+    .. math::
 
-    The model supports multiple antennas, and the correlation among different antennas can be
-    specified in parameters 'tx_cov_matrix' and 'rx_cov_matrix', for the both transmitter and
-    at the receiver side, respectively.
-    They both must be Hermitian, positive definite square matrices.
+       h_{\\ell}(t) =
+          \\sqrt{\\frac{K_{\\ell}}{1 + K_{\\ell}}} \\mathrm{e}^{\\mathrm{j} t \\omega_{\\ell} \\cos(\\theta_{\\ell,0}) + \\mathrm{j} \\phi_{\\ell,0} }
+          + \\sqrt{\\frac{1}{N(1 + K_{\\ell})}} \\sum_{n=1}^{N} \\mathrm{e}^{\\mathrm{j} t \\omega_{\\ell} \\cos\\left( \\frac{2\\pi n + \\theta_{\\ell,n}}{N} \\right) + \\mathrm{j} \\phi_{\\ell,n}}
+    """
 
-    Rayleigh/Rice fading and uncorrelated scattering is considered. Fading follows Jakes'
-    Doppler spectrum, using the simulation approach from :footcite:t:`2006:xiao`,
-    which is based on the sum of sinusoids with random phases.
+    __los_gain: float
+    __los_angle: float
+    __los_phase: float
+    __los_doppler: float
+    __nlos_gain: float
+    __nlos_angles: np.ndarray
+    __nlos_phases: np.ndarray
+    __nlos_doppler: float
 
-    If the delays are not multiple of the sampling interval, then sinc-based interpolation is
-    considered.
+    def __init__(self, power: float, delay: float, los_gain: float, los_angle: float, los_phase: float, los_doppler: float, nlos_gain: float, nlos_angles: np.ndarray, nlos_phases: np.ndarray, nlos_doppler: float) -> None:
+        """
+        Args:
 
-    Antenna correlation considers the Kronecker model, as described in :footcite:t:`2002:yu`.
+            power (float):
+                Power of the represented path in Watts.
+                Initializes the :attr:`.power` attribute.
 
-    The channel will provide 'number_rx_antennas' outputs to a signal
-    consisting of 'number_tx_antennas' inputs. A random number generator,
-    given by 'rnd' may be needed. The sampling rate is the same at both input and output
-    of the channel, and is given by 'sampling_rate' samples/second.
-    `tx_cov_matrix` and `rx_cov_matrix` are covariance matrices for transmitter
-    and receiver.
+            delay (float):
+                Delay of the represented path in seconds.
+                Initializes the :attr:`.delay` attribute.
+
+            los_gain (float):
+                Line of sight power of the represented path.
+                Initializes the :attr:`.los_gain` attribute.
+
+            los_angle (float):
+                Line of sight doppler angle in radians.
+                Initializes the :attr:`.los_angle` attribute.
+
+            los_phase (float):
+                Line of sight components phase in radians.
+                Initializes the :attr:`.los_phase` attribute.
+
+            los_doppler (float):
+                Line of sight doppler frequency in :math:`\\mathrm{Hz}`.
+                Initializes the :attr:`.los_doppler` attribute.
+
+            nlos_gain (float):
+                Non line of sight power of the represented path.
+                Initializes the :attr:`.nlos_gain` attribute.
+
+            nlos_angles (float):
+                Non line of sight doppler angles in radians.
+                Initializes the :attr:`.nlos_angles` attribute.
+
+            nlos_phases (float):
+                Non line of sight components phases in radians.
+                Initializes the :attr:`.nlos_phases` attribute.
+
+            nlos_doppler (float):
+                Non line of sight doppler frequency in :math:`\\mathrm{Hz}`.
+                Initializes the :attr:`.nlos_doppler` attribute.
+        """
+
+        # Initialize class attributes
+        self.__power = power
+        self.__delay = delay
+        self.__los_gain = los_gain
+        self.__los_angle = los_angle
+        self.__los_phase = los_phase
+        self.__los_doppler = los_doppler
+        self.__nlos_gain = nlos_gain
+        self.__nlos_angles = nlos_angles
+        self.__nlos_phases = nlos_phases
+        self.__nlos_doppler = nlos_doppler
+
+    @classmethod
+    def Realize(cls: Type[PathRealization], power: float, delay: float, los_gain: float, nlos_gain, los_doppler: float, nlos_doppler: float, los_angle: float | None = None, num_sinusoids: int = 20, rng: np.random.Generator | None = None) -> PathRealization:
+        """Realize the path's random variables.
+
+        Args:
+            power (float): Power of the represented path in Watts.
+            delay (float): Delay of the represented path in seconds.
+            los_gain (float): Line of sight power component of the represented path.
+            nlos_gain (_type_): Non line of sight power component of the represented path.
+            los_doppler (float): Line of sight doppler frequency of the represented path.
+            nlos_doppler (float): None line of sight doppler frequencs of the represented path.
+            los_angle (float, optional): Line of sight doppler angle in radians.
+            num_sinusoids (int, optional): Number of sinusoids. :math:`20` by default.
+            rng (np.random.Generator, optional): Random generator used to realize the random variables.
+
+        Returns: The realized path realization.
+        """
+
+        # Initialize a new random generator if none was provided
+        _rng = np.random.default_rng() if rng is None else rng
+
+        # Draw random realizations for the path
+        los_angle = _rng.uniform(0, 2 * pi) if los_angle is None else los_angle
+        los_phase = _rng.uniform(0, 2 * pi)
+        nlos_angles = _rng.uniform(0, 2 * pi, num_sinusoids)
+        nlos_phases = _rng.uniform(0, 2 * pi, num_sinusoids)
+
+        # Intialize object from random realizations
+        return cls(power, delay, los_gain, los_angle, los_phase, los_doppler, nlos_gain, nlos_angles, nlos_phases, nlos_doppler)
+
+    @property
+    def power(self) -> float:
+        """Power of the propagation path in Watts.
+
+        Referred to as :math:`g_{\\ell}` within the respective equations.
+        """
+
+        return self.__power
+
+    @property
+    def delay(self) -> float:
+        """Delay of the propagation path in seconds.
+
+        Referred to as :math:`\\tau_{\ell}` within the respective equations.
+        """
+
+        return self.__delay
+
+    @property
+    def los_gain(self) -> float:
+        """Gain of the path's specular line of sight component.
+
+        Represented by
+
+        .. math::
+
+           \\sqrt{\\frac{K_{\ell}}{1 + K_{\ell}}}
+
+        within the respective equations.
+        """
+
+        return self.__los_gain
+
+    @property
+    def los_angle(self) -> float:
+        """Angle of the path's specular line of sight component in radians.
+
+        Represented by :math:`\\theta_{\\ell}` within the respective equations.
+        """
+
+        return self.__los_angle
+
+    @property
+    def los_phase(self) -> float:
+        """Phase of the path's specular line of sight component in radians.
+
+        Represented by :math:`\\phi_{\\ell}` within the respective equations.
+        """
+
+        return self.__los_phase
+
+    @property
+    def los_doppler(self) -> float:
+        """Doppler frequency of the path's specular line of sight component in Hz.
+
+        Represented by :math:`\\omega_{\\ell}` within the respective equations.
+        """
+
+        return self.__los_doppler
+
+    @property
+    def nlos_gain(self) -> float:
+        """Gain of the path's non-specular components.
+
+        Represented by
+
+        .. math::
+
+           \\sqrt{\\frac{1}{1 + K_{\ell}}}
+
+        within the respective equations.
+        """
+
+        return self.__nlos_gain
+
+    @property
+    def nlos_angles(self) -> np.ndarray:
+        """Angles of the path's non-specular components in radians.
+
+        Represented by the sequence
+
+        .. math::
+
+           \\left[\\theta_{\\ell,1},\\, \\dotsc,\\, \\theta_{\\ell,N} \\right]^{\\mathsf{T}} \\in [0, 2\\pi)^{N}
+
+        of :math:`N` angles in radians within the respective equations.
+        """
+
+        return self.__nlos_angles
+
+    @property
+    def nlos_phases(self) -> np.ndarray:
+        """Phases of the path's non-specular components in radians.
+
+        Represented by the sequence
+
+        .. math::
+
+           \\left[\\phi_{\\ell,1},\\, \\dotsc,\\, \\phi_{\\ell,N} \\right]^{\\mathsf{T}} \\in [0, 2\\pi)^{N}
+
+        of :math:`N` angles in radians within the respective equations.
+        """
+
+        return self.__nlos_phases
+
+    @property
+    def nlos_doppler(self) -> float:
+        """Doppler frequency of the path's non-specular components in Hz.
+
+        Represented by :math:`\\omega_{\\ell} within the respective equations.
+        """
+
+        return self.__nlos_doppler
+
+    def _impulse_response(self, timestamps: np.ndarray) -> np.ndarray:
+        """Compute the impulse response of the represented multipath component.
+
+        Args:
+
+            timestamps (numpy.ndarray): Timestamps in seconds at which to sample the impulse response.
+
+        Returns: The sampled impulse response.
+        """
+
+        num_sinusoids = len(self.__nlos_angles)
+
+        # Initialize empty impulse response
+        impulse_response = np.zeros(len(timestamps), dtype=np.complex_)
+
+        # Sum up and normalize all non-specular components
+        for s, (nlos_angle, nlos_phase) in enumerate(zip(self.nlos_angles, self.nlos_phases)):
+            impulse_response += exp(1j * (self.nlos_doppler * timestamps * cos((2 * pi * s + nlos_angle) / num_sinusoids) + nlos_phase))
+        impulse_response *= self.nlos_gain * (num_sinusoids**-0.5)
+
+        # Add the specular component
+        impulse_response += self.los_gain * exp(1j * (self.los_doppler * timestamps * cos(self.los_angle) + self.los_phase))
+
+        # Scale by the overall path power
+        impulse_response *= self.power**0.5
+
+        return impulse_response
+
+    def propagate(self, signal: Signal) -> np.ndarray:
+        """Propagate a signal along the represented multipath component.
+
+        Args:
+
+            signal (Signal): The signal to be propagated.
+
+
+        Returns: The propagated samples.
+        """
+
+        # Generate the path's impule response
+        impulse_response = self._impulse_response(signal.timestamps)
+
+        # Propagate the transmitted samples
+        propagated_samples = signal.samples * impulse_response[np.newaxis, :]
+        return propagated_samples
+
+    def to_HDF(self, group: Group) -> None:
+        group.attrs["power"] = self.__power
+        group.attrs["delay"] = self.__delay
+        group.attrs["los_gain"] = self.__los_gain
+        group.attrs["los_angle"] = self.__los_angle
+        group.attrs["los_phase"] = self.__los_phase
+        group.attrs["los_doppler"] = self.los_doppler
+        group.attrs["nlos_gain"] = self.__nlos_gain
+        group.attrs["nlos_doppler"] = self.nlos_doppler
+        HDFSerializable._write_dataset(group, "nlos_angles", self.__nlos_angles)
+        HDFSerializable._write_dataset(group, "nlos_phases", self.__nlos_phases)
+
+    @classmethod
+    def from_HDF(cls: Type[PathRealization], group: Group) -> PathRealization:
+        power = group.attrs["power"]
+        delay = group.attrs["delay"]
+        los_gain = group.attrs["los_gain"]
+        los_angle = group.attrs["los_angle"]
+        los_phase = group.attrs["los_phase"]
+        los_doppler = group.attrs["los_doppler"]
+        nlos_gain = group.attrs["nlos_gain"]
+        nlos_doppler = group.attrs["nlos_doppler"]
+        nlos_angles = np.array(group["nlos_angles"], dtype=np.float_)
+        nlos_phases = np.array(group["nlos_phases"], dtype=np.float_)
+
+        return cls(power, delay, los_gain, los_angle, los_phase, los_doppler, nlos_gain, nlos_angles, nlos_phases, nlos_doppler)
+
+
+class MultipathFadingRealization(ChannelRealization, Visualizable):
+    """Realization of a multipath fading channel.
+
+    Generated by the :meth:`realize()<MultipathFadingChannel.realize>` routine of :class:`MultipathFadingChannels<MultipathFadingChannel>`.
+    """
+
+    __path_realizations: Sequence[PathRealization]
+    __spatial_response: np.ndarray
+    __max_delay: float
+
+    def __init__(self, alpha_device: Device, beta_device: Device, gain: float, path_realizations: Sequence[PathRealization], spatial_response: np.ndarray, max_delay: float, interpolation_mode: InterpolationMode = InterpolationMode.NEAREST) -> None:
+        """
+        Args:
+
+            alpha_device (Device):
+                First device linked by the :class:`.MultipathFadingChannel` instance that generated this realization.
+
+            beta_device (Device):
+                Second device linked by the :class:`.MultipathFadingChannel` instance that generated this realization.
+
+            gain (float):
+                Linear power gain factor a signal experiences when being propagated over this realization.
+
+            path_realizations (Sequence[PathRealization]):
+                Realizations of the individual propagation paths.
+
+            spatial_response (numpy.ndarray):
+                Spatial response matrix of the channel realization considering `alpha_device` is the transmitter and `beta_device` is the receiver.
+
+            interpolation_mode (InterpolationMode, optional):
+                Interpolation behaviour of the channel realization's delay components with respect to the proagated signal's sampling rate.
+        """
+
+        # Initialize base class
+        ChannelRealization.__init__(self, alpha_device, beta_device, gain, interpolation_mode)
+        Visualizable.__init__(self)
+
+        # Initialize class attributes
+        self.__path_realizations = path_realizations
+        self.__spatial_response = spatial_response
+
+        # Infer additional parameters
+        self.__max_delay = max(path.delay for path in path_realizations) if max_delay is None else max_delay
+
+    @classmethod
+    def Realize(
+        cls: Type[MultipathFadingRealization],
+        alpha_device: SimulatedDevice,
+        beta_device: SimulatedDevice,
+        gain: float,
+        power_profile: np.ndarray,
+        delays: np.ndarray,
+        los_gains: np.ndarray,
+        nlos_gains: np.ndarray,
+        los_doppler: float,
+        nlos_doppler: float,
+        alpha_correlation: AntennaCorrelation | None = None,
+        beta_correlation: AntennaCorrelation | None = None,
+        los_angle: float | None = None,
+        num_sinusoids: int = 20,
+        rng: np.random.Generator | None = None,
+    ) -> MultipathFadingRealization:
+        """Realize the random variables of a multipath fading channel.
+
+        Args:
+            alpha_device (SimulatedDevice): First device linked by the channel.
+            beta_device (SimulatedDevice): Second device linked by the channel.
+            gain (float): Overall channel gain factor.
+            power_profile (numpy.ndarray): Powers of each propagation path.
+            delays (numpy.ndarray): Delays of each propgation path.
+            los_gains (numpy.ndarray): Line of sight powers of each propagation path.
+            nlos_gains (numpy.ndarray): Non line lof sight powers of each proapgation path.
+            los_doppler (float): Line of sight doppler frequency of each propagation path.
+            nlos_doppler (float): Non line of sight dopller frequency of each propagation path.
+            alpha_correlation (AntennaCorrelation, optional): Antenna correlations at `alpha_device`.
+            beta_correlation (AntennaCorrelation, optional): Antennna correlations at `beta_device`.
+            los_angle (float, optional): Line of sight doppler angle in radians.
+            num_sinusoids (int, optional): Number of model sinusoids. Defaults to 20.
+            rng (numpy.random.Generator, optional): Random generator used to realize the random variables.
+
+        Returns: The realized realization.
+        """
+
+        # Initialize a new random generator if none was provided
+        _rng = np.random.default_rng() if rng is None else rng
+
+        # Generate MIMO channel response
+        spatial_response = np.exp(1j * _rng.uniform(0, 2 * pi, (beta_device.num_antennas, alpha_device.num_antennas)))
+
+        # Apply antenna array correlation models
+        if alpha_correlation is not None:
+            spatial_response = spatial_response @ alpha_correlation.covariance
+        if beta_correlation is not None:
+            spatial_response = beta_correlation.covariance @ spatial_response
+
+        # Generate path realizations
+        path_realizations: List[PathRealization] = []
+        for power, delay, los_gain, nlos_gain in zip(power_profile, delays, los_gains, nlos_gains):
+            path_realizations.append(PathRealization.Realize(power, delay, los_gain, nlos_gain, los_doppler, nlos_doppler, los_angle, num_sinusoids, _rng))
+
+        max_delay = delays.max()
+        return cls(alpha_device, beta_device, gain, path_realizations, spatial_response, max_delay)
+
+    @property
+    def path_realizations(self) -> Sequence[PathRealization]:
+        """Realizations of the individual propagation paths."""
+
+        return self.__path_realizations
+
+    def __directive_spatial_response(self, transmitter: Device, receiver: Device) -> np.ndarray:
+        """Infer the spatial response for the given transmitter and receiver.
+
+        Subroutine of :meth:`state<MultipathFadingRealization.state>` and :meth:`_propagate<MultipathFadingRealization.propagate>`.
+
+        Args:
+            transmitter (Device):
+                The transmitter device.
+
+            receiver (Device):
+                The receiver device.
+
+        Returns: The spatial channel response matrix.
+
+        Raises:
+
+            ValueError: If the provided transmitter and receiver do not match the devices the channel was realized for.
+        """
+
+        if transmitter == self.alpha_device and receiver == self.beta_device:
+            return self.__spatial_response
+
+        if transmitter == self.beta_device and receiver == self.alpha_device:
+            return self.__spatial_response.T
+
+        raise ValueError("The provided transmitter and receiver do not match the devices the channel was realized for")
+
+    def state(self, transmitter: Device, receiver: Device, delay: float, sampling_rate: float, num_samples: int, max_num_taps: int) -> ChannelStateInformation:
+        spatial_response = self.__directive_spatial_response(transmitter, receiver)
+        num_taps = min(1 + int(self.__max_delay * sampling_rate), max_num_taps)
+        timestamps = np.arange(num_samples) / sampling_rate + delay
+
+        siso_csi = np.zeros((num_samples, num_taps), dtype=np.complex_)
+        for path_realization in self.path_realizations:
+            tap_index = int(path_realization.delay * sampling_rate)
+
+            # Skip paths with delays larger than the maximum delay required by the CSI request
+            if tap_index > num_taps:
+                continue
+
+            siso_csi[:, tap_index] = siso_csi[:, tap_index] + path_realization._impulse_response(timestamps)
+
+        # For the multipath fading model, the MIMO CSI is the outer product of the SISO CSI with the spatial response
+        # The resulting multidimensional array is sparse in its fourth dimension and converted to a GCXS array for memory efficiency
+        mimo_csi = GCXS.from_numpy(np.einsum("ij,kl->ijkl", spatial_response * self.gain**0.5, siso_csi), compressed_axes=(0, 1, 2))
+
+        state = ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE, mimo_csi, num_delay_taps=num_taps)
+        return state
+
+    def _propagate(self, signal: Signal, transmitter: Device, receiver: Device, interpolation: InterpolationMode) -> Signal:
+        # Infer propagation direction and transmpose spatial response if necessary
+        spatial_response = self.__directive_spatial_response(transmitter, receiver)
+        sampling_rate = signal.sampling_rate
+        max_delay_in_samples = int(self.__max_delay * sampling_rate)
+        num_transmitted_samples = signal.num_samples + max_delay_in_samples
+
+        # Propagate the transmitted samples
+        propagated_samples = np.zeros((spatial_response.shape[0], num_transmitted_samples), dtype=np.complex_)
+        for path_realization in self.path_realizations:
+            num_delay_samples = int(path_realization.delay * sampling_rate)
+            propagated_samples[:, num_delay_samples : num_delay_samples + signal.num_samples] += path_realization.propagate(signal)
+
+        # Apply the channel's spatial response
+        propagated_samples = spatial_response @ propagated_samples
+
+        # Return the result
+        propagated_signal = Signal(propagated_samples, sampling_rate, carrier_frequency=signal.carrier_frequency, delay=signal.delay, noise_power=signal.noise_power)
+        return propagated_signal
+
+    def _plot(self, axes: plt.Axes) -> None:
+        delays = np.array([path.delay for path in self.path_realizations])
+        powers = np.array([path.power for path in self.path_realizations])
+
+        axes.stem(delays, powers, use_line_collection=True)
+        axes.set_xlabel("Delay [s]")
+        axes.set_ylabel("Power [Watts]")
+        axes.set_yscale("log")
+
+    def to_HDF(self, group: Group) -> None:
+        ChannelRealization.to_HDF(self, group)
+
+        group.attrs["num_path_realizations"] = len(self.__path_realizations)
+        group.attrs["max_delay"] = self.__max_delay
+
+        HDFSerializable._write_dataset(group, "spatial_response", self.__spatial_response)
+
+        for r, path_realization in enumerate(self.__path_realizations):
+            path_realization.to_HDF(HDFSerializable._create_group(group, f"path_realization_{r:02d}"))
+
+    @classmethod
+    def From_HDF(cls: Type[MultipathFadingRealization], group: Group, alpha_device: Device, beta_device: Device) -> MultipathFadingRealization:
+        initialization_parameters = cls._parameters_from_HDF(group)
+        num_path_realizations = group.attrs["num_path_realizations"]
+        initialization_parameters["max_delay"] = group.attrs["max_delay"]
+        initialization_parameters["path_realizations"] = [PathRealization.from_HDF(group[f"path_realization_{r:02d}"]) for r in range(num_path_realizations)]
+        initialization_parameters["spatial_response"] = np.array(group["spatial_response"], dtype=np.complex_)
+
+        return cls(alpha_device, beta_device, **initialization_parameters)
+
+
+class MultipathFadingChannel(Channel[MultipathFadingRealization], Serializable):
+    """Base class for the implementation of stochastic multipath fading channels.
+
+    Allows for the direct configuration of the Multipath Fading Channel's parameters
+
+    .. math::
+    
+       \\mathbf{g} &= \\left[ g_{1}, g_{2}, \\,\\dotsc,\\, g_{L}  \\right]^\mathsf{T} \\in \\mathbb{C}^{L} \\\\
+       \\mathbf{k} &= \\left[ K_{1}, K_{2}, \\,\\dotsc,\\, K_{L}  \\right]^\mathsf{T} \\in \\mathbb{R}^{L} \\\\
+       \\mathbf{\\tau} &= \\left[ \\tau_{1}, \\tau_{2}, \\,\\dotsc,\\, \\tau_{L}  \\right]^\mathsf{T} \\in \\mathbb{R}^{L} \\\\
+       
+    directly.
+    Refer to :doc:`/api/channel.multipath_fading_channel` for a detailed description of the channel model.
+
+    The following minimal example outlines how to configure the channel model
+    within the context of a :doc:`simulation.simulation.Simulation`:
+
+    .. literalinclude:: ../scripts/examples/channel_MultipathFadingChannel.py
+       :language: python
+       :linenos:
+       :lines: 12-40
+
     """
 
     yaml_tag = "MultipathFading"
-    serialized_attributes = {"impulse_response_interpolation", "interpolate_signals"}
 
-    delay_resolution_error: float = 0.4
     __delays: np.ndarray
     __power_profile: np.ndarray
     __rice_factors: np.ndarray
     __max_delay: float
     __num_resolvable_paths: int
     __num_sinusoids: int
-    __los_angle: Optional[float]
-    los_gains: np.ndarray
+    __los_angle: float | None
+    __los_gains: np.ndarray
     __doppler_frequency: float
-    __los_doppler_frequency: Optional[float]
-    # Correlation of the first device
-    __alpha_correlation: Optional[AntennaCorrelation]
-    # Correlation of the second device
-    __beta_correlation: Optional[AntennaCorrelation]
-    interpolate_signals: bool
+    __los_doppler_frequency: float | None
+    __alpha_correlation: AntennaCorrelation | None
+    __beta_correlation: AntennaCorrelation | None
 
     def __init__(
         self,
-        delays: Union[np.ndarray, List[float]],
-        power_profile: Union[np.ndarray, List[float]],
-        rice_factors: Union[np.ndarray, List[float]],
-        num_sinusoids: Optional[int] = None,
-        los_angle: Optional[float] = None,
-        doppler_frequency: Optional[float] = None,
-        los_doppler_frequency: Optional[float] = None,
-        interpolate_signals: bool = None,
-        alpha_correlation: Optional[AntennaCorrelation] = None,
-        beta_correlation: Optional[AntennaCorrelation] = None,
+        delays: np.ndarray | List[float],
+        power_profile: np.ndarray | List[float],
+        rice_factors: np.ndarray | List[float],
+        alpha_device: SimulatedDevice | None = None,
+        beta_device: SimulatedDevice | None = None,
+        gain: float = 1.0,
+        num_sinusoids: int | None = None,
+        los_angle: float | None = None,
+        doppler_frequency: float | None = None,
+        los_doppler_frequency: float | None = None,
+        alpha_correlation: AntennaCorrelation | None = None,
+        beta_correlation: AntennaCorrelation | None = None,
         **kwargs: Any,
     ) -> None:
         """
         Args:
-            delays (np.ndarray):
+
+            delays (numpy.ndarray):
                 Delay in seconds of each individual multipath tap.
+                Denoted by :math:`\\tau_{\\ell}` within the respective equations.
 
-            power_profile (np.ndarray):
+            power_profile (numpy.ndarray):
                 Power loss factor of each individual multipath tap.
+                Denoted by :math:`g_{\\ell}` within the respective equations.
 
-            rice_factors (np.ndarray):
+            rice_factors (numpy.ndarray):
                 Rice factor balancing line of sight and multipath in each individual channel tap.
+                Denoted by :math:`K_{\\ell}` within the respective equations.
 
-            transmitter (Transmitter, optional):
-                The modem transmitting into this channel.
+            alpha_device (Device, optional):
+                First device linked by the :class:`.MultipathFadingChannel` instance that generated this realization.
 
-            receiver (Receiver, optional):
-                The modem receiving from this channel.
-
-            scenario (Scenario, optional):
-                The scenario this channel is attached to.
-
-            active (bool, optional):
-                Channel activity flag.
+            beta_device (Device, otional):
+                Second device linked by the :class:`.MultipathFadingChannel` instance that generated this realization.
 
             gain (float, optional):
-                Channel power gain.
-
-            random_generator (rnd.Generator, optional):
-                Generator object for random number sequences.
+                Linear power gain factor a signal experiences when being propagated over this realization.
+                :math:`1.0` by default.
 
             num_sinusoids (int, optional):
                 Number of sinusoids used to sample the statistical distribution.
+                Denoted by :math:`N` within the respective equations.
 
             los_angle (float, optional):
                 Angle phase of the line of sight component within the statistical distribution.
 
             doppler_frequency (float, optional):
                 Doppler frequency shift of the statistical distribution.
+                Denoted by :math:`\\omega_{\\ell}` within the respective equations.
 
             alpha_correlation(AntennaCorrelation, optional):
                 Antenna correlation model at the first device.
@@ -240,11 +721,11 @@ class MultipathFadingChannel(Channel, Serializable):
                 Channel base class initialization parameters.
 
         Raises:
-            ValueError:
-                If the length of `delays`, `power_profile` and `rice_factors` is not identical.
-                If delays are smaller than zero.
-                If power factors are smaller than zero.
-                If rice factors are smaller than zero.
+
+            ValueError: If the length of `delays`, `power_profile` and `rice_factors` is not identical.
+            ValueError: If delays are smaller than zero.
+            ValueError: If power factors are smaller than zero.
+            ValueError: If rice factors are smaller than zero.
         """
 
         # Convert delays, power profile and rice factors to numpy arrays if they were provided as lists
@@ -280,7 +761,6 @@ class MultipathFadingChannel(Channel, Serializable):
         self.los_angle = los_angle
         self.doppler_frequency = 0.0 if doppler_frequency is None else doppler_frequency
         self.__los_doppler_frequency = None
-        self.interpolate_signals = interpolate_signals
         self.alpha_correlation = None
         self.beta_correlation = None
 
@@ -293,16 +773,16 @@ class MultipathFadingChannel(Channel, Serializable):
 
         rice_inf_pos = np.isposinf(self.__rice_factors)
         rice_num_pos = np.invert(rice_inf_pos)
-        self.los_gains = np.empty(self.num_resolvable_paths, dtype=float)
-        self.non_los_gains = np.empty(self.num_resolvable_paths, dtype=float)
+        self.__los_gains = np.empty(self.num_resolvable_paths, dtype=float)
+        self.__non_los_gains = np.empty(self.num_resolvable_paths, dtype=float)
 
-        self.los_gains[rice_inf_pos] = 1.0
-        self.los_gains[rice_num_pos] = np.sqrt(self.__rice_factors[rice_num_pos] / (1 + self.__rice_factors[rice_num_pos]))
-        self.non_los_gains[rice_num_pos] = 1 / np.sqrt(1 + self.__rice_factors[rice_num_pos])
-        self.non_los_gains[rice_inf_pos] = 0.0
+        self.__los_gains[rice_inf_pos] = 1.0
+        self.__los_gains[rice_num_pos] = np.sqrt(self.__rice_factors[rice_num_pos] / (1 + self.__rice_factors[rice_num_pos]))
+        self.__non_los_gains[rice_num_pos] = 1 / np.sqrt(1 + self.__rice_factors[rice_num_pos])
+        self.__non_los_gains[rice_inf_pos] = 0.0
 
         # Initialize base class
-        Channel.__init__(self, **kwargs)
+        Channel.__init__(self, alpha_device, beta_device, gain, **kwargs)
 
         # Update correlations (required here to break dependency cycle during init)
         self.alpha_correlation = alpha_correlation
@@ -310,60 +790,67 @@ class MultipathFadingChannel(Channel, Serializable):
 
     @property
     def delays(self) -> np.ndarray:
-        """Access configured path delays.
+        """Delays for each propagation path in seconds.
 
-        Returns:
-            np.ndarray: Path delays.
+        Represented by the sequence
+
+        .. math::
+
+           \\left[\\tau_{1},\\, \\dotsc,\\, \\tau_{L} \\right]^{\\mathsf{T}} \\in \\mathbb{R}_{+}^{L}
+
+        of :math:`L` propagtion delays within the respective equations.
         """
 
         return self.__delays
 
     @property
     def power_profile(self) -> np.ndarray:
-        """Access configured power profile.
+        """Gain factors of each propagation path.
 
-        Returns:
-            np.ndarray: Power profile.
+        Represented by the sequence
+
+        .. math::
+
+           \\left[g_{1},\\, \\dotsc,\\, g_{L} \\right]^{\\mathsf{T}} \\in \\mathbb{R}_{+}^{L}
+
+        of :math:`L` propagtion factors within the respective equations.
         """
 
         return self.__power_profile
 
     @property
     def rice_factors(self) -> np.ndarray:
-        """Access configured rice factors.
+        """Rice factors balancing line of sight and non-line of sight power components for each propagation path.
 
-        Returns:
-            np.ndarray: Rice factors.
+        Represented by the sequence
+
+        .. math::
+
+           \\left[K_{1},\\, \\dotsc,\\, K_{L} \\right]^{\\mathsf{T}} \\in \\mathbb{R}_{+}^{L}
+
+        of :math:`L` factors within the respective equations.
         """
 
         return self.__rice_factors
 
     @property
     def doppler_frequency(self) -> float:
-        """Access doppler frequency shift.
+        """Doppler frequency in :math:`Hz`.
 
-        Returns:
-            float: Doppler frequency shift in Hz.
+        Represented by :math:`\\omega` within the respective equations.
         """
 
         return self.__doppler_frequency
 
     @doppler_frequency.setter
     def doppler_frequency(self, frequency: float) -> None:
-        """Modify doppler frequency shift configuration.
-
-        Args:
-            frequency (float): New doppler frequency shift in Hz.
-        """
-
         self.__doppler_frequency = frequency
 
     @property
     def los_doppler_frequency(self) -> float:
-        """Access doppler frequency shift of the line of sight component.
+        """Line of sight Doppler frequency in :math:`Hz`.
 
-        Returns:
-            float: Doppler frequency shift in Hz.
+        Represented by :math:`\\omega` within the respective equations.
         """
 
         if self.__los_doppler_frequency is None:
@@ -372,227 +859,113 @@ class MultipathFadingChannel(Channel, Serializable):
         return self.__los_doppler_frequency
 
     @los_doppler_frequency.setter
-    def los_doppler_frequency(self, frequency: Optional[float]) -> None:
-        """Modify doppler frequency shift configuration of the line of sigh component.
-
-        Args:
-            frequency (Optional[float]): New doppler frequency shift in Hz.
-        """
-
+    def los_doppler_frequency(self, frequency: float | None) -> None:
         self.__los_doppler_frequency = frequency
 
     @property
     def max_delay(self) -> float:
-        """Access the maximum multipath delay.
-
-        Returns:
-            float: The maximum delay.
-        """
+        """Maximum propagation delay in seconds."""
 
         return self.__max_delay
 
     @property
     def num_resolvable_paths(self) -> int:
-        """Access the configured number of fading sequences generating a single impulse response.
+        """Number of dedicated propagation paths.
 
-        Returns:
-            int: The number of sequences.
+        Represented by :math:`L` within the respective equations.
         """
 
         return self.__num_resolvable_paths
 
     @property
     def num_sinusoids(self) -> int:
-        """Access the configured number of sinusoids within one fading sequence.
+        """Number of sinusoids assumed to model the fading in time-domain.
 
-        Returns:
-            int: The number of sinusoids.
+        Represented by :math:`N` within the respective equations.
+
+        Raises:
+
+            ValueError: For values smaller than zero.
         """
 
         return self.__num_sinusoids
 
     @num_sinusoids.setter
     def num_sinusoids(self, num: int) -> None:
-        """Modify the configured number of sinusoids within one fading sequence.
-
-        Args:
-            num (int): The new number of sinusoids.
-
-        Raises:
-            ValueError: If `num` is smaller than zero.
-        """
-
         if num < 0:
             raise ValueError("Number of sinusoids must be greater or equal to zero")
 
         self.__num_sinusoids = num
 
     @property
-    def los_angle(self) -> Optional[float]:
-        """Access configured angle of arrival of the specular model component.
+    def los_angle(self) -> float | None:
+        """Line of sight doppler angle in radians.
 
-        Returns:
-            Optional[float]: The AoA in radians, `None` if it is not configured.
+        Represented by :math:`\\theta_{0}` within the respective equations.
         """
 
         return self.__los_angle
 
     @los_angle.setter
-    def los_angle(self, angle: Optional[float]) -> None:
-        """Access configured angle of arrival of the specular model component.
-
-        Args:
-            angle (Optional[float]): The new angle of arrival in radians.
-        """
-
+    def los_angle(self, angle: float | None) -> None:
         self.__los_angle = angle
 
-    def realize(self, num_samples: int, sampling_rate: float) -> ChannelRealization:
-        max_delay_in_samples = int(self.__delays[-1] * sampling_rate)
-        timestamps = np.arange(num_samples) / sampling_rate
-
-        impulse_response = np.zeros((self.receiver.antennas.num_antennas, self.transmitter.antennas.num_antennas, num_samples, max_delay_in_samples + 1), dtype=complex)
-
-        interpolation_filter: Optional[np.ndarray] = None
-        if self.impulse_response_interpolation:
-            interpolation_filter = self.interpolation_filter(sampling_rate)
-
-        for power, path_idx, los_gain, nlos_gain in zip(self.__power_profile, range(self.num_resolvable_paths), self.los_gains, self.non_los_gains):
-            for rx_idx, tx_idx in product(range(self.transmitter.antennas.num_antennas), range(self.receiver.antennas.num_antennas)):
-                signal_weights = power**0.5 * self.__tap(timestamps, los_gain, nlos_gain)
-
-                if interpolation_filter is not None:
-                    impulse_response[rx_idx, tx_idx, :, :] += np.outer(signal_weights, interpolation_filter[path_idx, :])
-
-                else:
-                    delay_idx = int(self.__delays[path_idx] * sampling_rate)
-                    impulse_response[rx_idx, tx_idx, :, delay_idx] += signal_weights
-
-        # Force a signal covariance at the transmitter if configured
-        if self.alpha_correlation is not None:
-            alpha_covariance = self.alpha_correlation.covariance
-            impulse_response = np.tensordot(alpha_covariance, impulse_response, (0, 1)).transpose((1, 0, 2, 3))
-
-        # Force a signal covariance at the receiver if configured
-        if self.beta_correlation is not None:
-            beta_covariance = self.beta_correlation.covariance
-            impulse_response = np.tensordot(beta_covariance, impulse_response, (0, 0))
-
-        return ChannelRealization(self, np.sqrt(self.gain) * impulse_response)
-
-    def __tap(self, timestamps: np.ndarray, los_gain: complex, nlos_gain: complex) -> np.ndarray:
-        """Generate a single fading sequence tap.
-
-        Implements equation (18) of the underlying paper.
-
-        Args:
-
-            timestamps (np.ndarray):
-                Time instances at which the channel should be sampled.
-
-            los_gain (complex):
-                Gain of the line-of-sight (specular) model component.
-
-            nlos_gain (complex):
-                Gain of the non-line-of-sight model components.
-
-        Returns:
-
-            np.ndarray:
-                Channel gains at requested timestamps.
-        """
-
-        nlos_doppler = self.doppler_frequency
-        nlos_angles = self._rng.uniform(0, 2 * pi, self.num_sinusoids)
-        nlos_phases = self._rng.uniform(0, 2 * pi, self.num_sinusoids)
-
-        nlos_component = np.zeros(len(timestamps), dtype=complex)
-        for s in range(self.num_sinusoids):
-            nlos_component += exp(1j * (nlos_doppler * timestamps * cos((2 * pi * s + nlos_angles[s]) / self.num_sinusoids) + nlos_phases[s]))
-
-        nlos_component *= nlos_gain * (self.num_sinusoids**-0.5)
-
-        if self.los_angle is not None:
-            los_angle = self.los_angle
-
-        else:
-            los_angle = self._rng.uniform(0, 2 * pi)
-
-        los_doppler = self.los_doppler_frequency
-        los_phase = self._rng.uniform(0, 2 * pi)
-        los_component = los_gain * exp(1j * (los_doppler * timestamps * cos(los_angle) + los_phase))
-        return los_component + nlos_component
-
-    def interpolation_filter(self, sampling_rate: float) -> np.ndarray:
-        """Create an interpolation filter matrix.
-
-        Args:
-            sampling_rate: The sampling rate to which to interpolate.
-
-        Returns:
-            np.ndarray:
-                Interpolation filter matrix containing filters for each configured resolvable path.
-        """
-
-        num_delay_samples = int(self.__delays[-1] * sampling_rate)
-        filter_instances = np.empty((self.num_resolvable_paths, num_delay_samples + 1), float)
-
-        for path_idx, delay in enumerate(self.__delays):
-            resampling_matrix = delay_resampling_matrix(sampling_rate, 1, delay, num_delay_samples + 1)
-            filter_instances[path_idx, :] = resampling_matrix[:, 0] / np.linalg.norm(resampling_matrix)
-
-        return filter_instances
+    def _realize(self) -> MultipathFadingRealization:
+        return MultipathFadingRealization.Realize(self.alpha_device, self.beta_device, self.gain, self.__power_profile, self.__delays, self.__los_gains, self.__non_los_gains, self.los_doppler_frequency, self.doppler_frequency, self.alpha_correlation, self.beta_correlation, self.los_angle, self.__num_sinusoids, self._rng)
 
     @property
-    def alpha_correlation(self) -> Optional[AntennaCorrelation]:
+    def alpha_correlation(self) -> AntennaCorrelation | None:
         """Antenna correlation at the first device.
 
         Returns:
             Handle to the correlation model.
-            `None`, if not model was configured and ideal correlation is assumed.
+            :py:obj:`None`, if no model was configured and ideal correlation is assumed.
         """
 
         return self.__alpha_correlation
 
     @alpha_correlation.setter
-    def alpha_correlation(self, value: AntennaCorrelation) -> None:
+    def alpha_correlation(self, value: AntennaCorrelation | None) -> None:
         if value is not None:
             value.channel = self
-            value.device = self.transmitter
+            value.device = self.alpha_device
 
         self.__alpha_correlation = value
 
     @property
-    def beta_correlation(self) -> Optional[AntennaCorrelation]:
+    def beta_correlation(self) -> AntennaCorrelation | None:
         """Antenna correlation at the second device.
 
         Returns:
             Handle to the correlation model.
-            `None`, if not model was configured and ideal correlation is assumed.
+            :py:obj:`None`, if no model was configured and ideal correlation is assumed.
         """
 
         return self.__beta_correlation
 
     @beta_correlation.setter
-    def beta_correlation(self, value: AntennaCorrelation) -> None:
+    def beta_correlation(self, value: AntennaCorrelation | None) -> None:
         if value is not None:
             value.channel = self
-            value.device = self.receiver
+            value.device = self.beta_device
 
         self.__beta_correlation = value
 
-    @Channel.transmitter.setter  # type: ignore
-    def transmitter(self, value: SimulatedDevice) -> None:
-        Channel.transmitter.fset(self, value)  # type: ignore
+    @Channel.alpha_device.setter  # type: ignore
+    def alpha_device(self, value: SimulatedDevice) -> None:
+        Channel.alpha_device.fset(self, value)  # type: ignore
 
         # Register new device at correlation model
         if self.alpha_correlation is not None:
             self.alpha_correlation.device = value
 
-    @Channel.receiver.setter  # type: ignore
-    def receiver(self, value: SimulatedDevice) -> None:
-        Channel.receiver.fset(self, value)  # type: ignore
+    @Channel.beta_device.setter  # type: ignore
+    def beta_device(self, value: SimulatedDevice) -> None:
+        Channel.beta_device.fset(self, value)  # type: ignore
 
         # Register new device at correlation model
         if self.beta_correlation is not None:
             self.beta_correlation.device = value
+
+    def recall_realization(self, group: Group) -> MultipathFadingRealization:
+        return MultipathFadingRealization.From_HDF(group, self.alpha_device, self.beta_device)

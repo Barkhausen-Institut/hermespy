@@ -280,7 +280,7 @@ class TestProcessedDeviceInput(TestCase):
     def setUp(self) -> None:
         
         self.impinging_signals = [Signal(np.random.standard_normal((2, 10)), 1.)]
-        self.operator_inputs = [(self.impinging_signals[0], None)]
+        self.operator_inputs = [self.impinging_signals[0],]
         
         self.input = ProcessedDeviceInput(self.impinging_signals, self.operator_inputs)
         
@@ -317,7 +317,7 @@ class TestDeviceReception(TestCase):
     def setUp(self) -> None:
         
         self.impinging_signals = [Signal(np.random.standard_normal((2, 10)), 1.)]
-        self.operator_inputs = [(self.impinging_signals[0], None)]
+        self.operator_inputs = [self.impinging_signals[0],]
         self.operator_receptions = [Reception(Signal(np.random.standard_normal((2, 10)), 1.))]
         self.reception = DeviceReception(self.impinging_signals, self.operator_inputs, self.operator_receptions)
         
@@ -333,23 +333,18 @@ class TestDeviceReception(TestCase):
         
     def test_hdf_serialization(self) -> None:
         """Test HDF roundtrip serialization"""
-        
-        with TemporaryDirectory() as tempdir:
-            
-            file_path = join(tempdir, 'test.hdf')
 
-            file = File(file_path, 'w')
-            group = file.create_group('g1')
-            self.reception.to_HDF(group)
-            file.close()
-            
-            file = File(file_path, 'r')
-            deserialized_reception = DeviceReception.from_HDF(file['g1'])
-            recalled_reception = DeviceReception.Recall(file['g1'], self.device)
-            file.close()
+        file = File('test.h5', 'w', driver='core', backing_store=False)
+        group = file.create_group('g1')
         
-            assert_array_equal(self.operator_receptions[0].signal.samples, deserialized_reception.operator_receptions[0].signal.samples)
-            assert_array_equal(self.operator_receptions[0].signal.samples, recalled_reception.operator_receptions[0].signal.samples)
+        self.reception.to_HDF(group)
+        deserialized_reception = DeviceReception.from_HDF(file['g1'])
+        recalled_reception = DeviceReception.Recall(file['g1'], self.device)
+
+        file.close()
+        
+        assert_array_equal(self.operator_receptions[0].signal.samples, deserialized_reception.operator_receptions[0].signal.samples)
+        assert_array_equal(self.operator_receptions[0].signal.samples, recalled_reception.operator_receptions[0].signal.samples)
 
 
 class MixingOperatorMock(MixingOperator):
@@ -422,7 +417,7 @@ class ReceiverMock(Receiver):
 
         Receiver.__init__(self, *args, **kwargs)
 
-    def _receive(self, signal, csi) -> Reception:
+    def _receive(self, signal) -> Reception:
         return Reception(Signal)
 
     @property
@@ -468,14 +463,12 @@ class TestReceiver(TestCase):
         self.assertIs(reference, self.receiver.reference)
 
     def test_cache_reception(self) -> None:
-        """Cached receptions should be returned by the signal and csi properties"""
+        """Cached receptions should be returned by the signal and channel realization properties"""
 
         signal = Mock()
-        csi = Mock()
-        self.receiver.cache_reception(signal, csi)
+        self.receiver.cache_reception(signal)
 
         self.assertIs(signal, self.receiver.signal)
-        self.assertIs(csi, self.receiver.csi)
         
     def test_receive_validation(self) -> None:
         """Receiving without cached reception should raise RuntimeError"""
@@ -486,8 +479,7 @@ class TestReceiver(TestCase):
     def test_receive(self) -> None:
         
         signal = Mock()
-        csi = Mock()
-        self.receiver.cache_reception(signal, csi)
+        self.receiver.cache_reception(signal)
         reception = self.receiver.receive(cache=True)
         
         self.assertIs(reception, self.receiver.reception)
@@ -882,15 +874,14 @@ class TestDevice(TestCase):
         """Receive operators property should return the proper operators"""
         
         signal = Mock()
-        csi = Mock()
         self.receiver = ReceiverMock()
         self.device.receivers.add(self.receiver)
-        self.receiver.cache_reception(signal, csi)
+        self.receiver.cache_reception(signal)
         
         operator_receptions = self.device.receive_operators()
         self.assertSequenceEqual([self.receiver.reception], operator_receptions)
         
-        operator_receptions = self.device.receive_operators([(signal, csi),])
+        operator_receptions = self.device.receive_operators([signal,])
         self.assertSequenceEqual([self.receiver.reception], operator_receptions)
 
         impinging_signals = [Signal(np.random.standard_normal((1, 10)), self.device.sampling_rate, self.device.carrier_frequency)]

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 # pragma: no cover
-"""Matlab interface to the Quadriga channel model."""
 
 from __future__ import annotations
 
@@ -52,13 +51,13 @@ class QuadrigaMatlabInterface(QuadrigaInterface):
                 else:  # pragma: no cover
                     value = matlab.object(value.tolist())
 
-            elif isinstance(value, float):
+            elif isinstance(value, float):  # pragma: no cover
                 value = matlab.double(value)
 
-            elif isinstance(value, int):
+            elif isinstance(value, int):  # pragma: no cover
                 value = matlab.int32(value)
 
-            else:
+            else:  # pragma: no cover
                 value = matlab.object(value)
 
             self.__engine.workspace[key] = value

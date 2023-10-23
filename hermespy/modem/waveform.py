@@ -8,11 +8,12 @@ Communication Waveform Base
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from math import ceil
-from typing import Generic, TYPE_CHECKING, Optional, Tuple, TypeVar, List
+from typing import Generic, TYPE_CHECKING, Optional, TypeVar, List
 
 import numpy as np
+from sparse import GCXS  # type: ignore
 
-from hermespy.core import ChannelStateInformation, Serializable, Signal, ChannelStateFormat
+from hermespy.core import Serializable, Signal
 from hermespy.modem.tools.psk_qam_mapping import PskQamMapping
 from .symbols import StatedSymbols, Symbols
 
@@ -97,10 +98,10 @@ class Synchronization(Generic[WaveformType], ABC, Serializable):
         if self.__waveform_generator is None:
             raise RuntimeError("Trying to synchronize with a floating synchronization routine")
 
-        # samples_per_frame = self.__waveform_generator.samples_in_frame
-        # num_frames = int(signal.shape[1] / samples_per_frame)
+        samples_per_frame = self.waveform_generator.samples_per_frame
+        num_frames = signal.shape[1] // samples_per_frame
 
-        return [0]
+        return [] if num_frames < 1 else [0]
 
 
 class ChannelEstimation(Generic[WaveformType], Serializable):
@@ -133,12 +134,21 @@ class ChannelEstimation(Generic[WaveformType], Serializable):
     def waveform_generator(self, value: Optional[WaveformType]) -> None:
         """Set waveform generator this synchronization routine is attached to."""
 
-        if self.__waveform_generator is not None:
-            raise RuntimeError("Error trying to re-attach already attached synchronization routine.")
+        if value is None:
+            waveform_generator = self.__waveform_generator
+            self.__waveform_generator = None
 
-        self.__waveform_generator = value
+            if waveform_generator is not None:
+                waveform_generator.channel_estimation = ChannelEstimation()
 
-    def estimate_channel(self, symbols: Symbols) -> Tuple[StatedSymbols, ChannelStateInformation]:
+        else:
+            if self.__waveform_generator is not value and self.__waveform_generator is not None:
+                self.__waveform_generator.channel_estimation = ChannelEstimation()
+
+            self.__waveform_generator = value
+            value.channel_estimation = self
+
+    def estimate_channel(self, symbols: Symbols, delay: float = 0.0) -> StatedSymbols:
         """Estimate the wireless channel of a received communication frame.
 
         Args:
@@ -146,43 +156,14 @@ class ChannelEstimation(Generic[WaveformType], Serializable):
             symbols (Symbols):
                 Demodulated communication symbols.
 
+            delay (float, optional):
+                The considered frame's delay offset to the drop start in seconds.
+
         Returns: The symbols and their respective channel states.
         """
 
-        state = np.ones((symbols.num_streams, 1, symbols.num_blocks, symbols.num_symbols), dtype=complex)
-        return StatedSymbols(symbols.raw, state), ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE, state)
-
-
-class IdealChannelEstimation(Generic[WaveformType], ChannelEstimation[WaveformType]):
-    """Channel estimation accessing the ideal channel state informaion.
-
-    This type of channel estimation is only available during simulation runtime.
-    """
-
-    yaml_tag = "IdealChannelEstimation"
-
-    def _csi(self) -> ChannelStateInformation:
-        """Query the ideal channel state information.
-
-        Returns: Ideal channel state information of the most recent reception.
-
-        Raises:
-
-            RuntimeError: If the estimation routine is not attached.
-            RuntimeError: If no channel state is available.
-        """
-
-        if self.waveform_generator is None:
-            raise RuntimeError("Ideal channel state estimation routine floating")
-
-        if self.waveform_generator.modem is None or self.waveform_generator.modem.receiving_device is None:
-            raise RuntimeError("Operating modem floating")
-
-        cached_csi = self.waveform_generator.modem.csi
-        if cached_csi is None:
-            raise RuntimeError("No ideal channel state information available")
-
-        return cached_csi
+        state = GCXS.from_numpy(np.ones((symbols.num_streams, 1, symbols.num_blocks, symbols.num_symbols), dtype=complex))
+        return StatedSymbols(symbols.raw, state)
 
 
 class ChannelEqualization(Generic[WaveformType], ABC, Serializable):
@@ -241,15 +222,15 @@ class ZeroForcingChannelEqualization(Generic[WaveformType], ChannelEqualization[
     """YAML serialization tag"""
 
     def equalize_channel(self, symbols: StatedSymbols) -> Symbols:
+        equalized_symbols: np.ndarray
+
         if symbols.num_streams < 2:
             summed_tx_states = np.sum(symbols.states, axis=1, keepdims=False)
             equalized_symbols = symbols.raw / summed_tx_states
 
         else:
-            equalized_symbols = np.empty((symbols.num_transmit_streams, symbols.num_blocks, symbols.num_symbols), dtype=np.complex_)
-            for b, s in np.ndindex(symbols.num_blocks, symbols.num_symbols):
-                equalization = np.linalg.pinv(symbols.states[:, :, b, s])
-                equalized_symbols[:, b, s] = np.dot(equalization, symbols.raw[:, b, s])
+            equalization = np.linalg.pinv(symbols.dense_states().transpose((2, 3, 0, 1)))
+            equalized_symbols = np.einsum("ijkl,lij->kij", equalization, symbols.raw)
 
         return Symbols(equalized_symbols)
 
@@ -377,17 +358,20 @@ class WaveformGenerator(ABC, Serializable):
 
         return int(np.log2(self.modulation_order))
 
-    def bits_per_frame(self, num_data_symbols: int) -> int:
+    def bits_per_frame(self, num_data_symbols: int | None = None) -> int:
         """Number of bits required to generate a single data frame.
 
         Args:
 
             num_data_symbols (int):
                 Number of unique data symbols contained within the frame.
+                If not specified, the waveform's default number of data symbols will be assumed.
 
         Returns: Number of bits.
         """
-        return num_data_symbols * self.bits_per_symbol
+
+        _num_data_symbols = self.num_data_symbols if num_data_symbols is None else num_data_symbols
+        return _num_data_symbols * self.bits_per_symbol
 
     @property
     @abstractmethod
@@ -532,8 +516,8 @@ class WaveformGenerator(ABC, Serializable):
         """
         ...  # pragma: no cover
 
-    def estimate_channel(self, frame: Symbols) -> Tuple[StatedSymbols, ChannelStateInformation]:
-        return self.channel_estimation.estimate_channel(frame)
+    def estimate_channel(self, frame: Symbols, frame_delay: float = 0.0) -> StatedSymbols:
+        return self.channel_estimation.estimate_channel(frame, frame_delay)
 
     def equalize_symbols(self, symbols: StatedSymbols) -> Symbols:
         return self.channel_equalization.equalize_channel(symbols)
@@ -588,14 +572,19 @@ class WaveformGenerator(ABC, Serializable):
                 If the `modem` does not reference this generator.
         """
 
-        if handle is None and self.__modem is None:
-            return
+        if handle is None:
+            modem = self.__modem
+            self.__modem = None
 
-        if handle.waveform_generator is not self:
-            handle.waveform_generator = self
+            if modem is not None:
+                modem.waveform_generator = None
 
-        self.__modem = handle
-        self.random_mother = handle
+        else:
+            if handle.waveform_generator is not self:
+                handle.waveform_generator = self
+
+            self.__modem = handle
+            self.random_mother = handle
 
     @property
     def synchronization(self) -> Synchronization:

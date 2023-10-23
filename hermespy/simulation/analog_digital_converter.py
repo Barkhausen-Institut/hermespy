@@ -413,7 +413,7 @@ class AnalogDigitalConverter(Serializable):
         """
 
         num_frame_samples = int(round(frame_duration * input_signal.sampling_rate)) if frame_duration > 0 else input_signal.num_samples
-        num_frames = int(np.ceil(input_signal.num_samples / num_frame_samples))
+        num_frames = int(np.ceil(input_signal.num_samples / num_frame_samples)) if num_frame_samples > 0 else 0
         converted_signal = Signal.empty(input_signal.sampling_rate, input_signal.num_streams, 0, carrier_frequency=input_signal.carrier_frequency)
 
         # Iterate over each frame independtenly

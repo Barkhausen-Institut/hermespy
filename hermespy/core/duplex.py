@@ -10,7 +10,6 @@ from abc import abstractmethod
 from h5py import Group
 from typing import Generic
 
-from .channel_state_information import ChannelStateInformation
 from .device import Device, OperatorSlot, ReceptionType, Receiver, SNRType, TransmissionType, Transmitter
 from .signal_model import Signal
 
@@ -71,16 +70,12 @@ class DuplexOperator(Transmitter[TransmissionType], Receiver[ReceptionType], Gen
 
         Transmitter.slot.fset(self, value)
 
-    @property
-    def csi(self) -> ChannelStateInformation | None:
-        return Receiver.csi.fget(self)  # type: ignore
-
     @abstractmethod
     def _transmit(self, duration: float = 0.0) -> TransmissionType:
         ...  # pragma: no cover
 
     @abstractmethod
-    def _receive(self, signal: Signal, csi: ChannelStateInformation) -> ReceptionType:
+    def _receive(self, signal: Signal) -> ReceptionType:
         ...  # pragma: no cover
 
     @property
