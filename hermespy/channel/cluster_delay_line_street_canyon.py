@@ -1,11 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-===========================================
-3GPP Street Canyon (Urban Microcells) Model
-===========================================
-
-Implements several parameter sets defined within the 3GPP standard modeling specific scenarios.
-"""
 
 from abc import ABCMeta
 from math import log10
@@ -26,7 +19,19 @@ __status__ = "Prototype"
 
 
 class StreetCanyonLineOfSight(ClusterDelayLineBase, Serializable):
-    """Parameter Preset for the 3GPP Cluster Delay Line Urban Microcells Street Canyon Model."""
+    """3GPP cluster delay line preset modeling an urban street canyon with direct
+    line of sight between the linked wireless devices.
+
+    Refer to the :footcite:t:`3GPP:TR38901` for detailed information.
+
+    The following minimal example outlines how to configure the channel model
+    within the context of a :doc:`simulation.simulation.Simulation`:
+
+    .. literalinclude:: ../scripts/examples/channel_cdl_street_canyon_los.py
+       :language: python
+       :linenos:
+       :lines: 12-40
+    """
 
     yaml_tag = "StreetCanyonLOS"
     """YAML serialization tag."""
@@ -69,8 +74,8 @@ class StreetCanyonLineOfSight(ClusterDelayLineBase, Serializable):
 
     @property
     def zod_spread_mean(self) -> float:
-        device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
-        terminal_height = abs(self.transmitter.position[2] - self.receiver.position[2])
+        device_distance = np.linalg.norm(self.beta_device.position - self.alpha_device.position, 2)
+        terminal_height = abs(self.alpha_device.position[2] - self.beta_device.position[2])
 
         return max(-0.21, -148e-4 * device_distance + 0.01 * terminal_height + 0.83)
 
@@ -112,7 +117,7 @@ class StreetCanyonLineOfSight(ClusterDelayLineBase, Serializable):
 
     @property
     def cluster_delay_spread(self) -> float:
-        return 5.0
+        return 5.0 * 1e-9
 
     @property
     def cluster_aod_spread(self) -> float:
@@ -140,8 +145,8 @@ class UrbanMicroCellsNoLineOfSight(ClusterDelayLineBase, metaclass=ABCMeta):
 
     @property
     def zod_spread_mean(self) -> float:
-        device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
-        terminal_height = abs(self.transmitter.position[2] - self.receiver.position[2])
+        device_distance = np.linalg.norm(self.beta_device.position - self.alpha_device.position, 2)
+        terminal_height = abs(self.alpha_device.position[2] - self.beta_device.position[2])
 
         return max(-0.5, -31e-4 * device_distance + 0.01 * terminal_height + 0.2)
 
@@ -151,12 +156,24 @@ class UrbanMicroCellsNoLineOfSight(ClusterDelayLineBase, metaclass=ABCMeta):
 
     @property
     def zod_offset(self) -> float:
-        device_distance = float(np.linalg.norm(self.receiver.position - self.transmitter.position, 2))
+        device_distance = float(np.linalg.norm(self.beta_device.position - self.alpha_device.position, 2))
         return -(10 ** (-1.5 * log10(max(10, device_distance)) + 3.3))
 
 
 class StreetCanyonNoLineOfSight(UrbanMicroCellsNoLineOfSight, Serializable):
-    """Parameter Preset for the 3GPP Cluster Delay Line Urban Microcells Street Canyon Model."""
+    """3GPP cluster delay line preset modeling an urban street canyon without direct
+    line of sight between the linked wireless devices.
+
+    Refer to the :footcite:t:`3GPP:TR38901` for detailed information.
+
+    The following minimal example outlines how to configure the channel model
+    within the context of a :doc:`simulation.simulation.Simulation`:
+
+    .. literalinclude:: ../scripts/examples/channel_cdl_street_canyon_nlos.py
+       :language: python
+       :linenos:
+       :lines: 12-40
+    """
 
     yaml_tag = "StreetCanyonNLOS"
     """YAML serialization tag."""
@@ -227,7 +244,7 @@ class StreetCanyonNoLineOfSight(UrbanMicroCellsNoLineOfSight, Serializable):
 
     @property
     def cluster_delay_spread(self) -> float:
-        return 11.0
+        return 11.0 * 1e-9
 
     @property
     def cluster_aod_spread(self) -> float:
@@ -251,7 +268,19 @@ class StreetCanyonNoLineOfSight(UrbanMicroCellsNoLineOfSight, Serializable):
 
 
 class StreetCanyonOutsideToInside(UrbanMicroCellsNoLineOfSight, Serializable):
-    """Parameter Preset for the 3GPP Cluster Delay Line Urban Microcells Street Canyon Model."""
+    """3GPP cluster delay line preset modeling an urban street canyon with
+    the linked wireless devices being outside and inside a building, respectively.
+
+    Refer to the :footcite:t:`3GPP:TR38901` for detailed information.
+
+    The following minimal example outlines how to configure the channel model
+    within the context of a :doc:`simulation.simulation.Simulation`:
+
+    .. literalinclude:: ../scripts/examples/channel_cdl_street_canyon_o2i.py
+       :language: python
+       :linenos:
+       :lines: 12-40
+    """
 
     yaml_tag = "StreetCanyonO2I"
     """YAML serialization tag."""
@@ -322,7 +351,7 @@ class StreetCanyonOutsideToInside(UrbanMicroCellsNoLineOfSight, Serializable):
 
     @property
     def cluster_delay_spread(self) -> float:
-        return 11.0
+        return 11.0 * 1e-9
 
     @property
     def cluster_aod_spread(self) -> float:

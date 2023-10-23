@@ -108,13 +108,21 @@ class Direction(np.ndarray):
         Returns: The initialized direction.
         """
 
-        vector = vector.flatten()
-        ndmin = len(vector)
+        vector = vector.flatten().astype(np.float_)
+        ndmin = vector.size
         if ndmin > 3:
             raise ValueError("Vector is not a valid cartesian vector")
 
+        if normalize:
+            norm = np.linalg.norm(vector)
+
+            if norm == 0:
+                raise ValueError("Zero-vectors cannot be normalized")
+
+            vector /= norm
+
         unit_vector = np.zeros(3, dtype=np.float_)
-        unit_vector[:ndmin] = vector / np.linalg.norm(vector) if normalize else vector
+        unit_vector[:ndmin] = vector
 
         return unit_vector.view(Direction)
 

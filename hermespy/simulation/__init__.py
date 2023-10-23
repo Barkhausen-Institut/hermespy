@@ -5,6 +5,7 @@ from .analog_digital_converter import AnalogDigitalConverter, Gain, GainControlT
 from .isolation import Isolation, SpecificIsolation, PerfectIsolation, SelectiveLeakage
 from .noise import Noise, AWGN
 from .coupling import Coupling, ImpedanceCoupling, PerfectCoupling
+from .modem import SCIdealChannelEstimation, SingleCarrierIdealChannelEstimation, OFDMIdealChannelEstimation
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -55,4 +56,7 @@ __all__ = [
     "Coupling",
     "ImpedanceCoupling",
     "PerfectCoupling",
+    "SCIdealChannelEstimation",
+    "SingleCarrierIdealChannelEstimation",
+    "OFDMIdealChannelEstimation",
 ]

@@ -1,13 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-============================================
-3GPP Cluster Delay Line Indoor Factory Model
-============================================
 
-Implements several parameter sets defined within the 3GPP standard modeling specific scenarios.
-"""
-
-from abc import ABCMeta
 from math import log10
 from typing import Any
 
@@ -24,38 +16,47 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class IndoorFactoryBase(ClusterDelayLineBase, metaclass=ABCMeta):
+class IndoorFactoryBase(ClusterDelayLineBase):
     """Indoor Factory Cluster Delay Line Model Base."""
 
     __volume: float  # Hall volume in m3
     __surface: float  # Total surface hall area in m2 (walls/floor/ceiling)
 
-    def __init__(self, volume: float, surface: float, **kwargs: Any) -> None:
+    def __init__(self, volume: float, surface: float, alpha_device=None, beta_device=None, gain: float = 1.0, **kwargs: Any) -> None:
         """
         Args:
 
             volume (float):
-                Hall volume in m3.
+                Hall volume in :math:`\\mathrm{m}^3`.
 
             surface (float):
-                Total surface hall area in m2 (walls/floor/ceiling).
+                Total surface hall area in :math:`\\mathrm{m}^2`. (walls/floor/ceiling).
+
+            alpha_device (SimulatedDevice, optional):
+                First device linked by the :class:`.ClusterDelayLine` instance.
+
+            beta_device (SimulatedDevice, optional):
+                Second device linked by the :class:`.ClusterDelayLine` instance.
+
+            gain (float, optional):
+                Linear power gain factor a signal experiences when being propagated over this realization.
+                :math:`1.0` by default.
         """
 
+        # Initialize base class
+        ClusterDelayLineBase.__init__(self, alpha_device, beta_device, gain, **kwargs)
+
+        # Initialize class attributes
         self.volume = volume
         self.surface = surface
-        ClusterDelayLineBase.__init__(self, **kwargs)
 
     @property
     def volume(self) -> float:
-        """Hall volume.
-
-        Returns:
-
-            float: Volume in m3.
+        """Assumed factory hall volume in :math:`\\mathrm{m}^3`.
 
         Raises:
-            ValueError:
-                For volumes smaller or equal to zero.
+
+            ValueError: For values smaller or equal to zero.
         """
 
         return self.__volume
@@ -69,15 +70,11 @@ class IndoorFactoryBase(ClusterDelayLineBase, metaclass=ABCMeta):
 
     @property
     def surface(self) -> float:
-        """Hall surface area.
-
-        Returns:
-
-            float: Surface area in m2.
+        """Assumed factory hall surface in :math:`\\mathrm{m}^2`.
 
         Raises:
-            ValueError:
-                For surfaces areas smaller or equal to zero.
+
+            ValueError: For values smaller or equal to zero.
         """
 
         return self.__surface
@@ -91,10 +88,21 @@ class IndoorFactoryBase(ClusterDelayLineBase, metaclass=ABCMeta):
 
 
 class IndoorFactoryLineOfSight(IndoorFactoryBase, Serializable):
-    """Parameter Preset for the 3GPP Cluster Indoor-Factory Model."""
+    """3GPP cluster delay line preset modeling an indoor factory scenario with direct line of sight
+    between the linked wireless devices.
+
+    Refer to the :footcite:t:`3GPP:TR38901` for detailed information.
+
+    The following minimal example outlines how to configure the channel model
+    within the context of a :doc:`simulation.simulation.Simulation`:
+
+    .. literalinclude:: ../scripts/examples/channel_cdl_indoor_factory_los.py
+       :language: python
+       :linenos:
+       :lines: 12-40
+    """
 
     yaml_tag = "IndoorFactoryLOS"
-    """YAML serialization tag."""
 
     @property
     def line_of_sight(self) -> bool:
@@ -198,10 +206,21 @@ class IndoorFactoryLineOfSight(IndoorFactoryBase, Serializable):
 
 
 class IndoorFactoryNoLineOfSight(IndoorFactoryBase, Serializable):
-    """Parameter Preset for the 3GPP Cluster Indoor-Factory Model."""
+    """3GPP cluster delay line preset modeling an indoor factory scenario without direct line of sight
+    between the linked wireless devices.
+
+    Refer to the :footcite:t:`3GPP:TR38901` for detailed information.
+
+    The following minimal example outlines how to configure the channel model
+    within the context of a :doc:`simulation.simulation.Simulation`:
+
+    .. literalinclude:: ../scripts/examples/channel_cdl_indoor_factory_nlos.py
+       :language: python
+       :linenos:
+       :lines: 12-40
+    """
 
     yaml_tag = "IndoorFactoryNLOS"
-    """YAML serialization tag."""
 
     @property
     def line_of_sight(self) -> bool:

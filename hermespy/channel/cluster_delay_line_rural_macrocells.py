@@ -1,11 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-===========================
-3GPP Rural Macrocells Model
-===========================
-
-Implements several parameter sets defined within the 3GPP standard modeling specific scenarios.
-"""
 
 from math import atan
 
@@ -25,7 +18,19 @@ __status__ = "Prototype"
 
 
 class RuralMacrocellsLineOfSight(ClusterDelayLineBase, Serializable):
-    """Parameter Preset for the 3GPP Cluster Delay Line Rural Macrocells Model."""
+    """3GPP cluster delay line preset modeling a rural scenario with direct line of sight
+    between the linked wireless devices.
+
+    Refer to the :footcite:t:`3GPP:TR38901` for detailed information.
+
+    The following minimal example outlines how to configure the channel model
+    within the context of a :doc:`simulation.simulation.Simulation`:
+
+    .. literalinclude:: ../scripts/examples/channel_cdl_rural_macrocells_los.py
+       :language: python
+       :linenos:
+       :lines: 12-40
+    """
 
     yaml_tag = "RMaLOS"
     """YAML serialization tag."""
@@ -68,8 +73,8 @@ class RuralMacrocellsLineOfSight(ClusterDelayLineBase, Serializable):
 
     @property
     def zod_spread_mean(self) -> float:
-        device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
-        terminal_height = abs(self.transmitter.position[2] - self.receiver.position[2])
+        device_distance = np.linalg.norm(self.beta_device.position - self.alpha_device.position, 2)
+        terminal_height = abs(self.alpha_device.position[2] - self.beta_device.position[2])
 
         return max(-1, -17e-5 * device_distance - 0.01 * (terminal_height - 1.5) + 0.22)
 
@@ -135,7 +140,19 @@ class RuralMacrocellsLineOfSight(ClusterDelayLineBase, Serializable):
 
 
 class RuralMacrocellsNoLineOfSight(ClusterDelayLineBase, Serializable):
-    """Parameter Preset for the 3GPP Cluster Delay Line Urban Macrocells Model."""
+    """3GPP cluster delay line preset modeling a rural scenario without direct line of sight
+    between the linked wireless devices.
+
+    Refer to the :footcite:t:`3GPP:TR38901` for detailed information.
+
+    The following minimal example outlines how to configure the channel model
+    within the context of a :doc:`simulation.simulation.Simulation`:
+
+    .. literalinclude:: ../scripts/examples/channel_cdl_rural_macrocells_nlos.py
+       :language: python
+       :linenos:
+       :lines: 12-40
+    """
 
     yaml_tag = "RMaLOS"
     """YAML serialization tag."""
@@ -178,8 +195,8 @@ class RuralMacrocellsNoLineOfSight(ClusterDelayLineBase, Serializable):
 
     @property
     def zod_spread_mean(self) -> float:
-        device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
-        terminal_height = abs(self.transmitter.position[2] - self.receiver.position[2])
+        device_distance = np.linalg.norm(self.beta_device.position - self.alpha_device.position, 2)
+        terminal_height = abs(self.alpha_device.position[2] - self.beta_device.position[2])
 
         return max(-1, -19e-5 * device_distance - 0.01 * (terminal_height - 1.5) + 0.28)
 
@@ -189,7 +206,7 @@ class RuralMacrocellsNoLineOfSight(ClusterDelayLineBase, Serializable):
 
     @property
     def zod_offset(self) -> float:
-        device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
+        device_distance = np.linalg.norm(self.beta_device.position - self.alpha_device.position, 2)
 
         return atan((35 - 0.35) / device_distance) - atan((35 - 1.5) / device_distance)
 
@@ -247,7 +264,19 @@ class RuralMacrocellsNoLineOfSight(ClusterDelayLineBase, Serializable):
 
 
 class RuralMacrocellsOutsideToInside(ClusterDelayLineBase, Serializable):
-    """Parameter Preset for the 3GPP Cluster Delay Line Urban Macrocells Model."""
+    """3GPP cluster delay line preset modeling a rural scenario with
+    the linked wireless devices being outside and inside a building, respectively.
+
+    Refer to the :footcite:t:`3GPP:TR38901` for detailed information.
+
+    The following minimal example outlines how to configure the channel model
+    within the context of a :doc:`simulation.simulation.Simulation`:
+
+    .. literalinclude:: ../scripts/examples/channel_cdl_rural_macrocells_o2i.py
+       :language: python
+       :linenos:
+       :lines: 12-40
+    """
 
     yaml_tag = "RMaO2I"
     """YAML serialization tag."""
@@ -290,8 +319,8 @@ class RuralMacrocellsOutsideToInside(ClusterDelayLineBase, Serializable):
 
     @property
     def zod_spread_mean(self) -> float:
-        device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
-        terminal_height = abs(self.transmitter.position[2] - self.receiver.position[2])
+        device_distance = np.linalg.norm(self.beta_device.position - self.alpha_device.position, 2)
+        terminal_height = abs(self.alpha_device.position[2] - self.beta_device.position[2])
 
         return max(-1, -19e-5 * device_distance - 0.01 * (terminal_height - 1.5) + 0.28)
 
@@ -301,7 +330,7 @@ class RuralMacrocellsOutsideToInside(ClusterDelayLineBase, Serializable):
 
     @property
     def zod_offset(self) -> float:
-        device_distance = np.linalg.norm(self.receiver.position - self.transmitter.position, 2)
+        device_distance = np.linalg.norm(self.beta_device.position - self.alpha_device.position, 2)
 
         return atan((35 - 0.35) / device_distance) - atan((35 - 1.5) / device_distance)
 

@@ -6,16 +6,18 @@ Channel State Information Model
 """
 
 from __future__ import annotations
-from typing import Generator, Optional, List, SupportsIndex, Tuple, Type, TypeVar
+from itertools import product
+from typing import Generator, List, SupportsIndex, Tuple, Type
 from enum import Enum
 
 import numpy as np
 import matplotlib.pyplot as plt
 from h5py import Group
 from scipy.fft import fft, ifft
-from sparse import COO  # type: ignore
+from sparse import COO, SparseArray  # type: ignore
 
 from .factory import HDFSerializable
+from .signal_model import Signal
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -25,10 +27,6 @@ __version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
-
-
-CSIT = TypeVar("CSIT", bound="ChannelStateInformation")
-"""Type hint for channel state information."""
 
 
 class ChannelStateFormat(Enum):
@@ -77,18 +75,18 @@ class ChannelStateInformation(HDFSerializable):
     """
 
     __state_format: ChannelStateFormat
-    __state: np.ndarray
+    __state: np.ndarray | SparseArray
     __num_delay_taps: int
     __num_frequency_bins: int
 
-    def __init__(self, state_format: ChannelStateFormat, state: Optional[np.ndarray] = None, num_delay_taps: Optional[int] = None, num_frequency_bins: Optional[int] = None) -> None:
+    def __init__(self, state_format: ChannelStateFormat, state: np.ndarray | SparseArray = None, num_delay_taps: int | None = None, num_frequency_bins: int | None = None) -> None:
         """Channel State Information object initialization.
 
         Args:
             state_format (ChannelStateFormat):
                 Format of the `state` from which to initialize the channel state information.
 
-            state (np.ndarray, optional):
+            state (np.ndarray | SparseArray, optional):
                 Channel state matrix.
                 A numpy tensor of dimension
                 `num_receive_streams`x`num_transmit_streams`x`num_samples`x`state_information`.
@@ -117,7 +115,7 @@ class ChannelStateInformation(HDFSerializable):
         return self.__state_format
 
     @property
-    def state(self) -> np.ndarray:
+    def state(self) -> np.ndarray | SparseArray:
         """Current channel state tensor.
 
         Returns:
@@ -127,11 +125,11 @@ class ChannelStateInformation(HDFSerializable):
         return self.__state
 
     @state.setter
-    def state(self, new_state: np.ndarray) -> None:
+    def state(self, new_state: np.ndarray | SparseArray) -> None:
         """Modify the channel state tensor.
 
         Args:
-            new_state (np.ndarray): The new channel state.
+            new_state (np.ndarray | SparseArray): The new channel state.
 
         Raises:
             ValueError: On invalid state dimensions.
@@ -139,14 +137,25 @@ class ChannelStateInformation(HDFSerializable):
 
         self.set_state(self.__state_format, new_state)
 
-    def set_state(self, state_format: ChannelStateFormat, state: Optional[np.ndarray] = None, num_delay_taps: Optional[int] = None, num_frequency_bins: Optional[int] = None) -> None:
+    def dense_state(self) -> np.ndarray:
+        """Return the channel state in dense format.
+
+        Note that this method will convert the channel state to dense format if it is currently in sparse format.
+        This operation may be computationally expensive and should be avoided if possible.
+
+        Returns: The channel state tensor in dense format.
+        """
+
+        return self.__state.todense() if isinstance(self.__state, (SparseArray)) else self.__state
+
+    def set_state(self, state_format: ChannelStateFormat, state: np.ndarray | SparseArray = None, num_delay_taps: int | None = None, num_frequency_bins: int | None = None) -> None:
         """Set a new channel state.
 
         Args:
             state_format (ChannelStateFormat):
                 Format of the `state` from which to initialize the channel state information.
 
-            state (np.ndarray, optional):
+            state (np.ndarray | SparseArray, optional):
                 Channel state matrix.
                 A numpy tensor of dimension
                 `num_receive_streams`x`num_transmit_streams`x`num_samples`x`state_information`.
@@ -208,7 +217,7 @@ class ChannelStateInformation(HDFSerializable):
 
         return self
 
-    def to_frequency_selectivity(self, num_bins: Optional[int] = None) -> ChannelStateInformation:
+    def to_frequency_selectivity(self, num_bins: int | None = None) -> ChannelStateInformation:
         """Access the channel state in frequency-domain.
 
         May convert the internal state format via FFT.
@@ -232,7 +241,7 @@ class ChannelStateInformation(HDFSerializable):
             else:
                 self.__num_frequency_bins = num_bins
 
-            self.__state = fft(self.__state[:, :, :num_bins, :], axis=3, n=num_bins)
+            self.__state = fft(self.dense_state()[:, :, :num_bins, :], axis=3, n=num_bins)
 
             self.__state_format = ChannelStateFormat.FREQUENCY_SELECTIVITY
 
@@ -293,7 +302,7 @@ class ChannelStateInformation(HDFSerializable):
         return self.__num_delay_taps
 
     @property
-    def linear(self) -> COO:
+    def linear(self) -> SparseArray:
         """Convert the channel state to a linear transformation tensor.
 
         Returns:
@@ -306,12 +315,12 @@ class ChannelStateInformation(HDFSerializable):
         else:  # Channel estate is in frequency selectivity format
             return self.__frequency_response_transformation()
 
-    def __impulse_response_transformation(self) -> COO:
+    def __impulse_response_transformation(self) -> SparseArray:
         """Convert a channel impulse response to a linear transformation tensor.
 
 
         Returns:
-            COO:
+            SparseArray:
                 Sparse linear transformation tensor of dimension N_Rx x N_Tx x T+L x T.
                 Note that the slice over the last two dimensions will form a lower triangular matrix.
         """
@@ -333,7 +342,7 @@ class ChannelStateInformation(HDFSerializable):
         transformation = COO(coordinates, self.__state.flatten(), shape=(num_rx, num_tx, num_out, num_in))
         return transformation
 
-    def __frequency_response_transformation(self) -> COO:
+    def __frequency_response_transformation(self) -> SparseArray:
         """Convert a channel frequency response to a linear transformation tensor.
 
 
@@ -472,29 +481,33 @@ class ChannelStateInformation(HDFSerializable):
             for tx_id, transmit_states in enumerate(receive_states):
                 axes[rx_id, tx_id].imshow(abs(transmit_states))
 
-    def append(self, state: ChannelStateInformation, axis: int) -> None:
-        """Append a channel state slice to this channel state.
+    def propagate(self, signal: Signal) -> Signal:
+        """Propagate a single signal model over this channel state information.
+
+        This method should generally be avoided, since it's computationally costly.
+        Instead, whenever there is access to a :class:`ChannelRealization`,
+        :meth:`ChannelRealization.propagate` should always be preferred.
 
         Args:
 
-            state (ChannelStateInformation):
-                The channel state information to append along `axis`.
+            signal (Signal):
+                Signal model to be propagated.
 
-            axis (int):
-                The dimension along which to append the `linear_state`.
+        Returns: Propagated signal model.
         """
 
-    def append_linear(self, linear_state: np.ndarray, axis: int) -> None:
-        """Append a linear channel state slice to this channel state.
+        # Make sure the accessed state is in impulse response format
+        state = self.to_impulse_response().dense_state()
 
-        Args:
+        # Propagate the signal
+        propagated_samples = np.zeros((state.shape[0], signal.num_samples + state.shape[3] - 1), dtype=np.complex_)
 
-            linear_state (np.ndarray):
-                The linear state matrix to be appended along `axis`.
+        for delay_index in range(state.shape[3]):
+            for tx_idx, rx_idx in product(range(state.shape[1]), range(state.shape[0])):
+                delayed_signal = state[rx_idx, tx_idx, : signal.num_samples, delay_index] * signal.samples[tx_idx, :]
+                propagated_samples[rx_idx, delay_index : delay_index + signal.num_samples] += delayed_signal
 
-            axis (int):
-                The dimension along which to append the `linear_state`.
-        """
+        return Signal(propagated_samples, sampling_rate=signal.sampling_rate, carrier_frequency=signal.carrier_frequency, delay=signal.delay)
 
     def reciprocal(self) -> ChannelStateInformation:
         """Compute the reciprocal channel state.
@@ -506,7 +519,7 @@ class ChannelStateInformation(HDFSerializable):
         return ChannelStateInformation(self.__state_format, reciprocal_state, self.num_delay_taps, self.__num_frequency_bins)
 
     @classmethod
-    def from_HDF(cls: Type[CSIT], group: Group) -> CSIT:
+    def from_HDF(cls: Type[ChannelStateInformation], group: Group) -> ChannelStateInformation:
         # Recall datasets
         state = np.array(group["state"], dtype=complex)
 
@@ -518,7 +531,7 @@ class ChannelStateInformation(HDFSerializable):
 
     def to_HDF(self, group: Group) -> None:
         # Serialize datasets
-        group.create_dataset("state", data=self.state)
+        group.create_dataset("state", data=self.dense_state())
 
         # Serialize attributes
         group.attrs["num_transmit_streams"] = self.num_transmit_streams

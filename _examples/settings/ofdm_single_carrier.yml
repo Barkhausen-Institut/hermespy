@@ -55,6 +55,8 @@ Operators:
       dc_suppression: False                 # Consider the DC component during the DFT
       num_subcarriers: 128                  # Number of subcarriers per communication frame
       channel_estimation: !<OFDM-Ideal>     # Ideal channel estimation routine
+        transmitter: *device_alpha
+        receiver: *device_alpha
       channel_equalization: !<OFDM-ZF>      # Zero-forcing channel equalization
 
       # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
