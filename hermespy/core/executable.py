@@ -239,10 +239,10 @@ class Executable(ABC):
         """
 
         if Executable.__style in Executable.__hermes_styles():
-            yield plt.style.use(path.join(Executable.__hermes_root_dir(), "core", "styles", Executable.__style + ".mplstyle"))
+            yield plt.style.context(path.join(Executable.__hermes_root_dir(), "core", "styles", Executable.__style + ".mplstyle"))
 
         else:
-            yield plt.style.use(Executable.__style)
+            yield plt.style.context(Executable.__style)
 
     @staticmethod
     def __hermes_root_dir() -> str:

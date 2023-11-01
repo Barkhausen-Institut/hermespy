@@ -16,12 +16,14 @@ import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 import numpy as np
+from mpl_toolkits.mplot3d import Axes3D  # type: ignore
 from scipy.constants import pi, speed_of_light
 
 from .executable import Executable
 from .factory import Serializable
 from .signal_model import Signal
 from .transformation import Direction, Transformable, Transformation
+from .visualize import VAT
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -556,7 +558,7 @@ class AntennaArrayBase(Transformable):
 
         return antenna_characteristics
 
-    def plot_topology(self) -> plt.Figure:
+    def plot_topology(self) -> Tuple[plt.Figure, VAT]:
         """Plot a scatter representation of the array topology.
 
         Returns:
@@ -567,16 +569,16 @@ class AntennaArrayBase(Transformable):
         topology = self.topology
 
         with Executable.style_context():
-            figure = plt.figure()
+            figure, axes = plt.subplots(1, 1, squeeze=False, subplot_kw={"projection": "3d"})
             figure.suptitle("Antenna Array Topology")
 
-            axes = figure.add_subplot(projection="3d")
-            axes.scatter(topology[:, 0], topology[:, 1], topology[:, 2])
-            axes.set_xlabel("X [m]")
-            axes.set_ylabel("Y [m]")
-            axes.set_zlabel("Z [m]")
+            ax: Axes3D = axes.flat[0]
+            ax.scatter(topology[:, 0], topology[:, 1], topology[:, 2])
+            ax.set_xlabel("X [m]")
+            ax.set_ylabel("Y [m]")
+            ax.set_zlabel("Z [m]")
 
-            return figure
+            return figure, axes
 
     def cartesian_phase_response(self, carrier_frequency: float, position: np.ndarray, frame: Literal["local", "global"] = "local") -> np.ndarray:
         """Phase response of the sensor array towards an impinging point source within its far-field.

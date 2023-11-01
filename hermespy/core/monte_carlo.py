@@ -101,17 +101,18 @@ from collections.abc import Sequence
 from contextlib import nullcontext
 from functools import reduce
 from math import exp, sqrt
+from os import path
 from time import perf_counter
 from typing import Any, Callable, Generic, List, Optional, Type, TypeVar, Tuple, Union, SupportsFloat
 from warnings import catch_warnings, simplefilter
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
-import matplotlib.axes as axes
 import numpy as np
 import ray
 import transaction  # type: ignore
-from os import path
+from matplotlib.axis import Axis
+from mpl_toolkits.mplot3d import Axes3D  # type: ignore
 from persistent import Persistent  # type: ignore
 from persistent.mapping import PersistentMapping  # type: ignore
 from persistent.list import PersistentList  # type: ignore
@@ -131,7 +132,7 @@ from BTrees.OOBTree import OOBTree  # type: ignore
 from hermespy.tools import lin2db
 from .definitions import ConsoleMode
 from .logarithmic import LogarithmicSequence, ValueType
-from .visualize import Visualizable
+from .visualize import VAT, Visualizable
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -295,12 +296,12 @@ class EvaluationResult(Visualizable, ABC):
         ...  # pragma: no cover
 
     @staticmethod
-    def __configure_axis(axis: axes.Axes, tick_format: ValueType = ValueType.LIN) -> None:
+    def __configure_axis(axis: Axis, tick_format: ValueType = ValueType.LIN) -> None:
         """Subroutine to configure an axis.
 
         Args:
 
-            axis:
+            axis (Axis):
                 The matplotlib axis to be configured.
 
             tick_format (ValueType):
@@ -311,7 +312,7 @@ class EvaluationResult(Visualizable, ABC):
             axis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"{lin2db(x):.2g}dB"))
 
     @staticmethod
-    def _plot_linear(grid: List[GridDimension], sample_points: Sequence[np.float_], scalar_data: np.ndarray, evaluator: Evaluator, axes: plt.Axes) -> None:
+    def _plot_linear(grid: List[GridDimension], sample_points: Sequence[np.float_], scalar_data: np.ndarray, evaluator: Evaluator, axes: VAT) -> None:
         """Visualize result as a linear plot.
 
         Args:
@@ -333,22 +334,24 @@ class EvaluationResult(Visualizable, ABC):
                 Must be initialized as a 2D axes.
         """
 
+        ax: plt.Axes = axes.flat[0]
+
         # Configure axes labels
-        axes.set_xlabel(grid[0].title)
-        axes.set_ylabel(evaluator.abbreviation)
+        ax.set_xlabel(grid[0].title)
+        ax.set_ylabel(evaluator.abbreviation)
 
         # Configure axes scales
-        axes.set_xscale(grid[0].plot_scale)
-        axes.set_yscale(evaluator.plot_scale)
+        ax.set_xscale(grid[0].plot_scale)
+        ax.set_yscale(evaluator.plot_scale)
 
-        EvaluationResult.__configure_axis(axes.xaxis, grid[0].tick_format)
-        EvaluationResult.__configure_axis(axes.yaxis, evaluator.tick_format)
+        EvaluationResult.__configure_axis(ax.xaxis, grid[0].tick_format)
+        EvaluationResult.__configure_axis(ax.yaxis, evaluator.tick_format)
 
         # Plot final result
-        axes.plot(sample_points, scalar_data)
+        ax.plot(sample_points, scalar_data)
 
     @staticmethod
-    def _plot_surface(grid: List[GridDimension], sample_points: Sequence[np.float_], data: np.ndarray, evaluator: Evaluator, axes: plt.Axes) -> None:
+    def _plot_surface(grid: List[GridDimension], sample_points: Sequence[np.float_], data: np.ndarray, evaluator: Evaluator, axes: VAT) -> None:
         """Visualize result as a surface plot.
 
         Args:
@@ -370,18 +373,20 @@ class EvaluationResult(Visualizable, ABC):
                 Must be initialized as a 3D axes.
         """
 
-        # Configure axes labels and scales
-        axes.set(xlabel=grid[0].title, ylabel=grid[1].title, zlabel=evaluator.abbreviation)
+        ax: Axes3D = axes.flat[0]
 
-        EvaluationResult.__configure_axis(axes.xaxis, grid[0].tick_format)
-        EvaluationResult.__configure_axis(axes.yaxis, grid[1].tick_format)
-        EvaluationResult.__configure_axis(axes.zaxis, evaluator.tick_format)
+        # Configure axes labels and scales
+        ax.set(xlabel=grid[0].title, ylabel=grid[1].title, zlabel=evaluator.abbreviation)
+
+        EvaluationResult.__configure_axis(ax.xaxis, grid[0].tick_format)
+        EvaluationResult.__configure_axis(ax.yaxis, grid[1].tick_format)
+        EvaluationResult.__configure_axis(ax.zaxis, evaluator.tick_format)
 
         y, x = np.meshgrid(np.asarray(grid[1].sample_points), np.asarray(sample_points))
-        axes.plot_surface(x.astype(float), y.astype(float), data)
+        ax.plot_surface(x.astype(float), y.astype(float), data)
 
     @staticmethod
-    def _plot_multidim(grid: List[GridDimension], scalar_data: np.ndarray, x_dimension: int, y_label: str, x_scale: str, y_scale: str, axes: plt.Axes) -> None:
+    def _plot_multidim(grid: List[GridDimension], scalar_data: np.ndarray, x_dimension: int, y_label: str, x_scale: str, y_scale: str, axes: VAT) -> None:
         """Plot multidimensional simulation results into a two-dimensional axes system.
 
         Args:
@@ -408,13 +413,15 @@ class EvaluationResult(Visualizable, ABC):
                 Must be initialized as a 2D axes.
         """
 
+        ax: plt.Axes = axes.flat[0]
+
         # Configure axes labels
-        axes.set_xlabel(grid[x_dimension].title)
-        axes.set_ylabel(y_label)
+        ax.set_xlabel(grid[x_dimension].title)
+        ax.set_ylabel(y_label)
 
         # Configure axes scales
-        axes.set_yscale(y_scale)
-        axes.set_xscale(x_scale)
+        ax.set_yscale(y_scale)
+        ax.set_xscale(x_scale)
 
         subgrid = grid.copy()
         del subgrid[x_dimension]
@@ -434,15 +441,23 @@ class EvaluationResult(Visualizable, ABC):
             line_scalars = scalar_data[(..., *section_indices)]  # type: ignore
 
             # Plot the graph line
-            axes.plot(grid[x_dimension].sample_points, line_scalars, label=line_label)
+            ax.plot(grid[x_dimension].sample_points, line_scalars, label=line_label)
 
         if len(section_magnitudes) > 0 and section_magnitudes[0] > 1:
-            axes.legend()
+            ax.legend()
 
     @staticmethod
-    def _plot_empty(axes: plt.Axes) -> None:
-        # Create single axes
-        axes.text(0.5, 0.5, "NO DATA AVAILABLE", horizontalalignment="center")
+    def _plot_empty(axes: VAT) -> None:
+        """Plot an empty notice into the provided axes.
+
+        Args:
+
+            axes (VAT): The axes to plot into.
+        """
+
+        ax: plt.Axes
+        for ax in axes.flat:
+            ax.text(0.5, 0.5, "NO DATA AVAILABLE", horizontalalignment="center")
 
 
 class ScalarEvaluationResult(EvaluationResult):
@@ -484,19 +499,18 @@ class ScalarEvaluationResult(EvaluationResult):
         # The plotting title should resolve to the represented evaluator's title
         return self.__evaluator.title
 
-    def _new_axes(self) -> Tuple[plt.Figure, plt.Axes]:
+    def _new_axes(self, **kwargs) -> Tuple[plt.Figure, VAT]:
         # Generate 3D axes with surface plotting enabled
         if len(self.__grid) == 2 and self.plot_surface:
-            fig = plt.figure()
-            axes = fig.add_subplot(111, projection="3d")
+            fig, axes = plt.subplots(1, 1, squeeze=False, subplot_kw={"projection": "3d"})
 
         # Generate 2D axes otherwise
         else:
-            fig, axes = plt.subplots()
+            fig, axes = plt.subplots(1, 1, squeeze=False)
 
         return fig, axes
 
-    def _plot(self, axes: plt.Axes) -> None:
+    def _plot(self, axes: VAT) -> None:
         # If the grid contains no data, dont plot anything
         if len(self.__grid) < 1:
             self._plot_empty(axes)
@@ -1278,12 +1292,12 @@ class MonteCarloResult(object):
 
         return self.__performance_time
 
-    def plot(self) -> List[plt.Figure]:
+    def plot(self) -> List[plt.FigureBase]:
         """Plot evaluation figures for all contained evaluator artifacts.
 
         Returns:
-            List[plt.Figure]:
-                List of handles to all created Matplotlib figures.
+
+            List of handles to all created Matplotlib figures.
         """
         return [result.plot() for result in self.__results]
 

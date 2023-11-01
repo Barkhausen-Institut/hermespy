@@ -172,7 +172,7 @@ class RadarCube(HDFSerializable):
 
         return self.__range_bins
 
-    def plot_range(self, title: str | None = None, axes: plt.Axes | None = None, scale: Literal["lin", "log"] = "lin") -> plt.Figure:
+    def plot_range(self, title: str | None = None, axes: plt.Axes | None = None, scale: Literal["lin", "log"] = "lin") -> plt.FigureBase:
         """Visualize the cube's range data.
 
         Args:
@@ -189,13 +189,14 @@ class RadarCube(HDFSerializable):
         # Collapse the cube into the range-dimension
         range_profile = np.sum(self.data, axis=(0, 1), keepdims=False)
 
+        figure: plt.FigureBase
         if axes is None:
             with Executable.style_context():
                 figure, axes = plt.subplots()
                 figure.suptitle(title)
 
         else:
-            figure = axes.figure
+            figure = axes.get_figure()
 
         axes.set_xlabel("Range [m]")
         axes.set_ylabel("Power")
