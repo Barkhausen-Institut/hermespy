@@ -458,7 +458,7 @@ class TestSimulation(TestCase):
             result = self.simulation.run()
 
             self.assertIsInstance(result, MonteCarloResult)
-            mock_figure.savefig.assert_called_once()
+            mock_figure.get_figure.assert_called()
         
     def test_silent_run(self) -> None:
         """Test running the simulation without output"""

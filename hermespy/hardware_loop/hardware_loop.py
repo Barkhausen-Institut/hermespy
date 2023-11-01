@@ -17,7 +17,7 @@ from rich.progress import Progress, SpinnerColumn, TimeElapsedColumn
 from rich.prompt import Confirm
 from ruamel.yaml import SafeConstructor, Node, SafeRepresenter, MappingNode
 
-from hermespy.core import Artifact, ConsoleMode, Drop, Evaluation, EvaluationResult, Evaluator, MonteCarloResult, Pipeline, Serializable, SerializableEnum, Verbosity
+from hermespy.core import Artifact, ConsoleMode, Drop, Evaluation, EvaluationResult, Evaluator, MonteCarloResult, Pipeline, Serializable, SerializableEnum, VAT, Verbosity
 from hermespy.core.monte_carlo import GridDimension, SampleGrid, MonteCarloSample
 from hermespy.tools import tile_figures
 from .physical_device import PDT
@@ -153,7 +153,7 @@ class HardwareLoopPlot(ABC):
     __hardware_loop: HardwareLoop | None
     __title: str
     __figure: plt.Figure | None
-    __axes: plt.Axes | None
+    __axes: VAT | None
 
     def __init__(self, title: str = "") -> None:
         # Initialize class attributes
@@ -190,12 +190,12 @@ class HardwareLoopPlot(ABC):
         return self.__figure
 
     @property
-    def axes(self) -> plt.Axes:
+    def axes(self) -> VAT:
         """Axes of the hardware loop plot."""
 
         return self.__axes
 
-    def prepare_figure(self) -> Tuple[plt.Figure, plt.Axes]:
+    def prepare_figure(self) -> Tuple[plt.Figure, VAT]:
         """Prepare the figure for the hardware loop plot.
 
         Returns:
@@ -214,12 +214,12 @@ class HardwareLoopPlot(ABC):
         return figure, axes
 
     @abstractmethod
-    def _prepare_figure(self) -> Tuple[plt.Figure, plt.Axes]:
+    def _prepare_figure(self) -> Tuple[plt.Figure, VAT]:
         """Prepare the figure for the hardware loop plot.
 
         Returns:
 
-            Tuple[plt.Figure, plt.Axes]:
+            Tuple[plt.Figure, VAT]:
                 Figure and axes of the hardware loop plot.
         """
         ...  # pragma: no cover
@@ -597,8 +597,10 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PDT], Pipeline[Ph
         if self.results_dir:
             result.save_to_matlab(path.join(self.results_dir, "results.mat"))
 
-            for idx, (figure, evaluator) in enumerate(zip(result_figures, self.__evaluators)):
-                figure.savefig(path.join(self.results_dir, f"result_{idx}_{evaluator.abbreviation}.png"), format="png")
+            for idx, (figure_base, evaluator) in enumerate(zip(result_figures, self.__evaluators)):
+                figure = figure_base.get_figure()
+                if figure is not None:
+                    figure.savefig(path.join(self.results_dir, f"result_{idx}_{evaluator.abbreviation}.png"), format="png")
 
         if self.plot_information:
             plt.show()

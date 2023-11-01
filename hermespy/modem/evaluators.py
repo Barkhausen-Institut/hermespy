@@ -55,7 +55,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import uniform
 
-from hermespy.core import ArtifactTemplate, Serializable, Evaluator, EvaluationTemplate, GridDimension, ScalarEvaluationResult
+from hermespy.core import ArtifactTemplate, Serializable, Evaluator, EvaluationTemplate, GridDimension, ScalarEvaluationResult, VAT
 from .modem import TransmittingModem, ReceivingModem
 
 __author__ = "Jan Adler"
@@ -134,10 +134,11 @@ class BitErrorEvaluation(EvaluationTemplate[np.ndarray]):
     def title(self) -> str:
         return "Bit Error Evaluation"
 
-    def _plot(self, axes: plt.Axes) -> None:
-        axes.stem(self.evaluation)
-        axes.set_xlabel("Bit Index")
-        axes.set_ylabel("Bit Error Indicator")
+    def _plot(self, axes: VAT) -> None:
+        ax: plt.Axes = axes.flat[0]
+        ax.stem(self.evaluation)
+        ax.set_xlabel("Bit Index")
+        ax.set_ylabel("Bit Error Indicator")
 
     def artifact(self) -> BitErrorArtifact:
         ber = np.mean(self.evaluation)
@@ -210,10 +211,11 @@ class BlockErrorEvaluation(EvaluationTemplate[np.ndarray]):
     def title(self) -> str:
         return "Block Error Evaluation"
 
-    def _plot(self, axes: plt.Axes) -> None:
-        axes.stem(self.evaluation)
-        axes.set_xlabel("Block Index")
-        axes.set_ylabel("Block Error Indicator")
+    def _plot(self, axes: VAT) -> None:
+        ax: plt.Axes = axes.flat[0]
+        ax.stem(self.evaluation)
+        ax.set_xlabel("Block Index")
+        ax.set_ylabel("Block Error Indicator")
 
     def artifact(self) -> BitErrorArtifact:
         bler = np.mean(self.evaluation)
@@ -292,10 +294,11 @@ class FrameErrorEvaluation(EvaluationTemplate[np.ndarray]):
     def title(self) -> str:
         return "Frame Error Evaluation"
 
-    def _plot(self, axes: plt.Axes) -> None:
-        axes.stem(self.evaluation)
-        axes.set_xlabel("Frame Index")
-        axes.set_ylabel("Frame Error Indicator")
+    def _plot(self, axes: VAT) -> None:
+        ax: plt.Axes = axes.flat[0]
+        ax.stem(self.evaluation)
+        ax.set_xlabel("Frame Index")
+        ax.set_ylabel("Frame Error Indicator")
 
     def artifact(self) -> FrameErrorArtifact:
         bler = float(np.mean(self.evaluation))

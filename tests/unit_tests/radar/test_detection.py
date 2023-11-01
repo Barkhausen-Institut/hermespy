@@ -3,6 +3,7 @@
 from unittest import TestCase
 from unittest.mock import patch, Mock
 
+import matplotlib.pyplot as plt
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.constants import speed_of_light
@@ -106,17 +107,19 @@ class TestRadarPointCloud(TestCase):
 
     def test_plot(self) -> None:
         """Point clouds should be properly plotted"""
+        
+        figure_mock = Mock(spec=plt.Figure)
+        axes_mock = Mock()
+        axes_collection = np.array([[axes_mock]], dtype=np.object_)
 
         with patch("matplotlib.pyplot.subplots") as subplots_patch:
-            figure = Mock()
-            axes = Mock()
-            subplots_patch.return_value = (figure, axes)
+            subplots_patch.return_value = (figure_mock, axes_collection)
 
             self.cloud.add_point(PointDetection(np.zeros(3), np.zeros(3), 1.0))
             self.cloud.plot()
 
             subplots_patch.assert_called_once()
-            axes.scatter.assert_called_once()
+            axes_mock.scatter.assert_called_once()
 
 
 class TestThresholdDetector(TestCase):

@@ -463,7 +463,7 @@ class AnalogDigitalConverter(Serializable):
 
         return quantized_signal
 
-    def plot_quantizer(self, input_samples: Optional[np.ndarray] = None, label: str = "", fig_axes: Optional[plt.axes] = None) -> None:
+    def plot_quantizer(self, input_samples: Optional[np.ndarray] = None, label: str = "", fig_axes: Optional[plt.Axes] = None) -> None:
         """Plot the quantizer characteristics.
 
         Generates a matplotlib plot depicting the staircase amplitude response.
@@ -485,10 +485,9 @@ class AnalogDigitalConverter(Serializable):
 
         _input_samples = np.arange(-1, 1, 0.01) + 1j * np.arange(1, -1, -0.01) if input_samples is None else input_samples.flatten()
 
-        figure: Optional[plt.figure] = None
+        figure: Optional[plt.Figure] = None
         if fig_axes is None:
-            figure = plt.figure()
-            quant_axes = figure.add_axes()
+            figure, quant_axes = plt.subplots()
 
             quant_axes.set_xlabel("Input Amplitude")
             quant_axes.set_ylabel("Output Amplitude")

@@ -8,7 +8,7 @@ Signal Modeling
 from __future__ import annotations
 from copy import deepcopy
 from math import floor
-from typing import Literal, Optional, Type
+from typing import Literal, Tuple, Type
 
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
@@ -20,9 +20,8 @@ from scipy.fft import fft, fftshift, fftfreq
 from scipy.ndimage import convolve1d
 from scipy.signal import butter, sosfilt, firwin
 
-from .executable import Executable
 from .factory import HDFSerializable
-from .visualize import Visualizable
+from .visualize import VAT, Visualizable
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
@@ -438,7 +437,30 @@ class Signal(HDFSerializable, Visualizable):
 
         return fftfreq(self.num_samples, 1 / self.sampling_rate)
 
-    def plot(self, axes: np.ndarray | None = None, *, title: Optional[str] = None, angle: bool = False, space: Literal["time", "frequency", "both"] = "both", legend: bool = True) -> None | plt.Figure:
+    def _new_axes(self, num_streams: int | None = None, space: Literal["time", "frequency", "both"] = "both", **kwargs) -> Tuple[plt.Figure, np.ndarray[plt.Axes, np.dtype[np.object_]]]:
+        """Generate a new figure and axes to plot into.
+
+        Can be overriden by subclasses to configure custom axes flags.
+
+        Args:
+
+            space (Literal["time", "frequency", "both"], optional):
+                Signal space to be plotted.
+                Both by default.
+
+            **kwargs:
+                Additional keyword arguments to be used by subclasses.
+
+        Returns: Tuple of matplotlib figure and axes.
+        """
+
+        num_streams = self.num_streams if num_streams is None else num_streams
+        num_axes = 2 if space == "both" else 1
+
+        figure, axes = plt.subplots(num_streams, num_axes, squeeze=False)
+        return figure, axes
+
+    def plot(self, axes: VAT | None = None, *, title: str | None = None, angle: bool = False, space: Literal["time", "frequency", "both"] = "both", legend: bool = True) -> plt.FigureBase:
         """Plot the current signal in time- and frequency-domain.
 
         .. plot::
@@ -457,12 +479,12 @@ class Signal(HDFSerializable, Visualizable):
 
         Args:
 
-            axes (Optional[np.ndarray], optional):
-                Axes to which the graphs should be plotted to.
-                If none are provided, the routine will create a new figure.
+            axes (plt.Axes, optional):
+                The axis object into which the information should be plotted.
+                If not specified, the routine will generate and return a new figure.
 
             title (str, optional):
-                Figure title.
+                Title of the generated plot.
 
             angle (bool, optional):
                 Plot the angle of complex frequency bins.
@@ -481,61 +503,52 @@ class Signal(HDFSerializable, Visualizable):
         """
 
         title = "Signal Model" if title is None else title
-        figure: Optional[plt.figure] = None
-        axes = np.array([[axes]], dtype=object) if isinstance(axes, plt.Axes) else axes
+        figure, _axes = self._prepare_axes(axes, title, num_streams=self.num_streams, space=space)
 
-        with Executable.style_context():
-            # Create a new figure if no axes were provided
-            if axes is None:
-                num_axes = 2 if space == "both" else 1
+        # Generate timestamps for time-domain plotting
+        timestamps = self.timestamps
 
-                figure, axes = plt.subplots(self.num_streams, num_axes, squeeze=False)
-                figure.suptitle(title)
+        # Infer the axis indices to account for different plot
+        time_axis_idx = 0
+        frequency_axis_idx = 1 if space == "both" else 0
 
-            # Generate timestamps for time-domain plotting
-            timestamps = self.timestamps
+        for stream_idx, stream_samples in enumerate(self.__samples):
+            # Plot time space
+            if space in {"both", "time"}:
+                if self.num_samples < 1:
+                    _axes[stream_idx, time_axis_idx].text(0.5, 0.5, "NO SAMPLES", horizontalalignment="center")
 
-            # Infer the axis indices to account for different plot
-            time_axis_idx = 0
-            frequency_axis_idx = 1 if space == "both" else 0
+                else:
+                    _axes[stream_idx, time_axis_idx].plot(timestamps, stream_samples.real, label="Real")
+                    _axes[stream_idx, time_axis_idx].plot(timestamps, stream_samples.imag, label="Imag")
 
-            for stream_idx, stream_samples in enumerate(self.__samples):
-                # Plot time space
-                if space in {"both", "time"}:
-                    if self.num_samples < 1:
-                        axes[stream_idx, time_axis_idx].text(0.5, 0.5, "NO SAMPLES", horizontalalignment="center")
+                _axes[stream_idx, time_axis_idx].set_xlabel("Time-Domain [s]")
 
-                    else:
-                        axes[stream_idx, time_axis_idx].plot(timestamps, stream_samples.real, label="Real")
-                        axes[stream_idx, time_axis_idx].plot(timestamps, stream_samples.imag, label="Imag")
+                if legend:
+                    _axes[stream_idx, time_axis_idx].legend(loc="upper left", fancybox=True, shadow=True)
 
-                    axes[stream_idx, time_axis_idx].set_xlabel("Time-Domain [s]")
+            # Plot frequency space
+            if space in {"both", "frequency"}:
+                if self.num_samples < 1:
+                    _axes[stream_idx, time_axis_idx].text(0.5, 0.5, "NO SAMPLES", horizontalalignment="center")
 
-                    if legend:
-                        axes[stream_idx, time_axis_idx].legend(loc="upper left", fancybox=True, shadow=True)
+                else:
+                    frequencies = fftshift(fftfreq(self.num_samples, 1 / self.sampling_rate))
+                    bins = fftshift(fft(stream_samples))
 
-                # Plot frequency space
-                if space in {"both", "frequency"}:
-                    if self.num_samples < 1:
-                        axes[stream_idx, time_axis_idx].text(0.5, 0.5, "NO SAMPLES", horizontalalignment="center")
+                    _axes[stream_idx, frequency_axis_idx].plot(frequencies, np.abs(bins))
 
-                    else:
-                        frequencies = fftshift(fftfreq(self.num_samples, 1 / self.sampling_rate))
-                        bins = fftshift(fft(stream_samples))
+                _axes[stream_idx, frequency_axis_idx].set_ylabel("Abs")
+                _axes[stream_idx, frequency_axis_idx].set_xlabel("Frequency-Domain [Hz]")
 
-                        axes[stream_idx, frequency_axis_idx].plot(frequencies, np.abs(bins))
-
-                    axes[stream_idx, frequency_axis_idx].set_ylabel("Abs")
-                    axes[stream_idx, frequency_axis_idx].set_xlabel("Frequency-Domain [Hz]")
-
-                    if angle:
-                        phase = axes[stream_idx, frequency_axis_idx].twinx()
-                        phase.plot(frequencies, np.angle(bins))
-                        phase.set_ylabel("Angle [Rad]")
+                if angle:
+                    phase = _axes[stream_idx, frequency_axis_idx].twinx()
+                    phase.plot(frequencies, np.angle(bins))
+                    phase.set_ylabel("Angle [Rad]")
 
         return figure
 
-    def plot_eye(self, symbol_duration: float, axes: plt.Axes | None = None, *, title: str | None = None, domain: Literal["time", "complex"] = "time", legend: bool = True, linewidth: float = 0.75, symbol_cutoff: float = 0.1) -> None | plt.Figure:
+    def plot_eye(self, symbol_duration: float, axes: VAT | None = None, *, title: str | None = None, domain: Literal["time", "complex"] = "time", legend: bool = True, linewidth: float = 0.75, symbol_cutoff: float = 0.1) -> plt.FigureBase:
         """Plot the signal model's eye diagram.
 
         Depending on the `domain` flag the eye diagram will either be rendered with the time-domain on the plot's x-axis
@@ -626,25 +639,25 @@ class Signal(HDFSerializable, Visualizable):
 
             for n in range(num_cutoff_symbols, num_symbols - num_cutoff_symbols):
                 stream_slice = self.__samples[0, symbol_num_samples * n : symbol_num_samples * (2 + n) + 1]
-                axes.plot(timestamps[: len(stream_slice)], stream_slice.real, color=colors[0], linewidth=linewidth)
-                axes.plot(timestamps[: len(stream_slice)], stream_slice.imag, color=colors[1], linewidth=linewidth)
+                axes.flat[0].plot(timestamps[: len(stream_slice)], stream_slice.real, color=colors[0], linewidth=linewidth)
+                axes.flat[0].plot(timestamps[: len(stream_slice)], stream_slice.imag, color=colors[1], linewidth=linewidth)
 
-            axes.set_xlabel("Time-Domain [s]")
-            axes.set_ylabel("Amplitude")
+            axes.flat[0].set_xlabel("Time-Domain [s]")
+            axes.flat[0].set_ylabel("Amplitude")
 
             if legend:
                 legend_elements = [Line2D([0], [0], color=colors[0], label="Real"), Line2D([0], [0], color=colors[1], label="Imag")]
-                axes.legend(handles=legend_elements, loc="upper left", fancybox=True, shadow=True)
+                axes.flat[0].legend(handles=legend_elements, loc="upper left", fancybox=True, shadow=True)
 
         elif domain == "complex":
             symbol_num_samples = floor(symbol_duration * self.sampling_rate)
             num_cutoff_samples = num_cutoff_symbols * symbol_num_samples
 
             stream_slice = self.__samples[0, num_cutoff_samples:-num_cutoff_samples]
-            axes.plot(stream_slice.real, stream_slice.imag, color=colors[0], linewidth=linewidth)
+            axes.flat[0].plot(stream_slice.real, stream_slice.imag, color=colors[0], linewidth=linewidth)
 
-            axes.set_xlabel("Real")
-            axes.set_ylabel("Imag")
+            axes.flat[0].set_xlabel("Real")
+            axes.flat[0].set_ylabel("Imag")
 
         else:
             raise ValueError(f"Unsupported plotting domain '{domain}'")

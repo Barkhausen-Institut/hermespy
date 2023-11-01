@@ -11,7 +11,7 @@ from numpy import cos, exp
 from scipy.constants import pi
 from sparse import GCXS  # type: ignore
 
-from hermespy.core import ChannelStateInformation, ChannelStateFormat, Device, HDFSerializable, Serializable, Signal, Visualizable
+from hermespy.core import ChannelStateInformation, ChannelStateFormat, Device, HDFSerializable, Serializable, Signal, VAT, Visualizable
 from .channel import Channel, ChannelRealization, InterpolationMode
 
 if TYPE_CHECKING:
@@ -587,14 +587,16 @@ class MultipathFadingRealization(ChannelRealization, Visualizable):
         propagated_signal = Signal(propagated_samples, sampling_rate, carrier_frequency=signal.carrier_frequency, delay=signal.delay, noise_power=signal.noise_power)
         return propagated_signal
 
-    def _plot(self, axes: plt.Axes) -> None:
+    def _plot(self, axes: VAT) -> None:
+        ax: plt.Axes = axes.flat[0]
+
         delays = np.array([path.delay for path in self.path_realizations])
         powers = np.array([path.power for path in self.path_realizations])
 
-        axes.stem(delays, powers, use_line_collection=True)
-        axes.set_xlabel("Delay [s]")
-        axes.set_ylabel("Power [Watts]")
-        axes.set_yscale("log")
+        ax.stem(delays, powers)
+        ax.set_xlabel("Delay [s]")
+        ax.set_ylabel("Power [Watts]")
+        ax.set_yscale("log")
 
     def to_HDF(self, group: Group) -> None:
         ChannelRealization.to_HDF(self, group)
@@ -624,11 +626,11 @@ class MultipathFadingChannel(Channel[MultipathFadingRealization], Serializable):
     Allows for the direct configuration of the Multipath Fading Channel's parameters
 
     .. math::
-    
+
        \\mathbf{g} &= \\left[ g_{1}, g_{2}, \\,\\dotsc,\\, g_{L}  \\right]^\mathsf{T} \\in \\mathbb{C}^{L} \\\\
        \\mathbf{k} &= \\left[ K_{1}, K_{2}, \\,\\dotsc,\\, K_{L}  \\right]^\mathsf{T} \\in \\mathbb{R}^{L} \\\\
        \\mathbf{\\tau} &= \\left[ \\tau_{1}, \\tau_{2}, \\,\\dotsc,\\, \\tau_{L}  \\right]^\mathsf{T} \\in \\mathbb{R}^{L} \\\\
-       
+
     directly.
     Refer to :doc:`/api/channel.multipath_fading_channel` for a detailed description of the channel model.
 

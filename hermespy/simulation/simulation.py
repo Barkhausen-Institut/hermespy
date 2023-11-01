@@ -794,7 +794,7 @@ class Simulation(Serializable, Pipeline[SimulationScenario, SimulatedDevice], Mo
         result = self.simulate(SimulationActor)
 
         # Visualize results if the flag respective is enabled
-        figures: List[plt.Figure] = []
+        figures: List[plt.FigureBase] = []
         if self.plot_results:
             with self.style_context():
                 figures = result.plot()
@@ -802,8 +802,10 @@ class Simulation(Serializable, Pipeline[SimulationScenario, SimulatedDevice], Mo
         # Dump results if the respective flag is enabled
         if self.dump_results and self.results_dir is not None:
             # Save figures to png files
-            for figure_idx, figure in enumerate(figures):
-                figure.savefig(path.join(self.results_dir, f"figure_{figure_idx}.png"), format="png")
+            for figure_idx, base_figure in enumerate(figures):
+                figure_instace = base_figure.get_figure()
+                if figure_instace is not None:
+                    figure_instace.savefig(path.join(self.results_dir, f"figure_{figure_idx}.png"), format="png")
 
             # Save results to matlab file
             result.save_to_matlab(path.join(self.results_dir, "results.mat"))

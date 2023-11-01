@@ -237,7 +237,7 @@ class MockEvaluationResult(EvaluationResult):
         return np.empty(0, dtype=np.float_)
 
 
-class TestEvaluationReuslt(TestCase):
+class TestEvaluationResult(TestCase):
     """Test evaluation result base class"""
 
     def setUp(self) -> None:
@@ -252,8 +252,9 @@ class TestEvaluationReuslt(TestCase):
         scalar_data = np.arange(10)
         evaluator = Mock()
         axes = Mock()
+        axes_collection = np.array([[axes]], dtype=np.object_)
         
-        self.result._plot_linear(grid, sample_points, scalar_data, evaluator, axes)
+        self.result._plot_linear(grid, sample_points, scalar_data, evaluator, axes_collection)
         axes.plot.assert_called_once()
 
     def test_surface_plotting(self) -> None:
@@ -264,8 +265,9 @@ class TestEvaluationReuslt(TestCase):
         scalar_data = np.random.uniform(size=(10, 10))
         evaluator = Mock()
         axes = Mock()
+        axes_collection = np.array([[axes]], dtype=np.object_)
         
-        self.result._plot_surface(grid, sample_points, scalar_data, evaluator, axes)
+        self.result._plot_surface(grid, sample_points, scalar_data, evaluator, axes_collection)
         axes.plot_surface.assert_called_once()
 
     def test_multidim_plotting(self) -> None:
@@ -274,8 +276,9 @@ class TestEvaluationReuslt(TestCase):
         grid = [GridDimension(TestObjectMock(), 'property_b', np.arange(10)) for _ in range(3)]
         scalar_data = np.random.uniform(size=(10, 10, 10))
         axes = Mock()
+        axes_collection = np.array([[axes]], dtype=np.object_)
         
-        self.result._plot_multidim(grid, scalar_data, 0, 'lin', 'lin', 'lin', axes)
+        self.result._plot_multidim(grid, scalar_data, 0, 'lin', 'lin', 'lin', axes_collection)
         axes.plot.assert_called()
 
     def test_multidim_plotting_no_labels(self) -> None:
@@ -284,16 +287,18 @@ class TestEvaluationReuslt(TestCase):
         grid = [GridDimension(TestObjectMock(), 'property_b', np.arange(10))]
         scalar_data = np.random.uniform(size=(10))
         axes = Mock()
+        axes_collection = np.array([[axes]], dtype=np.object_)
         
-        self.result._plot_multidim(grid, scalar_data, 0, 'lin', 'lin', 'lin', axes)
+        self.result._plot_multidim(grid, scalar_data, 0, 'lin', 'lin', 'lin', axes_collection)
         axes.plot.assert_called()
         
     def test_empty_plotting(self) -> None:
         """Empty plotting should call the correct plotting routine"""
         
         axes = Mock()
+        axes_collection = np.array([[axes]], dtype=np.object_)
         
-        self.result._plot_empty(axes)
+        self.result._plot_empty(axes_collection)
         axes.text.assert_called_once()
 
 
@@ -309,15 +314,15 @@ class TestScalarEvaluationResult(TestCase):
         
         result = ScalarEvaluationResult(grid, scalar_data, evaluator)
             
-        axes = Mock()
-        figure = Mock()
+        axes = MagicMock(spec=np.ndarray)
+        figure = MagicMock(spec=plt.Figure)
         
         with patch('matplotlib.pyplot.subplots') as subplots_mock:
             
             subplots_mock.return_value = (figure, axes)
             _ = result.plot()
     
-        axes.plot.assert_called_once()
+        axes.flat[0].plot.assert_called_once()
                 
     def test_surface_plotting(self) -> None:
         """Surface plotting should call the correct plotting routine"""
@@ -328,10 +333,13 @@ class TestScalarEvaluationResult(TestCase):
         
         result = ScalarEvaluationResult(grid, scalar_data, evaluator)
         
-        with patch('matplotlib.pyplot.figure') as figure_mock:
+        axes = MagicMock(spec=np.ndarray)
+        figure = MagicMock(spec=plt.Figure)
+        with patch('matplotlib.pyplot.subplots') as subplots_mock:
+            subplots_mock.return_value = (figure, axes)
             _ = result.plot()
             
-        figure_mock().add_subplot.assert_called()
+        axes.flat[0].plot_surface.assert_called_once()
         
     def test_multidim_plotting(self) -> None:
         """Multidimensional plotting should call the correct plotting routine"""
@@ -342,15 +350,14 @@ class TestScalarEvaluationResult(TestCase):
         
         result = ScalarEvaluationResult(grid, scalar_data, evaluator)
             
-        axes = Mock()
-        figure = Mock()
-        
+        axes = MagicMock(spec=np.ndarray)
+        figure = MagicMock(spec=plt.Figure)
         with patch('matplotlib.pyplot.subplots') as subplots_mock:
             
             subplots_mock.return_value = (figure, axes)
             _ = result.plot()
             
-        axes.plot.assert_called()
+        axes.flat[0].plot.assert_called()
         
     def test_plot_no_data(self) -> None:
         """Even without grid dimensions an empty figure should be generated"""
@@ -748,12 +755,14 @@ class TestMonteCarloResult(TestCase):
     def test_plot(self) -> None:
         """Plotting should call the correct plotting routine"""
         
-        with patch('matplotlib.pyplot.figure') as figure_mock:
+        figure_mock = MagicMock(spec=plt.Figure)
+        axes_mock = MagicMock(spec=np.ndarray)
+        with patch('matplotlib.pyplot.subplots') as subplots_mock:
             
-            figure_mock.return_value = Mock()
-            self.result.plot()
+            subplots_mock.return_value = figure_mock, axes_mock
+            _ = self.result.plot()
             
-            figure_mock.assert_called()
+        subplots_mock.assert_called()
         
     def test_save_to_matlab(self) -> None:
         """Saving to Matlab should call the correct routine"""

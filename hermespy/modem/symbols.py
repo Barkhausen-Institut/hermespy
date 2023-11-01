@@ -258,14 +258,14 @@ class Symbols(HDFSerializable):
         else:
             self.__symbols[section] = value
 
-    def plot_constellation(self, axes: Optional[plt.axes.Axes] = None, title: str = "Symbol Constellation") -> Optional[plt.Figure]:
+    def plot_constellation(self, axes: Optional[plt.Axes] = None, title: str = "Symbol Constellation") -> Optional[plt.Figure]:
         """Plot the symbol constellation.
 
         Essentially projects the time-series of symbols onto a single complex plane.
 
         Args:
 
-            axes (Optional[plt.axes.Axes], optional):
+            axes (Optional[plt.Axes], optional):
                 The axes to plot the graph to.
                 By default, a new matplotlib figure is created.
 
@@ -281,7 +281,7 @@ class Symbols(HDFSerializable):
         """
 
         symbols = self.__symbols.flatten()
-        figure: Optional[plt.figure.Figure] = None
+        figure: Optional[plt.Figure] = None
 
         # Create a new figure and the respective axes if none were provided
         if axes is None:
