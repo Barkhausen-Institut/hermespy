@@ -146,7 +146,7 @@ As a result, all combined binaries and source files will remain within the repos
 
    .. code-tab:: batch Windows Conda
 
-      conda create -n <envname> python=3.9
+      conda create -n <envname> python=3.11
       conda activate <envname>
       conda install pip
       pip install -e ".[develop]"

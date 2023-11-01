@@ -4,6 +4,7 @@
 from unittest import TestCase
 from unittest.mock import Mock, patch, PropertyMock
 
+import matplotlib.pyplot as plt
 import numpy as np
 from numpy.random import default_rng
 
@@ -78,11 +79,12 @@ class TestBitErrorEvaluation(TestCase):
     def test_plot(self) -> None:
         """Plotting should generate a valid plot"""
         
+        figure_mock = Mock(spec=plt.Figure)
+        axes_mock = Mock(spec=plt.Axes)
+        axes_collection = np.array([[axes_mock]], dtype=np.object_)
+        
         with patch('matplotlib.pyplot.subplots') as subplots_mock:
-            
-            figure = Mock()
-            axes = Mock()
-            subplots_mock.return_value = (figure, axes)
+            subplots_mock.return_value = (figure_mock, axes_collection)
             
             self.evaluation.plot()       
             subplots_mock.assert_called_once()
@@ -143,11 +145,12 @@ class TestBlockErrorEvaluation(TestCase):
     def test_plot(self) -> None:
         """Plotting should generate a valid plot"""
         
+        figure_mock = Mock(spec=plt.Figure)
+        axes_mock = Mock(spec=plt.Axes)
+        axes_collection = np.array([[axes_mock]], dtype=np.object_)
+        
         with patch('matplotlib.pyplot.subplots') as subplots_mock:
-            
-            figure = Mock()
-            axes = Mock()
-            subplots_mock.return_value = (figure, axes)
+            subplots_mock.return_value = (figure_mock, axes_collection)
             
             self.evaluation.plot()       
             subplots_mock.assert_called_once()    
@@ -221,11 +224,12 @@ class TestFrameErrorEvaluation(TestCase):
     def test_plot(self) -> None:
         """Plotting should generate a valid plot"""
         
+        figure_mock = Mock(spec=plt.Figure)
+        axes_mock = Mock(spec=plt.Axes)
+        axes_collection = np.array([[axes_mock]], dtype=np.object_)
+        
         with patch('matplotlib.pyplot.subplots') as subplots_mock:
-            
-            figure = Mock()
-            axes = Mock()
-            subplots_mock.return_value = (figure, axes)
+            subplots_mock.return_value = (figure_mock, axes_collection)
             
             self.evaluation.plot()       
             subplots_mock.assert_called_once()
@@ -312,11 +316,12 @@ class TestThroughputEvaluation(TestCase):
     def test_plot(self) -> None:
         """Plotting should generate a valid plot"""
         
+        figure_mock = Mock(spec=plt.Figure)
+        axes_mock = Mock(spec=plt.Axes)
+        axes_collection = np.array([[axes_mock]], dtype=np.object_)
+        
         with patch('matplotlib.pyplot.subplots') as subplots_mock:
-            
-            figure = Mock()
-            axes = Mock()
-            subplots_mock.return_value = (figure, axes)
+            subplots_mock.return_value = (figure_mock, axes_collection)
             
             self.evaluation.plot()       
             subplots_mock.assert_called_once()

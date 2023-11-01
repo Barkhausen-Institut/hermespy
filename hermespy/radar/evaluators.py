@@ -58,7 +58,7 @@ import numpy as np
 from h5py import File
 from scipy.stats import uniform
 
-from hermespy.core import ReplayScenario, Scenario, ScenarioMode, Serializable
+from hermespy.core import ReplayScenario, Scenario, ScenarioMode, Serializable, VAT
 from hermespy.core.monte_carlo import Evaluator, Evaluation, EvaluationResult, EvaluationTemplate, GridDimension, ArtifactTemplate, Artifact, ScalarEvaluationResult
 from hermespy.radar import Radar, RadarReception
 from hermespy.channel import RadarChannelBase
@@ -333,14 +333,16 @@ class RocEvaluationResult(EvaluationResult):
     def title(self) -> str:
         return self.__title
 
-    def _plot(self, axes: plt.Axes) -> None:
+    def _plot(self, axes: VAT) -> None:
+        ax: plt.Axes = axes.flat[0]
+
         # Configure axes labels
-        axes.set_xlabel("False Alarm Probability")
-        axes.set_ylabel("Detection Probability")
+        ax.set_xlabel("False Alarm Probability")
+        ax.set_ylabel("Detection Probability")
 
         # Configure axes limits
-        axes.set_xlim(0.0, 1.1)
-        axes.set_ylim(0.0, 1.1)
+        ax.set_xlim(0.0, 1.1)
+        ax.set_ylim(0.0, 1.1)
 
         section_magnitudes = tuple(s.num_sample_points for s in self.__grid)
         for section_indices in np.ndindex(section_magnitudes):
@@ -355,11 +357,11 @@ class RocEvaluationResult(EvaluationResult):
             y_axis = self.__detection_probabilities[section_indices]
 
             # Plot the graph line
-            axes.plot(x_axis, y_axis, label=line_label)
+            ax.plot(x_axis, y_axis, label=line_label)
 
         # Only plot the legend for an existing sweep grid.
         if len(self.__grid) > 0:
-            axes.legend()
+            ax.legend()
 
     def to_array(self) -> np.ndarray:
         return np.stack((self.__detection_probabilities, self.__false_alarm_probabilities), axis=-1)

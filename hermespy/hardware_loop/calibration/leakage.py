@@ -16,7 +16,7 @@ from numpy.linalg import svd
 from scipy.fft import fft, fftfreq, fftshift, ifft
 from scipy.signal import convolve
 
-from hermespy.core import Serializable, Signal, Visualizable
+from hermespy.core import Serializable, Signal, VAT, Visualizable
 from ..physical_device import LeakageCalibrationBase, PhysicalDevice
 from .delay import DelayCalibration
 
@@ -130,20 +130,23 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Visualizable, Serializ
     def title(self) -> str:
         return "Frequency Selective Leakage Calibration"
 
-    def _new_axes(self) -> Tuple[plt.Figure, plt.Axes]:
-        figure, axes = plt.subplots(ncols=2)
+    def _new_axes(self, **kwargs) -> Tuple[plt.Figure, VAT]:
+        figure, axes = plt.subplots(1, 2, squeeze=False)
         return figure, axes
 
-    def _plot(self, axes: plt.Axes) -> None:
+    def _plot(self, axes: VAT) -> None:
+        time_axes: plt.Axes = axes[0, 0]
+        freq_axes: plt.Axes = axes[0, 1]
+
         for m, n in np.ndindex(self.__leakage_response.shape[0], self.__leakage_response.shape[1]):
             sample_instances = np.arange(self.__leakage_response.shape[2]) / self.__sampling_rate
             frequency_bins = fftshift(fftfreq(self.__leakage_response.shape[2]))
 
-            axes[0].plot(sample_instances, self.__leakage_response[m, n, :].real, label=f"Tx: {n} Rx{m}")
-            axes[1].plot(frequency_bins, fftshift(abs(fft(self.__leakage_response[m, n, :]))), label=f"Tx: {n} Rx{m}")
+            time_axes.plot(sample_instances, self.__leakage_response[m, n, :].real, label=f"Tx: {n} Rx{m}")
+            freq_axes.plot(frequency_bins, fftshift(abs(fft(self.__leakage_response[m, n, :]))), label=f"Tx: {n} Rx{m}")
 
-            axes[0].set_xlabel("Time [s]")
-            axes[1].set_xlabel("Frequency [Hz]")
+            time_axes.set_xlabel("Time [s]")
+            freq_axes.set_xlabel("Frequency [Hz]")
 
     def to_HDF(self, group: Group) -> None:
         self._write_dataset(group, "leakage_response", self.leakage_response)
