@@ -17,7 +17,7 @@ from .random_node import RandomRealization, RandomNode
 from .drop import Drop, RecalledDrop
 from .scenario import Scenario, ScenarioMode, ScenarioType, ReplayScenario
 from .signal_model import Signal
-from .visualize import Visualizable
+from .visualize import VAT, Visualizable
 
 __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -105,5 +105,6 @@ __all__ = [
     "Signal",
     "ProcessedDeviceInput",
     "DeviceInput",
+    "VAT",
     "Visualizable",
 ]

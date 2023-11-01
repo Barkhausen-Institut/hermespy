@@ -214,15 +214,14 @@ class TestRocEvaluationResult(TestCase):
     def test_plot(self) -> None:
         """ROC plotting should be properly handled"""
         
+        figure_mock = Mock()
+        axes_mock = Mock()
+        axes_collection = np.array([[axes_mock]], dtype=np.object_)
+        
         with patch('matplotlib.pyplot.subplots') as subplots_mock:
-            
-            figure = Mock()
-            axes = Mock()
-            subplots_mock.return_value = (figure, axes)
-            
+            subplots_mock.return_value = (figure_mock, axes_collection)
             self.result.plot()
-            
-            axes.plot.assert_called()
+            axes_mock.plot.assert_called()
             
     def test_to_array(self) -> None:
         """Conversion to array should be properly handled"""

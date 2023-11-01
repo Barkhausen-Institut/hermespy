@@ -28,13 +28,13 @@ The following figure visualizes the gain characteristics for the implemented amp
 """
 
 from __future__ import annotations
-from typing import Any, Optional, Tuple
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.constants import pi
 
-from hermespy.core import Serializable
+from hermespy.core import Serializable, VAT, Visualizable
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -46,7 +46,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class PowerAmplifier(Serializable):
+class PowerAmplifier(Serializable, Visualizable):
     """Base class of a power-amplifier model.
 
     Implements a distortion-less amplification model
@@ -148,21 +148,30 @@ class PowerAmplifier(Serializable):
         # No modeling in the prototype, just return the non-distorted input signal
         return input_signal
 
-    def plot(self, samples: Optional[np.ndarray] = None, axes: Optional[Tuple[plt.axes, plt.axes]] = None) -> None:
+    @property
+    def title(self) -> str:
+        return self.__class__.__name__ + " Characteristics"
+
+    def plot(self, axes: VAT | None = None, *, title: str | None = None, samples: np.ndarray | None = None) -> plt.FigureBase:
         """Plot the power amplifier distortion characteristics.
 
         Generates a matplotlib plot depicting the phase/amplitude.
 
         Args:
 
+            axes (VAT, optional):
+                The axis object into which the information should be plotted.
+                If not specified, the routine will generate and return a new figure.
+
+            title (str, optional):
+                Title of the generated plot.
+
             samples (np.ndarray, optional):
                 Sample points at which to evaluate the characteristics.
                 In other words, the x-axis of the resulting characteristics plot.
-
-            axes (Optional[Tuple[plt.axes, plt.axes]], optional):
-                Axes to which to plot the characteristics.
-                By default, a new figure is created.
         """
+
+        fig, ax = self._prepare_axes(axes, title)
 
         if samples is None:
             samples = np.arange(0, 2, 0.01) * self.saturation_amplitude
@@ -171,27 +180,19 @@ class PowerAmplifier(Serializable):
         amplitude = abs(model)
         phase = np.angle(model)
 
-        figure: Optional[plt.figure] = None
-        if axes is None:
-            figure, amplitude_axes = plt.subplots()
-            figure.suptitle(self.__class__.__name__ + " Characteristics")
+        amplitude_axes: plt.Axes = ax.flat[0]
+        phase_axes: plt.Axes = amplitude_axes.twinx()  # type: ignore
 
-            amplitude_axes.set_xlabel("Input Amplitude")
-            amplitude_axes.set_ylabel("Output Amplitude")
+        amplitude_axes.set_xlabel("Input Amplitude")
+        amplitude_axes.set_ylabel("Output Amplitude")
 
-            phase_axes = amplitude_axes.twinx()
-            phase_axes.set_ylabel("Output Phase")
-            phase_axes.set_ylim([-pi, pi])
-
-        else:
-            amplitude_axes = axes[0]
-            phase_axes = axes[1]
+        phase_axes.set_ylabel("Output Phase")
+        phase_axes.set_ylim((-pi, pi))
 
         amplitude_axes.plot(samples, amplitude)
         phase_axes.plot(samples, phase)
 
-        if figure is not None:
-            figure.tight_layout()
+        return fig
 
 
 class ClippingPowerAmplifier(PowerAmplifier):
