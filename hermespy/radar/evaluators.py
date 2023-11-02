@@ -282,6 +282,9 @@ class RocArtifact(Artifact):
     def h1_value(self) -> float:
         return self.__h1_value
 
+    def to_scalar(self) -> None:
+        return None
+
 
 class RocEvaluation(Evaluation):
     """Evaluation of receiver operating characteristics (ROC)"""
