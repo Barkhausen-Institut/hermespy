@@ -217,7 +217,7 @@ class BlockErrorEvaluation(EvaluationTemplate[np.ndarray]):
         ax.set_xlabel("Block Index")
         ax.set_ylabel("Block Error Indicator")
 
-    def artifact(self) -> BitErrorArtifact:
+    def artifact(self) -> BlockErrorArtifact:
         bler = np.mean(self.evaluation)
         return BlockErrorArtifact(bler)
 
