@@ -1074,7 +1074,6 @@ class TestMonteCarlo(TestCase):
                                       num_actors=self.num_actors,
                                       console=self.console,
                                       console_mode=ConsoleMode.INTERACTIVE,
-                                      database_caching=True,
                                       progress_log_interval=-1.)
 
     def test_init(self) -> None:
