@@ -222,6 +222,10 @@ Full releases with a new set of features will be provided on a bi-anual basis in
      - :doc:`api/modem.precoding.space_time_block_coding`
      - 
 
+   * - Ganesan
+     - :doc:`api/modem.precoding.space_time_block_coding`
+     - 
+
    * - 
      - :doc:`api/modem.precoding.single_carrier`
      - :doc:`examples/ofdm_5g`
@@ -339,11 +343,11 @@ Full releases with a new set of features will be provided on a bi-anual basis in
      - Examples
 
    * - **Soundcard**
-     - :doc:`/api/hardware_loop.audio.device`
+     - :doc:`/api/hardware_loop.audio.device.AudioDevice`
      - :doc:`/notebooks/audio`, :doc:`/examples/audio`
 
    * - **USRP**
-     - :doc:`/api/hardware_loop.usrp`
+     - :doc:`/api/hardware_loop.uhd.usrp.UsrpDevice`
      - :doc:`examples/uhd`
 
 .. footbibliography::

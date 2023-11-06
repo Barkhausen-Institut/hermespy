@@ -3,6 +3,7 @@
 import unittest
 from unittest.mock import patch, MagicMock, Mock
 
+import matplotlib.pyplot as plt
 import numpy as np
 from numpy.testing import assert_array_almost_equal, assert_array_equal, assert_array_less
 
@@ -97,25 +98,23 @@ class TestPowerAmplifier(unittest.TestCase):
     def test_plot(self) -> None:
         """The plotting routine should generate matplotlib plots"""
 
-        figure = Mock()
-        axes = MagicMock()
+        figure = Mock(spec=plt.Figure)
+        axes = MagicMock(spec=plt.Axes)
+        axes_collection = np.array([[axes]], dtype=np.object_)
 
         with patch('matplotlib.pyplot.subplots') as subplots_patch:
 
-            subplots_patch.return_value = figure, axes
+            subplots_patch.return_value = figure, axes_collection
 
             self.pa.plot()
             subplots_patch.assert_called_once()
 
-            self.pa.plot(axes=axes)
-
+            self.pa.plot(axes=axes_collection)
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""
 
         test_yaml_roundtrip_serialization(self, self.pa)
-
-
 
 
 class TestRappPowerAmplifier(unittest.TestCase):

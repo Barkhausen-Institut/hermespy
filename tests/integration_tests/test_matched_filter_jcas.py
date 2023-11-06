@@ -34,8 +34,8 @@ class TestSCMatchedFilterJcas(TestCase):
         self.target_range = 5
         self.max_range = 10
         self.channel = SingleTargetRadarChannel(target_range=self.target_range,
-                                    transmitter=self.device,
-                                    receiver=self.device,
+                                    alpha_device=self.device,
+                                    beta_device=self.device,
                                     radar_cross_section=1.)
         
         self.oversampling_factor = 16
@@ -57,10 +57,10 @@ class TestSCMatchedFilterJcas(TestCase):
             transmission = self.device.transmit()
             
             # Propagate signal over the radar channel
-            propagetd_signals, _, _ = self.channel.propagate(transmission)
+            propagation = self.channel.propagate(transmission)
             
             # Receive signal
-            self.device.receive(propagetd_signals)
+            self.device.receive(propagation)
             
             # The bits should be recovered correctly
             assert_array_equal(self.operator.transmission.bits, self.operator.reception.bits)

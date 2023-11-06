@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from unittest import TestCase
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -256,7 +256,9 @@ class TestUniformArray(TestCase):
     def test_plot_topology(self) -> None:
         """Calling the plot routine should return a figure object"""
 
-        self.assertIsInstance(self.array.plot_topology(), plt.Figure)
+        with patch("matplotlib.pyplot.figure") as figure_mock:
+            _ = self.array.plot_topology()
+            figure_mock.assert_called_once()
 
     def test_cartesian_phase_response_local(self) -> None:
         """Local cartesian response phase function should generate a proper sensor array response vector"""

@@ -12,7 +12,6 @@ from __future__ import annotations
 import numpy as np
 from h5py import Group
 
-from .channel_state_information import ChannelStateInformation
 from .device import Transmission, Transmitter, Receiver, Reception
 from .signal_model import Signal
 
@@ -154,7 +153,7 @@ class SignalReceiver(StaticOperator, Receiver[Reception]):
     def energy(self) -> float:
         return 0.0
 
-    def _receive(self, signal: Signal, _: ChannelStateInformation) -> Reception:
+    def _receive(self, signal: Signal) -> Reception:
         received_signal = signal.resample(self.sampling_rate)
         return Reception(received_signal)
 

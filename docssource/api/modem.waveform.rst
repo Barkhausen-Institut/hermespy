@@ -1,3 +1,7 @@
-.. automodule:: hermespy.modem.waveform
+======================
+Communication Waveform
+======================
+
+.. autoclass:: hermespy.modem.waveform.WaveformGenerator
 
 .. footbibliography::

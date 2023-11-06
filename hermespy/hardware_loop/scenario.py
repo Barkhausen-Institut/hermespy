@@ -9,9 +9,10 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Sequence
 from time import time
-from typing import Generic, Optional, Tuple, TypeVar
+from typing import Generic, Optional, TypeVar
 
-from hermespy.core import ChannelStateInformation, DeviceInput, DeviceReception, Scenario, Drop, Signal
+from hermespy.core import DeviceInput, DeviceReception, Scenario, Drop, Signal
+from hermespy.channel import ChannelPropagation
 from hermespy.simulation import SimulatedDeviceReception, SimulationScenario, TriggerRealization
 from .physical_device import PDT
 
@@ -25,7 +26,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class PhysicalScenario(Scenario[PDT], Generic[PDT]):
+class PhysicalScenario(Generic[PDT], Scenario[PDT]):
     """Scenario of physical device bindings.
 
     Managing physical devices by a scenario enables synchronized triggering
@@ -101,7 +102,7 @@ class SimulatedPhysicalScenario(SimulationScenario, PhysicalScenario):
         # Triggering does nothing
         pass  # pragma: no cover
 
-    def receive_devices(self, impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]] | Sequence[Sequence[Tuple[Signal, ChannelStateInformation | None]]] | None = None, cache: bool = True, trigger_realizations: Sequence[TriggerRealization] | None = None) -> Sequence[SimulatedDeviceReception]:
+    def receive_devices(self, impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]] | Sequence[Sequence[ChannelPropagation]] | None = None, cache: bool = True, trigger_realizations: Sequence[TriggerRealization] | None = None) -> Sequence[SimulatedDeviceReception]:
         if impinging_signals is None:
             physical_device_receptions = PhysicalScenario.receive_devices(self, None, cache)
             impinging_signals = [r.impinging_signals for r in physical_device_receptions]

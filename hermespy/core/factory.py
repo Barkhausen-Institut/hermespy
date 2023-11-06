@@ -73,19 +73,30 @@ class Serializable(object):
     """
 
     yaml_tag: Optional[str] = None
-    """YAML serialization tag."""
+    """YAML serialization tag.
+
+    :meta private:
+    """
 
     property_blacklist: Set[str] = set()
-    """Set of properties to be ignored during serialization."""
+    """Set of properties to be ignored during serialization.
+
+    :meta private:
+    """
 
     serialized_attributes: Set[str] = set()
-    """Set of object attributes to be serialized."""
+    """Set of object attributes to be serialized.
+
+    :meta private:
+    """
 
     @staticmethod
     def _arg_signature() -> Set[str]:
         """Argument signature.
 
         Returns: Additional arguments not inferable from the init signature.
+
+        :meta private:
         """
 
         return set()
@@ -99,6 +110,8 @@ class Serializable(object):
             blacklist (Set[str], optional): List of attribute names to be ignored during extraction.
 
         Returns: Set of serializable attribute names.
+
+        :meta private:
         """
 
         if blacklist:
@@ -151,6 +164,8 @@ class Serializable(object):
                 The channel instance to be serialized.
 
         Returns: The serialized YAML node.
+
+        :meta private:
         """
 
         return node._mapping_serialization_wrapper(representer)
@@ -164,6 +179,8 @@ class Serializable(object):
             additional_fields (Dict[str, Any], optional): Additional fields to be serialized.
 
         Returns: A YAML mapping node representing this object.
+
+        :meta private:
         """
 
         # Init additional fields
@@ -203,6 +220,8 @@ class Serializable(object):
                 YAML node representing the `Serializable` serialization.
 
         Returns: The de-serialized object.
+
+        :meta private:
         """
 
         # Handle empty yaml nodes
@@ -222,6 +241,8 @@ class Serializable(object):
 
         Returns:
             SerializableArray: Initialized class instance.
+
+        :meta private:
         """
 
         # Extract initialization signature
@@ -775,8 +796,10 @@ class HDFSerializable(metaclass=ABCMeta):
 
         Args:
 
-            group (Group):
+            group (h5py.Group):
                 The HDF5 group to which the object is serialized.
+
+        :meta private:
         """
         ...  # pragma no cover
 
@@ -789,10 +812,12 @@ class HDFSerializable(metaclass=ABCMeta):
 
         Args:
 
-            group (Group):
+            group (h5py.Group):
                 The HDF5 group from which the object state is recalled.
 
         Returns: The object initialized from the HDF5 group state.
+
+        :meta private:
         """
         ...  # pragma no cover
 
@@ -802,13 +827,15 @@ class HDFSerializable(metaclass=ABCMeta):
 
         Args:
 
-            group (Group):
+            group (h5py.Group):
                 The HDF5 group from which the object state is recalled.
 
             name (str):
                 Name of the group to be created.
 
         Returns: A handle to group `name`.
+
+        :meta private:
         """
 
         if name not in group:
@@ -823,7 +850,7 @@ class HDFSerializable(metaclass=ABCMeta):
 
         Args:
 
-            group (Group):
+            group (h5py.Group):
                 The HDF5 group from which the object state is recalled.
 
             dataset (str):
@@ -831,6 +858,8 @@ class HDFSerializable(metaclass=ABCMeta):
 
             data (Any | None):
                 The data to be written to `dataset`.
+
+        :meta private:
         """
 
         if dataset in group:

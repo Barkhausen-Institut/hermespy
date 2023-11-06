@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
-"""Interface prototype to the Quadriga channel model."""
 
 from __future__ import annotations
+from os import getenv
+import os.path as path
 from typing import List, Tuple, Optional, Type, TYPE_CHECKING
 
-import os
 import numpy as np
-from os import getenv, path
+
+from hermespy.core import RandomNode
 
 if TYPE_CHECKING:
     from hermespy.channel import QuadrigaChannel  # pragma: no cover
@@ -22,8 +23,8 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class QuadrigaInterface:
-    """Implements the direct interface between hermes QuadrigChannel/quadriga backend.
+class QuadrigaInterface(RandomNode):
+    """Interface between Hermes' channel model and the Quadriga channel simulator.
 
     It is important to mention, that in the hermes implementation channels are
     independent of each other, i.e. are associated with each transmitter/receiver
@@ -36,21 +37,33 @@ class QuadrigaInterface:
     """
 
     yaml_tag = "QuadrigaInterface"
-    __instance: Optional[QuadrigaInterface] = None
+    _instance: Optional[QuadrigaInterface] = None
     __path_quadriga_src: str
     __antenna_kind: str  # TODO: Implement Enumeration for possible types of antennas
     __scenario_label: str
     __channels: List[QuadrigaChannel]
     __fetched_channels: List[QuadrigaChannel]
 
-    def __init__(self, path_quadriga_src: Optional[str] = None, antenna_kind: str = "omni", scenario_label: str = "3GPP_38.901_UMa_LOS") -> None:
-        """Quadriga Interface object initialization.
-
-        Args:
-            path_quadriga_src (str, optional): Path to the Quadriga Matlab source files.
-            antenna_kind (str, optional): Type of antenna considered.
-            scenario_label (str, optional): Scenario label.
+    def __init__(self, path_quadriga_src: Optional[str] = None, antenna_kind: str = "omni", scenario_label: str = "3GPP_38.901_UMa_LOS", seed: int | None = None) -> None:
         """
+        Args:
+            path_quadriga_src (str, optional):
+                Path to the Quadriga Matlab source files.
+                If not specified, the environment variable `HERMES_QUADRIGA` is assumed.
+
+            antenna_kind (str, optional):
+                Type of antenna considered.
+                Defaults to "omni".
+
+            scenario_label (str, optional):
+                Scenario label.
+
+            seed (int, optional):
+                Random seed.
+        """
+
+        # Initialize base class
+        RandomNode.__init__(self, seed=seed)
 
         # Infer the quadriga source path
         default_src_path = path.join(path.dirname(__file__), "..", "..", "submodules", "quadriga", "quadriga_src")
@@ -75,24 +88,24 @@ class QuadrigaInterface:
     def GlobalInstance(cls: Type[QuadrigaInterface]) -> QuadrigaInterface:
         """Access the global Quadriga interface instance.
 
-        Returns:
-            QuadrigaInterface: Handle to the quadriga interface.
+        If no global instance exists, a new one is created.
+
+        Returns: Handle to the global Quadriga interface instance.
         """
 
-        if QuadrigaInterface.__instance is None:
-            QuadrigaInterface.__instance = cls()
+        if QuadrigaInterface._instance is None:
+            QuadrigaInterface._instance = cls()
 
-        return QuadrigaInterface.__instance
+        return QuadrigaInterface._instance
 
     @classmethod
     def GlobalInstanceExists(cls: Type[QuadrigaInterface]) -> bool:
         """Checks if a global Quadriga interface instance exists.
 
-        Returns:
-            bool: If a global instance exists.
+        Returns: Boolean indicating if a global instance exists.
         """
 
-        return QuadrigaInterface.__instance is not None
+        return QuadrigaInterface._instance is not None
 
     @classmethod
     def SetGlobalInstance(cls: Type[QuadrigaInterface], new_instance: QuadrigaInterface) -> None:
@@ -101,88 +114,60 @@ class QuadrigaInterface:
         Copies registered channels to the new instance if a global instance already exists.
 
         Args:
-            new_instance (QuadrigaInterface): The Quadriga interface instance to be made global.
+
+            new_instance (QuadrigaInterface):
+                The Quadriga interface instance to be made global.
         """
 
-        if QuadrigaInterface.__instance is not None:
-            for channel in QuadrigaInterface.__instance.__channels:
+        if QuadrigaInterface._instance is not None:
+            for channel in QuadrigaInterface._instance.__channels:
                 new_instance.register_channel(channel)
 
-        QuadrigaInterface.__instance = new_instance
+        QuadrigaInterface._instance = new_instance
 
     @property
     def path_quadriga_src(self) -> str:
-        """Access the configured path to the Quadriga source files.
+        """Path to the configured Quadriga source files.
 
-        Returns:
-            str: Path to Quadriga sources.
+        Raises:
+
+            ValueError: If the path does not exist within the filesystem.
         """
 
         return self.__path_quadriga_src
 
     @path_quadriga_src.setter
-    def path_quadriga_src(self, path: str) -> None:
-        """Modify the configured path to the Quadriga source files.
+    def path_quadriga_src(self, location: str) -> None:
+        if not path.exists(location):
+            raise ValueError(f"Provided path to Quadriga sources {location} does not exist within filesystem")
 
-        Args:
-            path (str): Path to Quadriga sources.
-
-        Raises:
-            ValueError: If the `path` does not exist within the filesystem.
-        """
-
-        if not os.path.exists(path):
-            raise ValueError(f"Provided path to Quadriga sources {path} does not exist within filesystem")
-
-        self.__path_quadriga_src = path
+        self.__path_quadriga_src = location
 
     @property
     def antenna_kind(self) -> str:
-        """Access the configured type of antenna.
-
-        Returns:
-            str: The configured antenna type.
-        """
+        """Assumed type of antenna."""
 
         return self.__antenna_kind
 
     @antenna_kind.setter
     def antenna_kind(self, antenna_type: str) -> None:
-        """Modify the configured type of antenna.
-
-        Args:
-            antenna_type (str): String representation of the antenna type.
-        """
-
         self.__antenna_kind = antenna_type
 
     @property
     def scenario_label(self) -> str:
-        """Access the configured quadriga scenario label.
-
-        Returns:
-            str: The scenario label.
-        """
+        """Configured Quadriga scenario label."""
 
         return self.__scenario_label
 
     @scenario_label.setter
     def scenario_label(self, label: str) -> None:
-        """Modify the configured Quadriga scenario label.
-
-        Args:
-            label (str): The new label.
-        """
+        """Modify the configured Quadriga scenario label."""
 
         self.__scenario_label = label
 
     @property
     def channels(self) -> List[QuadrigaChannel]:
-        """Access the currently registered quadriga channels.
-
-        Returns:
-            List[QuadrigaChannel]: List of channel objects.
-        """
+        """List of registered Quadriga channels."""
 
         return self.__channels
 
@@ -219,8 +204,7 @@ class QuadrigaInterface:
             channel (QuadrigaChannel):
                 The channel in question.
 
-        Returns:
-            The registration state.
+        Returns: Boolean indicating if the channel is registered.
         """
 
         return channel in self.__channels
@@ -263,9 +247,9 @@ class QuadrigaInterface:
         """Launches quadriga channel simulator.
 
         Raises:
-            RuntimeError:
-                If no channels are registered
-                If transmitter sampling rates are not identical.
+
+            RuntimeError: If no channels are registered
+            RuntimeError: If transmitter sampling rates are not identical.
         """
 
         transmitters: List[SimulatedDevice] = []
@@ -278,12 +262,12 @@ class QuadrigaInterface:
         for channel_idx, channel in enumerate(self.__channels):
             self.__channel_indices[channel_idx, :] = (receiver_index, transmitter_index)
 
-            if channel.transmitter not in transmitters:
-                transmitters.append(channel.transmitter)
+            if channel.alpha_device not in transmitters:
+                transmitters.append(channel.alpha_device)
                 transmitter_index += 1
 
-            if channel.receiver not in receivers:
-                receivers.append(channel.receiver)
+            if channel.beta_device not in receivers:
+                receivers.append(channel.beta_device)
                 receiver_index += 1
 
         carriers = np.empty(len(self.__channels), dtype=float)
@@ -324,7 +308,7 @@ class QuadrigaInterface:
             "tracks_speed": np.zeros(len(receivers)),
             "tracks_length": np.zeros(len(receivers)),
             "tracks_angle": np.zeros(len(receivers)),
-            "seed": np.random.rand(),
+            "seed": self._rng.integers(0, 2**32 - 1),
         }
 
         # Run quadriga for the specific interface implementation

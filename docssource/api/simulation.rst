@@ -10,9 +10,12 @@ including noise and hardware modeling.
    :namespace: hermespy
 
 .. toctree::
+   :glob:
 
-   simulation.simulation
-   simulation.simulated_device
+   simulation.simulation.Simulation
+   simulation.simulation.SimulationScenario
+   simulation.simulation.SimulatedDrop
+   simulation.simulated_device.*
    simulation.analog_digital_converter
    simulation.rf_chain
    simulation.rf_chain.power_amplifier

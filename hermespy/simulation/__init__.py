@@ -1,10 +1,11 @@
 from .simulation import Simulation, SimulationScenario
-from .simulated_device import ProcessedSimulatedDeviceInput, SimulatedDevice, SimulatedDeviceOutput, SimulatedDeviceReceiveRealization, SimulatedDeviceTransmission, SimulatedDeviceReception, TriggerModel, TriggerRealization, RandomTrigger, StaticTrigger, OffsetTrigger
+from .simulated_device import ProcessedSimulatedDeviceInput, SimulatedDevice, SimulatedDeviceOutput, SimulatedDeviceReceiveRealization, SimulatedDeviceTransmission, SimulatedDeviceReception, TriggerModel, TriggerRealization, RandomTrigger, StaticTrigger, SampleOffsetTrigger, TimeOffsetTrigger
 from .rf_chain import RfChain, PowerAmplifier, SalehPowerAmplifier, RappPowerAmplifier, ClippingPowerAmplifier, CustomPowerAmplifier, PhaseNoise, NoPhaseNoise, OscillatorPhaseNoise
 from .analog_digital_converter import AnalogDigitalConverter, Gain, GainControlType, AutomaticGainControl, QuantizerType
 from .isolation import Isolation, SpecificIsolation, PerfectIsolation, SelectiveLeakage
 from .noise import Noise, AWGN
 from .coupling import Coupling, ImpedanceCoupling, PerfectCoupling
+from .modem import SCIdealChannelEstimation, SingleCarrierIdealChannelEstimation, OFDMIdealChannelEstimation
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -29,7 +30,8 @@ __all__ = [
     "TriggerRealization",
     "RandomTrigger",
     "StaticTrigger",
-    "OffsetTrigger",
+    "SampleOffsetTrigger",
+    "TimeOffsetTrigger",
     "RfChain",
     "PowerAmplifier",
     "SalehPowerAmplifier",
@@ -54,4 +56,7 @@ __all__ = [
     "Coupling",
     "ImpedanceCoupling",
     "PerfectCoupling",
+    "SCIdealChannelEstimation",
+    "SingleCarrierIdealChannelEstimation",
+    "OFDMIdealChannelEstimation",
 ]

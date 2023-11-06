@@ -191,13 +191,6 @@ class TestRadar(TestCase):
         waveform = Mock()
         self.radar.waveform = waveform
         self.assertEqual(waveform, self.radar.waveform)
-        
-    def test_max_range_validation(self) -> None:
-        """Max range property getter should raise RuntimError if no waveform is configured"""
- 
-        self.radar.waveform = None
-        with self.assertRaises(RuntimeError):
-            _ = self.radar.max_range
             
     def test_max_range(self) -> None:
         """Max range property getter should return the waveform's max range"""
@@ -385,7 +378,7 @@ class TestRadar(TestCase):
         with patch('hermespy.radar.Radar.property_blacklist', new_callable=PropertyMock) as blacklist, \
              patch('hermespy.radar.Radar.waveform', new_callable=PropertyMock) as waveform:
                  
-            blacklist.return_value = {'slot', 'waveform', 'receive_beamformer'}
+            blacklist.return_value = {'slot', 'waveform', 'receive_beamformer', 'device'}
             waveform.return_value = self.waveform
 
             test_yaml_roundtrip_serialization(self, self.radar)

@@ -40,12 +40,13 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
     'sphinx.ext.ifconfig',
-    'sphinx.ext.napoleon',
+    'sphinx.ext.napoleon',                      # Support for google-style docstrings
     'sphinx_copybutton',                        # Copy script examples directly
     'sphinx_autodoc_typehints',                 # Type hinting support for the autodoc extension
     'sphinx_tabs.tabs',                         # Multiple tabs
     'matplotlib.sphinxext.plot_directive',      # Directly rendering plots as images
     'sphinx.ext.mathjax',                       # Rendering math equations for nbsphinx
+    'sphinx.ext.intersphinx',                   # Linking to other documentations
 ]
 
 autoclass_content = "both"
@@ -72,12 +73,25 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 pygments_style = 'sphinx'
 
+
+# Autodoc configuration
+autodoc_typehints = 'signature'
 autodoc_default_options = {
     'members': True,
     'undoc-members': True,
-    'member-order': 'bysource',
+    'member-order': 'groupwise',
     'show-inheritance': True,
-    'exclude-members': '__weakref__'
+    'exclude-members': '__weakref__',
+    'inherited-members': True,
+}
+
+# Intersphinx configuration
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3/', None),
+    'h5py': ('https://docs.h5py.org/en/latest/', None),
+    'matplotlib': ('https://matplotlib.org/stable/', None),
+    'numpy': ('https://numpy.org/doc/stable/', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy/', None),
 }
 
 nbsphinx_requirejs_path = ""
@@ -111,6 +125,8 @@ html_theme_options = {
 carousel_bootstrap_add_css_js = True
 #carousel_bootstrap_prefix = ""
 
+# Mermaid config
+mermaid_d3_zoom = True
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

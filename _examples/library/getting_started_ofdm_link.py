@@ -45,14 +45,13 @@ link.waveform_generator = OFDMWaveform(subcarrier_spacing=subcarrier_spacing, mo
 channel = IdealChannel(tx_device, rx_device)
 
 # Simulate the signal transmission over the channel
-transmission = link.transmit()
-rx_signal, _, channel_state = channel.propagate(tx_device.transmit())
-rx_device.receive(rx_signal)
-reception = link.receive()
+transmission = tx_device.transmit()
+propagation = channel.propagate(transmission)
+reception = rx_device.receive(propagation)
 
 # Evaluate bit errors during transmission and visualize the received symbol constellation
 evaluator = BitErrorEvaluator(link, link)
 evaluator.evaluate().plot()
-reception.symbols.plot_constellation()
-reception.signal.plot()
+link.reception.symbols.plot_constellation()
+link.reception.signal.plot()
 plt.show()

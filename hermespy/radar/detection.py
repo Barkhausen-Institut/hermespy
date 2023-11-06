@@ -12,10 +12,11 @@ from typing import List, Tuple, Type
 
 import matplotlib.pyplot as plt
 import numpy as np
+from mpl_toolkits.mplot3d import Axes3D  # type: ignore
 from scipy.ndimage import generate_binary_structure, maximum_filter
 from scipy.signal import convolve
 
-from hermespy.core import Serializable, Visualizable
+from hermespy.core import Serializable, VAT, Visualizable
 from .cube import RadarCube
 
 __author__ = "Jan Adler"
@@ -209,22 +210,24 @@ class RadarPointCloud(Visualizable):
     def title(self) -> str:
         return "Radar Point Coud"
 
-    def _new_axes(self) -> Tuple[plt.Figure, plt.Axes]:
-        figure, axes = plt.subplots(subplot_kw={"projection": "3d"})
+    def _new_axes(self, **kwargs) -> Tuple[plt.Figure, VAT]:
+        figure, axes = plt.subplots(1, 1, squeeze=False, subplot_kw={"projection": "3d"})
         return figure, axes
 
-    def _plot(self, axes: plt.Axes) -> None:
+    def _plot(self, axes: VAT) -> None:
+        ax: Axes3D = axes.flat[0]  # type: ignore
+
         for point in self.points:
             position = point.position
-            axes.scatter(position[0], position[2], position[1], marker="o", c=point.power, cmap="Greens")
+            ax.scatter(position[0], position[2], position[1], marker="o", c=point.power, cmap="Greens")
 
         # Configure axes
-        axes.set_xlim((-self.max_range, self.max_range))
-        axes.set_ylim((0, self.max_range))
-        axes.set_zlim((-self.max_range, self.max_range))
-        axes.set_xlabel("X [m]")
-        axes.set_ylabel("Z [m]")
-        axes.set_zlabel("Y [m]")
+        ax.set_xlim((-self.max_range, self.max_range))
+        ax.set_ylim((0, self.max_range))
+        ax.set_zlim((-self.max_range, self.max_range))
+        ax.set_xlabel("X [m]")
+        ax.set_ylabel("Z [m]")
+        ax.set_zlabel("Y [m]")
 
 
 class RadarDetector(object):

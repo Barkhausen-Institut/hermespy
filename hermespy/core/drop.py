@@ -7,11 +7,10 @@ Drop
 
 from __future__ import annotations
 from collections.abc import Sequence
-from typing import Tuple, Type, TYPE_CHECKING
+from typing import Type, TYPE_CHECKING
 
 from h5py import Group
 
-from .channel_state_information import ChannelStateInformation
 from .device import DeviceReception, DeviceTransmission
 from .factory import HDFSerializable
 from .signal_model import Signal
@@ -87,7 +86,7 @@ class Drop(HDFSerializable):
         return len(self.__device_receptions)
 
     @property
-    def operator_inputs(self) -> Sequence[Sequence[Tuple[Signal, ChannelStateInformation | None]]]:
+    def operator_inputs(self) -> Sequence[Sequence[Signal]]:
         """Signals feeding into device's operators during reception.
 
         Returns: Operator inputs.

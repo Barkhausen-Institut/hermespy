@@ -126,6 +126,7 @@ def amplitude_path_loss(carrier_frequency: float, distance: float) -> float:
     if absolute_carrier == 0.0:
         raise ValueError("Carrier frequency may not be zero for free space propagation path loss modeling")
 
+    # Note that the wavelength factor referes to the effective antenna aperture, so technically it's not part of the propagation loss
     wavelength = speed_of_light / absolute_carrier
     amplitude_scale = wavelength / (4 * np.pi * distance)
 
