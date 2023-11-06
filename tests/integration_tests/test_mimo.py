@@ -8,9 +8,9 @@ from scipy.constants import speed_of_light, pi
 
 from hermespy.beamforming import ConventionalBeamformer
 from hermespy.core import UniformArray, IdealAntenna
-from hermespy.modem import Alamouti, TransmittingModem, ReceivingModem, ChannelEqualization, CommunicationReception, CommunicationTransmission, \
-    RootRaisedCosineWaveform, SingleCarrierIdealChannelEstimation, SingleCarrierLeastSquaresChannelEstimation, SingleCarrierZeroForcingChannelEqualization
-from hermespy.simulation import SimulatedDevice
+from hermespy.modem import Alamouti, Ganesan, TransmittingModem, ReceivingModem, ChannelEqualization, CommunicationReception, CommunicationTransmission, \
+    RootRaisedCosineWaveform, SingleCarrierLeastSquaresChannelEstimation, SingleCarrierZeroForcingChannelEqualization
+from hermespy.simulation import SimulatedDevice, SingleCarrierIdealChannelEstimation
 from hermespy.channel import RuralMacrocellsLineOfSight
 
 __author__ = "Jan Adler"
@@ -40,14 +40,14 @@ class TestMIMOLink(TestCase):
         self.rx_device.orientation = np.array([pi, 0, 0])
         self.rx_device.antennas = UniformArray(IdealAntenna(), .5 * self.wavelength, [3, 3])
 
-        self.channel = RuralMacrocellsLineOfSight(transmitter=self.tx_device, receiver=self.rx_device, seed=42)
+        self.channel = RuralMacrocellsLineOfSight(alpha_device=self.tx_device, beta_device=self.rx_device, seed=42)
         
         self.tx_modem = TransmittingModem()
-        self.tx_modem.waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e8, num_preamble_symbols=16, num_data_symbols=51, 
+        self.tx_modem.waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e8, num_preamble_symbols=16, num_data_symbols=64, 
                                                                     pilot_rate=5, oversampling_factor=4, modulation_order=4)
 
         self.rx_modem = ReceivingModem()
-        self.rx_modem.waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e8, num_preamble_symbols=16, num_data_symbols=51,
+        self.rx_modem.waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e8, num_preamble_symbols=16, num_data_symbols=64,
                                                                     pilot_rate=5, oversampling_factor=4, modulation_order=4)
         self.rx_modem.waveform_generator.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
         self.rx_modem.waveform_generator.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
@@ -59,10 +59,10 @@ class TestMIMOLink(TestCase):
         
         device_transmission = self.tx_device.transmit()
         
-        propagation, _, csi = self.channel.propagate(device_transmission)
-        propagation[0].samples = propagation[0].samples[:, :self.rx_modem.waveform_generator.samples_in_frame]
+        propagation = self.channel.propagate(device_transmission)
+        propagation.signal.samples = propagation.signal.samples[:, :self.rx_modem.samples_per_frame]
         
-        device_reception = self.rx_device.receive(propagation, channel_state=csi)
+        device_reception = self.rx_device.receive(propagation)
         
         return device_transmission.operator_transmissions[0], device_reception.operator_receptions[0]
         
@@ -86,7 +86,21 @@ class TestMIMOLink(TestCase):
         
         self.tx_modem.precoding[0] = Alamouti()
         self.rx_modem.precoding[0] = Alamouti()
-        self.rx_modem.waveform_generator.channel_estimation = SingleCarrierIdealChannelEstimation()
+        self.rx_modem.waveform_generator.channel_estimation = SingleCarrierIdealChannelEstimation(self.tx_device, self.rx_device)
+        self.rx_modem.waveform_generator.channel_equalization = ChannelEqualization()
+
+        transmission, reception = self.__propagate()
+        assert_array_equal(transmission.bits, reception.bits)
+
+    def test_ganesan(self) -> None:
+        """Test valid data transmission via Ganesan precoding"""
+        
+        self.tx_device.antennas = UniformArray(IdealAntenna(), .5 * self.wavelength, [4])
+        self.rx_device.antennas = UniformArray(IdealAntenna(), .5 * self.wavelength, [1])
+        
+        self.tx_modem.precoding[0] = Ganesan()
+        self.rx_modem.precoding[0] = Ganesan()
+        self.rx_modem.waveform_generator.channel_estimation = SingleCarrierIdealChannelEstimation(self.tx_device, self.rx_device)
         self.rx_modem.waveform_generator.channel_equalization = ChannelEqualization()
 
         transmission, reception = self.__propagate()

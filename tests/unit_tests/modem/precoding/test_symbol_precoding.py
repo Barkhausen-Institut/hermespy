@@ -7,7 +7,7 @@ from fractions import Fraction
 
 import numpy as np
 
-from hermespy.modem import SymbolPrecoding, SymbolPrecoder, DFT
+from hermespy.modem import StatedSymbols, SymbolPrecoding, SymbolPrecoder, DFT
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
@@ -42,12 +42,15 @@ class TestSymbolPrecoding(unittest.TestCase):
         """Encoding should be delegated to the registeded precoders"""
         
         encoder = Mock(spec=SymbolPrecoder)
+        encoder.rate = Fraction(1, 1)
         self.precoding[0] = encoder
-        symbols = Mock()
+        symbols = Mock(spec=StatedSymbols)
+        symbols.copy.return_value = symbols
+        symbols.num_blocks = 1
         
         self.precoding.encode(symbols)
         
-        encoder.encode.assert_called_once_with(symbols.copy())
+        encoder.encode.assert_called_once_with(symbols)
         
     def test_decode(self) -> None:
         """Decoding should be delegated to the registeded precoders"""
@@ -73,6 +76,15 @@ class TestSymbolPrecoding(unittest.TestCase):
 
         expected_rate = precoder_alpha.rate * precoder_beta.rate
         self.assertEqual(expected_rate, self.precoding.rate)
+        
+    def test_num_encoded_blocks(self) -> None:
+        """Number of encoded blocks should be the multiplication of all precoder-rates."""
+        
+        precoder_alpha = Mock()
+        precoder_alpha.rate = Fraction(1, 2)
+        self.precoding[0] = precoder_alpha
+        
+        self.assertEqual(10, self.precoding.num_encoded_blocks(5))
         
     def test_serialization(self) -> None:
         """Test YAML serialization"""

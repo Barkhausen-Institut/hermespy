@@ -12,10 +12,6 @@ span.brackets > a:after {
     content: "]"; 
 }
 
-div.mermaid {
-    margin-bottom: 42px;
-}
-
 .sidebar-logo {
     max-width: 60%;
 }
@@ -23,8 +19,4 @@ div.mermaid {
 .scbs-carousel {
     width: 80% !important;
     margin: 0 auto !important;
-}
-
-.docutils.container {
-    margin-top: 42px !important;
 }

@@ -49,21 +49,34 @@ class TestSimulatedDrop(TestCase):
         
         self.assertEqual(2, len(self.drop.channel_realizations))
         
+    def test_hdf_serialization_validation(self) -> None:
+        """HDF serialization should raise ValueError on invalid scenario arguments"""
+
+        file = File('test.h5', 'w', driver='core', backing_store=False)
+        group = file.create_group('group')
+            
+        self.drop.to_HDF(group)
+        
+        with self.assertRaises(ValueError):
+            _ = self.drop.from_HDF(group)
+        
+        self.scenario.new_device()
+
+        with self.assertRaises(ValueError):
+            _ = SimulatedDrop.from_HDF(group, scenario=self.scenario)
+
+        file.close()
+
     def test_hdf_serialization(self) -> None:
         """Test HDF roundtrip serialization"""
 
-        with TemporaryDirectory() as tempdir:
+        file = File('test.h5', 'w', driver='core', backing_store=False)
+        group = file.create_group('group')
             
-            file_path = join(tempdir, 'test.hdf')
-
-            file = File(file_path, 'w')
-            group = file.create_group('g1')
-            self.drop.to_HDF(group)
-            file.close()
-            
-            file = File(file_path, 'r')
-            deserialization = SimulatedDrop.from_HDF(file['g1'])
-            file.close()
+        self.drop.to_HDF(group)
+        deserialization = SimulatedDrop.from_HDF(group, scenario=self.scenario)
+        
+        file.close()
 
         self.assertIsInstance(deserialization, SimulatedDrop)
         self.assertEqual(self.drop.timestamp, deserialization.timestamp)
@@ -136,7 +149,7 @@ class TestSimulationScenario(TestCase):
 
         device = Mock()
         self.scenario.add_device(device)
-        self.scenario.channels[0, 2].active = False
+        self.scenario.channels[0, 2].gain = 0.
 
         departing_channels = self.scenario.departing_channels(device, active_only=True)
         expected_departing_channels = (self.scenario.channels[1:, 2])
@@ -153,7 +166,7 @@ class TestSimulationScenario(TestCase):
 
         device = Mock()
         self.scenario.add_device(device)
-        self.scenario.channels[2, 0].active = False
+        self.scenario.channels[2, 0].gain = 0.
 
         arriving_channels = self.scenario.arriving_channels(device, active_only=True)
         expected_arriving_channels = self.scenario.channels[2, 1:]
@@ -445,7 +458,7 @@ class TestSimulation(TestCase):
             result = self.simulation.run()
 
             self.assertIsInstance(result, MonteCarloResult)
-            mock_figure.savefig.assert_called_once()
+            mock_figure.get_figure.assert_called()
         
     def test_silent_run(self) -> None:
         """Test running the simulation without output"""
@@ -455,6 +468,14 @@ class TestSimulation(TestCase):
         
         if not GENERATE_OUTPUT:
             self.assertEqual('', self.io.getvalue())
+            
+    def test_set_channel(self) -> None:
+        """Test the channel set convenience method"""
+        
+        expected_channel = Mock()
+        self.simulation.set_channel(self.device, self.device, expected_channel)
+        
+        self.assertIs(expected_channel, self.simulation.scenario.channels[0, 0])
        
     def test_serialization(self) -> None:
         """Test YAML serialization"""
@@ -495,8 +516,8 @@ class TestSimulation(TestCase):
         factory = Factory()
         simulation = factory.from_str(serialization)
         
-        self.assertIs(simulation.scenario.devices[0], simulation.scenario.channels[0, 0].transmitter)
-        self.assertIs(simulation.scenario.devices[0], simulation.scenario.channels[0, 0].receiver)
+        self.assertIs(simulation.scenario.devices[0], simulation.scenario.channels[0, 0].alpha_device)
+        self.assertIs(simulation.scenario.devices[0], simulation.scenario.channels[0, 0].beta_device)
             
     def test_serialization_dimension_shorthand(self) -> None:
         """Test YAML serialization with dimension shorthand"""

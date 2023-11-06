@@ -249,6 +249,39 @@ class TestHardwareLoop(TestCase):
         
         temp.cleanup()
         
+    def test_run_dummy_serialization(self) -> None:
+        """Test the run routine with dummy serialization"""
+        
+        generate_output = getenv('HERMES_TEST_PLOT', 'False').lower() == 'true'
+        if not generate_output:
+            self.hardware_loop.console = Console(file=StringIO())
+        
+        temp = TemporaryDirectory()
+        self.hardware_loop.results_dir = temp.name
+        
+        # Add devices of all plot modes
+        device = self.hardware_loop.new_device()
+
+        waveform = RRCWaveform(symbol_rate=1e8, oversampling_factor=4, num_preamble_symbols=0, num_data_symbols=20)
+        modem = DuplexModem(waveform=waveform)
+        modem.device = device
+        
+        with ExitStack() as stack:
+            
+            isinstance_mock = stack.enter_context(patch('hermespy.hardware_loop.hardware_loop.isinstance'))
+            isinstance_mock.return_value = False
+            stack.enter_context(patch('matplotlib.pyplot.figure'))
+            
+            self.hardware_loop.console_mode = ConsoleMode.LINEAR
+            self.hardware_loop.num_drops = 1
+            self.hardware_loop.run()
+            
+        temp.cleanup()
+  
+        self.assertIs(device, modem.device)
+        self.assertSequenceEqual([device], self.hardware_loop.scenario.devices)
+        self.assertCountEqual([modem], self.hardware_loop.scenario.operators)
+        
     def test_record_replay(self) -> None:
         """Test recording a dataset from a hardware loop and replaying it"""
         

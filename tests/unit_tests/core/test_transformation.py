@@ -68,6 +68,9 @@ class TestDirection(TestCase):
         with self.assertRaises(ValueError):
             _ = Direction.From_Cartesian(np.arange(5))
 
+        with self.assertRaises(ValueError):
+            _ = Direction.From_Cartesian(np.zeros(3), normalize=True)
+
 
 class TestTransformation(TestCase):
 

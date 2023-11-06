@@ -73,10 +73,8 @@ class FMCWRadarSimulation(TestCase):
             self.virtual_target.pose = Transformation.From_Translation(Direction.From_Spherical(azimuth, zenith) * self.target_range)
 
             # Generate the radar cube
-            self.radar.transmit()
-            tx_signals = self.device.transmit()
-            rx_signals, _, _ = self.channel.propagate(tx_signals)
-            self.device.process_input(rx_signals)
+            propagation = self.channel.propagate(self.device.transmit())
+            self.device.process_input(propagation)
             reception = self.radar.receive()
 
             directive_powers = np.linalg.norm(reception.cube.data, axis=(1, 2))
@@ -85,8 +83,8 @@ class FMCWRadarSimulation(TestCase):
     def test_detection(self) -> None:
         """Test FMCW detection"""
 
-        rx_signals, _, _ = self.channel.propagate(self.device.transmit())
-        self.device.process_input(rx_signals)
+        propagation = self.channel.propagate(self.device.transmit())
+        self.device.process_input(propagation)
         reception = self.radar.receive()
 
         expected_velocity_peak = 5
@@ -102,14 +100,13 @@ class FMCWRadarSimulation(TestCase):
         
         velocity_candidates = [-self.radar.velocity_resolution, 0, self.radar.velocity_resolution]
         expected_bin_indices = [4, 5, 6]
-        
+
         for expected_bin_index, target_velocity in zip(expected_bin_indices, velocity_candidates):
             
             self.virtual_target.velocity = np.array([0, 0, -target_velocity], dtype=np.float_)
 
-            transmission = self.device.transmit()
-            rx_signals, _, _ = self.channel.propagate(transmission)
-            self.device.process_input(rx_signals)
+            propagation = self.channel.propagate(self.device.transmit())
+            self.device.process_input(propagation)
             reception = self.radar.receive()
 
             velocity_bins = np.sum(reception.cube.data, axis=(0, 2))

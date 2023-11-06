@@ -6,6 +6,9 @@ from typing import Type
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
+import matplotlib.pyplot as plt
+import numpy as np
+
 from hermespy.hardware_loop import DeviceReceptionPlot, DeviceTransmissionPlot, EyePlot, ReceivedConstellationPlot, RadarRangePlot, EvaluationPlot, ArtifactPlot, PhysicalDeviceDummy, HardwareLoopPlot, PhysicalScenarioDummy, HardwareLoop
 from hermespy.hardware_loop.visualizers import SignalPlot, HardwareLoopDevicePlot
 from hermespy.hardware_loop.hardware_loop import HardwareLoopSample
@@ -40,8 +43,10 @@ class HardwareLoopPlotTest(TestCase):
             
             if not VISUALIZE_PLOTS:
 
+                figure_mock = MagicMock()
+                axes_collection = np.array([[MagicMock(spec=plt.Axes)]], dtype=np.object_)
                 subplots_patch = stack.enter_context(patch('matplotlib.pyplot.subplots'))
-                subplots_patch.return_value = MagicMock(), MagicMock()
+                subplots_patch.return_value = figure_mock, axes_collection
             
             self.plot = plot(*args, **kwargs)            
             self.loop.add_plot(self.plot)
@@ -66,9 +71,9 @@ class HardwareLoopPlotTest(TestCase):
             self.plot.update_plot(sample)
 
         else:
-            call_count = len(self.axes.mock_calls)
+            call_count = len(self.axes[0, 0].mock_calls)
             self.plot.update_plot(sample)
-            self.assertGreater(len(self.axes.mock_calls), call_count)
+            self.assertGreater(len(self.axes[0, 0].mock_calls), call_count)
 
 
 class TestDeviceReceptionPlot(HardwareLoopPlotTest, TestCase):

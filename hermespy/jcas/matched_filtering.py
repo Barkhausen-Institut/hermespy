@@ -13,7 +13,7 @@ from h5py import Group
 from scipy.constants import speed_of_light
 from scipy.signal import correlate, correlation_lags
 
-from hermespy.core import ChannelStateInformation, Device, Receiver, Signal, Serializable, Transmitter
+from hermespy.core import Device, Receiver, Signal, Serializable, Transmitter
 from hermespy.modem import DuplexModem, CommunicationTransmission, CommunicationReception
 from hermespy.radar import Radar, RadarTransmission, RadarReception, RadarCube
 
@@ -94,13 +94,13 @@ class MatchedFilterJcas(Radar, DuplexModem, Transmitter[JCASTransmission], Recei
         transmission = JCASTransmission(DuplexModem._transmit(self, duration))  # type: ignore
         return transmission
 
-    def _receive(self, signal: Signal, csi: ChannelStateInformation) -> JCASReception:
+    def _receive(self, signal: Signal) -> JCASReception:
         # There must be a recent transmission being cached in order to correlate
         if self.transmission is None:
             raise RuntimeError("Receiving from a matched filter joint must be preceeded by a transmission")
 
         # Receive information
-        communication_reception = DuplexModem._receive(self, signal, csi)
+        communication_reception = DuplexModem._receive(self, signal)
 
         # Re-sample communication waveform
         signal = signal.resample(self.sampling_rate)
@@ -114,7 +114,8 @@ class MatchedFilterJcas(Radar, DuplexModem, Transmitter[JCASTransmission], Recei
             signal.append_samples(Signal(np.zeros((1, required_num_received_samples - signal.num_samples), dtype=complex), self.sampling_rate, signal.carrier_frequency))
 
         # Remove possible overhead samples if signal is too long
-        # resampled_signal.samples = resampled_signal.samples[:, :num_samples]
+        # resampled_signal.samples = re
+        # sampled_signal.samples[:, :num_samples]
 
         correlation = abs(correlate(signal.samples, self.transmission.signal.samples, mode="valid", method="fft").flatten()) / self.transmission.signal.num_samples
         lags = correlation_lags(signal.num_samples, self.transmission.signal.num_samples, mode="valid")

@@ -5,8 +5,6 @@ from unittest import TestCase
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
-from typing import Tuple
-
 from hermespy.core import Antenna, Signal, UniformArray
 from hermespy.channel import SpatialDelayChannel
 from hermespy.simulation import SimulationScenario
@@ -43,7 +41,7 @@ class TestSingleAntennaPolarization(TestCase):
         self.device_alpha = scenario.new_device(carrier_frequency=1e9, antennas=UniformArray(HorizontallyPolarizedAntenna, 1., [1, 1, 1]))
         self.device_beta = scenario.new_device(carrier_frequency=1e9, antennas=UniformArray(HorizontallyPolarizedAntenna, 1., [1, 1, 1]))
         
-        self.channel = SpatialDelayChannel(model_propagation_loss=False)
+        self.channel = SpatialDelayChannel(model_propagation_loss=False, alpha_device=self.device_alpha, beta_device=self.device_beta, seed=42)
         scenario.set_channel(self.device_beta, self.device_alpha, self.channel)
         
         self.orientation_candidates = np.pi * np.array([[0., 0., 0.],
@@ -79,9 +77,9 @@ class TestSingleAntennaPolarization(TestCase):
         for p, position in enumerate(position_candidates):
             
             self.device_beta.position = position
-            propagated_signal, _, _ = self.channel.propagate(self.test_signal)
+            propagation = self.channel.propagate(self.test_signal)
             
-            powers[p] = propagated_signal[0].power
+            powers[p] = propagation.signal.power
         
         assert_array_almost_equal(expected_power * np.ones(position_candidates.shape[0]), powers)
 
@@ -91,9 +89,9 @@ class TestSingleAntennaPolarization(TestCase):
         for o, orientation in enumerate(self.orientation_candidates):
             
             self.device_beta.orientation = orientation
-            propagated_signal, _, _ = self.channel.propagate(self.test_signal)
-
-            powers[o] = propagated_signal[0].power
+            propagation = self.channel.propagate(self.test_signal)
+            
+            powers[o] = propagation.signal.power
             
         assert_array_almost_equal(expected_powers, powers)
 
