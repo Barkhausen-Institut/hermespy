@@ -443,6 +443,7 @@ class TestReceiver(TestCase):
     def setUp(self) -> None:
 
         self.device = Mock()
+        self.device.antennas.num_receive_antennas = 1
         self.slot = ReceiverSlot(device=self.device)
         self.receiver = ReceiverMock(slot=self.slot)
 
@@ -479,6 +480,7 @@ class TestReceiver(TestCase):
     def test_receive(self) -> None:
         
         signal = Mock()
+        signal.num_streams = 1
         self.receiver.cache_reception(signal)
         reception = self.receiver.receive(cache=True)
         
@@ -820,6 +822,7 @@ class TestDevice(TestCase):
         expected_transmission = Transmission(Signal(np.random.standard_normal((1, 10)), self.device.sampling_rate, self.device.carrier_frequency))
         transmitter = Mock()
         transmitter.transmission = expected_transmission
+        transmitter.selected_transmit_antennas = [0,]
         self.device.transmitters.add(transmitter)
         
         output = self.device.generate_output()
@@ -831,6 +834,7 @@ class TestDevice(TestCase):
         expected_transmission = Transmission(Signal(np.random.standard_normal((1, 10)), self.device.sampling_rate, self.device.carrier_frequency))
         transmitter = Mock()
         transmitter.transmit.return_value = expected_transmission
+        transmitter.selected_transmit_antennas = [0,]
         self.device.transmitters.add(transmitter)
     
         transmission = self.device.transmit()
@@ -854,6 +858,7 @@ class TestDevice(TestCase):
         impinging_signal = Signal(np.random.standard_normal((1, 10)), self.device.sampling_rate, self.device.carrier_frequency)
 
         receiver = Mock()
+        receiver.selected_receive_antennas = [0,]
         self.device.receivers.add(receiver)
 
         processed_input = self.device.process_input(impinging_signal)
@@ -874,6 +879,7 @@ class TestDevice(TestCase):
         """Receive operators property should return the proper operators"""
         
         signal = Mock()
+        signal.num_streams = 1
         self.receiver = ReceiverMock()
         self.device.receivers.add(self.receiver)
         self.receiver.cache_reception(signal)
@@ -894,6 +900,7 @@ class TestDevice(TestCase):
         impinging_signal = Signal(np.random.standard_normal((1, 10)), self.device.sampling_rate, self.device.carrier_frequency)
 
         receiver = Mock()
+        receiver.selected_receive_antennas = [0,]
         self.device.receivers.add(receiver)
     
         reception = self.device.receive(impinging_signal)

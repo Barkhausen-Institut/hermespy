@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from .antennas import Antenna, IdealAntenna, Dipole, LinearAntenna, PatchAntenna, AntennaArrayBase, AntennaArray, UniformArray
+from .antennas import Antenna, AntennaMode, IdealAntenna, Dipole, LinearAntenna, PatchAntenna, AntennaArrayBase, AntennaArray, UniformArray
 from .definitions import ConsoleMode, SNRType
+from .evaluators import ReceivedPowerEvaluator, ReceivedPowerResult, ReceivePowerArtifact, ReceivedPowerEvaluation
 from .logarithmic import dB, Logarithmic, LogarithmicSequence, ValueType
 from .operators import StaticOperator, SilentTransmitter, SignalTransmitter, SignalReceiver
 from .channel import ChannelStateFormat, ChannelStateInformation, ChannelStateDimension
@@ -31,6 +32,7 @@ __status__ = "Prototype"
 
 __all__ = [
     "Antenna",
+    "AntennaMode",
     "IdealAntenna",
     "Dipole",
     "LinearAntenna",
@@ -39,6 +41,10 @@ __all__ = [
     "AntennaArray",
     "UniformArray",
     "SNRType",
+    "ReceivedPowerEvaluator",
+    "ReceivedPowerResult",
+    "ReceivePowerArtifact",
+    "ReceivedPowerEvaluation",
     "dB",
     "Logarithmic",
     "LogarithmicSequence",

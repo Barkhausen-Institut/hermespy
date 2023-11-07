@@ -746,7 +746,7 @@ class Evaluator(ABC):
         ...  # pragma: no cover
 
 
-class MonteCarloSample():
+class MonteCarloSample:
     """Single sample of a Monte Carlo simulation."""
 
     __sample_index: int  # Index of the sample

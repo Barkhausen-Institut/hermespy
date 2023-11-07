@@ -8,7 +8,7 @@ Signal Modeling
 from __future__ import annotations
 from copy import deepcopy
 from math import floor
-from typing import Literal, Tuple, Type
+from typing import Literal, Sequence, Tuple, Type
 
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
@@ -333,7 +333,7 @@ class Signal(HDFSerializable, Visualizable):
         # Create a new signal object from the resampled samples and return it as result
         return Signal(samples, sampling_rate, carrier_frequency=self.__carrier_frequency, delay=self.delay, noise_power=self.noise_power)
 
-    def superimpose(self, added_signal: Signal, resample: bool = True, aliasing_filter: bool = True) -> None:
+    def superimpose(self, added_signal: Signal, resample: bool = True, aliasing_filter: bool = True, stream_indices: Sequence[int] | None = None) -> None:
         """Superimpose an additive signal model to this model.
 
         Internally re-samples `added_signal` to this model's sampling rate, if required.
@@ -352,8 +352,14 @@ class Signal(HDFSerializable, Visualizable):
             NotImplementedError: If the delays if this signal and `added_signal` differ.
         """
 
-        if added_signal.num_streams != self.num_streams:
-            raise ValueError(f"Superimposing signal models with different stream counts ({added_signal.num_streams} to {self.num_streams}) is not defined")
+        num_streams = added_signal.num_streams if stream_indices is None else len(stream_indices)
+        _stream_indices = np.arange(num_streams) if stream_indices is None else np.array(stream_indices, dtype=np.int_)
+
+        if _stream_indices.max() >= self.num_streams:
+            raise ValueError(f"Stream indices must be in the interval [0, {self.num_streams - 1}]")
+
+        if num_streams > self.num_streams:
+            raise ValueError(f"Stream counts do not match ({num_streams} to {self.num_streams}) is not defined")
 
         if self.delay != added_signal.delay:
             raise NotImplementedError("Superimposing signal models of differing delay is not yet supported")
@@ -389,11 +395,11 @@ class Signal(HDFSerializable, Visualizable):
             self.__samples = np.append(self.__samples, np.zeros((self.num_streams, resampled_added_samples.shape[1] - self.num_samples), dtype=complex), axis=1)
 
         # Mix the added signal onto this signal's samples according to the carrier frequency distance
-        self.__mix(self.__samples, resampled_added_samples, self.__sampling_rate, frequency_distance)
+        self.__mix(self.__samples, _stream_indices, resampled_added_samples, self.__sampling_rate, frequency_distance)
 
     @staticmethod
     @jit(nopython=True)
-    def __mix(target_samples: np.ndarray, added_samples: np.ndarray, sampling_rate: float, frequency_distance: float) -> None:  # pragma: no cover
+    def __mix(target_samples: np.ndarray, stream_indices: np.ndarray, added_samples: np.ndarray, sampling_rate: float, frequency_distance: float) -> None:  # pragma: no cover
         """Internal subroutine to mix two sets of signal model samples.
 
         Args:
@@ -415,8 +421,7 @@ class Signal(HDFSerializable, Visualizable):
         # ToDo: Reminder, mixing like this currently does not account for possible delays.
         mix_sinusoid = np.exp(2j * pi * np.arange(num_added_samples) * frequency_distance / sampling_rate)
 
-        for stream_idx in range(added_samples.shape[0]):
-            target_samples[stream_idx, :num_added_samples] += added_samples[stream_idx, :] * mix_sinusoid
+        target_samples[stream_indices, :num_added_samples] += added_samples * mix_sinusoid[None, :]
 
     @property
     def timestamps(self) -> np.ndarray:
@@ -635,7 +640,7 @@ class Signal(HDFSerializable, Visualizable):
         colors = self._get_color_cycle()
 
         if domain == "time":
-            timestamps = np.linspace(-symbol_duration, symbol_duration, 1 + 2 * symbol_num_samples, endpoint=True)
+            timestamps = np.arange(-symbol_num_samples, 1 + symbol_num_samples, 1) / symbol_num_samples
 
             for n in range(num_cutoff_symbols, num_symbols - num_cutoff_symbols):
                 stream_slice = self.__samples[0, symbol_num_samples * n : symbol_num_samples * (2 + n) + 1]

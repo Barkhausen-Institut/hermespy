@@ -47,7 +47,7 @@ class _TestLinksBase(TestCase):
         # Define a simplex linke between the two devices
         self.link = SimplexLink(self.tx_device, self.rx_device)
         self.link.precoding[0] = SpatialMultiplexing()
-        self.link.precoding[1] = DFT()
+        # self.link.precoding[1] = DFT()
         
         self.repeater = RepetitionEncoder(bit_block_size=16)
         self.link.encoder_manager.add_encoder(self.repeater)
@@ -114,9 +114,6 @@ class _TestLinksBase(TestCase):
         waveform.synchronization = ChirpFSKCorrelationSynchronization()
         self.link.waveform_generator = waveform
         
-        # Remove DFT precoding from link
-        self.link.precoding.pop_precoder(1)
-        
         return waveform
         
     def __configure_ofdm_waveform(self) -> OFDMWaveform:
@@ -143,9 +140,6 @@ class _TestLinksBase(TestCase):
         waveform.channel_equalization = OFDMZeroForcingChannelEqualization()
         
         self.link.waveform_generator = waveform
-        
-        # Hack: Remove DFT precoding from link
-        self.link.precoding.pop_precoder(1)
         
         # Properly configure the error correction
         bits_per_symbol = waveform.bits_per_frame() // num_symbols

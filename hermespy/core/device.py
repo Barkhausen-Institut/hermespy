@@ -774,8 +774,9 @@ class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType
     __reference: Device | None
     __signal: Signal | None
     __reception: ReceptionType | None
+    __selected_receive_antennas: Sequence[int]
 
-    def __init__(self, seed: int | None = None, reference: Device | None = None, *args, **kwargs) -> None:
+    def __init__(self, seed: int | None = None, reference: Device | None = None, selected_receive_antennas: Sequence[int] | None = None, *args, **kwargs) -> None:
         """
         Args:
 
@@ -784,6 +785,10 @@ class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType
 
             reference (Device, optional):
                 Reference device to which the channel shall be estimated.
+
+            selected_receive_antennas (Sequence[int] | None):
+                Indices of antennas selected for reception from the operated :class:`Device's<Device>` antenna array.
+                If not specified, all available antennas will be considered.
 
             *args:
                 Operator base class initialization parameters.
@@ -796,7 +801,9 @@ class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType
         RandomNode.__init__(self, seed=seed)
         MixingOperator.__init__(self, *args, **kwargs)
 
+        # Initialize class attributes
         self.reference = reference
+        self.selected_receive_antennas = selected_receive_antennas
         self.__signal = None
         self.__reception = None
 
@@ -823,6 +830,58 @@ class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType
     @reference.setter
     def reference(self, value: Optional[Device]) -> None:
         self.__reference = value
+
+    @property
+    def selected_receive_antennas(self) -> Sequence[int] | None:
+        """Indices of antennas selected for reception from the operated :class:`Device's<Device>` antenna array.
+
+        If `None`, all available antennas will be considered.
+
+        Raises:
+
+            ValueError: If the selected antennas don't match the configured device's receive antenna array configuration.
+        """
+
+        return self.__selected_receive_antennas
+
+    @selected_receive_antennas.setter
+    def selected_receive_antennas(self, value: Sequence[int] | None) -> None:
+        if value is None:
+            self.__selected_receive_antennas = None
+            return
+
+        # Make sure the provided indices match the underlying device's antenna array configuration
+        if self.device is not None:
+            if max(value) > (self.device.antennas.num_receive_antennas - 1):
+                raise ValueError("Receive antenna selection indices don't match the device's receive antenna configuration")
+
+        self.__selected_receive_antennas = value
+
+    @property
+    def num_receive_antennas(self) -> int:
+        """Number of considered receiving antennas."""
+
+        if self.selected_receive_antennas is None:
+            if self.device is None:
+                return 0
+
+            return self.device.antennas.num_receive_antennas
+
+        return len(self.selected_receive_antennas)
+
+    @property
+    def receive_antenna_array(self) -> AntennaArrayBase:
+        """Antenna sub-array considered for signal reception.
+
+        Rasies:
+
+            ValueError: If this :class:`Receiver` is currently not assigned to a :class:`Device`.
+        """
+
+        if self.device is None:
+            raise RuntimeError("Antenna array collection requires a device specification.")
+
+        return self.device.antennas.receive_array[self.selected_receive_antennas]
 
     @property
     def reception(self) -> ReceptionType | None:
@@ -856,6 +915,9 @@ class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType
                 raise RuntimeError("Error attempting to fetch a cached receiver signal")
 
             signal = self.signal
+
+        if signal.num_streams != self.num_receive_antennas and self.num_receive_antennas > 0:
+            raise ValueError(f"Number of signal streams does not match the number of receive antennas ({signal.num_streams} != {self.num_receive_antennas})")
 
         # Generate received information
         reception = self._receive(signal)
@@ -1167,8 +1229,9 @@ class Transmitter(Generic[TransmissionType], RandomNode, MixingOperator["Transmi
     """Operator transmitting over a device."""
 
     __transmission: TransmissionType | None
+    __selected_transmit_antennas: Sequence[int] | None
 
-    def __init__(self, seed: Optional[int] = None, *args, **kwargs) -> None:
+    def __init__(self, seed: Optional[int] = None, selected_transmit_antennas: Sequence[int] | None = None, *args, **kwargs) -> None:
         """
         Args:
 
@@ -1177,6 +1240,10 @@ class Transmitter(Generic[TransmissionType], RandomNode, MixingOperator["Transmi
 
             *args:
                 Operator base class initialization parameters.
+
+            selected_transmit_antennas (Sequence[int] | None):
+                Indices of antennas selected for transmission from the operated :class:`Device's<Device>` antenna array.
+                If not specified, all available antennas will be considered.
 
             **kwargs:
                 Operator base class initialization parameters.
@@ -1187,6 +1254,7 @@ class Transmitter(Generic[TransmissionType], RandomNode, MixingOperator["Transmi
         MixingOperator.__init__(self, *args, **kwargs)
 
         # Initialize class attributes
+        self.__selected_transmit_antennas = selected_transmit_antennas
         self.__transmission = None
 
     def transmit(self, duration: float = 0.0, cache: bool = True) -> TransmissionType:
@@ -1302,6 +1370,58 @@ class Transmitter(Generic[TransmissionType], RandomNode, MixingOperator["Transmi
         """
         ...  # pragma: no cover
 
+    @property
+    def selected_transmit_antennas(self) -> Sequence[int] | None:
+        """Indices of antennas selected for transmission from the operated :class:`Device's<Device>` antenna array.
+
+        If `None`, all available antennas will be considered.
+
+        Raises:
+
+            ValueError: If the selected antennas don't match the configured device's transmit antenna array configuration.
+        """
+
+        return self.__selected_transmit_antennas
+
+    @selected_transmit_antennas.setter
+    def selected_transmit_antennas(self, value: Sequence[int] | None) -> None:
+        if value is None:
+            self.__selected_transmit_antennas = None
+            return
+
+        # Make sure the provided indices match the underlying device's antenna array configuration
+        if self.device is not None:
+            if max(value) > (self.device.antennas.num_transmit_antennas - 1):
+                raise ValueError("Transmit antenna selection indices don't match the device's receive antenna configuration")
+
+        self.__selected_transmit_antennas = value
+
+    @property
+    def num_transmit_antennas(self) -> int:
+        """Number of considered receiving antennas."""
+
+        if self.selected_transmit_antennas is None:
+            if self.device is None:
+                return 0
+
+            return self.device.antennas.num_receive_antennas
+
+        return len(self.selected_transmit_antennas)
+
+    @property
+    def transmit_antenna_array(self) -> AntennaArrayBase:
+        """Antenna sub-array considered for signal transmission.
+
+        Rasies:
+
+            ValueError: If this :class:`Transmitter` is currently not assigned to a :class:`Device`.
+        """
+
+        if self.device is None:
+            raise RuntimeError("Antenna array collection requires a device specification.")
+
+        return self.device.antennas.transmit_array[self.selected_transmit_antennas]
+
     @Operator.device.setter  # type: ignore
     def device(self, value: Device) -> None:  # type: ignore
         value.transmitters.add(self)
@@ -1355,8 +1475,8 @@ class TransmitterSlot(OperatorSlot[Transmitter]):
         if not self.registered(transmitter):
             raise ValueError("Transmitter not registered at this slot")
 
-        if transmission.signal.num_streams != self.device.num_antennas:
-            raise ValueError(f"Transmitted signal has invalid number of streams ({transmission.signal.num_streams} instead of {self.device.num_antennas})")
+        if transmission.signal.num_streams != transmitter.num_transmit_antennas:
+            raise ValueError(f"Transmitted signal has invalid number of streams ({transmission.signal.num_streams} instead of {transmitter.num_transmit_antennas})")
 
         self.__transmissions[transmitter.slot_index] = transmission
 
@@ -1465,6 +1585,24 @@ class Device(ABC, Transformable, RandomNode, Serializable):
 
         # Register the device as the antenna array's reference frame
         self.__antennas.set_base(self)
+
+    @property
+    def num_transmit_antennas(self) -> int:
+        """Number of available transmit antennas.
+
+        Shorthand to :meth:`antennas'<.antennas>` :meth:`num_transmit_antennas<AntennaArrayBase.num_transmit_antenans>`.
+        """
+
+        return self.antennas.num_transmit_antennas
+
+    @property
+    def num_receive_antennas(self) -> int:
+        """Number of available receive antennas.
+
+        Shorthand to :meth:`antennas'<.antennas>` :meth:`num_receive_antennas<AntennaArrayBase.num_receive_antenans>`.
+        """
+
+        return self.antennas.num_receive_antennas
 
     @property
     def power(self) -> float:
@@ -1591,7 +1729,7 @@ class Device(ABC, Transformable, RandomNode, Serializable):
 
         return [transmitter.transmit() for transmitter in self.transmitters]
 
-    def generate_output(self, operator_transmissions: Optional[List[Transmission]] = None) -> DeviceOutput:
+    def generate_output(self, operator_transmissions: Optional[List[Transmission]] = None, resample: bool = True) -> DeviceOutput:
         """Generate the device's output.
 
         Args:
@@ -1609,15 +1747,16 @@ class Device(ABC, Transformable, RandomNode, Serializable):
 
         # Generate operator transmissions if None were provided:
         operator_transmissions = [o.transmission for o in self.transmitters] if operator_transmissions is None else operator_transmissions
+        operator_streams = [o.selected_transmit_antennas for o in self.transmitters]
 
         if any([t is None for t in operator_transmissions]):
             raise RuntimeError("Error trying to generate outputs without specifying transmissions, caches are empty")
 
         # Superimpose the operator transmissions to the device's RF configuration
-        superimposed_signal = Signal.empty(self.sampling_rate, self.antennas.num_transmit_antennas, carrier_frequency=self.carrier_frequency)
+        superimposed_signal = Signal.empty(self.sampling_rate, self.num_transmit_antennas, carrier_frequency=self.carrier_frequency)
 
-        for transmission in operator_transmissions:
-            superimposed_signal.superimpose(transmission.signal)
+        for transmission, indices in zip(operator_transmissions, operator_streams):
+            superimposed_signal.superimpose(transmission.signal, resample=resample, stream_indices=indices)
 
         return DeviceOutput(superimposed_signal)
 
@@ -1675,11 +1814,17 @@ class Device(ABC, Transformable, RandomNode, Serializable):
             superimposed_signal = impinging_signals[0]
 
         # Each operator is fed the superimposed signal by default
-        operator_inputs = [superimposed_signal for _ in self.receivers]
+        operator_inputs: List[Signal] = []
+        for receiver in self.receivers:
+            selected_receive_antennas = receiver.selected_receive_antennas
+            stream_selector = slice(None) if selected_receive_antennas is None else selected_receive_antennas
+
+            stream_samples = superimposed_signal.samples[stream_selector, :]  # type: ignore
+            operator_input = Signal(stream_samples, superimposed_signal.sampling_rate, superimposed_signal.carrier_frequency)
+            operator_inputs.append(operator_input)
 
         # Cache the operator inputs if the respective flag is enabled
         if cache:
-            receiver: Receiver
             for receiver, input in zip(self.receivers, operator_inputs):
                 receiver.cache_reception(input)
 

@@ -1071,7 +1071,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
 
         # If operator separation is disable, the transmissions are superimposed to a single signal model
         else:
-            superimposed_signal = Signal.empty(self.sampling_rate, self.num_antennas, carrier_frequency=self.carrier_frequency)
+            superimposed_signal = Signal.empty(self.sampling_rate, self.num_transmit_antennas, carrier_frequency=self.carrier_frequency)
 
             for transmission in operator_transmissions:
                 superimposed_signal.superimpose(transmission.signal)
@@ -1088,7 +1088,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
             signal.samples = np.append(trigger_padding, signal.samples, axis=1)
 
         # Genreate the output data object
-        output = SimulatedDeviceOutput(emerging_signals, trigger_realization, self.sampling_rate, self.num_antennas, self.carrier_frequency)
+        output = SimulatedDeviceOutput(emerging_signals, trigger_realization, self.sampling_rate, self.num_transmit_antennas, self.carrier_frequency)
 
         # Cache the output if the respective flag is enabled
         if cache:
@@ -1250,8 +1250,13 @@ class SimulatedDevice(Device, Moveable, Serializable):
     def _generate_receiver_input(self, receiver: Receiver, baseband_signal: Signal, noise_realization: NoiseRealization, cache: bool) -> Signal:
         # ToDo: Handle operator separation
 
+        # Select the appropriate signal streams
+        receive_antenna_selection = slice(None) if receiver.selected_receive_antennas is None else receiver.selected_receive_antennas
+        received_samples = baseband_signal.samples[receive_antenna_selection, :]  # type: ignore
+        received_signal = Signal(received_samples, baseband_signal.sampling_rate, baseband_signal.carrier_frequency)
+
         # Add noise to the received signal
-        noisy_signal = self.__noise.add(baseband_signal, noise_realization)
+        noisy_signal = self.__noise.add(received_signal, noise_realization)
 
         # Model adc conversion during reception
         quantized_signal = self.adc.convert(noisy_signal, receiver.frame_duration)
@@ -1297,7 +1302,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
         """
 
         _impinging_signals: Sequence[Signal] = []
-        mixed_signal = Signal.empty(sampling_rate=self.sampling_rate, num_streams=self.num_antennas, num_samples=0, carrier_frequency=self.carrier_frequency)
+        mixed_signal = Signal.empty(sampling_rate=self.sampling_rate, num_streams=self.num_receive_antennas, num_samples=0, carrier_frequency=self.carrier_frequency)
 
         if isinstance(impinging_signals, DeviceInput):
             for i in impinging_signals.impinging_signals:

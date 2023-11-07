@@ -34,6 +34,19 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
+class IterationPriority(SerializableEnum):
+    """Iteration priority of the hardware loop.
+
+    Used by the :meth:`HardwareLoop.run` method.
+    """
+
+    DROPS = 0
+    """Iterate over drops first before iterating over the parameter grid."""
+
+    GRID = 1
+    """Iterate over the parameter grid first before iterating over drops."""
+
+
 class EvaluatorPlotMode(SerializableEnum):
     """Evalution plot mode during hardware loop runtime."""
 
@@ -266,7 +279,7 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PDT], Pipeline[Ph
     """YAML serialization tag"""
 
     property_blacklist = {"console"}
-    serialized_attributes = {"scenario", "manual_triggering", "plot_information"}
+    serialized_attributes = {"scenario", "manual_triggering", "plot_information", "record_drops"}
 
     manual_triggering: bool
     """Require a user input to trigger each drop manually"""
@@ -274,11 +287,15 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PDT], Pipeline[Ph
     plot_information: bool
     """Plot information during loop runtime"""
 
+    record_drops: bool
+    """Record drops during loop runtime"""
+
     __dimensions: List[GridDimension]  # Parameter dimension over which a run sweeps
     __evaluators: List[Evaluator]  # Evaluators further processing drop information
     __plots: List[HardwareLoopPlot]
+    __iteration_priority: IterationPriority
 
-    def __init__(self, scenario: PhysicalScenarioType, manual_triggering: bool = False, plot_information: bool = True, **kwargs) -> None:
+    def __init__(self, scenario: PhysicalScenarioType, manual_triggering: bool = False, plot_information: bool = True, iteration_priority: IterationPriority = IterationPriority.DROPS, record_drops: bool = True, **kwargs) -> None:
         """
         Args:
 
@@ -292,12 +309,24 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PDT], Pipeline[Ph
             plot_information (bool, optional):
                 Plot information during loop runtime.
                 Enabled by default.
+
+            iteration_priority (IterationPriority, optional):
+                Which dimension to iterate over first.
+                Defaults to :attr:`IterationPriority.DROPS`.
+
+            record_drops (bool, optional):
+                Record drops during loop runtime.
+                Enabled by default.
         """
 
+        # Initialize base classes
         Pipeline.__init__(self, scenario=scenario, **kwargs)
 
+        # Initialize class attributes
         self.manual_triggering = manual_triggering
         self.plot_information = plot_information
+        self.iteration_priority = iteration_priority
+        self.record_drops = record_drops
         self.__dimensions = []
         self.__evaluators = []
         self.__plots = []
@@ -400,6 +429,16 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PDT], Pipeline[Ph
 
         return self.__evaluators.index(evaluator)
 
+    @property
+    def iteration_priority(self) -> IterationPriority:
+        """Iteration priority of the hardware loop."""
+
+        return self.__iteration_priority
+
+    @iteration_priority.setter
+    def iteration_priority(self, value: IterationPriority) -> None:
+        self.__iteration_priority = value
+
     def run(self, overwrite=True, campaign: str = "default") -> None:
         """Run the hardware loop configuration.
 
@@ -413,29 +452,35 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PDT], Pipeline[Ph
         """
 
         # Prepare the results file
+        # Only required if the results directory is set and drops are recorded
         if self.results_dir:
-            file_location = path.join(self.results_dir, "drops.h5")
+            if self.record_drops:
+                file_location = path.join(self.results_dir, "drops.h5")
 
-            # Workaround for scenarios which might not be serializable:
-            # Create a dummy scenario and patch the operators for recording
-            if not isinstance(self.scenario, Serializable):
-                state = PhysicalScenarioDummy()
-                for device in self.scenario.devices:
-                    state.new_device(carrier_frequency=device.carrier_frequency, sampling_rate=device.sampling_rate)
+                # Workaround for scenarios which might not be serializable:
+                # Create a dummy scenario and patch the operators for recording
+                if not isinstance(self.scenario, Serializable):
+                    state = PhysicalScenarioDummy()
+                    for device in self.scenario.devices:
+                        state.new_device(carrier_frequency=device.carrier_frequency, sampling_rate=device.sampling_rate)
 
-                # Patch operators for recording
-                operator_devices = [(operator.device, self.scenario.device_index(operator.device)) for operator in self.scenario.operators]
+                    # Patch operators for recording
+                    operator_devices = [(operator.device, self.scenario.device_index(operator.device)) for operator in self.scenario.operators]
 
-                for (_, device_idx), operator in zip(operator_devices, self.scenario.operators):
-                    operator.device = state.devices[device_idx]  # type: ignore
+                    for (_, device_idx), operator in zip(operator_devices, self.scenario.operators):
+                        operator.device = state.devices[device_idx]  # type: ignore
 
-                self.scenario.record(file_location, overwrite=overwrite, campaign=campaign, state=state)
+                    self.scenario.record(file_location, overwrite=overwrite, campaign=campaign, state=state)
 
-                for (_, device_idx), operator in zip(operator_devices, state.operators):
-                    operator.device = self.scenario.devices[device_idx]  # type: ignore
+                    for (_, device_idx), operator in zip(operator_devices, state.operators):
+                        operator.device = self.scenario.devices[device_idx]  # type: ignore
+
+                else:
+                    self.scenario.record(file_location, overwrite=overwrite, campaign=campaign)
 
             else:
-                self.scenario.record(file_location, overwrite=overwrite, campaign=campaign)
+                if self.console_mode is not ConsoleMode.SILENT and self.verbosity.value >= Verbosity.INFO.value:
+                    self.console.print("Skipping drop recording", style="bright_yellow")
 
         # Run internally
         self.__run()
@@ -529,10 +574,24 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PDT], Pipeline[Ph
             total = 0
 
             # Generate the number of required drops
-            index_grid = (self.num_drops, *[d.num_sample_points for d in self.__dimensions])
+            index_grid: Tuple[int, ...] = tuple()
+
+            if self.iteration_priority is IterationPriority.GRID:
+                index_grid = (self.num_drops, *[d.num_sample_points for d in self.__dimensions])
+                grid_selector = slice(1, 1 + len(self.__dimensions))
+                drop_selector = 0
+
+            elif self.iteration_priority is IterationPriority.DROPS:
+                index_grid = (*[d.num_sample_points for d in self.__dimensions], self.num_drops)
+                grid_selector = slice(0, len(self.__dimensions))
+                drop_selector = len(self.__dimensions)
+
+            else:
+                raise ValueError(f"Invalid iteration priority: {self.iteration_priority}")
+
             for indices in np.ndindex(index_grid):
-                sample_index = indices[0]
-                section_indices = indices[1:]
+                sample_index = indices[drop_selector]
+                section_indices = indices[grid_selector]
 
                 # Ask for a trigger input if manual mode is enabled
                 # Abort execution if user denies
@@ -557,7 +616,7 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PDT], Pipeline[Ph
                     if self.console_mode is not ConsoleMode.SILENT and self.verbosity.value <= Verbosity.INFO.value:
                         result_str = f"# {total:<5}"
 
-                        for dimesion, i in zip(self.__dimensions, indices[1:]):
+                        for dimesion, i in zip(self.__dimensions, indices[grid_selector]):
                             result_str += f" {dimesion.title[-20:]} = {dimesion.sample_points[i]:<5}"
 
                         for evaluator, artifact in zip(self.__evaluators, loop_sample.artifacts):
@@ -581,10 +640,10 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PDT], Pipeline[Ph
                 # Update progress
                 total += 1
 
-                for task, completed in zip(grid_tasks, indices[1:]):
+                for task, completed in zip(grid_tasks, indices[grid_selector]):
                     progress.update(task, completed=completed)
 
-                progress.update(loop_drop_progress, completed=indices[0])
+                progress.update(loop_drop_progress, completed=indices[drop_selector])
                 progress.update(total_progress, completed=total)
 
         # Compute the evaluation results

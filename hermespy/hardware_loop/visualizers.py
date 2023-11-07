@@ -124,7 +124,10 @@ class EyePlot(HardwareLoopPlot):
 
         # Plot eye diagram
         symbol_duration = self.__modem.symbol_duration
-        self.__modem.reception.signal.plot_eye(symbol_duration=symbol_duration, axes=self.axes)
+        if self.__modem.reception.num_frames > 0:
+            self.__modem.reception.frames[0].signal.plot_eye(symbol_duration=symbol_duration, axes=self.axes)
+        else:
+            self.__modem.reception.signal.plot_eye(symbol_duration=symbol_duration, axes=self.axes)
 
         # Update plot
         self.figure.canvas.draw()
