@@ -47,14 +47,13 @@ class DFT(SymbolPrecoder, Serializable):
 
     def encode(self, symbols: StatedSymbols) -> StatedSymbols:
         encoded_symbols = symbols.copy()
-        encoded_symbols.raw = np.fft.fft(symbols.raw, axis=2, norm=self.__fft_norm)
+        encoded_symbols.raw = np.fft.fft(symbols.raw, axis=1, norm=self.__fft_norm)
 
         return encoded_symbols
 
     def decode(self, symbols: StatedSymbols) -> StatedSymbols:
         decoded_symbols = symbols.copy()
-        decoded_symbols.raw = np.fft.ifft(symbols.raw, axis=2, norm=self.__fft_norm)
-        # decoded_symbols.states = np.fft.ifft(symbols.states, axis=3, norm=self.__fft_norm)
+        decoded_symbols.raw = np.fft.ifft(symbols.raw, axis=1, norm=self.__fft_norm)
 
         return decoded_symbols
 

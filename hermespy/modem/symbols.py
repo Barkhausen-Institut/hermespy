@@ -258,7 +258,7 @@ class Symbols(HDFSerializable):
         else:
             self.__symbols[section] = value
 
-    def plot_constellation(self, axes: Optional[plt.Axes] = None, title: str = "Symbol Constellation") -> Optional[plt.Figure]:
+    def plot_constellation(self, axes: plt.Axes | np.ndarray | None = None, title: str = "Symbol Constellation") -> Optional[plt.Figure]:
         """Plot the symbol constellation.
 
         Essentially projects the time-series of symbols onto a single complex plane.
@@ -284,17 +284,24 @@ class Symbols(HDFSerializable):
         figure: Optional[plt.Figure] = None
 
         # Create a new figure and the respective axes if none were provided
+        _axes: np.ndarray
         if axes is None:
             with Executable.style_context():
-                figure, axes = plt.subplots()
+                figure, _axes = plt.subplots(1, 1, squeeze=None)
                 figure.suptitle(title)
 
-        axes.scatter(symbols.real, symbols.imag)
-        axes.set(ylabel="Imag")
-        axes.set(xlabel="Real")
-        axes.grid(True, which="both")
-        axes.axhline(y=0, color="k")
-        axes.axvline(x=0, color="k")
+        elif isinstance(axes, plt.Axes):
+            _axes = np.array([[axes]])
+
+        else:
+            _axes = axes
+
+        _axes[0, 0].scatter(symbols.real, symbols.imag)
+        _axes[0, 0].set(ylabel="Imag")
+        _axes[0, 0].set(xlabel="Real")
+        _axes[0, 0].grid(True, which="both")
+        _axes[0, 0].axhline(y=0, color="k")
+        _axes[0, 0].axvline(x=0, color="k")
 
         return figure
 

@@ -12,7 +12,7 @@ from typing import List, Optional, Type, Union, Any, Set
 
 import numpy as np
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, Node
-from scipy.fft import fft, fftshift, ifft, ifftshift
+from scipy.fft import fft, fftfreq, fftshift, ifft, ifftshift
 from scipy.interpolate import griddata
 from scipy.signal import find_peaks
 
@@ -374,11 +374,13 @@ class FrameSymbolSection(FrameSection, Serializable):
     serialized_attributes = {"pattern"}
 
     pattern: List[int]
+    __prefix_offset: int
 
-    def __init__(self, num_repetitions: int = 1, pattern: Optional[List[int]] = None, frame: Optional[OFDMWaveform] = None) -> None:
+    def __init__(self, num_repetitions: int = 1, pattern: Optional[List[int]] = None, frame: Optional[OFDMWaveform] = None, prefix_offset: int = 0) -> None:
         FrameSection.__init__(self, num_repetitions=num_repetitions, frame=frame)
         self.pattern = pattern if pattern is not None else []
         self.frame = frame
+        self.prefix_offset = prefix_offset
 
     @property
     def num_symbols(self) -> int:
@@ -410,6 +412,19 @@ class FrameSymbolSection(FrameSection, Serializable):
             num = max(num, self.frame.resources[resource_idx].num_subcarriers)
 
         return num
+
+    @property
+    def prefix_offset(self) -> int:
+        """Number of samples to skip the prefix."""
+
+        return self.__prefix_offset
+
+    @prefix_offset.setter
+    def prefix_offset(self, value: int) -> None:
+        if value < 0:
+            raise ValueError("Prefix offset must be greater or equal to zero")
+
+        self.__prefix_offset = value
 
     @property
     def _padded_num_subcarriers(self) -> int:
@@ -500,7 +515,7 @@ class FrameSymbolSection(FrameSection, Serializable):
 
             # Sort resource samples into their respective matrix sections
             resource_slicing = (*prefix_slice, resource_idx, slice(None))
-            signal_slicing = (*prefix_slice, slice(sample_index, sample_index + self._padded_num_subcarriers))
+            signal_slicing = (*prefix_slice, slice(sample_index - self.prefix_offset, sample_index + self._padded_num_subcarriers - self.prefix_offset))
             resource_samples[resource_slicing] = signal_samples[signal_slicing]
 
             # Advance sample index by resource length
@@ -510,7 +525,7 @@ class FrameSymbolSection(FrameSection, Serializable):
 
     def modulate(self, symbols: np.ndarray) -> np.ndarray:
         # Generate the resource grid of the oversampled OFDM frame
-        grid = np.zeros((self._padded_num_subcarriers, self.num_words), dtype=complex)
+        grid = np.zeros((self._padded_num_subcarriers, self.num_words), dtype=np.complex_)
 
         # Select the subgrid onto which to project this symbol section's resource configuration
         subgrid_start_idx = self._subgrid_start_idx()
@@ -545,7 +560,13 @@ class FrameSymbolSection(FrameSection, Serializable):
         """
 
         # Transform the time-domain resource signals to frequency-domain data symbols
-        grid = fftshift(fft(resource_signals, self._padded_num_subcarriers, axis=-1, norm="ortho"), axes=-1)
+        transform = fft(resource_signals, self._padded_num_subcarriers, axis=-1, norm="ortho")
+
+        # Correct for the time delay introduced by the prefix offset
+        if self.prefix_offset != 0:
+            transform *= np.exp(2j * np.pi * fftfreq(self._padded_num_subcarriers) * self.prefix_offset)
+
+        grid = fftshift(transform, axes=-1)
 
         # Account for the DC suppression
         if self.frame.dc_suppression:
@@ -576,16 +597,35 @@ class FrameSymbolSection(FrameSection, Serializable):
         subgrid = grid[selector]
         return subgrid
 
+    def __roll_dc_component(self, grid: np.ndarray) -> None:
+        """Roll the DC component to the last frequency bin to model DC suppression.
+
+        Subroutine of :meth:`.demodulate` and :meth:`.extract_channel`.
+
+        Args:
+
+            grid (np.ndarray):
+                Multidimensional matrix of frequency bins.
+                The last dimension will be rolled.
+        """
+
+        if self.frame.dc_suppression:
+            dc_index = int(0.5 * self._padded_num_subcarriers)
+            grid[dc_index:, :] = np.roll(grid[dc_index:, :], -1, axis=0)
+
     def demodulate(self, signal: np.ndarray) -> np.ndarray:
         # Remove the cyclic prefixes before transformation into time-domain
         resource_signals = self._remove_prefix(signal)
 
         # Extract the subgrid relevant to this section
         grid = self.__transform_resource_signals(resource_signals)
-        subgrid = self.__extract_subgrids(grid)
 
-        # Return the result
-        return subgrid
+        # Account for the DC suppression
+        self.__roll_dc_component(grid)
+
+        # Extract the subgrid relevant to this section
+        subgrids = self.__extract_subgrids(grid)
+        return subgrids
 
     def extract_channel(self, csi: np.ndarray, reference_position: ReferencePosition) -> np.ndarray:
         # Remove the cyclic prefixes before transformation into time-domain
@@ -608,10 +648,14 @@ class FrameSymbolSection(FrameSection, Serializable):
         # Extract the subgrid relevant to this section
         selected_grid_csi = self.__transform_resource_signals(selected_csi)
 
-        grid_start_idx = self._padded_num_subcarriers // 2 - self.frame.num_subcarriers // 2
-        grid_stop_idx = grid_start_idx + self.frame.num_subcarriers
-        grid_csi = selected_grid_csi[:, :, :, grid_start_idx:grid_stop_idx]
-        return grid_csi
+        # Account for the DC suppression
+        self.__roll_dc_component(selected_grid_csi)
+
+        # Select the relevant subgrid
+        start_idx = (self.frame.num_subcarriers * self.frame.oversampling_factor) // 2 - self.frame.num_subcarriers // 2
+        subgrid = selected_grid_csi[:, :, :, start_idx:start_idx + self.frame.num_subcarriers]
+
+        return subgrid
 
     @property
     def resource_mask(self) -> np.ndarray:

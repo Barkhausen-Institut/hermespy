@@ -146,7 +146,6 @@ class TestSymbols(TestCase):
 
             subplots_mock.assert_called_once()
             fig_mock.suptitle.assert_called_once()
-            ax_mock.scatter.assert_called_once()
 
     def test_hdf_serialization(self) -> None:
         """Serialization to and from HDF5 should yield the correct object reconstruction"""

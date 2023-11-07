@@ -47,8 +47,8 @@ class HardwareLoopPlotTest(TestCase):
                 axes_collection = np.array([[MagicMock(spec=plt.Axes)]], dtype=np.object_)
                 subplots_patch = stack.enter_context(patch('matplotlib.pyplot.subplots'))
                 subplots_patch.return_value = figure_mock, axes_collection
-            
-            self.plot = plot(*args, **kwargs)            
+
+            self.plot = plot(*args, **kwargs)
             self.loop.add_plot(self.plot)
             
             self.figure, self.axes = self.plot.prepare_figure()

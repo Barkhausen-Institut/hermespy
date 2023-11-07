@@ -377,29 +377,25 @@ class PhysicalDevice(Device):
             device_transmission = Device.transmit(self, clear_cache)
 
         else:
-            # Generate operator transmissions
             operator_transmissions = self.transmit_operators()
 
-            # Superimpose the operator transmissions
-            superimposed_signal = operator_transmissions[0].signal.copy()
-            for transmission in operator_transmissions[1:]:
-                if transmission.signal.sampling_rate != superimposed_signal.sampling_rate:
-                    raise RuntimeError("Adpative sampling does not support operators with differing sampling rates")
+            try:
+                output = self.generate_output(operator_transmissions, False)
 
-                superimposed_signal.superimpose(transmission.signal, resample=False)
+            except RuntimeError:
+                raise RuntimeError("Resampling is required for adaptive sampling but not allowed")
 
             # Adaptive sampling rate will simply assume the device's sampling rate
-            superimposed_signal.sampling_rate = self.sampling_rate
-            superimposed_signal.carrier_frequency = self.carrier_frequency
+            mixed_signal = output.mixed_signal
+            mixed_signal.carrier_frequency = self.carrier_frequency
+            mixed_signal.sampling_rate = self.sampling_rate
 
             # Generate the device transmission
-            device_transmission = DeviceTransmission(operator_transmissions, superimposed_signal)
+            device_transmission = DeviceTransmission(operator_transmissions, mixed_signal)
 
         # Upload the samples
         self._upload(device_transmission.mixed_signal)
         self.__recent_upload = device_transmission.mixed_signal
-
-        # Cache the uploaded samples for later calibration corrections at the receiver
 
         # Return transmission
         return device_transmission
@@ -461,7 +457,7 @@ class PhysicalDevice(Device):
             # Download signal samples
             _impinging_signals = self._download()
 
-            if _impinging_signals.num_streams != self.num_antennas:
+            if _impinging_signals.num_streams != self.num_receive_antennas:
                 raise ValueError("Number of received signal streams does not match number of configured antennas")
 
             if _impinging_signals.sampling_rate != self.sampling_rate:
