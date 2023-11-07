@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from .calibration import DelayCalibration, SelectiveLeakageCalibration
-from .hardware_loop import EvaluatorRegistration, EvaluatorPlotMode, HardwareLoop, HardwareLoopPlot, HardwareLoopSample
+from .hardware_loop import EvaluatorRegistration, EvaluatorPlotMode, HardwareLoop, HardwareLoopPlot, HardwareLoopSample, IterationPriority
 from .physical_device import Calibration, DelayCalibrationBase, LeakageCalibrationBase, NoDelayCalibration, NoLeakageCalibration, PhysicalDevice, PDT
 from .physical_device_dummy import PhysicalDeviceDummy, PhysicalScenarioDummy
 from .scenario import PhysicalScenario, PhysicalScenarioType, SimulatedPhysicalScenario
@@ -30,6 +30,7 @@ __all__ = [
     "HardwareLoop",
     "HardwareLoopPlot",
     "HardwareLoopSample",
+    "IterationPriority",
     "Calibration",
     "DelayCalibrationBase",
     "LeakageCalibrationBase",

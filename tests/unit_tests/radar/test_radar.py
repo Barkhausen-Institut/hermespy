@@ -278,7 +278,7 @@ class TestRadar(TestCase):
         self.radar.waveform = None
         
         with self.assertRaises(RuntimeError):
-            _ = self.radar.receive(Mock())
+            _ = self.radar.receive(Signal(np.zeros((self.device.num_receive_antennas, 5), dtype=complex), 1.))
             
     def test_receive_device_validation(self) -> None:
         """Receiving should raise a RuntimeError if no device was configured"""
@@ -286,7 +286,7 @@ class TestRadar(TestCase):
         self.radar.device = None
         
         with self.assertRaises(RuntimeError):
-            _ = self.radar.receive(Mock())
+            _ = self.radar.receive(Signal(np.zeros((self.device.num_transmit_antennas, 5), dtype=complex), 1.))
 
     def test_receive_no_beamformer_validation(self) -> None:
         """Receiving without a configured beamformer should raise a RuntimeError"""

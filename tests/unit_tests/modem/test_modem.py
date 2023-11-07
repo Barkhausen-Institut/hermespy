@@ -235,23 +235,6 @@ class TestBaseModem(TestCase):
         self.assertIs(self.modem, self.modem.encoder_manager.random_mother)
         self.assertIs(self.modem, self.modem.waveform_generator.random_mother)
 
-    def test_num_transmit_streams(self) -> None:
-        """Number of transmit streams property should return proper number of streams"""
-
-        self.transmit_device.antennas = UniformArray(IdealAntenna(), spacing=1., dimensions=(3,))
-        self.assertEqual(3, self.modem.num_transmit_streams)
-
-        self.transmit_device.antennas = UniformArray(IdealAntenna(), spacing=1., dimensions=(2,))
-        self.assertEqual(2, self.modem.num_transmit_streams)
-        
-    def test_num_receive_streams(self) -> None:
-        """Number of receive streams property should return proper number of streams"""
-
-        self.receive_device.antennas = UniformArray(IdealAntenna(), spacing=1., dimensions=(3,))
-        self.assertEqual(3, self.modem.num_receive_streams)
-
-        self.receive_device.antennas = UniformArray(IdealAntenna(), spacing=1., dimensions=(2,))
-        self.assertEqual(2, self.modem.num_receive_streams)
 
     def test_encoder_manager_setget(self) -> None:
         """Encoder manager property getter should return setter argument"""
@@ -324,10 +307,6 @@ class TestTransmittingModem(TestBaseModem):
         
         self.transmit_device = SimulatedDevice()
         self.transmit_device.transmitters.add(self.modem)
-        
-    def test_num_receive_streams(self) -> None:
-        
-        self.assertEqual(0, self.modem.num_receive_streams)
         
     def test_bits_source_setget(self) -> None:
         """Bits source property getter should return setter argument"""
@@ -426,10 +405,6 @@ class TestReceivingModem(TestBaseModem):
         
         self.receive_device = SimulatedDevice()
         self.receive_device.receivers.add(self.modem)
-        
-    def test_num_transmit_streams(self) -> None:
-        
-        self.assertEqual(0, self.modem.num_transmit_streams)
 
     def test_receive_stream_coding_setget(self) -> None:
         """Receive stream coding property should return correct configuration"""

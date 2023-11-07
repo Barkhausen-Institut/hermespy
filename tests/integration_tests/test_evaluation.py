@@ -6,7 +6,8 @@ import numpy as np
 
 from hermespy.modem import DuplexModem, RootRaisedCosineWaveform, BitErrorEvaluator, BlockErrorEvaluator, FrameErrorEvaluator, ThroughputEvaluator
 from hermespy.simulation import SimulatedDevice
-from hermespy.core.monte_carlo import Evaluator, GridDimension, register
+from hermespy.core.evaluators import ReceivedPowerEvaluator
+from hermespy.core.monte_carlo import Evaluator, GridDimension
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -96,3 +97,9 @@ class TestEvaluators(TestCase):
         
         ber = ThroughputEvaluator(self.modem, self.modem)
         self._test_evaluator(ber)
+
+    def test_received_power_evaluator(self) -> None:
+        """Test the received power evaluation"""
+        
+        pow = ReceivedPowerEvaluator(self.modem)
+        self._test_evaluator(pow)
