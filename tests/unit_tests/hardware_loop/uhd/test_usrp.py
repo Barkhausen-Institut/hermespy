@@ -98,7 +98,7 @@ class TestUsrpDevice(TestCase):
     def test_transmit(self) -> None:
         """Test transmitting operator behaviour"""
         
-        transmitted_signal = Signal(self.rng.normal(size=(self.usrp.num_antennas, 11)),
+        transmitted_signal = Signal(self.rng.normal(size=(self.usrp.num_transmit_antennas, 11)),
                                     sampling_rate=self.usrp.sampling_rate,
                                     carrier_frequency=self.usrp.carrier_frequency)
         transmitter = SignalTransmitter(transmitted_signal)
@@ -128,7 +128,7 @@ class TestUsrpDevice(TestCase):
     def test_download(self) -> None:
         """Test the device download subroutine"""
 
-        received_signal = Signal(self.rng.normal(size=(self.usrp.num_antennas, 11)),
+        received_signal = Signal(self.rng.normal(size=(self.usrp.num_receive_antennas, 11)),
                                  sampling_rate=self.usrp.sampling_rate,
                                  carrier_frequency=self.usrp.carrier_frequency)
 

@@ -95,7 +95,7 @@ class TestBitErrorEvaluator(TestCase):
     
     def setUp(self) -> None:
         
-        self.waveform = RootRaisedCosineWaveform(symbol_rate=1e9, num_preamble_symbols=0, num_data_symbols = 10)
+        self.waveform = RootRaisedCosineWaveform(symbol_rate=1e9, num_preamble_symbols=0, num_data_symbols=10)
         self.transmitter = TransmittingModem()
         self.transmitter.waveform_generator = self.waveform
         self.receiver = ReceivingModem()

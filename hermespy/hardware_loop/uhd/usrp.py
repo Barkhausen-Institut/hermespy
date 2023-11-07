@@ -6,6 +6,7 @@ UHD Device
 """
 
 from __future__ import annotations
+from copy import deepcopy
 from functools import cached_property
 from typing import Any, List, Callable
 
@@ -13,7 +14,7 @@ import numpy as np
 from zerorpc.exceptions import LostRemote, RemoteError
 from usrp_client import UsrpClient, MimoSignal, TxStreamingConfig, RxStreamingConfig, RfConfig
 
-from hermespy.core import Serializable, Signal
+from hermespy.core import AntennaArrayBase, AntennaArray, AntennaMode, Device, IdealAntenna, Serializable, Signal
 from ..physical_device import PhysicalDevice
 
 __author__ = "Jan Adler"
@@ -41,8 +42,10 @@ class UsrpDevice(PhysicalDevice, Serializable):
     __sampling_rate: float | None
     __num_prepended_zeros: int
     __num_appended_zeros: int
+    __num_transmit_antennas: int
+    __num_receive_antennas: int
 
-    def __init__(self, ip: str, port: int = 5555, carrier_frequency: float = 7e8, sampling_rate: float | None = None, tx_gain: float = 0.0, rx_gain: float = 0.0, scale_transmission: bool = False, num_prepended_zeros: int = 200, num_appended_zeros: int = 200, *args, **kwargs) -> None:
+    def __init__(self, ip: str, port: int = 5555, carrier_frequency: float = 7e8, sampling_rate: float | None = None, tx_gain: float = 0.0, rx_gain: float = 0.0, scale_transmission: bool = True, num_prepended_zeros: int = 200, num_appended_zeros: int = 200, num_transmit_antennas: int = 1, num_receive_antennas: int = 1, antennas: AntennaArrayBase | None = None, *args, **kwargs) -> None:
         """
         Args:
 
@@ -80,13 +83,34 @@ class UsrpDevice(PhysicalDevice, Serializable):
                 The number of zeros appended to the transmission signal.
                 :math:`200` by default.
 
+            num_transmit_antennas (int, optional):
+                Number of transmit antennas.
+                :math:`1` by default.
+
+            num_receive_antennas (int, optional):
+                Number of receive antennas.
+                :math:`1` by default.
+
+            antennas (AntennaArrayBase, optional):
+                Antenna array topology of the USRP device.
+                If not provided, an antenna array with ideal antennas matching the number of transmit and receive antennas is created.
+
             *args, **kwargs:
                 Additional arguments passed to the :class:`.PhysicalDevice` parent class.
         """
 
         self.__usrp_client = UsrpClient.create(ip, port)
+        self.__num_transmit_antennas = num_transmit_antennas
+        self.__num_receive_antennas = num_receive_antennas
 
-        PhysicalDevice.__init__(self, *args, **kwargs)
+        # Infer antenna array topology from USRP device
+        _antennas: AntennaArrayBase
+        if antennas is None:
+            _antennas = AntennaArray([IdealAntenna(AntennaMode.TX) for _ in range(self.num_transmit_antennas)] + [IdealAntenna(AntennaMode.RX) for _ in range(self.num_receive_antennas)])
+        else:
+            _antennas = antennas
+
+        PhysicalDevice.__init__(self, *args, antennas=_antennas, **kwargs)
 
         self.carrier_frequency = carrier_frequency
         self.tx_gain = tx_gain
@@ -143,11 +167,13 @@ class UsrpDevice(PhysicalDevice, Serializable):
                     rx_carrier_frequency != self.__current_configuration.rxCarrierFrequency,
                     tx_gain != self.__current_configuration.txGain,
                     rx_gain != self.__current_configuration.rxGain,
+                    self.num_transmit_antennas != self.__current_configuration.noTxAntennas,
+                    self.num_receive_antennas != self.__current_configuration.noRxAntennas,
                 ]
             )
             or force
         ):
-            config = RfConfig(txAnalogFilterBw=tx_filter_bandwidth, rxAnalogFilterBw=rx_filter_bandwidth, txSamplingRate=tx_sampling_rate, rxSamplingRate=rx_sampling_rate, txCarrierFrequency=tx_carrier_frequency, rxCarrierFrequency=rx_carrier_frequency, txGain=tx_gain, rxGain=rx_gain)
+            config = RfConfig(txAnalogFilterBw=tx_filter_bandwidth, rxAnalogFilterBw=rx_filter_bandwidth, txSamplingRate=tx_sampling_rate, rxSamplingRate=rx_sampling_rate, txCarrierFrequency=tx_carrier_frequency, rxCarrierFrequency=rx_carrier_frequency, txGain=tx_gain, rxGain=rx_gain, noTxAntennas=self.num_transmit_antennas, noRxAntennas=self.num_receive_antennas)
 
             self.__rpc_call_wrapper(self.__usrp_client.configureRfConfig, config)
             self.__current_configuration = config
@@ -209,10 +235,10 @@ class UsrpDevice(PhysicalDevice, Serializable):
     def _download(self) -> Signal:
         # Abort if no samples are to be expcted during collection
         if not self.__collection_enabled:
-            return Signal.empty(self.sampling_rate, self.antennas.num_antennas)
+            return Signal.empty(self.sampling_rate, self.antennas.num_receive_antennas)
 
         mimo_signals = self.__usrp_client.collect()
-        signal_model = Signal.empty(self.sampling_rate, self.antennas.num_antennas, carrier_frequency=self.carrier_frequency)
+        signal_model = Signal.empty(self.sampling_rate, self.num_receive_antennas, carrier_frequency=self.carrier_frequency)
 
         for mimo_signal in mimo_signals:
             streams = np.array(mimo_signal.signals)
@@ -273,6 +299,28 @@ class UsrpDevice(PhysicalDevice, Serializable):
     @rx_gain.setter
     def rx_gain(self, value: float) -> None:
         self.__rx_gain = value
+
+    @property
+    def num_transmit_antennas(self) -> int:
+        """Number of transmit antennas."""
+
+        return self.__num_transmit_antennas
+
+    @property
+    def num_receive_antennas(self) -> int:
+        """Number of receive antennas."""
+
+        return self.__num_receive_antennas
+
+    @Device.antennas.setter  # type: ignore
+    def antennas(self, value: AntennaArrayBase) -> None:
+        if value.num_transmit_antennas != self.num_transmit_antennas:
+            raise ValueError(f"Number of antenna array's transmit antennas must match the number of USRP's transmit antennas ({value.num_transmit_antennas} != {self.num_transmit_antennas})")
+
+        if value.num_receive_antennas != self.num_receive_antennas:
+            raise ValueError(f"Number of antenna array's receive antennas must match the number of USRP's receive antennas ({value.num_receive_antennas} != {self.num_receive_antennas})")
+
+        Device.antennas.fset(self, deepcopy(value))  # type: ignore
 
     @property
     def sampling_rate(self) -> float:

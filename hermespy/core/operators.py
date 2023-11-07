@@ -128,6 +128,16 @@ class SignalTransmitter(StaticOperator, Transmitter[Transmission]):
         # Init class attributes
         self.__signal = signal
 
+    @property
+    def signal(self) -> Signal:
+        """Signal to be transmitted by the static operator for each transmission."""
+
+        return self.__signal
+
+    @signal.setter
+    def signal(self, value: Signal) -> None:
+        self.__signal = value
+
     def _transmit(self, duration: float = 0.0) -> Transmission:
         transmission = Transmission(self.__signal)
 

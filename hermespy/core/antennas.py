@@ -20,7 +20,7 @@ from mpl_toolkits.mplot3d import Axes3D  # type: ignore
 from scipy.constants import pi, speed_of_light
 
 from .executable import Executable
-from .factory import Serializable
+from .factory import Serializable, SerializableEnum
 from .signal_model import Signal
 from .transformation import Direction, Transformable, Transformation
 from .visualize import VAT
@@ -35,6 +35,19 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
+class AntennaMode(SerializableEnum):
+    """Mode of operation of the antenna."""
+
+    TX = 0
+    """Transmit-only antenna"""
+
+    RX = 1
+    """Receive-only antenna"""
+
+    DUPLEX = 2
+    """Transmit-receive antenna"""
+
+
 class Antenna(Transformable, Serializable):
     """Model of a single antenna.
 
@@ -42,11 +55,16 @@ class Antenna(Transformable, Serializable):
     """
 
     yaml_tag = "Antenna"
+    __mode: AntennaMode
     __array: Optional[AntennaArray]  # Array this antenna belongs to
 
-    def __init__(self, pose: Transformation | None = None) -> None:
+    def __init__(self, mode: AntennaMode = AntennaMode.DUPLEX, pose: Transformation | None = None) -> None:
         """
         Args:
+
+            mode (AntennaMode, optional):
+                Antenna's mode of operation.
+                By default, a full duplex antenna is assumed.
 
             pose (Transformation, optional):
                 The antenna's position and orientation with respect to its array.
@@ -56,7 +74,19 @@ class Antenna(Transformable, Serializable):
         Serializable.__init__(self)
         Transformable.__init__(self, pose=pose)
 
+        # Initialize attributes
+        self.__mode = mode
         self.__array = None
+
+    @property
+    def mode(self) -> AntennaMode:
+        """Antenna's mode of operation."""
+
+        return self.__mode
+
+    @mode.setter
+    def mode(self, value: AntennaMode) -> None:
+        self.__mode = value
 
     @property
     def array(self) -> Optional[AntennaArray]:
@@ -362,10 +392,14 @@ class LinearAntenna(Antenna):
 
     __slant: float
 
-    def __init__(self, slant: float = 0.0, pose: Transformation | None = None):
+    def __init__(self, mode: AntennaMode = AntennaMode.DUPLEX, slant: float = 0.0, pose: Transformation | None = None):
         """Initialize a new linear antenna.
 
         Args:
+
+            mode (AntennaMode, optional):
+                Antenna's mode of operation.
+                By default, a full duplex antenna is assumed.
 
             slant (float):
                 Slant of the antenna in radians.
@@ -375,7 +409,7 @@ class LinearAntenna(Antenna):
         """
 
         # Initialize base class
-        Antenna.__init__(self, pose)
+        Antenna.__init__(self, mode, pose)
 
         # Initialize class attributes
         self.__slant = slant
@@ -464,7 +498,12 @@ class AntennaArrayBase(Transformable):
         Returns: Number of transmitting elements.
         """
 
-        return self.num_antennas
+        num_antennas = 0
+        for antenna in self.antennas:
+            if antenna.mode == AntennaMode.DUPLEX or antenna.mode == AntennaMode.TX:
+                num_antennas += 1
+
+        return num_antennas
 
     @property
     def num_receive_antennas(self) -> int:
@@ -473,7 +512,12 @@ class AntennaArrayBase(Transformable):
         Returns: Number of receiving elements.
         """
 
-        return self.num_antennas
+        num_antennas = 0
+        for antenna in self.antennas:
+            if antenna.mode == AntennaMode.DUPLEX or antenna.mode == AntennaMode.RX:
+                num_antennas += 1
+
+        return num_antennas
 
     @property
     @abstractmethod
@@ -497,6 +541,24 @@ class AntennaArrayBase(Transformable):
                 :math:`M \\times 3` topology matrix, where :math:`M` is the number of antenna elements.
         """
         return np.array([antenna.forwards_transformation.translation for antenna in self.antennas], dtype=float)
+
+    @property
+    def transmit_array(self) -> AntennaArray:
+        """Sub-array of transmitting antennas within this antenna array."""
+
+        antennas = [antenna for antenna in self.antennas if antenna.mode is AntennaMode.DUPLEX or antenna.mode is AntennaMode.TX]
+        pose = self.pose
+
+        return AntennaArray(antennas, pose)
+
+    @property
+    def receive_array(self) -> AntennaArray:
+        """Sub-array of receiging antennas within this antenna array."""
+
+        antennas = [antenna for antenna in self.antennas if antenna.mode is AntennaMode.DUPLEX or antenna.mode is AntennaMode.RX]
+        pose = self.pose
+
+        return AntennaArray(antennas, pose)
 
     @overload
     def characteristics(self, location: np.ndarray, frame: Literal["global", "local"] = "local") -> np.ndarray:
@@ -799,6 +861,18 @@ class AntennaArrayBase(Transformable):
         # That's it
         return response
 
+    def __getitem__(self, index: slice | Sequence[int] | None) -> AntennaArrayBase:
+        if index is None:
+            return self
+
+        if isinstance(index, Sequence):
+            index = slice(*index)
+
+        antennas = self.antennas[index]
+        pose = self.pose
+
+        return AntennaArray(antennas, pose)
+
 
 class UniformArray(AntennaArrayBase, Serializable):
     """Model of a Uniform Antenna Array."""
@@ -936,12 +1010,13 @@ class AntennaArray(AntennaArrayBase, Serializable):
 
     __antennas: List[Antenna]
 
-    def __init__(self, antennas: List[Antenna] = None, pose: Transformation | None = None) -> None:
+    def __init__(self, antennas: Sequence[Antenna] = None, pose: Transformation | None = None) -> None:
         """
         Args:
 
-            antennas (List[Antenna], optional):
+            antennas (Sequence[Antenna], optional):
                 Antenna models of each array element.
+                If not specified, an empty array is assumed.
 
             pose (Transformation, optional):
                 The anntena array's transformation with respect to its device.
