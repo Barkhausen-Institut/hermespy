@@ -23,23 +23,19 @@ class TestConfigurationExamples(TestCase):
     """Test configuration example execution without exceptions"""
 
     def setUp(self) -> None:
-        
         # Create temporary directory to store simulation artifacts
         self.tempdir = TemporaryDirectory()
 
     def tearDown(self) -> None:
-
         # Clear temporary directory and remove all simulation artifacts
         self.tempdir.cleanup()
 
     @classmethod
     def setUpClass(cls) -> None:
-        
         ray.init(local_mode=True, num_cpus=1, ignore_reinit_error=True, logging_level=logging.ERROR)
 
     @classmethod
     def tearDownClass(cls) -> None:
-
         # Shut down ray
         ray.shutdown()
 
@@ -53,7 +49,7 @@ class TestConfigurationExamples(TestCase):
         """
 
         with SimulationTestContext():
-            hermes_simulation([path, '-o', self.tempdir.name])
+            hermes_simulation([path, "-o", self.tempdir.name])
 
     def test_chirp_fsk_lora(self) -> None:
         """Test example settings for chirp FSK modulation"""
@@ -64,7 +60,7 @@ class TestConfigurationExamples(TestCase):
         """Test example settings for chirp QAM modulation"""
 
         self.__run_yaml("_examples/settings/chirp_qam.yml")
-        
+
     def test_hardware_model(self) -> None:
         """Test example settings for hardware simulation"""
 

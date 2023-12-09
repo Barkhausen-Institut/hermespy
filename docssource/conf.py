@@ -82,7 +82,7 @@ autodoc_default_options = {
     'member-order': 'groupwise',
     'show-inheritance': True,
     'exclude-members': '__weakref__',
-    'inherited-members': True,
+    'inherited-members': False,
 }
 
 # Intersphinx configuration
@@ -127,6 +127,9 @@ carousel_bootstrap_add_css_js = True
 
 # Mermaid config
 mermaid_d3_zoom = True
+
+# Suppress index warnings
+suppress_warnings = []
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

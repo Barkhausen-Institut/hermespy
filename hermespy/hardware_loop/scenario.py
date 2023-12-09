@@ -41,7 +41,14 @@ class PhysicalScenario(Generic[PDT], Scenario[PDT]):
         """Trigger synchronzed transmission and reception for all managed devices."""
         ...  # pragma no cover
 
-    def receive_devices(self, impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]] | None = None, cache: bool = True) -> Sequence[DeviceReception]:
+    def receive_devices(
+        self,
+        impinging_signals: Sequence[DeviceInput]
+        | Sequence[Signal]
+        | Sequence[Sequence[Signal]]
+        | None = None,
+        cache: bool = True,
+    ) -> Sequence[DeviceReception]:
         """Receive over all scenario devices.
 
         Internally calls :meth:`Scenario.process_inputs` and :meth:`Scenario.receive_devices`.
@@ -63,7 +70,9 @@ class PhysicalScenario(Generic[PDT], Scenario[PDT]):
             ValueError: If the number of `impinging_signals` does not match the number of registered devices.
         """
 
-        impinging_signals = [None] * self.num_devices if impinging_signals is None else impinging_signals
+        impinging_signals = (
+            [None] * self.num_devices if impinging_signals is None else impinging_signals
+        )
 
         # Generate inputs
         device_inputs = [d.process_input(i, cache) for d, i in zip(self.devices, impinging_signals)]  # type: ignore
@@ -72,7 +81,10 @@ class PhysicalScenario(Generic[PDT], Scenario[PDT]):
         receptions = self.receive_operators(device_inputs)
 
         # Generate device receptions
-        return [DeviceReception.From_ProcessedDeviceInput(i, r) for i, r in zip(device_inputs, receptions)]
+        return [
+            DeviceReception.From_ProcessedDeviceInput(i, r)
+            for i, r in zip(device_inputs, receptions)
+        ]
 
     def _drop(self) -> Drop:
         # Generate device transmissions
@@ -102,12 +114,25 @@ class SimulatedPhysicalScenario(SimulationScenario, PhysicalScenario):
         # Triggering does nothing
         pass  # pragma: no cover
 
-    def receive_devices(self, impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]] | Sequence[Sequence[ChannelPropagation]] | None = None, cache: bool = True, trigger_realizations: Sequence[TriggerRealization] | None = None) -> Sequence[SimulatedDeviceReception]:
+    def receive_devices(
+        self,
+        impinging_signals: Sequence[DeviceInput]
+        | Sequence[Signal]
+        | Sequence[Sequence[Signal]]
+        | Sequence[Sequence[ChannelPropagation]]
+        | None = None,
+        cache: bool = True,
+        trigger_realizations: Sequence[TriggerRealization] | None = None,
+    ) -> Sequence[SimulatedDeviceReception]:
         if impinging_signals is None:
             physical_device_receptions = PhysicalScenario.receive_devices(self, None, cache)
             impinging_signals = [r.impinging_signals for r in physical_device_receptions]
 
-            return SimulationScenario.receive_devices(self, impinging_signals, cache, trigger_realizations)
+            return SimulationScenario.receive_devices(
+                self, impinging_signals, cache, trigger_realizations
+            )
 
         else:
-            return SimulationScenario.receive_devices(self, impinging_signals, cache, trigger_realizations)
+            return SimulationScenario.receive_devices(
+                self, impinging_signals, cache, trigger_realizations
+            )

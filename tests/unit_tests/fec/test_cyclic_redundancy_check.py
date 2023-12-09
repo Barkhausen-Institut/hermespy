@@ -22,13 +22,11 @@ class TestCrcEncoder(unittest.TestCase):
     """Test Redundancy Check Bit Encoding"""
 
     def setUp(self) -> None:
-
         self.rng = np.random.default_rng(42)
         self.bit_block_size = 10
         self.check_block_size = 3
 
-        self.encoder = CyclicRedundancyCheck(bit_block_size=self.bit_block_size,
-                                             check_block_size=self.check_block_size)
+        self.encoder = CyclicRedundancyCheck(bit_block_size=self.bit_block_size, check_block_size=self.check_block_size)
 
     def test_init(self) -> None:
         """Initialization arguments should be properly stored as class attributes."""

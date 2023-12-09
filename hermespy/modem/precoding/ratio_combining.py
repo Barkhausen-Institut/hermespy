@@ -43,10 +43,16 @@ class MaximumRatioCombining(SymbolPrecoder, Serializable):
         if symbols.num_transmit_streams != 1:
             raise RuntimeError("Maximum ratio combining only supports a  single transmit stream")
 
-        simo_states = symbols.states.reshape((symbols.num_streams, symbols.num_symbols * symbols.num_blocks))
-        symbols_raw = symbols.raw.reshape((symbols.num_streams, symbols.num_symbols * symbols.num_blocks))
+        simo_states = symbols.states.reshape(
+            (symbols.num_streams, symbols.num_symbols * symbols.num_blocks)
+        )
+        symbols_raw = symbols.raw.reshape(
+            (symbols.num_streams, symbols.num_symbols * symbols.num_blocks)
+        )
 
-        symbol_estimates = np.sum(simo_states.conj() * symbols_raw, axis=0, keepdims=True) / np.sum(np.abs(simo_states) ** 2, axis=0, keepdims=True)
+        symbol_estimates = np.sum(simo_states.conj() * symbols_raw, axis=0, keepdims=True) / np.sum(
+            np.abs(simo_states) ** 2, axis=0, keepdims=True
+        )
         state_estimates = np.sum(np.abs(symbols.states) ** 2, axis=0)
         # resulting_noises = np.sum(stream_noises * (np.abs(stream_responses) ** 2), axis=0, keepdims=True)
 

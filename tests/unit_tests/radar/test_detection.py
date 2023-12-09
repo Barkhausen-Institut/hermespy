@@ -107,7 +107,7 @@ class TestRadarPointCloud(TestCase):
 
     def test_plot(self) -> None:
         """Point clouds should be properly plotted"""
-        
+
         figure_mock = Mock(spec=plt.Figure)
         axes_mock = Mock()
         axes_collection = np.array([[axes_mock]], dtype=np.object_)
@@ -172,8 +172,8 @@ class TestThresholdDetector(TestCase):
         cloud = self.detector.detect(cube)
 
         self.assertEqual(1, cloud.num_points)
-        self.assertAlmostEqual(1., cloud.points[0].power)
-        assert_array_almost_equal(np.array([0., 0., range_bins[50]]), cloud.points[0].position)
+        self.assertAlmostEqual(1.0, cloud.points[0].power)
+        assert_array_almost_equal(np.array([0.0, 0.0, range_bins[50]]), cloud.points[0].position)
         assert_array_almost_equal(np.array([0, 0, doppler_bins[4] * speed_of_light / carrier_frequency]), cloud.points[0].velocity)
 
     def test_detect_unfiltered(self) -> None:
@@ -194,7 +194,7 @@ class TestThresholdDetector(TestCase):
 
         self.assertEqual(1, cloud.num_points)
         self.assertAlmostEqual(0.5, cloud.points[0].power)
-        assert_array_almost_equal(np.array([0., 0., range_bins[3]]), cloud.points[0].position)
+        assert_array_almost_equal(np.array([0.0, 0.0, range_bins[3]]), cloud.points[0].position)
         assert_array_almost_equal(np.array([0, 0, doppler_bins[2] * speed_of_light / carrier_frequency]), cloud.points[0].velocity)
 
 
@@ -222,7 +222,7 @@ class TestMaxDetector(TestCase):
 
         self.assertEqual(1, cloud.num_points)
         self.assertAlmostEqual(0.5, cloud.points[0].power)
-        assert_array_almost_equal(np.array([0., 0., range_bins[3]]), cloud.points[0].position)
+        assert_array_almost_equal(np.array([0.0, 0.0, range_bins[3]]), cloud.points[0].position)
         assert_array_almost_equal(np.array([0, 0, doppler_bins[2] * speed_of_light / carrier_frequency]), cloud.points[0].velocity)
 
     def test_empty_detect(self) -> None:
@@ -364,7 +364,7 @@ class TestCFARDetector(TestCase):
             range = cube.range_bins[py]
             power_indicator = cube.data[1, px, py]
             point_detection_expected = PointDetection.FromSpherical(zenith, azimuth, velocity, range, power_indicator)
-            assert (point_detection_expected in cloud.points)
+            assert point_detection_expected in cloud.points
 
     def test_empty_detect(self) -> None:
         """CFAR detector should return an empty point cloud if no points are detected"""

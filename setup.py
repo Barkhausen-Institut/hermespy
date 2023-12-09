@@ -50,7 +50,7 @@ setup(
         "test": [
             'pytest>=7.4.2',
             'coverage>=7.3.2',
-            'mypy>=1.3.0',
+            'mypy>=1.3.0,<1.7.0',
             'nbformat',
             'nbconvert'
         ],

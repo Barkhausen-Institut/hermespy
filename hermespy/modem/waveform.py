@@ -71,7 +71,10 @@ class Synchronization(Generic[WaveformType], ABC, Serializable):
         """Set waveform generator this synchronization routine is attached to."""
 
         # Un-register this synchronization routine from its previously assigned waveform
-        if self.__waveform_generator is not None and self.__waveform_generator.synchronization is self:
+        if (
+            self.__waveform_generator is not None
+            and self.__waveform_generator.synchronization is self
+        ):
             self.__waveform_generator.synchronization = Synchronization()
 
         self.__waveform_generator = value
@@ -162,7 +165,11 @@ class ChannelEstimation(Generic[WaveformType], Serializable):
         Returns: The symbols and their respective channel states.
         """
 
-        state = GCXS.from_numpy(np.ones((symbols.num_streams, 1, symbols.num_blocks, symbols.num_symbols), dtype=complex))
+        state = GCXS.from_numpy(
+            np.ones(
+                (symbols.num_streams, 1, symbols.num_blocks, symbols.num_symbols), dtype=complex
+            )
+        )
         return StatedSymbols(symbols.raw, state)
 
 
@@ -215,7 +222,9 @@ class ChannelEqualization(Generic[WaveformType], ABC, Serializable):
         return stated_symbols
 
 
-class ZeroForcingChannelEqualization(Generic[WaveformType], ChannelEqualization[WaveformType], Serializable):
+class ZeroForcingChannelEqualization(
+    Generic[WaveformType], ChannelEqualization[WaveformType], Serializable
+):
     """Zero-Forcing channel equalization for arbitrary waveforms."""
 
     yaml_tag = "ZeroForcing"
@@ -255,7 +264,14 @@ class WaveformGenerator(ABC, Serializable):
     # Cardinality of the set of communication symbols
     __modulation_order: int
 
-    def __init__(self, modem: Optional[BaseModem] = None, oversampling_factor: int = 1, modulation_order: int = 16, channel_estimation: ChannelEstimation | None = None, channel_equalization: ChannelEqualization | None = None) -> None:
+    def __init__(
+        self,
+        modem: Optional[BaseModem] = None,
+        oversampling_factor: int = 1,
+        modulation_order: int = 16,
+        channel_estimation: ChannelEstimation | None = None,
+        channel_equalization: ChannelEqualization | None = None,
+    ) -> None:
         """Waveform Generator initialization.
 
         Args:
@@ -276,8 +292,12 @@ class WaveformGenerator(ABC, Serializable):
         self.oversampling_factor = oversampling_factor
         self.modulation_order = modulation_order
         self.synchronization = Synchronization(self)
-        self.channel_estimation = ChannelEstimation(self) if channel_estimation is None else channel_estimation
-        self.channel_equalization = ChannelEqualization(self) if channel_equalization is None else channel_equalization
+        self.channel_estimation = (
+            ChannelEstimation(self) if channel_estimation is None else channel_estimation
+        )
+        self.channel_equalization = (
+            ChannelEqualization(self) if channel_equalization is None else channel_equalization
+        )
 
         if modem is not None:
             self.modem = modem
@@ -755,7 +775,12 @@ class ConfigurablePilotWaveform(PilotWaveformGenerator, ABC):
     repeat_pilot_symbol_sequence: bool
     """Allow the repetition of pilot symbol sequences."""
 
-    def __init__(self, symbol_sequence: Optional[PilotSymbolSequence] = None, repeat_symbol_sequence: bool = True, **kwargs) -> None:
+    def __init__(
+        self,
+        symbol_sequence: Optional[PilotSymbolSequence] = None,
+        repeat_symbol_sequence: bool = True,
+        **kwargs,
+    ) -> None:
         """
         Args:
 
@@ -771,7 +796,9 @@ class ConfigurablePilotWaveform(PilotWaveformGenerator, ABC):
                Additional :class:`WaveformGenerator` initialization parameters.
         """
 
-        self.pilot_symbol_sequence = UniformPilotSymbolSequence() if symbol_sequence is None else symbol_sequence
+        self.pilot_symbol_sequence = (
+            UniformPilotSymbolSequence() if symbol_sequence is None else symbol_sequence
+        )
         self.repeat_pilot_symbol_sequence = repeat_symbol_sequence
 
         # Initialize base class
@@ -798,7 +825,9 @@ class ConfigurablePilotWaveform(PilotWaveformGenerator, ABC):
 
         if num_repetitions > 1:
             if not self.repeat_pilot_symbol_sequence:
-                raise RuntimeError("Pilot symbol repetition required for sequence generation but not allowed")
+                raise RuntimeError(
+                    "Pilot symbol repetition required for sequence generation but not allowed"
+                )
 
             symbol_sequence = np.tile(symbol_sequence, num_repetitions)
 

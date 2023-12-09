@@ -69,7 +69,9 @@ class PowerAmplifier(Serializable, Visualizable):
 
     __saturation_amplitude: float
 
-    def __init__(self, saturation_amplitude: float = float("inf"), adjust_power: bool = False) -> None:
+    def __init__(
+        self, saturation_amplitude: float = float("inf"), adjust_power: bool = False
+    ) -> None:
         """
         Args:
 
@@ -106,7 +108,9 @@ class PowerAmplifier(Serializable, Visualizable):
         """Set the cut-off point for the linear behaviour of the amplification."""
 
         if value < 0.0:
-            raise ValueError("Power-Amplifier model saturation amplitude must be greater or equal to zero")
+            raise ValueError(
+                "Power-Amplifier model saturation amplitude must be greater or equal to zero"
+            )
 
         self.__saturation_amplitude = value
 
@@ -152,7 +156,13 @@ class PowerAmplifier(Serializable, Visualizable):
     def title(self) -> str:
         return self.__class__.__name__ + " Characteristics"
 
-    def plot(self, axes: VAT | None = None, *, title: str | None = None, samples: np.ndarray | None = None) -> plt.FigureBase:
+    def plot(
+        self,
+        axes: VAT | None = None,
+        *,
+        title: str | None = None,
+        samples: np.ndarray | None = None,
+    ) -> plt.FigureBase:
         """Plot the power amplifier distortion characteristics.
 
         Generates a matplotlib plot depicting the phase/amplitude.
@@ -224,7 +234,9 @@ class ClippingPowerAmplifier(PowerAmplifier):
         output_signal = input_signal.copy()
 
         clip_idx = np.nonzero(np.abs(input_signal) > self.saturation_amplitude)
-        output_signal[clip_idx] = self.saturation_amplitude * np.exp(1j * np.angle(input_signal[clip_idx]))
+        output_signal[clip_idx] = self.saturation_amplitude * np.exp(
+            1j * np.angle(input_signal[clip_idx])
+        )
 
         return output_signal
 
@@ -342,7 +354,14 @@ class SalehPowerAmplifier(PowerAmplifier):
     __amplitude_alpha: float  # Amplitude model factor alpha.
     __amplitude_beta: float  # Amplitude model factor beta.
 
-    def __init__(self, amplitude_alpha: float, amplitude_beta: float, phase_alpha: float, phase_beta: float, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        amplitude_alpha: float,
+        amplitude_beta: float,
+        phase_alpha: float,
+        phase_beta: float,
+        **kwargs: Any,
+    ) -> None:
         """
         Args:
 
@@ -432,7 +451,9 @@ class CustomPowerAmplifier(PowerAmplifier):
     __gain: np.ndarray
     __phase: np.ndarray
 
-    def __init__(self, input: np.ndarray, gain: np.ndarray, phase: np.ndarray, **kwargs: Any) -> None:
+    def __init__(
+        self, input: np.ndarray, gain: np.ndarray, phase: np.ndarray, **kwargs: Any
+    ) -> None:
         """
         Args:
 
@@ -457,7 +478,9 @@ class CustomPowerAmplifier(PowerAmplifier):
             raise ValueError("Custom power amplifier phase must be a vector")
 
         if len(input) != len(gain) != len(phase):
-            raise ValueError("Custom power amplifier input, gain and phase vectors must be of identical length")
+            raise ValueError(
+                "Custom power amplifier input, gain and phase vectors must be of identical length"
+            )
 
         self.__input = input
         self.__gain = gain

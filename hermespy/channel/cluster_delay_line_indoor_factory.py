@@ -22,7 +22,15 @@ class IndoorFactoryBase(ClusterDelayLineBase):
     __volume: float  # Hall volume in m3
     __surface: float  # Total surface hall area in m2 (walls/floor/ceiling)
 
-    def __init__(self, volume: float, surface: float, alpha_device=None, beta_device=None, gain: float = 1.0, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        volume: float,
+        surface: float,
+        alpha_device=None,
+        beta_device=None,
+        gain: float = 1.0,
+        **kwargs: Any,
+    ) -> None:
         """
         Args:
 

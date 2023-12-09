@@ -45,9 +45,17 @@ class PskQamMapping(object):
     mapping_available = [2, 4, 8, 16, 64, 64, 256]
     mapping_available_pam = [2, 4, 8, 16]
 
-    _psk8_map = np.exp(1j * np.array([0, 1 / 4, 3 / 4, 1 / 2, -1 / 4, -1 / 2, 1, -3 / 4]) * np.pi)  # gray-coded 8-PSK map
+    _psk8_map = np.exp(
+        1j * np.array([0, 1 / 4, 3 / 4, 1 / 2, -1 / 4, -1 / 2, 1, -3 / 4]) * np.pi
+    )  # gray-coded 8-PSK map
 
-    def __init__(self, modulation_order: int, mapping: np.ndarray = None, soft_output: bool = False, is_complex: bool = True):
+    def __init__(
+        self,
+        modulation_order: int,
+        mapping: np.ndarray = None,
+        soft_output: bool = False,
+        is_complex: bool = True,
+    ):
         """
         Args:
             modulation_order (int):
@@ -70,14 +78,24 @@ class PskQamMapping(object):
         if modulation_order <= 0 or (modulation_order & (modulation_order - 1)) != 0:
             raise ValueError("modulation_order must be a power of two")
 
-        if is_complex and modulation_order not in PskQamMapping.mapping_available and mapping is None:
+        if (
+            is_complex
+            and modulation_order not in PskQamMapping.mapping_available
+            and mapping is None
+        ):
             raise ValueError("constellation must be provided for this modulation order")
 
-        if not is_complex and modulation_order not in PskQamMapping.mapping_available_pam and mapping is None:
+        if (
+            not is_complex
+            and modulation_order not in PskQamMapping.mapping_available_pam
+            and mapping is None
+        ):
             raise ValueError("constellation must be provided for this modulation order")
 
         if mapping is not None and mapping.size != modulation_order:
-            raise ValueError("mapping must have the same number of elements as the modulation order")
+            raise ValueError(
+                "mapping must have the same number of elements as the modulation order"
+            )
 
         self.is_complex = is_complex
 
@@ -154,11 +172,15 @@ class PskQamMapping(object):
                 imag_part = self.generate_pam_symbol_3gpp(16, bits[[1, 3, 5, 7], :])
                 symbols = (real_part + 1j * imag_part) / np.sqrt(170)
             else:
-                raise RuntimeError(f"Modulation ({self.modulation_order}-{'QAM' if self.is_complex else 'PAM'}) not supported")
+                raise RuntimeError(
+                    f"Modulation ({self.modulation_order}-{'QAM' if self.is_complex else 'PAM'}) not supported"
+                )
 
         return np.ravel(symbols)
 
-    def detect_bits(self, rx_symbols: np.ndarray, noise_variance: Union[np.ndarray, float] = 1) -> np.ndarray:
+    def detect_bits(
+        self, rx_symbols: np.ndarray, noise_variance: Union[np.ndarray, float] = 1
+    ) -> np.ndarray:
         """Returns either bits or LLR for the provided symbols.
 
         Args:
@@ -179,7 +201,11 @@ class PskQamMapping(object):
         number_of_bits = rx_symbols.size * self.bits_per_symbol
         llr = np.zeros(number_of_bits)
 
-        noise_variance = noise_variance * np.ones(rx_symbols.shape) if isinstance(noise_variance, float) else noise_variance
+        noise_variance = (
+            noise_variance * np.ones(rx_symbols.shape)
+            if isinstance(noise_variance, float)
+            else noise_variance
+        )
 
         # set starting index of encoded symbol (MSB)
         bits_idx = np.arange(0, number_of_bits, self.bits_per_symbol, dtype=int)
@@ -196,7 +222,9 @@ class PskQamMapping(object):
                     llr[bits_idx + bit_offset] = np.bitwise_and(min_index, power_of_2) > 0
                     llr = llr * 2 - 1
             else:
-                raise RuntimeError("Soft output demodulation not implemented for custom constellation")
+                raise RuntimeError(
+                    "Soft output demodulation not implemented for custom constellation"
+                )
 
         # use 3GPP mapping for BPSK, QPSK, 16-,64- and 256-QAM
         elif self.modulation_order == 2:
@@ -268,14 +296,18 @@ class PskQamMapping(object):
         elif modulation_order == 8:
             symbols = (2 * bits[0, :] - 1) * ((1 - 2 * bits[1, :]) * (1 + 2 * bits[2, :]) - 4)
         elif modulation_order == 16:
-            symbols = ((((1 - 2 * bits[2, :]) * (1 + 2 * bits[3, :]) - 4) * (-1 + 2 * bits[1, :])) - 8) * (-1 + 2 * bits[0, :])
+            symbols = (
+                (((1 - 2 * bits[2, :]) * (1 + 2 * bits[3, :]) - 4) * (-1 + 2 * bits[1, :])) - 8
+            ) * (-1 + 2 * bits[0, :])
         else:
             raise ValueError(f"unsupported modulation order ({modulation_order})")
 
         return symbols
 
     @staticmethod
-    def get_llr_3gpp(modulation_order: int, rx_symbols: np.ndarray, noise_variance: np.ndarray, is_complex: bool) -> np.ndarray:
+    def get_llr_3gpp(
+        modulation_order: int, rx_symbols: np.ndarray, noise_variance: np.ndarray, is_complex: bool
+    ) -> np.ndarray:
         """Returns LLR for each bit based on a received symbol, following 1D 3GPP modulation mapping.
 
         3GPP has defined in TS 36.211 mapping tables from bits into complex symbols.
@@ -315,9 +347,24 @@ class PskQamMapping(object):
 
             rx_symbols = rx_symbols * np.sqrt(5)
 
-            llr[0, :] = 2 * ((rx_symbols <= -2) * (-4 * (1 + rx_symbols)) + np.logical_and(rx_symbols > -2, rx_symbols <= 2) * (-2 * rx_symbols) + (rx_symbols > 2) * (4 * (1 - rx_symbols))) / noise_variance
+            llr[0, :] = (
+                2
+                * (
+                    (rx_symbols <= -2) * (-4 * (1 + rx_symbols))
+                    + np.logical_and(rx_symbols > -2, rx_symbols <= 2) * (-2 * rx_symbols)
+                    + (rx_symbols > 2) * (4 * (1 - rx_symbols))
+                )
+                / noise_variance
+            )
 
-            llr[1, :] = 2 * ((rx_symbols <= 0) * (-2 * (2 + rx_symbols)) + (rx_symbols > 0) * (-2 * (2 - rx_symbols))) / noise_variance
+            llr[1, :] = (
+                2
+                * (
+                    (rx_symbols <= 0) * (-2 * (2 + rx_symbols))
+                    + (rx_symbols > 0) * (-2 * (2 - rx_symbols))
+                )
+                / noise_variance
+            )
 
             llr = llr / 5
 
@@ -353,7 +400,16 @@ class PskQamMapping(object):
                 / noise_variance
             )
 
-            llr[2, :] = 4 * ((rx_symbols <= -4) * (-(6 + rx_symbols)) + np.bitwise_and(rx_symbols > -4, rx_symbols <= 0) * (2 + rx_symbols) + np.bitwise_and(rx_symbols > 0, rx_symbols <= 4) * (2 - rx_symbols) + (rx_symbols > 4) * (-(6 - rx_symbols))) / noise_variance
+            llr[2, :] = (
+                4
+                * (
+                    (rx_symbols <= -4) * (-(6 + rx_symbols))
+                    + np.bitwise_and(rx_symbols > -4, rx_symbols <= 0) * (2 + rx_symbols)
+                    + np.bitwise_and(rx_symbols > 0, rx_symbols <= 4) * (2 - rx_symbols)
+                    + (rx_symbols > 4) * (-(6 - rx_symbols))
+                )
+                / noise_variance
+            )
             llr = llr / 21
 
         elif modulation_order == 16:
@@ -462,7 +518,12 @@ class PskQamMapping(object):
             bits_all = np.zeros(self.modulation_order * self.bits_per_symbol)
             for symbol_idx in range(self.modulation_order):
                 idx = symbol_idx * self.bits_per_symbol
-                bits = np.asarray([1 if symbol_idx & (1 << (self.bits_per_symbol - 1 - n)) else 0 for n in range(self.bits_per_symbol)])
+                bits = np.asarray(
+                    [
+                        1 if symbol_idx & (1 << (self.bits_per_symbol - 1 - n)) else 0
+                        for n in range(self.bits_per_symbol)
+                    ]
+                )
 
                 bits_all[idx : idx + self.bits_per_symbol] = bits
 

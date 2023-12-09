@@ -8,7 +8,13 @@ from typing import Type
 import numpy as np
 from h5py import Group
 
-from hermespy.core import ChannelStateInformation, ChannelStateFormat, Device, HDFSerializable, Signal
+from hermespy.core import (
+    ChannelStateInformation,
+    ChannelStateFormat,
+    Device,
+    HDFSerializable,
+    Signal,
+)
 from hermespy.channel import Channel, ChannelRealization, InterpolationMode, QuadrigaInterface
 
 __author__ = "Tobias Kronauer"
@@ -30,7 +36,15 @@ class QuadrigaChannelRealization(ChannelRealization):
     __path_gains: np.ndarray
     __path_delays: np.ndarray
 
-    def __init__(self, alpha_device: Device, beta_device: Device, gain: float, path_gains: np.ndarray, path_delays: np.ndarray, interpolation_mode: InterpolationMode = InterpolationMode.NEAREST) -> None:
+    def __init__(
+        self,
+        alpha_device: Device,
+        beta_device: Device,
+        gain: float,
+        path_gains: np.ndarray,
+        path_delays: np.ndarray,
+        interpolation_mode: InterpolationMode = InterpolationMode.NEAREST,
+    ) -> None:
         """
         Args:
 
@@ -73,12 +87,23 @@ class QuadrigaChannelRealization(ChannelRealization):
 
         return self.__path_delays
 
-    def _propagate(self, signal: Signal, transmitter: Device, receiver: Device, interpolation: InterpolationMode) -> Signal:
+    def _propagate(
+        self,
+        signal: Signal,
+        transmitter: Device,
+        receiver: Device,
+        interpolation: InterpolationMode,
+    ) -> Signal:
         if signal.num_samples > self.path_gains.shape[3]:
-            raise ValueError(f"Quadriga channel realization does not support signals with more samples than the channel realization ({signal.num_samples} > {self.path_gains.shape[2]}).")
+            raise ValueError(
+                f"Quadriga channel realization does not support signals with more samples than the channel realization ({signal.num_samples} > {self.path_gains.shape[2]})."
+            )
 
         max_delay_in_samples = ceil(np.max(self.path_delays) * signal.sampling_rate)
-        propagated_signal = np.zeros((receiver.antennas.num_receive_antennas, signal.num_samples + max_delay_in_samples), dtype=np.complex_)
+        propagated_signal = np.zeros(
+            (receiver.antennas.num_receive_antennas, signal.num_samples + max_delay_in_samples),
+            dtype=np.complex_,
+        )
 
         for tx_antenna in range(transmitter.antennas.num_transmit_antennas):
             for rx_antenna in range(receiver.antennas.num_receive_antennas):
@@ -87,18 +112,40 @@ class QuadrigaChannelRealization(ChannelRealization):
                 cir_txa_rxa = self.__path_gains[rx_antenna, tx_antenna, ::]
                 tau_txa_rxa = self.__path_delays[rx_antenna, tx_antenna, ::]
 
-                time_delay_in_samples_vec = np.around(tau_txa_rxa * signal.sampling_rate).astype(int)
+                time_delay_in_samples_vec = np.around(tau_txa_rxa * signal.sampling_rate).astype(
+                    int
+                )
 
                 for delay_idx, delay_in_samples in enumerate(time_delay_in_samples_vec):
-                    propagated_signal[rx_antenna, delay_in_samples : delay_in_samples + signal.num_samples] += cir_txa_rxa[delay_idx, : signal.num_samples] * signal.samples[tx_antenna, :]
+                    propagated_signal[
+                        rx_antenna, delay_in_samples : delay_in_samples + signal.num_samples
+                    ] += (
+                        cir_txa_rxa[delay_idx, : signal.num_samples] * signal.samples[tx_antenna, :]
+                    )
 
         return Signal(propagated_signal, signal.sampling_rate, signal.carrier_frequency)
 
-    def state(self, transmitter: Device, receiver: Device, delay: float, sampling_rate: float, num_samples: int, max_num_taps: int) -> ChannelStateInformation:
+    def state(
+        self,
+        transmitter: Device,
+        receiver: Device,
+        delay: float,
+        sampling_rate: float,
+        num_samples: int,
+        max_num_taps: int,
+    ) -> ChannelStateInformation:
         max_delay_in_samples = ceil(np.max(self.path_delays) * sampling_rate)
         num_taps = min(max_num_taps, max_delay_in_samples + 1)
 
-        impulse_response = np.zeros((receiver.antennas.num_receive_antennas, transmitter.antennas.num_transmit_antennas, num_samples, num_taps), dtype=np.complex_)
+        impulse_response = np.zeros(
+            (
+                receiver.antennas.num_receive_antennas,
+                transmitter.antennas.num_transmit_antennas,
+                num_samples,
+                num_taps,
+            ),
+            dtype=np.complex_,
+        )
 
         for tx_antenna in range(receiver.antennas.num_receive_antennas):
             for rx_antenna in range(transmitter.antennas.num_transmit_antennas):
@@ -108,10 +155,14 @@ class QuadrigaChannelRealization(ChannelRealization):
                 tau_txa_rxa = self.path_delays[rx_antenna, tx_antenna, :]
 
                 time_delay_in_samples_vec = np.around(tau_txa_rxa * sampling_rate).astype(int)
-                time_delay_in_samples_vec = time_delay_in_samples_vec[time_delay_in_samples_vec < num_taps]
+                time_delay_in_samples_vec = time_delay_in_samples_vec[
+                    time_delay_in_samples_vec < num_taps
+                ]
 
                 for delay_idx, delay_in_samples in enumerate(time_delay_in_samples_vec):
-                    impulse_response[rx_antenna, tx_antenna, :, delay_in_samples] += cir_txa_rxa[delay_idx]
+                    impulse_response[rx_antenna, tx_antenna, :, delay_in_samples] += cir_txa_rxa[
+                        delay_idx
+                    ]
 
         impulse_response *= np.sqrt(self.gain)
         return ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE, impulse_response)
@@ -122,7 +173,12 @@ class QuadrigaChannelRealization(ChannelRealization):
         HDFSerializable._write_dataset(group, "path_delays", self.path_delays)
 
     @classmethod
-    def From_HDF(cls: Type[QuadrigaChannelRealization], group: Group, alpha_device: Device, beta_device: Device) -> QuadrigaChannelRealization:
+    def From_HDF(
+        cls: Type[QuadrigaChannelRealization],
+        group: Group,
+        alpha_device: Device,
+        beta_device: Device,
+    ) -> QuadrigaChannelRealization:
         params = cls._parameters_from_HDF(group)
         params["path_gains"] = np.array(group["path_gains"], dtype=np.complex_)
         params["path_delays"] = np.array(group["path_delays"], dtype=np.float_)
@@ -178,10 +234,17 @@ class QuadrigaChannel(Channel):
 
     def _realize(self) -> ChannelRealization:
         # Query the quadriga interface for a new impulse response
-        path_gains, path_delays = self._quadriga_interface.get_impulse_response(self)
+        (path_gains, path_delays) = self._quadriga_interface.get_impulse_response(self)
 
         # Return the channel realization
-        return QuadrigaChannelRealization(self.alpha_device, self.beta_device, self.gain, path_gains, path_delays, self.interpolation_mode)
+        return QuadrigaChannelRealization(
+            self.alpha_device,
+            self.beta_device,
+            self.gain,
+            path_gains,
+            path_delays,
+            self.interpolation_mode,
+        )
 
     def recall_realization(self, group: Group) -> QuadrigaChannelRealization:
         return QuadrigaChannelRealization.From_HDF(group, self.alpha_device, self.beta_device)

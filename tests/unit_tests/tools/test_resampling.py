@@ -21,10 +21,7 @@ __status__ = "Prototype"
 
 
 class TestDelayResampling(TestCase):
-    
-    
     def setUp(self) -> None:
-        
         self.rng = np.random.default_rng(42)
 
     def test_resampling_matrix_circular(self) -> None:
@@ -35,11 +32,8 @@ class TestDelayResampling(TestCase):
         delay_tests = np.array([0.0, 0.5, 1, 2, 0.3, 1.7]) / sampling_rate
 
         for num_samples, delay in product(num_sample_tests, delay_tests):
-
             positive_resampling_matrix = delay_resampling_matrix(sampling_rate, num_samples, delay)
-            negative_resampling_matrix = delay_resampling_matrix(sampling_rate,
-                                                                 positive_resampling_matrix.shape[0],
-                                                                 -delay)
+            negative_resampling_matrix = delay_resampling_matrix(sampling_rate, positive_resampling_matrix.shape[0], -delay)
 
             circular_transformation = negative_resampling_matrix @ positive_resampling_matrix
 
@@ -60,6 +54,5 @@ class TestDelayResampling(TestCase):
         num_output_samples_tests = np.arange(4)
 
         for num_input_samples, num_output_samples in product(num_input_samples_tests, num_output_samples_tests):
-
             resampling_matrix = delay_resampling_matrix(sampling_rate, num_input_samples, delay, num_output_samples)
             self.assertCountEqual([num_output_samples, num_input_samples], resampling_matrix.shape)

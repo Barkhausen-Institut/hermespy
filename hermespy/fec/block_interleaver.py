@@ -80,7 +80,9 @@ class BlockInterleaver(Encoder, Serializable):
         self.__interleave_blocks = interleave_blocks
 
         if self.block_size % self.interleave_blocks != 0:
-            raise ValueError("The block size must be an integer multiple of the number of interleave blocks")
+            raise ValueError(
+                "The block size must be an integer multiple of the number of interleave blocks"
+            )
 
     def encode(self, bits: np.ndarray) -> np.ndarray:
         return bits.reshape((self.interleave_blocks, -1)).T.flatten()

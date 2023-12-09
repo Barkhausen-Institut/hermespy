@@ -17,37 +17,34 @@ __status__ = "Prototype"
 
 class PhysicalScenarioMock(PhysicalScenario[Mock]):
     """Physical scenario base class mock for unit testing"""
-    
+
     def _trigger(self) -> None:
         return
 
 
 class TestPhysicalScenario(TestCase):
-    
     def setUp(self) -> None:
-        
         self.scenario = PhysicalScenarioMock()
         self.device = Mock()
         self.device.transmitters = []
         self.device.receivers = []
         self.scenario.add_device(self.device)
-        
+
     def test_receive_devices(self) -> None:
         """Test extended reception routine"""
-        
+
         receptions = self.scenario.receive_devices()
-        
+
         self.device.process_input.assert_called_once()
         self.device.receive_operators.assert_called_once()
         self.assertEqual(1, len(receptions))
 
-        
-    @patch.object(PhysicalScenarioMock, '_trigger')
+    @patch.object(PhysicalScenarioMock, "_trigger")
     def test_drop(self, _trigger: MagicMock) -> None:
         """Test the physical scenario drop geneartion"""
-        
+
         _ = self.scenario._drop()
-        
+
         self.device.transmit.assert_called_once()
         self.device.process_input.assert_called_once()
         self.device.receive_operators.assert_called_once()
@@ -56,19 +53,18 @@ class TestPhysicalScenario(TestCase):
 
 class TestSimulatedPhysicalScenario(TestCase):
     """Test the simulated physical scenario"""
-    
+
     def setUp(self) -> None:
-        
         self.scenario = SimulatedPhysicalScenario()
-        
+
     def test_receive_devices_empty(self) -> None:
         """Test reception over all devices without impinging signals"""
-        
+
         reception = self.scenario.receive_devices()
         self.assertSequenceEqual([], reception)
 
     def test_receive_devices(self) -> None:
         """Test reception over all devices"""
-        
+
         reception = self.scenario.receive_devices([])
         self.assertSequenceEqual([], reception)

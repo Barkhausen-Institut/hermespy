@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 try:  # pragma: no cover
-    from .usrp import UsrpDevice
+    from .usrp import UsrpAntennas, UsrpDevice
     from .system import UsrpSystem
 
 except ImportError:  # pragma: no cover
-    UsrpDevice, UsrpSystem = None, None  # type: ignore
+    UsrpaAntennas, UsrpDevice, UsrpSystem = None, None, None  # type: ignore
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -17,4 +17,4 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-__all__ = ["UsrpDevice", "UsrpSystem"]
+__all__ = ["UsrpAntennas", "UsrpDevice", "UsrpSystem"]

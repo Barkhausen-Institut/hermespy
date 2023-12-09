@@ -8,7 +8,7 @@ import numpy as np
 from h5py import Group
 from scipy.constants import speed_of_light
 
-from hermespy.core import ChannelStateInformation, ChannelStateFormat, Device, Signal
+from hermespy.core import AntennaMode, ChannelStateInformation, ChannelStateFormat, Device, Signal
 from hermespy.tools import amplitude_path_loss
 from .channel import Channel, ChannelRealization, InterpolationMode
 
@@ -38,7 +38,15 @@ class DelayChannelRealization(ChannelRealization):
     __delay: float
     __model_propagation_loss: bool
 
-    def __init__(self, alpha_device: Device, beta_device: Device, gain: float, delay: float, model_propagation_loss: bool, interpolation_mode: InterpolationMode) -> None:
+    def __init__(
+        self,
+        alpha_device: Device,
+        beta_device: Device,
+        gain: float,
+        delay: float,
+        model_propagation_loss: bool,
+        interpolation_mode: InterpolationMode,
+    ) -> None:
         """
         Args:
 
@@ -78,7 +86,9 @@ class DelayChannelRealization(ChannelRealization):
         return self.__model_propagation_loss
 
     @abstractmethod
-    def _spatial_response(self, transmitter: Device, receiver: Device, carrier_frequency: float) -> np.ndarray:
+    def _spatial_response(
+        self, transmitter: Device, receiver: Device, carrier_frequency: float
+    ) -> np.ndarray:
         """Compute the realization's spatial response for a specific propagation direction.
 
         Args:
@@ -109,28 +119,59 @@ class DelayChannelRealization(ChannelRealization):
 
         if self.model_propagation_loss:
             if carrier_frequency == 0.0:
-                raise RuntimeError("Transmitting device's carrier frequency may not be zero, disable propagation path loss modeling")
+                raise RuntimeError(
+                    "Transmitting device's carrier frequency may not be zero, disable propagation path loss modeling"
+                )
 
             gain_factor *= amplitude_path_loss(carrier_frequency, self.delay * speed_of_light)
 
         return gain_factor
 
-    def _propagate(self, signal: Signal, transmitter: Device, receiver: Device, interpolation: InterpolationMode) -> Signal:
+    def _propagate(
+        self,
+        signal: Signal,
+        transmitter: Device,
+        receiver: Device,
+        interpolation: InterpolationMode,
+    ) -> Signal:
         delay_samples = int(self.delay * signal.sampling_rate)
         spatial_response = self._spatial_response(transmitter, receiver, signal.carrier_frequency)
         gain_factor = self.__path_gain(signal.carrier_frequency)
 
-        propagated_samples = np.append(np.zeros((receiver.antennas.num_receive_antennas, delay_samples), np.complex_), gain_factor * spatial_response @ signal.samples)
+        propagated_samples = np.append(
+            np.zeros((receiver.antennas.num_receive_antennas, delay_samples), np.complex_),
+            gain_factor * spatial_response @ signal.samples,
+        )
 
-        propagated_signal = Signal(propagated_samples, signal.sampling_rate, signal.carrier_frequency)
+        propagated_signal = Signal(
+            propagated_samples, signal.sampling_rate, signal.carrier_frequency
+        )
         return propagated_signal
 
-    def state(self, transmitter: Device, receiver: Device, delay_offset: float, sampling_rate: float, num_samples: int, max_num_taps: int) -> ChannelStateInformation:
+    def state(
+        self,
+        transmitter: Device,
+        receiver: Device,
+        delay_offset: float,
+        sampling_rate: float,
+        num_samples: int,
+        max_num_taps: int,
+    ) -> ChannelStateInformation:
         delay_samples = int(self.delay * sampling_rate)
-        spatial_response = self._spatial_response(transmitter, receiver, transmitter.carrier_frequency)
+        spatial_response = self._spatial_response(
+            transmitter, receiver, transmitter.carrier_frequency
+        )
         gain_factor = self.__path_gain(transmitter.carrier_frequency) * self.gain**0.5
 
-        cir = np.zeros((receiver.antennas.num_receive_antennas, transmitter.antennas.num_transmit_antennas, num_samples, min(1 + delay_samples, max_num_taps)), dtype=np.complex_)
+        cir = np.zeros(
+            (
+                receiver.antennas.num_receive_antennas,
+                transmitter.antennas.num_transmit_antennas,
+                num_samples,
+                min(1 + delay_samples, max_num_taps),
+            ),
+            dtype=np.complex_,
+        )
         if delay_samples < max_num_taps:
             cir[:, :, :, delay_samples] = gain_factor * spatial_response[:, :, np.newaxis]
 
@@ -165,14 +206,25 @@ class SpatialDelayChannelRealization(DelayChannelRealization):
     Generated from :class:`SpatialDelayChannel's<SpatialDelayChannel>` :meth:`realize<SpatialDelayChannel.realize>` routine.
     """
 
-    def _spatial_response(self, transmitter: Device, receiver: Device, carrier_frequency: float) -> np.ndarray:
-        transmit_response = transmitter.antennas.cartesian_array_response(carrier_frequency, receiver.global_position, "global")
-        receive_response = receiver.antennas.cartesian_array_response(carrier_frequency, transmitter.global_position, "global")
+    def _spatial_response(
+        self, transmitter: Device, receiver: Device, carrier_frequency: float
+    ) -> np.ndarray:
+        transmit_response = transmitter.antennas.cartesian_array_response(
+            carrier_frequency, receiver.global_position, "global", AntennaMode.TX
+        )
+        receive_response = receiver.antennas.cartesian_array_response(
+            carrier_frequency, transmitter.global_position, "global", AntennaMode.RX
+        )
 
         return receive_response @ transmit_response.T
 
     @classmethod
-    def From_HDF(cls: Type[SpatialDelayChannelRealization], group: Group, alpha_device: Device, beta_device: Device) -> SpatialDelayChannelRealization:
+    def From_HDF(
+        cls: Type[SpatialDelayChannelRealization],
+        group: Group,
+        alpha_device: Device,
+        beta_device: Device,
+    ) -> SpatialDelayChannelRealization:
         return cls(alpha_device, beta_device, **DelayChannelRealization._parameters_from_HDF(group))
 
 
@@ -182,11 +234,22 @@ class RandomDelayChannelRealization(DelayChannelRealization):
     Generated from :class:`RandomDelayChannel's<RandomDelayChannel>` :meth:`realize<RandomDelayChannel.realize>` routine.
     """
 
-    def _spatial_response(self, transmitter: Device, receiver: Device, carrier_frequency: float) -> np.ndarray:
-        return np.eye(receiver.antennas.num_receive_antennas, transmitter.antennas.num_transmit_antennas, dtype=np.complex_)
+    def _spatial_response(
+        self, transmitter: Device, receiver: Device, carrier_frequency: float
+    ) -> np.ndarray:
+        return np.eye(
+            receiver.antennas.num_receive_antennas,
+            transmitter.antennas.num_transmit_antennas,
+            dtype=np.complex_,
+        )
 
     @classmethod
-    def From_HDF(cls: Type[RandomDelayChannelRealization], group: Group, alpha_device: Device, beta_device: Device) -> RandomDelayChannelRealization:
+    def From_HDF(
+        cls: Type[RandomDelayChannelRealization],
+        group: Group,
+        alpha_device: Device,
+        beta_device: Device,
+    ) -> RandomDelayChannelRealization:
         return cls(alpha_device, beta_device, **DelayChannelRealization._parameters_from_HDF(group))
 
 
@@ -195,7 +258,14 @@ class DelayChannelBase(Generic[DCRT], Channel[DCRT]):
 
     __model_propagation_loss: bool
 
-    def __init__(self, alpha_device: SimulatedDevice | None = None, beta_device: SimulatedDevice | None = None, gain: float = 1.0, model_propagation_loss: bool = True, **kwargs) -> None:
+    def __init__(
+        self,
+        alpha_device: SimulatedDevice | None = None,
+        beta_device: SimulatedDevice | None = None,
+        gain: float = 1.0,
+        model_propagation_loss: bool = True,
+        **kwargs,
+    ) -> None:
         """
         Args:
 
@@ -250,7 +320,14 @@ class DelayChannelBase(Generic[DCRT], Channel[DCRT]):
 
     def _realize(self) -> DCRT:
         delay = self._realize_delay()
-        return self._init_realization(self.alpha_device, self.beta_device, self.gain, delay=delay, model_propagation_loss=self.model_propagation_loss, interpolation_mode=self.interpolation_mode)
+        return self._init_realization(
+            self.alpha_device,
+            self.beta_device,
+            self.gain,
+            delay=delay,
+            model_propagation_loss=self.model_propagation_loss,
+            interpolation_mode=self.interpolation_mode,
+        )
 
 
 class SpatialDelayChannel(DelayChannelBase[SpatialDelayChannelRealization]):
@@ -286,9 +363,13 @@ class SpatialDelayChannel(DelayChannelBase[SpatialDelayChannelRealization]):
 
     def _realize_delay(self) -> float:
         if self.alpha_device is None or self.beta_device is None:
-            raise RuntimeError("The spatial delay channel requires the linked devices positions to be specified")
+            raise RuntimeError(
+                "The spatial delay channel requires the linked devices positions to be specified"
+            )
 
-        distance = float(np.linalg.norm(self.alpha_device.global_position - self.beta_device.global_position))
+        distance = float(
+            np.linalg.norm(self.alpha_device.global_position - self.beta_device.global_position)
+        )
         delay = distance / speed_of_light
 
         return delay
@@ -377,7 +458,9 @@ class RandomDelayChannel(DelayChannelBase[RandomDelayChannelRealization]):
                 raise ValueError("Delay limit tuple must contain two entries")
 
             if any(v < 0.0 for v in value):
-                raise ValueError(f"Delay must be greater or equal to zero (not {value[0]} and {value[1]})")
+                raise ValueError(
+                    f"Delay must be greater or equal to zero (not {value[0]} and {value[1]})"
+                )
 
             if value[0] > value[1]:
                 raise ValueError("First tuple entry must be smaller or equal to second tuple entry")

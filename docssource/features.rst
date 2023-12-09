@@ -16,11 +16,11 @@ Full releases with a new set of features will be provided on a bi-anual basis in
 
    * - Capon Beamformer
      - :doc:`api/beamforming.capon`
-     - :doc:`notebooks/beamformer`
+     - :doc:`Usage<notebooks/beamforming_usage>`
 
    * - Conventional Beamformer
      - :doc:`api/beamforming.conventional`
-     - :doc:`notebooks/beamformer`
+     - :doc:`Usage<notebooks/beamforming_usage>`
 
 .. list-table:: **Forward Error Correction**
    :header-rows: 1
@@ -73,23 +73,29 @@ Full releases with a new set of features will be provided on a bi-anual basis in
      - Examples
 
    * - Indoor Factory
-     - :doc:`api/channel.cluster_delay_line_indoor_factory`
+     - :doc:`api/channel.cluster_delay_line_indoor_factory.IndoorFactoryBase`
      -
 
    * - Indoor Office
-     - :doc:`api/channel.cluster_delay_line_indoor_office`
+     - :doc:`NLOS<api/channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight>`, 
+       :doc:`LOS<api/channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight>`
      -
 
    * - Rural Macrocells
-     - :doc:`api/channel.cluster_delay_line_rural_macrocells`
+     - :doc:`NLOS<api/channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight>`,
+       :doc:`LOS<api/channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight>`
      -
 
    * - Street Canyon
-     - :doc:`api/channel.cluster_delay_line_street_canyon`
+     - :doc:`NLOS<api/channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight>`,
+       :doc:`LOS<api/channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight>`,
+       :doc:`O2I<api/channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside>`
      -
 
    * - Urban Macrocells
-     - :doc:`api/channel.cluster_delay_line_urban_macrocells`
+     - :doc:`NLOS<api/channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight>`,
+       :doc:`LOS<api/channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight>`, 
+       :doc:`O2I<api/channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside>`
      -
 
    * - Multipath Fading
@@ -271,7 +277,7 @@ Full releases with a new set of features will be provided on a bi-anual basis in
      - :doc:`examples/hardware_model`
 
    * - Anlog Digital Conversion
-     - :doc:`api/simulation.analog_digital_converter`
+     - :doc:`api/simulation.rf_chain.adc`
      - :doc:`examples/hardware_model`
     
    * - **Phase Noise**

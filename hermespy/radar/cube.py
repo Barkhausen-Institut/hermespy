@@ -36,7 +36,14 @@ class RadarCube(HDFSerializable):
     __range_bins: np.ndarray
     __carrier_frequency: float
 
-    def __init__(self, data: np.ndarray, angle_bins: np.ndarray | None = None, doppler_bins: np.ndarray | None = None, range_bins: np.ndarray | None = None, carrier_frequency: float = 0.0) -> None:
+    def __init__(
+        self,
+        data: np.ndarray,
+        angle_bins: np.ndarray | None = None,
+        doppler_bins: np.ndarray | None = None,
+        range_bins: np.ndarray | None = None,
+        carrier_frequency: float = 0.0,
+    ) -> None:
         """
         Args:
 
@@ -71,7 +78,9 @@ class RadarCube(HDFSerializable):
         """
 
         if data.ndim != 3:
-            raise ValueError(f"Cube data must be a three-dimensional numpy tensor (has {data.ndim} dimenions)")
+            raise ValueError(
+                f"Cube data must be a three-dimensional numpy tensor (has {data.ndim} dimenions)"
+            )
 
         # Infer angle bins
         if angle_bins is None:
@@ -172,7 +181,12 @@ class RadarCube(HDFSerializable):
 
         return self.__range_bins
 
-    def plot_range(self, title: str | None = None, axes: plt.Axes | None = None, scale: Literal["lin", "log"] = "lin") -> plt.FigureBase:
+    def plot_range(
+        self,
+        title: str | None = None,
+        axes: plt.Axes | None = None,
+        scale: Literal["lin", "log"] = "lin",
+    ) -> plt.FigureBase:
         """Visualize the cube's range data.
 
         Args:
@@ -212,7 +226,12 @@ class RadarCube(HDFSerializable):
 
         return figure
 
-    def plot_range_velocity(self, title: str | None = None, interpolate: bool = True, scale: Literal["frequency", "velocity"] | None = None) -> plt.Figure:
+    def plot_range_velocity(
+        self,
+        title: str | None = None,
+        interpolate: bool = True,
+        scale: Literal["frequency", "velocity"] | None = None,
+    ) -> plt.Figure:
         """Visualize the cube's range-velocity profile.
 
         Args:
@@ -269,7 +288,13 @@ class RadarCube(HDFSerializable):
         range_bins = np.array(group["range_bins"], dtype=np.float_)
         carrier_frequency = group.attrs.get("carrier_frequency", 0.0)
 
-        return cls(data=data, angle_bins=angle_bins, doppler_bins=doppler_bins, range_bins=range_bins, carrier_frequency=carrier_frequency)
+        return cls(
+            data=data,
+            angle_bins=angle_bins,
+            doppler_bins=doppler_bins,
+            range_bins=range_bins,
+            carrier_frequency=carrier_frequency,
+        )
 
     def to_HDF(self, group: Group) -> None:
         self._write_dataset(group, "data", self.data)

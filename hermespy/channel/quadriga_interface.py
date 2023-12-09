@@ -44,7 +44,13 @@ class QuadrigaInterface(RandomNode):
     __channels: List[QuadrigaChannel]
     __fetched_channels: List[QuadrigaChannel]
 
-    def __init__(self, path_quadriga_src: Optional[str] = None, antenna_kind: str = "omni", scenario_label: str = "3GPP_38.901_UMa_LOS", seed: int | None = None) -> None:
+    def __init__(
+        self,
+        path_quadriga_src: Optional[str] = None,
+        antenna_kind: str = "omni",
+        scenario_label: str = "3GPP_38.901_UMa_LOS",
+        seed: int | None = None,
+    ) -> None:
         """
         Args:
             path_quadriga_src (str, optional):
@@ -66,8 +72,14 @@ class QuadrigaInterface(RandomNode):
         RandomNode.__init__(self, seed=seed)
 
         # Infer the quadriga source path
-        default_src_path = path.join(path.dirname(__file__), "..", "..", "submodules", "quadriga", "quadriga_src")
-        self.path_quadriga_src = getenv("HERMES_QUADRIGA", default_src_path) if path_quadriga_src is None else path_quadriga_src
+        default_src_path = path.join(
+            path.dirname(__file__), "..", "..", "submodules", "quadriga", "quadriga_src"
+        )
+        self.path_quadriga_src = (
+            getenv("HERMES_QUADRIGA", default_src_path)
+            if path_quadriga_src is None
+            else path_quadriga_src
+        )
 
         self.antenna_kind = antenna_kind
         self.scenario_label = scenario_label
@@ -139,7 +151,9 @@ class QuadrigaInterface(RandomNode):
     @path_quadriga_src.setter
     def path_quadriga_src(self, location: str) -> None:
         if not path.exists(location):
-            raise ValueError(f"Provided path to Quadriga sources {location} does not exist within filesystem")
+            raise ValueError(
+                f"Provided path to Quadriga sources {location} does not exist within filesystem"
+            )
 
         self.__path_quadriga_src = location
 
@@ -324,4 +338,6 @@ class QuadrigaInterface(RandomNode):
             **parameters: Quadriga channel parameters.
         """
 
-        raise NotImplementedError("Neither a Matlab or Octave interface was found during Quadriga execution")
+        raise NotImplementedError(
+            "Neither a Matlab or Octave interface was found during Quadriga execution"
+        )

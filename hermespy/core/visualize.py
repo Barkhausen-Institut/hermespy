@@ -63,7 +63,9 @@ class Visualizable(object):
         figure, axes = plt.subplots(1, 1, squeeze=False)
         return figure, axes
 
-    def _prepare_axes(self, axes: VAT | None = None, title: str | None = None, **kwargs) -> Tuple[plt.FigureBase, VAT]:
+    def _prepare_axes(
+        self, axes: VAT | None = None, title: str | None = None, **kwargs
+    ) -> Tuple[plt.FigureBase, VAT]:
         """Prepare axes to plot into.
 
         Args:
