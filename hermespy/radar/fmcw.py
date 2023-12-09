@@ -47,7 +47,15 @@ class FMCW(RadarWaveform, Serializable):
     __pulse_rep_interval: float  # pulse repetition interval in seconds
     __adc_sampling_rate: float  # sampling rate of ADC after mixing
 
-    def __init__(self, num_chirps: int = 10, bandwidth: float = 0.1e9, chirp_duration: float = 1.5e-6, pulse_rep_interval: float = 1.5e-6, sampling_rate: float = None, adc_sampling_rate: float = None) -> None:
+    def __init__(
+        self,
+        num_chirps: int = 10,
+        bandwidth: float = 0.1e9,
+        chirp_duration: float = 1.5e-6,
+        pulse_rep_interval: float = 1.5e-6,
+        sampling_rate: float = None,
+        adc_sampling_rate: float = None,
+    ) -> None:
         """
         Args:
 
@@ -83,7 +91,9 @@ class FMCW(RadarWaveform, Serializable):
         self.chirp_duration = chirp_duration
         self.pulse_rep_interval = pulse_rep_interval
         self.sampling_rate = bandwidth if sampling_rate is None else sampling_rate
-        self.adc_sampling_rate = self.sampling_rate if adc_sampling_rate is None else adc_sampling_rate
+        self.adc_sampling_rate = (
+            self.sampling_rate if adc_sampling_rate is None else adc_sampling_rate
+        )
 
     def ping(self) -> Signal:
         return Signal(self.__frame_prototype(), self.sampling_rate)
@@ -93,7 +103,14 @@ class FMCW(RadarWaveform, Serializable):
         num_frame_samples = self.num_chirps * num_pulse_samples
 
         resampled_input_signal = input_signal.resample(self.sampling_rate)
-        input_samples = resampled_input_signal.samples[0, :num_frame_samples] if resampled_input_signal.num_samples >= num_frame_samples else np.append(resampled_input_signal.samples[0, :], np.zeros(num_frame_samples - resampled_input_signal.num_samples))
+        input_samples = (
+            resampled_input_signal.samples[0, :num_frame_samples]
+            if resampled_input_signal.num_samples >= num_frame_samples
+            else np.append(
+                resampled_input_signal.samples[0, :],
+                np.zeros(num_frame_samples - resampled_input_signal.num_samples),
+            )
+        )
 
         chirp_stack = np.reshape(input_samples, (-1, num_pulse_samples))
 
@@ -102,8 +119,15 @@ class FMCW(RadarWaveform, Serializable):
         baseband_samples = chirp_stack.conj() * chirp_prototype
 
         if self.adc_sampling_rate < self.sampling_rate:
-            downsampling_rate = Fraction(self.adc_sampling_rate / self.sampling_rate).limit_denominator(1000)
-            baseband_samples = signal.resample_poly(baseband_samples, up=downsampling_rate.numerator, down=downsampling_rate.denominator, axis=1)
+            downsampling_rate = Fraction(
+                self.adc_sampling_rate / self.sampling_rate
+            ).limit_denominator(1000)
+            baseband_samples = signal.resample_poly(
+                baseband_samples,
+                up=downsampling_rate.numerator,
+                down=downsampling_rate.denominator,
+                axis=1,
+            )
 
         transform = fft2(baseband_samples)
         # fft shift the Doppler components
@@ -134,7 +158,10 @@ class FMCW(RadarWaveform, Serializable):
 
     @property
     def relative_doppler_bins(self) -> np.ndarray:
-        return np.arange(self.num_chirps) * self.relative_doppler_resolution - self.max_relative_doppler
+        return (
+            np.arange(self.num_chirps) * self.relative_doppler_resolution
+            - self.max_relative_doppler
+        )
 
     @property
     def frame_duration(self) -> float:
@@ -301,7 +328,9 @@ class FMCW(RadarWaveform, Serializable):
         num_zero_samples = int((self.pulse_rep_interval - self.chirp_duration) * self.sampling_rate)
 
         if num_zero_samples < 0:
-            raise RuntimeError("Pulse repetition interval cannot be less than chirp duration in FMCW radar")
+            raise RuntimeError(
+                "Pulse repetition interval cannot be less than chirp duration in FMCW radar"
+            )
 
         pulse = np.concatenate((self.__chirp_prototype(), np.zeros(num_zero_samples)))
         return pulse

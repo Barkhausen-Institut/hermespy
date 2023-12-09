@@ -19,22 +19,19 @@ __status__ = "Prototype"
 
 
 class TestVisualizable(TestCase):
-
     def setUp(self) -> None:
-        
         self.visualizable = Visualizable()
 
     def test_plot_new_figure(self) -> None:
         """Test plotting to a new figure"""
 
-        with patch('matplotlib.pyplot.figure') as figure_patch:
-
+        with patch("matplotlib.pyplot.figure") as figure_patch:
             _ = self.visualizable.plot()
             figure_patch.assert_called()
-            
+
     def test_plot_validation(self) -> None:
         """Plotting with a provided axes should raise an error if the axes are empty"""
-        
+
         axes = np.empty((0, 0), dtype=np.object_)
         with self.assertRaises(ValueError):
             _ = self.visualizable.plot(axes)
@@ -44,7 +41,7 @@ class TestVisualizable(TestCase):
         axes = np.array([[axes_mock]], dtype=np.object_)
         with self.assertRaises(RuntimeError):
             _ = self.visualizable.plot(axes)
-        
+
     def test_plot_existing_figure(self) -> None:
         """Test plotting into an existing figure"""
 

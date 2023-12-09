@@ -29,7 +29,9 @@ class Moveable(Transformable):
 
     __velocity: np.ndarray
 
-    def __init__(self, pose: Transformation | None = None, velocity: np.ndarray | None = None) -> None:
+    def __init__(
+        self, pose: Transformation | None = None, velocity: np.ndarray | None = None
+    ) -> None:
         """
         Args:
 

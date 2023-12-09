@@ -10,8 +10,8 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 from numpy.random import default_rng
 
 from hermespy.channel import IdealChannel, IdealChannelRealization
-from hermespy.core import Signal, UniformArray, IdealAntenna
-from hermespy.simulation import SimulatedDevice
+from hermespy.core import AntennaMode, Signal
+from hermespy.simulation import SimulatedDevice, SimulatedUniformArray, SimulatedIdealAntenna
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Andre Noll Barreto"
@@ -26,44 +26,52 @@ __status__ = "Prototype"
 
 class TestIdealChannelRealization(unittest.TestCase):
     """Test the ideal channel realization"""
-    
+
     def setUp(self) -> None:
-        
         self.rng = np.random.default_rng(42)
         self.sampling_rate = 1e6
 
         self.alpha_device = SimulatedDevice()
         self.beta_device = SimulatedDevice()
-        
+
         self.realization = IdealChannelRealization(self.alpha_device, self.beta_device, 0.9876)
 
     def __test_propagate_state(self) -> None:
         """Subroutine for testing the propagation of the channel state information"""
-        
+
         test_signal = Signal(self.rng.random((self.alpha_device.antennas.num_transmit_antennas, 100)) + 1j * self.rng.random((self.alpha_device.antennas.num_transmit_antennas, 100)), 1e3)
 
         signal_propagation = self.realization.propagate(test_signal)
-        state_propagation = self.realization.state(self.alpha_device, self.beta_device, 0., self.sampling_rate, test_signal.num_samples, 1 + signal_propagation.signal.num_samples - test_signal.num_samples).propagate(test_signal)
-        
+        state_propagation = self.realization.state(self.alpha_device, self.beta_device, 0.0, self.sampling_rate, test_signal.num_samples, 1 + signal_propagation.signal.num_samples - test_signal.num_samples).propagate(test_signal)
+
         assert_array_almost_equal(signal_propagation.signal.samples, state_propagation.samples)
 
     def test_propagate_state_miso(self) -> None:
         """Propagation should result in a signal with the correct number of samples in the MISO case"""
-        
-        self.alpha_device.antennas = UniformArray(IdealAntenna, 1., (2, 1, 1))
+
+        self.alpha_device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 1.0, (2, 1, 1))
         self.__test_propagate_state()
-        
+
     def test_propagate_state_simo(self) -> None:
         """Propagation should result in a signal with the correct number of samples in the SIMO case"""
-        
-        self.beta_device.antennas = UniformArray(IdealAntenna, 1., (2, 1, 1))
+
+        self.beta_device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 1.0, (2, 1, 1))
         self.__test_propagate_state()
-        
+
     def test_propagate_state_mimo(self) -> None:
         """Propagation should result in a signal with the correct number of samples in the MIMO case"""
-        
-        self.alpha_device.antennas = UniformArray(IdealAntenna, 1., (2, 1, 1))
-        self.beta_device.antennas = UniformArray(IdealAntenna, 1., (2, 1, 1))
+
+        self.alpha_device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 1.0, (2, 1, 1))
+        self.beta_device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 1.0, (2, 1, 1))
+        self.__test_propagate_state()
+
+    def test_propagate_state_empty(self) -> None:
+        """Propagation should result in an empty signal in the MIMO case with no receive antennas"""
+
+        self.alpha_device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 1.0, (2, 1, 1))
+        self.beta_device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 1.0, (1, 1, 1))
+        self.beta_device.antennas.antennas[0].mode = AntennaMode.TX
+
         self.__test_propagate_state()
 
 
@@ -71,7 +79,6 @@ class TestIdealChannel(unittest.TestCase):
     """Test the channel model base class"""
 
     def setUp(self) -> None:
-
         self.alpha_device = SimulatedDevice()
         self.beta_device = SimulatedDevice()
         self.gain = 1.0
@@ -118,14 +125,13 @@ class TestIdealChannel(unittest.TestCase):
 
         for num_samples in self.propagate_signal_lengths:
             for gain in self.propagate_signal_gains:
-
                 samples = np.random.rand(1, num_samples) + 1j * np.random.rand(1, num_samples)
                 signal = Signal(samples, self.sampling_rate)
 
                 self.channel.gain = gain
 
                 expected_propagated_samples = np.sqrt(gain) * samples
-                
+
                 realization = self.channel.realize()
                 forwards_signal = realization.propagate(signal, self.alpha_device, self.beta_device).signal
                 backwards_signal = realization.propagate(signal, self.beta_device, self.alpha_device).signal
@@ -136,21 +142,19 @@ class TestIdealChannel(unittest.TestCase):
     def test_propagate_SIMO(self) -> None:
         """Test valid propagation for the Single-Input-Multiple-Output channel"""
 
-        self.beta_device.antennas = UniformArray(IdealAntenna, 1., (3, 1, 1))
+        self.beta_device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 1.0, (3, 1, 1))
 
         for num_samples in self.propagate_signal_lengths:
             for gain in self.propagate_signal_gains:
-
-                forwards_samples = (np.random.rand(1, num_samples)
-                                    + 1j * np.random.rand(1, num_samples))
+                forwards_samples = np.random.rand(1, num_samples) + 1j * np.random.rand(1, num_samples)
                 backwards_samples = np.random.rand(3, num_samples) + 1j * np.random.rand(3, num_samples)
                 forwards_input = Signal(forwards_samples, self.sampling_rate)
                 backwards_input = Signal(backwards_samples, self.sampling_rate)
 
                 self.channel.gain = gain
 
-                expected_forwards_samples = np.sqrt(gain) *  np.repeat(forwards_samples, 3, axis=0)
-                expected_backwards_samples = np.sqrt(gain) *  np.sum(backwards_samples, axis=0, keepdims=True)
+                expected_forwards_samples = np.sqrt(gain) * np.repeat(forwards_samples, 3, axis=0)
+                expected_backwards_samples = np.sqrt(gain) * np.sum(backwards_samples, axis=0, keepdims=True)
 
                 realization = self.channel.realize()
                 forwards_signal = realization.propagate(forwards_input, self.alpha_device, self.beta_device).signal
@@ -162,12 +166,11 @@ class TestIdealChannel(unittest.TestCase):
     def test_propagate_MISO(self) -> None:
         """Test valid propagation for the Multiple-Input-Single-Output channel"""
 
-        self.alpha_device.antennas = UniformArray(IdealAntenna, 1., (3, 1, 1))
+        self.alpha_device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 1.0, (3, 1, 1))
 
         for num_samples in self.propagate_signal_lengths:
             for gain in self.propagate_signal_gains:
-
-                forwards_samples = (np.random.rand(self.alpha_device.antennas.num_transmit_antennas, num_samples) + 1j * np.random.rand(self.alpha_device.antennas.num_transmit_antennas, num_samples))
+                forwards_samples = np.random.rand(self.alpha_device.antennas.num_transmit_antennas, num_samples) + 1j * np.random.rand(self.alpha_device.antennas.num_transmit_antennas, num_samples)
                 backwards_samples = np.random.rand(1, num_samples) + 1j * np.random.rand(1, num_samples)
                 forwards_input = Signal(forwards_samples, self.sampling_rate)
                 backwards_input = Signal(backwards_samples, self.sampling_rate)
@@ -187,12 +190,11 @@ class TestIdealChannel(unittest.TestCase):
     def test_propagate_MIMO(self) -> None:
         """Test valid propagation for the Multiple-Input-Multiple-Output channel"""
 
-        self.alpha_device.antennas = UniformArray(IdealAntenna, 1., (3, 1, 1))
-        self.beta_device.antennas = UniformArray(IdealAntenna, 1., (2, 1, 1))
+        self.alpha_device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 1.0, (3, 1, 1))
+        self.beta_device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 1.0, (2, 1, 1))
 
         for num_samples in self.propagate_signal_lengths:
             for gain in self.propagate_signal_gains:
-
                 samples = np.random.rand(3, num_samples) + 1j * np.random.rand(3, num_samples)
                 forwards_transmission = Signal(samples, self.sampling_rate)
                 backwards_transmission = Signal(samples[:2, :], self.sampling_rate)
@@ -214,7 +216,6 @@ class TestIdealChannel(unittest.TestCase):
 
         for num_samples in self.propagate_signal_lengths:
             for gain in self.propagate_signal_gains:
-
                 samples = np.random.rand(1, num_samples) + 1j * np.random.rand(1, num_samples)
                 signal = Signal(samples, self.sampling_rate)
                 self.channel.gain = gain
@@ -231,9 +232,9 @@ class TestIdealChannel(unittest.TestCase):
     def test_recall_realization(self) -> None:
         """Test realization recall"""
 
-        file = File('test.h5', 'w', driver='core', backing_store=False)
-        group = file.create_group('g')
-        
+        file = File("test.h5", "w", driver="core", backing_store=False)
+        group = file.create_group("g")
+
         expected_realization = self.channel.realize()
         expected_realization.to_HDF(group)
 
@@ -243,16 +244,13 @@ class TestIdealChannel(unittest.TestCase):
         self.assertIs(expected_realization.alpha_device, recalled_realization.alpha_device)
         self.assertIs(expected_realization.beta_device, recalled_realization.beta_device)
         self.assertEqual(expected_realization.gain, recalled_realization.gain)
-        
+
     def test_serialization(self) -> None:
         """Test YAML serialization"""
-        
-        with patch('hermespy.channel.Channel.alpha_device', new_callable=PropertyMock) as transmitter_mock, \
-             patch('hermespy.channel.Channel.beta_device', new_callable=PropertyMock) as receiver_mock, \
-             patch('hermespy.channel.Channel.random_mother', new_callable=PropertyMock) as random_mock:
-            
+
+        with patch("hermespy.channel.Channel.alpha_device", new_callable=PropertyMock) as transmitter_mock, patch("hermespy.channel.Channel.beta_device", new_callable=PropertyMock) as receiver_mock, patch("hermespy.channel.Channel.random_mother", new_callable=PropertyMock) as random_mock:
             transmitter_mock.return_value = None
             receiver_mock.return_value = None
             random_mock.return_value = None
-            
+
             test_yaml_roundtrip_serialization(self, self.channel)

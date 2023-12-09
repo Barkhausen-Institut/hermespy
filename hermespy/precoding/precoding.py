@@ -258,10 +258,10 @@ class Precoding(Sequence, Serializable, Generic[PrecoderType]):
 
         if precoder_index >= len(self.__precoders) - 1:
             if self.modem.transmitting_device is not None:
-                return self.modem.num_transmit_antennas
+                return self.modem.num_transmit_ports
 
             else:
-                return self.modem.num_receive_antennas
+                return self.modem.num_receive_ports
 
         return self.__precoders[precoder_index + 1].num_input_streams
 

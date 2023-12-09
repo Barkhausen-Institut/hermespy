@@ -60,7 +60,9 @@ class DelayCalibration(DelayCalibrationBase, Serializable):
         return cls(delay=delay)
 
     @staticmethod
-    def Estimate(device: PhysicalDevice, max_delay: float, num_iterations: int = 10, wait: float = 0.0) -> DelayCalibration:
+    def Estimate(
+        device: PhysicalDevice, max_delay: float, num_iterations: int = 10, wait: float = 0.0
+    ) -> DelayCalibration:
         """Estimate a physical device's inherent transmit-receive delay.
 
         Ideally, the transmit and receive channels of the device should be connected by a patch cable.
@@ -94,7 +96,9 @@ class DelayCalibration(DelayCalibrationBase, Serializable):
         sampling_rate = device.max_sampling_rate
         num_samples = int(2 * max_delay * device.max_sampling_rate)
         if num_samples <= 1:
-            raise ValueError("The assumed maximum delay is not resolvable by the configured sampling rate")
+            raise ValueError(
+                "The assumed maximum delay is not resolvable by the configured sampling rate"
+            )
 
         dirac_index = int(max_delay * sampling_rate)
         waveform = np.zeros((device.num_antennas, num_samples), dtype=complex)

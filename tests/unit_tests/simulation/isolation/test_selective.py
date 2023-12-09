@@ -6,8 +6,8 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 from scipy.fft import fft
 
-from hermespy.core import IdealAntenna, Signal, UniformArray
-from hermespy.simulation import SelectiveLeakage, SimulatedDevice
+from hermespy.core import Signal
+from hermespy.simulation import SelectiveLeakage, SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -23,18 +23,17 @@ class TestSelectiveLeakage(TestCase):
     """Test frequency-selective leakage"""
 
     def setUp(self) -> None:
-        
-        self.device = SimulatedDevice(antennas=UniformArray(IdealAntenna, 1e-3, (3, 2, 1)))
-        
-        self.leakage = SelectiveLeakage.Normal(self.device, num_samples=10, mean=1., variance=0.)
+        self.device = SimulatedDevice(antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1e-3, (3, 2, 1)))
+
+        self.leakage = SelectiveLeakage.Normal(self.device, num_samples=10, mean=1.0, variance=0.0)
         self.device.isolation = self.leakage
-        
+
     def test_init_validation(self) -> None:
         """Initialization should raise a ValueError on invalid arguments"""
-        
+
         with self.assertRaises(ValueError):
             _ = SelectiveLeakage(np.zeros((1, 2)))
-        
+
     def test_leakage_response(self) -> None:
         """The leakage response matrix should be the FFT of its impulse response"""
 
@@ -48,7 +47,7 @@ class TestSelectiveLeakage(TestCase):
         """Leaking a signal should result in the expected leak"""
 
         test_signal = Signal(np.zeros((self.device.antennas.num_transmit_antennas, 100), dtype=np.complex_), self.device.sampling_rate, self.device.carrier_frequency)
-        test_signal.samples[:, 0] = 1.
+        test_signal.samples[:, 0] = 1.0
 
         leaked_signal = self.leakage.leak(test_signal)
         assert_array_almost_equal(np.abs(6 * test_signal.samples), np.abs(leaked_signal.samples[:, :100]))

@@ -1,17 +1,40 @@
 # -*- coding: utf-8 -*-
 
 from .calibration import DelayCalibration, SelectiveLeakageCalibration
-from .hardware_loop import EvaluatorRegistration, EvaluatorPlotMode, HardwareLoop, HardwareLoopPlot, HardwareLoopSample, IterationPriority
-from .physical_device import Calibration, DelayCalibrationBase, LeakageCalibrationBase, NoDelayCalibration, NoLeakageCalibration, PhysicalDevice, PDT
+from .hardware_loop import (
+    EvaluatorRegistration,
+    EvaluatorPlotMode,
+    HardwareLoop,
+    HardwareLoopPlot,
+    HardwareLoopSample,
+    IterationPriority,
+)
+from .physical_device import (
+    Calibration,
+    DelayCalibrationBase,
+    LeakageCalibrationBase,
+    NoDelayCalibration,
+    NoLeakageCalibration,
+    PhysicalDevice,
+    PDT,
+)
 from .physical_device_dummy import PhysicalDeviceDummy, PhysicalScenarioDummy
 from .scenario import PhysicalScenario, PhysicalScenarioType, SimulatedPhysicalScenario
 from .audio import AudioDevice, AudioScenario
-from .visualizers import DeviceReceptionPlot, DeviceTransmissionPlot, EyePlot, ReceivedConstellationPlot, RadarRangePlot, EvaluationPlot, ArtifactPlot
+from .visualizers import (
+    DeviceReceptionPlot,
+    DeviceTransmissionPlot,
+    EyePlot,
+    ReceivedConstellationPlot,
+    RadarRangePlot,
+    EvaluationPlot,
+    ArtifactPlot,
+)
 
 try:  # pragma: no cover
-    from .uhd import UsrpDevice, UsrpSystem
+    from .uhd import UsrpAntennas, UsrpDevice, UsrpSystem
 except ImportError:  # pragma: no cover
-    UsrpDevice, UsrpSystem = None, None  # type: ignore
+    UsrpAntennas, UsrpDevice, UsrpSystem = None, None, None  # type: ignore
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -43,6 +66,7 @@ __all__ = [
     "PhysicalScenario",
     "PhysicalScenarioType",
     "SimulatedPhysicalScenario",
+    "UsrpAntennas",
     "UsrpDevice",
     "UsrpSystem",
     "AudioDevice",

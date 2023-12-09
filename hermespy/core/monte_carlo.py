@@ -103,7 +103,18 @@ from functools import reduce
 from math import exp, sqrt
 from os import path
 from time import perf_counter
-from typing import Any, Callable, Generic, List, Optional, Type, TypeVar, Tuple, Union, SupportsFloat
+from typing import (
+    Any,
+    Callable,
+    Generic,
+    List,
+    Optional,
+    Type,
+    TypeVar,
+    Tuple,
+    Union,
+    SupportsFloat,
+)
 from warnings import catch_warnings, simplefilter
 
 import matplotlib.pyplot as plt
@@ -274,6 +285,95 @@ class EvaluationResult(Visualizable, ABC):
     step within the evaluation routine.
     """
 
+    __grid: Sequence[GridDimension]
+
+    def __init__(self, grid: Sequence[GridDimension], evaluator: Evaluator) -> None:
+        """
+        Args:
+
+            grid (Sequence[GridDimension]):
+                Parameter grid over which the simulation generating this result iterated.
+        """
+
+        # Initialize base class
+        Visualizable.__init__(self)
+
+        # Initialize class attributes
+        self.__grid = grid
+        self.__evaluator = evaluator
+
+    @property
+    def grid(self) -> Sequence[GridDimension]:
+        """Paramter grid over which the simulation iterated."""
+
+        return self.__grid
+
+    @property
+    def evaluator(self) -> Evaluator:
+        """Evaluator that generated this result."""
+
+        return self.__evaluator
+
+    def __result_to_str(self, value: Any) -> str:
+        """Convert a single result value to its string representation.
+
+        Args:
+
+            value (Any): The value to be converted.
+
+
+        Returns: The values string representation.
+        """
+
+        if isinstance(value, (int, float, complex)):
+            if self.evaluator.tick_format == ValueType.DB or self.evaluator.plot_scale == "log":
+                return f"{lin2db(value):.2g} dB"
+            return f"{value:.2g}"
+        return str(value)
+
+    def print(self, console: Console | None = None) -> None:
+        """Print a readable version of this evaluation result.
+
+        Args:
+
+            console (Console | None):
+                Rich console to print in.
+                If not provided, a new one will be generated.
+        """
+
+        _console = Console() if console is None else console
+
+        # Query the array representation of this evaluation result
+        results = self.to_array()
+
+        # Render results into a rich table
+        table = Table()
+
+        for dimension in self.grid:
+            table.add_column(dimension.title, style="cyan")
+        table.add_column(self.evaluator.abbreviation)
+
+        for grid_section in np.ndindex(*[d.num_sample_points for d in self.grid]):
+            columns = [g.sample_points[s].title for s, g in zip(grid_section, self.grid)]
+
+            result = results[grid_section]
+            result_str: str
+
+            if isinstance(result, np.ndarray):
+                if result.size == 1:
+                    result_str = self.__result_to_str(result.flat[0])
+                else:
+                    result_str = ""
+                    for value in result.flat:
+                        result_str += self.__result_to_str(value) + ", "
+                    result_str = result_str[:-2]
+            else:
+                result_str = self.__result_to_str(result)
+
+            table.add_row(*columns, result_str)
+
+        _console.print(table)
+
     @abstractmethod
     def to_array(self) -> np.ndarray:
         """Convert the evaluation result raw data to an array representation.
@@ -302,87 +402,96 @@ class EvaluationResult(Visualizable, ABC):
         if tick_format is ValueType.DB:
             axis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"{lin2db(x):.2g}dB"))
 
-    @staticmethod
-    def _plot_linear(grid: List[GridDimension], sample_points: Sequence[np.float_], scalar_data: np.ndarray, evaluator: Evaluator, axes: VAT) -> None:
+    def _plot_linear(self, scalar_data: np.ndarray, axes: VAT) -> None:
         """Visualize result as a linear plot.
 
         Args:
 
-            grid (List[GridDimension]):
-                Simulation grid.
-
-            sample_points (np.ndarray):
+            sample_points (Sequence[SamplePoint]):
                 Grid coordinates to visualize.
 
             scalar_data (np.ndarray):
                 Results at the respective coordinates.
 
-            evaluator (Evaluator):
-                The evaluator generating the results.
-
             axes (plt.Axes):
                 Axes to plot in.
                 Must be initialized as a 2D axes.
+
+        Raises:
+
+            RuntimeError: If the result's grid contains more than one dimension.
         """
+
+        # If the grid contains more than one dimension, raise an error
+        if len(self.grid) != 1:
+            raise RuntimeError("Cannot plot multidimensional results in a linear plot")
 
         ax: plt.Axes = axes.flat[0]
 
         # Configure axes labels
-        ax.set_xlabel(grid[0].title)
-        ax.set_ylabel(evaluator.abbreviation)
+        ax.set_xlabel(self.grid[0].title)
+        ax.set_ylabel(self.evaluator.abbreviation)
 
         # Configure axes scales
-        ax.set_xscale(grid[0].plot_scale)
-        ax.set_yscale(evaluator.plot_scale)
+        ax.set_xscale(self.grid[0].plot_scale)
+        ax.set_yscale(self.evaluator.plot_scale)
 
-        EvaluationResult.__configure_axis(ax.xaxis, grid[0].tick_format)
-        EvaluationResult.__configure_axis(ax.yaxis, evaluator.tick_format)
+        EvaluationResult.__configure_axis(ax.xaxis, self.grid[0].tick_format)
+        EvaluationResult.__configure_axis(ax.yaxis, self.evaluator.tick_format)
 
         # Plot final result
-        ax.plot(sample_points, scalar_data)
+        sample_values = np.asarray([s.value for s in self.grid[0].sample_points])
+        ax.plot(sample_values, scalar_data)
 
-    @staticmethod
-    def _plot_surface(grid: List[GridDimension], sample_points: Sequence[np.float_], data: np.ndarray, evaluator: Evaluator, axes: VAT) -> None:
+    def _plot_surface(self, data: np.ndarray, axes: VAT) -> None:
         """Visualize result as a surface plot.
 
         Args:
 
-            grid (List[GridDimension]):
-                Simulation grid.
-
-            sample_points (Sequence[np.float_]):
-                Grid coordinates to visualize.
-
             data (np.ndarray):
                 Results at the respective coordinates.
-
-            evaluator (Evaluator):
-                The evaluator generating the results.
 
             axes (plt.Axes):
                 Axes to plot in.
                 Must be initialized as a 3D axes.
+
+        Raises:
+
+            RuntimeError: If the result's grid contains more than two dimensions.
         """
+
+        # If the grid contains more than two dimensions, raise an error
+        if len(self.grid) != 2:
+            raise RuntimeError("Cannot plot multidimensional results in a surface plot")
 
         ax: Axes3D = axes.flat[0]
 
         # Configure axes labels and scales
-        ax.set(xlabel=grid[0].title, ylabel=grid[1].title, zlabel=evaluator.abbreviation)
+        ax.set(
+            xlabel=self.grid[0].title, ylabel=self.grid[1].title, zlabel=self.evaluator.abbreviation
+        )
 
-        EvaluationResult.__configure_axis(ax.xaxis, grid[0].tick_format)
-        EvaluationResult.__configure_axis(ax.yaxis, grid[1].tick_format)
-        EvaluationResult.__configure_axis(ax.zaxis, evaluator.tick_format)
+        EvaluationResult.__configure_axis(ax.xaxis, self.grid[0].tick_format)
+        EvaluationResult.__configure_axis(ax.yaxis, self.grid[1].tick_format)
+        EvaluationResult.__configure_axis(ax.zaxis, self.evaluator.tick_format)
 
-        y, x = np.meshgrid(np.asarray(grid[1].sample_points), np.asarray(sample_points))
+        x_points = np.asarray([s.value for s in self.grid[0].sample_points])
+        y_points = np.asarray([s.value for s in self.grid[1].sample_points])
+        y, x = np.meshgrid(y_points, x_points)
         ax.plot_surface(x.astype(float), y.astype(float), data)
 
-    @staticmethod
-    def _plot_multidim(grid: List[GridDimension], scalar_data: np.ndarray, x_dimension: int, y_label: str, x_scale: str, y_scale: str, axes: VAT) -> None:
+    def _plot_multidim(
+        self,
+        scalar_data: np.ndarray,
+        x_dimension: int,
+        y_label: str,
+        x_scale: str,
+        y_scale: str,
+        axes: VAT,
+    ) -> None:
         """Plot multidimensional simulation results into a two-dimensional axes system.
 
         Args:
-            grid (List[GridDimension]):
-                Simulation grid.
 
             scalar_data (np.ndarray):
                 Scalar data to be plotted.
@@ -407,22 +516,24 @@ class EvaluationResult(Visualizable, ABC):
         ax: plt.Axes = axes.flat[0]
 
         # Configure axes labels
-        ax.set_xlabel(grid[x_dimension].title)
+        ax.set_xlabel(self.grid[x_dimension].title)
         ax.set_ylabel(y_label)
 
         # Configure axes scales
         ax.set_yscale(y_scale)
         ax.set_xscale(x_scale)
 
-        subgrid = grid.copy()
+        subgrid = list(self.grid).copy()
         del subgrid[x_dimension]
+
+        x_points = np.asarray([s.value for s in self.grid[x_dimension].sample_points])
 
         section_magnitudes = tuple(s.num_sample_points for s in subgrid)
         for section_indices in np.ndindex(section_magnitudes):
             # Generate the graph line label
             line_label = ""
             for i, v in enumerate(section_indices):
-                line_label += f"{grid[i+1].title} = {grid[i+1].sample_points[v]}, "
+                line_label += f"{self.grid[i+1].title} = {self.grid[i+1].sample_points[v].title}, "
             line_label = line_label[:-2]
 
             if len(line_label) < 1:
@@ -432,7 +543,7 @@ class EvaluationResult(Visualizable, ABC):
             line_scalars = scalar_data[(..., *section_indices)]  # type: ignore
 
             # Plot the graph line
-            ax.plot(grid[x_dimension].sample_points, line_scalars, label=line_label)
+            ax.plot(x_points, line_scalars, label=line_label)
 
         if len(section_magnitudes) > 0 and section_magnitudes[0] > 1:
             ax.legend()
@@ -456,12 +567,16 @@ class ScalarEvaluationResult(EvaluationResult):
 
     plot_surface: bool
 
-    __grid: List[GridDimension]
     __scalar_results: np.ndarray
-    __evaluator: Evaluator
     __base_dimension_index: int
 
-    def __init__(self, grid: Sequence[GridDimension], scalar_results: np.ndarray, evaluator: Evaluator, plot_surface: bool = True) -> None:
+    def __init__(
+        self,
+        grid: Sequence[GridDimension],
+        scalar_results: np.ndarray,
+        evaluator: Evaluator,
+        plot_surface: bool = True,
+    ) -> None:
         """
         Args:
 
@@ -479,20 +594,22 @@ class ScalarEvaluationResult(EvaluationResult):
                 Enabled by default.
         """
 
-        self.__grid = list(grid)
+        # Initialize base class
+        EvaluationResult.__init__(self, grid, evaluator)
+
+        # Initialize class attributes
         self.__scalar_results = scalar_results
-        self.__evaluator = evaluator
         self.plot_surface = plot_surface
         self.__base_dimension_index = 0
 
     @property
     def title(self) -> str:
         # The plotting title should resolve to the represented evaluator's title
-        return self.__evaluator.title
+        return self.evaluator.title
 
     def _new_axes(self, **kwargs) -> Tuple[plt.Figure, VAT]:
         # Generate 3D axes with surface plotting enabled
-        if len(self.__grid) == 2 and self.plot_surface:
+        if len(self.grid) == 2 and self.plot_surface:
             fig, axes = plt.subplots(1, 1, squeeze=False, subplot_kw={"projection": "3d"})
 
         # Generate 2D axes otherwise
@@ -503,33 +620,45 @@ class ScalarEvaluationResult(EvaluationResult):
 
     def _plot(self, axes: VAT) -> None:
         # If the grid contains no data, dont plot anything
-        if len(self.__grid) < 1:
+        if len(self.grid) < 1:
             self._plot_empty(axes)
             return
 
         # Shuffle grid and respective scalar results so that the selected base dimension is always the first entry
-        grid = self.__grid.copy()
+        grid = list(self.grid).copy()
         grid.insert(0, grid.pop(self.__base_dimension_index))
         scalars = np.moveaxis(self.__scalar_results, self.__base_dimension_index, 0)
-        sample_points = self.__grid[0].sample_points
 
         # A single axis plot, the simple case
         if len(grid) < 2:
-            self._plot_linear(grid, sample_points, scalars, self.__evaluator, axes)
+            self._plot_linear(scalars, axes)
 
         # Two dimensions, with surface plotting enabled
         elif len(grid) == 2 and self.plot_surface:
-            self._plot_surface(grid, sample_points, scalars, self.__evaluator, axes)
+            self._plot_surface(scalars, axes)
 
         # Multiple dimensions, resort to legend-based multiplots
         else:
-            self._plot_multidim(grid, scalars, 0, self.__evaluator.abbreviation, grid[0].plot_scale, self.__evaluator.plot_scale, axes)
+            self._plot_multidim(
+                scalars,
+                0,
+                self.evaluator.abbreviation,
+                grid[0].plot_scale,
+                self.evaluator.plot_scale,
+                axes,
+            )
 
     def to_array(self) -> np.ndarray:
         return self.__scalar_results
 
     @classmethod
-    def From_Artifacts(cls: Type[SERT], grid: Sequence[GridDimension], artifacts: np.ndarray, evaluator: Evaluator, plot_surface: bool = True) -> SERT:
+    def From_Artifacts(
+        cls: Type[SERT],
+        grid: Sequence[GridDimension],
+        artifacts: np.ndarray,
+        evaluator: Evaluator,
+        plot_surface: bool = True,
+    ) -> SERT:
         """Generate a scalar evaluation result from a set of artifacts.
 
         Args:
@@ -553,7 +682,9 @@ class ScalarEvaluationResult(EvaluationResult):
 
         scalar_results = np.empty(artifacts.shape, dtype=float)
         for section_coords in np.ndindex(artifacts.shape):
-            scalar_results[section_coords] = np.mean([artifact.to_scalar() for artifact in artifacts[section_coords]])
+            scalar_results[section_coords] = np.mean(
+                [artifact.to_scalar() for artifact in artifacts[section_coords]]
+            )
 
         return cls(grid, scalar_results, evaluator, plot_surface)
 
@@ -728,7 +859,9 @@ class Evaluator(ABC):
         self.__plot_scale = value
 
     @abstractmethod
-    def generate_result(self, grid: Sequence[GridDimension], artifacts: np.ndarray) -> EvaluationResult:
+    def generate_result(
+        self, grid: Sequence[GridDimension], artifacts: np.ndarray
+    ) -> EvaluationResult:
         """Generates an evaluation result from the artifacts collected over the whole simulation grid.
 
         Args:
@@ -754,7 +887,9 @@ class MonteCarloSample:
     __grid_section: Tuple[int, ...]
     __artifacts: Sequence[Artifact]  # Artifacts of evaluation
 
-    def __init__(self, grid_section: Tuple[int, ...], sample_index: int, artifacts: Sequence[Artifact]) -> None:
+    def __init__(
+        self, grid_section: Tuple[int, ...], sample_index: int, artifacts: Sequence[Artifact]
+    ) -> None:
         """
         Args:
 
@@ -883,7 +1018,11 @@ class GridSection(object):
 
         return self.__samples
 
-    def add_samples(self, samples: MonteCarloSample | Sequence[MonteCarloSample], evaluators: Sequence[Evaluator]) -> None:
+    def add_samples(
+        self,
+        samples: MonteCarloSample | Sequence[MonteCarloSample],
+        evaluators: Sequence[Evaluator],
+    ) -> None:
         """Add a new sample to this grid section collection.
 
         Args:
@@ -903,7 +1042,10 @@ class GridSection(object):
         for sample in _samples:
             # Make sure the provided number of artifacts is correct
             if sample.num_artifacts != self.__num_evaluators:
-                raise ValueError(f"Number of sample artifacts ({sample.num_artifacts}) does not match the " f"configured number of evaluators ({self.__num_evaluators})")
+                raise ValueError(
+                    f"Number of sample artifacts ({sample.num_artifacts}) does not match the "
+                    f"configured number of evaluators ({self.__num_evaluators})"
+                )
 
             # Update confidences
             self.__update_confidences(sample.artifact_scalars, evaluators)
@@ -940,7 +1082,9 @@ class GridSection(object):
 
         return True
 
-    def __update_confidences(self, artifact_scalars: np.ndarray, evaluators: Sequence[Evaluator]) -> None:
+    def __update_confidences(
+        self, artifact_scalars: np.ndarray, evaluators: Sequence[Evaluator]
+    ) -> None:
         """Update the confidence estimates for this grid section.
 
         Args:
@@ -962,9 +1106,29 @@ class GridSection(object):
             raise ValueError("Artifact scalars must be a vector (on-dimensional array)")
 
         if len(artifact_scalars) != self.__num_evaluators:
-            raise ValueError("Number of artifact scalars does not match the number of configured evaluators")
+            raise ValueError(
+                "Number of artifact scalars does not match the number of configured evaluators"
+            )
 
-        for e, (scalar, evaluator, mean, second_moment, third_moment, third_moment_abs, fourth_moment) in enumerate(zip(artifact_scalars, evaluators, self.__means, self.__second_moments, self.__third_moments, self.__third_moments_abs, self.__fourth_moments)):
+        for e, (
+            scalar,
+            evaluator,
+            mean,
+            second_moment,
+            third_moment,
+            third_moment_abs,
+            fourth_moment,
+        ) in enumerate(
+            zip(
+                artifact_scalars,
+                evaluators,
+                self.__means,
+                self.__second_moments,
+                self.__third_moments,
+                self.__third_moments_abs,
+                self.__fourth_moments,
+            )
+        ):
             # Return zero if the evaluator tolerance is set to zero
             if evaluator.tolerance == 0.0:
                 self.__evaluator_confidences[e] = 0.0
@@ -977,9 +1141,18 @@ class GridSection(object):
             delta = scalar - mean
             updated_mean = (n * mean) / nn
             updated_second_moment = second_moment + delta**2 * (n) / nn
-            updated_third_moment = third_moment + delta**3 * (n**2 - n) / nn**2 - 3 * second_moment * delta / nn
-            updated_third_moment_abs = third_moment_abs + abs(delta**3 * (n**2 - n) / nn**2 - 3 * second_moment * delta / nn)
-            updated_fourth_moment = fourth_moment + delta**4 * (n**3 - n**2 + n) / nn**3 + 6 * delta**2 * second_moment / nn**2 - 4 * delta * third_moment / nn
+            updated_third_moment = (
+                third_moment + delta**3 * (n**2 - n) / nn**2 - 3 * second_moment * delta / nn
+            )
+            updated_third_moment_abs = third_moment_abs + abs(
+                delta**3 * (n**2 - n) / nn**2 - 3 * second_moment * delta / nn
+            )
+            updated_fourth_moment = (
+                fourth_moment
+                + delta**4 * (n**3 - n**2 + n) / nn**3
+                + 6 * delta**2 * second_moment / nn**2
+                - 4 * delta * third_moment / nn
+            )
 
             # Store the updated moment estimates for the next update
             self.__means[e] = updated_mean
@@ -1005,11 +1178,18 @@ class GridSection(object):
             sigma_tolerance_squared = sigma_tolerance**2
             kappa_term = 4 * (2 / (nn - 1) + kappa_moment / nn)
 
-            confidence_bound = 2 * (1 - evaluator._scalar_cdf(sigma_tolerance)) + 2 * min(self.__C_0, self.__C_1 / (1 + abs(sigma_tolerance)) ** 3) * beta_bar_moment / sample_sqrt * min(1.0, kappa_term)
+            confidence_bound = 2 * (1 - evaluator._scalar_cdf(sigma_tolerance)) + 2 * min(
+                self.__C_0, self.__C_1 / (1 + abs(sigma_tolerance)) ** 3
+            ) * beta_bar_moment / sample_sqrt * min(1.0, kappa_term)
 
             # This is necessary to preventa math overflow from the exponential denominator
             if kappa_term < 1.0 and sigma_tolerance_squared < 1418.0:
-                confidence_bound += (1 - kappa_term) * abs(sigma_tolerance_squared - 1) * abs(beta_hat_moment) / (exp(0.5 * sigma_tolerance_squared) * 3 * sqrt(2 * pi * n) * deviance**3)
+                confidence_bound += (
+                    (1 - kappa_term)
+                    * abs(sigma_tolerance_squared - 1)
+                    * abs(beta_hat_moment)
+                    / (exp(0.5 * sigma_tolerance_squared) * 3 * sqrt(2 * pi * n) * deviance**3)
+                )
 
             # Store the current confidence estimate
             self.__evaluator_confidences[e] = 1.0 - min(1.0, confidence_bound)
@@ -1021,7 +1201,9 @@ class ActorRunResult(object):
     samples: List[MonteCarloSample] | None
     message: str | None
 
-    def __init__(self, samples: List[MonteCarloSample] | None = None, message: str | None = None) -> None:
+    def __init__(
+        self, samples: List[MonteCarloSample] | None = None, message: str | None = None
+    ) -> None:
         """
         Args:
 
@@ -1041,7 +1223,9 @@ class SampleGrid(object):
 
     __sections: np.ndarray
 
-    def __init__(self, grid_configuration: List[GridDimension], evaluators: Sequence[Evaluator]) -> None:
+    def __init__(
+        self, grid_configuration: List[GridDimension], evaluators: Sequence[Evaluator]
+    ) -> None:
         """
         Args:
 
@@ -1052,10 +1236,14 @@ class SampleGrid(object):
                 The evaluators generating the artifacts.
         """
 
-        self.__sections = np.empty([dimension.num_sample_points for dimension in grid_configuration], dtype=np.object_)
+        self.__sections = np.empty(
+            [dimension.num_sample_points for dimension in grid_configuration], dtype=np.object_
+        )
         num_evaluators = len(evaluators)
 
-        for coordinates in np.ndindex(*[dimension.num_sample_points for dimension in grid_configuration]):
+        for coordinates in np.ndindex(
+            *[dimension.num_sample_points for dimension in grid_configuration]
+        ):
             coordinate_tuple = tuple(coordinates)
             self.__sections[coordinate_tuple] = GridSection(coordinate_tuple, num_evaluators)
 
@@ -1078,9 +1266,16 @@ class MonteCarloActor(Generic[MO]):
     catch_exceptions: bool  # Catch exceptions during run.
     __investigated_object: MO  # Copy of the object to be investigated
     __grid: Sequence[GridDimension]  # Simulation grid dimensions
-    __evaluators: Sequence[Evaluator]  # Evaluators used to process the investigated object sample state
+    __evaluators: Sequence[
+        Evaluator
+    ]  # Evaluators used to process the investigated object sample state
 
-    def __init__(self, argument_tuple: Tuple[MO, Sequence[GridDimension], Sequence[Evaluator]], index: int, catch_exceptions: bool = True) -> None:
+    def __init__(
+        self,
+        argument_tuple: Tuple[MO, Sequence[GridDimension], Sequence[Evaluator]],
+        index: int,
+        catch_exceptions: bool = True,
+    ) -> None:
         """
         Args:
 
@@ -1146,7 +1341,9 @@ class MonteCarloActor(Generic[MO]):
             for section_indices in program:
                 # Detect the grid dimensions where sections changed, i.e. which require re-configuration
                 section_index_array = np.asarray(section_indices, dtype=int)
-                reconfigured_dimensions = np.argwhere(section_index_array != recent_section_indices).flatten()
+                reconfigured_dimensions = np.argwhere(
+                    section_index_array != recent_section_indices
+                ).flatten()
 
                 # Reconfigure the dimensions
                 # Not that for the first grid_section this has already been done
@@ -1163,13 +1360,18 @@ class MonteCarloActor(Generic[MO]):
                         first_impact = 0
 
                     elif grid_dimension.first_impact in self.__stage_identifiers:
-                        first_impact = min(first_impact, self.__stage_identifiers.index(grid_dimension.first_impact))
+                        first_impact = min(
+                            first_impact,
+                            self.__stage_identifiers.index(grid_dimension.first_impact),
+                        )
 
                     if grid_dimension.last_impact is None:
                         last_impact = self.__num_stages - 1
 
                     elif grid_dimension.last_impact in self.__stage_identifiers:
-                        last_impact = max(last_impact, self.__stage_identifiers.index(grid_dimension.last_impact))
+                        last_impact = max(
+                            last_impact, self.__stage_identifiers.index(grid_dimension.last_impact)
+                        )
 
                 if first_impact >= self.__num_stages:
                     first_impact = 0
@@ -1234,7 +1436,13 @@ class MonteCarloResult(object):
     __performance_time: float  # Absolute time required to compute the simulation
     __results: Sequence[EvaluationResult]
 
-    def __init__(self, grid: Sequence[GridDimension], evaluators: Sequence[Evaluator], sample_grid: SampleGrid, performance_time: float) -> None:
+    def __init__(
+        self,
+        grid: Sequence[GridDimension],
+        evaluators: Sequence[Evaluator],
+        sample_grid: SampleGrid,
+        performance_time: float,
+    ) -> None:
         """
         Args:
 
@@ -1266,7 +1474,9 @@ class MonteCarloResult(object):
 
             section: GridSection
             for section in sample_grid:
-                evaluator_artifacts[section.coordinates] = [sample.artifacts[evaluator_idx] for sample in section.samples]
+                evaluator_artifacts[section.coordinates] = [
+                    sample.artifacts[evaluator_idx] for sample in section.samples
+                ]
 
             self.__results.append(evaluator.generate_result(grid, evaluator_artifacts))
 
@@ -1298,7 +1508,11 @@ class MonteCarloResult(object):
                 File location to which the results should be saved.
         """
 
-        mat_dict = {"dimensions": [d.title for d in self.__grid], "evaluators": [evaluator.abbreviation for evaluator in self.__evaluators], "performance_time": self.__performance_time}
+        mat_dict = {
+            "dimensions": [d.title for d in self.__grid],
+            "evaluators": [evaluator.abbreviation for evaluator in self.__evaluators],
+            "performance_time": self.__performance_time,
+        }
 
         # Append evaluation array representions
         for r, result in enumerate(self.__results):
@@ -1314,6 +1528,21 @@ class MonteCarloResult(object):
         # Save results in matlab file
         savemat(file, mat_dict)
 
+    def print(self, console: Console | None = None) -> None:
+        """Print a text representation of the simulation result.
+
+        Args:
+
+            console (Console, optional):
+                Rich console to print to.
+                If not provided, a new one will be initialized.
+        """
+
+        _console = Console() if console is None else console
+
+        for result in self.evaluation_results:
+            result.print(_console)
+
     @property
     def evaluation_results(self) -> Sequence[EvaluationResult]:
         """Access individual evaluation results.
@@ -1324,12 +1553,73 @@ class MonteCarloResult(object):
         return self.__results
 
 
+class SamplePoint(object):
+    """Sample point of a single grid dimension.
+
+    A single :class:`.GridDimension` holds a sequence of sample points
+    accesible by the :attr:`sample_points<.GridDimension.sample_points>` property.
+    During simulation runtime, the simulation will dynamically reconfigure
+    the scenario selecting a single sample point out of each :class:`.GridDimension`
+    per generated simulation sample.
+    """
+
+    __value: Any
+    __title: str | None
+
+    def __init__(self, value: Any, title: str | None = None) -> None:
+        """
+        Args:
+
+            value (Any):
+                Sample point value with which to configure the grid dimension.
+
+            title (str, optional):
+                String representation of this sample point.
+                If not specified, the simulation will attempt to infer an adequate representation.
+        """
+
+        self.__value = value
+        self.__title = title
+
+    @property
+    def value(self) -> Any:
+        """Sample point value with which to configure the grid dimension"""
+
+        return self.__value
+
+    @property
+    def title(self) -> str:
+        """String representation of this sample point"""
+
+        if self.__title is not None:
+            return self.__title
+
+        if type(self.__value).__str__ is not object.__str__:
+            return str(self.__value)
+
+        if isinstance(self.__value, float):
+            return f"{self.__value:.2g}"
+
+        if isinstance(self.__value, int):
+            return f"{self.__value}"
+
+        # Return the values class name if its not representable otherwise
+        return self.__value.__class__.__name__
+
+
 class GridDimension(object):
-    """Single axis within the simulation grid."""
+    """Single axis within the simulation grid.
+
+    A grid dimension represents a single simulation parameter that is to
+    be varied during simulation runtime to observe its effects on the evaluated
+    performance indicators.
+    The values the represented parameter is configured to are
+    :class:`SamplePoints<.SamplePoint>`.
+    """
 
     __considered_objects: Tuple[Any, ...]
     __dimension: str
-    __sample_points: List[Any]
+    __sample_points: List[SamplePoint]
     __title: str | None
     __setter_lambdas: Tuple[Callable, ...]
     __plot_scale: str
@@ -1337,7 +1627,15 @@ class GridDimension(object):
     __first_impact: str | None
     __last_impact: str | None
 
-    def __init__(self, considered_objects: Any | Tuple[Any, ...], dimension: str, sample_points: List[Any], title: str | None = None, plot_scale: str | None = None, tick_format: Optional[ValueType] = None) -> None:
+    def __init__(
+        self,
+        considered_objects: Any | Tuple[Any, ...],
+        dimension: str,
+        sample_points: Sequence[SamplePoint | Any],
+        title: str | None = None,
+        plot_scale: str | None = None,
+        tick_format: Optional[ValueType] = None,
+    ) -> None:
         """
         Args:
 
@@ -1367,7 +1665,9 @@ class GridDimension(object):
                 If the selected `dimension` does not exist within the `considered_object`.
         """
 
-        _considered_objects = considered_objects if isinstance(considered_objects, tuple) else (considered_objects,)
+        _considered_objects = (
+            considered_objects if isinstance(considered_objects, tuple) else (considered_objects,)
+        )
         self.__considered_objects = tuple()
 
         property_path = dimension.split(".")
@@ -1398,7 +1698,9 @@ class GridDimension(object):
 
         self.__setter_lambdas = tuple()
         self.__dimension = dimension
-        self.__sample_points = sample_points
+        self.__sample_points = [
+            s if isinstance(s, SamplePoint) else SamplePoint(s) for s in sample_points
+        ]
         self.__title = title
         self.__first_impact = None
         self.__last_impact = None
@@ -1406,14 +1708,18 @@ class GridDimension(object):
         for considered_object in _considered_objects:
             # Make sure the dimension exists
             try:
-                dimension_object = reduce(lambda obj, attr: getattr(obj, attr), object_path, considered_object)
+                dimension_object = reduce(
+                    lambda obj, attr: getattr(obj, attr), object_path, considered_object
+                )
                 dimension_class = type(dimension_object)
                 dimension_property: RegisteredDimension = getattr(dimension_class, property_name)
 
             except AttributeError:
-                raise ValueError("Dimension '" + dimension + "' does not exist within the investigated object")
+                raise ValueError(
+                    "Dimension '" + dimension + "' does not exist within the investigated object"
+                )
 
-            if len(sample_points) < 1:
+            if len(self.__sample_points) < 1:
                 raise ValueError("A simulation grid dimension must have at least one sample point")
 
             # Update impacts if the dimension is registered as a PyMonte simulation dimension
@@ -1422,10 +1728,14 @@ class GridDimension(object):
                 last_impact = dimension_property.last_impact
 
                 if self.__first_impact and first_impact != self.__first_impact:
-                    raise ValueError("Diverging impacts on multi-object grid dimension initialization")
+                    raise ValueError(
+                        "Diverging impacts on multi-object grid dimension initialization"
+                    )
 
                 if self.__last_impact and last_impact != self.__last_impact:
-                    raise ValueError("Diverging impacts on multi-object grid dimension initialization")
+                    raise ValueError(
+                        "Diverging impacts on multi-object grid dimension initialization"
+                    )
 
                 self.__first_impact = first_impact
                 self.__last_impact = last_impact
@@ -1450,14 +1760,8 @@ class GridDimension(object):
         return self.__dimension
 
     @property
-    def sample_points(self) -> List[Any]:
-        """Points at which this grid dimension is sampled.
-
-        Returns:
-
-            List[Any]:
-                List of sample points.
-        """
+    def sample_points(self) -> List[SamplePoint]:
+        """Points at which this grid dimension is sampled."""
 
         return self.__sample_points
 
@@ -1488,10 +1792,12 @@ class GridDimension(object):
         """
 
         if point_index < 0 or point_index >= len(self.__sample_points):
-            raise ValueError(f"Index {point_index} is out of the range for grid dimension '{self.title}'")
+            raise ValueError(
+                f"Index {point_index} is out of the range for grid dimension '{self.title}'"
+            )
 
         for setter_lambda in self.__setter_lambdas:
-            setter_lambda(self.__sample_points[point_index])
+            setter_lambda(self.__sample_points[point_index].value)
 
     @property
     def first_impact(self) -> str | None:
@@ -1583,7 +1889,9 @@ class GridDimension(object):
         """
 
         stages = dimension.split(".")
-        object_reference = reduce(lambda obj, attr: getattr(obj, attr), stages[:-1], considered_object)
+        object_reference = reduce(
+            lambda obj, attr: getattr(obj, attr), stages[:-1], considered_object
+        )
 
         # Return a lambda to the function if the reference is callable
         function_reference = getattr(object_reference, stages[-1])
@@ -1607,7 +1915,13 @@ class RegisteredDimension(property):
     __last_impact: str | None
     __title: str | None
 
-    def __init__(self, _property: property, first_impact: str | None = None, last_impact: str | None = None, title: str | None = None) -> None:
+    def __init__(
+        self,
+        _property: property,
+        first_impact: str | None = None,
+        last_impact: str | None = None,
+        title: str | None = None,
+    ) -> None:
         """
         Args:
 
@@ -1630,7 +1944,13 @@ class RegisteredDimension(property):
         self.__last_impact = last_impact
         self.__title = title
 
-        property.__init__(self, getattr(_property, "fget", None), getattr(_property, "fset", None), getattr(_property, "fdel", None), getattr(_property, "doc", None))
+        property.__init__(
+            self,
+            getattr(_property, "fget", None),
+            getattr(_property, "fset", None),
+            getattr(_property, "fdel", None),
+            getattr(_property, "doc", None),
+        )
 
     @classmethod
     def is_registered(cls, object: Any) -> bool:
@@ -1667,15 +1987,21 @@ class RegisteredDimension(property):
 
     def getter(self, fget: Callable[[Any], Any]) -> RegisteredDimension:
         updated_property = property.getter(self, fget)
-        return RegisteredDimension(updated_property, self.first_impact, self.last_impact, self.title)
+        return RegisteredDimension(
+            updated_property, self.first_impact, self.last_impact, self.title
+        )
 
     def setter(self, fset: Callable[[Any, Any], None]) -> RegisteredDimension:
         updated_property = property(self.fget, fset, self.fdel, self.__doc__)
-        return RegisteredDimension(updated_property, self.first_impact, self.last_impact, self.title)
+        return RegisteredDimension(
+            updated_property, self.first_impact, self.last_impact, self.title
+        )
 
     def deleter(self, fdel: Callable[[Any], None]) -> RegisteredDimension:
         updated_property = property.deleter(self, fdel)
-        return RegisteredDimension(updated_property, self.first_impact, self.last_impact, self.title)
+        return RegisteredDimension(
+            updated_property, self.first_impact, self.last_impact, self.title
+        )
 
 
 def register(*args, **kwargs) -> Callable[[Any], RegisteredDimension]:
@@ -1792,7 +2118,11 @@ class MonteCarlo(Generic[MO]):
 
             with catch_warnings():
                 simplefilter("ignore")
-                ray.init(address=ray_address, runtime_env=runtime_env_info if self.runtime_env else None, logging_level=logging.ERROR)
+                ray.init(
+                    address=ray_address,
+                    runtime_env=runtime_env_info if self.runtime_env else None,
+                    logging_level=logging.ERROR,
+                )
 
         self.__dimensions = []
         self.__investigated_object = investigated_object
@@ -1806,20 +2136,6 @@ class MonteCarlo(Generic[MO]):
         self.num_actors = num_actors
         self.catch_exceptions = catch_exceptions
         self.__progress_log_interval = progress_log_interval
-
-    @staticmethod
-    def __sample_point_to_str(sample_point: Any) -> str:
-        # Check if the sample point has a custom string cast
-        if type(sample_point).__str__ is not object.__str__:
-            return str(sample_point)
-
-        if isinstance(sample_point, float):
-            return f"{sample_point:.2g}"
-
-        if isinstance(sample_point, int):
-            return f"{sample_point}"
-
-        return sample_point.__class__.__name__
 
     def simulate(self, actor: Type[MonteCarloActor]) -> MonteCarloResult:
         """Launch the Monte Carlo simulation.
@@ -1838,7 +2154,9 @@ class MonteCarlo(Generic[MO]):
 
         # Print meta-information and greeting
         if self.__console_mode != ConsoleMode.SILENT:
-            self.console.log(f"Launched simulation campaign with {self.num_actors} dedicated actors")
+            self.console.log(
+                f"Launched simulation campaign with {self.num_actors} dedicated actors"
+            )
 
         # Sort dimensions after impact in descending order
         def sort(dimension: GridDimension) -> int:
@@ -1856,7 +2174,11 @@ class MonteCarlo(Generic[MO]):
             dimension_str += f" x {dimension.num_sample_points}"
 
         if self.__console_mode != ConsoleMode.SILENT:
-            self.console.log(f"Generating a maximum of {max_num_samples} = " + dimension_str + f" samples inspected by {len(self.__evaluators)} evaluators\n")
+            self.console.log(
+                f"Generating a maximum of {max_num_samples} = "
+                + dimension_str
+                + f" samples inspected by {len(self.__evaluators)} evaluators\n"
+            )
 
         # Render simulation grid table
         if self.__console_mode != ConsoleMode.SILENT and len(self.__dimensions) > 0:
@@ -1867,7 +2189,7 @@ class MonteCarlo(Generic[MO]):
             for dimension in self.__dimensions:
                 section_str = ""
                 for sample_point in dimension.sample_points:
-                    section_str += self.__sample_point_to_str(sample_point) + " "
+                    section_str += sample_point.title + " "
 
                 dimension_table.add_row(dimension.title, section_str)
 
@@ -1883,8 +2205,12 @@ class MonteCarlo(Generic[MO]):
             actor_pool = ActorPool([actor.options(num_cpus=self.cpus_per_actor).remote((self.__investigated_object, self.__dimensions, self.__evaluators), a, self.catch_exceptions) for a in range(self.num_actors)])  # type: ignore
 
             # Generate section sample containers and meta-information
-            grid_task_count = np.zeros([dimension.num_sample_points for dimension in self.__dimensions], dtype=int)
-            grid_active_mask = np.ones([dimension.num_sample_points for dimension in self.__dimensions], dtype=bool)
+            grid_task_count = np.zeros(
+                [dimension.num_sample_points for dimension in self.__dimensions], dtype=int
+            )
+            grid_active_mask = np.ones(
+                [dimension.num_sample_points for dimension in self.__dimensions], dtype=bool
+            )
 
             # Submit initial actor tasks
             # 2  # A little overhead in task submission might speed things up? Not clear atm.
@@ -1893,7 +2219,9 @@ class MonteCarlo(Generic[MO]):
                 _ = self.__queue_next(actor_pool, sample_grid, grid_active_mask, grid_task_count)
 
         # Initialize progress bar
-        progress = Progress(SpinnerColumn(), *Progress.get_default_columns(), TimeElapsedColumn(), transient=True)
+        progress = Progress(
+            SpinnerColumn(), *Progress.get_default_columns(), TimeElapsedColumn(), transient=True
+        )
         task1 = progress.add_task("Computing", total=max_num_samples)
         last_progress_plot_time = 0.0
         num_result_rows = min(10, self.section_block_size)
@@ -1904,7 +2232,9 @@ class MonteCarlo(Generic[MO]):
             # Keep executing until all samples are computed
             while actor_pool.has_next():
                 # Receive samples from the queue
-                samples = self.__receive_next(actor_pool, sample_grid, grid_active_mask, grid_task_count)
+                samples = self.__receive_next(
+                    actor_pool, sample_grid, grid_active_mask, grid_task_count
+                )
 
                 # Queue next task and compute retrieve progress
                 self.__queue_next(actor_pool, sample_grid, grid_active_mask, grid_task_count)
@@ -1927,8 +2257,10 @@ class MonteCarlo(Generic[MO]):
                         for sample in samples[:num_result_rows]:
                             results_row: List[str] = []
 
-                            for dimension, section_idx in zip(self.__dimensions, sample.grid_section):
-                                results_row.append(self.__sample_point_to_str(dimension.sample_points[section_idx]))
+                            for dimension, section_idx in zip(
+                                self.__dimensions, sample.grid_section
+                            ):
+                                results_row.append(dimension.sample_points[section_idx].title)
 
                             results_row.append(str(sample_grid[sample.grid_section].num_samples))
 
@@ -1971,10 +2303,24 @@ class MonteCarlo(Generic[MO]):
             self.console.log(f"Simulation finished after {performance_time:.2f} seconds")
 
         # Compute the result
-        result = MonteCarloResult(self.__dimensions, self.__evaluators, sample_grid, performance_time)
+        result = MonteCarloResult(
+            self.__dimensions, self.__evaluators, sample_grid, performance_time
+        )
+
+        # Print results
+        if self.__console_mode != ConsoleMode.SILENT:
+            self.console.print("")
+            result.print(self.console)
+
         return result
 
-    def __receive_next(self, pool: ActorPool, grid: SampleGrid, grid_active_mask: np.ndarray, grid_task_count: np.ndarray) -> List[MonteCarloSample]:
+    def __receive_next(
+        self,
+        pool: ActorPool,
+        grid: SampleGrid,
+        grid_active_mask: np.ndarray,
+        grid_task_count: np.ndarray,
+    ) -> List[MonteCarloSample]:
         # Retrieve result from pool
         runResult: ActorRunResult = pool.get_next_unordered(timeout=None)
 
@@ -2000,17 +2346,28 @@ class MonteCarlo(Generic[MO]):
 
                 # Abort section if the confidence threshold has been reached
                 elif grid_section.num_samples >= self.min_num_samples:
-                    grid_active_mask[grid_section.coordinates] = not grid_section.confidence_status(self.__evaluators)
+                    grid_active_mask[grid_section.coordinates] = not grid_section.confidence_status(
+                        self.__evaluators
+                    )
 
         return runResult.samples
 
-    def __queue_next(self, pool: ActorPool, grid: SampleGrid, grid_active_mask: np.ndarray, grid_task_count: np.ndarray):
+    def __queue_next(
+        self,
+        pool: ActorPool,
+        grid: SampleGrid,
+        grid_active_mask: np.ndarray,
+        grid_task_count: np.ndarray,
+    ):
         # Query active sections and respective task counts
         active_sections = np.argwhere(grid_active_mask)
         active_sections_task_count = grid_task_count[grid_active_mask]
 
         program: List[Tuple[int, ...]] = []
-        for section_coordinates, task_count in zip(active_sections[: self.section_block_size, :], active_sections_task_count.flat[: self.section_block_size]):
+        for section_coordinates, task_count in zip(
+            active_sections[: self.section_block_size, :],
+            active_sections_task_count.flat[: self.section_block_size],
+        ):
             section_coordinates = tuple(section_coordinates)
             program.append(section_coordinates)
 
@@ -2032,7 +2389,9 @@ class MonteCarlo(Generic[MO]):
 
         return self.__investigated_object
 
-    def new_dimension(self, dimension: str, sample_points: List[Any], *args: Any, **kwargs) -> GridDimension:
+    def new_dimension(
+        self, dimension: str, sample_points: List[Any], *args: Any, **kwargs
+    ) -> GridDimension:
         """Add a dimension to the simulation grid.
 
         Must be a property of the investigated object.
@@ -2080,6 +2439,24 @@ class MonteCarlo(Generic[MO]):
             raise ValueError("Dimension instance already registered within the grid")
 
         self.__dimensions.append(dimension)
+
+    def remove_dimension(self, dimension: GridDimension) -> None:
+        """Remove an existing dimension from the simulation grid.
+
+        Args:
+
+            dimension (GridDimension):
+                The dimension to be removed.
+
+        Raises:
+
+            ValueError: If the `dimension` does not exist.
+        """
+
+        if dimension not in self.__dimensions:
+            raise ValueError("Dimension not registered within the current simulation grid")
+
+        self.__dimensions.remove(dimension)
 
     @property
     def dimensions(self) -> List[GridDimension]:
@@ -2299,4 +2676,4 @@ class MonteCarlo(Generic[MO]):
             List of package names.
         """
 
-        return ["ray", "numpy", "scipy", "ZODB", "matplotlib", "rich"]
+        return ["ray", "numpy", "scipy", "matplotlib", "rich"]

@@ -1,23 +1,8 @@
 # -*- coding: utf-8 -*-
-"""
-=======================================
-Analog-to-Digital Converter
-=======================================
-
-Implements an analog-to digital converter.
-Currently only uniform quantization is considered.
-
-
-The following figure visualizes the quantizer responses.
-
-.. plot:: scripts/plot_quantizer.py
-   :align: center
-
-"""
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import TypeVar, Optional
+from typing import TypeVar
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -193,7 +178,12 @@ class AutomaticGainControl(Serializable, GainControlBase):
     __agc_type: GainControlType
     __backoff: float
 
-    def __init__(self, agc_type: GainControlType = GainControlType.MAX_AMPLITUDE, backoff: float = 1.0, rescale_quantization: bool = False) -> None:
+    def __init__(
+        self,
+        agc_type: GainControlType = GainControlType.MAX_AMPLITUDE,
+        backoff: float = 1.0,
+        rescale_quantization: bool = False,
+    ) -> None:
         """
         Args:
 
@@ -257,10 +247,15 @@ class AutomaticGainControl(Serializable, GainControlBase):
 
     def estimate_gain(self, input_signal: Signal) -> float:
         if self.agc_type == GainControlType.MAX_AMPLITUDE:
-            max_amplitude = max(np.abs(np.real(input_signal.samples)).max(), np.abs(np.imag(input_signal.samples)).max())
+            max_amplitude = max(
+                np.abs(np.real(input_signal.samples)).max(),
+                np.abs(np.imag(input_signal.samples)).max(),
+            )
 
         elif self.agc_type == GainControlType.RMS_AMPLITUDE:
-            max_amplitude = max(rms_value(np.real(input_signal.samples)), rms_value(np.imag(input_signal.samples)))
+            max_amplitude = max(
+                rms_value(np.real(input_signal.samples)), rms_value(np.imag(input_signal.samples))
+            )
 
         else:
             raise RuntimeError("Unsupported gain control type")
@@ -294,7 +289,12 @@ class AnalogDigitalConverter(Serializable):
     gain: Gain
     __quantizer_type: QuantizerType
 
-    def __init__(self, num_quantization_bits: int | None = None, gain: Optional[Gain] = None, quantizer_type: QuantizerType = QuantizerType.MID_RISER) -> None:
+    def __init__(
+        self,
+        num_quantization_bits: int | None = None,
+        gain: Gain | None = None,
+        quantizer_type: QuantizerType = QuantizerType.MID_RISER,
+    ) -> None:
         """
         Args:
 
@@ -412,14 +412,31 @@ class AnalogDigitalConverter(Serializable):
         Returns: Gain adjusted and quantized signal.
         """
 
-        num_frame_samples = int(round(frame_duration * input_signal.sampling_rate)) if frame_duration > 0 else input_signal.num_samples
-        num_frames = int(np.ceil(input_signal.num_samples / num_frame_samples)) if num_frame_samples > 0 else 0
-        converted_signal = Signal.empty(input_signal.sampling_rate, input_signal.num_streams, 0, carrier_frequency=input_signal.carrier_frequency)
+        num_frame_samples = (
+            int(round(frame_duration * input_signal.sampling_rate))
+            if frame_duration > 0
+            else input_signal.num_samples
+        )
+        num_frames = (
+            int(np.ceil(input_signal.num_samples / num_frame_samples))
+            if num_frame_samples > 0
+            else 0
+        )
+        converted_signal = Signal.empty(
+            input_signal.sampling_rate,
+            input_signal.num_streams,
+            0,
+            carrier_frequency=input_signal.carrier_frequency,
+        )
 
         # Iterate over each frame independtenly
         for f in range(num_frames):
-            frame_samples = input_signal.samples[:, f * num_frame_samples : (f + 1) * num_frame_samples]
-            frame_signal = Signal(frame_samples, input_signal.sampling_rate, input_signal.carrier_frequency)
+            frame_samples = input_signal.samples[
+                :, f * num_frame_samples : (f + 1) * num_frame_samples
+            ]
+            frame_signal = Signal(
+                frame_samples, input_signal.sampling_rate, input_signal.carrier_frequency
+            )
 
             converted_frame_signal = self.__convert_frame(frame_signal)
             converted_signal.append_samples(converted_frame_signal)
@@ -463,7 +480,12 @@ class AnalogDigitalConverter(Serializable):
 
         return quantized_signal
 
-    def plot_quantizer(self, input_samples: Optional[np.ndarray] = None, label: str = "", fig_axes: Optional[plt.Axes] = None) -> None:
+    def plot_quantizer(
+        self,
+        input_samples: np.ndarray | None = None,
+        label: str = "",
+        fig_axes: plt.Axes | None = None,
+    ) -> None:
         """Plot the quantizer characteristics.
 
         Generates a matplotlib plot depicting the staircase amplitude response.
@@ -483,9 +505,13 @@ class AnalogDigitalConverter(Serializable):
                 By default, a new figure is created.
         """
 
-        _input_samples = np.arange(-1, 1, 0.01) + 1j * np.arange(1, -1, -0.01) if input_samples is None else input_samples.flatten()
+        _input_samples = (
+            np.arange(-1, 1, 0.01) + 1j * np.arange(1, -1, -0.01)
+            if input_samples is None
+            else input_samples.flatten()
+        )
 
-        figure: Optional[plt.Figure] = None
+        figure: plt.Figure | None = None
         if fig_axes is None:
             figure, quant_axes = plt.subplots()
 

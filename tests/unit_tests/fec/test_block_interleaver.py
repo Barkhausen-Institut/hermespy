@@ -19,9 +19,7 @@ __status__ = "Prototype"
 
 
 class TestBlockInterleaver(unittest.TestCase):
-
     def setUp(self) -> None:
-
         self.block_size = 12
         self.interleave_blocks = 2
         self.interleaver = BlockInterleaver(self.block_size, self.interleave_blocks)
@@ -29,10 +27,8 @@ class TestBlockInterleaver(unittest.TestCase):
     def test_init(self) -> None:
         """Test that the init properly stores all parameters."""
 
-        self.assertEqual(self.block_size, self.interleaver.block_size,
-                         "Block size init failed")
-        self.assertEqual(self.interleave_blocks, self.interleaver.interleave_blocks,
-                         "Number of interleaved blocks init failed")
+        self.assertEqual(self.block_size, self.interleaver.block_size, "Block size init failed")
+        self.assertEqual(self.interleave_blocks, self.interleaver.interleave_blocks, "Number of interleaved blocks init failed")
 
     def test_init_validation(self) -> None:
         """The interleaver init must raise a `ValueError` if blocks can't be sectioned properly"""

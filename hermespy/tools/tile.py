@@ -52,7 +52,12 @@ def screen_geometry(monitor: int = 0) -> Tuple[int, ...]:
 
     else:
         selected_monitor = monitors[monitor]
-        return (selected_monitor.x, selected_monitor.y, selected_monitor.width, selected_monitor.height)
+        return (
+            selected_monitor.x,
+            selected_monitor.y,
+            selected_monitor.width,
+            selected_monitor.height,
+        )
 
 
 def set_figure_geometry(fig, backend, x, y, w, h) -> None:

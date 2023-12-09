@@ -8,12 +8,12 @@ Isolation model (to be implemented): :footcite:t:`2018:kiayni`
 """
 
 from __future__ import annotations
-from typing import Optional
 
 import numpy as np
 
 from hermespy.core.signal_model import Signal
 from hermespy.core.factory import Serializable
+from .analog_digital_converter import AnalogDigitalConverter
 from .phase_noise import PhaseNoise, NoPhaseNoise
 from .power_amplifier import PowerAmplifier
 
@@ -37,16 +37,22 @@ class RfChain(Serializable):
 
     __phase_offset: float
     __amplitude_imbalance: float
-
-    __power_amplifier: Optional[PowerAmplifier]
+    __power_amplifier: PowerAmplifier | None
     __phase_noise: PhaseNoise
+    __adc: AnalogDigitalConverter
 
-    def __init__(self, phase_offset: float = None, amplitude_imbalance: float = None) -> None:
+    def __init__(
+        self,
+        phase_offset: float | None = None,
+        amplitude_imbalance: float | None = None,
+        adc: AnalogDigitalConverter | None = None,
+    ) -> None:
+        # Initialize class attributes
         self.__phase_offset = 0.0
         self.__amplitude_imbalance = 0.0
-
         self.__power_amplifier = None
         self.__phase_noise = NoPhaseNoise()
+        self.adc = AnalogDigitalConverter() if adc is None else adc
 
         if phase_offset is not None:
             self.__phase_offset = phase_offset
@@ -84,6 +90,16 @@ class RfChain(Serializable):
     @phase_offset.setter
     def phase_offset(self, value: float) -> None:
         self.__phase_offset = value
+
+    @property
+    def adc(self) -> AnalogDigitalConverter:
+        """The analog to digital converter at the end of the RF receive chain."""
+
+        return self.__adc
+
+    @adc.setter
+    def adc(self, value: AnalogDigitalConverter) -> None:
+        self.__adc = value
 
     def transmit(self, input_signal: Signal) -> Signal:
         """Returns the distorted version of signal in "input_signal".

@@ -60,7 +60,9 @@ class RandomNode(object):
     __generator: Optional[Generator]  # Numpy generator object
     __seed: Optional[int]
 
-    def __init__(self, mother_node: Optional[RandomNode] = None, seed: Optional[int] = None) -> None:
+    def __init__(
+        self, mother_node: Optional[RandomNode] = None, seed: Optional[int] = None
+    ) -> None:
         """
         Args:
 

@@ -52,7 +52,9 @@ class SelectiveLeakage(Serializable, Isolation):
         """
 
         if leakage_response.ndim != 3:
-            raise ValueError(f"Leakage response matrix must be a three-dimensional array (has {leakage_response.ndim} dimensions)")
+            raise ValueError(
+                f"Leakage response matrix must be a three-dimensional array (has {leakage_response.ndim} dimensions)"
+            )
 
         # Initialize base classes
         Serializable.__init__(self)
@@ -62,7 +64,13 @@ class SelectiveLeakage(Serializable, Isolation):
         self.__leakage_response = leakage_response
 
     @classmethod
-    def Normal(cls: Type[SelectiveLeakage], device: SimulatedDevice, num_samples: int = 100, mean: float = 1.0, variance: float = 1.0) -> SelectiveLeakage:
+    def Normal(
+        cls: Type[SelectiveLeakage],
+        device: SimulatedDevice,
+        num_samples: int = 100,
+        mean: float = 1.0,
+        variance: float = 1.0,
+    ) -> SelectiveLeakage:
         """Initialize a frequency-selective leakage model with a normally distributed frequency response.
 
         Args:
@@ -78,7 +86,23 @@ class SelectiveLeakage(Serializable, Isolation):
         Returns: An initialized selective frequency model.
         """
 
-        frequency_response = np.random.normal(np.sqrt(0.5) * mean, variance, (device.antennas.num_receive_antennas, device.antennas.num_transmit_antennas, num_samples)) + 1j * np.random.normal(np.sqrt(0.5) * mean, variance, (device.antennas.num_receive_antennas, device.antennas.num_transmit_antennas, num_samples))
+        frequency_response = np.random.normal(
+            np.sqrt(0.5) * mean,
+            variance,
+            (
+                device.antennas.num_receive_antennas,
+                device.antennas.num_transmit_antennas,
+                num_samples,
+            ),
+        ) + 1j * np.random.normal(
+            np.sqrt(0.5) * mean,
+            variance,
+            (
+                device.antennas.num_receive_antennas,
+                device.antennas.num_transmit_antennas,
+                num_samples,
+            ),
+        )
         leakage_response = ifft(frequency_response, axis=2, norm="backward")
 
         return cls(leakage_response=leakage_response)
@@ -96,10 +120,20 @@ class SelectiveLeakage(Serializable, Isolation):
 
     def _leak(self, signal: Signal) -> Signal:
         num_leaked_samples = self.leakage_response.shape[2] + signal.num_samples - 1
-        leaking_samples = np.zeros((self.leakage_response.shape[0], num_leaked_samples), dtype=np.complex_)
+        leaking_samples = np.zeros(
+            (self.leakage_response.shape[0], num_leaked_samples), dtype=np.complex_
+        )
 
         for m, n in np.ndindex(self.leakage_response.shape[0], signal.num_streams):
             # The leaked signal is the convolution of the transmitted signal with the leakage response
-            leaking_samples[m, :] += convolve(self.leakage_response[m, n, :], signal.samples[n, :], "full")[:num_leaked_samples]
+            leaking_samples[m, :] += convolve(
+                self.leakage_response[m, n, :], signal.samples[n, :], "full"
+            )[:num_leaked_samples]
 
-        return Signal(leaking_samples, signal.sampling_rate, signal.carrier_frequency, signal.delay, signal.noise_power)
+        return Signal(
+            leaking_samples,
+            signal.sampling_rate,
+            signal.carrier_frequency,
+            signal.delay,
+            signal.noise_power,
+        )

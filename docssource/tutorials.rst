@@ -15,7 +15,8 @@ HermesPy `repository`_ or directly access them via Google `Colabs`_ and run them
 
    notebooks/channel.ipynb
    notebooks/fec_coding.ipynb
-   notebooks/beamformer.ipynb
+   notebooks/beamforming_usage.ipynb
+   notebooks/beamforming_implementation.ipynb
    notebooks/waveform.ipynb
    notebooks/precoding.ipynb
    notebooks/roc.ipynb

@@ -41,7 +41,14 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT], Serializabl
     __guard_ratio: float  # Guard ratio of frame duration
     __peak_prominence: float  # Minimum peak prominence for peak detection
 
-    def __init__(self, threshold: float = 0.9, guard_ratio: float = 0.8, peak_prominence: float = 0.2, *args: Any, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        threshold: float = 0.9,
+        guard_ratio: float = 0.8,
+        peak_prominence: float = 0.2,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
         """
         Args:
 
@@ -121,7 +128,9 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT], Serializabl
 
         # Raise a runtime error if pilot sequence is empty
         if len(pilot_sequence) < 1:
-            raise RuntimeError("No pilot sequence configured, time-domain correlation synchronization impossible")
+            raise RuntimeError(
+                "No pilot sequence configured, time-domain correlation synchronization impossible"
+            )
 
         # Compute the correlation between each signal stream and the pilot sequence, sum up as a result
         correlation = np.zeros(len(pilot_sequence) + signal.shape[1] - 1, dtype=float)
@@ -132,7 +141,9 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT], Serializabl
 
         # Determine the pilot sequence locations by performing a peak search over the correlation profile
         frame_length = self.waveform_generator.samples_per_frame
-        pilot_indices, _ = find_peaks(abs(correlation), height=0.9, distance=int(0.8 * frame_length))
+        pilot_indices, _ = find_peaks(
+            abs(correlation), height=0.9, distance=int(0.8 * frame_length)
+        )
 
         # Abort if no pilot section has been detected
         if len(pilot_indices) < 1:
@@ -144,6 +155,10 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT], Serializabl
 
         # Correct infeasible pilot index choices
         pilot_indices = np.where(pilot_indices < 0, 0, pilot_indices)
-        pilot_indices = np.where(pilot_indices > (signal.shape[1] - frame_length), abs(signal.shape[1] - frame_length), pilot_indices)
+        pilot_indices = np.where(
+            pilot_indices > (signal.shape[1] - frame_length),
+            abs(signal.shape[1] - frame_length),
+            pilot_indices,
+        )
 
         return pilot_indices.tolist()

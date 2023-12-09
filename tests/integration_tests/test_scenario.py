@@ -5,12 +5,9 @@ from tempfile import TemporaryDirectory
 from typing import List
 from unittest import TestCase
 
-from numpy.testing import assert_array_almost_equal
-
 from hermespy.core import Drop
 from hermespy.simulation import SimulationScenario
 from hermespy.modem import TransmittingModem, ReceivingModem, RaisedCosineWaveform
-
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -26,7 +23,6 @@ class TestRecordReplay(TestCase):
     """Test recording and replaying of scenario drops"""
 
     def setUp(self) -> None:
-
         self.scenario = SimulationScenario()
         self.num_drops = 3
 
@@ -41,20 +37,19 @@ class TestRecordReplay(TestCase):
         device_alpha.transmitters.add(modem_alpha)
         device_beta.receivers.add(modem_beta)
 
-        self.scenario.channel(device_alpha, device_alpha).gain = 0.
-        self.scenario.channel(device_beta, device_beta).gain = 0.
+        self.scenario.channel(device_alpha, device_alpha).gain = 0.0
+        self.scenario.channel(device_beta, device_beta).gain = 0.0
 
         self.tempdir = TemporaryDirectory()
-        self.file = path.join(self.tempdir.name, 'test.h5')
+        self.file = path.join(self.tempdir.name, "test.h5")
 
     def tearDown(self) -> None:
-
         self.scenario.stop()
         self.tempdir.cleanup()
 
     def _record(self) -> List[Drop]:
         """Record some drops for testing.
-        
+
         Returns: List of recorded drops.
         """
 
@@ -72,17 +67,16 @@ class TestRecordReplay(TestCase):
 
     def test_record_replay_from_dataset(self) -> None:
         """Test recording and replaying datasets directly from the filesystem"""
-        
+
         # Record drops
         expected_drops = self._record()
-        
+
         self.scenario.replay(self.file)
         replayed_drops = [self.scenario.drop() for _ in range(self.num_drops)]
         self.scenario.stop()
-        
+
         # Compare the expected and replayed drops to make sure the generated information is identical
         for expected_drop, replayed_drop in zip(expected_drops, replayed_drops):
-            
             self.assertEqual(expected_drop.timestamp, replayed_drop.timestamp)
             self.assertEqual(expected_drop.num_device_receptions, replayed_drop.num_device_transmissions)
 
@@ -98,6 +92,5 @@ class TestRecordReplay(TestCase):
         replay_scenario.stop()
 
         for expected_drop, replayed_drop in zip(expected_drops, replayed_drops):
-
             self.assertEqual(expected_drop.timestamp, replayed_drop.timestamp)
             self.assertEqual(expected_drop.num_device_receptions, replayed_drop.num_device_transmissions)
