@@ -30,93 +30,81 @@ class MockWaveformGenerator(WaveformGenerator):
     """Mock communication waveform for modem testing"""
 
     symbol_rate = 1e9
-    
+
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, modulation_order=2, **kwargs)
-    
+
     @property
     def symbols_per_frame(self) -> int:
-        
         return 100
-    
+
     @property
     def num_data_symbols(self) -> int:
         return self.symbols_per_frame
 
     @property
     def bit_energy(self) -> float:
-    
-        return 1.
-    
+        return 1.0
+
     @property
     def symbol_energy(self) -> float:
-        
-        return 1.
-    
+        return 1.0
+
     @property
     def power(self) -> float:
-        
-        return 1.
-    
+        return 1.0
+
     @property
     def samples_per_frame(self) -> int:
         return self.symbols_per_frame * self.oversampling_factor
-    
+
     @property
     def symbol_duration(self) -> float:
         return 1 / self.symbol_rate
-    
+
     def map(self, data_bits: np.ndarray) -> Symbols:
-        
         return Symbols(data_bits[np.newaxis, :, np.newaxis])
-    
+
     def unmap(self, symbols: Symbols) -> np.ndarray:
-        
         return symbols.raw.real.flatten()
-    
+
     def place(self, symbols: Symbols) -> Symbols:
         return symbols
-    
+
     def pick(self, placed_symbols: StatedSymbols) -> StatedSymbols:
         return placed_symbols
-    
+
     def modulate(self, data_symbols: Symbols) -> np.ndarray:
-        
         return data_symbols.raw.flatten().repeat(self.oversampling_factor)
 
     def demodulate(self, signal: np.ndarray) -> Symbols:
-        
-        symbols = Symbols(signal[np.newaxis, :self.oversampling_factor * self.symbols_per_frame:self.oversampling_factor, np.newaxis])
+        symbols = Symbols(signal[np.newaxis, : self.oversampling_factor * self.symbols_per_frame : self.oversampling_factor, np.newaxis])
         return symbols
-    
+
     @property
     def bandwidth(self) -> float:
-        
         return self.sampling_rate
-    
+
     @property
     def sampling_rate(self) -> float:
-        
         return self.symbol_rate * self.oversampling_factor
-    
-    
+
+
 class MockPilotWaveformGenerator(MockWaveformGenerator, ConfigurablePilotWaveform):
     """Mock communication waveform for modem testing"""
-    
+
     def pilot_signal(self) -> Signal:
         return Signal(np.zeros(self.samples_per_frame), self.sampling_rate)
-        
-        
+
+
 class TestSynchronization(unittest.TestCase):
     """Test waveform generator synchronization base class"""
 
     def setUp(self) -> None:
-
         self.rng = np.random.default_rng(42)
         self.synchronization = Synchronization()
         self.waveform_generator = MockWaveformGenerator()
         self.waveform_generator.synchronization = self.synchronization
-
 
     def test_init(self) -> None:
         """Initialization parameters should be properly stored as object attributes"""
@@ -136,9 +124,9 @@ class TestSynchronization(unittest.TestCase):
 
     def test_synchronize_validation(self) -> None:
         """Synchronization shoul raise RuntimeError if no waveform is assigned"""
-        
+
         self.synchronization.waveform_generator = None
-        
+
         with self.assertRaises(RuntimeError):
             _ = self.synchronization.synchronize(np.zeros(10))
 
@@ -156,97 +144,91 @@ class TestSynchronization(unittest.TestCase):
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""
-        
-        with patch('hermespy.modem.waveform.Synchronization.property_blacklist', new_callable=PropertyMock) as blacklist:
-        
-            blacklist.return_value  = {'waveform_generator',}
+
+        with patch("hermespy.modem.waveform.Synchronization.property_blacklist", new_callable=PropertyMock) as blacklist:
+            blacklist.return_value = {"waveform_generator"}
             test_yaml_roundtrip_serialization(self, self.synchronization)
-        
-        
+
+
 class TestChannelEstimation(unittest.TestCase):
-    
     def setUp(self) -> None:
-        
         self.waveform = MockWaveformGenerator()
         self.estimation = ChannelEstimation(self.waveform)
-        
+
     def test_init(self) -> None:
         """Initialization should properly set class properties"""
-        
+
         self.assertIs(self.waveform, self.estimation.waveform_generator)
 
     def test_waveform_generator(self) -> None:
         """Waveform generator property should properly rebind estimations"""
-        
+
         new_waveform = MockWaveformGenerator()
-        
+
         self.estimation.waveform_generator = new_waveform
         self.assertIsNot(self.waveform.channel_estimation, self.estimation)
         self.assertIs(new_waveform, self.estimation.waveform_generator)
-        
+
         self.estimation.waveform_generator = None
         self.assertIsNot(new_waveform, self.estimation.waveform_generator)
         self.assertIsNone(self.estimation.waveform_generator)
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""
-        
-        with patch('hermespy.modem.waveform.ChannelEstimation.property_blacklist', new_callable=PropertyMock) as blacklist:
-        
-            blacklist.return_value  = {'waveform_generator',}
+
+        with patch("hermespy.modem.waveform.ChannelEstimation.property_blacklist", new_callable=PropertyMock) as blacklist:
+            blacklist.return_value = {"waveform_generator"}
             test_yaml_roundtrip_serialization(self, self.estimation)
 
 
 class TestChannelEqualization(unittest.TestCase):
     """Test channel equalization base class"""
-    
+
     def setUp(self) -> None:
-        
         self.waveform = MockWaveformGenerator()
         self.equalization = ChannelEqualization(self.waveform)
-        
+
     def test_waveform_validation(self) -> None:
         """Waveform setter should raise RuntimeError if already assigned to a waveform"""
 
         with self.assertRaises(RuntimeError):
             self.equalization.waveform_generator = MockWaveformGenerator()
-            
+
     def test_equalize_channel(self) -> None:
         """Equalization should be a stub returing the symbols"""
 
         symbols = Mock()
         equalized_symbols = self.equalization.equalize_channel(symbols)
-        
+
         self.assertIs(symbols, equalized_symbols)
-        
+
 
 class TestZeroForcingEqualization(unittest.TestCase):
     """Test zero-forcing channel equalization"""
-    
+
     def setUp(self) -> None:
-        
         self.rng = np.random.default_rng(42)
-        
+
         self.waveform = MockWaveformGenerator()
         self.equalization = ZeroForcingChannelEqualization(self.waveform)
-        
+
         num_bits = self.waveform.bits_per_frame(self.waveform.num_data_symbols)
         self.raw_symbols = self.waveform.map(self.rng.uniform(0, 2, num_bits))
         self.raw_state = np.ones((1, 1, self.raw_symbols.num_blocks, self.raw_symbols.num_symbols))
         self.symbols = StatedSymbols(self.raw_symbols.raw, self.raw_state)
-        
+
     def test_siso_equalization(self) -> None:
         """Test ZF equalization in the SISO case"""
-        
+
         equalized_symbols = self.equalization.equalize_channel(self.symbols)
         assert_array_almost_equal(self.symbols.raw, equalized_symbols.raw)
 
     def test_simo_equalization(self) -> None:
         """Test ZF equalization in the SIMO case"""
-        
+
         self.raw_state = np.ones((2, 1, self.raw_symbols.num_blocks, self.raw_symbols.num_symbols))
         propagated_symbols = StatedSymbols(np.repeat(self.raw_symbols.raw, 2, axis=0), self.raw_state)
-        
+
         equalized_symbols = self.equalization.equalize_channel(propagated_symbols)
         assert_array_almost_equal(self.symbols.raw, equalized_symbols.raw)
 
@@ -255,7 +237,6 @@ class TestWaveformGenerator(unittest.TestCase):
     """Test the communication waveform generator unit"""
 
     def setUp(self) -> None:
-
         self.rnd = rnd.default_rng(42)
         self.modem = Mock()
 
@@ -268,7 +249,7 @@ class TestWaveformGenerator(unittest.TestCase):
 
     def test_oversampling_factor_validation(self) -> None:
         """Oversampling factor property setter should raise a ValueError on invalid arguments"""
-        
+
         with self.assertRaises(ValueError):
             self.waveform_generator.oversampling_factor = 0
 
@@ -311,7 +292,6 @@ class TestWaveformGenerator(unittest.TestCase):
         expected_num_frames_candidates = [0, 1, 1, 1]
 
         for num_samples, expected_num_frames in zip(num_samples_test, expected_num_frames_candidates):
-
             signal = np.exp(2j * self.rnd.uniform(0, pi, (num_streams, 1))) @ np.exp(2j * self.rnd.uniform(0, pi, (1, num_samples)))
 
             synchronized_frames = self.waveform_generator.synchronization.synchronize(signal)
@@ -324,30 +304,26 @@ class TestWaveformGenerator(unittest.TestCase):
         """Synchronization should raise a ValueError if the signal shape does match the stream response shape"""
 
         with self.assertRaises(ValueError):
-            _ = self.waveform_generator.synchronization.synchronize(np.zeros(10),
-                                                                    ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE,
-                                                                    np.zeros((10, 2))))
+            _ = self.waveform_generator.synchronization.synchronize(np.zeros(10), ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE, np.zeros((10, 2))))
 
         with self.assertRaises(ValueError):
-            _ = self.waveform_generator.synchronization.synchronize(np.zeros((10, 2)),
-                                                                    ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE,
-                                                                    np.zeros((10, 2))))
+            _ = self.waveform_generator.synchronization.synchronize(np.zeros((10, 2)), ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE, np.zeros((10, 2))))
 
     def test_data_rate(self) -> None:
         """Data rate method should compute the correct data rate"""
-        
+
         num_data_symbols = 10
         a = self.waveform_generator.bits_per_frame(num_data_symbols)
         b = self.waveform_generator.frame_duration
-        
+
         self.assertAlmostEqual(a / b, self.waveform_generator.data_rate(num_data_symbols))
-        
+
     def test_modem_set_none(self) -> None:
         """Modem property setter should abort if nothings to be done"""
-        
+
         self.waveform_generator = MockWaveformGenerator()
         self.waveform_generator.modem = None
-        
+
         self.assertIsNone(self.waveform_generator.modem)
 
     def test_modem_setget(self) -> None:
@@ -359,15 +335,15 @@ class TestWaveformGenerator(unittest.TestCase):
 
         self.assertIs(self.waveform_generator, modem.waveform_generator)
         self.assertIs(self.waveform_generator.modem, modem)
-        
+
         self.waveform_generator.modem = None
-        
+
         self.assertIsNone(modem.waveform_generator)
         self.assertIsNone(self.waveform_generator.modem)
-        
+
     def test_symbol_precoding_support(self) -> None:
         """Symbol precoding should be supported"""
-        
+
         self.assertTrue(self.waveform_generator.symbol_precoding_support)
 
 
@@ -385,26 +361,24 @@ class TestUniformPilotSymbolSequence(unittest.TestCase):
 
 class TestConfigurablePilotWaveform(unittest.TestCase):
     """Test the configurable pilot waveform"""
-    
+
     def setUp(self) -> None:
-        
         self.pilot_symbols = np.array([1.234 - 1234j, 2.345 + 2345j, 3.456 - 3456j])
         self.pilot_sequence = CustomPilotSymbolSequence(self.pilot_symbols)
-        
+
         self.waveform_generator = MockPilotWaveformGenerator()
         self.waveform_generator.pilot_symbol_sequence = self.pilot_sequence
-        
+
     def test_pilot_symbols_validation(self) -> None:
         """Pilot symbol generator should raise RuntimeError if repetition required but flag disabled"""
-        
+
         self.waveform_generator.repeat_pilot_symbol_sequence = False
-        
+
         with self.assertRaises(RuntimeError):
             self.waveform_generator.pilot_symbols(9)
-        
+
     def test_pilot_symbols(self) -> None:
         """Pilot symbols generator routine should compute correct pilot symbol sequences"""
-        
+
         symbols = self.waveform_generator.pilot_symbols(3)
         assert_array_equal(self.pilot_symbols, symbols)
-    

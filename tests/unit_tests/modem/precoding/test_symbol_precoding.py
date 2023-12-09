@@ -21,9 +21,7 @@ __status__ = "Prototype"
 
 
 class TestSymbolPrecoding(unittest.TestCase):
-
     def setUp(self) -> None:
-
         # Random rng
         self.generator = np.random.default_rng(42)
 
@@ -37,30 +35,30 @@ class TestSymbolPrecoding(unittest.TestCase):
         """Object init arguments should be properly stored as class attributes."""
 
         self.assertIs(self.modem, self.precoding.modem)
-        
+
     def test_encode(self) -> None:
         """Encoding should be delegated to the registeded precoders"""
-        
+
         encoder = Mock(spec=SymbolPrecoder)
         encoder.rate = Fraction(1, 1)
         self.precoding[0] = encoder
         symbols = Mock(spec=StatedSymbols)
         symbols.copy.return_value = symbols
         symbols.num_blocks = 1
-        
+
         self.precoding.encode(symbols)
-        
+
         encoder.encode.assert_called_once_with(symbols)
-        
+
     def test_decode(self) -> None:
         """Decoding should be delegated to the registeded precoders"""
-        
+
         decoder = Mock(spec=SymbolPrecoder)
         self.precoding[0] = decoder
         symbols = Mock()
-        
+
         self.precoding.decode(symbols)
-        
+
         decoder.decode.assert_called_once_with(symbols.copy())
 
     def test_rate(self) -> None:
@@ -76,22 +74,21 @@ class TestSymbolPrecoding(unittest.TestCase):
 
         expected_rate = precoder_alpha.rate * precoder_beta.rate
         self.assertEqual(expected_rate, self.precoding.rate)
-        
+
     def test_num_encoded_blocks(self) -> None:
         """Number of encoded blocks should be the multiplication of all precoder-rates."""
-        
+
         precoder_alpha = Mock()
         precoder_alpha.rate = Fraction(1, 2)
         self.precoding[0] = precoder_alpha
-        
+
         self.assertEqual(10, self.precoding.num_encoded_blocks(5))
-        
+
     def test_serialization(self) -> None:
         """Test YAML serialization"""
-        
+
         self.precoding[0] = DFT()
-        
-        with patch('hermespy.modem.precoding.SymbolPrecoding.modem', new_callable=PropertyMock) as modem:
-        
+
+        with patch("hermespy.modem.precoding.SymbolPrecoding.modem", new_callable=PropertyMock) as modem:
             modem.return_value = self.modem
             test_yaml_roundtrip_serialization(self, self.precoding)

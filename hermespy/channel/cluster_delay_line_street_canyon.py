@@ -156,7 +156,9 @@ class UrbanMicroCellsNoLineOfSight(ClusterDelayLineBase, metaclass=ABCMeta):
 
     @property
     def zod_offset(self) -> float:
-        device_distance = float(np.linalg.norm(self.beta_device.position - self.alpha_device.position, 2))
+        device_distance = float(
+            np.linalg.norm(self.beta_device.position - self.alpha_device.position, 2)
+        )
         return -(10 ** (-1.5 * log10(max(10, device_distance)) + 3.3))
 
 

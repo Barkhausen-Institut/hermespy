@@ -11,7 +11,16 @@ from numpy import cos, exp
 from scipy.constants import pi
 from sparse import GCXS  # type: ignore
 
-from hermespy.core import ChannelStateInformation, ChannelStateFormat, Device, HDFSerializable, Serializable, Signal, VAT, Visualizable
+from hermespy.core import (
+    ChannelStateInformation,
+    ChannelStateFormat,
+    Device,
+    HDFSerializable,
+    Serializable,
+    Signal,
+    VAT,
+    Visualizable,
+)
 from .channel import Channel, ChannelRealization, InterpolationMode
 
 if TYPE_CHECKING:
@@ -33,7 +42,9 @@ class AntennaCorrelation(ABC):
     __channel: Channel | None
     __device: SimulatedDevice | None
 
-    def __init__(self, channel: Channel | None = None, device: SimulatedDevice | None = None) -> None:
+    def __init__(
+        self, channel: Channel | None = None, device: SimulatedDevice | None = None
+    ) -> None:
         self.channel = channel
         self.device = device
 
@@ -97,8 +108,13 @@ class CustomAntennaCorrelation(Serializable, AntennaCorrelation):
 
     @property
     def covariance(self) -> np.ndarray:
-        if self.device is not None and self.device.num_antennas != self.__covariance_matrix.shape[0]:
-            raise RuntimeError(f"Device with {self.device.num_antennas} antennas does not match covariance matrix of magnitude {self.__covariance_matrix.shape[0]}")
+        if (
+            self.device is not None
+            and self.device.num_antennas != self.__covariance_matrix.shape[0]
+        ):
+            raise RuntimeError(
+                f"Device with {self.device.num_antennas} antennas does not match covariance matrix of magnitude {self.__covariance_matrix.shape[0]}"
+            )
 
         return self.__covariance_matrix
 
@@ -134,7 +150,19 @@ class PathRealization(HDFSerializable):
     __nlos_phases: np.ndarray
     __nlos_doppler: float
 
-    def __init__(self, power: float, delay: float, los_gain: float, los_angle: float, los_phase: float, los_doppler: float, nlos_gain: float, nlos_angles: np.ndarray, nlos_phases: np.ndarray, nlos_doppler: float) -> None:
+    def __init__(
+        self,
+        power: float,
+        delay: float,
+        los_gain: float,
+        los_angle: float,
+        los_phase: float,
+        los_doppler: float,
+        nlos_gain: float,
+        nlos_angles: np.ndarray,
+        nlos_phases: np.ndarray,
+        nlos_doppler: float,
+    ) -> None:
         """
         Args:
 
@@ -192,7 +220,18 @@ class PathRealization(HDFSerializable):
         self.__nlos_doppler = nlos_doppler
 
     @classmethod
-    def Realize(cls: Type[PathRealization], power: float, delay: float, los_gain: float, nlos_gain, los_doppler: float, nlos_doppler: float, los_angle: float | None = None, num_sinusoids: int = 20, rng: np.random.Generator | None = None) -> PathRealization:
+    def Realize(
+        cls: Type[PathRealization],
+        power: float,
+        delay: float,
+        los_gain: float,
+        nlos_gain,
+        los_doppler: float,
+        nlos_doppler: float,
+        los_angle: float | None = None,
+        num_sinusoids: int = 20,
+        rng: np.random.Generator | None = None,
+    ) -> PathRealization:
         """Realize the path's random variables.
 
         Args:
@@ -219,7 +258,18 @@ class PathRealization(HDFSerializable):
         nlos_phases = _rng.uniform(0, 2 * pi, num_sinusoids)
 
         # Intialize object from random realizations
-        return cls(power, delay, los_gain, los_angle, los_phase, los_doppler, nlos_gain, nlos_angles, nlos_phases, nlos_doppler)
+        return cls(
+            power,
+            delay,
+            los_gain,
+            los_angle,
+            los_phase,
+            los_doppler,
+            nlos_gain,
+            nlos_angles,
+            nlos_phases,
+            nlos_doppler,
+        )
 
     @property
     def power(self) -> float:
@@ -330,7 +380,7 @@ class PathRealization(HDFSerializable):
     def nlos_doppler(self) -> float:
         """Doppler frequency of the path's non-specular components in Hz.
 
-        Represented by :math:`\\omega_{\\ell} within the respective equations.
+        Represented by :math:`\\omega_{\\ell}` within the respective equations.
         """
 
         return self.__nlos_doppler
@@ -352,11 +402,19 @@ class PathRealization(HDFSerializable):
 
         # Sum up and normalize all non-specular components
         for s, (nlos_angle, nlos_phase) in enumerate(zip(self.nlos_angles, self.nlos_phases)):
-            impulse_response += exp(1j * (self.nlos_doppler * timestamps * cos((2 * pi * s + nlos_angle) / num_sinusoids) + nlos_phase))
+            impulse_response += exp(
+                1j
+                * (
+                    self.nlos_doppler * timestamps * cos((2 * pi * s + nlos_angle) / num_sinusoids)
+                    + nlos_phase
+                )
+            )
         impulse_response *= self.nlos_gain * (num_sinusoids**-0.5)
 
         # Add the specular component
-        impulse_response += self.los_gain * exp(1j * (self.los_doppler * timestamps * cos(self.los_angle) + self.los_phase))
+        impulse_response += self.los_gain * exp(
+            1j * (self.los_doppler * timestamps * cos(self.los_angle) + self.los_phase)
+        )
 
         # Scale by the overall path power
         impulse_response *= self.power**0.5
@@ -406,7 +464,18 @@ class PathRealization(HDFSerializable):
         nlos_angles = np.array(group["nlos_angles"], dtype=np.float_)
         nlos_phases = np.array(group["nlos_phases"], dtype=np.float_)
 
-        return cls(power, delay, los_gain, los_angle, los_phase, los_doppler, nlos_gain, nlos_angles, nlos_phases, nlos_doppler)
+        return cls(
+            power,
+            delay,
+            los_gain,
+            los_angle,
+            los_phase,
+            los_doppler,
+            nlos_gain,
+            nlos_angles,
+            nlos_phases,
+            nlos_doppler,
+        )
 
 
 class MultipathFadingRealization(ChannelRealization, Visualizable):
@@ -419,7 +488,16 @@ class MultipathFadingRealization(ChannelRealization, Visualizable):
     __spatial_response: np.ndarray
     __max_delay: float
 
-    def __init__(self, alpha_device: Device, beta_device: Device, gain: float, path_realizations: Sequence[PathRealization], spatial_response: np.ndarray, max_delay: float, interpolation_mode: InterpolationMode = InterpolationMode.NEAREST) -> None:
+    def __init__(
+        self,
+        alpha_device: Device,
+        beta_device: Device,
+        gain: float,
+        path_realizations: Sequence[PathRealization],
+        spatial_response: np.ndarray,
+        max_delay: float,
+        interpolation_mode: InterpolationMode = InterpolationMode.NEAREST,
+    ) -> None:
         """
         Args:
 
@@ -451,7 +529,9 @@ class MultipathFadingRealization(ChannelRealization, Visualizable):
         self.__spatial_response = spatial_response
 
         # Infer additional parameters
-        self.__max_delay = max(path.delay for path in path_realizations) if max_delay is None else max_delay
+        self.__max_delay = (
+            max(path.delay for path in path_realizations) if max_delay is None else max_delay
+        )
 
     @classmethod
     def Realize(
@@ -496,7 +576,9 @@ class MultipathFadingRealization(ChannelRealization, Visualizable):
         _rng = np.random.default_rng() if rng is None else rng
 
         # Generate MIMO channel response
-        spatial_response = np.exp(1j * _rng.uniform(0, 2 * pi, (beta_device.num_antennas, alpha_device.num_antennas)))
+        spatial_response = np.exp(
+            1j * _rng.uniform(0, 2 * pi, (beta_device.num_antennas, alpha_device.num_antennas))
+        )
 
         # Apply antenna array correlation models
         if alpha_correlation is not None:
@@ -507,7 +589,19 @@ class MultipathFadingRealization(ChannelRealization, Visualizable):
         # Generate path realizations
         path_realizations: List[PathRealization] = []
         for power, delay, los_gain, nlos_gain in zip(power_profile, delays, los_gains, nlos_gains):
-            path_realizations.append(PathRealization.Realize(power, delay, los_gain, nlos_gain, los_doppler, nlos_doppler, los_angle, num_sinusoids, _rng))
+            path_realizations.append(
+                PathRealization.Realize(
+                    power,
+                    delay,
+                    los_gain,
+                    nlos_gain,
+                    los_doppler,
+                    nlos_doppler,
+                    los_angle,
+                    num_sinusoids,
+                    _rng,
+                )
+            )
 
         max_delay = delays.max()
         return cls(alpha_device, beta_device, gain, path_realizations, spatial_response, max_delay)
@@ -543,9 +637,19 @@ class MultipathFadingRealization(ChannelRealization, Visualizable):
         if transmitter == self.beta_device and receiver == self.alpha_device:
             return self.__spatial_response.T
 
-        raise ValueError("The provided transmitter and receiver do not match the devices the channel was realized for")
+        raise ValueError(
+            "The provided transmitter and receiver do not match the devices the channel was realized for"
+        )
 
-    def state(self, transmitter: Device, receiver: Device, delay: float, sampling_rate: float, num_samples: int, max_num_taps: int) -> ChannelStateInformation:
+    def state(
+        self,
+        transmitter: Device,
+        receiver: Device,
+        delay: float,
+        sampling_rate: float,
+        num_samples: int,
+        max_num_taps: int,
+    ) -> ChannelStateInformation:
         spatial_response = self.__directive_spatial_response(transmitter, receiver)
         num_taps = min(1 + int(self.__max_delay * sampling_rate), max_num_taps)
         timestamps = np.arange(num_samples) / sampling_rate + delay
@@ -558,16 +662,29 @@ class MultipathFadingRealization(ChannelRealization, Visualizable):
             if tap_index > num_taps:
                 continue
 
-            siso_csi[:, tap_index] = siso_csi[:, tap_index] + path_realization._impulse_response(timestamps)
+            siso_csi[:, tap_index] = siso_csi[:, tap_index] + path_realization._impulse_response(
+                timestamps
+            )
 
         # For the multipath fading model, the MIMO CSI is the outer product of the SISO CSI with the spatial response
         # The resulting multidimensional array is sparse in its fourth dimension and converted to a GCXS array for memory efficiency
-        mimo_csi = GCXS.from_numpy(np.einsum("ij,kl->ijkl", spatial_response * self.gain**0.5, siso_csi), compressed_axes=(0, 1, 2))
+        mimo_csi = GCXS.from_numpy(
+            np.einsum("ij,kl->ijkl", spatial_response * self.gain**0.5, siso_csi),
+            compressed_axes=(0, 1, 2),
+        )
 
-        state = ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE, mimo_csi, num_delay_taps=num_taps)
+        state = ChannelStateInformation(
+            ChannelStateFormat.IMPULSE_RESPONSE, mimo_csi, num_delay_taps=num_taps
+        )
         return state
 
-    def _propagate(self, signal: Signal, transmitter: Device, receiver: Device, interpolation: InterpolationMode) -> Signal:
+    def _propagate(
+        self,
+        signal: Signal,
+        transmitter: Device,
+        receiver: Device,
+        interpolation: InterpolationMode,
+    ) -> Signal:
         # Infer propagation direction and transmpose spatial response if necessary
         spatial_response = self.__directive_spatial_response(transmitter, receiver)
         sampling_rate = signal.sampling_rate
@@ -575,16 +692,26 @@ class MultipathFadingRealization(ChannelRealization, Visualizable):
         num_transmitted_samples = signal.num_samples + max_delay_in_samples
 
         # Propagate the transmitted samples
-        propagated_samples = np.zeros((spatial_response.shape[0], num_transmitted_samples), dtype=np.complex_)
+        propagated_samples = np.zeros(
+            (spatial_response.shape[0], num_transmitted_samples), dtype=np.complex_
+        )
         for path_realization in self.path_realizations:
             num_delay_samples = int(path_realization.delay * sampling_rate)
-            propagated_samples[:, num_delay_samples : num_delay_samples + signal.num_samples] += path_realization.propagate(signal)
+            propagated_samples[
+                :, num_delay_samples : num_delay_samples + signal.num_samples
+            ] += path_realization.propagate(signal)
 
         # Apply the channel's spatial response
         propagated_samples = spatial_response @ propagated_samples
 
         # Return the result
-        propagated_signal = Signal(propagated_samples, sampling_rate, carrier_frequency=signal.carrier_frequency, delay=signal.delay, noise_power=signal.noise_power)
+        propagated_signal = Signal(
+            propagated_samples,
+            sampling_rate,
+            carrier_frequency=signal.carrier_frequency,
+            delay=signal.delay,
+            noise_power=signal.noise_power,
+        )
         return propagated_signal
 
     def _plot(self, axes: VAT) -> None:
@@ -607,15 +734,27 @@ class MultipathFadingRealization(ChannelRealization, Visualizable):
         HDFSerializable._write_dataset(group, "spatial_response", self.__spatial_response)
 
         for r, path_realization in enumerate(self.__path_realizations):
-            path_realization.to_HDF(HDFSerializable._create_group(group, f"path_realization_{r:02d}"))
+            path_realization.to_HDF(
+                HDFSerializable._create_group(group, f"path_realization_{r:02d}")
+            )
 
     @classmethod
-    def From_HDF(cls: Type[MultipathFadingRealization], group: Group, alpha_device: Device, beta_device: Device) -> MultipathFadingRealization:
+    def From_HDF(
+        cls: Type[MultipathFadingRealization],
+        group: Group,
+        alpha_device: Device,
+        beta_device: Device,
+    ) -> MultipathFadingRealization:
         initialization_parameters = cls._parameters_from_HDF(group)
         num_path_realizations = group.attrs["num_path_realizations"]
         initialization_parameters["max_delay"] = group.attrs["max_delay"]
-        initialization_parameters["path_realizations"] = [PathRealization.from_HDF(group[f"path_realization_{r:02d}"]) for r in range(num_path_realizations)]
-        initialization_parameters["spatial_response"] = np.array(group["spatial_response"], dtype=np.complex_)
+        initialization_parameters["path_realizations"] = [
+            PathRealization.from_HDF(group[f"path_realization_{r:02d}"])
+            for r in range(num_path_realizations)
+        ]
+        initialization_parameters["spatial_response"] = np.array(
+            group["spatial_response"], dtype=np.complex_
+        )
 
         return cls(alpha_device, beta_device, **initialization_parameters)
 
@@ -732,17 +871,27 @@ class MultipathFadingChannel(Channel[MultipathFadingRealization], Serializable):
 
         # Convert delays, power profile and rice factors to numpy arrays if they were provided as lists
         self.__delays = np.array(delays) if isinstance(delays, list) else delays
-        self.__power_profile = np.array(power_profile) if isinstance(power_profile, list) else power_profile
-        self.__rice_factors = np.array(rice_factors) if isinstance(rice_factors, list) else rice_factors
+        self.__power_profile = (
+            np.array(power_profile) if isinstance(power_profile, list) else power_profile
+        )
+        self.__rice_factors = (
+            np.array(rice_factors) if isinstance(rice_factors, list) else rice_factors
+        )
 
-        if self.__delays.ndim != 1 or self.__power_profile.ndim != 1 or self.__rice_factors.ndim != 1:
+        if (
+            self.__delays.ndim != 1
+            or self.__power_profile.ndim != 1
+            or self.__rice_factors.ndim != 1
+        ):
             raise ValueError("Delays, power profile and rice factors must be vectors")
 
         if len(delays) < 1:
             raise ValueError("Configuration must contain at least one delay tap")
 
         if len(delays) != len(power_profile) or len(power_profile) != len(rice_factors):
-            raise ValueError("Delays, power profile and rice factor vectors must be of equal length")
+            raise ValueError(
+                "Delays, power profile and rice factor vectors must be of equal length"
+            )
 
         if np.any(self.__delays < 0.0):
             raise ValueError("Delays must be greater or equal to zero")
@@ -779,7 +928,9 @@ class MultipathFadingChannel(Channel[MultipathFadingRealization], Serializable):
         self.__non_los_gains = np.empty(self.num_resolvable_paths, dtype=float)
 
         self.__los_gains[rice_inf_pos] = 1.0
-        self.__los_gains[rice_num_pos] = np.sqrt(self.__rice_factors[rice_num_pos] / (1 + self.__rice_factors[rice_num_pos]))
+        self.__los_gains[rice_num_pos] = np.sqrt(
+            self.__rice_factors[rice_num_pos] / (1 + self.__rice_factors[rice_num_pos])
+        )
         self.__non_los_gains[rice_num_pos] = 1 / np.sqrt(1 + self.__rice_factors[rice_num_pos])
         self.__non_los_gains[rice_inf_pos] = 0.0
 
@@ -913,7 +1064,22 @@ class MultipathFadingChannel(Channel[MultipathFadingRealization], Serializable):
         self.__los_angle = angle
 
     def _realize(self) -> MultipathFadingRealization:
-        return MultipathFadingRealization.Realize(self.alpha_device, self.beta_device, self.gain, self.__power_profile, self.__delays, self.__los_gains, self.__non_los_gains, self.los_doppler_frequency, self.doppler_frequency, self.alpha_correlation, self.beta_correlation, self.los_angle, self.__num_sinusoids, self._rng)
+        return MultipathFadingRealization.Realize(
+            self.alpha_device,
+            self.beta_device,
+            self.gain,
+            self.__power_profile,
+            self.__delays,
+            self.__los_gains,
+            self.__non_los_gains,
+            self.los_doppler_frequency,
+            self.doppler_frequency,
+            self.alpha_correlation,
+            self.beta_correlation,
+            self.los_angle,
+            self.__num_sinusoids,
+            self._rng,
+        )
 
     @property
     def alpha_correlation(self) -> AntennaCorrelation | None:

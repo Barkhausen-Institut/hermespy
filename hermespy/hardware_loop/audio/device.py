@@ -13,13 +13,14 @@ which is typically either :math:`44.1~\\mathrm{kHz}` or :math:`48~\\mathrm{kHz}`
 """
 
 from __future__ import annotations
+from abc import ABC, abstractmethod
 from types import ModuleType
-from typing import List, Optional, Sequence
+from typing import Optional, Sequence
 
 import numpy as np
 from scipy.fft import fft, ifft
 
-from hermespy.core import Serializable, Signal, Antenna, AntennaArrayBase
+from hermespy.core import AntennaMode, Serializable, Signal, Antenna, AntennaArray, AntennaPort
 from ..physical_device import PhysicalDevice
 
 __author__ = "Jan Adler"
@@ -39,32 +40,144 @@ class AudioAntenna(Antenna):
         return np.array([2**0.5, 2**0.5], dtype=float)
 
 
-class AudioDeviceAntennas(AntennaArrayBase):
+class AudioPort(ABC, AntennaPort[AudioAntenna, "AudioDeviceAntennas"]):
+    """Antenna port model for audio devices."""
+
+    @property
+    @abstractmethod
+    def channel(self) -> int:
+        """Audio channel index."""
+        ...  # pragma: no cover
+
+
+class AudioPlaybackPort(AudioPort):
+    """Antenna transmit port model for audio devices.
+
+    Represents a single transmitting audio channel of a soundcard.
+    """
+
+    __channel: int
+
+    def __init__(self, array: AudioDeviceAntennas, channel: int) -> None:
+        """
+        Args:
+
+            array (AudioDeviceAntennas):
+                Antenna array to which the port belongs.
+
+            channel (int):
+                Recording audio channel index.
+        """
+
+        # Save attributes
+        self.__channel = channel
+
+        # Initialize base class
+        antennas = [AudioAntenna(AntennaMode.TX)]
+        AntennaPort.__init__(self, antennas, None, array)
+
+    @property
+    def channel(self) -> int:
+        """Recording audio channel index."""
+
+        return self.__channel
+
+
+class AudioRecordPort(AudioPort):
+    """Antenna receive port model for audio devices.
+
+    Represents a single receiving audio channel of a soundcard.
+    """
+
+    def __init__(self, array: AudioDeviceAntennas, channel: int) -> None:
+        """
+        Args:
+
+            array (AudioDeviceAntennas):
+                Antenna array to which the port belongs.
+
+            channel (int):
+                Recording audio channel index.
+        """
+
+        # Initialize base class
+        antennas = [AudioAntenna(AntennaMode.RX)]
+        AntennaPort.__init__(self, antennas, None, array)
+
+        # Save attributes
+        self.__channel = channel
+
+    @property
+    def channel(self) -> int:
+        """Recording audio channel index."""
+
+        return self.__channel
+
+
+class AudioDeviceAntennas(AntennaArray[AudioPort, AudioAntenna]):
     """Antenna array information for audio devices."""
 
     __device: AudioDevice
 
     def __init__(self, device: AudioDevice) -> None:
         # Initialize base class
-        AntennaArrayBase.__init__(self)
+        AntennaArray.__init__(self)
 
         # Save attributes
         self.__device = device
 
+        # Create ports
+        self.__transmit_ports = [
+            AudioPlaybackPort(self, channel) for channel in self.__device.playback_channels
+        ]
+        self.__receiver_ports = [
+            AudioRecordPort(self, channel) for channel in self.__device.record_channels
+        ]
+
+        # Configure the kinematics
+        self.set_base(device)
+
+    def _new_port(self) -> AudioPort:
+        raise RuntimeError("Audio antenna arrays can't create new ports")
+
+    @property
+    def ports(self) -> Sequence[AudioPort]:
+        return [*self.__transmit_ports, *self.__receiver_ports]
+
+    @property
+    def transmit_ports(self) -> Sequence[AudioPlaybackPort]:
+        return self.__transmit_ports
+
+    @property
+    def receive_ports(self) -> Sequence[AudioRecordPort]:
+        return self.__receiver_ports
+
     @property
     def num_antennas(self) -> int:
+        return len(self.__transmit_ports) + len(self.__receiver_ports)
+
+    @property
+    def num_receive_antennas(self) -> int:
         return len(self.__device.playback_channels)
 
     @property
-    def antennas(self) -> List[Antenna]:
-        return [AudioAntenna() for _ in range(self.num_antennas)]
+    def num_transmit_antennas(self) -> int:
+        return len(self.__device.record_channels)
 
 
 class AudioDevice(PhysicalDevice, Serializable):
     """HermesPy binding to an arbitrary audio device. Let's rock!"""
 
     yaml_tag = "AudioDevice"
-    property_blacklist = {"topology", "wavelength", "velocity", "orientation", "position", "random_mother", "antennas"}
+    property_blacklist = {
+        "topology",
+        "wavelength",
+        "velocity",
+        "orientation",
+        "position",
+        "random_mother",
+        "antennas",
+    }
 
     __playback_device: int  # Device over which audio streams are to be transmitted
     __record_device: int  # Device over which audio streams are to be received
@@ -72,8 +185,17 @@ class AudioDevice(PhysicalDevice, Serializable):
     __record_channels: Sequence[int]  # List of audio channel for signal reception
     __sampling_rate: float  # Configured sampling rate
     __transmission: Optional[np.ndarray]  # Configured transmission samples
+    __antennas: AudioDeviceAntennas  # Antenna array information
 
-    def __init__(self, playback_device: int, record_device: int, playback_channels: Sequence[int] | None = None, record_channels: Sequence[int] | None = None, sampling_rate: float = 48000, **kwargs) -> None:
+    def __init__(
+        self,
+        playback_device: int,
+        record_device: int,
+        playback_channels: Sequence[int] | None = None,
+        record_channels: Sequence[int] | None = None,
+        sampling_rate: float = 48000,
+        **kwargs,
+    ) -> None:
         """
         Args:
 
@@ -96,6 +218,10 @@ class AudioDevice(PhysicalDevice, Serializable):
                 48 kHz by default.
         """
 
+        # Initialize base class
+        PhysicalDevice.__init__(self, **kwargs)
+
+        # Initialize attributes
         self.playback_device = playback_device
         self.record_device = record_device
         self.playback_channels = [1] if playback_channels is None else playback_channels
@@ -103,9 +229,11 @@ class AudioDevice(PhysicalDevice, Serializable):
         self.sampling_rate = sampling_rate
         self.__transmission = None
         self.__reception = np.empty(0, float)
+        self.__antennas = AudioDeviceAntennas(self)
 
-        antennas = AudioDeviceAntennas(self)
-        PhysicalDevice.__init__(self, antennas=antennas, **kwargs)
+    @property
+    def antennas(self) -> AudioDeviceAntennas:
+        return self.__antennas
 
     @property
     def playback_device(self) -> int:
@@ -202,20 +330,36 @@ class AudioDevice(PhysicalDevice, Serializable):
 
         # Mix to to positive frequencies for audio transmission
         resampled_samples = signal.resample(self.sampling_rate).samples
-        pressure_signal = np.roll(fft(resampled_samples), int(0.25 * resampled_samples.shape[1]), axis=1)
+        pressure_signal = np.roll(
+            fft(resampled_samples), int(0.25 * resampled_samples.shape[1]), axis=1
+        )
         pressure_signal[:, int(0.5 * pressure_signal.shape[1]) :] = 0.0
         pressure_signal = ifft(pressure_signal, axis=1).real
-        pressure_signal = np.append(pressure_signal, np.zeros((pressure_signal.shape[0], delay_samples), dtype=float), axis=1)
+        pressure_signal = np.append(
+            pressure_signal,
+            np.zeros((pressure_signal.shape[0], delay_samples), dtype=float),
+            axis=1,
+        )
 
         self.__transmission = pressure_signal.T
-        self.__reception = np.empty((self.__transmission.shape[0], len(self.__record_channels)), dtype=float)
+        self.__reception = np.empty(
+            (self.__transmission.shape[0], len(self.__record_channels)), dtype=float
+        )
 
     def trigger(self) -> None:
         # Import sounddevice
         sd = self.__import_sd()
 
         # Simultaneously play and record samples
-        sd.playrec(self.__transmission, self.sampling_rate, out=self.__reception, input_mapping=self.__record_channels, output_mapping=self.__playback_channels, device=(self.__record_device, self.__playback_device), blocking=False)
+        sd.playrec(
+            self.__transmission,
+            self.sampling_rate,
+            out=self.__reception,
+            input_mapping=self.__record_channels,
+            output_mapping=self.__playback_channels,
+            device=(self.__record_device, self.__playback_device),
+            blocking=False,
+        )
 
     def _download(self) -> Signal:
         # Import sounddevice

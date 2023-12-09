@@ -118,7 +118,9 @@ class PseudoRandomGenerator:
         return x1
 
     def __forward_x2(self) -> int:
-        x2 = (self.__queue_x2[-3] + self.__queue_x2[-2] + self.__queue_x2[-1] + self.__queue_x1[0]) % 2
+        x2 = (
+            self.__queue_x2[-3] + self.__queue_x2[-2] + self.__queue_x2[-1] + self.__queue_x1[0]
+        ) % 2
 
         self.__queue_x2.append(x2)
         return x2

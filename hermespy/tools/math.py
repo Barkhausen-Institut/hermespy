@@ -34,7 +34,9 @@ class DbConversionType(Enum):
 
 
 @jit(nopython=True)
-def db2lin(db_val: float, conversion_type: Optional[DbConversionType] = DbConversionType.POWER):  # pragma: no cover
+def db2lin(
+    db_val: float, conversion_type: Optional[DbConversionType] = DbConversionType.POWER
+):  # pragma: no cover
     """
     Converts from dB to linear
 
@@ -57,7 +59,9 @@ def db2lin(db_val: float, conversion_type: Optional[DbConversionType] = DbConver
 
 
 @jit(nopython=True)
-def lin2db(val: float, conversion_type: Optional[DbConversionType] = DbConversionType.POWER):  # pragma: no cover
+def lin2db(
+    val: float, conversion_type: Optional[DbConversionType] = DbConversionType.POWER
+):  # pragma: no cover
     """
     Converts from linear to dB
 
@@ -124,7 +128,9 @@ def amplitude_path_loss(carrier_frequency: float, distance: float) -> float:
     absolute_carrier = abs(carrier_frequency)
 
     if absolute_carrier == 0.0:
-        raise ValueError("Carrier frequency may not be zero for free space propagation path loss modeling")
+        raise ValueError(
+            "Carrier frequency may not be zero for free space propagation path loss modeling"
+        )
 
     # Note that the wavelength factor referes to the effective antenna aperture, so technically it's not part of the propagation loss
     wavelength = speed_of_light / absolute_carrier

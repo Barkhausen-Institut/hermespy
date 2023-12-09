@@ -72,16 +72,16 @@ class TestSymbols(TestCase):
 
         with self.assertRaises(ValueError):
             self.symbols.append_stream(np.zeros((3, 5, 5)))
-            
+
     def test_append_symbols_vector(self) -> None:
         """Append a vector of symbols should yield the correct object"""
-        
+
         initial_symbols = Symbols(self.raw_symbols.flatten())
-        
+
         appended_symbols = self.raw_symbols[0, :, 0]
         initial_symbols.append_symbols(appended_symbols)
-        
-        assert_array_equal(appended_symbols, initial_symbols.raw[0, -appended_symbols.size:, 0])
+
+        assert_array_equal(appended_symbols, initial_symbols.raw[0, -appended_symbols.size :, 0])
 
     def test_append_symbols(self) -> None:
         """Appending symbols should yield the correct object"""
@@ -146,6 +146,14 @@ class TestSymbols(TestCase):
 
             subplots_mock.assert_called_once()
             fig_mock.suptitle.assert_called_once()
+            subplots_mock.reset_mock()
+            fig_mock.reset_mock()
+            ax_mock.reset_mock()
+
+            axes = np.empty((1, 1), dtype=np.object_)
+            axes[0, 0] = ax_mock
+            self.symbols.plot_constellation(axes=axes)
+            ax_mock.scatter.assert_called_once()
 
     def test_hdf_serialization(self) -> None:
         """Serialization to and from HDF5 should yield the correct object reconstruction"""

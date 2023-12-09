@@ -20,31 +20,27 @@ __status__ = "Prototype"
 
 class DuplexOperatorMock(DuplexOperator[Transmission, Reception]):
     """Duplex operator mock implementation for testing purposes only"""
-    
+
     __sampling_rate: float = 1e9
     __num_frame_samples = 10
     __frame_duration: float = 10e-9
-    
-    
+
     def _transmit(self, duration: float = 0) -> Transmission:
-        
         samples = self._rng.normal(size=(self.device.antennas.num_transmit_antennas, self.__num_frame_samples))
         return Transmission(Signal(samples, self.__sampling_rate, self.device.carrier_frequency))
 
     def _receive(self, signal: Signal, csi: ChannelStateInformation) -> Reception:
-        
         return Reception(signal)
-    
+
     def sampling_rate(self) -> float:
-        
         return self.__sampling_rate
-    
+
     def frame_duration(self) -> float:
         return self.__frame_duration
-    
+
     def _noise_power(self, strength: float, snr_type: SNRType) -> float:
-        return 0.
-    
+        return 0.0
+
     def _recall_reception(self, group: Group) -> Reception:
         return Reception.from_HDF(group)
 
@@ -53,44 +49,42 @@ class DuplexOperatorMock(DuplexOperator[Transmission, Reception]):
 
 
 class TestDuplexOperator(TestCase):
-    
     def setUp(self) -> None:
-        
         self.device = SimulatedDevice()
         self.operator = DuplexOperatorMock(device=self.device, seed=42)
-        
+
     def test_init(self) -> None:
         """Initialization parameters should be properly stored as class atttributes"""
-        
+
         self.assertIs(self.device, self.operator.device)
-        
+
     def test_device_setget(self) -> None:
         """Device property getter should return setter argument"""
-        
+
         expected_device = SimulatedDevice()
         self.operator.device = expected_device
-        
+
         # Verify that the duplex operator has been assigned the device
         self.assertIs(expected_device, self.operator.device)
-        
+
         # Verify that the duplex operator is registered as both a transmitter and receiver
         self.assertIn(self.operator, expected_device.transmitters)
         self.assertIn(self.operator, expected_device.receivers)
-        
+
         # Verify that the duplex operator has been dropped as an operator by the old device
         self.assertNotIn(self.operator, self.device.transmitters)
         self.assertNotIn(self.operator, self.device.receivers)
 
     def test_slot_set(self) -> None:
         """Setting the slot should register the operator as both a transmitter and receiver"""
-        
+
         expected_device = SimulatedDevice()
         self.operator.slot = expected_device.transmitters
 
         # Verify that the duplex operator is registered as both a transmitter and receiver
         self.assertIn(self.operator, expected_device.transmitters)
         self.assertIn(self.operator, expected_device.receivers)
-        
+
         # Verify that the duplex operator has been dropped as an operator by the old device
         self.assertNotIn(self.operator, self.device.transmitters)
         self.assertNotIn(self.operator, self.device.receivers)

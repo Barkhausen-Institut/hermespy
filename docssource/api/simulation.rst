@@ -16,10 +16,11 @@ including noise and hardware modeling.
    simulation.simulation.SimulationScenario
    simulation.simulation.SimulatedDrop
    simulation.simulated_device.*
-   simulation.analog_digital_converter
+   simulation.antennas
    simulation.rf_chain
    simulation.rf_chain.power_amplifier
    simulation.rf_chain.phase_noise
+   simulation.rf_chain.adc
    simulation.noise
    simulation.coupling
    simulation.isolation

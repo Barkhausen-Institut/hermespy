@@ -37,7 +37,15 @@ class ImpedanceCoupling(Serializable, Coupling):
     __receive_impedance: Optional[np.ndarray]
     __matching_impedance: Optional[np.ndarray]
 
-    def __init__(self, device: Optional[SimulatedDevice] = None, transmit_correlation: Optional[np.ndarray] = None, receive_correlation: Optional[np.ndarray] = None, transmit_impedance: Optional[np.ndarray] = None, receive_impedance: Optional[np.ndarray] = None, matching_impedance: Optional[np.ndarray] = None) -> None:
+    def __init__(
+        self,
+        device: Optional[SimulatedDevice] = None,
+        transmit_correlation: Optional[np.ndarray] = None,
+        receive_correlation: Optional[np.ndarray] = None,
+        transmit_impedance: Optional[np.ndarray] = None,
+        receive_impedance: Optional[np.ndarray] = None,
+        matching_impedance: Optional[np.ndarray] = None,
+    ) -> None:
         """
         Args:
 
@@ -164,8 +172,16 @@ class ImpedanceCoupling(Serializable, Coupling):
         self.__matching_impedance = value
 
     def _transmit(self, signal: Signal) -> Signal:
-        transmit_impedance = np.eye(self.device.antennas.num_transmit_antennas) if self.transmit_impedance is None else self.transmit_impedance
-        transmit_correlation = np.eye(self.device.antennas.num_transmit_antennas) if self.transmit_correlation is None else self.transmit_correlation
+        transmit_impedance = (
+            np.eye(self.device.antennas.num_transmit_antennas)
+            if self.transmit_impedance is None
+            else self.transmit_impedance
+        )
+        transmit_correlation = (
+            np.eye(self.device.antennas.num_transmit_antennas)
+            if self.transmit_correlation is None
+            else self.transmit_correlation
+        )
 
         transmit_coupling = transmit_impedance.real**-0.5 @ transmit_correlation**0.5
         transmitted_samples = transmit_coupling @ signal.samples
@@ -173,11 +189,29 @@ class ImpedanceCoupling(Serializable, Coupling):
         return Signal(transmitted_samples, signal.sampling_rate, signal.carrier_frequency)
 
     def _receive(self, signal: Signal) -> Signal:
-        receive_impedance = np.eye(self.device.antennas.num_receive_antennas) if self.receive_impedance is None else self.receive_impedance
-        receive_correlation = np.eye(self.device.antennas.num_receive_antennas) if self.receive_correlation is None else self.receive_correlation
-        matching_impedance = np.eye(self.device.antennas.num_receive_antennas) if self.matching_impedance is None else self.matching_impedance
+        receive_impedance = (
+            np.eye(self.device.antennas.num_receive_antennas)
+            if self.receive_impedance is None
+            else self.receive_impedance
+        )
+        receive_correlation = (
+            np.eye(self.device.antennas.num_receive_antennas)
+            if self.receive_correlation is None
+            else self.receive_correlation
+        )
+        matching_impedance = (
+            np.eye(self.device.antennas.num_receive_antennas)
+            if self.matching_impedance is None
+            else self.matching_impedance
+        )
 
-        receive_coupling = 2 * receive_impedance[0, 0].real * matching_impedance.real**0.5 @ np.linalg.inv(matching_impedance + receive_correlation) @ receive_correlation**0.5
+        receive_coupling = (
+            2
+            * receive_impedance[0, 0].real
+            * matching_impedance.real**0.5
+            @ np.linalg.inv(matching_impedance + receive_correlation)
+            @ receive_correlation**0.5
+        )
         received_samples = receive_coupling @ signal.samples
 
         return Signal(received_samples, signal.sampling_rate, signal.carrier_frequency)

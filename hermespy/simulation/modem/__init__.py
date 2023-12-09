@@ -15,4 +15,8 @@ __status__ = "Prototype"
 # Class name aliasing
 SCIdealChannelEstimation = SingleCarrierIdealChannelEstimation
 
-__all__ = ["OFDMIdealChannelEstimation", "SCIdealChannelEstimation", "SingleCarrierIdealChannelEstimation"]
+__all__ = [
+    "OFDMIdealChannelEstimation",
+    "SCIdealChannelEstimation",
+    "SingleCarrierIdealChannelEstimation",
+]

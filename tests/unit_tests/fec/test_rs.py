@@ -22,41 +22,37 @@ __status__ = "Prototype"
 
 class TestReedSolomonCoding(TestCase):
     """Test Reed Solomon Coding."""
-    
+
     def setUp(self) -> None:
-        
         self.data_block_size = 107
         self.correction_power = 10
-        
+
         self.rng = default_rng(42)
         self.num_attempts = 5
-        
+
         self.coding = ReedSolomonCoding(self.data_block_size, self.correction_power)
-        
+
     def _test_encode_decode(self) -> None:
         """Encoding a data block should yield a valid code."""
-        
+
         for _ in range(self.num_attempts):
-            
             data_block = self.rng.integers(0, 2, self.data_block_size)
             flip_index = self.rng.integers(0, self.coding.code_block_size)
-            
+
             code_block = self.coding.encode(data_block)
             code_block[flip_index] = not bool(code_block[flip_index])
-            
+
             decoded_block = self.coding.decode(code_block)
             assert_array_equal(data_block, decoded_block)
 
     def _test_pickle(self) -> None:
         """Pickeling and unpickeling the C++ wrapper"""
-        
+
         for _ in range(self.num_attempts):
-            
             with NamedTemporaryFile() as file:
-            
                 dump(self.coding, file)
                 file.seek(0)
-                
+
                 coding = load(file)
                 self.assertEqual(self.data_block_size, coding.bit_block_size)
                 self.assertEqual(self.correction_power, coding.correction_power)

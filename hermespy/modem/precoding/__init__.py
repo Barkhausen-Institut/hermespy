@@ -17,4 +17,13 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-__all__ = ["SymbolPrecoder", "SymbolPrecoding", "SingleCarrier", "SpatialMultiplexing", "DFT", "Alamouti", "Ganesan", "MaximumRatioCombining"]
+__all__ = [
+    "SymbolPrecoder",
+    "SymbolPrecoding",
+    "SingleCarrier",
+    "SpatialMultiplexing",
+    "DFT",
+    "Alamouti",
+    "Ganesan",
+    "MaximumRatioCombining",
+]

@@ -146,7 +146,10 @@ class AWGNRealization(NoiseRealization):
         # Create random number generator
         rng = self.generator()
 
-        noise_samples = (rng.normal(0, self.power**0.5, signal.samples.shape) + 1j * rng.normal(0, self.power**0.5, signal.samples.shape)) / 2**0.5
+        noise_samples = (
+            rng.normal(0, self.power**0.5, signal.samples.shape)
+            + 1j * rng.normal(0, self.power**0.5, signal.samples.shape)
+        ) / 2**0.5
 
         noisy_signal = signal.copy()
         noisy_signal.samples += noise_samples

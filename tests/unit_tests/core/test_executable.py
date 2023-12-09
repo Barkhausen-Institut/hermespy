@@ -35,18 +35,14 @@ class ExecutableStub(Executable):
         pass
 
     @classmethod
-    def to_yaml(cls: Type[Serializable],
-                representer: SafeRepresenter,
-                node: Serializable) -> Node:
-
-        return ScalarNode('ExecutableStub', None)
+    def to_yaml(cls: Type[Serializable], representer: SafeRepresenter, node: Serializable) -> Node:
+        return ScalarNode("ExecutableStub", None)
 
 
 class TestExecutable(unittest.TestCase):
     """Test the base executable prototype, the base class for hermes operations"""
 
     def setUp(self) -> None:
-
         self.verbosity = Verbosity.NONE
 
         with tempfile.TemporaryDirectory() as tempdir:
@@ -60,8 +56,7 @@ class TestExecutable(unittest.TestCase):
     def test_execute(self) -> None:
         """Executing the executable should call the run routine"""
 
-        with patch.object(self.executable, 'run') as run:
-
+        with patch.object(self.executable, "run") as run:
             self.executable.execute()
             self.assertTrue(run.called)
 
@@ -69,7 +64,6 @@ class TestExecutable(unittest.TestCase):
         """Results directory property getter should return setter argument"""
 
         with tempfile.TemporaryDirectory() as dirname:
-
             self.executable.results_dir = dirname
             self.assertEqual(dirname, self.executable.results_dir)
 
@@ -87,7 +81,6 @@ class TestExecutable(unittest.TestCase):
         """Verbosity property getter should return setter argument"""
 
         for verbosity_option in Verbosity:
-
             self.executable.verbosity = verbosity_option
             self.assertEqual(verbosity_option, self.executable.verbosity)
 
@@ -95,31 +88,29 @@ class TestExecutable(unittest.TestCase):
         """Verbosity property getter should return setter argument for strings"""
 
         for verbosity_option in Verbosity:
-
             self.executable.verbosity = verbosity_option.name
             self.assertEqual(verbosity_option, self.executable.verbosity)
-            
-    @patch('hermespy.core.executable.getcwd')
+
+    @patch("hermespy.core.executable.getcwd")
     def test_default_results_dir(self, getcwd: MagicMock) -> None:
         """Test default directory generation"""
-        
+
         with tempfile.TemporaryDirectory() as tempdir:
-            
             getcwd.return_value = tempdir
             results_dir = self.executable.default_results_dir()
-            
+
             self.assertTrue(exists(results_dir))
-            
+
             second_results_dir = self.executable.default_results_dir()
             self.assertTrue(exists(second_results_dir))
-            
+
     def test_style_setget(self) -> None:
         """Style property getter should return setter argument"""
 
-        style = 'light'
+        style = "light"
         self.executable.style = style
         self.assertEqual(style, self.executable.style)
-        
+
         Executable._style = plt.style.available[0]
         self.assertEqual(style, self.executable.style)
 
@@ -143,29 +134,27 @@ class TestExecutable(unittest.TestCase):
         console = MagicMock()
         self.executable.console = console
         self.assertEqual(console, self.executable.console)
-        
+
     def test_console_mode_setget(self) -> None:
         """Console mode property getter should return setter argument"""
-        
+
         self.executable.console_mode = ConsoleMode.INTERACTIVE
         self.assertEqual(ConsoleMode.INTERACTIVE, self.executable.console_mode)
-        
-        self.executable.console_mode = 'LINEAR'
+
+        self.executable.console_mode = "LINEAR"
         self.assertEqual(ConsoleMode.LINEAR, self.executable.console_mode)
 
     def test_handle_exception(self) -> None:
         """Test the exception handling subroutine"""
-        
+
         self.executable.verbosity = Verbosity.ERROR
-        
-        with patch('rich.prompt.Confirm.ask') as confirm_patch, patch('sys.stdout') if gettrace() is None else nullcontext():
-            
+
+        with patch("rich.prompt.Confirm.ask") as confirm_patch, patch("sys.stdout") if gettrace() is None else nullcontext():
             confirm_patch.return_value = False
-            
+
             with self.assertRaises(SystemExit):
-                
                 try:
                     raise Exception("ExampleException")
-                
+
                 except Exception:
                     self.executable._handle_exception()

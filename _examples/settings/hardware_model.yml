@@ -25,12 +25,12 @@ Devices:
         K2: 10
         K3: 1e4
 
-    # AD-Conversion hardware model
-    adc: !<ADC> 
+      # AD-Conversion hardware model
+      adc: !<ADC> 
 
-      quantizer_type: !<QuantizerType> MID_RISER
-      num_quantization_bits: 16
-      gain: !<AutomaticGainControl>
+        quantizer_type: !<QuantizerType> MID_RISER
+        num_quantization_bits: 16
+        gain: !<AutomaticGainControl>
 
 # Operators transmitting or receiving signals over the devices
 Operators:

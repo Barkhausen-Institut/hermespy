@@ -65,7 +65,13 @@ class Executable(ABC):
     __console: Console  # Rich console instance for text output
     __console_mode: ConsoleMode  # Output format during execution
 
-    def __init__(self, results_dir: Optional[str] = None, verbosity: Union[Verbosity, str] = Verbosity.INFO, console: Optional[Console] = None, console_mode: ConsoleMode = ConsoleMode.INTERACTIVE) -> None:
+    def __init__(
+        self,
+        results_dir: Optional[str] = None,
+        verbosity: Union[Verbosity, str] = Verbosity.INFO,
+        console: Optional[Console] = None,
+        console_mode: ConsoleMode = ConsoleMode.INTERACTIVE,
+    ) -> None:
         """
         Args:
 
@@ -228,7 +234,10 @@ class Executable(ABC):
             List[str]: List of style identifiers.
         """
 
-        return [path.splitext(path.basename(x))[0] for x in glob(path.join(Executable.__hermes_root_dir(), "core", "styles", "*.mplstyle"))]
+        return [
+            path.splitext(path.basename(x))[0]
+            for x in glob(path.join(Executable.__hermes_root_dir(), "core", "styles", "*.mplstyle"))
+        ]
 
     @staticmethod
     @contextmanager
@@ -239,7 +248,14 @@ class Executable(ABC):
         """
 
         if Executable.__style in Executable.__hermes_styles():
-            yield plt.style.context(path.join(Executable.__hermes_root_dir(), "core", "styles", Executable.__style + ".mplstyle"))
+            yield plt.style.context(
+                path.join(
+                    Executable.__hermes_root_dir(),
+                    "core",
+                    "styles",
+                    Executable.__style + ".mplstyle",
+                )
+            )
 
         else:
             yield plt.style.context(Executable.__style)
@@ -285,7 +301,9 @@ class Executable(ABC):
 
         self.__console_mode = value
 
-    def _handle_exception(self, force: bool = False, show_locals: bool = True, confirm: bool = True) -> None:
+    def _handle_exception(
+        self, force: bool = False, show_locals: bool = True, confirm: bool = True
+    ) -> None:
         """Print an exception traceback if Verbosity is ALL or higher.
 
         Args:
@@ -296,7 +314,9 @@ class Executable(ABC):
         """
 
         # Check if the exception should be ignored
-        if (self.verbosity.value < Verbosity.NONE.value and self.console_mode != ConsoleMode.SILENT) or force:
+        if (
+            self.verbosity.value < Verbosity.NONE.value and self.console_mode != ConsoleMode.SILENT
+        ) or force:
             # Resort to rich's exception tracing
             self.console.print_exception(show_locals=show_locals)
 

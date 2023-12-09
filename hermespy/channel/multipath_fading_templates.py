@@ -57,7 +57,12 @@ class StandardAntennaCorrelation(Serializable, AntennaCorrelation):
     __device_type: DeviceType  # The assumed device
     __correlation: CorrelationType  # The assumed correlation
 
-    def __init__(self, device_type: DeviceType | int | str, correlation: Union[CorrelationType, str], **kwargs) -> None:
+    def __init__(
+        self,
+        device_type: DeviceType | int | str,
+        correlation: Union[CorrelationType, str],
+        **kwargs,
+    ) -> None:
         """
         Args:
 
@@ -96,7 +101,9 @@ class StandardAntennaCorrelation(Serializable, AntennaCorrelation):
     @property
     def covariance(self) -> np.ndarray:
         if self.device is None:
-            raise FloatingError("Error trying to compute the covariance matrix of an unknown device")
+            raise FloatingError(
+                "Error trying to compute the covariance matrix of an unknown device"
+            )
 
         f = self.__correlation.value[self.__device_type.value]
         n = self.device.num_antennas
@@ -108,9 +115,19 @@ class StandardAntennaCorrelation(Serializable, AntennaCorrelation):
             return np.array([[1, f], [f, 1]], dtype=complex)
 
         if n == 4:
-            return np.array([[1, f ** (1 / 9), f ** (4 / 9), f], [f ** (1 / 9), 1, f ** (1 / 9), f ** (4 / 9)], [f ** (4 / 9), f ** (1 / 9), 1, f ** (1 / 9)], [f, f ** (4 / 9), f ** (1 / 9), 1]], dtype=complex)
+            return np.array(
+                [
+                    [1, f ** (1 / 9), f ** (4 / 9), f],
+                    [f ** (1 / 9), 1, f ** (1 / 9), f ** (4 / 9)],
+                    [f ** (4 / 9), f ** (1 / 9), 1, f ** (1 / 9)],
+                    [f, f ** (4 / 9), f ** (1 / 9), 1],
+                ],
+                dtype=complex,
+            )
 
-        raise RuntimeError(f"3GPP standard antenna covariance is only defined for 1, 2 and 4 antennas, device has {n} antennas")
+        raise RuntimeError(
+            f"3GPP standard antenna covariance is only defined for 1, 2 and 4 antennas, device has {n} antennas"
+        )
 
 
 class Cost259Type(SerializableEnum):
@@ -145,7 +162,17 @@ class MultipathFadingCost259(MultipathFadingChannel):
     yaml_tag = "COST259"
     __model_type: Cost259Type
 
-    def __init__(self, model_type: Cost259Type = Cost259Type.URBAN, alpha_device: SimulatedDevice | None = None, beta_device: SimulatedDevice | None = None, gain: float = 1.0, los_angle: Optional[float] = None, doppler_frequency: Optional[float] = None, los_doppler_frequency: Optional[float] = None, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        model_type: Cost259Type = Cost259Type.URBAN,
+        alpha_device: SimulatedDevice | None = None,
+        beta_device: SimulatedDevice | None = None,
+        gain: float = 1.0,
+        los_angle: Optional[float] = None,
+        doppler_frequency: Optional[float] = None,
+        los_doppler_frequency: Optional[float] = None,
+        **kwargs: Any,
+    ) -> None:
         """
         Args:
 
@@ -178,21 +205,117 @@ class MultipathFadingCost259(MultipathFadingChannel):
         """
 
         if model_type == Cost259Type.URBAN:
-            delays = 1e-6 * np.array([0, 0.217, 0.512, 0.514, 0.517, 0.674, 0.882, 1.230, 1.287, 1.311, 1.349, 1.533, 1.535, 1.622, 1.818, 1.836, 1.884, 1.943, 2.048, 2.140])
-            power_db = np.array([-5.7, -7.6, -10.1, -10.2, -10.2, -11.5, -13.4, -16.3, -16.9, -17.1, -17.4, -19.0, -19.0, -19.8, -21.5, -21.6, -22.1, -22.6, -23.5, -24.3])
+            delays = 1e-6 * np.array(
+                [
+                    0,
+                    0.217,
+                    0.512,
+                    0.514,
+                    0.517,
+                    0.674,
+                    0.882,
+                    1.230,
+                    1.287,
+                    1.311,
+                    1.349,
+                    1.533,
+                    1.535,
+                    1.622,
+                    1.818,
+                    1.836,
+                    1.884,
+                    1.943,
+                    2.048,
+                    2.140,
+                ]
+            )
+            power_db = np.array(
+                [
+                    -5.7,
+                    -7.6,
+                    -10.1,
+                    -10.2,
+                    -10.2,
+                    -11.5,
+                    -13.4,
+                    -16.3,
+                    -16.9,
+                    -17.1,
+                    -17.4,
+                    -19.0,
+                    -19.0,
+                    -19.8,
+                    -21.5,
+                    -21.6,
+                    -22.1,
+                    -22.6,
+                    -23.5,
+                    -24.3,
+                ]
+            )
             rice_factors = np.zeros(delays.shape)
 
         elif model_type == Cost259Type.RURAL:
-            delays = 1e-6 * np.array([0, 0.042, 0.101, 0.129, 0.149, 0.245, 0.312, 0.410, 0.469, 0.528])
+            delays = 1e-6 * np.array(
+                [0, 0.042, 0.101, 0.129, 0.149, 0.245, 0.312, 0.410, 0.469, 0.528]
+            )
             power_db = np.array([-5.2, -6.4, -8.4, -9.3, -10.0, -13.1, -15.3, -18.5, -20.4, -22.4])
             rice_factors = np.zeros(delays.shape)
 
         elif model_type == Cost259Type.HILLY:
             if los_angle is not None:
-                raise ValueError("Model type HILLY does not support line of sight angle configuration")
+                raise ValueError(
+                    "Model type HILLY does not support line of sight angle configuration"
+                )
 
-            delays = 1e-6 * np.array([0, 0.356, 0.441, 0.528, 0.546, 0.609, 0.625, 0.842, 0.916, 0.941, 15.0, 16.172, 16.492, 16.876, 16.882, 16.978, 17.615, 17.827, 17.849, 18.016])
-            power_db = np.array([-3.6, -8.9, -10.2, -11.5, -11.8, -12.7, -13.0, -16.2, -17.3, -17.7, -17.6, -22.7, -24.1, -25.8, -25.8, -26.2, -29.0, -29.9, -30.0, -30.7])
+            delays = 1e-6 * np.array(
+                [
+                    0,
+                    0.356,
+                    0.441,
+                    0.528,
+                    0.546,
+                    0.609,
+                    0.625,
+                    0.842,
+                    0.916,
+                    0.941,
+                    15.0,
+                    16.172,
+                    16.492,
+                    16.876,
+                    16.882,
+                    16.978,
+                    17.615,
+                    17.827,
+                    17.849,
+                    18.016,
+                ]
+            )
+            power_db = np.array(
+                [
+                    -3.6,
+                    -8.9,
+                    -10.2,
+                    -11.5,
+                    -11.8,
+                    -12.7,
+                    -13.0,
+                    -16.2,
+                    -17.3,
+                    -17.7,
+                    -17.6,
+                    -22.7,
+                    -24.1,
+                    -25.8,
+                    -25.8,
+                    -26.2,
+                    -29.0,
+                    -29.9,
+                    -30.0,
+                    -30.7,
+                ]
+            )
             rice_factors = np.hstack([np.array([np.inf]), np.zeros(delays.size - 1)])
             los_angle = np.arccos(0.7)
 
@@ -206,7 +329,19 @@ class MultipathFadingCost259(MultipathFadingChannel):
         power_profile /= sum(power_profile)
 
         # Init base class with pre-defined model parameters
-        MultipathFadingChannel.__init__(self, alpha_device=alpha_device, beta_device=beta_device, gain=gain, delays=delays, power_profile=power_profile, rice_factors=rice_factors, los_angle=los_angle, doppler_frequency=doppler_frequency, los_doppler_frequency=los_doppler_frequency, **kwargs)
+        MultipathFadingChannel.__init__(
+            self,
+            alpha_device=alpha_device,
+            beta_device=beta_device,
+            gain=gain,
+            delays=delays,
+            power_profile=power_profile,
+            rice_factors=rice_factors,
+            los_angle=los_angle,
+            doppler_frequency=doppler_frequency,
+            los_doppler_frequency=los_doppler_frequency,
+            **kwargs,
+        )
 
     @property
     def model_type(self) -> Cost259Type:
@@ -218,7 +353,11 @@ class MultipathFadingCost259(MultipathFadingChannel):
         return self.__model_type
 
     @classmethod
-    def to_yaml(cls: Type[MultipathFadingCost259], representer: SafeRepresenter, node: MultipathFadingCost259) -> MappingNode:
+    def to_yaml(
+        cls: Type[MultipathFadingCost259],
+        representer: SafeRepresenter,
+        node: MultipathFadingCost259,
+    ) -> MappingNode:
         """Serialize a serializable object to YAML.
 
         Args:
@@ -271,29 +410,39 @@ class MultipathFading5GTDL(MultipathFadingChannel):
     yaml_tag = "5GTDL"
     __rms_delay: float
 
-    def __init__(self, model_type: TDLType = TDLType.A, rms_delay: float = 0.0, alpha_device: SimulatedDevice | None = None, beta_device: SimulatedDevice | None = None, gain: float = 1.0, doppler_frequency: float | None = None, los_doppler_frequency: float | None = None, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        model_type: TDLType = TDLType.A,
+        rms_delay: float = 0.0,
+        alpha_device: SimulatedDevice | None = None,
+        beta_device: SimulatedDevice | None = None,
+        gain: float = 1.0,
+        doppler_frequency: float | None = None,
+        los_doppler_frequency: float | None = None,
+        **kwargs: Any,
+    ) -> None:
         """
         Args:
 
             model_type (TYPE):
                 The model type.
-                Initializes the :attr:`.model_type` attribute.
+                Initializes the :attr:`model_type` attribute.
 
             rms_delay (float):
                 Root-Mean-Squared delay in seconds.
-                Initializes the :attr:`.rms_delay` attribute.
+                Initializes the :attr:`rms_delay` attribute.
 
             alpha_device (SimulatedDevice, optional):
-                First device linked by this :class:`.MultipathFading5GTDL` channel instance.
-                Initializes the :attr:`.alpha_device` property.
+                First device linked by this :class:`MultipathFading5GTDL` channel instance.
+                Initializes the :attr:`alpha_device` property.
                 If not specified the channel is considered floating,
-                meaning a call to :meth:`.realize` will raise an exception.
+                meaning a call to :meth:`realize<Channel.realize>` will raise an exception.
 
             beta_device (SimulatedDevice, optional):
-                Second device linked by this :class:`.MultipathFading5GTDL` channel.
-                Initializes the :attr:`.beta_device` property.
+                Second device linked by this :class:`MultipathFading5GTDL` channel.
+                Initializes the :attr:`beta_device` property.
                 If not specified the channel is considered floating,
-                meaning a call to :meth:`.realize` will raise an exception.
+                meaning a call to :meth:`realize` will raise an exception.
 
             gain (float, otional):
                 Linear power gain factor a signal experiences when being propagated over this realization.
@@ -320,36 +469,264 @@ class MultipathFading5GTDL(MultipathFadingChannel):
         self.__rms_delay = rms_delay
 
         if model_type == TDLType.A:
-            normalized_delays = np.array([0, 0.3819, 0.4025, 0.5868, 0.4610, 0.5375, 0.6708, 0.5750, 0.7618, 1.5375, 1.8978, 2.2242, 2.1717, 2.4942, 2.5119, 3.0582, 4.0810, 4.4579, 4.5695, 4.7966, 5.0066, 5.3043, 9.6586])
-            power_db = np.array([-13.4, 0, -2.2, -4, -6, -8.2, -9.9, -10.5, -7.5, -15.9, -6.6, -16.7, -12.4, -15.2, -10.8, -11.3, -12.7, -16.2, -18.3, -18.9, -16.6, -19.9, -29.7])
+            normalized_delays = np.array(
+                [
+                    0,
+                    0.3819,
+                    0.4025,
+                    0.5868,
+                    0.4610,
+                    0.5375,
+                    0.6708,
+                    0.5750,
+                    0.7618,
+                    1.5375,
+                    1.8978,
+                    2.2242,
+                    2.1717,
+                    2.4942,
+                    2.5119,
+                    3.0582,
+                    4.0810,
+                    4.4579,
+                    4.5695,
+                    4.7966,
+                    5.0066,
+                    5.3043,
+                    9.6586,
+                ]
+            )
+            power_db = np.array(
+                [
+                    -13.4,
+                    0,
+                    -2.2,
+                    -4,
+                    -6,
+                    -8.2,
+                    -9.9,
+                    -10.5,
+                    -7.5,
+                    -15.9,
+                    -6.6,
+                    -16.7,
+                    -12.4,
+                    -15.2,
+                    -10.8,
+                    -11.3,
+                    -12.7,
+                    -16.2,
+                    -18.3,
+                    -18.9,
+                    -16.6,
+                    -19.9,
+                    -29.7,
+                ]
+            )
             rice_factors = np.zeros(normalized_delays.shape)
 
         elif model_type == TDLType.B:
-            normalized_delays = np.array([0, 0.1072, 0.2155, 0.2095, 0.2870, 0.2986, 0.3752, 0.5055, 0.3681, 0.3697, 0.5700, 0.5283, 1.1021, 1.2756, 1.5474, 1.7842, 2.0169, 2.8294, 3.0219, 3.6187, 4.1067, 4.2790, 4.7834])
-            power_db = np.array([0, -2.2, -4, -3.2, -9.8, -3.2, -3.4, -5.2, -7.6, -3, -8.9, -9, -4.8, -5.7, -7.5, -1.9, -7.6, -12.2, -9.8, -11.4, -14.9, -9.2, -11.3])
+            normalized_delays = np.array(
+                [
+                    0,
+                    0.1072,
+                    0.2155,
+                    0.2095,
+                    0.2870,
+                    0.2986,
+                    0.3752,
+                    0.5055,
+                    0.3681,
+                    0.3697,
+                    0.5700,
+                    0.5283,
+                    1.1021,
+                    1.2756,
+                    1.5474,
+                    1.7842,
+                    2.0169,
+                    2.8294,
+                    3.0219,
+                    3.6187,
+                    4.1067,
+                    4.2790,
+                    4.7834,
+                ]
+            )
+            power_db = np.array(
+                [
+                    0,
+                    -2.2,
+                    -4,
+                    -3.2,
+                    -9.8,
+                    -3.2,
+                    -3.4,
+                    -5.2,
+                    -7.6,
+                    -3,
+                    -8.9,
+                    -9,
+                    -4.8,
+                    -5.7,
+                    -7.5,
+                    -1.9,
+                    -7.6,
+                    -12.2,
+                    -9.8,
+                    -11.4,
+                    -14.9,
+                    -9.2,
+                    -11.3,
+                ]
+            )
             rice_factors = np.zeros(normalized_delays.shape)
 
         elif model_type == TDLType.C:
-            normalized_delays = np.array([0, 0.2099, 0.2219, 0.2329, 0.2176, 0.6366, 0.6448, 0.6560, 0.6584, 0.7935, 0.8213, 0.9336, 1.2285, 1.3083, 2.1704, 2.7105, 4.2589, 4.6003, 5.4902, 5.6077, 6.3065, 6.6374, 7.0427, 8.6523])
-            power_db = np.array([-4.4, -1.2, -3.5, -5.2, -2.5, 0, -2.2, -3.9, -7.4, -7.1, -10.7, -11.1, -5.1, -6.8, -8.7, -13.2, -13.9, -13.9, -15.8, -17.1, -16, -15.7, -21.6, -22.8])
+            normalized_delays = np.array(
+                [
+                    0,
+                    0.2099,
+                    0.2219,
+                    0.2329,
+                    0.2176,
+                    0.6366,
+                    0.6448,
+                    0.6560,
+                    0.6584,
+                    0.7935,
+                    0.8213,
+                    0.9336,
+                    1.2285,
+                    1.3083,
+                    2.1704,
+                    2.7105,
+                    4.2589,
+                    4.6003,
+                    5.4902,
+                    5.6077,
+                    6.3065,
+                    6.6374,
+                    7.0427,
+                    8.6523,
+                ]
+            )
+            power_db = np.array(
+                [
+                    -4.4,
+                    -1.2,
+                    -3.5,
+                    -5.2,
+                    -2.5,
+                    0,
+                    -2.2,
+                    -3.9,
+                    -7.4,
+                    -7.1,
+                    -10.7,
+                    -11.1,
+                    -5.1,
+                    -6.8,
+                    -8.7,
+                    -13.2,
+                    -13.9,
+                    -13.9,
+                    -15.8,
+                    -17.1,
+                    -16,
+                    -15.7,
+                    -21.6,
+                    -22.8,
+                ]
+            )
             rice_factors = np.zeros(normalized_delays.shape)
 
         elif model_type == TDLType.D:
             if los_doppler_frequency is not None:
-                raise ValueError("Model type D does not support line of sight doppler frequency configuration")
+                raise ValueError(
+                    "Model type D does not support line of sight doppler frequency configuration"
+                )
 
-            normalized_delays = np.array([0, 0.035, 0.612, 1.363, 1.405, 1.804, 2.596, 1.775, 4.042, 7.937, 9.424, 9.708, 12.525])
-            power_db = np.array([-13.5, -18.8, -21, -22.8, -17.9, -20.1, -21.9, -22.9, -27.8, -23.6, -24.8, -30.0, -27.7])
+            normalized_delays = np.array(
+                [
+                    0,
+                    0.035,
+                    0.612,
+                    1.363,
+                    1.405,
+                    1.804,
+                    2.596,
+                    1.775,
+                    4.042,
+                    7.937,
+                    9.424,
+                    9.708,
+                    12.525,
+                ]
+            )
+            power_db = np.array(
+                [
+                    -13.5,
+                    -18.8,
+                    -21,
+                    -22.8,
+                    -17.9,
+                    -20.1,
+                    -21.9,
+                    -22.9,
+                    -27.8,
+                    -23.6,
+                    -24.8,
+                    -30.0,
+                    -27.7,
+                ]
+            )
             rice_factors = np.zeros(normalized_delays.shape)
             rice_factors[0] = 13.3
             los_doppler_frequency = 0.7
 
         elif model_type == TDLType.E:
             if los_doppler_frequency is not None:
-                raise ValueError("Model type E does not support line of sight doppler frequency configuration")
+                raise ValueError(
+                    "Model type E does not support line of sight doppler frequency configuration"
+                )
 
-            normalized_delays = np.array([0, 0.5133, 0.5440, 0.5630, 0.5440, 0.7112, 1.9092, 1.9293, 1.9589, 2.6426, 3.7136, 5.4524, 12.0034, 20.6519])
-            power_db = np.array([-22.03, -15.8, -18.1, -19.8, -22.9, -22.4, -18.6, -20.8, -22.6, -22.3, -25.6, -20.2, -29.8, -29.2])
+            normalized_delays = np.array(
+                [
+                    0,
+                    0.5133,
+                    0.5440,
+                    0.5630,
+                    0.5440,
+                    0.7112,
+                    1.9092,
+                    1.9293,
+                    1.9589,
+                    2.6426,
+                    3.7136,
+                    5.4524,
+                    12.0034,
+                    20.6519,
+                ]
+            )
+            power_db = np.array(
+                [
+                    -22.03,
+                    -15.8,
+                    -18.1,
+                    -19.8,
+                    -22.9,
+                    -22.4,
+                    -18.6,
+                    -20.8,
+                    -22.6,
+                    -22.3,
+                    -25.6,
+                    -20.2,
+                    -29.8,
+                    -29.2,
+                ]
+            )
             rice_factors = np.zeros(normalized_delays.shape)
             rice_factors[0] = 22
             los_doppler_frequency = 0.7
@@ -367,7 +744,18 @@ class MultipathFading5GTDL(MultipathFadingChannel):
         delays = rms_delay * normalized_delays
 
         # Init base class with pre-defined model parameters
-        MultipathFadingChannel.__init__(self, alpha_device=alpha_device, beta_device=beta_device, gain=gain, delays=delays, power_profile=power_profile, rice_factors=rice_factors, doppler_frequency=doppler_frequency, los_doppler_frequency=los_doppler_frequency, **kwargs)
+        MultipathFadingChannel.__init__(
+            self,
+            alpha_device=alpha_device,
+            beta_device=beta_device,
+            gain=gain,
+            delays=delays,
+            power_profile=power_profile,
+            rice_factors=rice_factors,
+            doppler_frequency=doppler_frequency,
+            los_doppler_frequency=los_doppler_frequency,
+            **kwargs,
+        )
 
     @property
     def model_type(self) -> TDLType:
@@ -408,7 +796,15 @@ class MultipathFadingExponential(MultipathFadingChannel):
     __tap_interval: float
     __rms_delay: float
 
-    def __init__(self, tap_interval: float, rms_delay: float, alpha_device: SimulatedDevice | None = None, beta_device: SimulatedDevice | None = None, gain: float = 1.0, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        tap_interval: float,
+        rms_delay: float,
+        alpha_device: SimulatedDevice | None = None,
+        beta_device: SimulatedDevice | None = None,
+        gain: float = 1.0,
+        **kwargs: Any,
+    ) -> None:
         """
         Args:
 
@@ -451,14 +847,25 @@ class MultipathFadingExponential(MultipathFadingChannel):
         # Truncate the distributions for paths whose average power is very
         # small (less than exponential_truncation).
         alpha = -2 * np.log((-1 + np.sqrt(1 + 4 * rms_norm**2)) / (2 * rms_norm))
-        max_delay_in_samples = int(-np.ceil(np.log(MultipathFadingExponential.__exponential_truncation) / alpha))
+        max_delay_in_samples = int(
+            -np.ceil(np.log(MultipathFadingExponential.__exponential_truncation) / alpha)
+        )
 
         delays = np.arange(max_delay_in_samples + 1) * tap_interval
         power_profile = np.exp(-alpha * np.arange(max_delay_in_samples + 1))
         rice_factors = np.zeros(delays.shape)
 
         # Init base class with pre-defined model parameters
-        MultipathFadingChannel.__init__(self, alpha_device=alpha_device, beta_device=beta_device, gain=gain, delays=delays, power_profile=power_profile, rice_factors=rice_factors, **kwargs)
+        MultipathFadingChannel.__init__(
+            self,
+            alpha_device=alpha_device,
+            beta_device=beta_device,
+            gain=gain,
+            delays=delays,
+            power_profile=power_profile,
+            rice_factors=rice_factors,
+            **kwargs,
+        )
 
     @property
     def tap_interval(self) -> float:
