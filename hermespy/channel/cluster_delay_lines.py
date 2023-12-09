@@ -12,7 +12,18 @@ import numpy as np
 from h5py import Group
 from scipy.constants import pi, speed_of_light
 
-from hermespy.core import ChannelStateInformation, ChannelStateFormat, Device, Direction, Executable, HDFSerializable, Serializable, Signal, Visualizable
+from hermespy.core import (
+    AntennaMode,
+    ChannelStateInformation,
+    ChannelStateFormat,
+    Device,
+    Direction,
+    Executable,
+    HDFSerializable,
+    Serializable,
+    Signal,
+    Visualizable,
+)
 from hermespy.tools import db2lin
 from .channel import Channel, ChannelRealization, InterpolationMode
 
@@ -98,7 +109,9 @@ class ClusterDelayLineRealization(ChannelRealization, Visualizable):
         # Infer additional parameters
         self.__num_clusters = cluster_delays.shape[0]
         self.__num_rays = azimuth_of_arrival.shape[1]
-        self.__max_delay = max(np.max(cluster_delays[:3] + cluster_delay_spread * 2.56), cluster_delays.max())
+        self.__max_delay = max(
+            np.max(cluster_delays[:3] + cluster_delay_spread * 2.56), cluster_delays.max()
+        )
 
     @property
     def line_of_sight(self) -> bool:
@@ -178,7 +191,36 @@ class ClusterDelayLineRealization(ChannelRealization, Visualizable):
 
         return self.__max_delay
 
-    def __ray_impulse_generator(self, transmitter: Device, receiver: Device, sampling_rate: float, num_samples: int, center_frequency: float) -> Generator[Tuple[np.ndarray, np.ndarray, float], None, None]:
+    def __ray_impulse_generator(
+        self,
+        transmitter: Device,
+        receiver: Device,
+        sampling_rate: float,
+        num_samples: int,
+        center_frequency: float,
+    ) -> Generator[Tuple[np.ndarray, np.ndarray, float], None, None]:
+        """Sequential generation of individual ray impulse responses.
+
+        Subroutine of :meth:`._propagate`.
+
+        Args:
+
+            transmitter (Device):
+                Transmitting device.
+
+            receiver (Device):
+                Receiving device.
+
+            sampling_rate (float):
+                Sampling rate in Hertz.
+
+            num_samples (int):
+                Number of samples to generate.
+
+            center_frequency (float):
+                Center frequency in Hertz.
+        """
+
         # First summand scaling of equation 7.5-30
         rice_factor_lin = db2lin(self.rice_factor)
         nlos_scale = (1 + rice_factor_lin) ** -0.5 if self.line_of_sight else 1.0
@@ -188,8 +230,12 @@ class ClusterDelayLineRealization(ChannelRealization, Visualizable):
         virtual_num_clusters = 3 * num_split_clusters + max(0, self.num_clusters - 2)
 
         # Prepare the cluster delays, equation 7.5-26
-        subcluster_delays: np.ndarray = np.repeat(self.cluster_delays[:num_split_clusters, None], 3, axis=1) + self.cluster_delay_spread * np.array([1.0, 1.28, 2.56])
-        virtual_cluster_delays = np.concatenate((subcluster_delays.flatten(), self.cluster_delays[num_split_clusters:]))
+        subcluster_delays: np.ndarray = np.repeat(
+            self.cluster_delays[:num_split_clusters, None], 3, axis=1
+        ) + self.cluster_delay_spread * np.array([1.0, 1.28, 2.56])
+        virtual_cluster_delays = np.concatenate(
+            (subcluster_delays.flatten(), self.cluster_delays[num_split_clusters:])
+        )
 
         # Wavelength factor
         wavelength_factor = center_frequency / speed_of_light
@@ -199,22 +245,47 @@ class ClusterDelayLineRealization(ChannelRealization, Visualizable):
         # Compute the cluster propagation parameters
         for subcluster_idx in range(0, virtual_num_clusters):
             cluster_idx = int(subcluster_idx / 3) if subcluster_idx < 6 else subcluster_idx - 4
-            ray_indices = ClusterDelayLineBase.subcluster_indices[cluster_idx] if cluster_idx < num_split_clusters else range(self.num_rays)
+            ray_indices = (
+                ClusterDelayLineBase.subcluster_indices[cluster_idx]
+                if cluster_idx < num_split_clusters
+                else range(self.num_rays)
+            )
             delay: float = virtual_cluster_delays[subcluster_idx]
 
-            for aoa, zoa, aod, zod, jones in zip(self.azimuth_of_arrival[cluster_idx, ray_indices], self.zenith_of_arrival[cluster_idx, ray_indices], self.azimuth_of_departure[cluster_idx, ray_indices], self.zenith_of_departure[cluster_idx, ray_indices], self.polarization_transformations[:, :, cluster_idx, ray_indices].transpose(2, 0, 1)):
+            for aoa, zoa, aod, zod, jones in zip(
+                self.azimuth_of_arrival[cluster_idx, ray_indices],
+                self.zenith_of_arrival[cluster_idx, ray_indices],
+                self.azimuth_of_departure[cluster_idx, ray_indices],
+                self.zenith_of_departure[cluster_idx, ray_indices],
+                self.polarization_transformations[:, :, cluster_idx, ray_indices].transpose(
+                    2, 0, 1
+                ),
+            ):
                 # Compute directive unit vectors
                 tx_direction = Direction.From_Spherical(aod, zod)
                 rx_direction = Direction.From_Spherical(aoa, zoa)
 
                 # Combination of Equation 7.5-23, 7.5.24 and 7.5.28
-                tx_array_response = transmitter.antennas.cartesian_array_response(center_frequency, tx_direction.view(np.ndarray), "global").conj()
-                rx_array_response = receiver.antennas.cartesian_array_response(center_frequency, rx_direction.view(np.ndarray), "global")
+                tx_array_response = transmitter.antennas.cartesian_array_response(
+                    center_frequency, tx_direction.view(np.ndarray), "global", AntennaMode.TX
+                ).conj()
+                rx_array_response = receiver.antennas.cartesian_array_response(
+                    center_frequency, rx_direction.view(np.ndarray), "global", AntennaMode.RX
+                )
 
-                channel: np.ndarray = rx_array_response @ jones @ tx_array_response.T * (sqrt(self.cluster_powers[cluster_idx] / self.num_clusters) * nlos_scale)
+                channel: np.ndarray = (
+                    rx_array_response
+                    @ jones
+                    @ tx_array_response.T
+                    * (sqrt(self.cluster_powers[cluster_idx] / self.num_clusters) * nlos_scale)
+                )
 
-                wave_vector = np.array([cos(aoa) * sin(zoa), sin(aoa) * sin(zoa), cos(zoa)], dtype=float)
-                impulse: np.ndarray = np.exp(np.inner(wave_vector, relative_velocity) * fast_fading * 2j * pi)
+                wave_vector = np.array(
+                    [cos(aoa) * sin(zoa), sin(aoa) * sin(zoa), cos(zoa)], dtype=float
+                )
+                impulse: np.ndarray = np.exp(
+                    np.inner(wave_vector, relative_velocity) * fast_fading * 2j * pi
+                )
 
                 yield channel, impulse, delay
 
@@ -225,40 +296,94 @@ class ClusterDelayLineRealization(ChannelRealization, Visualizable):
             rx_wave_vector = device_vector / los_distance
 
             # Equation 7.5-29
-            tx_array_response = transmitter.antennas.cartesian_array_response(center_frequency, receiver.global_position, "global").conj()
-            rx_array_response = receiver.antennas.cartesian_array_response(center_frequency, transmitter.global_position, "global")
+            tx_array_response = transmitter.antennas.cartesian_array_response(
+                center_frequency, receiver.global_position, "global", AntennaMode.TX
+            ).conj()
+            rx_array_response = receiver.antennas.cartesian_array_response(
+                center_frequency, transmitter.global_position, "global", AntennaMode.RX
+            )
 
             # Second summand of equation 7.5-30
             los_delay: float = self.cluster_delays[0]
-            los_channel: np.ndarray = rx_array_response @ tx_array_response.T * (rice_factor_lin / 1 + rice_factor_lin)
-            los_impulse: np.ndarray = np.exp(-2j * pi * los_distance * wavelength_factor) * np.exp(np.inner(rx_wave_vector, relative_velocity) * fast_fading * 2j * pi)
+            los_channel: np.ndarray = (
+                rx_array_response @ tx_array_response.T * (rice_factor_lin / 1 + rice_factor_lin)
+            )
+            los_impulse: np.ndarray = np.exp(-2j * pi * los_distance * wavelength_factor) * np.exp(
+                np.inner(rx_wave_vector, relative_velocity) * fast_fading * 2j * pi
+            )
 
             yield los_channel, los_impulse, los_delay
 
-    def _propagate(self, signal: Signal, transmitter: Device, receiver: Device, interpolation: InterpolationMode) -> Signal:
+    def _propagate(
+        self,
+        signal: Signal,
+        transmitter: Device,
+        receiver: Device,
+        interpolation: InterpolationMode,
+    ) -> Signal:
         max_delay_in_samples = ceil(self.max_delay * signal.sampling_rate)
         num_resulting_streams = receiver.antennas.num_receive_antennas
-        propagated_samples = np.zeros((num_resulting_streams, signal.num_samples + max_delay_in_samples), dtype=np.complex_)
+        propagated_samples = np.zeros(
+            (num_resulting_streams, signal.num_samples + max_delay_in_samples), dtype=np.complex_
+        )
 
         # Prepare the optimal einsum path ahead of time for faster execution
-        channel = np.zeros((receiver.antennas.num_receive_antennas, transmitter.antennas.num_transmit_antennas), dtype=np.complex_)
+        channel = np.zeros(
+            (num_resulting_streams, transmitter.antennas.num_transmit_antennas), dtype=np.complex_
+        )
         impulse = np.zeros(signal.num_samples, dtype=np.complex_)
         einsum_subscripts = "ij,jk,k->ik"
-        einsum_path = np.einsum_path(einsum_subscripts, channel, signal.samples, impulse, optimize="optimal")[0]
+        einsum_path = np.einsum_path(
+            einsum_subscripts, channel, signal.samples, impulse, optimize="optimal"
+        )[0]
 
-        for channel, impulse, delay in self.__ray_impulse_generator(transmitter, receiver, signal.sampling_rate, signal.num_samples, signal.carrier_frequency):
+        for channel, impulse, delay in self.__ray_impulse_generator(
+            transmitter,
+            receiver,
+            signal.sampling_rate,
+            signal.num_samples,
+            signal.carrier_frequency,
+        ):
             if interpolation == InterpolationMode.NEAREST:
                 delay_in_samples = int(delay * signal.sampling_rate)
-                propagated_samples[:, delay_in_samples : delay_in_samples + signal.num_samples] += np.einsum(einsum_subscripts, channel, signal.samples, impulse, optimize=einsum_path)
+                propagated_samples[
+                    :, delay_in_samples : delay_in_samples + signal.num_samples
+                ] += np.einsum(
+                    einsum_subscripts, channel, signal.samples, impulse, optimize=einsum_path
+                )
 
-        return Signal(propagated_samples, signal.sampling_rate, signal.carrier_frequency, signal.delay, signal.noise_power)
+        return Signal(
+            propagated_samples,
+            signal.sampling_rate,
+            signal.carrier_frequency,
+            signal.delay,
+            signal.noise_power,
+        )
 
-    def state(self, transmitter: Device, receiver: Device, delay_offset: float, sampling_rate: float, num_samples: int, max_num_taps: int) -> ChannelStateInformation:
+    def state(
+        self,
+        transmitter: Device,
+        receiver: Device,
+        delay_offset: float,
+        sampling_rate: float,
+        num_samples: int,
+        max_num_taps: int,
+    ) -> ChannelStateInformation:
         carrier_frequency = transmitter.carrier_frequency
         max_delay_in_samples = min(max_num_taps, ceil(self.max_delay * sampling_rate))
-        raw_state = np.zeros((receiver.antennas.num_receive_antennas, transmitter.antennas.num_transmit_antennas, num_samples, 1 + max_delay_in_samples), dtype=np.complex_)
+        raw_state = np.zeros(
+            (
+                receiver.antennas.num_receive_antennas,
+                transmitter.antennas.num_transmit_antennas,
+                num_samples,
+                1 + max_delay_in_samples,
+            ),
+            dtype=np.complex_,
+        )
 
-        for channel, impulse, delay in self.__ray_impulse_generator(transmitter, receiver, sampling_rate, num_samples, carrier_frequency):
+        for channel, impulse, delay in self.__ray_impulse_generator(
+            transmitter, receiver, sampling_rate, num_samples, carrier_frequency
+        ):
             # Compute the delay in samples
             delay_tap_index = int(delay * sampling_rate)
 
@@ -266,7 +391,9 @@ class ClusterDelayLineRealization(ChannelRealization, Visualizable):
                 continue
 
             # Compute the resulting channel state
-            raw_state[:, :, :, delay_tap_index] += np.einsum("ij,k->ijk", channel, impulse, optimize=False)
+            raw_state[:, :, :, delay_tap_index] += np.einsum(
+                "ij,k->ijk", channel, impulse, optimize=False
+            )
 
         raw_state *= self.gain**0.5
         return ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE, raw_state)
@@ -285,7 +412,12 @@ class ClusterDelayLineRealization(ChannelRealization, Visualizable):
 
         markers = ["x", "+", "o"]
 
-        for i, (azimuth_clusters, zenith_clusters) in enumerate([[self.azimuth_of_arrival, self.zenith_of_arrival], [self.azimuth_of_departure, self.zenith_of_departure]]):
+        for i, (azimuth_clusters, zenith_clusters) in enumerate(
+            [
+                [self.azimuth_of_arrival, self.zenith_of_arrival],
+                [self.azimuth_of_departure, self.zenith_of_departure],
+            ]
+        ):
             for azimuth_rays, zenith_rays in zip(azimuth_clusters, zenith_clusters):
                 azimuth_points = azimuth_rays + azimuth_offset[0]
                 zenith_points = abs(180 * (zenith_rays + zenith_offset[0]) / pi) % 180
@@ -297,7 +429,9 @@ class ClusterDelayLineRealization(ChannelRealization, Visualizable):
 
         # Plot line of sight indicators
 
-        for axis_index, (azimuth, zenith) in enumerate(zip(los_azimuth + azimuth_offset, los_zenith + zenith_offset)):
+        for axis_index, (azimuth, zenith) in enumerate(
+            zip(los_azimuth + azimuth_offset, los_zenith + zenith_offset)
+        ):
             axes[axis_index].scatter(azimuth, abs(180 * zenith / pi), marker="o", color="b")
 
             axes[axis_index].set_rmax(90)
@@ -336,14 +470,32 @@ class ClusterDelayLineRealization(ChannelRealization, Visualizable):
 
         magnitude = np.linalg.norm(self.alpha_device.position - self.beta_device.position)
 
-        for i, (aoa, zoa, aod, zod) in enumerate(zip(self.azimuth_of_arrival, self.zenith_of_arrival, self.azimuth_of_departure, self.zenith_of_departure)):
-            tx_vectors = np.array([np.sin(zod) * np.cos(aod), np.sin(zod) * np.sin(aod), np.cos(zod)])
-            rx_vectors = -np.array([np.sin(zoa) * np.cos(aoa), np.sin(zoa) * np.sin(aoa), np.cos(zoa)])
+        for i, (aoa, zoa, aod, zod) in enumerate(
+            zip(
+                self.azimuth_of_arrival,
+                self.zenith_of_arrival,
+                self.azimuth_of_departure,
+                self.zenith_of_departure,
+            )
+        ):
+            tx_vectors = np.array(
+                [np.sin(zod) * np.cos(aod), np.sin(zod) * np.sin(aod), np.cos(zod)]
+            )
+            rx_vectors = -np.array(
+                [np.sin(zoa) * np.cos(aoa), np.sin(zoa) * np.sin(aoa), np.cos(zoa)]
+            )
 
-            for vectors, origin in zip((tx_vectors, rx_vectors), (self.alpha_device.position, self.beta_device.position)):
+            for vectors, origin in zip(
+                (tx_vectors, rx_vectors), (self.alpha_device.position, self.beta_device.position)
+            ):
                 stops = vectors * magnitude + origin[:, np.newaxis]
                 for stop in stops.T:
-                    axis.plot([origin[0], stop[0]], [origin[1], stop[1]], [origin[2], stop[2]], color=colors[i % len(colors)])
+                    axis.plot(
+                        [origin[0], stop[0]],
+                        [origin[1], stop[1]],
+                        [origin[2], stop[2]],
+                        color=colors[i % len(colors)],
+                    )
 
             """start_arrival = self.transmitter_position
             stop_arrival = self.transmitter_position + arrival
@@ -396,7 +548,10 @@ class ClusterDelayLineRealization(ChannelRealization, Visualizable):
         Returns: Angular spread in radians.
         """
 
-        return self._angular_spread(self.azimuth_of_arrival, np.repeat(self.cluster_powers[:, None], self.azimuth_of_arrival.shape[1], axis=1))
+        return self._angular_spread(
+            self.azimuth_of_arrival,
+            np.repeat(self.cluster_powers[:, None], self.azimuth_of_arrival.shape[1], axis=1),
+        )
 
     @cached_property
     def azimuth_departure_spread(self) -> float:
@@ -405,7 +560,10 @@ class ClusterDelayLineRealization(ChannelRealization, Visualizable):
         Returns: Angular spread in radians.
         """
 
-        return self._angular_spread(self.azimuth_of_departure, np.repeat(self.cluster_powers[:, None], self.azimuth_of_departure.shape[1], axis=1))
+        return self._angular_spread(
+            self.azimuth_of_departure,
+            np.repeat(self.cluster_powers[:, None], self.azimuth_of_departure.shape[1], axis=1),
+        )
 
     @cached_property
     def zenith_arrival_spread(self) -> float:
@@ -414,7 +572,10 @@ class ClusterDelayLineRealization(ChannelRealization, Visualizable):
         Returns: Angular spread in radians.
         """
 
-        return self._angular_spread(self.zenith_of_arrival, np.repeat(self.cluster_powers[:, None], self.zenith_of_arrival.shape[1], axis=1))
+        return self._angular_spread(
+            self.zenith_of_arrival,
+            np.repeat(self.cluster_powers[:, None], self.zenith_of_arrival.shape[1], axis=1),
+        )
 
     @cached_property
     def zenith_departure_spread(self) -> float:
@@ -423,7 +584,10 @@ class ClusterDelayLineRealization(ChannelRealization, Visualizable):
         Returns: Angular spread in radians.
         """
 
-        return self._angular_spread(self.zenith_of_departure, np.repeat(self.cluster_powers[:, None], self.zenith_of_departure.shape[1], axis=1))
+        return self._angular_spread(
+            self.zenith_of_departure,
+            np.repeat(self.cluster_powers[:, None], self.zenith_of_departure.shape[1], axis=1),
+        )
 
     def to_HDF(self, group: Group) -> None:
         """Serialize the object state to HDF5.
@@ -451,10 +615,17 @@ class ClusterDelayLineRealization(ChannelRealization, Visualizable):
         HDFSerializable._write_dataset(group, "zenith_of_departure", self.zenith_of_departure)
         HDFSerializable._write_dataset(group, "cluster_delays", self.cluster_delays)
         HDFSerializable._write_dataset(group, "cluster_powers", self.cluster_powers)
-        HDFSerializable._write_dataset(group, "polarization_transformations", self.polarization_transformations)
+        HDFSerializable._write_dataset(
+            group, "polarization_transformations", self.polarization_transformations
+        )
 
     @classmethod
-    def From_HDF(cls: Type[ClusterDelayLineRealization], group: Group, alpha_device: Device, beta_device: Device) -> ClusterDelayLineRealization:
+    def From_HDF(
+        cls: Type[ClusterDelayLineRealization],
+        group: Group,
+        alpha_device: Device,
+        beta_device: Device,
+    ) -> ClusterDelayLineRealization:
         # Deserialize base class parameters
         params = cls._parameters_from_HDF(group)
 
@@ -470,7 +641,9 @@ class ClusterDelayLineRealization(ChannelRealization, Visualizable):
         params["zenith_of_departure"] = np.array(group["zenith_of_departure"], dtype=np.float_)
         params["cluster_delays"] = np.array(group["cluster_delays"], dtype=np.float_)
         params["cluster_powers"] = np.array(group["cluster_powers"], dtype=np.float_)
-        params["polarization_transformations"] = np.array(group["polarization_transformations"], dtype=np.complex_)
+        params["polarization_transformations"] = np.array(
+            group["polarization_transformations"], dtype=np.complex_
+        )
 
         # Initialize cdl realization instance
         return cls(alpha_device, beta_device, **params)
@@ -481,17 +654,79 @@ class ClusterDelayLineBase(Channel[ClusterDelayLineRealization]):
     """The delay normalization routine applied during channel sampling."""
 
     # Cluster scaling factors for the angle of arrival
-    __azimuth_scaling_factors = np.array([[4, 0.779], [5, 0.86], [8, 1.018], [10, 1.090], [11, 1.123], [12, 1.146], [14, 1.19], [15, 1.211], [16, 1.226], [19, 1.273], [20, 1.289], [25, 1.358]], dtype=float)
+    __azimuth_scaling_factors = np.array(
+        [
+            [4, 0.779],
+            [5, 0.86],
+            [8, 1.018],
+            [10, 1.090],
+            [11, 1.123],
+            [12, 1.146],
+            [14, 1.19],
+            [15, 1.211],
+            [16, 1.226],
+            [19, 1.273],
+            [20, 1.289],
+            [25, 1.358],
+        ],
+        dtype=float,
+    )
 
-    __zenith_scaling_factors = np.array([[8, 0.889], [10, 0.957], [11, 1.031], [12, 1.104], [15, 1.108], [19, 1.184], [20, 1.178], [25, 1.282]], dtype=float)
+    __zenith_scaling_factors = np.array(
+        [
+            [8, 0.889],
+            [10, 0.957],
+            [11, 1.031],
+            [12, 1.104],
+            [15, 1.108],
+            [19, 1.184],
+            [20, 1.178],
+            [25, 1.282],
+        ],
+        dtype=float,
+    )
 
     # Ray offset angles
-    _ray_offset_angles = np.array([0.0447, -0.0447, 0.1413, -0.1413, 0.2492, -0.2492, 0.3715, -0.3715, 0.5129, -0.5129, 0.6797, -0.6797, 0.8844, -0.8844, 1.1481, -1.1481, 1.5195, -1.5195, 2.1551, -2.1551])
+    _ray_offset_angles = np.array(
+        [
+            0.0447,
+            -0.0447,
+            0.1413,
+            -0.1413,
+            0.2492,
+            -0.2492,
+            0.3715,
+            -0.3715,
+            0.5129,
+            -0.5129,
+            0.6797,
+            -0.6797,
+            0.8844,
+            -0.8844,
+            1.1481,
+            -1.1481,
+            1.5195,
+            -1.5195,
+            2.1551,
+            -2.1551,
+        ]
+    )
 
     # Sub-cluster partitions for the three strongest clusters
-    subcluster_indices: List[List[int]] = [[0, 1, 2, 3, 4, 5, 6, 7, 18, 19], [8, 9, 10, 11, 16, 17], [12, 13, 14, 15]]
+    subcluster_indices: List[List[int]] = [
+        [0, 1, 2, 3, 4, 5, 6, 7, 18, 19],
+        [8, 9, 10, 11, 16, 17],
+        [12, 13, 14, 15],
+    ]
 
-    def __init__(self, alpha_device: SimulatedDevice | None = None, beta_device: SimulatedDevice | None = None, gain: float = 1.0, delay_normalization: DelayNormalization = DelayNormalization.ZERO, **kwargs) -> None:
+    def __init__(
+        self,
+        alpha_device: SimulatedDevice | None = None,
+        beta_device: SimulatedDevice | None = None,
+        gain: float = 1.0,
+        delay_normalization: DelayNormalization = DelayNormalization.ZERO,
+        **kwargs,
+    ) -> None:
         """
         Args:
 
@@ -865,7 +1100,9 @@ class ClusterDelayLineBase(Channel[ClusterDelayLineRealization]):
         """
         ...  # pragma: no cover
 
-    def _cluster_delays(self, delay_spread: float, rice_factor: float) -> Tuple[np.ndarray, np.ndarray]:
+    def _cluster_delays(
+        self, delay_spread: float, rice_factor: float
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """Compute a single sample set of normalized cluster delays.
 
         A single cluster delay is referred to as :math:`\\tau_n` within the the standard.
@@ -886,13 +1123,18 @@ class ClusterDelayLineBase(Channel[ClusterDelayLineRealization]):
         """
 
         # Generate delays according to the configured spread and scales
-        raw_delays = -self.delay_scaling * delay_spread * np.log(self._rng.uniform(size=self.num_clusters))
+        raw_delays = (
+            -self.delay_scaling * delay_spread * np.log(self._rng.uniform(size=self.num_clusters))
+        )
 
         # Sort the delays in ascending order
         raw_delays.sort()
 
         # Normalize delays if the respective flag is enabled
-        if self.delay_normalization == DelayNormalization.ZERO or self.delay_normalization == DelayNormalization.TOF:
+        if (
+            self.delay_normalization == DelayNormalization.ZERO
+            or self.delay_normalization == DelayNormalization.TOF
+        ):
             raw_delays -= raw_delays[0]
 
         # Scale delays, if required by the configuration
@@ -900,18 +1142,25 @@ class ClusterDelayLineBase(Channel[ClusterDelayLineRealization]):
 
         # In case of line of sight, scale the delays by the appropriate K-factor
         if self.line_of_sight:
-            rice_scale = 0.775 - 0.0433 * rice_factor + 2e-4 * rice_factor**2 + 17e-6 * rice_factor**3
+            rice_scale = (
+                0.775 - 0.0433 * rice_factor + 2e-4 * rice_factor**2 + 17e-6 * rice_factor**3
+            )
             scaled_delays /= rice_scale
 
         # Account for the time of flight over the line of sight, if required
         if self.delay_normalization == DelayNormalization.TOF:
-            time_of_flight = np.linalg.norm(self.alpha_device.position - self.beta_device.position, 2) / speed_of_light
+            time_of_flight = (
+                np.linalg.norm(self.alpha_device.position - self.beta_device.position, 2)
+                / speed_of_light
+            )
             scaled_delays += time_of_flight
 
         # Return the raw and scaled delays, since they are both required for further processing
         return raw_delays, scaled_delays
 
-    def _cluster_powers(self, delay_spread: float, delays: np.ndarray, rice_factor: float) -> np.ndarray:
+    def _cluster_powers(
+        self, delay_spread: float, delays: np.ndarray, rice_factor: float
+    ) -> np.ndarray:
         """Compute a single sample set of normalized cluster power factors from delays.
 
         A single cluster power factor is referred to as :math:`P_n` within the the standard.
@@ -933,8 +1182,13 @@ class ClusterDelayLineBase(Channel[ClusterDelayLineRealization]):
                 Vector of cluster power scales.
         """
 
-        shadowing = 10 ** (-0.1 * self._rng.normal(scale=self.cluster_shadowing_std, size=delays.shape))
-        powers = np.exp(-delays * (self.delay_scaling - 1) / (self.delay_scaling * delay_spread)) * shadowing
+        shadowing = 10 ** (
+            -0.1 * self._rng.normal(scale=self.cluster_shadowing_std, size=delays.shape)
+        )
+        powers = (
+            np.exp(-delays * (self.delay_scaling - 1) / (self.delay_scaling * delay_spread))
+            * shadowing
+        )
 
         # In case of line of sight, add a specular component to the cluster delays
         if self.line_of_sight:
@@ -947,7 +1201,13 @@ class ClusterDelayLineBase(Channel[ClusterDelayLineRealization]):
 
         return powers
 
-    def _ray_azimuth_angles(self, cluster_powers: np.ndarray, rice_factor: float, los_azimuth: float, direction: Literal["arrival", "departure"]) -> np.ndarray:
+    def _ray_azimuth_angles(
+        self,
+        cluster_powers: np.ndarray,
+        rice_factor: float,
+        los_azimuth: float,
+        direction: Literal["arrival", "departure"],
+    ) -> np.ndarray:
         """Compute cluster ray azimuth angles of arrival or departure.
 
         Args:
@@ -974,14 +1234,21 @@ class ClusterDelayLineBase(Channel[ClusterDelayLineRealization]):
 
         # Scale the scale (hehe) in the line of sight case
         if self.line_of_sight:
-            angle_scale *= 1.1035 - 0.028 * rice_factor - 2e-3 * rice_factor**2 + 1e-4 * rice_factor**3
+            angle_scale *= (
+                1.1035 - 0.028 * rice_factor - 2e-3 * rice_factor**2 + 1e-4 * rice_factor**3
+            )
 
         # Draw azimuth angle spread from the distribution
         spread_mean = self.aoa_spread_mean if direction == "arrival" else self.aod_spread_mean
         spread_std = self.aoa_spread_std if direction == "arrival" else self.aod_spread_std
         spread = 10 ** self._rng.normal(spread_mean, spread_std, size=size)
 
-        angles: np.ndarray = 2 * (spread / 1.4) * np.sqrt(-np.log(cluster_powers / cluster_powers.max())) / angle_scale
+        angles: np.ndarray = (
+            2
+            * (spread / 1.4)
+            * np.sqrt(-np.log(cluster_powers / cluster_powers.max()))
+            / angle_scale
+        )
 
         # Assign positive / negative integers and add some noise
         angle_variation = self._rng.normal(0.0, (spread / 7) ** 2, size=size)
@@ -997,13 +1264,17 @@ class ClusterDelayLineBase(Channel[ClusterDelayLineRealization]):
             spread_angles += los_azimuth
 
         # Spread the angles
-        cluster_spread = self.cluster_aoa_spread if direction == "arrival" else self.cluster_aod_spread
+        cluster_spread = (
+            self.cluster_aoa_spread if direction == "arrival" else self.cluster_aod_spread
+        )
         ray_offsets = cluster_spread * self._ray_offset_angles
         ray_angles = np.tile(spread_angles[:, None], len(ray_offsets)) + ray_offsets
 
         return ray_angles
 
-    def _ray_zoa(self, cluster_powers: np.ndarray, rice_factor: float, los_zenith: float) -> np.ndarray:
+    def _ray_zoa(
+        self, cluster_powers: np.ndarray, rice_factor: float, los_zenith: float
+    ) -> np.ndarray:
         """Compute cluster ray zenith angles of arrival.
 
         Args:
@@ -1030,13 +1301,17 @@ class ClusterDelayLineBase(Channel[ClusterDelayLineRealization]):
         zenith_scale = self.__zenith_scaling_factors[scale_index, 1]
 
         if self.line_of_sight:
-            zenith_scale *= 1.3086 + 0.0339 * rice_factor - 0.0077 * rice_factor**2 + 2e-4 * rice_factor**3
+            zenith_scale *= (
+                1.3086 + 0.0339 * rice_factor - 0.0077 * rice_factor**2 + 2e-4 * rice_factor**3
+            )
 
         # Draw zenith angle spread from the distribution
         zenith_spread = 10 ** self._rng.normal(self.zoa_spread_mean, self.zoa_spread_std)
 
         # Generate angle starting point
-        zenith_centroids: np.ndarray = -zenith_spread * np.log(cluster_powers / cluster_powers.max()) / zenith_scale
+        zenith_centroids: np.ndarray = (
+            -zenith_spread * np.log(cluster_powers / cluster_powers.max()) / zenith_scale
+        )
 
         cluster_variation = self._rng.normal(0.0, (zenith_spread / 7) ** 2, size=size)
         cluster_sign = self._rng.choice([-1.0, 1.0], size=size)
@@ -1056,7 +1331,9 @@ class ClusterDelayLineBase(Channel[ClusterDelayLineRealization]):
 
         return ray_zenith
 
-    def _ray_zod(self, cluster_powers: np.ndarray, rice_factor: float, los_zenith: float) -> np.ndarray:
+    def _ray_zod(
+        self, cluster_powers: np.ndarray, rice_factor: float, los_zenith: float
+    ) -> np.ndarray:
         """Compute cluster ray zenith angles of departure.
 
         Args:
@@ -1083,13 +1360,17 @@ class ClusterDelayLineBase(Channel[ClusterDelayLineRealization]):
         zenith_scale = self.__zenith_scaling_factors[scale_index, 1]
 
         if self.line_of_sight:
-            zenith_scale *= 1.3086 + 0.0339 * rice_factor - 0.0077 * rice_factor**2 + 2e-4 * rice_factor**3
+            zenith_scale *= (
+                1.3086 + 0.0339 * rice_factor - 0.0077 * rice_factor**2 + 2e-4 * rice_factor**3
+            )
 
         # Draw zenith angle spread from the distribution
         zenith_spread = 10 ** self._rng.normal(self.zod_spread_mean, self.zod_spread_std, size=size)
 
         # Generate angle starting point
-        zenith_centroids: np.ndarray = -zenith_spread * np.log(cluster_powers / cluster_powers.max()) / zenith_scale
+        zenith_centroids: np.ndarray = (
+            -zenith_spread * np.log(cluster_powers / cluster_powers.max()) / zenith_scale
+        )
 
         cluster_variation = self._rng.normal(0.0, (zenith_spread / 7) ** 2, size=size)
         cluster_sign = self._rng.choice([-1.0, 1.0], size=size)
@@ -1116,15 +1397,23 @@ class ClusterDelayLineBase(Channel[ClusterDelayLineRealization]):
         rice_factor = self._rng.normal(loc=self.rice_factor_mean, scale=self.rice_factor_std)
 
         # Compute the line of sight distance
-        los_distance = np.linalg.norm(self.alpha_device.global_position - self.beta_device.global_position, 2)
+        los_distance = np.linalg.norm(
+            self.alpha_device.global_position - self.beta_device.global_position, 2
+        )
 
         # Ensure transmiter and receiver are not located at identical positions
         if los_distance == 0.0:
-            raise RuntimeError("Identical device positions violate the far-field assumption of the 3GPP CDL channel model")
+            raise RuntimeError(
+                "Identical device positions violate the far-field assumption of the 3GPP CDL channel model"
+            )
 
         # Compute line of sight directions in local coordinates for both devices
-        tx_los_direction = self.alpha_device.backwards_transformation.transform_direction(self.beta_device.global_position, True)
-        rx_los_direction = self.beta_device.backwards_transformation.transform_direction(self.alpha_device.global_position, True)
+        tx_los_direction = self.alpha_device.backwards_transformation.transform_direction(
+            self.beta_device.global_position, True
+        )
+        rx_los_direction = self.beta_device.backwards_transformation.transform_direction(
+            self.alpha_device.global_position, True
+        )
 
         # Extract directive angles in spherical coordinates
         tx_los_angles = tx_los_direction.to_spherical()
@@ -1138,8 +1427,20 @@ class ClusterDelayLineBase(Channel[ClusterDelayLineRealization]):
         cluster_powers = self._cluster_powers(delay_spread, raw_cluster_delays, rice_factor)
 
         # Compute cluster angles
-        ray_aod = pi / 180 * self._ray_azimuth_angles(cluster_powers, rice_factor, 180 * tx_los_angles[0] / pi, "departure")
-        ray_aoa = pi / 180 * self._ray_azimuth_angles(cluster_powers, rice_factor, 180 * rx_los_angles[0] / pi, "arrival")
+        ray_aod = (
+            pi
+            / 180
+            * self._ray_azimuth_angles(
+                cluster_powers, rice_factor, 180 * tx_los_angles[0] / pi, "departure"
+            )
+        )
+        ray_aoa = (
+            pi
+            / 180
+            * self._ray_azimuth_angles(
+                cluster_powers, rice_factor, 180 * rx_los_angles[0] / pi, "arrival"
+            )
+        )
         ray_zod = pi / 180 * self._ray_zod(cluster_powers, rice_factor, 180 * tx_los_angles[1] / pi)
         ray_zoa = pi / 180 * self._ray_zoa(cluster_powers, rice_factor, 180 * rx_los_angles[1] / pi)
 
@@ -1150,15 +1451,38 @@ class ClusterDelayLineBase(Channel[ClusterDelayLineRealization]):
                 self._rng.shuffle(a)
 
         # Generate cross-polarization power ratios (step 9)
-        cross_polarization = 10 ** (0.1 * self._rng.normal(self.cross_polarization_power_mean, self.cross_polarization_power_std, size=(num_clusters, num_rays)))
+        cross_polarization = 10 ** (
+            0.1
+            * self._rng.normal(
+                self.cross_polarization_power_mean,
+                self.cross_polarization_power_std,
+                size=(num_clusters, num_rays),
+            )
+        )
 
         # Draw initial random phases (step 10)
         # A single 2x2 slice represents the jones matrix transforming the polarization of a single ray
-        polarization_transformations = np.exp(2j * pi * self._rng.uniform(size=(2, 2, num_clusters, num_rays)))
+        polarization_transformations = np.exp(
+            2j * pi * self._rng.uniform(size=(2, 2, num_clusters, num_rays))
+        )
         polarization_transformations[0, 1, ::] *= cross_polarization**-0.5
         polarization_transformations[1, 0, ::] *= cross_polarization**-0.5
 
-        return ClusterDelayLineRealization(self.alpha_device, self.beta_device, self.gain, self.line_of_sight, rice_factor, ray_aoa, ray_zoa, ray_aod, ray_zod, cluster_delays, self.cluster_delay_spread, cluster_powers, polarization_transformations)
+        return ClusterDelayLineRealization(
+            self.alpha_device,
+            self.beta_device,
+            self.gain,
+            self.line_of_sight,
+            rice_factor,
+            ray_aoa,
+            ray_zoa,
+            ray_aod,
+            ray_zod,
+            cluster_delays,
+            self.cluster_delay_spread,
+            cluster_powers,
+            polarization_transformations,
+        )
 
     @property
     def _center_frequency(self) -> float:
@@ -1457,7 +1781,9 @@ class ClusterDelayLine(ClusterDelayLineBase, Serializable):
     @cross_polarization_power_std.setter
     def cross_polarization_power_std(self, value: float) -> None:
         if value < 0.0:
-            raise ValueError("Cross-polarization power standard deviation must be greater or equal to zero")
+            raise ValueError(
+                "Cross-polarization power standard deviation must be greater or equal to zero"
+            )
 
         self.__cross_polarization_power_std = value
 
@@ -1534,6 +1860,8 @@ class ClusterDelayLine(ClusterDelayLineBase, Serializable):
     @cluster_shadowing_std.setter
     def cluster_shadowing_std(self, value: float) -> None:
         if value < 0.0:
-            raise ValueError("Cluster shadowing standard deviation must be greater or equal to zero")
+            raise ValueError(
+                "Cluster shadowing standard deviation must be greater or equal to zero"
+            )
 
         self.__cluster_shadowing_std = value

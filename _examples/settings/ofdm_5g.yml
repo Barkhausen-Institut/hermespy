@@ -20,13 +20,13 @@ Devices:
   # Representation of a single (virtual) device
   - &device_alpha !<SimulatedDevice>
 
-    carrier_frequency: 3e9          # Center frequency of Rf-band emitted signal
+    carrier_frequency: 3e9               # Center frequency of Rf-band emitted signal
     
-    antennas: !<UniformArray>       # Uniform antenna array
+    antennas: !<SimulatedUniformArray>   # Uniform antenna array
       
-      antenna: !<IdealAntenna>      # Assume ideal isotropic antennas
-      spacing: 10e-2                # Elements spaced 10cm apart
-      dimensions: [2, 1, 1]         # 2 elements within the array
+      element: !<SimulatedIdealAntenna>  # Assume ideal isotropic antennas
+      spacing: 10e-2                     # Elements spaced 10cm apart
+      dimensions: [2, 1, 1]              # 2 elements within the array
 
 
 # Specify channel models interconnecting devices 

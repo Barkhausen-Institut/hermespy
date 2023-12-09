@@ -8,7 +8,15 @@ from .scrambler import Scrambler3GPP, Scrambler80211a
 # Attempt to import the C++ bindings of aff3ct.
 # They are treated as an optional feature.
 try:  # pragma: no cover
-    from .aff3ct import BCHCoding, LDPCCoding, PolarSCCoding, PolarSCLCoding, ReedSolomonCoding, RSCCoding, TurboCoding
+    from .aff3ct import (
+        BCHCoding,
+        LDPCCoding,
+        PolarSCCoding,
+        PolarSCLCoding,
+        ReedSolomonCoding,
+        RSCCoding,
+        TurboCoding,
+    )
 
 except ModuleNotFoundError:  # pragma: no cover
     ...
@@ -23,4 +31,19 @@ __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
-__all__ = ["Encoder", "EncoderManager", "BlockInterleaver", "CyclicRedundancyCheck", "BCHCoding", "LDPCCoding", "PolarSCCoding", "PolarSCLCoding", "ReedSolomonCoding", "RSCCoding", "TurboCoding", "RepetitionEncoder", "Scrambler80211a", "Scrambler3GPP"]
+__all__ = [
+    "Encoder",
+    "EncoderManager",
+    "BlockInterleaver",
+    "CyclicRedundancyCheck",
+    "BCHCoding",
+    "LDPCCoding",
+    "PolarSCCoding",
+    "PolarSCLCoding",
+    "ReedSolomonCoding",
+    "RSCCoding",
+    "TurboCoding",
+    "RepetitionEncoder",
+    "Scrambler80211a",
+    "Scrambler3GPP",
+]

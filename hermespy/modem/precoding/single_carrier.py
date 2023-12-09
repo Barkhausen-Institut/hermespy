@@ -39,11 +39,15 @@ class SingleCarrier(SymbolPrecoder, Serializable):
 
     def encode(self, symbols: StatedSymbols) -> StatedSymbols:
         if symbols.num_streams != 1:
-            raise RuntimeError("Single-Carrier spatial multiplexing only supports one-dimensional input streams during encoding")
+            raise RuntimeError(
+                "Single-Carrier spatial multiplexing only supports one-dimensional input streams during encoding"
+            )
 
         repeated_symbols = symbols.copy()
         repeated_symbols.raw = np.repeat(repeated_symbols.raw, self.num_output_streams, axis=0)
-        repeated_symbols.states = np.repeat(repeated_symbols.states, self.num_output_streams, axis=0)
+        repeated_symbols.states = np.repeat(
+            repeated_symbols.states, self.num_output_streams, axis=0
+        )
 
         return repeated_symbols
 

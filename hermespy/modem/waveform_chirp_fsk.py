@@ -14,7 +14,12 @@ import numpy as np
 from scipy import integrate
 
 from hermespy.core.factory import Serializable
-from hermespy.modem.waveform import PilotWaveformGenerator, StatedSymbols, WaveformGenerator, Synchronization
+from hermespy.modem.waveform import (
+    PilotWaveformGenerator,
+    StatedSymbols,
+    WaveformGenerator,
+    Synchronization,
+)
 from hermespy.core.signal_model import Signal
 from .symbols import Symbols
 from .waveform_correlation_synchronization import CorrelationSynchronization
@@ -47,7 +52,16 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
     __num_data_chirps: int
     __guard_interval: float
 
-    def __init__(self, chirp_duration: float = 10e-9, chirp_bandwidth: float = 1e9, freq_difference: Optional[float] = None, num_pilot_chirps: int = 14, num_data_chirps: int = 50, guard_interval: float = 0.0, **kwargs) -> None:
+    def __init__(
+        self,
+        chirp_duration: float = 10e-9,
+        chirp_bandwidth: float = 1e9,
+        freq_difference: Optional[float] = None,
+        num_pilot_chirps: int = 14,
+        num_data_chirps: int = 50,
+        guard_interval: float = 0.0,
+        **kwargs,
+    ) -> None:
         """Frequency Shift Keying Waveform Generator object initialization.
 
         Args:
@@ -94,7 +108,10 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
             float: Frame length in seconds.
         """
 
-        return self.chirp_duration * (self.num_data_chirps + self.num_pilot_chirps) + self.guard_interval
+        return (
+            self.chirp_duration * (self.num_data_chirps + self.num_pilot_chirps)
+            + self.guard_interval
+        )
 
     @property
     def chirp_duration(self) -> float:
@@ -303,7 +320,9 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
 
     @property
     def samples_per_frame(self) -> int:
-        return self.samples_in_chirp * self.chirps_in_frame + int((np.around(self.__guard_interval * self.sampling_rate)))
+        return self.samples_in_chirp * self.chirps_in_frame + int(
+            (np.around(self.__guard_interval * self.sampling_rate))
+        )
 
     @property
     def symbol_duration(self) -> float:
@@ -335,7 +354,9 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
         bits = np.empty(symbols.num_symbols * self.bits_per_symbol)
 
         for s, symbol in enumerate(symbols.raw[0, ::].flat):
-            symbol_bits = [int(x) for x in list(np.binary_repr(int(symbol.real), width=bits_per_symbol))]
+            symbol_bits = [
+                int(x) for x in list(np.binary_repr(int(symbol.real), width=bits_per_symbol))
+            ]
             bits[s * bits_per_symbol : (s + 1) * bits_per_symbol] = symbol_bits
 
         return bits
@@ -361,7 +382,9 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
 
         # Modulate data symbols
         for symbol in symbols.raw[0, ::].flat:
-            frame_samples[sample_idx : sample_idx + samples_in_chirp] = prototypes[int(symbol.real), :]
+            frame_samples[sample_idx : sample_idx + samples_in_chirp] = prototypes[
+                int(symbol.real), :
+            ]
             sample_idx += samples_in_chirp
 
         return frame_samples
@@ -471,7 +494,9 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
 
         pilot_samples = np.empty(self.samples_in_chirp * self.num_pilot_chirps, dtype=complex)
         for pilot_idx in range(self.num_pilot_chirps):
-            pilot_samples[pilot_idx * self.samples_in_chirp : (1 + pilot_idx) * self.samples_in_chirp] = prototypes[pilot_idx % len(prototypes)]
+            pilot_samples[
+                pilot_idx * self.samples_in_chirp : (1 + pilot_idx) * self.samples_in_chirp
+            ] = prototypes[pilot_idx % len(prototypes)]
 
         return Signal(pilot_samples, self.sampling_rate)
 
@@ -497,7 +522,9 @@ class ChirpFSKSynchronization(Synchronization[ChirpFSKWaveform], Serializable):
         Synchronization.__init__(self, waveform_generator)
 
 
-class ChirpFSKCorrelationSynchronization(CorrelationSynchronization[ChirpFSKWaveform], Serializable):
+class ChirpFSKCorrelationSynchronization(
+    CorrelationSynchronization[ChirpFSKWaveform], Serializable
+):
     """Correlation-based clock-synchronization for Chirp-FSK waveforms."""
 
     yaml_tag = "ChirpFsk-Correlation"

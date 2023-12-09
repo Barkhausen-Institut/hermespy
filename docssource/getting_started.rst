@@ -293,7 +293,7 @@ can be launched by executing
    :lines: 45-50
 
 which will result in a rendered plot being generated.
-The full code snippet implementing the above introduction can be downloaded from `GitHub <https://github.com/Barkhausen-Institut/hermespy/blob/main/_examples/library/getting_started_simulation.py>`_.
+The full code snippet implementing the above introduction can be downloaded from `GitHub - Getting Started Simulation <https://github.com/Barkhausen-Institut/hermespy/blob/main/_examples/library/getting_started_simulation.py>`_.
 For more complex simulation examples and instructions on how to integrate and evaluate your own signal processing algorithms in HermesPy,
 please refer to the :doc:`Tutorials <tutorials>` section.
 
@@ -417,10 +417,6 @@ The data can be accessed by the user for further processing, or even directly re
    :linenos:
    :lines: 45-46
 
-The full code snippet implementing the above introduction can be downloaded from `GitHub <https://github.com/Barkhausen-Institut/hermespy/blob/main/_examples/library/getting_started_loop.py>`_.
+The full code snippet implementing the above introduction can be downloaded from `GitHub - Getting Started Loop <https://github.com/Barkhausen-Institut/hermespy/blob/main/_examples/library/getting_started_loop.py>`_.
 For more complex simulation examples and instructions on how to integrate and evaluate your own signal processing algorithms in HermesPy,
 please refer to the :doc:`Tutorials <tutorials>` section.
-
-=================
-Command Line Tool
-=================

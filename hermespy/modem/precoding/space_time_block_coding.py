@@ -57,7 +57,9 @@ class Alamouti(SymbolPrecoder, Serializable):
 
         # 2x2 MIMO Alamouti code
         if num_tx_streams != 2:
-            raise RuntimeError(f"Alamouti encoding requires two transmit antennas ({num_tx_streams} requested)")
+            raise RuntimeError(
+                f"Alamouti encoding requires two transmit antennas ({num_tx_streams} requested)"
+            )
 
         if symbols.num_blocks % 2 != 0:
             raise ValueError("Alamouti encoding must contain an even amount of data symbols blocks")
@@ -85,15 +87,30 @@ class Alamouti(SymbolPrecoder, Serializable):
             raise ValueError("Alamouti decoding must contain an even amount of data symbols blocks")
 
         channel_state = symbols.states[:, :2, 0::2, :]
-        channel_state = channel_state.todense() if isinstance(channel_state, SparseArray) else channel_state
+        channel_state = (
+            channel_state.todense() if isinstance(channel_state, SparseArray) else channel_state
+        )
 
         weight_norms = np.sum(np.abs(channel_state) ** 2, axis=1, keepdims=False)
 
-        decoded_symbols = np.empty((symbols.num_streams, symbols.num_blocks, symbols.num_symbols), dtype=complex)
-        decoded_symbols[:, 0::2, :] = (channel_state[:, 0, ::].conj() * symbols.raw[:, 0::2, :] + channel_state[:, 1, ::] * symbols.raw[:, 1::2, :].conj()) / weight_norms
-        decoded_symbols[:, 1::2, :] = (channel_state[:, 0, ::].conj() * symbols.raw[:, 1::2, :] - channel_state[:, 1, ::] * symbols.raw[:, 0::2, :].conj()) / weight_norms
+        decoded_symbols = np.empty(
+            (symbols.num_streams, symbols.num_blocks, symbols.num_symbols), dtype=complex
+        )
+        decoded_symbols[:, 0::2, :] = (
+            channel_state[:, 0, ::].conj() * symbols.raw[:, 0::2, :]
+            + channel_state[:, 1, ::] * symbols.raw[:, 1::2, :].conj()
+        ) / weight_norms
+        decoded_symbols[:, 1::2, :] = (
+            channel_state[:, 0, ::].conj() * symbols.raw[:, 1::2, :]
+            - channel_state[:, 1, ::] * symbols.raw[:, 0::2, :].conj()
+        ) / weight_norms
 
-        return StatedSymbols(decoded_symbols, np.ones((symbols.num_streams, 1, symbols.num_blocks, symbols.num_symbols), dtype=complex))
+        return StatedSymbols(
+            decoded_symbols,
+            np.ones(
+                (symbols.num_streams, 1, symbols.num_blocks, symbols.num_symbols), dtype=complex
+            ),
+        )
 
     @property
     def num_input_streams(self) -> int:
@@ -139,7 +156,9 @@ class Ganesan(SymbolPrecoder, Serializable):
         input_data = symbols.raw[0, :, :]
 
         if num_tx_streams != 4:
-            raise RuntimeError(f"Ganesan encoding requires 4 transmit antennas ({num_tx_streams} requested)")
+            raise RuntimeError(
+                f"Ganesan encoding requires 4 transmit antennas ({num_tx_streams} requested)"
+            )
 
         if symbols.num_blocks % 3 != 0:
             raise ValueError("Number of blocks must be divisable by 3.")
@@ -192,16 +211,22 @@ class Ganesan(SymbolPrecoder, Serializable):
 
         # check the number of blocks (we expect them to be divisable by 4)
         if symbols.num_blocks % 4 != 0:
-            raise ValueError("Ganesan decoding must be given an amount of data symbols blocks that is divisable by 4")
+            raise ValueError(
+                "Ganesan decoding must be given an amount of data symbols blocks that is divisable by 4"
+            )
         # check number of Tx (must be 4)
         if symbols.num_transmit_streams != 4:
-            raise ValueError(f"Ganesan decoding must be given 4 transmit antennas ({symbols.num_transmit_streams} were given)")
+            raise ValueError(
+                f"Ganesan decoding must be given 4 transmit antennas ({symbols.num_transmit_streams} were given)"
+            )
 
         states = symbols.dense_states()
 
         # Init the decoded symbols ndarray. Notice that num_blocks is reduced because of the 3/4 symbol rate.
         num_rx = symbols.num_streams
-        decoded_symbols = np.empty((num_rx, symbols.num_blocks // 4 * 3, symbols.num_symbols), dtype=np.complex_)
+        decoded_symbols = np.empty(
+            (num_rx, symbols.num_blocks // 4 * 3, symbols.num_symbols), dtype=np.complex_
+        )
 
         # split the r vector onto real and imag vectors and concatenate them
         b = symbols.raw
@@ -218,14 +243,18 @@ class Ganesan(SymbolPrecoder, Serializable):
         # R' = {r1.real, r2.real, r3.real, r4.real, r1.imag, r2.imag, r3.imag, r4.imag}, where
         # s' = {s1.real, s2.real, s3.real, s1.imag, s2.imag, s3.imag}
         # Then matrix A can be constructed with the following sings and index matrices
-        signs_matrix_real = np.array([[1, -1, 1, -1, -1, 1], [1, -1, -1, -1, 1, 1], [1, 1, 1, 1, -1, 1], [1, 1, -1, 1, 1, 1]])
+        signs_matrix_real = np.array(
+            [[1, -1, 1, -1, -1, 1], [1, -1, -1, -1, 1, 1], [1, 1, 1, 1, -1, 1], [1, 1, -1, 1, 1, 1]]
+        )
         signs_matrix_imag = signs_matrix_real.copy()
         signs_matrix_imag[:, 3:] *= -1
         signs_matrix = np.concatenate((signs_matrix_real, signs_matrix_imag), axis=0)
         index_matrix = np.array([[0, 2, 3], [1, 3, 2], [2, 0, 1], [3, 1, 0]])
 
         # Init result(decoded_symbols), matrix A(an) and estimator with lhs(b) of the linear system
-        decoded_symbols = np.empty((num_rx, symbols.num_blocks * 3 // 4, symbols.num_symbols), dtype=np.complex_)
+        decoded_symbols = np.empty(
+            (num_rx, symbols.num_blocks * 3 // 4, symbols.num_symbols), dtype=np.complex_
+        )
         an = np.empty((num_rx, 6, 8, symbols.num_symbols), dtype=np.float_)
         estimator = np.empty((symbols.num_symbols, symbols.num_streams, 6, 8), dtype=np.float_)
         b = np.empty((num_rx, 8, symbols.num_symbols), dtype=np.float_)
@@ -238,20 +267,30 @@ class Ganesan(SymbolPrecoder, Serializable):
         for n in range(symbols.num_blocks // 4):
             # Assemble matrix A'
             for n_ in range(4):
-                an[:, 3:, n_ + 4, :] = an[:, :3, n_, :] = states.real[:, index_matrix[n_], n * 4 + n_, :]
-                an[:, :3, n_ + 4, :] = an[:, 3:, n_, :] = states.imag[:, index_matrix[n_], n * 4 + n_, :]
+                an[:, 3:, n_ + 4, :] = an[:, :3, n_, :] = states.real[
+                    :, index_matrix[n_], n * 4 + n_, :
+                ]
+                an[:, :3, n_ + 4, :] = an[:, 3:, n_, :] = states.imag[
+                    :, index_matrix[n_], n * 4 + n_, :
+                ]
 
             # Calculate estimator such that estimator @ R' = s'
             # this einsum applies the signs matrix to A' and transposes it
-            estimator = np.linalg.pinv(np.einsum("ikjl,jk->lijk", an, signs_matrix, optimize=an_path))
+            estimator = np.linalg.pinv(
+                np.einsum("ikjl,jk->lijk", an, signs_matrix, optimize=an_path)
+            )
 
             # Init R' for this symbol period
             received_symbols_blocks = symbols.raw[:, n * 4 : n * 4 + 4, :]
             b = np.concatenate((received_symbols_blocks.real, received_symbols_blocks.imag), axis=1)
 
             # Solve the system and assemble extended results from 6 floats back to 3 complex
-            estimated_split_symbols = np.einsum("ijkl,jli->jki", estimator, b, optimize=estimation_path)
-            decoded_symbols[:, n * 3 : n * 3 + 3, :] = estimated_split_symbols[:, :3, :] + 1j * estimated_split_symbols[:, 3:, :]
+            estimated_split_symbols = np.einsum(
+                "ijkl,jli->jki", estimator, b, optimize=estimation_path
+            )
+            decoded_symbols[:, n * 3 : n * 3 + 3, :] = (
+                estimated_split_symbols[:, :3, :] + 1j * estimated_split_symbols[:, 3:, :]
+            )
 
         # Construct ideal channel states to cast result to StatedSymbols
         ideal_states = np.ones((num_rx, 1, decoded_symbols.shape[1], decoded_symbols.shape[2]))

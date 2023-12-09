@@ -10,7 +10,15 @@ from abc import abstractmethod
 from h5py import Group
 from typing import Generic
 
-from .device import Device, OperatorSlot, ReceptionType, Receiver, SNRType, TransmissionType, Transmitter
+from .device import (
+    Device,
+    OperatorSlot,
+    ReceptionType,
+    Receiver,
+    SNRType,
+    TransmissionType,
+    Transmitter,
+)
 from .signal_model import Signal
 
 __author__ = "Jan Adler"
@@ -23,12 +31,16 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class DuplexOperator(Transmitter[TransmissionType], Receiver[ReceptionType], Generic[TransmissionType, ReceptionType]):
+class DuplexOperator(
+    Transmitter[TransmissionType], Receiver[ReceptionType], Generic[TransmissionType, ReceptionType]
+):
     """Operator binding to both transmit and receive slots of any device."""
 
     __device: Device | None
 
-    def __init__(self, device: Device | None = None, reference: Device | None = None, seed: int | None = None):
+    def __init__(
+        self, device: Device | None = None, reference: Device | None = None, seed: int | None = None
+    ):
         """
         Args:
 

@@ -9,7 +9,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from enum import Enum
 from math import isclose
-from typing import Any, overload, List, Optional, Tuple, Type, Union
+from typing import Any, Callable, overload, List, Optional, Tuple, Type, Union
 
 import numpy as np
 
@@ -69,7 +69,12 @@ class Logarithmic(float):
     __value_db: float  # Logarithmic value in dB
     __conversion: DbConversionType  # Conversion type of the logarithmic scale
 
-    def __init__(self, value: Union[float, int], value_type: ValueType = ValueType.DB, conversion: DbConversionType = DbConversionType.POWER) -> None:
+    def __init__(
+        self,
+        value: Union[float, int],
+        value_type: ValueType = ValueType.DB,
+        conversion: DbConversionType = DbConversionType.POWER,
+    ) -> None:
         """
         Args:
 
@@ -103,7 +108,12 @@ class Logarithmic(float):
         self.__value_db = value_db
         self.__conversion = conversion
 
-    def __new__(cls: Type[Logarithmic], value: Union[float, int], value_type: ValueType = ValueType.DB, conversion: DbConversionType = DbConversionType.POWER) -> Logarithmic:
+    def __new__(
+        cls: Type[Logarithmic],
+        value: Union[float, int],
+        value_type: ValueType = ValueType.DB,
+        conversion: DbConversionType = DbConversionType.POWER,
+    ) -> Logarithmic:
         """
         Args:
 
@@ -119,16 +129,24 @@ class Logarithmic(float):
                 Power by default.
         """
 
+        # Force floating point values to prevent a nasty conversion bug
+        _value = float(value)
+
         if value_type is ValueType.LIN:
-            return float.__new__(cls, value)
+            return float.__new__(cls, _value)
 
         if value_type is ValueType.DB:
-            return float.__new__(cls, db2lin(value, conversion))
+            return float.__new__(cls, db2lin(_value, conversion))
 
         raise ValueError("Unknown value type")
 
     @classmethod
-    def From_Tuple(cls: Type[Logarithmic], linear: float, logarithmic: float, conversion: DbConversionType = DbConversionType.POWER) -> Logarithmic:
+    def From_Tuple(
+        cls: Type[Logarithmic],
+        linear: float,
+        logarithmic: float,
+        conversion: DbConversionType = DbConversionType.POWER,
+    ) -> Logarithmic:
         instance = cls.__new__(cls, linear, ValueType.LIN)
         cls.__init__(instance, logarithmic, ValueType.DB, conversion)
 
@@ -246,6 +264,20 @@ class Logarithmic(float):
 
         return f"<Log {str(self)}>"
 
+    def __reduce__(
+        self,
+    ) -> Tuple[
+        Callable[[float, float, DbConversionType], Logarithmic],
+        Tuple[
+            float,
+            float,
+            DbConversionType,
+        ],
+    ]:
+        """Serialization callback for the Ray framework / pickle."""
+
+        return Logarithmic.From_Tuple, (float(self), self.value_db, self.conversion)
+
 
 class LogarithmicSequence(np.ndarray):
     """A sequence of logarithmic numbers."""
@@ -253,7 +285,12 @@ class LogarithmicSequence(np.ndarray):
     __values_db: List[float]
     __conversion: DbConversionType
 
-    def __new__(cls: Type[LogarithmicSequence], values: Optional[Sequence[Union[float, int]]] = None, value_type: ValueType = ValueType.DB, conversion: DbConversionType = DbConversionType.POWER) -> LogarithmicSequence:
+    def __new__(
+        cls: Type[LogarithmicSequence],
+        values: Optional[Sequence[Union[float, int]]] = None,
+        value_type: ValueType = ValueType.DB,
+        conversion: DbConversionType = DbConversionType.POWER,
+    ) -> LogarithmicSequence:
         """
         Args:
 
@@ -323,11 +360,16 @@ class LogarithmicSequence(np.ndarray):
         Returns: List of logarithmics.
         """
 
-        return [Logarithmic.From_Tuple(lin, log, self.conversion) for lin, log in zip(self.view(np.ndarray), self.__values_db)]
+        return [
+            Logarithmic.From_Tuple(lin, log, self.conversion)
+            for lin, log in zip(self.view(np.ndarray), self.__values_db)
+        ]
 
     def __getitem__(self, i: Any) -> Union[Logarithmic, np.ndarray]:  # type: ignore
         if isinstance(i, (int, np.integer)):
-            return Logarithmic.From_Tuple(np.ndarray.__getitem__(self, i), self.__values_db[i], self.conversion)
+            return Logarithmic.From_Tuple(
+                np.ndarray.__getitem__(self, i), self.__values_db[i], self.conversion
+            )
 
         return np.ndarray.__getitem__(self, i)
 
@@ -341,7 +383,9 @@ class LogarithmicSequence(np.ndarray):
             np.ndarray.__setitem__(self, i, item)
             self.__values_db[i] = lin2db(item, self.conversion)
 
-    def __reduce__(self) -> Tuple[Type[LogarithmicSequence], Tuple[np.ndarray, ValueType, DbConversionType]]:
+    def __reduce__(
+        self,
+    ) -> Tuple[Type[LogarithmicSequence], Tuple[np.ndarray, ValueType, DbConversionType]]:
         """Serialization callback for the Ray framework."""
 
         deserializer = LogarithmicSequence
@@ -351,16 +395,23 @@ class LogarithmicSequence(np.ndarray):
 
 
 @overload
-def dB(*values: Sequence[Union[int, float]], conversion: DbConversionType = DbConversionType.POWER) -> LogarithmicSequence:
+def dB(
+    *values: Sequence[Union[int, float]], conversion: DbConversionType = DbConversionType.POWER
+) -> LogarithmicSequence:
     ...  # pragma no cover
 
 
 @overload
-def dB(*values: Union[int, float], conversion: DbConversionType = DbConversionType.POWER) -> Union[Logarithmic, LogarithmicSequence]:
+def dB(
+    *values: Union[int, float], conversion: DbConversionType = DbConversionType.POWER
+) -> Union[Logarithmic, LogarithmicSequence]:
     ...  # pragma no cover
 
 
-def dB(*values: Union[int, float, Sequence[Union[int, float]]], conversion: DbConversionType = DbConversionType.POWER) -> Union[Logarithmic, LogarithmicSequence]:
+def dB(
+    *values: Union[int, float, Sequence[Union[int, float]]],
+    conversion: DbConversionType = DbConversionType.POWER,
+) -> Union[Logarithmic, LogarithmicSequence]:
     """Represent scalar value as logarithmic number.
 
     Args:

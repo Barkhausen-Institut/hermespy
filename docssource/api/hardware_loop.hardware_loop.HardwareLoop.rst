@@ -1,3 +1,7 @@
-.. automodule:: hermespy.hardware_loop.hardware_loop
+================
+Hardaware Loop
+================
+
+.. autoclass:: hermespy.hardware_loop.hardware_loop.HardwareLoop
 
 .. footbibliography::

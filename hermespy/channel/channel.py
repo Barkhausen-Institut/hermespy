@@ -5,7 +5,15 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, Generic, Optional, Tuple, Type, TypeVar, TYPE_CHECKING
 from h5py import Group
 
-from hermespy.core import Device, DeviceOutput, RandomNode, SerializableEnum, Signal, ChannelStateInformation, Serializable
+from hermespy.core import (
+    Device,
+    DeviceOutput,
+    RandomNode,
+    SerializableEnum,
+    Signal,
+    ChannelStateInformation,
+    Serializable,
+)
 
 if TYPE_CHECKING:
     from hermespy.simulation import SimulatedDevice, SimulationScenario  # pragma: no cover
@@ -83,7 +91,13 @@ class ChannelRealization(object):
     __beta_device: Device
     __interpolation_mode: InterpolationMode
 
-    def __init__(self, alpha_device: Device, beta_device: Device, gain: float, interpolation_mode: InterpolationMode = InterpolationMode.NEAREST) -> None:
+    def __init__(
+        self,
+        alpha_device: Device,
+        beta_device: Device,
+        gain: float,
+        interpolation_mode: InterpolationMode = InterpolationMode.NEAREST,
+    ) -> None:
         """
         Args:
 
@@ -134,7 +148,13 @@ class ChannelRealization(object):
         return self.__interpolation_mode
 
     @abstractmethod
-    def _propagate(self, signal: Signal, transmitter: Device, receiver: Device, interpolation: InterpolationMode) -> Signal:
+    def _propagate(
+        self,
+        signal: Signal,
+        transmitter: Device,
+        receiver: Device,
+        interpolation: InterpolationMode,
+    ) -> Signal:
         """Propagate radio-frequency band signals over a channel instance.
 
         Abstract subroutine of :meth:`propagate()<ChannelRealization.propagate>`.
@@ -157,7 +177,13 @@ class ChannelRealization(object):
         """
         ...  # pragma: no cover
 
-    def propagate(self: CRT, signal: DeviceOutput | Signal, transmitter: Device | None = None, receiver: Device | None = None, interpolation_mode: InterpolationMode | None = None) -> ChannelPropagation[CRT]:
+    def propagate(
+        self: CRT,
+        signal: DeviceOutput | Signal,
+        transmitter: Device | None = None,
+        receiver: Device | None = None,
+        interpolation_mode: InterpolationMode | None = None,
+    ) -> ChannelPropagation[CRT]:
         """Propagate a signal model over this realization.
 
         Let
@@ -205,7 +231,9 @@ class ChannelRealization(object):
         # Infer parameters
         _transmitter = self.alpha_device if transmitter is None else transmitter
         _receiver = self.beta_device if receiver is None else receiver
-        _interpolation_mode = self.__interpolation_mode if interpolation_mode is None else interpolation_mode
+        _interpolation_mode = (
+            self.__interpolation_mode if interpolation_mode is None else interpolation_mode
+        )
 
         # Convert signal argument to signal model
         if isinstance(signal, DeviceOutput):
@@ -219,7 +247,9 @@ class ChannelRealization(object):
 
         # Assert that the signal's number of streams matches the number of antennas of the transmitter
         if _signal.num_streams != _transmitter.antennas.num_transmit_antennas:
-            raise ValueError(f"Number of signal streams to be propagated does not match the number of transmitter antennas ({_signal.num_streams} != {_transmitter.antennas.num_transmit_antennas}))")
+            raise ValueError(
+                f"Number of signal streams to be propagated does not match the number of transmitter antennas ({_signal.num_streams} != {_transmitter.antennas.num_transmit_antennas}))"
+            )
 
         # Propagate signal
         propagated_signal = self._propagate(_signal, _transmitter, _receiver, _interpolation_mode)
@@ -228,11 +258,21 @@ class ChannelRealization(object):
         propagated_signal.samples *= self.gain**0.5
 
         # Return resulting channel propagation
-        propagation = ChannelPropagation[CRT](self, propagated_signal, _transmitter, _receiver, _interpolation_mode)
+        propagation = ChannelPropagation[CRT](
+            self, propagated_signal, _transmitter, _receiver, _interpolation_mode
+        )
         return propagation
 
     @abstractmethod
-    def state(self, transmitter: Device, receiver: Device, delay: float, sampling_rate: float, num_samples: int, max_num_taps: int) -> ChannelStateInformation:
+    def state(
+        self,
+        transmitter: Device,
+        receiver: Device,
+        delay: float,
+        sampling_rate: float,
+        num_samples: int,
+        max_num_taps: int,
+    ) -> ChannelStateInformation:
         """Generate the discrete channel state information from this channel realization.
 
         Denoted by
@@ -289,7 +329,10 @@ class ChannelRealization(object):
         Returns: The object's parmeters as a keyword argument dictionary.
         """
 
-        return {"gain": group.attrs.get("gain", 1.0), "interpolation_mode": InterpolationMode(group.attrs.get("interpolation_mode", 0))}
+        return {
+            "gain": group.attrs.get("gain", 1.0),
+            "interpolation_mode": InterpolationMode(group.attrs.get("interpolation_mode", 0)),
+        }
 
     @classmethod
     def From_HDF(cls: Type[CRT], group: Group, alpha_device: Device, beta_device: Device) -> CRT:
@@ -364,7 +407,9 @@ class DirectiveChannelRealization(Generic[CRT]):
 
         return self.__realization
 
-    def propagate(self, signal: DeviceOutput | Signal, interpolation_mode: InterpolationMode | None = None) -> ChannelPropagation[CRT]:
+    def propagate(
+        self, signal: DeviceOutput | Signal, interpolation_mode: InterpolationMode | None = None
+    ) -> ChannelPropagation[CRT]:
         """Propagate a signal model over this realization.
 
         Let
@@ -397,9 +442,13 @@ class DirectiveChannelRealization(Generic[CRT]):
         Returns: All information generated by the propagation.
         """
 
-        return self.__realization.propagate(signal, self.__transmitter, self.__receiver, interpolation_mode)
+        return self.__realization.propagate(
+            signal, self.__transmitter, self.__receiver, interpolation_mode
+        )
 
-    def state(self, delay: float, sampling_rate: float, num_samples: int, max_num_taps: int) -> ChannelStateInformation:
+    def state(
+        self, delay: float, sampling_rate: float, num_samples: int, max_num_taps: int
+    ) -> ChannelStateInformation:
         """Generate the discrete channel state information from this channel realization.
 
         Denoted by
@@ -427,7 +476,9 @@ class DirectiveChannelRealization(Generic[CRT]):
         Returns: The channel state information representing this channel realization.
         """
 
-        return self.__realization.state(self.__transmitter, self.__receiver, delay, sampling_rate, num_samples, max_num_taps)
+        return self.__realization.state(
+            self.__transmitter, self.__receiver, delay, sampling_rate, num_samples, max_num_taps
+        )
 
 
 class ChannelPropagation(Generic[CRT]):
@@ -442,7 +493,14 @@ class ChannelPropagation(Generic[CRT]):
     __receiver: Device
     __interpolation_mode: InterpolationMode
 
-    def __init__(self, realization: CRT, signal: Signal, transmitter: Device, receiver: Device, interpolation_mode: InterpolationMode) -> None:
+    def __init__(
+        self,
+        realization: CRT,
+        signal: Signal,
+        transmitter: Device,
+        receiver: Device,
+        interpolation_mode: InterpolationMode,
+    ) -> None:
         """
         Args:
 
@@ -499,7 +557,9 @@ class ChannelPropagation(Generic[CRT]):
 
         return self.__interpolation_mode
 
-    def state(self, delay: float, sampling_rate: float, num_samples: int, max_num_taps: int) -> ChannelStateInformation:
+    def state(
+        self, delay: float, sampling_rate: float, num_samples: int, max_num_taps: int
+    ) -> ChannelStateInformation:
         """Generate the discrete channel state information from this channel realization.
 
         Resolves to :meth:`state()<ChannelRealization.state>` method of the :attr:`realization` attribute.
@@ -529,7 +589,9 @@ class ChannelPropagation(Generic[CRT]):
         """
 
         # Query the realization's channel state
-        state = self.__realization.state(self.transmitter, self.receiver, delay, sampling_rate, num_samples, max_num_taps)
+        state = self.__realization.state(
+            self.transmitter, self.receiver, delay, sampling_rate, num_samples, max_num_taps
+        )
 
         # Return the channel state
         return state
@@ -567,25 +629,33 @@ class Channel(ABC, RandomNode, Serializable, Generic[CRT]):
     __interpolation_mode: InterpolationMode
     __last_realization: CRT | None
 
-    def __init__(self, alpha_device: SimulatedDevice | None = None, beta_device: SimulatedDevice | None = None, gain: float = 1.0, interpolation_mode: InterpolationMode = InterpolationMode.NEAREST, devices: Tuple[SimulatedDevice, SimulatedDevice] | None = None, seed: Optional[int] = None) -> None:
+    def __init__(
+        self,
+        alpha_device: SimulatedDevice | None = None,
+        beta_device: SimulatedDevice | None = None,
+        gain: float = 1.0,
+        interpolation_mode: InterpolationMode = InterpolationMode.NEAREST,
+        devices: Tuple[SimulatedDevice, SimulatedDevice] | None = None,
+        seed: Optional[int] = None,
+    ) -> None:
         """
         Args:
 
             alpha_device (SimulatedDevice, optional):
                 First device linked by this channel.
-                Initializes the :meth:`alpha_device<.alpha_device>` property.
+                Initializes the :meth:`alpha_device<alpha_device>` property.
                 If not specified the channel is considered floating,
-                meaning a call to :meth:`.realize` will raise an exception.
+                meaning a call to :meth:`realize` will raise an exception.
 
             beta_device (SimulatedDevice, optional):
                 Second device linked by this channel.
-                Initializes the :meth:`beta_device<.beta_device>` property.
+                Initializes the :meth:`beta_device<beta_device>` property.
                 If not specified the channel is considered floating,
-                meaning a call to :meth:`.realize` will raise an exception.
+                meaning a call to :meth:`realize` will raise an exception.
 
             gain (float, optional):
                 Linear channel power gain factor.
-                Initializes the :meth:`gain<.gain>` property.
+                Initializes the :meth:`gain<gain>` property.
                 :math:`1.0` by default.
 
             interpolation_mode (InterpolationMode, optional):
@@ -620,7 +690,9 @@ class Channel(ABC, RandomNode, Serializable, Generic[CRT]):
 
         if devices is not None:
             if self.alpha_device is not None or self.beta_device is not None:
-                raise ValueError("Can't use 'devices' initialization argument in combination with specifying a alpha / beta devices")
+                raise ValueError(
+                    "Can't use 'devices' initialization argument in combination with specifying a alpha / beta devices"
+                )
 
             self.alpha_device = devices[0]
             self.beta_device = devices[1]
@@ -632,7 +704,7 @@ class Channel(ABC, RandomNode, Serializable, Generic[CRT]):
         Referred to as :math:`\\alpha` in the respective equations.
 
         If not specified, i.e. :py:obj:`None`, the channel is considered floating,
-        meaning a call to :meth:`.realize` will raise an exception.
+        meaning a call to :meth:`realize` will raise an exception.
         """
 
         return self.__alpha_device
@@ -648,7 +720,7 @@ class Channel(ABC, RandomNode, Serializable, Generic[CRT]):
         Referred to as :math:`\\beta` in the respective equations.
 
         If not specified, i.e. :py:obj:`None`, the channel is considered floating,
-        meaning a call to :meth:`.realize` will raise an exception.
+        meaning a call to :meth:`realize` will raise an exception.
         """
         return self.__beta_device
 
@@ -769,7 +841,14 @@ class Channel(ABC, RandomNode, Serializable, Generic[CRT]):
 
         return self.__last_realization
 
-    def propagate(self, signal: DeviceOutput | Signal, transmitter: Device | None = None, receiver: Device | None = None, interpolation_mode: InterpolationMode = InterpolationMode.NEAREST, cache: bool = True) -> ChannelPropagation[CRT]:
+    def propagate(
+        self,
+        signal: DeviceOutput | Signal,
+        transmitter: Device | None = None,
+        receiver: Device | None = None,
+        interpolation_mode: InterpolationMode = InterpolationMode.NEAREST,
+        cache: bool = True,
+    ) -> ChannelPropagation[CRT]:
         """Propagate radio-frequency band signals over this channel.
 
         Generates a new channel realization by calling :meth:`realize<.realize>` and propagates the provided signal over it.

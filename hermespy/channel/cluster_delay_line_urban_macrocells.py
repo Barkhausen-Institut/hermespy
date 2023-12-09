@@ -156,7 +156,9 @@ class UrbanMacrocellsNoLineOfSightBase(ClusterDelayLineBase, metaclass=ABCMeta):
 
     @property
     def zod_offset(self) -> float:
-        device_distance = float(np.linalg.norm(self.beta_device.position - self.alpha_device.position, 2))
+        device_distance = float(
+            np.linalg.norm(self.beta_device.position - self.alpha_device.position, 2)
+        )
         terminal_height = min(self.alpha_device.position[2], self.beta_device.position[2])
         fc = log10(self._center_frequency)
 

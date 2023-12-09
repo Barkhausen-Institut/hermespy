@@ -37,7 +37,12 @@ class Drop(HDFSerializable):
     __device_transmissions: Sequence[DeviceTransmission]  # Transmitted device information
     __device_receptions: Sequence[DeviceReception]  # Received device information
 
-    def __init__(self, timestamp: float, device_transmissions: Sequence[DeviceTransmission], device_receptions: Sequence[DeviceReception]) -> None:
+    def __init__(
+        self,
+        timestamp: float,
+        device_transmissions: Sequence[DeviceTransmission],
+        device_receptions: Sequence[DeviceReception],
+    ) -> None:
         """
         Args:
 
@@ -101,10 +106,17 @@ class Drop(HDFSerializable):
         num_transmissions = group.attrs.get("num_transmissions", 0)
         num_receptions = group.attrs.get("num_receptions", 0)
 
-        transmissions = [DeviceTransmission.from_HDF(group[f"transmission_{t:02d}"]) for t in range(num_transmissions)]
-        receptions = [DeviceReception.from_HDF(group[f"reception_{r:02d}"]) for r in range(num_receptions)]
+        transmissions = [
+            DeviceTransmission.from_HDF(group[f"transmission_{t:02d}"])
+            for t in range(num_transmissions)
+        ]
+        receptions = [
+            DeviceReception.from_HDF(group[f"reception_{r:02d}"]) for r in range(num_receptions)
+        ]
 
-        drop = cls(timestamp=timestamp, device_transmissions=transmissions, device_receptions=receptions)
+        drop = cls(
+            timestamp=timestamp, device_transmissions=transmissions, device_receptions=receptions
+        )
         return drop
 
     def to_HDF(self, group: Group) -> None:
@@ -133,11 +145,22 @@ class RecalledDrop(Drop):
         num_transmissions = group.attrs.get("num_transmissions", 0)
         num_receptions = group.attrs.get("num_receptions", 0)
 
-        device_transmissions = [DeviceTransmission.Recall(group[f"transmission_{t:02d}"], device) for t, device in zip(range(num_transmissions), scenario.devices)]
-        device_receptions = [DeviceReception.Recall(group[f"reception_{r:02d}"], device) for r, device in zip(range(num_receptions), scenario.devices)]
+        device_transmissions = [
+            DeviceTransmission.Recall(group[f"transmission_{t:02d}"], device)
+            for t, device in zip(range(num_transmissions), scenario.devices)
+        ]
+        device_receptions = [
+            DeviceReception.Recall(group[f"reception_{r:02d}"], device)
+            for r, device in zip(range(num_receptions), scenario.devices)
+        ]
 
         # Initialize base class
-        Drop.__init__(self, timestamp=timestamp, device_transmissions=device_transmissions, device_receptions=device_receptions)
+        Drop.__init__(
+            self,
+            timestamp=timestamp,
+            device_transmissions=device_transmissions,
+            device_receptions=device_receptions,
+        )
 
         # Initialize class attributes
         self.__group = group
@@ -159,7 +182,13 @@ class EvaluatedDrop(Drop):
     # Evaluation artifacts generated for this drop.
     __artifacts: Sequence[Artifact]
 
-    def __init__(self, timestamp: float, device_transmissions: Sequence[DeviceTransmission], device_receptions: Sequence[DeviceReception], artifacts: Sequence[Artifact]) -> None:
+    def __init__(
+        self,
+        timestamp: float,
+        device_transmissions: Sequence[DeviceTransmission],
+        device_receptions: Sequence[DeviceReception],
+        artifacts: Sequence[Artifact],
+    ) -> None:
         """
         Args:
 

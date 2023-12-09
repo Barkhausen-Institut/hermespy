@@ -70,7 +70,9 @@ class HardwareLoopDevicePlot(HardwareLoopPlot, ABC):
 class DeviceTransmissionPlot(HardwareLoopDevicePlot, SignalPlot):
     """Plot base-band signals transmitted by a device."""
 
-    def __init__(self, device: PhysicalDevice, title: str = "", space: Literal["time", "frequency"] = "time") -> None:
+    def __init__(
+        self, device: PhysicalDevice, title: str = "", space: Literal["time", "frequency"] = "time"
+    ) -> None:
         # Initialize base classes
         HardwareLoopDevicePlot.__init__(self, device, title)
         SignalPlot.__init__(self, title, space)
@@ -82,13 +84,19 @@ class DeviceTransmissionPlot(HardwareLoopDevicePlot, SignalPlot):
         return figure, axes
 
     def _update_plot(self, sample: HardwareLoopSample) -> None:
-        self._plot_signal(sample.drop.device_transmissions[self.hardware_loop.device_index(self.device)].mixed_signal)
+        self._plot_signal(
+            sample.drop.device_transmissions[
+                self.hardware_loop.device_index(self.device)
+            ].mixed_signal
+        )
 
 
 class DeviceReceptionPlot(HardwareLoopDevicePlot, SignalPlot):
     """Plot base-band signals received by a device."""
 
-    def __init__(self, device: PhysicalDevice, title: str = "", space: Literal["time", "frequency"] = "time") -> None:
+    def __init__(
+        self, device: PhysicalDevice, title: str = "", space: Literal["time", "frequency"] = "time"
+    ) -> None:
         # Initialize base classes
         HardwareLoopDevicePlot.__init__(self, device, title)
         SignalPlot.__init__(self, title, space)
@@ -100,7 +108,11 @@ class DeviceReceptionPlot(HardwareLoopDevicePlot, SignalPlot):
         return figure, axes
 
     def _update_plot(self, sample: HardwareLoopSample) -> None:
-        self._plot_signal(sample.drop.device_receptions[self.hardware_loop.device_index(self.device)].impinging_signals[0])
+        self._plot_signal(
+            sample.drop.device_receptions[
+                self.hardware_loop.device_index(self.device)
+            ].impinging_signals[0]
+        )
 
 
 class EyePlot(HardwareLoopPlot):
@@ -125,7 +137,11 @@ class EyePlot(HardwareLoopPlot):
         # Plot eye diagram
         symbol_duration = self.__modem.symbol_duration
         if self.__modem.reception.num_frames > 0:
-            self.__modem.reception.frames[0].signal.plot_eye(symbol_duration=symbol_duration, axes=self.axes)
+            self.__modem.reception.frames[0].signal.plot_eye(
+                symbol_duration=symbol_duration, axes=self.axes
+            )
+
+        # Plot an unsynchronized eye diagram if no frames are available
         else:
             self.__modem.reception.signal.plot_eye(symbol_duration=symbol_duration, axes=self.axes)
 
@@ -264,7 +280,9 @@ class ArtifactPlot(HardwareLoopEvaluatorPlot):
 
         # Update artifact queue
         self.__artifact_queue = np.roll(self.__artifact_queue, 1)
-        self.__artifact_queue[0] = sample.artifacts[self.hardware_loop.evaluator_index(self.evaluator)].to_scalar()
+        self.__artifact_queue[0] = sample.artifacts[
+            self.hardware_loop.evaluator_index(self.evaluator)
+        ].to_scalar()
 
         # Update plot
         ax.plot(np.arange(len(self.__artifact_queue)), self.__artifact_queue)

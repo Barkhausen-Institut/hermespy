@@ -8,7 +8,15 @@ from scipy.signal import convolve
 from sparse import COO  # type: ignore
 
 from hermespy.core import ChannelStateInformation, Serializable
-from hermespy.modem import ChannelEstimation, FilteredSingleCarrierWaveform, OFDMWaveform, ReferencePosition, StatedSymbols, Symbols, WaveformType
+from hermespy.modem import (
+    ChannelEstimation,
+    FilteredSingleCarrierWaveform,
+    OFDMWaveform,
+    ReferencePosition,
+    StatedSymbols,
+    Symbols,
+    WaveformType,
+)
 from ..simulated_device import SimulatedDevice
 
 __author__ = "Jan Adler"
@@ -32,7 +40,12 @@ class IdealChannelEstimation(Generic[WaveformType], ChannelEstimation[WaveformTy
     __transmitter: SimulatedDevice
     __receiver: SimulatedDevice
 
-    def __init__(self, transmitter: SimulatedDevice, receiver: SimulatedDevice, waveform_generator: WaveformType | None = None) -> None:
+    def __init__(
+        self,
+        transmitter: SimulatedDevice,
+        receiver: SimulatedDevice,
+        waveform_generator: WaveformType | None = None,
+    ) -> None:
         # Initialize base class
         ChannelEstimation.__init__(self, waveform_generator)
 
@@ -52,7 +65,9 @@ class IdealChannelEstimation(Generic[WaveformType], ChannelEstimation[WaveformTy
 
         return self.__receiver
 
-    def _csi(self, delay: float, sampling_rate: float | None = None, num_samples: int | None = None) -> ChannelStateInformation:
+    def _csi(
+        self, delay: float, sampling_rate: float | None = None, num_samples: int | None = None
+    ) -> ChannelStateInformation:
         """Query the ideal channel state information.
 
         Args:
@@ -79,21 +94,34 @@ class IdealChannelEstimation(Generic[WaveformType], ChannelEstimation[WaveformTy
         if self.waveform_generator is None:
             raise RuntimeError("Ideal channel state estimation routine floating")
 
-        if self.waveform_generator.modem is None or self.waveform_generator.modem.receiving_device is None:
+        if (
+            self.waveform_generator.modem is None
+            or self.waveform_generator.modem.receiving_device is None
+        ):
             raise RuntimeError("Operating modem floating")
 
         cached_realization = self.receiver.channel_realization(self.transmitter)
         if cached_realization is None:
-            raise RuntimeError("No channel realization available from which to estimate the ideal channel state information")
+            raise RuntimeError(
+                "No channel realization available from which to estimate the ideal channel state information"
+            )
 
-        sampling_rate = self.waveform_generator.sampling_rate if sampling_rate is None else sampling_rate
-        num_samples = self.waveform_generator.samples_per_frame if num_samples is None else num_samples
+        sampling_rate = (
+            self.waveform_generator.sampling_rate if sampling_rate is None else sampling_rate
+        )
+        num_samples = (
+            self.waveform_generator.samples_per_frame if num_samples is None else num_samples
+        )
 
-        channel_state_information = cached_realization.state(delay, sampling_rate, num_samples, num_samples)
+        channel_state_information = cached_realization.state(
+            delay, sampling_rate, num_samples, num_samples
+        )
         return channel_state_information
 
 
-class SingleCarrierIdealChannelEstimation(IdealChannelEstimation[FilteredSingleCarrierWaveform], Serializable):
+class SingleCarrierIdealChannelEstimation(
+    IdealChannelEstimation[FilteredSingleCarrierWaveform], Serializable
+):
     """Ideal channel estimation for single carrier waveforms"""
 
     yaml_tag = "SC-Ideal"
@@ -105,16 +133,33 @@ class SingleCarrierIdealChannelEstimation(IdealChannelEstimation[FilteredSingleC
         # sync_delay = int(frame_delay * self.waveform_generator.sampling_rate)
 
         # Compute the CSI including inter-symbol interference
-        filter_characteristics = self.waveform_generator._transmit_filter() * self.waveform_generator._receive_filter()
-        state = self._csi(frame_delay, self.waveform_generator.sampling_rate, self.waveform_generator.samples_per_frame).to_impulse_response().dense_state()
-        filtered_state = convolve(state, filter_characteristics[None, None, :, None], "full", "direct")
+        filter_characteristics = (
+            self.waveform_generator._transmit_filter() * self.waveform_generator._receive_filter()
+        )
+        state = (
+            self._csi(
+                frame_delay,
+                self.waveform_generator.sampling_rate,
+                self.waveform_generator.samples_per_frame,
+            )
+            .to_impulse_response()
+            .dense_state()
+        )
+        filtered_state = convolve(
+            state, filter_characteristics[None, None, :, None], "full", "direct"
+        )
 
         summed_state = filtered_state[:, :, :, 0]
         for d in range(1, min(oversampling_factor, filtered_state.shape[3])):
             summed_state[:, :, d:] += filtered_state[:, :, :-d, d]
 
         # Extract the symbol CSI
-        symbol_csi = summed_state[:, :, filter_delay : filter_delay + num_symbols * oversampling_factor : oversampling_factor, None]
+        symbol_csi = summed_state[
+            :,
+            :,
+            filter_delay : filter_delay + num_symbols * oversampling_factor : oversampling_factor,
+            None,
+        ]
 
         # Convert to sparse representation
         sparse_csi = COO.from_numpy(symbol_csi)
@@ -130,7 +175,14 @@ class OFDMIdealChannelEstimation(IdealChannelEstimation[OFDMWaveform], Serializa
     reference_position: ReferencePosition
     """Assumed position of the reference symbol within the frame."""
 
-    def __init__(self, transmitter: SimulatedDevice, receiver: SimulatedDevice, reference_position: ReferencePosition = ReferencePosition.IDEAL, *args, **kwargs) -> None:
+    def __init__(
+        self,
+        transmitter: SimulatedDevice,
+        receiver: SimulatedDevice,
+        reference_position: ReferencePosition = ReferencePosition.IDEAL,
+        *args,
+        **kwargs,
+    ) -> None:
         """
         Args:
 
@@ -151,7 +203,10 @@ class OFDMIdealChannelEstimation(IdealChannelEstimation[OFDMWaveform], Serializa
         # Query and densify the channel state
         ideal_csi = self._csi(delay=delay).dense_state()[: symbols.num_streams, ::]
 
-        symbol_csi = np.zeros((symbols.num_streams, ideal_csi.shape[1], symbols.num_blocks, symbols.num_symbols), dtype=np.complex_)
+        symbol_csi = np.zeros(
+            (symbols.num_streams, ideal_csi.shape[1], symbols.num_blocks, symbols.num_symbols),
+            dtype=np.complex_,
+        )
 
         sample_index = 0
         word_index = 0
@@ -162,7 +217,10 @@ class OFDMIdealChannelEstimation(IdealChannelEstimation[OFDMWaveform], Serializa
 
         for section in self.waveform_generator.structure:
             num_samples = section.num_samples
-            csi = section.extract_channel(ideal_csi[:, :, sample_index : sample_index + num_samples, :], self.reference_position)
+            csi = section.extract_channel(
+                ideal_csi[:, :, sample_index : sample_index + num_samples, :],
+                self.reference_position,
+            )
             symbol_csi[:, :, word_index : word_index + section.num_words, :] = csi
 
             sample_index += num_samples

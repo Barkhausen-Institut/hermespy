@@ -24,20 +24,16 @@ __status__ = "Prototype"
 
 class TestSCMatchedFilterJcas(TestCase):
     """Test matched filter sensing for psk/qam waveforms."""
-    
+
     def setUp(self) -> None:
-        
         self.rng = default_rng(42)
         self.device = SimulatedDevice()
         self.device.carrier_frequency = 1e9
-        
+
         self.target_range = 5
         self.max_range = 10
-        self.channel = SingleTargetRadarChannel(target_range=self.target_range,
-                                    alpha_device=self.device,
-                                    beta_device=self.device,
-                                    radar_cross_section=1.)
-        
+        self.channel = SingleTargetRadarChannel(target_range=self.target_range, alpha_device=self.device, beta_device=self.device, radar_cross_section=1.0)
+
         self.oversampling_factor = 16
 
         self.operator = MatchedFilterJcas(self.max_range)
@@ -47,20 +43,19 @@ class TestSCMatchedFilterJcas(TestCase):
         self.operator.waveform_generator.synchronization = SingleCarrierCorrelationSynchronization()
         self.operator.waveform_generator.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
         self.operator.waveform_generator.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
-        
+
     def test_jcas(self) -> None:
         """The target distance should be properly estimated while transmitting information."""
-        
+
         for _ in range(5):
-            
             # Generate transmitted signal
             transmission = self.device.transmit()
-            
+
             # Propagate signal over the radar channel
             propagation = self.channel.propagate(transmission)
-            
+
             # Receive signal
             self.device.receive(propagation)
-            
+
             # The bits should be recovered correctly
             assert_array_equal(self.operator.transmission.bits, self.operator.reception.bits)

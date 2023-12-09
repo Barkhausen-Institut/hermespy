@@ -18,43 +18,41 @@ __status__ = "Prototype"
 
 class TestUsrpSystem(TestCase):
     """Test the USRP system binding to Hermes."""
-    
+
     def setUp(self) -> None:
-        
-        self.device_patch = patch('hermespy.hardware_loop.uhd.system.UsrpDevice')
+        self.device_patch = patch("hermespy.hardware_loop.uhd.system.UsrpDevice")
         self.device_mock: MagicMock = self.device_patch.start()
-        
+
         self.system = UsrpSystem()
 
     def tearDown(self) -> None:
-        
         self.device_patch.stop()
 
     def test_new_device(self) -> None:
         """Test the creation of a new device"""
-        
-        ip = '123.456.789.012'
+
+        ip = "123.456.789.012"
         port = 1234
 
         new_device = self.system.new_device(ip=ip, port=port)
-        
+
         self.assertTrue(self.system.device_registered(new_device))
-        
+
     def test_add_device(self) -> None:
         """Test the registration of an existing device"""
-        
+
         added_device = Mock()
         self.system.add_device(added_device)
-        
+
         self.assertTrue(self.system.device_registered(added_device))
-        
-    @patch('usrp_client.system.System.execute')
+
+    @patch("usrp_client.system.System.execute")
     def test_trigger(self, execute: MagicMock) -> None:
         """Test the system triggering"""
-        
+
         self.system._trigger()
         execute.assert_called_once()
-        
+
     def test_serialization(self) -> None:
         """Test YAML serialization"""
 

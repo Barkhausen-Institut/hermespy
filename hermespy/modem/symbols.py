@@ -258,7 +258,9 @@ class Symbols(HDFSerializable):
         else:
             self.__symbols[section] = value
 
-    def plot_constellation(self, axes: plt.Axes | np.ndarray | None = None, title: str = "Symbol Constellation") -> Optional[plt.Figure]:
+    def plot_constellation(
+        self, axes: plt.Axes | np.ndarray | None = None, title: str = "Symbol Constellation"
+    ) -> Optional[plt.Figure]:
         """Plot the symbol constellation.
 
         Essentially projects the time-series of symbols onto a single complex plane.
@@ -370,13 +372,19 @@ class StatedSymbols(Symbols):
             raise ValueError("State must be a four-dimensional numpy array")
 
         if value.shape[0] != self.num_streams:
-            raise ValueError(f"Number of received streams don't match, expected {self.num_streams} instead of {value.shape[0]}")
+            raise ValueError(
+                f"Number of received streams don't match, expected {self.num_streams} instead of {value.shape[0]}"
+            )
 
         if value.shape[2] != self.num_blocks:
-            raise ValueError(f"Number of received blocks don't match, expected {self.num_blocks} instead of {value.shape[2]}")
+            raise ValueError(
+                f"Number of received blocks don't match, expected {self.num_blocks} instead of {value.shape[2]}"
+            )
 
         if value.shape[3] != self.num_symbols:
-            raise ValueError(f"Symbol block sizes don't match, expected {self.num_symbols} instead of {value.shape[3]}")
+            raise ValueError(
+                f"Symbol block sizes don't match, expected {self.num_symbols} instead of {value.shape[3]}"
+            )
 
         self.__states = value.copy()
 
