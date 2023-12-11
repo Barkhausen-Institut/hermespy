@@ -698,8 +698,8 @@ class HardwareLoop(
                             for plot in self.__plots:
                                 plot.update_plot(loop_sample)
 
-                except Exception:
-                    self._handle_exception(confirm=False)
+                except Exception as e:
+                    self._handle_exception(e, confirm=False)
 
                 # Update progress
                 total += 1

@@ -2,6 +2,7 @@
 
 import logging
 from unittest import TestCase
+from unittest.mock import patch, PropertyMock
 from tempfile import TemporaryDirectory
 
 import ray as ray
@@ -23,15 +24,25 @@ class TestConfigurationExamples(TestCase):
     """Test configuration example execution without exceptions"""
 
     def setUp(self) -> None:
+
         # Create temporary directory to store simulation artifacts
         self.tempdir = TemporaryDirectory()
+
+        # Patch the executable debug flag to True
+        self.debug_patch = patch("hermespy.core.executable.Executable.debug", new_callable=PropertyMock)
+        mock_debug = self.debug_patch.start()
+        mock_debug.return_value = True
 
     def tearDown(self) -> None:
         # Clear temporary directory and remove all simulation artifacts
         self.tempdir.cleanup()
 
+        # Remove the executable debug flag patch
+        self.debug_patch.stop()
+
     @classmethod
     def setUpClass(cls) -> None:
+
         ray.init(local_mode=True, num_cpus=1, ignore_reinit_error=True, logging_level=logging.ERROR)
 
     @classmethod
