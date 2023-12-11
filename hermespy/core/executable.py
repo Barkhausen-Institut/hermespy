@@ -15,7 +15,7 @@ from contextlib import contextmanager
 from glob import glob
 from os import getcwd, mkdir
 from sys import exit
-from typing import Any, Generator, List, Optional, Union
+from typing import Any, Generator, List, Union
 
 import matplotlib.pyplot as plt
 from rich.console import Console
@@ -59,18 +59,20 @@ class Executable(ABC):
     All executables are required to implement the :meth:`.run` method.
     """
 
-    __results_dir: Optional[str]  # Directory in which all execution artifacts will be dropped.
+    __results_dir: str | None  # Directory in which all execution artifacts will be dropped.
     __verbosity: Verbosity  # Information output behaviour during execution.
     __style: str = "dark"  # Plotting color scheme
     __console: Console  # Rich console instance for text output
     __console_mode: ConsoleMode  # Output format during execution
+    __debug: bool  # Debug mode flag
 
     def __init__(
         self,
-        results_dir: Optional[str] = None,
+        results_dir: str | None = None,
         verbosity: Union[Verbosity, str] = Verbosity.INFO,
-        console: Optional[Console] = None,
+        console: Console | None = None,
         console_mode: ConsoleMode = ConsoleMode.INTERACTIVE,
+        debug: bool = False,
     ) -> None:
         """
         Args:
@@ -87,6 +89,11 @@ class Executable(ABC):
             console_mode (ConsoleMode, optional):
                 Output behaviour of the information printed to the console.
                 Interactive by default.
+
+            debug (bool, optional):
+                If enabled, the executable will be run in debug mode.
+                In this case, the exception handler will re-raise exceptions
+                and stop the execution.
         """
 
         # Default parameters
@@ -94,6 +101,7 @@ class Executable(ABC):
         self.verbosity = verbosity if isinstance(verbosity, Verbosity) else Verbosity[verbosity]
         self.__console = Console(record=False) if console is None else console
         self.console_mode = console_mode
+        self.__debug = debug
 
     def execute(self) -> None:
         """Execute the executable.
@@ -123,7 +131,7 @@ class Executable(ABC):
         return self.__results_dir
 
     @results_dir.setter
-    def results_dir(self, directory: Optional[str]) -> None:
+    def results_dir(self, directory: str | None) -> None:
         """Modify the directory in which the execution results will be saved.
 
         Args:
@@ -169,6 +177,17 @@ class Executable(ABC):
 
         else:
             self.__verbosity = new_verbosity
+
+    @property
+    def debug(self) -> bool:
+        """Debug mode flag.
+
+        If enabled, the executable will be run in debug mode.
+        In this case, the exception handler will re-raise exceptions
+        and stop the execution.
+        """
+
+        return self.__debug
 
     @staticmethod
     def default_results_dir() -> str:
@@ -302,12 +321,17 @@ class Executable(ABC):
         self.__console_mode = value
 
     def _handle_exception(
-        self, force: bool = False, show_locals: bool = True, confirm: bool = True
+        self,
+        exception: Exception,
+        force: bool = False,
+        show_locals: bool = True,
+        confirm: bool = True,
     ) -> None:
         """Print an exception traceback if Verbosity is ALL or higher.
 
         Args:
 
+            exception (Exception): The exception to be handled.
             force (bool): If True, print the traceback regardless of Verbosity level
             show_locals (bool): Output the local variables.
             confirm (bool): Confirm for continuing execution.
@@ -324,3 +348,7 @@ class Executable(ABC):
             if confirm:
                 if not Confirm.ask("Continue execution?", console=self.console, choices=["y", "n"]):
                     exit(0)
+
+        # If debug mode is enabled, re-raise the exception
+        if self.debug:
+            raise exception

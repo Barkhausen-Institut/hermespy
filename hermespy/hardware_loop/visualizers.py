@@ -78,7 +78,7 @@ class DeviceTransmissionPlot(HardwareLoopDevicePlot, SignalPlot):
         SignalPlot.__init__(self, title, space)
 
     def _prepare_figure(self) -> Tuple[plt.Figure, VAT]:
-        figure, axes = plt.subplots(self.device.antennas.num_transmit_antennas, 1)
+        figure, axes = plt.subplots(self.device.antennas.num_transmit_antennas, squeeze=False)
         figure.suptitle(self.title if self.title != "" else "Transmitted Signal")
 
         return figure, axes
