@@ -7,7 +7,7 @@ from os.path import exists
 from contextlib import _GeneratorContextManager, nullcontext
 from sys import gettrace
 from typing import Type
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import matplotlib.pyplot as plt
 from ruamel.yaml import SafeRepresenter, Node, ScalarNode
@@ -28,8 +28,8 @@ __status__ = "Prototype"
 class ExecutableStub(Executable):
     """Testing instantiation of the abstract Executable prototype, mock implementing all abstract functions"""
 
-    def __init__(self, *args) -> None:
-        Executable.__init__(self, *args)
+    def __init__(self, *args, **kwargs) -> None:
+        Executable.__init__(self, *args, **kwargs)
 
     def run(self) -> None:
         pass
@@ -46,12 +46,13 @@ class TestExecutable(unittest.TestCase):
         self.verbosity = Verbosity.NONE
 
         with tempfile.TemporaryDirectory() as tempdir:
-            self.executable = ExecutableStub(tempdir, self.verbosity)
+            self.executable = ExecutableStub(tempdir, self.verbosity, debug=True)
 
     def test_init(self) -> None:
         """Executable initialization parameters should be properly stored"""
 
         self.assertEqual(self.verbosity, self.executable.verbosity)
+        self.assertTrue(self.executable.debug)
 
     def test_execute(self) -> None:
         """Executing the executable should call the run routine"""
@@ -148,13 +149,24 @@ class TestExecutable(unittest.TestCase):
         """Test the exception handling subroutine"""
 
         self.executable.verbosity = Verbosity.ERROR
-
-        with patch("rich.prompt.Confirm.ask") as confirm_patch, patch("sys.stdout") if gettrace() is None else nullcontext():
+        
+        with (
+            patch('rich.prompt.Confirm.ask') as confirm_patch,
+            patch('sys.stdout') if gettrace() is None else nullcontext(),
+            patch('hermespy.core.executable.Executable.debug', new_callable=PropertyMock) as debug_patch,
+        ):
             confirm_patch.return_value = False
-
+            debug_patch.return_value = False
+            
             with self.assertRaises(SystemExit):
                 try:
                     raise Exception("ExampleException")
+                
+                except Exception as e:
+                    self.executable._handle_exception(e)
 
-                except Exception:
-                    self.executable._handle_exception()
+            # If debug mode is enabled, raise exceptions should be re-raised by the handler
+            debug_patch.return_value = True
+
+            with self.assertRaises(ValueError):
+                self.executable._handle_exception(ValueError("xxxx"))
