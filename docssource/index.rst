@@ -25,7 +25,6 @@ To get started, visit the :doc:`Getting Started<getting_started>` section to bec
 For an in-depth view of how to make complex :doc:`API<api/api>` calls and implement your own algorithms within the signal processing
 pipelines, visit the :doc:`Tutorials<tutorials>` section.
 As a starting point for your own configuration files, visit the :doc:`Examples<examples/examples>` section.
-A complete overview of available features can be found in the :doc:`Features<features>` section.
 
 The project is completely open-source and published under the :doc:`GNU AGPL License<license>` on `GitHub`_.
 Please cite :footcite:t:`2022:adler` for any results obtained with the help of HermesPy.
@@ -36,7 +35,6 @@ or directly contact the current `maintainer`_.
 .. toctree::
    :hidden:
    :maxdepth: 1
-   :glob:
 
    self
    installation
@@ -50,7 +48,6 @@ or directly contact the current `maintainer`_.
    license
 
 .. footbibliography::
-
 
 .. _GitHub: https://github.com/Barkhausen-Institut/hermespy
 .. _GitHub pull requests: https://github.com/Barkhausen-Institut/hermespy/pulls
