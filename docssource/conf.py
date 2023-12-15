@@ -93,8 +93,19 @@ inheritance_graph_attrs = dict(
     size='"6.0, 8.0"',
     fontsize=14,
     ratio='compress',
+    fontcolor='"#d0d0d0"',
 )
 inheritance_node_attrs = dict(
+    color='"#4c8bc6"',
+    fillcolor='"#4c8bc6"',
+    fontcolor='"#d0d0d0"',
+    penwidth=2,
+)
+inheritance_edge_attrs = dict(
+    color='"#4c8bc6"',
+    fillcolor='"#4c8bc6"',
+    arrowsize=1,
+    penwidth=2,
 )
 
 # Intersphinx configuration

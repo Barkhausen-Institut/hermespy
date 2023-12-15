@@ -20,8 +20,8 @@ link = SimplexLink(tx_device, rx_device)
 
 # Configure the waveform to be transmitted over the link
 link.waveform = RootRaisedCosineWaveform(symbol_rate=1e6, oversampling_factor=8,
-                                                   num_preamble_symbols=10, num_data_symbols=100,
-                                                   roll_off=.9)
+                                         num_preamble_symbols=10, num_data_symbols=100,
+                                         roll_off=.9)
 link.waveform.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
 link.waveform.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
 
