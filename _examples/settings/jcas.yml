@@ -54,7 +54,7 @@ Operators:
     max_range: 10         # Maximal detectable range of the range estimation in m
 
     # Waveform configuration
-    waveform_generator: !<SC-Rectangular>
+    waveform: !<SC-Rectangular>
 
       # Symbol settings
       symbol_rate: 100e6
@@ -78,7 +78,7 @@ Operators:
     reference: *base_station
 
     # Waveform configuration
-    waveform_generator: !<SC-Rectangular>
+    waveform: !<SC-Rectangular>
 
       channel_estimation: !<SC-LS>
       channel_equalization: !<SC-ZF>

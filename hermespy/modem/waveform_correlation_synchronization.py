@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-===========================================
-Correlation-Based Waveform Synchronization
-===========================================
-"""
 
 from __future__ import annotations
 from typing import Any, Generic, List, TypeVar
@@ -12,7 +7,7 @@ import numpy as np
 from scipy.signal import correlate, find_peaks
 
 from hermespy.core import Serializable
-from .waveform import PilotWaveformGenerator, Synchronization
+from .waveform import PilotCommunicationWaveform, Synchronization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -24,7 +19,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-PGT = TypeVar("PGT", bound=PilotWaveformGenerator)
+PGT = TypeVar("PGT", bound=PilotCommunicationWaveform)
 """Type of pilot-generating waveforms."""
 
 
@@ -124,7 +119,7 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT], Serializabl
             signal = signal[np.newaxis, :]
 
         # Query the pilot signal from the waveform generator
-        pilot_sequence = self.waveform_generator.pilot_signal.samples.flatten()
+        pilot_sequence = self.waveform.pilot_signal.samples.flatten()
 
         # Raise a runtime error if pilot sequence is empty
         if len(pilot_sequence) < 1:
@@ -140,7 +135,7 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT], Serializabl
         correlation /= correlation.max()  # Normalize correlation
 
         # Determine the pilot sequence locations by performing a peak search over the correlation profile
-        frame_length = self.waveform_generator.samples_per_frame
+        frame_length = self.waveform.samples_per_frame
         pilot_indices, _ = find_peaks(
             abs(correlation), height=0.9, distance=int(0.8 * frame_length)
         )

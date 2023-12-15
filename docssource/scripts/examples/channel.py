@@ -21,10 +21,10 @@ channel = Channel(alpha_device=alpha_device, beta_device=beta_device)
 link = SimplexLink(alpha_device, beta_device)
 
 # Specify the waveform and postprocessing to be used by the link
-link.waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e8, oversampling_factor=2,
+link.waveform = RootRaisedCosineWaveform(symbol_rate=1e8, oversampling_factor=2,
                                                    num_data_symbols=1000, num_preamble_symbols=10, pilot_rate=10)
-link.waveform_generator.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
-link.waveform_generator.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
+link.waveform.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
+link.waveform.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
 
 # Generate the device's transmissions
 alpha_transmission = alpha_device.transmit()

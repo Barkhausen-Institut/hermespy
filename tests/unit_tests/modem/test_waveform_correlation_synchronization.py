@@ -73,10 +73,10 @@ class TestCorellationSynchronization(TestCase):
 
         pilot_sequence = Signal(np.ones(20, dtype=complex), 1.0)
 
-        waveform_generator = Mock()
-        waveform_generator.pilot_signal = pilot_sequence
-        waveform_generator.samples_per_frame = 20
-        self.synchronization.waveform_generator = waveform_generator
+        waveform = Mock()
+        waveform.pilot_signal = pilot_sequence
+        waveform.samples_per_frame = 20
+        self.synchronization.waveform = waveform
 
         shifted_sequence = np.append(np.zeros((1, 10), dtype=complex), pilot_sequence.samples, axis=1)
 
@@ -88,10 +88,10 @@ class TestCorellationSynchronization(TestCase):
 
         pilot_sequence = Signal(np.ones(20, dtype=complex), 1.0)
 
-        waveform_generator = Mock()
-        waveform_generator.pilot_signal = pilot_sequence
-        waveform_generator.samples_per_frame = 20
-        self.synchronization.waveform_generator = waveform_generator
+        waveform = Mock()
+        waveform.pilot_signal = pilot_sequence
+        waveform.samples_per_frame = 20
+        self.synchronization.waveform = waveform
 
         empty_sequence = np.zeros((1, 40), dtype=complex)
 

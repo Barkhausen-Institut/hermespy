@@ -6,7 +6,7 @@ from os import mkdir
 from os.path import join
 
 import numpy as np
-from hermespy.modem.waveform_generator_ofdm import OFDMIdealChannelEstimation, OFDMLeastSquaresChannelEstimation, OFDMZeroForcingChannelEqualization
+from hermespy.modem.waveform_ofdm import OFDMIdealChannelEstimation, OFDMLeastSquaresChannelEstimation, OFDMZeroForcingChannelEqualization
 from hermespy.modem.waveform_single_carrier import SingleCarrierIdealChannelEstimation, SingleCarrierLeastSquaresChannelEstimation, SingleCarrierZeroForcingChannelEqualization
 
 from hermespy.simulation import Simulation
@@ -53,8 +53,8 @@ for modulation_order, (waveform_name, waveform) in product(modulation_orders, wa
 
     modem = DuplexModem()
     modem.device = device
-    modem.waveform_generator = waveform
-    modem.waveform_generator.modulation_order = modulation_order
+    modem.waveform = waveform
+    modem.waveform.modulation_order = modulation_order
     simulation.scenario.set_channel(device, device, channel)
 
     simulation.new_dimension('snr', [db2lin(x) for x in np.arange(-10, 20, .5)])

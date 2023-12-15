@@ -6,8 +6,9 @@ from unittest.mock import Mock
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
-from hermespy.modem import StatedSymbols
+from hermespy.modem import StatedSymbols, ReceivingModem
 from hermespy.modem.precoding import MaximumRatioCombining
+from hermespy.simulation import SimulatedDevice, SimulatedUniformArray, SimulatedIdealAntenna
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
@@ -26,18 +27,31 @@ class TestMaximumRatioCombinging(TestCase):
     def setUp(self) -> None:
         self.rng = np.random.default_rng(42)
         self.precoder = MaximumRatioCombining()
+        
+        self.device = SimulatedDevice(antennas=SimulatedUniformArray(SimulatedIdealAntenna, .1, [2, 1, 1]))
+        self.modem = ReceivingModem(device=self.device)
+        self.modem.precoding[0] = self.precoder
 
     def test_properties(self) -> None:
         """Properties should return the expected values"""
 
-        self.assertEqual(-1, self.precoder.num_input_streams)
-        self.assertEqual(1, self.precoder.num_output_streams)
+        self.assertEqual(1, self.precoder.num_input_streams)
+        self.assertEqual(2, self.precoder.num_output_streams)
 
+    def test_encode_validation(self) -> None:
+        """Encoding should raise a RuntimeError on invalid input"""
+
+        with self.assertRaises(RuntimeError):
+            symbols = Mock(spec=StatedSymbols)
+            symbols.num_transmit_streams = 2
+            self.precoder.encode(symbols)
+            
     def test_encode(self) -> None:
-        """Encoding should raise a NotImplementedError"""
+        """Encode shoud be a stub for single stream symbols"""
 
-        with self.assertRaises(NotImplementedError):
-            self.precoder.encode(Mock())
+        symbols = Mock(spec=StatedSymbols)
+        symbols.num_transmit_streams = 1
+        self.assertIs(symbols, self.precoder.encode(symbols))
 
     def test_decode_validation(self) -> None:
         """Decoding should raise a RuntimeError if the number of input streams is not 1"""
@@ -63,4 +77,4 @@ class TestMaximumRatioCombinging(TestCase):
     def test_yaml_roundtrip_serialization(self) -> None:
         """Test YAML roundtrip serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.precoder)
+        test_yaml_roundtrip_serialization(self, MaximumRatioCombining())

@@ -20,11 +20,11 @@ hardware_scenario.set_channel(tx_device, rx_device, MultipathFading5GTDL())
 link = SimplexLink(tx_device, rx_device)
 
 # Configure the waveform to be transmitted over the link
-link.waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e6, oversampling_factor=8,
+link.waveform = RootRaisedCosineWaveform(symbol_rate=1e6, oversampling_factor=8,
                                                    num_preamble_symbols=10, num_data_symbols=100,
                                                    roll_off=.9)
-link.waveform_generator.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
-link.waveform_generator.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
+link.waveform.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
+link.waveform.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
 
 # Add a bit error rate evaluation to the hardware loop
 ber = BitErrorEvaluator(link, link)

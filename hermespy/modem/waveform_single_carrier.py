@@ -1,10 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-=================================
-Filtered Single Carrier Waveforms
-=================================
-
-"""
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
@@ -17,7 +11,7 @@ from hermespy.core import Executable, FloatingError, Serializable, Signal
 from .waveform import (
     ConfigurablePilotWaveform,
     MappedPilotSymbolSequence,
-    WaveformGenerator,
+    CommunicationWaveform,
     ChannelEstimation,
     ChannelEqualization,
     PilotSymbolSequence,
@@ -75,8 +69,7 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
         repeat_pilot_symbol_sequence: bool = True,
         **kwargs: Any,
     ) -> None:
-        """Waveform Generator PSK-QAM initialization.
-
+        """
         Args:
 
             symbol_rate (float):
@@ -231,13 +224,13 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
 
         self.__num_postamble_symbols = value
 
-    @WaveformGenerator.modulation_order.setter  # type: ignore
+    @CommunicationWaveform.modulation_order.setter  # type: ignore
     def modulation_order(self, value: int) -> None:
         self.__mapping = PskQamMapping(value, soft_output=False)
         self.pilot_symbol_sequence = MappedPilotSymbolSequence(
             self.__mapping
         )  # ToDo: Find a better way to update the pilot symbol sequence
-        WaveformGenerator.modulation_order.fset(self, value)  # type: ignore
+        CommunicationWaveform.modulation_order.fset(self, value)  # type: ignore
 
     @property
     def pilot_signal(self) -> Signal:
@@ -522,16 +515,16 @@ class SingleCarrierChannelEstimation(ChannelEstimation[FilteredSingleCarrierWave
     """Channel estimation for Psk Qam waveforms."""
 
     def __init__(
-        self, waveform_generator: Optional[FilteredSingleCarrierWaveform] = None, *args: Any
+        self, waveform: Optional[FilteredSingleCarrierWaveform] = None, *args: Any
     ) -> None:
         """
         Args:
 
-            waveform_generator (WaveformGenerator, optional):
+            waveform (CommunicationWaveform, optional):
                 The waveform generator this synchronization routine is attached to.
         """
 
-        ChannelEstimation.__init__(self, waveform_generator)
+        ChannelEstimation.__init__(self, waveform)
 
 
 class SingleCarrierLeastSquaresChannelEstimation(SingleCarrierChannelEstimation):
@@ -541,30 +534,30 @@ class SingleCarrierLeastSquaresChannelEstimation(SingleCarrierChannelEstimation)
     """YAML serialization tag"""
 
     def __init__(
-        self, waveform_generator: Optional[FilteredSingleCarrierWaveform] = None, *args: Any
+        self, waveform: Optional[FilteredSingleCarrierWaveform] = None, *args: Any
     ) -> None:
         """
         Args:
 
-            waveform_generator (WaveformGenerator, optional):
+            waveform (CommunicationWaveform, optional):
                 The waveform generator this channel estimation routine is attached to.
         """
 
-        SingleCarrierChannelEstimation.__init__(self, waveform_generator)
+        SingleCarrierChannelEstimation.__init__(self, waveform)
 
     def estimate_channel(self, symbols: Symbols, delay: float = 0.0) -> StatedSymbols:
-        if self.waveform_generator is None:
+        if self.waveform is None:
             raise FloatingError(
                 "Error trying to fetch the pilot section of a floating channel estimator"
             )
 
         # Query required waveform information
-        num_preamble_symbols = self.waveform_generator.num_preamble_symbols
-        num_postamble_symbols = self.waveform_generator.num_postamble_symbols
-        num_payload_symbols = self.waveform_generator._num_payload_symbols
-        num_pilot_symbols = self.waveform_generator._num_pilot_symbols
-        pilot_symbol_indices = self.waveform_generator._pilot_symbol_indices
-        transmitted_reference_symbols = self.waveform_generator.pilot_symbols(
+        num_preamble_symbols = self.waveform.num_preamble_symbols
+        num_postamble_symbols = self.waveform.num_postamble_symbols
+        num_payload_symbols = self.waveform._num_payload_symbols
+        num_pilot_symbols = self.waveform._num_pilot_symbols
+        pilot_symbol_indices = self.waveform._pilot_symbol_indices
+        transmitted_reference_symbols = self.waveform.pilot_symbols(
             num_preamble_symbols + num_pilot_symbols + num_postamble_symbols
         )
 
@@ -606,7 +599,7 @@ class SingleCarrierChannelEqualization(ChannelEqualization[FilteredSingleCarrier
         """
         Args:
 
-            waveform (WaveformGenerator, optional):
+            waveform (CommunicationWaveform, optional):
                 The waveform generator this equalization routine is attached to.
         """
 
@@ -628,19 +621,19 @@ class SingleCarrierMinimumMeanSquareChannelEqualization(SingleCarrierChannelEqua
     yaml_tag = "SC-MMSE"
     """YAML serialization tag"""
 
-    def __init__(self, waveform_generator: Optional[FilteredSingleCarrierWaveform] = None) -> None:
+    def __init__(self, waveform: Optional[FilteredSingleCarrierWaveform] = None) -> None:
         """
         Args:
 
-            waveform_generator (WaveformGenerator, optional):
+            waveform (CommunicationWaveform, optional):
                 The waveform generator this equalization routine is attached to.
         """
 
-        SingleCarrierChannelEqualization.__init__(self, waveform_generator)
+        SingleCarrierChannelEqualization.__init__(self, waveform)
 
     def equalize_channel(self, symbols: StatedSymbols) -> Symbols:
         # Query SNR and cached CSI from the device
-        snr = self.waveform_generator.modem.receiving_device.snr
+        snr = self.waveform.modem.receiving_device.snr
 
         # If no information about transmitted streams is available, assume orthogonal channels
         if symbols.num_transmit_streams < 2 and symbols.num_streams < 2:
@@ -793,31 +786,7 @@ class RolledOffSingleCarrierWaveform(FilteredSingleCarrierWaveform):
 
 
 class RootRaisedCosineWaveform(RolledOffSingleCarrierWaveform, Serializable):
-    """Root-Raised-Cosine filtered single carrier mdulation.
-
-
-    .. plot::
-
-       import matplotlib.pyplot as plt
-
-       from hermespy.modem import RaisedCosineWaveform
-
-
-       waveform = RaisedCosineWaveform(oversampling_factor=16, symbol_rate=1e6, num_preamble_symbols=1, num_data_symbols=0)
-       waveform.plot_filter()
-       plt.show()
-
-    .. plot::
-
-       import matplotlib.pyplot as plt
-
-       from hermespy.modem import RaisedCosineWaveform
-
-
-       waveform = RaisedCosineWaveform(oversampling_factor=16, symbol_rate=1e6, num_preamble_symbols=1, num_data_symbols=0)
-       waveform.plot_filter_correlation()
-       plt.show()
-    """
+    """Root-Raised-Cosine filtered single carrier modulation."""
 
     yaml_tag = "SC-RootRaisedCosine"
     """YAML serialization tag"""
@@ -868,30 +837,7 @@ class RootRaisedCosineWaveform(RolledOffSingleCarrierWaveform, Serializable):
 
 
 class RaisedCosineWaveform(RolledOffSingleCarrierWaveform, Serializable):
-    """Root-Raised-Cosine filtered single carrier mdulation.
-
-    .. plot::
-
-       import matplotlib.pyplot as plt
-
-       from hermespy.modem import RootRaisedCosineWaveform
-
-
-       waveform = RootRaisedCosineWaveform(oversampling_factor=16, symbol_rate=1e6, num_preamble_symbols=1, num_data_symbols=0)
-       waveform.plot_filter()
-       plt.show()
-
-    .. plot::
-
-       import matplotlib.pyplot as plt
-
-       from hermespy.modem import RootRaisedCosineWaveform
-
-
-       waveform = RootRaisedCosineWaveform(oversampling_factor=16, symbol_rate=1e6, num_preamble_symbols=1, num_data_symbols=0)
-       waveform.plot_filter_correlation()
-       plt.show()
-    """
+    """Root-Raised-Cosine filtered single carrier modulation."""
 
     yaml_tag = "SC-RaisedCosine"
     """YAML serialization tag"""
@@ -932,30 +878,7 @@ class RaisedCosineWaveform(RolledOffSingleCarrierWaveform, Serializable):
 
 
 class RectangularWaveform(FilteredSingleCarrierWaveform, Serializable):
-    """Rectangular filtered single carrier modulation.
-
-    .. plot::
-
-       import matplotlib.pyplot as plt
-
-       from hermespy.modem import RectangularWaveform
-
-
-       waveform = RectangularWaveform(oversampling_factor=16, symbol_rate=1e6, num_preamble_symbols=1, num_data_symbols=0)
-       waveform.plot_filter()
-       plt.show()
-
-    .. plot::
-
-       import matplotlib.pyplot as plt
-
-       from hermespy.modem import RectangularWaveform
-
-
-       waveform = RectangularWaveform(oversampling_factor=16, symbol_rate=1e6, num_preamble_symbols=1, num_data_symbols=0)
-       waveform.plot_filter_correlation()
-       plt.show()
-    """
+    """Rectangular filtered single carrier modulation."""
 
     yaml_tag = "SC-Rectangular"
     """YAML serialization tag"""
@@ -1005,30 +928,7 @@ class RectangularWaveform(FilteredSingleCarrierWaveform, Serializable):
 
 
 class FMCWWaveform(FilteredSingleCarrierWaveform, Serializable):
-    """Frequency Modulated Continuous Waveform Filter Modulation Scheme.
-
-    .. plot::
-
-       import matplotlib.pyplot as plt
-
-       from hermespy.modem import FMCWWaveform
-
-
-       waveform = FMCWWaveform(oversampling_factor=16, bandwidth=1e6, symbol_rate=1e6, num_preamble_symbols=1, num_data_symbols=0)
-       waveform.plot_filter()
-       plt.show()
-
-    .. plot::
-
-       import matplotlib.pyplot as plt
-
-       from hermespy.modem import FMCWWaveform
-
-
-       waveform = FMCWWaveform(oversampling_factor=16, bandwidth=1e6, symbol_rate=1e6, num_preamble_symbols=1, num_data_symbols=0)
-       waveform.plot_filter_correlation()
-       plt.show()
-    """
+    """Frequency Modulated Continuous Waveform Filter Modulation Scheme."""
 
     yaml_tag = "SC-FMCW"
     """YAML serialization tag"""

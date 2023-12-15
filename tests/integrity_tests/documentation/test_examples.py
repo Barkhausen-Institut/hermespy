@@ -150,6 +150,111 @@ class TestDocumentationExamples(TestCase):
         """Test example snippet for channel"""
 
         self.__run_example("channel.py")
+        
+    def test_modem_DuplexModem(self) -> None:
+        """Test example snippet for duplex modem"""
+
+        self.__run_example("modem_DuplexModem.py")
+
+    def test_modem_evaluators_ber(self) -> None:
+        """Test example snippet for bit error rate evaluation"""
+
+        self.__run_example('modem_evaluators_ber.py')
+
+    def test_modem_evaluators_bler(self) -> None:
+        """Test example snippet for block error rate evaluation"""
+
+        self.__run_example('modem_evaluators_bler.py')
+
+    def test_modem_evaluators_fer(self) -> None:
+        """Test example snippet for frame error rate evaluation"""
+
+        self.__run_example('modem_evaluators_fer.py')
+
+    def test_modem_evaluators_throughput(self) -> None:
+        """Test example snippet for throughput evaluation"""
+
+        self.__run_example('modem_evaluators_throughput.py')
+
+    def test_modem_precoding_alamouti(self) -> None:
+        """Test example snippet for Alamouti precoding"""
+
+        self.__run_example('modem_precoding_alamouti.py')
+
+    def test_modem_precoding_dft(self) -> None:
+        """Test example snippet for DFT precoding"""
+
+        self.__run_example('modem_precoding_dft.py')
+
+    def test_modem_precoding_ganesan(self) -> None:
+        """Test example snippet for Ganesan precoding"""
+
+        self.__run_example('modem_precoding_ganesan.py')
+
+    def test_modem_precoding_mrc(self) -> None:
+        """Test example snippet for MRC precoding"""
+
+        self.__run_example('modem_precoding_mrc.py')
+
+    def test_modem_precoding_precoding(self) -> None:
+        """Test example snippet for precoding"""
+
+        self.__run_example('modem_precoding_precoding.py')
+
+    def test_modem_precoding_sc(self) -> None:
+        """Test example snippet for SC precoding"""
+
+        self.__run_example('modem_precoding_sc.py')
+
+    def test_modem_precoding_sm(self) -> None:
+        """Test example snippet for spatial multiplexing precoding"""
+
+        self.__run_example('modem_precoding_sm.py')
+
+    def test_modem_ReceivingModem(self) -> None:
+        """Test example snippet for receiving modem"""
+
+        self.__run_example("modem_ReceivingModem.py")
+
+    def test_modem_SimplexLink(self) -> None:
+        """Test example snippet for simplex link"""
+
+        self.__run_example("modem_SimplexLink.py")
+
+    def test_modem_TransmittingModem(self) -> None:
+        """Test example snippet for transmitting modem"""
+
+        self.__run_example("modem_TransmittingModem.py")
+
+    def test_modem_waveforms_cfsk(self) -> None:
+        """Test example snippet for CFSK waveforms"""
+
+        self.__run_example("modem_waveforms_cfsk.py")
+        
+    def test_modem_waveforms_fmcw(self) -> None:
+        """Test example snippet for FMCW waveforms"""
+
+        self.__run_example("modem_waveforms_fmcw.py")
+        
+    def test_modem_waveforms_rc(self) -> None:
+        """Test example snippet for RC waveforms"""
+
+        self.__run_example("modem_waveforms_rc.py")
+        
+    def test_modem_waveforms_rect(self) -> None:
+        """Test example snippet for rect waveforms"""
+
+        self.__run_example("modem_waveforms_rect.py")
+        
+    def test_modem_waveforms_rrc(self) -> None:
+        """Test example snippet for RRC waveforms"""
+
+        self.__run_example("modem_waveforms_rrc.py")
+        
+    def test_modem(self) -> None:
+        """Test example snippet for modem"""
+
+        self.__run_example("modem.py")
 
     def test_radar_evaluators_DetectionProbEvaluation(self) -> None:
         """Test example snippet for detection probability evaluation"""

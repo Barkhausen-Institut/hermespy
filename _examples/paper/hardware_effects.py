@@ -27,9 +27,9 @@ simulation.scenario.set_channel(device, device, MultipathFading5GTDL())
 
 modem = DuplexModem()
 modem.device = device
-modem.waveform_generator = RaisedCosineWaveform(oversampling_factor=4, num_preamble_symbols=16, num_data_symbols=100, symbol_rate=100e6, modulation_order=16)
-modem.waveform_generator.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
-modem.waveform_generator.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
+modem.waveform = RaisedCosineWaveform(oversampling_factor=4, num_preamble_symbols=16, num_data_symbols=100, symbol_rate=100e6, modulation_order=16)
+modem.waveform.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
+modem.waveform.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
 
 simulation.new_dimension('snr', [db2lin(x) for x in np.arange(-10, 20, .5)])
 simulation.add_evaluator(BitErrorEvaluator(modem, modem))

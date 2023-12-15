@@ -23,7 +23,7 @@ from .waveform import (
     ChannelEstimation,
     ConfigurablePilotWaveform,
     Synchronization,
-    WaveformGenerator,
+    CommunicationWaveform,
     ZeroForcingChannelEqualization,
     MappedPilotSymbolSequence,
 )
@@ -629,22 +629,6 @@ class FrameSymbolSection(FrameSection, Serializable):
         subgrid = grid[selector]
         return subgrid
 
-    def __roll_dc_component(self, grid: np.ndarray) -> None:
-        """Roll the DC component to the last frequency bin to model DC suppression.
-
-        Subroutine of :meth:`.demodulate` and :meth:`.extract_channel`.
-
-        Args:
-
-            grid (np.ndarray):
-                Multidimensional matrix of frequency bins.
-                The last dimension will be rolled.
-        """
-
-        if self.frame.dc_suppression:
-            dc_index = int(0.5 * self._padded_num_subcarriers)
-            grid[dc_index:, :] = np.roll(grid[dc_index:, :], -1, axis=0)
-
     def demodulate(self, signal: np.ndarray) -> np.ndarray:
         # Remove the cyclic prefixes before transformation into time-domain
         resource_signals = self._remove_prefix(signal)
@@ -773,7 +757,7 @@ class FrameGuardSection(FrameSection, Serializable):
 class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
     """Generic Orthogonal-Frequency-Division-Multiplexing with a flexible frame configuration.
 
-    The internally applied FFT size is :meth:`OFDMWaveform.num_subcarriers` times :meth:`WaveformGenerator.oversampling_factor`.
+    The internally applied FFT size is :meth:`OFDMWaveform.num_subcarriers` times :meth:`CommunicationWaveform.oversampling_factor`.
 
     The following features are supported:
         - The modem can transmit or receive custom-defined frames.
@@ -833,7 +817,7 @@ class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
 
             **kwargs (Any):
                 Waveform generator base class initialization parameters.
-                Refer to :class:`WaveformGenerator` for details.
+                Refer to :class:`CommunicationWaveform` for details.
         """
 
         self.subcarrier_spacing = subcarrier_spacing
@@ -871,9 +855,9 @@ class OFDMWaveform(ConfigurablePilotWaveform, Serializable):
 
         return self.__structure
 
-    @WaveformGenerator.modulation_order.setter  # type: ignore
+    @CommunicationWaveform.modulation_order.setter  # type: ignore
     def modulation_order(self, value: int) -> None:
-        WaveformGenerator.modulation_order.fset(self, value)  # type: ignore
+        CommunicationWaveform.modulation_order.fset(self, value)  # type: ignore
         self._mapping = PskQamMapping(value)
 
     def add_resource(self, resource: FrameResource) -> None:
@@ -1233,7 +1217,7 @@ class PilotSection(FrameSection, Serializable):
                 Symbols with which the subcarriers within the pilot will be modulated.
                 By default, a pseudo-random sequence from the frame mapping will be generated.
 
-            frame (Optional[WaveformGeneratorOfdm], optional):
+            frame (Optional[CommunicationWaveformOfdm], optional):
                 The frame configuration this pilot section belongs to.
         """
 
@@ -1473,7 +1457,7 @@ class SchmidlCoxSynchronization(OFDMSynchronization):
 
     def synchronize(self, signal: np.ndarray) -> List[int]:
         symbol_length = (
-            self.waveform_generator.oversampling_factor * self.waveform_generator.num_subcarriers
+            self.waveform.oversampling_factor * self.waveform.num_subcarriers
         )
 
         # Abort if the supplied signal is shorter than one symbol length
@@ -1496,7 +1480,7 @@ class SchmidlCoxSynchronization(OFDMSynchronization):
                 )
             )
 
-        num_samples = self.waveform_generator.samples_per_frame
+        num_samples = self.waveform.samples_per_frame
         min_height = 0.75 * np.max(delay_powers)
         peaks, _ = find_peaks(delay_powers, distance=int(0.9 * num_samples), height=min_height)
         frame_indices = peaks - 1  # Correct for the first delay bin being prepended
@@ -1525,10 +1509,10 @@ class OFDMLeastSquaresChannelEstimation(ChannelEstimation[OFDMWaveform], Seriali
                 "Least-Squares channel estimation is only implemented for SISO links"
             )
 
-        resource_mask = self.waveform_generator._resource_mask
+        resource_mask = self.waveform._resource_mask
 
         propagated_references = symbols.raw[0, ::].T[resource_mask[ElementType.REFERENCE.value, ::]]
-        reference_symbols = self.waveform_generator.pilot_symbols(len(propagated_references))
+        reference_symbols = self.waveform.pilot_symbols(len(propagated_references))
         reference_channel_estimation = propagated_references / reference_symbols
 
         channel_estimation = np.zeros(
@@ -1563,15 +1547,15 @@ class OFDMChannelEqualization(ChannelEqualization[OFDMWaveform], ABC):
 
     yaml_tag = "OFDM-NoEqualization"
 
-    def __init__(self, waveform_generator: Optional[OFDMWaveform] = None) -> None:
+    def __init__(self, waveform: Optional[OFDMWaveform] = None) -> None:
         """
         Args:
 
-            waveform_generator (WaveformGenerator, optional):
+            waveform (CommunicationWaveform, optional):
                 The waveform generator this equalization routine is attached to.
         """
 
-        ChannelEqualization.__init__(self, waveform_generator)
+        ChannelEqualization.__init__(self, waveform)
 
 
 class OFDMZeroForcingChannelEqualization(ZeroForcingChannelEqualization[OFDMWaveform]):

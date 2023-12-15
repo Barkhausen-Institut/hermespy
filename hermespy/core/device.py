@@ -982,13 +982,13 @@ class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType
     def _receive(self, signal: Signal) -> ReceptionType:
         """Process a received signal by the receiver.
 
-        Subroutine of the public :meth:`receive` method that performs
-        the pipeline-specific receive processing
-        and consolidates the inferred information into a single :class:`Reception` object.
+        Subroutine of the public :meth:`receive<hermespy.core.device.Receiver.receive>`
+        method that performs the pipeline-specific receive processing
+        and consolidates the inferred information into a single
+        :class:`Reception<hermespy.core.device.Reception>` object.
 
         Args:
             signal (Signal): Multi-stream signal model to be processed.
-            csi (ChannelStateInformation): Available channel state information.
 
         Returns:
             Information inferred from the received signal.
