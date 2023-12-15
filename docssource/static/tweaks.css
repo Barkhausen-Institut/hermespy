@@ -20,3 +20,8 @@ span.brackets > a:after {
     width: 80% !important;
     margin: 0 auto !important;
 }
+
+img.inheritance {
+    margin: 0 auto;
+    display: block;
+}

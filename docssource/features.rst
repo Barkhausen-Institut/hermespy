@@ -182,20 +182,20 @@ Full releases with a new set of features will be provided on a bi-anual basis in
      - Examples
 
    * - Synchronization
-     - :class:`Synchronization <hermespy.modem.waveform_generator.Synchronization>`
+     - :class:`Synchronization <hermespy.modem.waveform.Synchronization>`
      - 
 
    * - Channel Estimation
-     - :class:`ChannelEstimation <hermespy.modem.waveform_generator.ChannelEstimation>`
-       :class:`IdealChannelEstimation <hermespy.modem.waveform_generator.IdealChannelEstimation>`
+     - :class:`ChannelEstimation <hermespy.modem.waveform.ChannelEstimation>`
+       :class:`IdealChannelEstimation <hermespy.modem.waveform.IdealChannelEstimation>`
        :class:`Single Carrier Least-Squares <hermespy.modem.waveform_single_carrier.SingleCarrierLeastSquaresChannelEstimation>`
-       :class:`OFDM Least-Squares <hermespy.modem.waveform_generator_ofdm.OFDMLeastSquaresChannelEstimation>`
+       :class:`OFDM Least-Squares <hermespy.modem.waveform_ofdm.OFDMLeastSquaresChannelEstimation>`
      -
 
    * - Equalization
-     - :class:`ChannelEqualization <hermespy.modem.waveform_generator.ChannelEqualization>`
-       :class:`Zero-Forcing <hermespy.modem.waveform_generator.ZeroForcingChannelEqualization>`
-       :class:`OFDM MMSE <hermespy.modem.waveform_generator_ofdm.OFDMMinimumMeanSquareChannelEqualization>`
+     - :class:`ChannelEqualization <hermespy.modem.waveform.ChannelEqualization>`
+       :class:`Zero-Forcing <hermespy.modem.waveform.ZeroForcingChannelEqualization>`
+       :class:`OFDM MMSE <hermespy.modem.waveform_ofdm.OFDMMinimumMeanSquareChannelEqualization>`
        :class:`Single Carrier MMSE <hermespy.modem.waveform_single_carrier.SingleCarrierMinimumMeanSquareChannelEqualization>`
      -
 

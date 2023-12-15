@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-====================================
-Discrete Fourier Transform Precoding
-====================================
-"""
 
 from __future__ import annotations
 from typing import Literal
@@ -31,7 +26,7 @@ class DFT(SymbolPrecoder, Serializable):
     __fft_norm: Literal["backward", "ortho", "forward"]
 
     def __init__(self, fft_norm: Literal["backward", "ortho", "forward"] = "ortho") -> None:
-        """Object initialization.
+        """
 
         Args:
             fft_norm (str, optional):

@@ -221,7 +221,7 @@ HermesPy offers the :doc:`SimplexLink<api/modem.modem.SimplexLink>` class, which
    :lines: 18-19
 
 The :doc:`Modem<api/modem>` package provides a range of communication waveform implementations,
-for this minimal introduction we will choose a :doc:`Root-Raised-Cosine<api/modem.waveform_single_carrier.RootRaisedCosine>` single carrier waveform:
+for this minimal introduction we will choose a :doc:`Root-Raised-Cosine<api/modem.waveform.single_carrier.RootRaisedCosine>` single carrier waveform:
 
 .. literalinclude:: ../_examples/library/getting_started_simulation.py
    :language: python
@@ -252,7 +252,7 @@ The generated information is collected in :doc:`SimulatedDrops<api/simulation.si
 
 After the generation of a new :doc:`SimulatedDrop<api/simulation.simulation.SimulatedDrop>`,
 :doc:`Evaluators<api/core.monte_carlo.Evaluator>` may be used to conveniently extract performance information.
-For instance, the bit error rate of the generated drop may be extracted by a :doc:`BitErrorEvaluator<api/modem.evaluators.BitErrorEvaluator>`:
+For instance, the bit error rate of the generated drop may be extracted by a :doc:`BitErrorEvaluator<api/modem.evaluators.ber>`:
 
 .. literalinclude:: ../_examples/library/getting_started_simulation.py
    :language: python
@@ -369,7 +369,7 @@ HermesPy offers the :doc:`SimplexLink<api/modem.modem.SimplexLink>` class, which
    :lines: 19-20
 
 The :doc:`Modem<api/modem>` package provides a range of communication waveform implementations,
-for this minimal introduction we will choose a :doc:`Root-Raised-Cosine<api/modem.waveform_single_carrier.RootRaisedCosine>` single carrier waveform:
+for this minimal introduction we will choose a :doc:`Root-Raised-Cosine<api/modem.waveform.single_carrier.RootRaisedCosine>` single carrier waveform:
 
 .. literalinclude:: ../_examples/library/getting_started_loop.py
    :language: python
@@ -382,7 +382,7 @@ the configured :doc:`PhysicalDevices<api/hardware_loop.physical_device.PhysicalD
 
 After the generation of a new :doc:`Drop<api/core.drop.Drop>`,
 :doc:`Evaluators<api/core.monte_carlo.Evaluator>` may be used to conveniently extract performance information.
-For instance, the bit error rate of the generated drop may be extracted by a :doc:`BitErrorEvaluator<api/modem.evaluators.BitErrorEvaluator>`:
+For instance, the bit error rate of the generated drop may be extracted by a :doc:`BitErrorEvaluator<api/modem.evaluators.ber>`:
 
 .. literalinclude:: ../_examples/library/getting_started_loop.py
    :language: python

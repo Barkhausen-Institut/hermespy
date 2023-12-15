@@ -27,10 +27,10 @@ class TestRecordReplay(TestCase):
         self.num_drops = 3
 
         modem_alpha = TransmittingModem()
-        modem_alpha.waveform_generator = RaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=20)
+        modem_alpha.waveform = RaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=20)
 
         modem_beta = ReceivingModem()
-        modem_beta.waveform_generator = RaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=20)
+        modem_beta.waveform = RaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=20)
 
         device_alpha = self.scenario.new_device()
         device_beta = self.scenario.new_device()

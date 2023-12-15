@@ -18,7 +18,7 @@ from hermespy.fec import EncoderManager
 from hermespy.modem import Symbols, CommunicationReceptionFrame, CommunicationTransmission, CommunicationTransmissionFrame, CommunicationReception, BaseModem, TransmittingModem, ReceivingModem, DuplexModem, SimplexLink, RandomBitsSource, SymbolPrecoder, SymbolPrecoding
 from hermespy.simulation import SimulatedDevice
 
-from .test_waveform import MockWaveformGenerator
+from .test_waveform import MockCommunicationWaveform
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -189,7 +189,7 @@ class TestBaseModem(TestCase):
 
         self.encoding = EncoderManager()
         self.precoding = SymbolPrecoding()
-        self.waveform = MockWaveformGenerator(oversampling_factor=4)
+        self.waveform = MockCommunicationWaveform(oversampling_factor=4)
 
         self.modem = modem_type(encoding=self.encoding, precoding=self.precoding, waveform=self.waveform, **kwargs)
         self.modem.random_mother = self.random_node
@@ -211,11 +211,11 @@ class TestBaseModem(TestCase):
         # Test initialization assignments
         self.assertIs(self.encoding, self.modem.encoder_manager)
         self.assertIs(self.precoding, self.modem.precoding)
-        self.assertIs(self.waveform, self.modem.waveform_generator)
+        self.assertIs(self.waveform, self.modem.waveform)
 
         # Test initialization random graph
         self.assertIs(self.modem, self.modem.encoder_manager.random_mother)
-        self.assertIs(self.modem, self.modem.waveform_generator.random_mother)
+        self.assertIs(self.modem, self.modem.waveform.random_mother)
 
     def test_encoder_manager_setget(self) -> None:
         """Encoder manager property getter should return setter argument"""
@@ -226,14 +226,14 @@ class TestBaseModem(TestCase):
         self.assertIs(encoder_manager, self.modem.encoder_manager)
         self.assertIs(encoder_manager.modem, self.modem)
 
-    def test_waveform_generator_setget(self) -> None:
+    def test_waveform_setget(self) -> None:
         """Waveform generator property getter should return setter argument"""
 
-        waveform_generator = Mock()
-        self.modem.waveform_generator = waveform_generator
+        waveform = Mock()
+        self.modem.waveform = waveform
 
-        self.assertIs(waveform_generator, self.modem.waveform_generator)
-        self.assertIs(waveform_generator.modem, self.modem)
+        self.assertIs(waveform, self.modem.waveform)
+        self.assertIs(waveform.modem, self.modem)
 
     def test_precoding_setget(self) -> None:
         """Precoding configuration property getter should return setter argument"""
@@ -274,7 +274,7 @@ class TestBaseModem(TestCase):
         with self.assertRaises(ValueError):
             _ = self.modem._noise_power(1.0, SNRType.EN0)
 
-        self.modem.waveform_generator = None
+        self.modem.waveform = None
         self.assertEqual(0, self.modem._noise_power(1.0, SNRType.EBN0))
 
 
@@ -434,7 +434,7 @@ class TestReceivingModem(TestBaseModem):
 
         transmit_device = SimulatedDevice()
         transmitting_modem = TransmittingModem(device=transmit_device)
-        transmitting_modem.waveform_generator = MockWaveformGenerator(oversampling_factor=4)
+        transmitting_modem.waveform = MockCommunicationWaveform(oversampling_factor=4)
         transmission = transmitting_modem.transmit()
 
         reception = self.modem.receive(transmission.signal)

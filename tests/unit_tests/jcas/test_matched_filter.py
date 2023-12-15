@@ -10,12 +10,12 @@ from h5py import File
 from numpy.testing import assert_array_equal
 
 from hermespy.core import Signal
-from hermespy.modem import CommunicationReception, CommunicationTransmission, DuplexModem, Symbols, WaveformGenerator
+from hermespy.modem import CommunicationReception, CommunicationTransmission, DuplexModem, Symbols, CommunicationWaveform
 from hermespy.radar import Radar, RadarCube, RadarReception
 from hermespy.simulation import SimulatedDevice
 from hermespy.jcas import JCASTransmission, JCASReception, MatchedFilterJcas
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
-from unit_tests.modem.test_waveform import MockWaveformGenerator
+from unit_tests.modem.test_waveform import MockCommunicationWaveform
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -88,8 +88,8 @@ class TestMatchedFilterJoint(TestCase):
         self.carrier_frequency = 1e8
 
         self.joint = MatchedFilterJcas(max_range=10)
-        self.waveform = MockWaveformGenerator()
-        self.joint.waveform_generator = self.waveform
+        self.waveform = MockCommunicationWaveform()
+        self.joint.waveform = self.waveform
 
         self.device = SimulatedDevice(carrier_frequency=self.carrier_frequency)
         self.device._rng = self.rng
@@ -203,8 +203,8 @@ class TestMatchedFilterJoint(TestCase):
     def test_serialization(self) -> None:
         """Test YAML serialization"""
 
-        with patch("hermespy.jcas.matched_filtering.MatchedFilterJcas.property_blacklist", new_callable=PropertyMock) as blacklist, patch("hermespy.jcas.matched_filtering.MatchedFilterJcas.waveform_generator", new_callable=PropertyMock) as waveform_generator:
-            blacklist.return_value = {"slot", "waveform_generator"}
-            waveform_generator.return_value = self.waveform
+        with patch("hermespy.jcas.matched_filtering.MatchedFilterJcas.property_blacklist", new_callable=PropertyMock) as blacklist, patch("hermespy.jcas.matched_filtering.MatchedFilterJcas.waveform", new_callable=PropertyMock) as waveform:
+            blacklist.return_value = {"slot", "waveform"}
+            waveform.return_value = self.waveform
 
             test_yaml_roundtrip_serialization(self, self.joint)

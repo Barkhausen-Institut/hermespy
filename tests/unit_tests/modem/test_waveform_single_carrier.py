@@ -365,7 +365,7 @@ class TestLeastSquaresChannelEstimation(TestCase):
     def test_least_squares_validation(self) -> None:
         """Least squares channel estimation should raise FloatingError if not assigned to a waveform"""
 
-        self.estimation.waveform_generator = None
+        self.estimation.waveform = None
 
         with self.assertRaises(RuntimeError):
             self.estimation.estimate_channel(self.symbols)
@@ -389,7 +389,7 @@ class TestChannelEqualization(TestCase):
         self.raw_state = np.ones((1, 1, self.raw_symbols.num_blocks, self.raw_symbols.num_symbols))
         self.symbols = StatedSymbols(self.raw_symbols.raw, self.raw_state)
 
-        self.modem_patch = patch("hermespy.modem.waveform.WaveformGenerator.modem")
+        self.modem_patch = patch("hermespy.modem.waveform.CommunicationWaveform.modem")
         self.modem_mock = self.modem_patch.start()
         self.modem_mock.receiving_device.snr = np.inf
 

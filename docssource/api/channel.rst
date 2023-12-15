@@ -214,7 +214,7 @@ followed by a propagation over a joint channel realization and finally the recep
 
 This snippet is essentially a summary of what is happening within the drop generation of :doc:`Simulations<simulation.simulation.Simulation>`.
 However, by default devices won't generate any waveforms to be transmitted.
-For example, a :doc:`SimplexLink<modem.modem.SimplexLink>` transmitting a :doc:`modem.waveform_single_carrier.RootRaisedCosine` from the first to the second device can be configured as follows:
+For example, a :doc:`SimplexLink<modem.modem.SimplexLink>` transmitting a :doc:`modem.waveform.single_carrier.RootRaisedCosine` from the first to the second device can be configured as follows:
 
 .. literalinclude:: ../scripts/examples/channel.py
    :language: python
@@ -229,7 +229,7 @@ requires the instantiation of a new :doc:`Simulation<simulation.simulation.Simul
    :linenos:
    :lines: 43-52
 
-Now, evaluators such as :doc:`modem.evaluators.BitErrorEvaluator` can be added to the simulation pipeline and
+Now, evaluators such as :doc:`modem.evaluators.ber` can be added to the simulation pipeline and
 the :doc:`Simulation<simulation.simulation.Simulation>` can be executed and the results can be analyzed.
 
 .. literalinclude:: ../scripts/examples/channel.py

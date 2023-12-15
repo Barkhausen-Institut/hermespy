@@ -44,10 +44,10 @@ class IdealChannelEstimation(Generic[WaveformType], ChannelEstimation[WaveformTy
         self,
         transmitter: SimulatedDevice,
         receiver: SimulatedDevice,
-        waveform_generator: WaveformType | None = None,
+        waveform: WaveformType | None = None,
     ) -> None:
         # Initialize base class
-        ChannelEstimation.__init__(self, waveform_generator)
+        ChannelEstimation.__init__(self, waveform)
 
         # Initialize class attributes
         self.__transmitter = transmitter
@@ -91,12 +91,12 @@ class IdealChannelEstimation(Generic[WaveformType], ChannelEstimation[WaveformTy
             RuntimeError: If no channel state is available.
         """
 
-        if self.waveform_generator is None:
+        if self.waveform is None:
             raise RuntimeError("Ideal channel state estimation routine floating")
 
         if (
-            self.waveform_generator.modem is None
-            or self.waveform_generator.modem.receiving_device is None
+            self.waveform.modem is None
+            or self.waveform.modem.receiving_device is None
         ):
             raise RuntimeError("Operating modem floating")
 
@@ -107,10 +107,10 @@ class IdealChannelEstimation(Generic[WaveformType], ChannelEstimation[WaveformTy
             )
 
         sampling_rate = (
-            self.waveform_generator.sampling_rate if sampling_rate is None else sampling_rate
+            self.waveform.sampling_rate if sampling_rate is None else sampling_rate
         )
         num_samples = (
-            self.waveform_generator.samples_per_frame if num_samples is None else num_samples
+            self.waveform.samples_per_frame if num_samples is None else num_samples
         )
 
         channel_state_information = cached_realization.state(
@@ -127,20 +127,20 @@ class SingleCarrierIdealChannelEstimation(
     yaml_tag = "SC-Ideal"
 
     def estimate_channel(self, symbols: Symbols, frame_delay: float = 0.0) -> StatedSymbols:
-        oversampling_factor = self.waveform_generator.oversampling_factor
-        num_symbols = self.waveform_generator._num_frame_symbols
-        filter_delay = int(0.5 * self.waveform_generator._filter_delay)
-        # sync_delay = int(frame_delay * self.waveform_generator.sampling_rate)
+        oversampling_factor = self.waveform.oversampling_factor
+        num_symbols = self.waveform._num_frame_symbols
+        filter_delay = int(0.5 * self.waveform._filter_delay)
+        # sync_delay = int(frame_delay * self.waveform.sampling_rate)
 
         # Compute the CSI including inter-symbol interference
         filter_characteristics = (
-            self.waveform_generator._transmit_filter() * self.waveform_generator._receive_filter()
+            self.waveform._transmit_filter() * self.waveform._receive_filter()
         )
         state = (
             self._csi(
                 frame_delay,
-                self.waveform_generator.sampling_rate,
-                self.waveform_generator.samples_per_frame,
+                self.waveform.sampling_rate,
+                self.waveform.samples_per_frame,
             )
             .to_impulse_response()
             .dense_state()
@@ -212,10 +212,10 @@ class OFDMIdealChannelEstimation(IdealChannelEstimation[OFDMWaveform], Serializa
         word_index = 0
 
         # If the frame contains a pilot section, skip the respective samples
-        if self.waveform_generator.pilot_section:
-            sample_index += self.waveform_generator.pilot_section.num_samples
+        if self.waveform.pilot_section:
+            sample_index += self.waveform.pilot_section.num_samples
 
-        for section in self.waveform_generator.structure:
+        for section in self.waveform.structure:
             num_samples = section.num_samples
             csi = section.extract_channel(
                 ideal_csi[:, :, sample_index : sample_index + num_samples, :],
@@ -227,6 +227,6 @@ class OFDMIdealChannelEstimation(IdealChannelEstimation[OFDMWaveform], Serializa
             word_index += section.num_words
 
         # Corret the FFT normalization
-        symbol_csi *= np.sqrt(self.waveform_generator.num_subcarriers)
+        symbol_csi *= np.sqrt(self.waveform.num_subcarriers)
 
         return StatedSymbols(symbols.raw, symbol_csi)

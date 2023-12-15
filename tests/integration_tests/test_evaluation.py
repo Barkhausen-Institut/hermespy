@@ -38,7 +38,7 @@ class TestEvaluators(TestCase):
         self.device = SimulatedDevice()
 
         self.modem = DuplexModem()
-        self.modem.waveform_generator = waveform
+        self.modem.waveform = waveform
         self.modem.device = self.device
 
         investigated_object = InvestigatedObject()

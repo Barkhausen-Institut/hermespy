@@ -7,7 +7,7 @@ from os.path import join
 from time import sleep
 
 import numpy as np
-from hermespy.modem.waveform_generator_ofdm import OFDMIdealChannelEstimation, OFDMLeastSquaresChannelEstimation, OFDMZeroForcingChannelEqualization
+from hermespy.modem.waveform_ofdm import OFDMIdealChannelEstimation, OFDMLeastSquaresChannelEstimation, OFDMZeroForcingChannelEqualization
 
 from hermespy.simulation import Simulation
 from hermespy.modem import BitErrorEvaluator, DuplexModem, OFDMWaveform, FrameResource, FrameSymbolSection, FrameElement
@@ -44,7 +44,7 @@ for (c, confidence), (t, tolerance) in product(enumerate(confidences), enumerate
 
     modem = DuplexModem()
     modem.device = device
-    modem.waveform_generator = ofdm
+    modem.waveform = ofdm
     simulation.scenario.set_channel(device, device, channel)
     evaluator = BitErrorEvaluator(modem, modem)
     evaluator.confidence = confidence

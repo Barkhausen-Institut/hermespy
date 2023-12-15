@@ -13,7 +13,7 @@ from h5py import Group
 from scipy.constants import speed_of_light
 from scipy.signal import correlate, correlation_lags
 
-from hermespy.core import Device, Receiver, Signal, Serializable, Transmitter
+from hermespy.core import Device, Receiver, SNRType, Signal, Serializable, Transmitter
 from hermespy.modem import DuplexModem, CommunicationTransmission, CommunicationReception
 from hermespy.radar import Radar, RadarTransmission, RadarReception, RadarCube
 
@@ -62,7 +62,7 @@ class JCASReception(CommunicationReception, RadarReception):
         RadarReception.to_HDF(self, group)
 
 
-class MatchedFilterJcas(
+class MatchedFilterJcas(  # type: ignore[misc]
     Radar, DuplexModem, Transmitter[JCASTransmission], Receiver[JCASReception], Serializable
 ):
     """Joint Communication and Sensing Operator.
@@ -167,7 +167,7 @@ class MatchedFilterJcas(
 
     @property
     def sampling_rate(self) -> float:
-        modem_sampling_rate = self.waveform_generator.sampling_rate
+        modem_sampling_rate = self.waveform.sampling_rate
 
         if self.__sampling_rate is None:
             return modem_sampling_rate
@@ -210,7 +210,7 @@ class MatchedFilterJcas(
 
     @property
     def frame_duration(self) -> float:
-        return self.waveform_generator.frame_duration
+        return self.waveform.frame_duration
 
     @property
     def max_range(self) -> float:
@@ -248,3 +248,7 @@ class MatchedFilterJcas(
 
     def _recall_reception(self, group: Group) -> JCASReception:
         return JCASReception.from_HDF(group)
+
+    def _noise_power(self, strength: float, snr_type=SNRType) -> float:
+        # Defer to the DuplexModem noise power calculation
+        return DuplexModem._noise_power(self, strength, snr_type)

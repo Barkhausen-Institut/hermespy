@@ -39,12 +39,12 @@ class TestMIMOLink(TestCase):
         self.channel = RuralMacrocellsLineOfSight(alpha_device=self.tx_device, beta_device=self.rx_device, seed=42)
 
         self.tx_modem = TransmittingModem()
-        self.tx_modem.waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e8, num_preamble_symbols=16, num_data_symbols=64, pilot_rate=5, oversampling_factor=4, modulation_order=4)
+        self.tx_modem.waveform = RootRaisedCosineWaveform(symbol_rate=1e8, num_preamble_symbols=16, num_data_symbols=64, pilot_rate=5, oversampling_factor=4, modulation_order=4)
 
         self.rx_modem = ReceivingModem()
-        self.rx_modem.waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e8, num_preamble_symbols=16, num_data_symbols=64, pilot_rate=5, oversampling_factor=4, modulation_order=4)
-        self.rx_modem.waveform_generator.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
-        self.rx_modem.waveform_generator.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
+        self.rx_modem.waveform = RootRaisedCosineWaveform(symbol_rate=1e8, num_preamble_symbols=16, num_data_symbols=64, pilot_rate=5, oversampling_factor=4, modulation_order=4)
+        self.rx_modem.waveform.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
+        self.rx_modem.waveform.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
 
         self.tx_device.transmitters.add(self.tx_modem)
         self.rx_device.receivers.add(self.rx_modem)
@@ -79,8 +79,8 @@ class TestMIMOLink(TestCase):
 
         self.tx_modem.precoding[0] = Alamouti()
         self.rx_modem.precoding[0] = Alamouti()
-        self.rx_modem.waveform_generator.channel_estimation = SingleCarrierIdealChannelEstimation(self.tx_device, self.rx_device)
-        self.rx_modem.waveform_generator.channel_equalization = ChannelEqualization()
+        self.rx_modem.waveform.channel_estimation = SingleCarrierIdealChannelEstimation(self.tx_device, self.rx_device)
+        self.rx_modem.waveform.channel_equalization = ChannelEqualization()
 
         transmission, reception = self.__propagate()
         assert_array_equal(transmission.bits, reception.bits)
@@ -93,8 +93,8 @@ class TestMIMOLink(TestCase):
 
         self.tx_modem.precoding[0] = Ganesan()
         self.rx_modem.precoding[0] = Ganesan()
-        self.rx_modem.waveform_generator.channel_estimation = SingleCarrierIdealChannelEstimation(self.tx_device, self.rx_device)
-        self.rx_modem.waveform_generator.channel_equalization = ChannelEqualization()
+        self.rx_modem.waveform.channel_estimation = SingleCarrierIdealChannelEstimation(self.tx_device, self.rx_device)
+        self.rx_modem.waveform.channel_equalization = ChannelEqualization()
 
         transmission, reception = self.__propagate()
         assert_array_equal(transmission.bits, reception.bits)

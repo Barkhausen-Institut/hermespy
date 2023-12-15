@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-===========================
-Communication Waveform Base
-===========================
-"""
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
@@ -30,7 +25,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-WaveformType = TypeVar("WaveformType", bound="WaveformGenerator")
+WaveformType = TypeVar("WaveformType", bound="CommunicationWaveform")
 """Type hint for waveform generator classes."""
 
 
@@ -41,22 +36,22 @@ class Synchronization(Generic[WaveformType], ABC, Serializable):
     """
 
     yaml_tag = "Synchronization"
-    property_blacklist = {"waveform_generator"}
+    property_blacklist = {"waveform"}
 
     # Waveform generator this routine is attached to
-    __waveform_generator: Optional[WaveformType]
+    __waveform: Optional[WaveformType]
 
-    def __init__(self, waveform_generator: Optional[WaveformType] = None) -> None:
+    def __init__(self, waveform: Optional[WaveformType] = None) -> None:
         """
         Args:
-            waveform_generator (WaveformGenerator, optional):
+            waveform (CommunicationWaveform, optional):
                 The waveform generator this synchronization routine is attached to.
         """
 
-        self.__waveform_generator = waveform_generator
+        self.__waveform = waveform
 
     @property
-    def waveform_generator(self) -> Optional[WaveformType]:
+    def waveform(self) -> Optional[WaveformType]:
         """Waveform generator this synchronization routine is attached to.
 
         Returns:
@@ -64,20 +59,20 @@ class Synchronization(Generic[WaveformType], ABC, Serializable):
                 Handle to tghe waveform generator. None if the synchronization routine is floating.
         """
 
-        return self.__waveform_generator
+        return self.__waveform
 
-    @waveform_generator.setter
-    def waveform_generator(self, value: Optional[WaveformType]) -> None:
+    @waveform.setter
+    def waveform(self, value: Optional[WaveformType]) -> None:
         """Set waveform generator this synchronization routine is attached to."""
 
         # Un-register this synchronization routine from its previously assigned waveform
         if (
-            self.__waveform_generator is not None
-            and self.__waveform_generator.synchronization is self
+            self.__waveform is not None
+            and self.__waveform.synchronization is self
         ):
-            self.__waveform_generator.synchronization = Synchronization()
+            self.__waveform.synchronization = Synchronization()
 
-        self.__waveform_generator = value
+        self.__waveform = value
 
     def synchronize(self, signal: np.ndarray) -> List[int]:
         """Simulates time-synchronization at the receiver-side.
@@ -98,10 +93,10 @@ class Synchronization(Generic[WaveformType], ABC, Serializable):
             RuntimeError: If the synchronization routine is floating
         """
 
-        if self.__waveform_generator is None:
+        if self.__waveform is None:
             raise RuntimeError("Trying to synchronize with a floating synchronization routine")
 
-        samples_per_frame = self.waveform_generator.samples_per_frame
+        samples_per_frame = self.waveform.samples_per_frame
         num_frames = signal.shape[1] // samples_per_frame
 
         return [] if num_frames < 1 else [0]
@@ -111,19 +106,19 @@ class ChannelEstimation(Generic[WaveformType], Serializable):
     """Base class for channel estimation routines of waveform generators."""
 
     yaml_tag = "NoChannelEstimation"
-    property_blacklist = {"waveform_generator"}
+    property_blacklist = {"waveform"}
 
-    def __init__(self, waveform_generator: Optional[WaveformType] = None) -> None:
+    def __init__(self, waveform: Optional[WaveformType] = None) -> None:
         """
         Args:
-            waveform_generator (WaveformGenerator, optional):
+            waveform (CommunicationWaveform, optional):
                 The waveform generator this estimation routine is attached to.
         """
 
-        self.__waveform_generator = waveform_generator
+        self.__waveform = waveform
 
     @property
-    def waveform_generator(self) -> Optional[WaveformType]:
+    def waveform(self) -> Optional[WaveformType]:
         """Waveform generator this synchronization routine is attached to.
 
         Returns:
@@ -131,24 +126,24 @@ class ChannelEstimation(Generic[WaveformType], Serializable):
                 Handle to the waveform generator. None if the synchronization routine is floating.
         """
 
-        return self.__waveform_generator
+        return self.__waveform
 
-    @waveform_generator.setter
-    def waveform_generator(self, value: Optional[WaveformType]) -> None:
+    @waveform.setter
+    def waveform(self, value: Optional[WaveformType]) -> None:
         """Set waveform generator this synchronization routine is attached to."""
 
         if value is None:
-            waveform_generator = self.__waveform_generator
-            self.__waveform_generator = None
+            waveform = self.__waveform
+            self.__waveform = None
 
-            if waveform_generator is not None:
-                waveform_generator.channel_estimation = ChannelEstimation()
+            if waveform is not None:
+                waveform.channel_estimation = ChannelEstimation()
 
         else:
-            if self.__waveform_generator is not value and self.__waveform_generator is not None:
-                self.__waveform_generator.channel_estimation = ChannelEstimation()
+            if self.__waveform is not value and self.__waveform is not None:
+                self.__waveform.channel_estimation = ChannelEstimation()
 
-            self.__waveform_generator = value
+            self.__waveform = value
             value.channel_estimation = self
 
     def estimate_channel(self, symbols: Symbols, delay: float = 0.0) -> StatedSymbols:
@@ -177,19 +172,19 @@ class ChannelEqualization(Generic[WaveformType], ABC, Serializable):
     """Abstract base class for channel equalization routines of waveform generators."""
 
     yaml_tag = "NoEqualization"
-    property_blacklist = {"waveform_generator"}
+    property_blacklist = {"waveform"}
 
-    def __init__(self, waveform_generator: Optional[WaveformType] = None) -> None:
+    def __init__(self, waveform: Optional[WaveformType] = None) -> None:
         """
         Args:
-            waveform_generator (WaveformGenerator, optional):
+            waveform (CommunicationWaveform, optional):
                 The waveform generator this equalization routine is attached to.
         """
 
-        self.__waveform_generator = waveform_generator
+        self.__waveform = waveform
 
     @property
-    def waveform_generator(self) -> Optional[WaveformType]:
+    def waveform(self) -> Optional[WaveformType]:
         """Waveform generator this equalization routine is attached to.
 
         Returns:
@@ -197,16 +192,16 @@ class ChannelEqualization(Generic[WaveformType], ABC, Serializable):
                 Handle to the waveform generator. None if the equalization routine is floating.
         """
 
-        return self.__waveform_generator
+        return self.__waveform
 
-    @waveform_generator.setter
-    def waveform_generator(self, value: Optional[WaveformType]) -> None:
+    @waveform.setter
+    def waveform(self, value: Optional[WaveformType]) -> None:
         """Set waveform generator this equalization routine is attached to."""
 
-        if self.__waveform_generator is not None:
+        if self.__waveform is not None:
             raise RuntimeError("Error trying to re-attach already attached equalization routine.")
 
-        self.__waveform_generator = value
+        self.__waveform = value
 
     def equalize_channel(self, stated_symbols: StatedSymbols) -> Symbols:
         """Equalize the wireless channel of a received communication frame.
@@ -244,11 +239,8 @@ class ZeroForcingChannelEqualization(
         return Symbols(equalized_symbols)
 
 
-class WaveformGenerator(ABC, Serializable):
-    """Implements an abstract waveform generator.
-
-    Implementations for specific technologies should inherit from this class.
-    """
+class CommunicationWaveform(ABC, Serializable):
+    """Abstract base class for all communication waveform descriptions."""
 
     property_blacklist = {"modem"}
 
@@ -597,11 +589,11 @@ class WaveformGenerator(ABC, Serializable):
             self.__modem = None
 
             if modem is not None:
-                modem.waveform_generator = None
+                modem.waveform = None
 
         else:
-            if handle.waveform_generator is not self:
-                handle.waveform_generator = self
+            if handle.waveform is not self:
+                handle.waveform = self
 
             self.__modem = handle
             self.random_mother = handle
@@ -620,8 +612,8 @@ class WaveformGenerator(ABC, Serializable):
     def synchronization(self, value: Synchronization) -> None:
         self.__synchronization = value
 
-        if value.waveform_generator is not self:
-            value.waveform_generator = self
+        if value.waveform is not self:
+            value.waveform = self
 
     @property
     def channel_estimation(self) -> ChannelEstimation:
@@ -637,8 +629,8 @@ class WaveformGenerator(ABC, Serializable):
     def channel_estimation(self, value: ChannelEstimation) -> None:
         self.__channel_estimation = value
 
-        if value.waveform_generator is not self:
-            value.waveform_generator = self
+        if value.waveform is not self:
+            value.waveform = self
 
     @property
     def channel_equalization(self) -> ChannelEqualization:
@@ -654,8 +646,8 @@ class WaveformGenerator(ABC, Serializable):
     def channel_equalization(self, value: ChannelEqualization) -> None:
         self.__channel_equalization = value
 
-        if value.waveform_generator is not self:
-            value.waveform_generator = self
+        if value.waveform is not self:
+            value.waveform = self
 
     @property
     @abstractmethod
@@ -677,7 +669,7 @@ class WaveformGenerator(ABC, Serializable):
         return True
 
 
-class PilotWaveformGenerator(WaveformGenerator, ABC):
+class PilotCommunicationWaveform(CommunicationWaveform):
     """Abstract base class of communication waveform generators generating a pilot signal."""
 
     @property
@@ -768,7 +760,7 @@ class MappedPilotSymbolSequence(CustomPilotSymbolSequence):
         CustomPilotSymbolSequence.__init__(self, mapping.get_mapping())
 
 
-class ConfigurablePilotWaveform(PilotWaveformGenerator, ABC):
+class ConfigurablePilotWaveform(PilotCommunicationWaveform):
     pilot_symbol_sequence: PilotSymbolSequence
     """The configured pilot symbol sequence."""
 
@@ -777,14 +769,14 @@ class ConfigurablePilotWaveform(PilotWaveformGenerator, ABC):
 
     def __init__(
         self,
-        symbol_sequence: Optional[PilotSymbolSequence] = None,
+        symbol_sequence: PilotSymbolSequence | None = None,
         repeat_symbol_sequence: bool = True,
         **kwargs,
     ) -> None:
         """
         Args:
 
-           symbol_sequence (Optional[PilotSymbolSequence], optional):
+           symbol_sequence (PilotSymbolSequence, optional):
                The configured pilot symbol sequence.
                Uniform by default.
 
@@ -793,7 +785,7 @@ class ConfigurablePilotWaveform(PilotWaveformGenerator, ABC):
                Enabled by default.
 
            **kwargs:
-               Additional :class:`WaveformGenerator` initialization parameters.
+               Additional :class:`CommunicationWaveform` initialization parameters.
         """
 
         self.pilot_symbol_sequence = (
@@ -802,7 +794,7 @@ class ConfigurablePilotWaveform(PilotWaveformGenerator, ABC):
         self.repeat_pilot_symbol_sequence = repeat_symbol_sequence
 
         # Initialize base class
-        PilotWaveformGenerator.__init__(self, **kwargs)
+        PilotCommunicationWaveform.__init__(self, **kwargs)
 
     def pilot_symbols(self, num_symbols: int) -> np.ndarray:
         """Sample a pilot symbol sequence.
