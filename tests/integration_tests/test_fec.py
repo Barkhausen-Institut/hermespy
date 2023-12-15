@@ -27,15 +27,15 @@ class TestFEC(TestCase):
     def setUp(self) -> None:
         self.rng = np.random.default_rng(42)
         self.modem = DuplexModem(seed=42)
-        self.modem.waveform_generator = RootRaisedCosineWaveform(oversampling_factor=1, symbol_rate=100e6, num_data_symbols=200, modulation_order=64, num_preamble_symbols=0)
+        self.modem.waveform = RootRaisedCosineWaveform(oversampling_factor=1, symbol_rate=100e6, num_data_symbols=200, modulation_order=64, num_preamble_symbols=0)
 
     def __test_coding(self) -> None:
-        num_data_bits = self.modem.encoder_manager.required_num_data_bits(self.modem.waveform_generator.bits_per_frame())
+        num_data_bits = self.modem.encoder_manager.required_num_data_bits(self.modem.waveform.bits_per_frame())
 
         transmitted_bits = self.rng.integers(0, 2, size=num_data_bits)
-        transmitted_encoded_bits = self.modem.encoder_manager.encode(transmitted_bits, self.modem.waveform_generator.bits_per_frame())
-        transmitted_symbols = self.modem.waveform_generator.map(transmitted_encoded_bits)
-        received_encoded_bits = self.modem.waveform_generator.unmap(transmitted_symbols)
+        transmitted_encoded_bits = self.modem.encoder_manager.encode(transmitted_bits, self.modem.waveform.bits_per_frame())
+        transmitted_symbols = self.modem.waveform.map(transmitted_encoded_bits)
+        received_encoded_bits = self.modem.waveform.unmap(transmitted_symbols)
         received_decoded_bits = self.modem.encoder_manager.decode(received_encoded_bits, num_data_bits)
 
         assert_array_equal(transmitted_bits, received_decoded_bits)
@@ -44,7 +44,7 @@ class TestFEC(TestCase):
         """Test repetition and interleaving"""
 
         self.modem.encoder_manager.add_encoder(RepetitionEncoder(bit_block_size=64, repetitions=3))
-        self.modem.encoder_manager.add_encoder(BlockInterleaver(block_size=self.modem.waveform_generator.bits_per_frame(), interleave_blocks=8))
+        self.modem.encoder_manager.add_encoder(BlockInterleaver(block_size=self.modem.waveform.bits_per_frame(), interleave_blocks=8))
 
         self.__test_coding()
 
@@ -65,7 +65,7 @@ class TestMonteCarloFEC(TestCase):
         device = self.simulation.scenario.new_device()
         self.modem = DuplexModem()
         self.modem.device = device
-        self.modem.waveform_generator = RootRaisedCosineWaveform(oversampling_factor=1, symbol_rate=100e6, num_data_symbols=200, modulation_order=64, num_preamble_symbols=0)
+        self.modem.waveform = RootRaisedCosineWaveform(oversampling_factor=1, symbol_rate=100e6, num_data_symbols=200, modulation_order=64, num_preamble_symbols=0)
 
     @classmethod
     def setUpClass(cls) -> None:

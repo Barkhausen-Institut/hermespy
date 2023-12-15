@@ -4,7 +4,7 @@ import numpy as np
 from scipy.constants import speed_of_light
 
 from hermespy.channel import IndoorFactoryLineOfSight
-from hermespy.modem.waveform_generator_ofdm import FrameElement, FrameSymbolSection
+from hermespy.modem.waveform_ofdm import FrameElement, FrameSymbolSection
 from hermespy.modem import DuplexModem, OFDMWaveform, FrameResource, BitErrorEvaluator
 from hermespy.precoding import ZFTimeEqualizer
 from hermespy.simulation import Simulation
@@ -45,10 +45,10 @@ ofdm_receive_tructure = [
 ]
 
 transmit_operator = DuplexModem()
-transmit_operator.waveform_generator = OFDMWaveform(modulation_order=256, subcarrier_spacing=15e3, dc_suppression=False, num_subcarriers=2048, resources=ofdm_resources, structure=ofdm_transmit_tructure, oversampling_factor=1)
+transmit_operator.waveform = OFDMWaveform(modulation_order=256, subcarrier_spacing=15e3, dc_suppression=False, num_subcarriers=2048, resources=ofdm_resources, structure=ofdm_transmit_tructure, oversampling_factor=1)
 transmit_operator.device = tx_device
 receive_operator = DuplexModem()
-receive_operator.waveform_generator = OFDMWaveform(modulation_order=256, subcarrier_spacing=15e3, dc_suppression=False, num_subcarriers=2048, resources=ofdm_resources, structure=ofdm_receive_tructure, oversampling_factor=1)
+receive_operator.waveform = OFDMWaveform(modulation_order=256, subcarrier_spacing=15e3, dc_suppression=False, num_subcarriers=2048, resources=ofdm_resources, structure=ofdm_receive_tructure, oversampling_factor=1)
 receive_operator.device = rx_device
 receive_operator.precoding[0] = ZFTimeEqualizer()
 transmit_operator.reference_transmitter = receive_operator

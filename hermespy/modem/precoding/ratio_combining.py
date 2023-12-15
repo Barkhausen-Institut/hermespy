@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-=======================
-Maximum Ratio Combining
-=======================
-"""
 
 from __future__ import annotations
 
@@ -26,13 +21,16 @@ __status__ = "Prototype"
 class MaximumRatioCombining(SymbolPrecoder, Serializable):
     """Maximum ratio combining symbol decoding step.
 
-    https://en.wikipedia.org/wiki/Maximal-ratio_combining
+    Refer to :footcite:t:`1954:kahn` for further information.
     """
 
     yaml_tag: str = "MRC"
 
-    def encode(self, _: StatedSymbols) -> StatedSymbols:
-        raise NotImplementedError("Maximum ratio combining only supports decoding operations")
+    def encode(self, symbols: StatedSymbols) -> StatedSymbols:
+        if symbols.num_transmit_streams != 1:
+            raise RuntimeError("Maximum ratio combining only supports a single transmit stream")
+
+        return symbols
 
     def decode(self, symbols: StatedSymbols) -> StatedSymbols:
         # Decode data using MRC receive diversity with N_rx received antennas.
@@ -43,7 +41,8 @@ class MaximumRatioCombining(SymbolPrecoder, Serializable):
         if symbols.num_transmit_streams != 1:
             raise RuntimeError("Maximum ratio combining only supports a  single transmit stream")
 
-        simo_states = symbols.states.reshape(
+        dense_states = symbols.dense_states()
+        simo_states = dense_states.reshape(
             (symbols.num_streams, symbols.num_symbols * symbols.num_blocks)
         )
         symbols_raw = symbols.raw.reshape(
@@ -53,7 +52,7 @@ class MaximumRatioCombining(SymbolPrecoder, Serializable):
         symbol_estimates = np.sum(simo_states.conj() * symbols_raw, axis=0, keepdims=True) / np.sum(
             np.abs(simo_states) ** 2, axis=0, keepdims=True
         )
-        state_estimates = np.sum(np.abs(symbols.states) ** 2, axis=0)
+        state_estimates = np.sum(np.abs(dense_states) ** 2, axis=0)
         # resulting_noises = np.sum(stream_noises * (np.abs(stream_responses) ** 2), axis=0, keepdims=True)
 
         symbol_estimates = symbol_estimates.reshape((1, symbols.num_blocks, symbols.num_symbols))
@@ -62,8 +61,8 @@ class MaximumRatioCombining(SymbolPrecoder, Serializable):
 
     @property
     def num_input_streams(self) -> int:
-        return -1
+        return 1
 
     @property
     def num_output_streams(self) -> int:
-        return 1
+        return self.required_num_output_streams

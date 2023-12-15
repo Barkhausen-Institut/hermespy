@@ -34,15 +34,15 @@ scenario = Scenario[SimulatedDevice]()
 device = SimulatedDevice()
 scenario.add_device(device)
 
-waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=40, oversampling_factor=8, roll_off=.9)
-waveform_generator.num_preamble_symbols = 128
-waveform_generator.num_data_symbols = 1024
-waveform_generator.modulation_order = 4
-waveform_generator.synchronization = SingleCarrierSynchronization()
-waveform_generator.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
-waveform_generator.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
+waveform = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=40, oversampling_factor=8, roll_off=.9)
+waveform.num_preamble_symbols = 128
+waveform.num_data_symbols = 1024
+waveform.modulation_order = 4
+waveform.synchronization = SingleCarrierSynchronization()
+waveform.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
+waveform.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
 
-device.sampling_rate = waveform_generator.sampling_rate
+device.sampling_rate = waveform.sampling_rate
 
 source = StreamBitsSource(os.path.join(os.path.dirname(__file__), '../resources/leena.raw'))
 leena_num_bits = 512 * 512 * 8
@@ -53,7 +53,7 @@ image_buffer[0, 0] = 255
 modem = Modem()
 modem.device = device
 modem.bits_source = source
-modem.waveform_generator = waveform_generator
+modem.waveform = waveform
 
 # Compute number of required frames
 bits_per_frame = modem.num_data_bits_per_frame

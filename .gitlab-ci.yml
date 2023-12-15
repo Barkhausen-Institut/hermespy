@@ -145,7 +145,7 @@ pages:
   only:
     - master
   before_script:
-    - apt update && apt-get install -y octave portaudio19-dev python-dev-is-python3 pandoc  # remove for docker
+    - apt update && apt-get install -y octave portaudio19-dev python-dev-is-python3 pandoc graphviz  # remove for docker
     - pip install dist/$HERMES_WHEEL_11\[test,documentation,quadriga,audio\]
   script:
     - sphinx-build ./docssource/ ./public/

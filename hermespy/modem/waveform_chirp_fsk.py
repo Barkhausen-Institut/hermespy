@@ -1,12 +1,7 @@
 # -*- coding: utf-8 -*-
-"""
-============================
-Chirp Frequency Shift Keying
-============================
-"""
 
 from __future__ import annotations
-from typing import Optional, Tuple
+from typing import Tuple
 from math import ceil
 from functools import lru_cache
 
@@ -15,9 +10,9 @@ from scipy import integrate
 
 from hermespy.core.factory import Serializable
 from hermespy.modem.waveform import (
-    PilotWaveformGenerator,
+    PilotCommunicationWaveform,
     StatedSymbols,
-    WaveformGenerator,
+    CommunicationWaveform,
     Synchronization,
 )
 from hermespy.core.signal_model import Signal
@@ -34,8 +29,8 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
-    """Chirp Frequency Shift Keying communication waveforms."""
+class ChirpFSKWaveform(PilotCommunicationWaveform, Serializable):
+    """Chirp Frequency Shift Keying communication waveform  description."""
 
     # YAML tag
     yaml_tag = "ChirpFsk"
@@ -56,14 +51,13 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
         self,
         chirp_duration: float = 10e-9,
         chirp_bandwidth: float = 1e9,
-        freq_difference: Optional[float] = None,
+        freq_difference: float | None = None,
         num_pilot_chirps: int = 14,
         num_data_chirps: int = 50,
         guard_interval: float = 0.0,
         **kwargs,
     ) -> None:
-        """Frequency Shift Keying Waveform Generator object initialization.
-
+        """
         Args:
 
             chirp_duration (float, optional):
@@ -72,7 +66,7 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
             chirp_bandwidth (float, optional):
                 Bandwidth of a single chirp in Hz.
 
-            freq_difference (Optional[float], optional):
+            freq_difference (float, optional):
                 Frequency difference of two adjacent chirp symbols.
 
             num_pilot_chirps (int, optional):
@@ -84,12 +78,12 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
             guard_interval (float, optional):
                 Frame guard interval in seconds.
 
-            kwargs:
+            \**kwargs:
                 Base waveform generator initialization arguments.
         """
 
         # Init base class
-        PilotWaveformGenerator.__init__(self, **kwargs)
+        PilotCommunicationWaveform.__init__(self, **kwargs)
 
         # Configure waveform paramters
         self.synchronization = ChirpFSKSynchronization()
@@ -183,7 +177,7 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
         return self.__freq_difference
 
     @freq_difference.setter
-    def freq_difference(self, value: Optional[float]) -> None:
+    def freq_difference(self, value: float | None) -> None:
         if value is None:
             self.__freq_difference = None
             return
@@ -431,10 +425,10 @@ class ChirpFSKWaveform(PilotWaveformGenerator, Serializable):
     def power(self) -> float:
         return self.symbol_energy / self.samples_in_chirp
 
-    @WaveformGenerator.modulation_order.setter  # type: ignore
+    @CommunicationWaveform.modulation_order.setter  # type: ignore
     def modulation_order(self, value: int) -> None:
         self._prototypes.cache_clear()
-        WaveformGenerator.modulation_order.fset(self, value)  # type: ignore
+        CommunicationWaveform.modulation_order.fset(self, value)  # type: ignore
 
     @property
     def symbol_precoding_support(self) -> bool:
@@ -511,15 +505,15 @@ class ChirpFSKSynchronization(Synchronization[ChirpFSKWaveform], Serializable):
 
     yaml_tag = "ChirpFsk-Synchronization"
 
-    def __init__(self, waveform_generator: Optional[ChirpFSKWaveform] = None) -> None:
+    def __init__(self, waveform: ChirpFSKWaveform | None = None) -> None:
         """
         Args:
 
-            waveform_generator (WaveformGenerator, optional):
+            waveform (CommunicationWaveform, optional):
                 The waveform generator this synchronization routine is attached to.
         """
 
-        Synchronization.__init__(self, waveform_generator)
+        Synchronization.__init__(self, waveform)
 
 
 class ChirpFSKCorrelationSynchronization(

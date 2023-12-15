@@ -49,7 +49,7 @@ class TestAudioDevice(TestCase):
         """Test single carrier data transmission over audio devices"""
 
         waveform = RootRaisedCosineWaveform(symbol_rate=1.2e4, pilot_rate=10, num_preamble_symbols=1, num_data_symbols=100, oversampling_factor=4)
-        self.modem.waveform_generator = waveform
+        self.modem.waveform = waveform
 
         self.propagate()
 
@@ -60,6 +60,6 @@ class TestAudioDevice(TestCase):
         structure = [FrameSymbolSection(3, [0])]
 
         waveform = OFDMWaveform(subcarrier_spacing=1e2, num_subcarriers=120, dc_suppression=True, resources=resources, structure=structure, oversampling_factor=4)
-        self.modem.waveform_generator = waveform
+        self.modem.waveform = waveform
 
         self.propagate()
