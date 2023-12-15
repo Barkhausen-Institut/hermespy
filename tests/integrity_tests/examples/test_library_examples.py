@@ -104,15 +104,14 @@ class TestLibraryExamples(TestCase):
     def test_usrp_loop(self) -> None:
         """Test USRP loop example execution"""
 
-
         with ExitStack() as stack:
-            stack.enter_context(patch("sys.stdout"))
-            stack.enter_context(patch("matplotlib.pyplot.figure"))
+            if gettrace() is None:
+                stack.enter_context(patch("sys.stdout"))
+                stack.enter_context(patch("matplotlib.pyplot.figure"))
 
             from hermespy.hardware_loop import PhysicalScenarioDummy, PhysicalDeviceDummy
 
             new_device = PhysicalDeviceDummy()
-
 
             def new_device_callback(self, *args, **kwargs):
                 if new_device not in self.devices:

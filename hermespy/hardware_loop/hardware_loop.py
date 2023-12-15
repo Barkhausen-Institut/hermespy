@@ -625,8 +625,14 @@ class HardwareLoop(
         total_progress = progress.add_task("[red]Progress", total=num_total_drops)
 
         with ExitStack() as stack:
+            # Add the progress bar to the context stack
             if self.console_mode == ConsoleMode.INTERACTIVE:
                 stack.enter_context(progress)
+
+            # If the plot information is enabled,
+            # add the interactive plot to the context stack to enable live updates
+            if self.plot_information:
+                stack.enter_context(plt.ion())
 
             # Start counting the total number of completed drops
             total = 0
@@ -694,9 +700,8 @@ class HardwareLoop(
 
                     # Update plots
                     if self.plot_information:
-                        with plt.ion():
-                            for plot in self.__plots:
-                                plot.update_plot(loop_sample)
+                        for plot in self.__plots:
+                            plot.update_plot(loop_sample)
 
                 except Exception as e:
                     self._handle_exception(e, confirm=False)
