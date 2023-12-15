@@ -12,6 +12,7 @@ from typing import Optional, Union, Iterable, Type
 import matplotlib.pyplot as plt
 import numpy as np
 from h5py import Group
+from matplotlib import rcParams
 from sparse import SparseArray  # type: ignore
 
 from hermespy.core import Executable, HDFSerializable
@@ -302,8 +303,8 @@ class Symbols(HDFSerializable):
         _axes[0, 0].set(ylabel="Imag")
         _axes[0, 0].set(xlabel="Real")
         _axes[0, 0].grid(True, which="both")
-        _axes[0, 0].axhline(y=0, color="k")
-        _axes[0, 0].axvline(x=0, color="k")
+        _axes[0, 0].axhline(y=0, color=rcParams['grid.color'])
+        _axes[0, 0].axvline(x=0, color=rcParams['grid.color'])
 
         return figure
 
