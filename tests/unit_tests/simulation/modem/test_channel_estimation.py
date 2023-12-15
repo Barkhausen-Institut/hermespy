@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch, PropertyMock
 from numpy.random import default_rng
 
 from hermespy.channel import Cost259Type, MultipathFadingCost259
-from hermespy.modem import SimplexLink, WaveformGenerator, OFDMWaveform, FrameSymbolSection, FrameGuardSection, FrameResource
+from hermespy.modem import SimplexLink, CommunicationWaveform, OFDMWaveform, FrameSymbolSection, FrameGuardSection, FrameResource
 from hermespy.modem.symbols import StatedSymbols, Symbols
 from hermespy.modem.waveform_ofdm import FrameElement, ElementType, PrefixType, SchmidlCoxPilotSection
 from hermespy.simulation.modem.channel_estimation import IdealChannelEstimation, OFDMIdealChannelEstimation, SimulatedDevice, SingleCarrierIdealChannelEstimation
@@ -23,7 +23,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class MockIdealChannelEstimation(IdealChannelEstimation[WaveformGenerator]):
+class MockIdealChannelEstimation(IdealChannelEstimation[CommunicationWaveform]):
     """Mock ideal channel estimation for testing purposes."""
 
     def estimate_channel(self, symbols: Symbols, delay: float = 0) -> StatedSymbols:
@@ -39,15 +39,15 @@ class TestIdealChannelEstimation(TestCase):
 
         self.waveform = Mock()
         self.waveform.modem = Mock()
-        self.estimation.waveform_generator = self.waveform
+        self.estimation.waveform = self.waveform
 
     def test_csi_validation(self) -> None:
         """Fetching the channel state should raise RuntimeErrors on invalid states"""
 
-        self.estimation.waveform_generator = None
+        self.estimation.waveform = None
         with self.assertRaises(RuntimeError):
             self.estimation.estimate_channel(Mock())
-        self.estimation.waveform_generator = self.waveform
+        self.estimation.waveform = self.waveform
 
         with self.assertRaises(RuntimeError):
             self.estimation.estimate_channel(Mock())
@@ -61,7 +61,7 @@ class _TestIdealChannelEstimation(TestCase):
     """Base class for testing ideal channel estimations"""
 
     estimation: IdealChannelEstimation
-    waveform: WaveformGenerator
+    waveform: CommunicationWaveform
 
     def setUp(self) -> None:
         self.rng = default_rng(42)
@@ -81,7 +81,7 @@ class _TestIdealChannelEstimation(TestCase):
 
         self.assertIs(self.estimation.transmitter, self.alpha_device)
         self.assertIs(self.estimation.receiver, self.beta_device)
-        self.assertIs(self.link.waveform_generator, self.estimation.waveform_generator)
+        self.assertIs(self.link.waveform, self.estimation.waveform)
 
     def test_estimate_channel(self) -> None:
         """Ideal channel estimation should correctly fetch the channel estimate"""
@@ -90,7 +90,7 @@ class _TestIdealChannelEstimation(TestCase):
         propagation = self.channel.propagate(transmission)
         self.beta_device.receive(propagation)
 
-        symbols = self.link.waveform_generator.demodulate(propagation.signal.samples[0, :])
+        symbols = self.link.waveform.demodulate(propagation.signal.samples[0, :])
         stated_symbols = self.estimation.estimate_channel(symbols)
 
         # ToDo: How could this be tested?

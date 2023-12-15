@@ -1,27 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-==========
-Bit Source
-==========
-
-Bit sources represent, as the title suggest, a source of (hard) communication bits
-to be transmitted over a modem.
-Every bit source implementation is expected to inherit from the :class:`.BitsSource` base class,
-which in turn represents a random node.
-
-.. autoclasstree:: hermespy.modem.bits_source
-   :align: center
-   :alt: Bits source class tree
-   :strict:
-   :namespace: hermespy
-
-There are currently two basic types of bit sources available:
-
-* :class:`.RandomBitsSource` instances implement a random stream of bits
-* :class:`.StreamBitsSource` instances implement a deterministic stream of bits
-
-
-"""
 
 from __future__ import annotations
 from abc import ABC, abstractmethod

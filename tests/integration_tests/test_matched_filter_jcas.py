@@ -38,11 +38,11 @@ class TestSCMatchedFilterJcas(TestCase):
 
         self.operator = MatchedFilterJcas(self.max_range)
         self.operator.device = self.device
-        self.operator.waveform_generator = RootRaisedCosineWaveform(oversampling_factor=self.oversampling_factor, modulation_order=4, num_preamble_symbols=20, num_data_symbols=100, pilot_rate=10, symbol_rate=1e6)
-        self.operator.waveform_generator.pilot_symbol_sequence = CustomPilotSymbolSequence(np.array([1, -1, 1j, -1j]))
-        self.operator.waveform_generator.synchronization = SingleCarrierCorrelationSynchronization()
-        self.operator.waveform_generator.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
-        self.operator.waveform_generator.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
+        self.operator.waveform = RootRaisedCosineWaveform(oversampling_factor=self.oversampling_factor, modulation_order=4, num_preamble_symbols=20, num_data_symbols=100, pilot_rate=10, symbol_rate=1e6)
+        self.operator.waveform.pilot_symbol_sequence = CustomPilotSymbolSequence(np.array([1, -1, 1j, -1j]))
+        self.operator.waveform.synchronization = SingleCarrierCorrelationSynchronization()
+        self.operator.waveform.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
+        self.operator.waveform.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
 
     def test_jcas(self) -> None:
         """The target distance should be properly estimated while transmitting information."""

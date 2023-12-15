@@ -27,7 +27,7 @@ class TestChirpFSKWaveform(unittest.TestCase):
     def setUp(self) -> None:
         self.generator = ChirpFSKWaveform.__new__(ChirpFSKWaveform)
         self.modem = Mock()
-        self.modem.waveform_generator = self.generator
+        self.modem.waveform = self.generator
 
         self.parameters = {"modem": self.modem, "oversampling_factor": 4, "modulation_order": 32, "chirp_duration": 4e-6, "chirp_bandwidth": 200e6, "freq_difference": 5e6, "num_pilot_chirps": 2, "num_data_chirps": 20, "guard_interval": 4e-6}
 
@@ -333,15 +333,15 @@ class TestChirpFskSynchronization(unittest.TestCase):
 
     def setUp(self) -> None:
         self.rng = np.random.default_rng(42)
-        self.waveform_generator = ChirpFSKWaveform()
+        self.waveform = ChirpFSKWaveform()
 
-        self.synchronization = self.waveform_generator.synchronization
+        self.synchronization = self.waveform.synchronization
 
     def test_init(self) -> None:
         """Initialization parameters should be properly stored as object attributes"""
 
-        self.assertIs(self.waveform_generator, self.synchronization.waveform_generator)
-        self.assertIsInstance(self.waveform_generator.synchronization, ChirpFSKSynchronization)
+        self.assertIs(self.waveform, self.synchronization.waveform)
+        self.assertIsInstance(self.waveform.synchronization, ChirpFSKSynchronization)
 
 
 class TestChirpFskCorrelationSynchronization(unittest.TestCase):
@@ -361,7 +361,7 @@ class TestChirpFskCorrelationSynchronization(unittest.TestCase):
         self.waveform.num_data_chirps = 20
         self.waveform.oversampling_factor = 2
 
-        self.synchronization = ChirpFSKCorrelationSynchronization(threshold=self.threshold, guard_ratio=self.guard_ratio, waveform_generator=self.waveform)
+        self.synchronization = ChirpFSKCorrelationSynchronization(threshold=self.threshold, guard_ratio=self.guard_ratio, waveform=self.waveform)
 
     def test_init(self) -> None:
         """Initialization parameters should be properly stored as class attributes"""

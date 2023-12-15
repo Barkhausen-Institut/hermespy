@@ -47,11 +47,11 @@ for d in range(2):
     
     # Initialize a new transmitting modem
     tx_operator = TransmittingModem()
-    tx_operator.waveform_generator = deepcopy(wave)
+    tx_operator.waveform = deepcopy(wave)
     
     # Initialize a new receiving modem
     rx_operator = ReceivingModem()
-    rx_operator.waveform_generator = deepcopy(wave)
+    rx_operator.waveform = deepcopy(wave)
     
     # Configure the devices by assigning them modem operators
     devs[d].transmitters.add(tx_operator)

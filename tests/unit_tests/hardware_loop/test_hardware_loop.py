@@ -376,7 +376,7 @@ class TestHardwareLoop(TestCase):
         device = self.hardware_loop.new_device()
         modem = DuplexModem()
         modem.device = device
-        modem.waveform_generator = RRCWaveform(symbol_rate=1e8, oversampling_factor=4, num_preamble_symbols=0, num_data_symbols=20)
+        modem.waveform = RRCWaveform(symbol_rate=1e8, oversampling_factor=4, num_preamble_symbols=0, num_data_symbols=20)
         evaluator = BitErrorEvaluator(modem, modem)
         self.hardware_loop.add_evaluator(evaluator)
         self.hardware_loop.new_dimension("sampling_rate", [1, 2, 3], device)

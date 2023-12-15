@@ -92,10 +92,10 @@ or directly contact the current `maintainer`_.
    installation
    getting_started
    tutorials
-   examples/examples
    api/api
    matlab
    references
+   examples/examples
    features
    developer_hints
    license

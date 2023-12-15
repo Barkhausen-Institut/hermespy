@@ -24,11 +24,11 @@ simulation.set_channel(alpha_device, beta_device, channel)
 link = SimplexLink(alpha_device, beta_device)
 
 # Specify the waveform and postprocessing to be used by the link
-link.waveform_generator = RRCWaveform(
+link.waveform = RRCWaveform(
     symbol_rate=1e8, oversampling_factor=2, num_data_symbols=1000, 
     num_preamble_symbols=10, pilot_rate=10)
-link.waveform_generator.channel_estimation = SCLeastSquaresChannelEstimation()
-link.waveform_generator.channel_equalization = SCZeroForcingChannelEqualization()
+link.waveform.channel_estimation = SCLeastSquaresChannelEstimation()
+link.waveform.channel_equalization = SCZeroForcingChannelEqualization()
 
 # Configure a simulation to evaluate the link's BER and sweep over the receive SNR
 simulation.add_evaluator(BitErrorEvaluator(link, link))

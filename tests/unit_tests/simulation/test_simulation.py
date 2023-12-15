@@ -390,7 +390,7 @@ class TestSimulation(TestCase):
 
         self.device = self.simulation.new_device()
         self.modem = DuplexModem()
-        self.modem.waveform_generator = RRCWaveform(symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=10)
+        self.modem.waveform = RRCWaveform(symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=10)
         self.modem.device = self.device
         self.evaluator = BitErrorEvaluator(self.modem, self.modem)
 

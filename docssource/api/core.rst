@@ -21,6 +21,9 @@ It is split into several interdependent sub-modules:
    core.device.DeviceOutput
    core.device.Transmitter
    core.device.Receiver
+   core.device.Transmission
+   core.device.Reception
+   core.device.OperationResult
    core.drop.Drop
    core.monte_carlo.Evaluator
    core.operators

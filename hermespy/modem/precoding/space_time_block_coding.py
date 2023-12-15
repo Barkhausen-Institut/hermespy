@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-=======================
-Space-Time Block Coding
-=======================
-"""
 
 from __future__ import annotations
 from fractions import Fraction
@@ -17,7 +12,7 @@ from .symbol_precoding import SymbolPrecoder
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
-__credits__ = ["Tobias Kronauer", "Jan Adler"]
+__credits__ = ["Tobias Kronauer", "Jan Adler", "Egor Achkasov"]
 __license__ = "AGPLv3"
 __version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
@@ -29,7 +24,7 @@ class Alamouti(SymbolPrecoder, Serializable):
     """Alamouti precoder distributing symbols in space and time.
 
     Support for 2 transmit antennas only.
-    Refer to :cite:t:`1998:alamouti` for further information.
+    Refer to :footcite:t:`1998:alamouti` for further information.
     """
 
     yaml_tag = "ALAMOUTI"
@@ -127,7 +122,7 @@ class Ganesan(SymbolPrecoder, Serializable):
     """Girish Ganesan and Petre Stoica general precoder distributing symbols in space and time.
 
     Supports 4 transmit antennas. Features a :math:`\\frac{3}{4}` symbol rate.
-    Refer to :cite:t:`2001:ganesan` for further information.
+    Refer to :footcite:t:`2001:ganesan` for further information.
     """
 
     yaml_tag = "GANESAN"

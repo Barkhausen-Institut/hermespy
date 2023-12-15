@@ -105,7 +105,7 @@ class TestEyePlot(HardwareLoopPlotTest, TestCase):
 
         self.modem = DuplexModem()
         self.modem.device = self.device
-        self.modem.waveform_generator = RRCWaveform(oversampling_factor=4, symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=10)
+        self.modem.waveform = RRCWaveform(oversampling_factor=4, symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=10)
 
         self._prepare_plot(EyePlot, self.modem)
 
@@ -130,7 +130,7 @@ class TestReceivedConstellationPlot(HardwareLoopPlotTest, TestCase):
 
         self.modem = DuplexModem()
         self.modem.device = self.device
-        self.modem.waveform_generator = RRCWaveform(oversampling_factor=4, symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=10)
+        self.modem.waveform = RRCWaveform(oversampling_factor=4, symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=10)
 
         self._prepare_plot(ReceivedConstellationPlot, self.modem)
 
@@ -166,7 +166,7 @@ class TestEvaluationPlot(HardwareLoopPlotTest, TestCase):
 
         self.modem = DuplexModem()
         self.modem.device = self.device
-        self.modem.waveform_generator = RRCWaveform(oversampling_factor=4, symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=10)
+        self.modem.waveform = RRCWaveform(oversampling_factor=4, symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=10)
 
         self.evaluator = BitErrorEvaluator(self.modem, self.modem)
         self.loop.add_evaluator(self.evaluator)
@@ -187,7 +187,7 @@ class TestArtifactPlot(HardwareLoopPlotTest, TestCase):
 
         self.modem = DuplexModem()
         self.modem.device = self.device
-        self.modem.waveform_generator = RRCWaveform(oversampling_factor=4, symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=10)
+        self.modem.waveform = RRCWaveform(oversampling_factor=4, symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=10)
 
         self.evaluator = BitErrorEvaluator(self.modem, self.modem)
         self.loop.add_evaluator(self.evaluator)

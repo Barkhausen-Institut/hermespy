@@ -115,7 +115,7 @@ class _TestLinksBase(TestCase):
         waveform.synchronization = SingleCarrierCorrelationSynchronization()
         waveform.channel_estimation = SingleCarrierIdealChannelEstimation(self.tx_device, self.rx_device)
         waveform.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
-        self.link.waveform_generator = waveform
+        self.link.waveform = waveform
 
         return waveform
 
@@ -127,7 +127,7 @@ class _TestLinksBase(TestCase):
 
         waveform = ChirpFSKWaveform(chirp_duration=1e-5, chirp_bandwidth=375e6)
         waveform.synchronization = ChirpFSKCorrelationSynchronization()
-        self.link.waveform_generator = waveform
+        self.link.waveform = waveform
 
         return waveform
 
@@ -151,7 +151,7 @@ class _TestLinksBase(TestCase):
         waveform.channel_estimation = OFDMIdealChannelEstimation(self.tx_device, self.rx_device, reference_position=ReferencePosition.IDEAL)
         waveform.channel_equalization = OFDMZeroForcingChannelEqualization()
 
-        self.link.waveform_generator = waveform
+        self.link.waveform = waveform
 
         # Properly configure the error correction
         bits_per_symbol = waveform.bits_per_frame() // num_symbols

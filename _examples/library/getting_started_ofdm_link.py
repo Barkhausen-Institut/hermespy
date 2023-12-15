@@ -36,7 +36,7 @@ rx_device = SimulatedDevice()
 
 # Set up a unidirectional link between both simulated devices
 link = SimplexLink(tx_device, rx_device)
-link.waveform_generator = OFDMWaveform(subcarrier_spacing=subcarrier_spacing, modulation_order=modulation_order,
+link.waveform = OFDMWaveform(subcarrier_spacing=subcarrier_spacing, modulation_order=modulation_order,
                                        num_subcarriers=num_subcarriers, oversampling_factor=oversampling_factor,
                                        dc_suppression=dc_suppression, resources=resources, structure=structure)
 

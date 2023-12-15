@@ -94,9 +94,9 @@ class TestBitErrorEvaluator(TestCase):
     def setUp(self) -> None:
         self.waveform = RootRaisedCosineWaveform(symbol_rate=1e9, num_preamble_symbols=0, num_data_symbols=10)
         self.transmitter = TransmittingModem()
-        self.transmitter.waveform_generator = self.waveform
+        self.transmitter.waveform = self.waveform
         self.receiver = ReceivingModem()
-        self.receiver.waveform_generator = self.waveform
+        self.receiver.waveform = self.waveform
 
         self.evaluator = BitErrorEvaluator(self.transmitter, self.receiver)
 
@@ -158,9 +158,9 @@ class TestBlockErrorEvaluator(TestCase):
     def setUp(self) -> None:
         self.waveform = RootRaisedCosineWaveform(symbol_rate=1e9, num_preamble_symbols=0, num_data_symbols=10)
         self.transmitter = TransmittingModem()
-        self.transmitter.waveform_generator = self.waveform
+        self.transmitter.waveform = self.waveform
         self.receiver = ReceivingModem()
-        self.receiver.waveform_generator = self.waveform
+        self.receiver.waveform = self.waveform
 
         self.evaluator = BlockErrorEvaluator(self.transmitter, self.receiver)
 
@@ -235,9 +235,9 @@ class TestFrameErrorEvaluator(TestCase):
     def setUp(self) -> None:
         self.waveform = RootRaisedCosineWaveform(symbol_rate=1e9, num_preamble_symbols=0, num_data_symbols=10)
         self.transmitter = TransmittingModem()
-        self.transmitter.waveform_generator = self.waveform
+        self.transmitter.waveform = self.waveform
         self.receiver = ReceivingModem()
-        self.receiver.waveform_generator = self.waveform
+        self.receiver.waveform = self.waveform
 
         self.evaluator = FrameErrorEvaluator(self.transmitter, self.receiver)
 
