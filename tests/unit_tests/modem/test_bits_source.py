@@ -21,9 +21,7 @@ __status__ = "Prototype"
 
 
 class TestRandomBitsSource(TestCase):
-
     def setUp(self) -> None:
-
         self.random_generator = np.random.default_rng(42)
         self.random_node = Mock()
         self.random_node._rng = self.random_generator
@@ -40,7 +38,6 @@ class TestRandomBitsSource(TestCase):
 
         number_of_frames = 20
         for frame_idx in range(number_of_frames):
-
             number_of_bits = 123 * number_of_frames
             bits = self.source.generate_bits(number_of_bits)
 
@@ -56,18 +53,16 @@ class TestStreamBitsSource(TestCase):
     """Test bits source that reads bits from a file stream"""
 
     def setUp(self) -> None:
-
         self.temp_dir = TemporaryDirectory()
-        self.file_path = path.join(self.temp_dir.name, 'file')
-        self.text = b'Hello World'
+        self.file_path = path.join(self.temp_dir.name, "file")
+        self.text = b"Hello World"
 
-        with open(self.file_path, 'wb') as file_stream:
+        with open(self.file_path, "wb") as file_stream:
             file_stream.write(self.text)
 
         self.source = StreamBitsSource(self.file_path)
 
     def tearDown(self) -> None:
-
         del self.source
         self.temp_dir.cleanup()
         
@@ -77,10 +72,16 @@ class TestStreamBitsSource(TestCase):
         with self.assertRaises(RuntimeError):
             self.source.generate_bits(1)
 
+    def test_get_bits_validation(self) -> None:
+        """Get bits routine should raise RuntimeError if the requested number of bits is not a multiple of 8"""
+
+        with self.assertRaises(RuntimeError):
+            self.source.generate_bits(1)
+
     def test_get_bits(self) -> None:
         """Test fetching the next block of bits from the file stream"""
 
-        bits = self.source.generate_bits(len(self.text)*8)
+        bits = self.source.generate_bits(len(self.text) * 8)
         text = np.packbits(bits).tobytes()
 
         self.assertEqual(self.text, text)

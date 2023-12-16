@@ -54,7 +54,7 @@ radar_h1.reference = device_h1
 ofdm = OFDMWaveform(subcarrier_spacing=bandwidth/1000, num_subcarriers=1000, oversampling_factor=1)
 ofdm.pilot_section = SchmidlCoxPilotSection()
 jcas_h0 = MatchedFilterJcas(max_range=radar_h0.waveform.max_range)
-jcas_h0.waveform_generator = ofdm
+jcas_h0.waveform = ofdm
 jcas_h1 = deepcopy(jcas_h0)
 
 jcas_h0.device = device_h0

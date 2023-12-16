@@ -11,12 +11,23 @@ from collections.abc import Sequence
 from enum import IntEnum
 from itertools import chain
 from os import path, remove
-from typing import Generic, List, Optional, overload, Set, Tuple, Type, TypeVar, Union
+from typing import Generic, List, Optional, overload, Set, Type, TypeVar, Union
 
 from h5py import File, Group
 
-from .channel_state_information import ChannelStateInformation
-from .device import DeviceInput, DeviceOutput, DeviceReception, DeviceTransmission, DeviceType, ProcessedDeviceInput, Reception, Transmission, Transmitter, Receiver, Operator
+from .device import (
+    DeviceInput,
+    DeviceOutput,
+    DeviceReception,
+    DeviceTransmission,
+    DeviceType,
+    ProcessedDeviceInput,
+    Reception,
+    Transmission,
+    Transmitter,
+    Receiver,
+    Operator,
+)
 from .drop import Drop, RecalledDrop
 from .factory import Factory
 from .random_node import RandomNode
@@ -27,7 +38,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -76,7 +87,9 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
     __drop_counter: int  # Internal drop counter
     __campaign: str  # Measurement campaign name
 
-    def __init__(self, seed: Optional[int] = None, devices: Optional[Sequence[DeviceType]] = None) -> None:
+    def __init__(
+        self, seed: Optional[int] = None, devices: Optional[Sequence[DeviceType]] = None
+    ) -> None:
         """
         Args:
 
@@ -157,7 +170,9 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
             RuntimeError: If the scenario does not allow for the creation or addition of new devices.
         """
 
-        raise RuntimeError("Error trying to create a new device within a scenario not supporting the operation")
+        raise RuntimeError(
+            "Error trying to create a new device within a scenario not supporting the operation"
+        )
 
     def device_registered(self, device: DeviceType) -> bool:
         """Check if an device is registered in this scenario.
@@ -359,7 +374,9 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
         # If in replay mode, make sure the campaign exists
         if self.mode == ScenarioMode.REPLAY:
             if not self.__campaign_exists(value, self.__file):
-                raise ValueError(f"The requested measurement campaign '{value}' does not exists within the currently replayed savefile")
+                raise ValueError(
+                    f"The requested measurement campaign '{value}' does not exists within the currently replayed savefile"
+                )
 
             self.__drop_counter = 0
 
@@ -398,7 +415,9 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
                 group.attrs[f"operator_{o:02d}"] = factory.to_str(operator)
 
         # Serialize full state
-        group.attrs["state"] = factory.to_str({"devices": self.devices, "operators": self.operators})
+        group.attrs["state"] = factory.to_str(
+            {"devices": self.devices, "operators": self.operators}
+        )
 
     @classmethod
     def _state_from_HDF(cls: Type[Scenario], factory: Factory, group: Group) -> Scenario:
@@ -416,7 +435,13 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
         # Return initialize scenario
         return scenario
 
-    def record(self, file: str, overwrite: bool = False, campaign: str = "default", state: Scenario | None = None) -> None:
+    def record(
+        self,
+        file: str,
+        overwrite: bool = False,
+        campaign: str = "default",
+        state: Scenario | None = None,
+    ) -> None:
         """Start recording drop information generated from this scenario.
 
         After the scenario starts recording, changing the device and operator configuration
@@ -444,7 +469,9 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
         """
 
         if self.mode != ScenarioMode.DEFAULT:
-            raise RuntimeError("Initialize a recording is only possible in default mode. Please stop before starting a new recording.")
+            raise RuntimeError(
+                "Initialize a recording is only possible in default mode. Please stop before starting a new recording."
+            )
 
         # Check wether the specified file already exists within the filesystem
         file_exists = path.exists(file)
@@ -534,7 +561,9 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
 
         if file is None:
             if self.__file is None:
-                raise ValueError("A file location must be specified or the scenario most be in record or replay mode")
+                raise ValueError(
+                    "A file location must be specified or the scenario most be in record or replay mode"
+                )
 
             file = self.__file.filename
 
@@ -543,8 +572,11 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
 
         # Check if the campaign is available (if a campaign was specified)
         if not self.__campaign_exists(campaign, _file):
+            filename = _file.filename
             _file.close()
-            raise ValueError(f"The requested measurement campaign '{campaign}' does not exists within the savefile '{_file.filename}'")
+            raise ValueError(
+                f"The requested measurement campaign '{campaign}' does not exists within the savefile '{filename}'"
+            )
 
         # Stop any action and close file handles if required
         self.stop()
@@ -615,7 +647,9 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
         transmissions = [[o.transmit() for o in d.transmitters] for d in self.devices]
         return transmissions
 
-    def generate_outputs(self, transmissions: Optional[List[List[Transmission]]] = None) -> Sequence[DeviceOutput]:
+    def generate_outputs(
+        self, transmissions: Optional[List[List[Transmission]]] = None
+    ) -> Sequence[DeviceOutput]:
         """Generate signals emitted by devices.
 
         Args:
@@ -630,7 +664,9 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
         transmissions = [None] * self.num_devices if transmissions is None else transmissions
 
         if len(transmissions) != self.num_devices:
-            raise ValueError(f"Number of device transmissions ({len(transmissions)}) does not match number of registered devices ({self.num_devices}")
+            raise ValueError(
+                f"Number of device transmissions ({len(transmissions)}) does not match number of registered devices ({self.num_devices}"
+            )
 
         outputs = [d.generate_output(t) for d, t in zip(self.devices, transmissions)]
         return outputs
@@ -646,18 +682,28 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
         return transmissions
 
     @overload
-    def process_inputs(self, impinging_signals: Sequence[DeviceInput], cache: bool = True) -> Sequence[ProcessedDeviceInput]:
+    def process_inputs(
+        self, impinging_signals: Sequence[DeviceInput], cache: bool = True
+    ) -> Sequence[ProcessedDeviceInput]:
         ...  # pragma: no cover
 
     @overload
-    def process_inputs(self, impinging_signals: Sequence[Signal], cache: bool = True) -> Sequence[ProcessedDeviceInput]:
+    def process_inputs(
+        self, impinging_signals: Sequence[Signal], cache: bool = True
+    ) -> Sequence[ProcessedDeviceInput]:
         ...  # pragma: no cover
 
     @overload
-    def process_inputs(self, impinging_signals: Sequence[Sequence[Signal]], cache: bool = True) -> Sequence[ProcessedDeviceInput]:
+    def process_inputs(
+        self, impinging_signals: Sequence[Sequence[Signal]], cache: bool = True
+    ) -> Sequence[ProcessedDeviceInput]:
         ...  # pragma: no cover
 
-    def process_inputs(self, impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]], cache: bool = True) -> Sequence[ProcessedDeviceInput]:
+    def process_inputs(
+        self,
+        impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]],
+        cache: bool = True,
+    ) -> Sequence[ProcessedDeviceInput]:
         """Process input signals impinging onto the scenario's devices.
 
         Args:
@@ -677,7 +723,9 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
         """
 
         if len(impinging_signals) != self.num_devices:
-            raise ValueError(f"Number of impinging signals ({len(impinging_signals)}) does not match the number if registered devices ({self.num_devices}) within this scenario")
+            raise ValueError(
+                f"Number of impinging signals ({len(impinging_signals)}) does not match the number if registered devices ({self.num_devices}) within this scenario"
+            )
 
         # Call the process input method for each device
         processed_inputs = [d.process_input(i, cache) for d, i in zip(self.devices, impinging_signals)]  # type: ignore
@@ -685,23 +733,31 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
         return processed_inputs
 
     @overload
-    def receive_operators(self, operator_inputs: Sequence[ProcessedDeviceInput], cache: bool = True) -> Sequence[Sequence[Reception]]:
+    def receive_operators(
+        self, operator_inputs: Sequence[ProcessedDeviceInput], cache: bool = True
+    ) -> Sequence[Sequence[Reception]]:
         ...  # pragma: no cover
 
     @overload
-    def receive_operators(self, operator_inputs: Sequence[Sequence[Tuple[Signal, ChannelStateInformation]]], cache: bool = True) -> Sequence[Sequence[Reception]]:
+    def receive_operators(
+        self, operator_inputs: Sequence[Sequence[Signal]], cache: bool = True
+    ) -> Sequence[Sequence[Reception]]:
         ...  # pragma: no cover
 
     @overload
     def receive_operators(self) -> Sequence[Sequence[Reception]]:
         ...  # pragma: no cover
 
-    def receive_operators(self, operator_inputs: Sequence[ProcessedDeviceInput] | Sequence[Sequence[Tuple[Signal, ChannelStateInformation]]] | None = None, cache: bool = True) -> Sequence[Sequence[Reception]]:
+    def receive_operators(
+        self,
+        operator_inputs: Sequence[ProcessedDeviceInput] | Sequence[Sequence[Signal]] | None = None,
+        cache: bool = True,
+    ) -> Sequence[Sequence[Reception]]:
         """Receive over the registered operators.
 
         Args:
 
-            operator_inputs (Sequence[Sequence[Tuple[Signal, ChannelStateInformation]]] | ProcessedDeviceInput, optional):
+            operator_inputs (Sequence[Sequence[Signal]] | ProcessedDeviceInput, optional):
                 Signal models fed to the receive operators of each device.
                 If not provided, the operatores are expected to have inputs cached
 
@@ -717,28 +773,42 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
             RuntimeError: If no operator inputs were specified and an operator has no cached inputs.
         """
 
-        _operator_inputs = [None for _ in range(self.num_devices)] if operator_inputs is None else operator_inputs
+        _operator_inputs = (
+            [None for _ in range(self.num_devices)] if operator_inputs is None else operator_inputs
+        )
 
         if len(_operator_inputs) != self.num_devices:
-            raise ValueError(f"Number of operator inputs ({len(_operator_inputs)}) does not match the number of registered scenario devices ({self.num_devices})")
+            raise ValueError(
+                f"Number of operator inputs ({len(_operator_inputs)}) does not match the number of registered scenario devices ({self.num_devices})"
+            )
 
         # Generate receptions
         receptions = [d.receive_operators(i, cache) for d, i in zip(self.devices, _operator_inputs)]  # type: ignore
         return receptions
 
     @overload
-    def receive_devices(self, impinging_signals: Sequence[DeviceInput], cache: bool = True) -> Sequence[DeviceReception]:
+    def receive_devices(
+        self, impinging_signals: Sequence[DeviceInput], cache: bool = True
+    ) -> Sequence[DeviceReception]:
         ...  # pragma: no cover
 
     @overload
-    def receive_devices(self, impinging_signals: Sequence[Signal], cache: bool = True) -> Sequence[DeviceReception]:
+    def receive_devices(
+        self, impinging_signals: Sequence[Signal], cache: bool = True
+    ) -> Sequence[DeviceReception]:
         ...  # pragma: no cover
 
     @overload
-    def receive_devices(self, impinging_signals: Sequence[Sequence[Signal]], cache: bool = True) -> Sequence[DeviceReception]:
+    def receive_devices(
+        self, impinging_signals: Sequence[Sequence[Signal]], cache: bool = True
+    ) -> Sequence[DeviceReception]:
         ...  # pragma: no cover
 
-    def receive_devices(self, impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]], cache: bool = True) -> Sequence[DeviceReception]:
+    def receive_devices(
+        self,
+        impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]],
+        cache: bool = True,
+    ) -> Sequence[DeviceReception]:
         """Receive over all scenario devices.
 
         Internally calls :meth:`Scenario.process_inputs` and :meth:`Scenario.receive_operators`.
@@ -766,7 +836,10 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
         operator_receptions = self.receive_operators([i.operator_inputs for i in processed_inputs])
 
         # Generate device receptions
-        device_receptions = [DeviceReception.From_ProcessedDeviceInput(i, r) for i, r in zip(processed_inputs, operator_receptions)]
+        device_receptions = [
+            DeviceReception.From_ProcessedDeviceInput(i, r)
+            for i, r in zip(processed_inputs, operator_receptions)
+        ]
         return device_receptions
 
     @property
@@ -832,7 +905,11 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
 
             # Serialize the drop to HDF if in record mode
             if self.mode == ScenarioMode.RECORD:
-                drop.to_HDF(self.__file.create_group(f"campaigns/{self.__campaign}/drop_{self.__drop_counter:02d}"))
+                drop.to_HDF(
+                    self.__file.create_group(
+                        f"campaigns/{self.__campaign}/drop_{self.__drop_counter:02d}"
+                    )
+                )
                 self.__drop_counter += 1
 
         return drop

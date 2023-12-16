@@ -33,15 +33,15 @@ tx_operator = modem_modules.Modem();
 % constructor. In this case, the desired parameter is "oversampling_factor=8", 
 % as in the example of https://hermespy.org/getting_started.html.
 oversampling_factor = pyargs('oversampling_factor',py.int(8));
-% instanciation of "WaveformGeneratorPskQam" with "oversampling_factor"
+% instanciation of "CommunicationWaveformPskQam" with "oversampling_factor"
 % parametrization
-tx_operator.waveform_generator = modem_modules.WaveformGeneratorPskQam(oversampling_factor);
+tx_operator.waveform = modem_modules.CommunicationWaveformPskQam(oversampling_factor);
 % set tx_device
 tx_operator.device = tx_device;
 
 % analogous to tx_device
 rx_operator = modem_modules.Modem();
-rx_operator.waveform_generator = modem_modules.WaveformGeneratorPskQam(oversampling_factor);
+rx_operator.waveform = modem_modules.CommunicationWaveformPskQam(oversampling_factor);
 rx_operator.device = rx_device;
 
 % Simulate a channel between the two devices

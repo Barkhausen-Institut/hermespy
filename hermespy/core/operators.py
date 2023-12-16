@@ -12,7 +12,7 @@ from __future__ import annotations
 import numpy as np
 from h5py import Group
 
-from .channel_state_information import ChannelStateInformation
+from .definitions import SNRType
 from .device import Transmission, Transmitter, Receiver, Reception
 from .signal_model import Signal
 
@@ -20,7 +20,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -96,7 +96,11 @@ class SilentTransmitter(StaticOperator, Transmitter[Transmission]):
         # Compute the number of samples to be transmitted
         num_samples = self.num_samples if duration <= 0.0 else int(duration * self.sampling_rate)
 
-        silence = Signal(np.zeros((self.device.num_antennas, num_samples), dtype=complex), sampling_rate=self.sampling_rate, carrier_frequency=self.device.carrier_frequency)
+        silence = Signal(
+            np.zeros((self.device.num_antennas, num_samples), dtype=complex),
+            sampling_rate=self.sampling_rate,
+            carrier_frequency=self.device.carrier_frequency,
+        )
 
         transmission = Transmission(silence)
 
@@ -129,10 +133,18 @@ class SignalTransmitter(StaticOperator, Transmitter[Transmission]):
         # Init class attributes
         self.__signal = signal
 
+    @property
+    def signal(self) -> Signal:
+        """Signal to be transmitted by the static operator for each transmission."""
+
+        return self.__signal
+
+    @signal.setter
+    def signal(self, value: Signal) -> None:
+        self.__signal = value
+
     def _transmit(self, duration: float = 0.0) -> Transmission:
         transmission = Transmission(self.__signal)
-
-        self.device.transmitters.add_transmission(self, transmission)
         return transmission
 
     def _recall_transmission(self, group: Group) -> Transmission:
@@ -145,21 +157,36 @@ class SignalReceiver(StaticOperator, Receiver[Reception]):
     yaml_tag = "SignalReceiver"
     serialized_attributes = {"num_samples", "sampling_rate", "device"}
 
-    def __init__(self, num_samples: int, sampling_rate: float, *args, **kwargs) -> None:
+    __expected_power: float
+
+    def __init__(
+        self, num_samples: int, sampling_rate: float, expected_power: float = 0.0, *args, **kwargs
+    ) -> None:
         # Initialize base classes
         StaticOperator.__init__(self, num_samples, sampling_rate)
         Receiver.__init__(self, *args, **kwargs)
 
+        # Initialize class attributes
+        if expected_power < 0.0:
+            raise ValueError(f"Expected power must be non-negative (not {expected_power})")
+        self.__expected_power = expected_power
+
     @property
     def energy(self) -> float:
-        return 0.0
+        return self.__expected_power * self.num_samples
 
-    def _receive(self, signal: Signal, _: ChannelStateInformation) -> Reception:
+    def _receive(self, signal: Signal) -> Reception:
         received_signal = signal.resample(self.sampling_rate)
         return Reception(received_signal)
 
-    def _noise_power(self, strength, snr_type=...) -> float:
-        return 0.0
+    def _noise_power(self, strength: float, snr_type: SNRType) -> float:
+        if snr_type == SNRType.PN0:
+            return self.__expected_power / strength
+
+        if snr_type == SNRType.EN0:
+            return self.__expected_power / strength * self.num_samples
+
+        raise ValueError(f"SNR type {snr_type} is not supported by the SignalReceiver")
 
     def _recall_reception(self, group: Group) -> Reception:
         return Reception.from_HDF(group)

@@ -7,7 +7,7 @@ Hardware Loop
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from contextlib import nullcontext
+from contextlib import ExitStack
 from os import path
 from typing import Any, Generic, List, Mapping, Sequence, Tuple, Type
 
@@ -17,7 +17,20 @@ from rich.progress import Progress, SpinnerColumn, TimeElapsedColumn
 from rich.prompt import Confirm
 from ruamel.yaml import SafeConstructor, Node, SafeRepresenter, MappingNode
 
-from hermespy.core import Artifact, ConsoleMode, Drop, Evaluation, EvaluationResult, Evaluator, MonteCarloResult, Pipeline, Serializable, SerializableEnum, Verbosity
+from hermespy.core import (
+    Artifact,
+    ConsoleMode,
+    Drop,
+    Evaluation,
+    EvaluationResult,
+    Evaluator,
+    MonteCarloResult,
+    Pipeline,
+    Serializable,
+    SerializableEnum,
+    VAT,
+    Verbosity,
+)
 from hermespy.core.monte_carlo import GridDimension, SampleGrid, MonteCarloSample
 from hermespy.tools import tile_figures
 from .physical_device import PDT
@@ -28,10 +41,23 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
+
+
+class IterationPriority(SerializableEnum):
+    """Iteration priority of the hardware loop.
+
+    Used by the :meth:`HardwareLoop.run` method.
+    """
+
+    DROPS = 0
+    """Iterate over drops first before iterating over the parameter grid."""
+
+    GRID = 1
+    """Iterate over the parameter grid first before iterating over drops."""
 
 
 class EvaluatorPlotMode(SerializableEnum):
@@ -110,7 +136,9 @@ class EvaluatorRegistration(Evaluator):
     def tolerance(self, value: float) -> None:
         self.__evaluator.tolerance = value
 
-    def generate_result(self, grid: Sequence[GridDimension], artifacts: np.ndarray) -> EvaluationResult:
+    def generate_result(
+        self, grid: Sequence[GridDimension], artifacts: np.ndarray
+    ) -> EvaluationResult:
         return self.__evaluator.generate_result(grid, artifacts)
 
 
@@ -124,7 +152,9 @@ class HardwareLoopSample(object):
     __evaluations: Sequence[Evaluation]
     __artifacts: Sequence[Artifact]
 
-    def __init__(self, drop: Drop, evaluations: Sequence[Evaluation], artifacts: Sequence[Artifact]) -> None:
+    def __init__(
+        self, drop: Drop, evaluations: Sequence[Evaluation], artifacts: Sequence[Artifact]
+    ) -> None:
         # Initialize class attributes
         self.__drop = drop
         self.__evaluations = evaluations
@@ -153,7 +183,7 @@ class HardwareLoopPlot(ABC):
     __hardware_loop: HardwareLoop | None
     __title: str
     __figure: plt.Figure | None
-    __axes: plt.Axes | None
+    __axes: VAT | None
 
     def __init__(self, title: str = "") -> None:
         # Initialize class attributes
@@ -190,12 +220,12 @@ class HardwareLoopPlot(ABC):
         return self.__figure
 
     @property
-    def axes(self) -> plt.Axes:
+    def axes(self) -> VAT:
         """Axes of the hardware loop plot."""
 
         return self.__axes
 
-    def prepare_figure(self) -> Tuple[plt.Figure, plt.Axes]:
+    def prepare_figure(self) -> Tuple[plt.Figure, VAT]:
         """Prepare the figure for the hardware loop plot.
 
         Returns:
@@ -214,12 +244,12 @@ class HardwareLoopPlot(ABC):
         return figure, axes
 
     @abstractmethod
-    def _prepare_figure(self) -> Tuple[plt.Figure, plt.Axes]:
+    def _prepare_figure(self) -> Tuple[plt.Figure, VAT]:
         """Prepare the figure for the hardware loop plot.
 
         Returns:
 
-            Tuple[plt.Figure, plt.Axes]:
+            Tuple[plt.Figure, VAT]:
                 Figure and axes of the hardware loop plot.
         """
         ...  # pragma: no cover
@@ -259,14 +289,16 @@ class HardwareLoopPlot(ABC):
         ...  # pragma: no cover
 
 
-class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenarioType, PDT]):
+class HardwareLoop(
+    Serializable, Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenarioType, PDT]
+):
     """Hermespy hardware loop configuration."""
 
     yaml_tag = "HardwareLoop"
     """YAML serialization tag"""
 
     property_blacklist = {"console"}
-    serialized_attributes = {"scenario", "manual_triggering", "plot_information"}
+    serialized_attributes = {"scenario", "manual_triggering", "plot_information", "record_drops"}
 
     manual_triggering: bool
     """Require a user input to trigger each drop manually"""
@@ -274,11 +306,23 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PDT], Pipeline[Ph
     plot_information: bool
     """Plot information during loop runtime"""
 
+    record_drops: bool
+    """Record drops during loop runtime"""
+
     __dimensions: List[GridDimension]  # Parameter dimension over which a run sweeps
     __evaluators: List[Evaluator]  # Evaluators further processing drop information
     __plots: List[HardwareLoopPlot]
+    __iteration_priority: IterationPriority
 
-    def __init__(self, scenario: PhysicalScenarioType, manual_triggering: bool = False, plot_information: bool = True, **kwargs) -> None:
+    def __init__(
+        self,
+        scenario: PhysicalScenarioType,
+        manual_triggering: bool = False,
+        plot_information: bool = True,
+        iteration_priority: IterationPriority = IterationPriority.DROPS,
+        record_drops: bool = True,
+        **kwargs,
+    ) -> None:
         """
         Args:
 
@@ -292,17 +336,31 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PDT], Pipeline[Ph
             plot_information (bool, optional):
                 Plot information during loop runtime.
                 Enabled by default.
+
+            iteration_priority (IterationPriority, optional):
+                Which dimension to iterate over first.
+                Defaults to :attr:`IterationPriority.DROPS`.
+
+            record_drops (bool, optional):
+                Record drops during loop runtime.
+                Enabled by default.
         """
 
+        # Initialize base classes
         Pipeline.__init__(self, scenario=scenario, **kwargs)
 
+        # Initialize class attributes
         self.manual_triggering = manual_triggering
         self.plot_information = plot_information
+        self.iteration_priority = iteration_priority
+        self.record_drops = record_drops
         self.__dimensions = []
         self.__evaluators = []
         self.__plots = []
 
-    def new_dimension(self, dimension: str, sample_points: List[Any], *args: Tuple[Any]) -> GridDimension:
+    def new_dimension(
+        self, dimension: str, sample_points: List[Any], *args: Tuple[Any]
+    ) -> GridDimension:
         """Add a dimension to the sweep grid.
 
         Must be a property of the :meth:`HardwareLoop.scenario`.
@@ -400,6 +458,16 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PDT], Pipeline[Ph
 
         return self.__evaluators.index(evaluator)
 
+    @property
+    def iteration_priority(self) -> IterationPriority:
+        """Iteration priority of the hardware loop."""
+
+        return self.__iteration_priority
+
+    @iteration_priority.setter
+    def iteration_priority(self, value: IterationPriority) -> None:
+        self.__iteration_priority = value
+
     def run(self, overwrite=True, campaign: str = "default") -> None:
         """Run the hardware loop configuration.
 
@@ -413,23 +481,46 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PDT], Pipeline[Ph
         """
 
         # Prepare the results file
+        # Only required if the results directory is set and drops are recorded
         if self.results_dir:
-            file_location = path.join(self.results_dir, "drops.h5")
+            if self.record_drops:
+                file_location = path.join(self.results_dir, "drops.h5")
 
-            state = PhysicalScenarioDummy()
-            for device in self.scenario.devices:
-                state.new_device(carrier_frequency=device.carrier_frequency, sampling_rate=device.sampling_rate)
+                # Workaround for scenarios which might not be serializable:
+                # Create a dummy scenario and patch the operators for recording
+                if not isinstance(self.scenario, Serializable):
+                    state = PhysicalScenarioDummy()
+                    for device in self.scenario.devices:
+                        state.new_device(
+                            carrier_frequency=device.carrier_frequency,
+                            sampling_rate=device.sampling_rate,
+                        )
 
-            # Patch operators for recording
-            operator_devices = [(operator.device, self.scenario.device_index(operator.device)) for operator in self.scenario.operators]
+                    # Patch operators for recording
+                    operator_devices = [
+                        (operator.device, self.scenario.device_index(operator.device))
+                        for operator in self.scenario.operators
+                    ]
 
-            for (_, device_idx), operator in zip(operator_devices, self.scenario.operators):
-                operator.device = state.devices[device_idx]  # type: ignore
+                    for (_, device_idx), operator in zip(operator_devices, self.scenario.operators):
+                        operator.device = state.devices[device_idx]  # type: ignore
 
-            self.scenario.record(file_location, overwrite=overwrite, campaign=campaign, state=state)
+                    self.scenario.record(
+                        file_location, overwrite=overwrite, campaign=campaign, state=state
+                    )
 
-            for (_, device_idx), operator in zip(operator_devices, state.operators):
-                operator.device = self.scenario.devices[device_idx]  # type: ignore
+                    for (_, device_idx), operator in zip(operator_devices, state.operators):
+                        operator.device = self.scenario.devices[device_idx]  # type: ignore
+
+                else:
+                    self.scenario.record(file_location, overwrite=overwrite, campaign=campaign)
+
+            else:
+                if (
+                    self.console_mode is not ConsoleMode.SILENT
+                    and self.verbosity.value >= Verbosity.INFO.value
+                ):
+                    self.console.print("Skipping drop recording", style="bright_yellow")
 
         # Run internally
         self.__run()
@@ -455,7 +546,9 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PDT], Pipeline[Ph
         # Stop the scenario replay
         self.scenario.stop()
 
-    def __generate_sample(self, section_indices: Tuple[int, ...], sample_index: int) -> HardwareLoopSample:
+    def __generate_sample(
+        self, section_indices: Tuple[int, ...], sample_index: int
+    ) -> HardwareLoopSample:
         """Generate a sample from the grid.
 
         Args:
@@ -499,34 +592,71 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PDT], Pipeline[Ph
         sample_grid = SampleGrid(self.__dimensions, self.__evaluators)
 
         # Print indicator that the simulation is starting
-        if self.console_mode is not ConsoleMode.SILENT and self.verbosity.value >= Verbosity.INFO.value:  # pragma: no cover
+        if (
+            self.console_mode is not ConsoleMode.SILENT
+            and self.verbosity.value >= Verbosity.INFO.value
+        ):  # pragma: no cover
             self.console.print()  # Just an empty line
             self.console.rule("Hardware Loop")
             self.console.print()  # Just an empty line
 
         # Prepare the console
-        progress = Progress(SpinnerColumn(), *Progress.get_default_columns(), TimeElapsedColumn(), transient=True, console=self.console)
+        progress = Progress(
+            SpinnerColumn(),
+            *Progress.get_default_columns(),
+            TimeElapsedColumn(),
+            transient=True,
+            console=self.console,
+        )
         confirm = Confirm(console=self.console)
 
         num_total_drops = self.num_drops
         grid_tasks = []
 
         for grid_dimension in self.__dimensions:
-            grid_tasks.append(progress.add_task("[cyan]" + grid_dimension.title, total=grid_dimension.num_sample_points))
+            grid_tasks.append(
+                progress.add_task(
+                    "[cyan]" + grid_dimension.title, total=grid_dimension.num_sample_points
+                )
+            )
             num_total_drops *= grid_dimension.num_sample_points
 
         loop_drop_progress = progress.add_task("[green]Drops", total=self.num_drops)
         total_progress = progress.add_task("[red]Progress", total=num_total_drops)
 
-        with progress if self.console_mode == ConsoleMode.INTERACTIVE else nullcontext():  # type: ignore
+        with ExitStack() as stack:
+            # Add the progress bar to the context stack
+            if self.console_mode == ConsoleMode.INTERACTIVE:
+                stack.enter_context(progress)
+
+            # If the plot information is enabled,
+            # add the interactive plot to the context stack to enable live updates
+            if self.plot_information:
+                stack.enter_context(plt.ion())
+
             # Start counting the total number of completed drops
             total = 0
 
             # Generate the number of required drops
-            index_grid = (self.num_drops, *[d.num_sample_points for d in self.__dimensions])
+            index_grid: Tuple[int, ...] = tuple()
+
+            if self.iteration_priority is IterationPriority.GRID:
+                index_grid = (self.num_drops, *[d.num_sample_points for d in self.__dimensions])
+                grid_selector = slice(1, 1 + len(self.__dimensions))
+                drop_selector = 0
+
+            elif self.iteration_priority is IterationPriority.DROPS:
+                index_grid = (*[d.num_sample_points for d in self.__dimensions], self.num_drops)
+                grid_selector = slice(0, len(self.__dimensions))
+                drop_selector = len(self.__dimensions)
+
+            else:
+                # This should never happen
+                raise RuntimeError(f"Invalid iteration priority: {self.iteration_priority}")
+
             for indices in np.ndindex(index_grid):
-                sample_index = indices[0]
-                section_indices = indices[1:]
+                sample_index = indices[drop_selector]
+                section_indices = indices[grid_selector]
 
                 # Ask for a trigger input if manual mode is enabled
                 # Abort execution if user denies
@@ -542,17 +672,22 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PDT], Pipeline[Ph
                 try:
                     # Generate a new samples
                     loop_sample = self.__generate_sample(section_indices, sample_index)
-                    grid_sample = MonteCarloSample(section_indices, sample_index, loop_sample.artifacts)
+                    grid_sample = MonteCarloSample(
+                        section_indices, sample_index, loop_sample.artifacts
+                    )
 
                     # Save sample
                     sample_grid[section_indices].add_samples(grid_sample, self.__evaluators)
 
                     # Print results
-                    if self.console_mode is not ConsoleMode.SILENT and self.verbosity.value <= Verbosity.INFO.value:
+                    if (
+                        self.console_mode is not ConsoleMode.SILENT
+                        and self.verbosity.value <= Verbosity.INFO.value
+                    ):
                         result_str = f"# {total:<5}"
 
-                        for dimesion, i in zip(self.__dimensions, indices[1:]):
-                            result_str += f" {dimesion.title[-20:]} = {dimesion.sample_points[i]:<5}"
+                        for dimesion, i in zip(self.__dimensions, indices[grid_selector]):
+                            result_str += f" {dimesion.title} = {dimesion.sample_points[i].title}"
 
                         for evaluator, artifact in zip(self.__evaluators, loop_sample.artifacts):
                             result_str += f" {evaluator.abbreviation}: {str(artifact):5}"
@@ -565,24 +700,25 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PDT], Pipeline[Ph
 
                     # Update plots
                     if self.plot_information:
-                        with plt.ion():
-                            for plot in self.__plots:
-                                plot.update_plot(loop_sample)
+                        for plot in self.__plots:
+                            plot.update_plot(loop_sample)
 
-                except Exception:
-                    self._handle_exception(confirm=False)
+                except Exception as e:
+                    self._handle_exception(e, confirm=False)
 
                 # Update progress
                 total += 1
 
-                for task, completed in zip(grid_tasks, indices[1:]):
+                for task, completed in zip(grid_tasks, indices[grid_selector]):
                     progress.update(task, completed=completed)
 
-                progress.update(loop_drop_progress, completed=indices[0])
+                progress.update(loop_drop_progress, completed=indices[drop_selector])
                 progress.update(total_progress, completed=total)
 
         # Compute the evaluation results
-        result: MonteCarloResult = MonteCarloResult(self.__dimensions, self.__evaluators, sample_grid, 0.0)
+        result: MonteCarloResult = MonteCarloResult(
+            self.__dimensions, self.__evaluators, sample_grid, 0.0
+        )
 
         # Generate result plots
         result_figures = result.plot()
@@ -591,25 +727,41 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PDT], Pipeline[Ph
         if self.results_dir:
             result.save_to_matlab(path.join(self.results_dir, "results.mat"))
 
-            for idx, (figure, evaluator) in enumerate(zip(result_figures, self.__evaluators)):
-                figure.savefig(path.join(self.results_dir, f"result_{idx}_{evaluator.abbreviation}.png"), format="png")
+            for idx, (figure_base, evaluator) in enumerate(zip(result_figures, self.__evaluators)):
+                figure = figure_base.get_figure()
+                if figure is not None:
+                    figure.savefig(
+                        path.join(self.results_dir, f"result_{idx}_{evaluator.abbreviation}.png"),
+                        format="png",
+                    )
 
         if self.plot_information:
             plt.show()
 
     @classmethod
-    def to_yaml(cls: Type[HardwareLoop], representer: SafeRepresenter, node: HardwareLoop) -> MappingNode:
+    def to_yaml(
+        cls: Type[HardwareLoop], representer: SafeRepresenter, node: HardwareLoop
+    ) -> MappingNode:
         # Prepare dimensions
         dimension_fields: List[Mapping[str, Any]] = []
         for dimension in node.__dimensions:
-            dimension_fields.append({"objects": dimension.considered_objects, "property": dimension.dimension, "points": dimension.sample_points, "title": dimension.title})
+            dimension_fields.append(
+                {
+                    "objects": dimension.considered_objects,
+                    "property": dimension.dimension,
+                    "points": [p.value for p in dimension.sample_points],
+                    "title": dimension.title,
+                }
+            )
 
         additional_fields = {"Evaluators": node.__evaluators, "Dimensions": dimension_fields}
 
         return node._mapping_serialization_wrapper(representer, additional_fields=additional_fields)
 
     @classmethod
-    def from_yaml(cls: Type[HardwareLoop], constructor: SafeConstructor, node: Node) -> HardwareLoop:
+    def from_yaml(
+        cls: Type[HardwareLoop], constructor: SafeConstructor, node: Node
+    ) -> HardwareLoop:
         state = constructor.construct_mapping(node, deep=True)
 
         state.pop("Operators", [])
@@ -625,7 +777,9 @@ class HardwareLoop(Serializable, Generic[PhysicalScenarioType, PDT], Pipeline[Ph
 
         # Add sweeping dimensions
         for dimension in dimensions:
-            new_dim = hardware_loop.new_dimension(dimension["property"], dimension["points"], *dimension["objects"])
+            new_dim = hardware_loop.new_dimension(
+                dimension["property"], dimension["points"], *dimension["objects"]
+            )
 
             title = dimension.get("title", None)
             if title is not None:

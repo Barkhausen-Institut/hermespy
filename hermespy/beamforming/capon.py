@@ -7,14 +7,14 @@ Capon Beamformer
 
 import numpy as np
 
-from hermespy.core import Serializable
+from hermespy.core import AntennaMode, AntennaArray, Serializable
 from .beamformer import ReceiveBeamformer
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -69,14 +69,14 @@ class CaponBeamformer(Serializable, ReceiveBeamformer):
 
     @property
     def num_receive_input_streams(self) -> int:
-        return self.operator.device.antennas.num_antennas
+        return self.operator.device.antennas.num_receive_ports
 
     @property
     def num_receive_output_streams(self) -> int:
         return 1
 
     @property
-    def num_receive_focus_angles(self) -> int:
+    def num_receive_focus_points(self) -> int:
         return 1
 
     @property
@@ -103,17 +103,27 @@ class CaponBeamformer(Serializable, ReceiveBeamformer):
 
         self.__loading = value
 
-    def _decode(self, samples: np.ndarray, carrier_frequency: float, angles: np.ndarray) -> np.ndarray:
+    def _decode(
+        self, samples: np.ndarray, carrier_frequency: float, angles: np.ndarray, array: AntennaArray
+    ) -> np.ndarray:
         # Compute the inverse sample covariance matrix R
         # In order to avoid algebra exceptions on decodings without noise, we will resort to the pseudo-inverse,
         # which is able to invert rank-deficient matrices
-        sample_covariance = np.linalg.inv(samples @ samples.T.conj() + self.loading * np.eye(samples.shape[0]))
+        sample_covariance = np.linalg.inv(
+            samples @ samples.T.conj() + self.loading * np.eye(samples.shape[0])
+        )
 
         # Query the sensor array response vectors for the angles of interest and create a dictionary from it
         dictionary = np.empty((self.num_receive_input_streams, angles.shape[0]), dtype=complex)
         for d, focus in enumerate(angles):
-            array_response = self.operator.device.antennas.spherical_phase_response(carrier_frequency, focus[0, 0], focus[0, 1])
-            dictionary[:, d] = sample_covariance @ array_response / (array_response.T.conj() @ sample_covariance @ array_response)
+            array_response = array.spherical_phase_response(
+                carrier_frequency, focus[0, 0], focus[0, 1], AntennaMode.RX
+            )
+            dictionary[:, d] = (
+                sample_covariance
+                @ array_response
+                / (array_response.T.conj() @ sample_covariance @ array_response)
+            )
 
         beamformed_samples = dictionary.T.conj() @ samples
         return beamformed_samples[:, np.newaxis, :]

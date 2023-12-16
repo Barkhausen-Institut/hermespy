@@ -1,14 +1,8 @@
 # -*- coding: utf-8 -*-
-"""
-=======================
-Single Carrier Encoding
-=======================
-"""
 
 from __future__ import annotations
 
 import numpy as np
-from numpy import argmax
 
 from hermespy.core import Serializable
 from ..symbols import StatedSymbols
@@ -39,11 +33,15 @@ class SingleCarrier(SymbolPrecoder, Serializable):
 
     def encode(self, symbols: StatedSymbols) -> StatedSymbols:
         if symbols.num_streams != 1:
-            raise RuntimeError("Single-Carrier spatial multiplexing only supports one-dimensional input streams during encoding")
+            raise RuntimeError(
+                "Single-Carrier spatial multiplexing only supports one-dimensional input streams during encoding"
+            )
 
         repeated_symbols = symbols.copy()
         repeated_symbols.raw = np.repeat(repeated_symbols.raw, self.num_output_streams, axis=0)
-        repeated_symbols.states = np.repeat(repeated_symbols.states, self.num_output_streams, axis=0)
+        repeated_symbols.states = np.repeat(
+            repeated_symbols.states, self.num_output_streams, axis=0
+        )
 
         return repeated_symbols
 
@@ -55,16 +53,17 @@ class SingleCarrier(SymbolPrecoder, Serializable):
 
         # Essentially, over all symbol streams for each symbol the one with the strongest response will be selected
         symbols = symbols.copy()
-        squeezed_channel_state = symbols.states.sum(axis=1, keepdims=False)
+        dense_states = symbols.dense_states()
+        squeezed_channel_state = dense_states.sum(axis=1, keepdims=False)
 
         # Select proper antenna for each symbol timestamp
-        antenna_selection = argmax(abs(squeezed_channel_state), axis=0)
+        antenna_selection = np.argmax(np.abs(squeezed_channel_state), axis=0)
 
         new_symbols = np.take_along_axis(symbols.raw, antenna_selection[np.newaxis, ::], axis=0)
         # stream_noises = np.take_along_axis(symbols, antenna_selection.T, axis=0)
 
         channel_state_selection = antenna_selection[np.newaxis, np.newaxis, ::].repeat(2, axis=1)
-        new_states = np.take_along_axis(symbols.states, channel_state_selection, axis=0)
+        new_states = np.take_along_axis(dense_states, channel_state_selection, axis=0)
 
         symbols.raw = new_symbols
         symbols.states = new_states

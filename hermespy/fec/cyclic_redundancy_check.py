@@ -22,7 +22,7 @@ __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -105,7 +105,9 @@ class CyclicRedundancyCheck(Encoder, RandomNode, Serializable):
         return self.__bit_block_size + self.__check_block_size
 
     @classmethod
-    def to_yaml(cls: Type[CyclicRedundancyCheck], representer: SafeRepresenter, node: CyclicRedundancyCheck) -> MappingNode:
+    def to_yaml(
+        cls: Type[CyclicRedundancyCheck], representer: SafeRepresenter, node: CyclicRedundancyCheck
+    ) -> MappingNode:
         """Serialize a `CyclicRedundancyCheck` to YAML.
 
         Args:
@@ -123,12 +125,17 @@ class CyclicRedundancyCheck(Encoder, RandomNode, Serializable):
         :meta private:
         """
 
-        state = {"bit_block_size": node.__bit_block_size, "check_block_size": node.__check_block_size}
+        state = {
+            "bit_block_size": node.__bit_block_size,
+            "check_block_size": node.__check_block_size,
+        }
 
         return representer.represent_mapping(cls.yaml_tag, state)
 
     @classmethod
-    def from_yaml(cls: Type[CyclicRedundancyCheck], constructor: SafeConstructor, node: Node) -> CyclicRedundancyCheck:
+    def from_yaml(
+        cls: Type[CyclicRedundancyCheck], constructor: SafeConstructor, node: Node
+    ) -> CyclicRedundancyCheck:
         """Recall a new `CyclicRedundancyCheck` from YAML.
 
         Args:

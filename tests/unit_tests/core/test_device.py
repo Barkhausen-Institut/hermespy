@@ -11,9 +11,8 @@ from h5py import File
 from scipy.constants import speed_of_light
 from numpy.testing import assert_array_equal
 
-from hermespy.core import Signal, SNRType, Transformation
-from hermespy.core.device import Device, DeviceInput, ProcessedDeviceInput, DeviceReception, DeviceOutput, DeviceTransmission, MixingOperator, OperationResult, Operator, OperatorSlot, Receiver, ReceiverSlot, Reception, Transmission, Transmitter,\
-    TransmitterSlot, UnsupportedSlot
+from hermespy.core import AntennaArray, IdealAntenna, Signal, SNRType, Transformation, UniformArray
+from hermespy.core.device import Device, DeviceInput, ProcessedDeviceInput, DeviceReception, DeviceOutput, DeviceTransmission, MixingOperator, OperationResult, Operator, OperatorSlot, Receiver, ReceiverSlot, Reception, Transmission, Transmitter, TransmitterSlot, UnsupportedSlot
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -27,11 +26,14 @@ __status__ = "Prototype"
 
 class DeviceMock(Device):
     """Mock of the device base class"""
-    
-    def __init__(self, *args, **kwargs) -> None:
 
+    def __init__(self, *args, **kwargs) -> None:
         self.__carrier_frequency = 1e9
         Device.__init__(self, *args, **kwargs)
+
+    @property
+    def antennas(self) -> AntennaArray:
+        return UniformArray(IdealAntenna, 1.0, [2, 1, 1])
 
     @property
     def velocity(self) -> np.ndarray:
@@ -44,17 +46,16 @@ class DeviceMock(Device):
     @property
     def carrier_frequency(self) -> float:
         return self.__carrier_frequency
-    
+
     @carrier_frequency.setter
     def carrier_frequency(self, value: float) -> float:
         self.__carrier_frequency = value
-        
-        
+
+
 class OperatorMock(Operator):
     """Mock of the operator base class"""
-    
-    def __init__(self, *args, **kwargs) -> None:
 
+    def __init__(self, *args, **kwargs) -> None:
         self.__carrier_frequency = 1e9
         Operator.__init__(self, *args, **kwargs)
 
@@ -65,47 +66,45 @@ class OperatorMock(Operator):
     @property
     def carrier_frequency(self) -> float:
         return self.__carrier_frequency
-    
+
     @carrier_frequency.setter
     def carrier_frequency(self, value: float) -> float:
         self.__carrier_frequency = value
-        
+
     @property
     def frame_duration(self) -> float:
-        return 0.
+        return 0.0
 
-        
+
 class TestOperationResult(TestCase):
     """Test operation result class"""
-    
+
     def setUp(self) -> None:
-        
-        self.signal = Signal(np.random.standard_normal((2, 10)), 1.)
+        self.signal = Signal(np.random.standard_normal((2, 10)), 1.0)
         self.result = OperationResult(self.signal)
-        
+
     def test_hdf_serialization(self) -> None:
         """Test HDF roundtrip serialization"""
 
         with TemporaryDirectory() as tempdir:
-            
-            file_path = join(tempdir, 'test.hdf')
+            file_path = join(tempdir, "test.hdf")
 
-            file = File(file_path, 'w')
-            group = file.create_group('g1')
+            file = File(file_path, "w")
+            group = file.create_group("g1")
             self.result.to_HDF(group)
             file.close()
-            
-            file = File(file_path, 'r')
-            recalled_result = OperationResult.from_HDF(file['g1'])
+
+            file = File(file_path, "r")
+            recalled_result = OperationResult.from_HDF(file["g1"])
             file.close()
-        
+
             assert_array_equal(self.result.signal.samples, recalled_result.signal.samples)
+
 
 class TestOperator(TestCase):
     """Test device slot operators"""
 
     def setUp(self) -> None:
-
         self.device = DeviceMock()
         self.slot = OperatorSlot(device=self.device)
         self.operator = Operator()
@@ -137,11 +136,11 @@ class TestOperator(TestCase):
 
         self.slot.add(Operator())
         self.slot.add(Operator())
-        
+
         new_operator = Operator()
         self.slot.add(new_operator)
         self.assertEqual(3, new_operator.slot_index)
-        
+
         unbound_operator = Operator()
         self.assertIsNone(unbound_operator.slot_index)
 
@@ -352,21 +351,193 @@ class TestDeviceReception(TestCase):
             assert_array_equal(self.operator_receptions[0].signal.samples, recalled_reception.operator_receptions[0].signal.samples)
 
 
+class TestDeviceOutput(TestCase):
+    """Test device output base class"""
+
+    def setUp(self) -> None:
+        self.signal = Signal(np.random.standard_normal((2, 10)), 1.0)
+        self.output = DeviceOutput(self.signal)
+
+    def test_properties(self) -> None:
+        """Test the properties of the device output class"""
+
+        self.assertIs(self.signal, self.output.mixed_signal)
+        self.assertEqual(self.signal.sampling_rate, self.output.sampling_rate)
+        self.assertEqual(self.signal.num_streams, self.output.num_antennas)
+        self.assertEqual(self.signal.carrier_frequency, self.output.carrier_frequency)
+        self.assertSequenceEqual([self.signal], self.output.emerging_signals)
+        self.assertEqual(1, self.output.num_emerging_signals)
+
+    def test_hdf_serialization(self) -> None:
+        """Test HDF roundtrip serialization"""
+
+        with TemporaryDirectory() as tempdir:
+            file_path = join(tempdir, "test.hdf")
+
+            file = File(file_path, "w")
+            group = file.create_group("g1")
+            self.output.to_HDF(group)
+            file.close()
+
+            file = File(file_path, "r")
+            recalled_output = DeviceOutput.from_HDF(file["g1"])
+            file.close()
+
+            assert_array_equal(self.signal.samples, recalled_output.mixed_signal.samples)
+
+
+class TestDeviceTransmission(TestCase):
+    """Test device transmission base class"""
+
+    def setUp(self) -> None:
+        self.mixed_signal = Signal(np.random.standard_normal((2, 10)), 1.0)
+        self.operator_transmissions = [Transmission(self.mixed_signal)]
+
+        self.transmission = DeviceTransmission(self.operator_transmissions, self.mixed_signal)
+
+        self.transmitter = TransmitterMock()
+        self.device = DeviceMock()
+        self.device.transmitters.add(self.transmitter)
+
+    def test_properties(self) -> None:
+        """Test the properties of the device transmission class"""
+
+        self.assertSequenceEqual(self.operator_transmissions, self.operator_transmissions)
+        self.assertEqual(1, self.transmission.num_operator_transmissions)
+
+    def test_hdf_serialization(self) -> None:
+        """Test HDF roundtrip serialization"""
+
+        with TemporaryDirectory() as tempdir:
+            file_path = join(tempdir, "test.hdf")
+
+            file = File(file_path, "w")
+            group = file.create_group("g1")
+            self.transmission.to_HDF(group)
+            file.close()
+
+            file = File(file_path, "r")
+            deserialized_transmission = DeviceTransmission.from_HDF(file["g1"])
+            recalled_transmission = DeviceTransmission.Recall(file["g1"], self.device)
+            file.close()
+
+            assert_array_equal(self.mixed_signal.samples, deserialized_transmission.mixed_signal.samples)
+            assert_array_equal(self.mixed_signal.samples, recalled_transmission.mixed_signal.samples)
+
+
+class TestDeviceInput(TestCase):
+    """Test device input base class"""
+
+    def setUp(self) -> None:
+        self.impinging_signals = [Signal(np.random.standard_normal((2, 10)), 1.0)]
+        self.input = DeviceInput(self.impinging_signals)
+
+    def test_properties(self) -> None:
+        """Test the properties of the device input class"""
+
+        self.assertSequenceEqual(self.impinging_signals, self.input.impinging_signals)
+        self.assertEqual(1, self.input.num_impinging_signals)
+
+    def test_hdf_serialization(self) -> None:
+        """Test HDF roundtrip serialization"""
+
+        with TemporaryDirectory() as tempdir:
+            file_path = join(tempdir, "test.hdf")
+
+            file = File(file_path, "w")
+            group = file.create_group("g1")
+            self.input.to_HDF(group)
+            file.close()
+
+            file = File(file_path, "r")
+            recalled_input = DeviceInput.from_HDF(file["g1"])
+            file.close()
+
+            assert_array_equal(self.impinging_signals[0].samples, recalled_input.impinging_signals[0].samples)
+
+
+class TestProcessedDeviceInput(TestCase):
+    """Test processed device input base class"""
+
+    def setUp(self) -> None:
+        self.impinging_signals = [Signal(np.random.standard_normal((2, 10)), 1.0)]
+        self.operator_inputs = [self.impinging_signals[0]]
+
+        self.input = ProcessedDeviceInput(self.impinging_signals, self.operator_inputs)
+
+    def test_properties(self) -> None:
+        """Test the properties of the processed device input class"""
+
+        self.assertSequenceEqual(self.impinging_signals, self.input.impinging_signals)
+        self.assertEqual(1, self.input.num_impinging_signals)
+        self.assertSequenceEqual(self.operator_inputs, self.input.operator_inputs)
+        self.assertEqual(1, self.input.num_operator_inputs)
+
+    def test_hdf_serialization(self) -> None:
+        """Test HDF roundtrip serialization"""
+
+        with TemporaryDirectory() as tempdir:
+            file_path = join(tempdir, "test.hdf")
+
+            file = File(file_path, "w")
+            group = file.create_group("g1")
+            self.input.to_HDF(group)
+            file.close()
+
+            file = File(file_path, "r")
+            recalled_input = ProcessedDeviceInput.from_HDF(file["g1"])
+            file.close()
+
+            assert_array_equal(self.impinging_signals[0].samples, recalled_input.impinging_signals[0].samples)
+
+
+class TestDeviceReception(TestCase):
+    """Test device reception base class"""
+
+    def setUp(self) -> None:
+        self.impinging_signals = [Signal(np.random.standard_normal((2, 10)), 1.0)]
+        self.operator_inputs = [self.impinging_signals[0]]
+        self.operator_receptions = [Reception(Signal(np.random.standard_normal((2, 10)), 1.0))]
+        self.reception = DeviceReception(self.impinging_signals, self.operator_inputs, self.operator_receptions)
+
+        self.receiver = ReceiverMock()
+        self.device = DeviceMock()
+        self.device.receivers.add(self.receiver)
+
+    def test_properties(self) -> None:
+        """Test the properties of the device reception class"""
+
+        self.assertSequenceEqual(self.operator_receptions, self.reception.operator_receptions)
+        self.assertEqual(1, self.reception.num_operator_receptions)
+
+    def test_hdf_serialization(self) -> None:
+        """Test HDF roundtrip serialization"""
+
+        file = File("test.h5", "w", driver="core", backing_store=False)
+        group = file.create_group("g1")
+
+        self.reception.to_HDF(group)
+        deserialized_reception = DeviceReception.from_HDF(file["g1"])
+        recalled_reception = DeviceReception.Recall(file["g1"], self.device)
+
+        file.close()
+
+        assert_array_equal(self.operator_receptions[0].signal.samples, deserialized_reception.operator_receptions[0].signal.samples)
+        assert_array_equal(self.operator_receptions[0].signal.samples, recalled_reception.operator_receptions[0].signal.samples)
+
+
 class MixingOperatorMock(MixingOperator):
     """Mock of the mixing operator base class"""
 
     def __init__(self, *args, **kwargs) -> None:
-
         MixingOperator.__init__(self, *args, **kwargs)
 
     @property
     def frame_duration(self) -> float:
-
         return 1.0
 
     @property
     def sampling_rate(self) -> float:
-
         return 1.0
 
 
@@ -374,7 +545,6 @@ class TestMixingOperator(TestCase):
     """Test the base class for mixing operators"""
 
     def setUp(self) -> None:
-
         self.slot = Mock()
         self.slot.device = Mock()
         self.mixing_operator = MixingOperatorMock(slot=self.slot)
@@ -400,16 +570,16 @@ class TestMixingOperator(TestCase):
         """Operator should return base band carrier frequency if no device is attached"""
 
         operator = MixingOperator()
-        self.assertEqual(0., operator.carrier_frequency)
+        self.assertEqual(0.0, operator.carrier_frequency)
 
     def test_carrier_frequency_validation(self) -> None:
         """Carrier frequency property setter should raise ValueError on negative arguments"""
 
         with self.assertRaises(ValueError):
-            self.mixing_operator.carrier_frequency = -1.
+            self.mixing_operator.carrier_frequency = -1.0
 
         try:
-            self.mixing_operator.carrier_frequency = 0.
+            self.mixing_operator.carrier_frequency = 0.0
 
         except ValueError:
             self.fail()
@@ -419,10 +589,9 @@ class ReceiverMock(Receiver):
     """Mock of the receiving device operator base class"""
 
     def __init__(self, *args, **kwargs):
-
         Receiver.__init__(self, *args, **kwargs)
 
-    def _receive(self, signal, csi) -> Reception:
+    def _receive(self, signal) -> Reception:
         return Reception(Signal)
 
     @property
@@ -434,11 +603,9 @@ class ReceiverMock(Receiver):
         return 1.0
 
     def _noise_power(self, strength, snr_type=...) -> float:
-        
         return strength
 
     def _recall_reception(self, group) -> Reception:
-        
         return Reception.from_HDF(group)
 
 
@@ -446,8 +613,8 @@ class TestReceiver(TestCase):
     """Test the base class for receiving operators"""
 
     def setUp(self) -> None:
-
         self.device = Mock()
+        self.device.antennas = UniformArray(IdealAntenna, 1., [2, 1, 1])
         self.slot = ReceiverSlot(device=self.device)
         self.receiver = ReceiverMock(slot=self.slot)
 
@@ -467,42 +634,81 @@ class TestReceiver(TestCase):
 
         self.assertIs(reference, self.receiver.reference)
 
+    def test_selected_receive_ports_validation(self) -> None:
+        """Selected receive ports property setter should raise ValueError on invalid arguments"""
+
+        with self.assertRaises(ValueError):
+            self.receiver.selected_receive_ports = [11, 12]
+
+    def test_selected_receive_ports_setget(self) -> None:
+        """Selectred receive ports property getter should return setter argument"""
+
+        self.receiver.selected_receive_ports = [0, 1]
+        self.assertSequenceEqual([0, 1], self.receiver.selected_receive_ports)
+
+        self.receiver.selected_receive_ports = None
+        self.assertIsNone(self.receiver.selected_receive_ports)
+
+    def test_num_receive_ports(self) -> None:
+        """Number of receive ports property should return the correct number"""
+
+        self.assertEqual(2, self.receiver.num_receive_ports)
+
+        self.receiver.selected_receive_ports = [0, 1]
+        self.assertEqual(2, self.receiver.num_receive_ports)
+
+        detached_receiver = ReceiverMock()
+        self.assertEqual(0, detached_receiver.num_receive_ports)
+
+    def test_num_receive_antennas(self) -> None:
+        """Number of receive antennas property should return the correct number"""
+
+        self.assertEqual(2, self.receiver.num_receive_antennas)
+
+        self.receiver.selected_receive_ports = [0, 1]
+        self.assertEqual(2, self.receiver.num_receive_antennas)
+
+        detached_receiver = ReceiverMock()
+        self.assertEqual(0, detached_receiver.num_receive_antennas)
+
+        detached_receiver.selected_receive_ports = [0, 1, 2]
+        self.assertEqual(0, detached_receiver.num_receive_antennas)
+
     def test_cache_reception(self) -> None:
-        """Cached receptions should be returned by the signal and csi properties"""
+        """Cached receptions should be returned by the signal and channel realization properties"""
 
         signal = Mock()
-        csi = Mock()
-        self.receiver.cache_reception(signal, csi)
+        self.receiver.cache_reception(signal)
 
         self.assertIs(signal, self.receiver.signal)
-        self.assertIs(csi, self.receiver.csi)
-        
+
     def test_receive_validation(self) -> None:
         """Receiving without cached reception should raise RuntimeError"""
-        
+
         with self.assertRaises(RuntimeError):
             _ = self.receiver.receive()
-        
+
+        with self.assertRaises(ValueError):
+            _ = self.receiver.receive(Signal.empty(1.0, 3), cache=True)
+
     def test_receive(self) -> None:
-        
         signal = Mock()
-        csi = Mock()
-        self.receiver.cache_reception(signal, csi)
+        signal.num_streams = 2
+        self.receiver.cache_reception(signal)
         reception = self.receiver.receive(cache=True)
-        
+
         self.assertIs(reception, self.receiver.reception)
-        
+
     def test_noise_power_n0(self) -> None:
         """Noise power should be computed correctly for N0 SNR type"""
-        
-        self.assertEqual(1., self.receiver.noise_power(1., SNRType.N0))
+
+        self.assertEqual(1.0, self.receiver.noise_power(1.0, SNRType.N0))
 
 
 class TestOperatorSlot(TestCase):
     """Test device operator slots"""
 
     def setUp(self) -> None:
-
         self.device = DeviceMock()
         self.slot = OperatorSlot(device=self.device)
         self.operator = OperatorMock(slot=self.slot)
@@ -529,7 +735,7 @@ class TestOperatorSlot(TestCase):
 
         self.assertTrue(self.slot.registered(operator))
         self.assertIs(operator.slot, self.slot)
-        
+
         self.slot.add(operator)
         self.assertEqual(2, self.slot.num_operators)
 
@@ -597,6 +803,42 @@ class TestOperatorSlot(TestCase):
 
         self.assertIs(operator, self.slot[1])
 
+    def test_max_sampling_rate(self) -> None:
+        """Maximum sampling rate property should compute the correct sampling rate"""
+
+        operator = Mock()
+        operator.sampling_rate = 10
+        self.slot.add(operator)
+
+        self.assertEqual(10, self.slot.max_sampling_rate)
+
+    def test_min_frame_duration(self) -> None:
+        """Minimum frame duration property should compute the correct duration"""
+
+        operator = Mock()
+        operator.frame_duration = 10
+        self.slot.add(operator)
+
+        self.assertEqual(10, self.slot.min_frame_duration)
+
+    def test_min_num_samples_per_frame(self) -> None:
+        """Minimum number of samples per frame property should compute the correct number"""
+
+        operator = Mock()
+        operator.sampling_rate = 10
+        operator.frame_duration = 10
+        self.slot.add(operator)
+
+        self.assertEqual(100, self.slot.min_num_samples_per_frame)
+
+    def test_getitem(self) -> None:
+        """Getitem should return the proper operator"""
+
+        operator = Mock()
+        self.slot.add(operator)
+
+        self.assertIs(operator, self.slot[1])
+
     def test_iteration(self) -> None:
         """Iteration should yield the proper order of operators"""
 
@@ -623,17 +865,26 @@ class TestOperatorSlot(TestCase):
         
         self.assertEqual(1, len(self.slot))
 
+    def test_len(self) -> None:
+        """Len should return the proper number of registered operators"""
+
+        self.assertEqual(1, len(self.slot))
+
 
 class TransmitterMock(Transmitter):
     """Mock of the base class for transmitting operators"""
 
     def __init__(self, *args, **kwargs) -> None:
-
         Transmitter.__init__(self, *args, **kwargs)
 
+    @property
+    def mock_transmission(self) -> Transmission:
+        rng = np.random.default_rng(42)
+        return Transmission(Signal(rng.standard_normal((self.device.antennas.num_transmit_antennas, 10)), self.sampling_rate, self.device.carrier_frequency))
+
     def _transmit(self, _: float) -> Transmission:
-        return Transmission(Signal(np.random.standard_normal((self.device.antennas.num_transmit_antennas, 10)), 1.))
-        
+        return self.mock_transmission
+
     @property
     def sampling_rate(self) -> float:
         return 1.0
@@ -646,7 +897,6 @@ class TestTransmitter(TestCase):
     """Test transmitting operator base class"""
 
     def setUp(self) -> None:
-
         self.device = DeviceMock()
         self.transmitter = TransmitterMock(slot=self.device.transmitters)
 
@@ -657,40 +907,87 @@ class TestTransmitter(TestCase):
         self.transmitter.slot = slot
 
         self.assertIs(slot, self.transmitter.slot)
-        
+
+    def test_selected_transmit_ports_validation(self) -> None:
+        """Selected transmit ports property setter should raise ValueError on invalid arguments"""
+
+        with self.assertRaises(ValueError):
+            self.transmitter.selected_transmit_ports = [11, 12]
+
+    def test_selected_transmit_ports_setget(self) -> None:
+        """Selectred transmit ports property getter should return setter argument"""
+
+        self.transmitter.selected_transmit_ports = [0, 1]
+        self.assertSequenceEqual([0, 1], self.transmitter.selected_transmit_ports)
+
+        self.transmitter.selected_transmit_ports = None
+        self.assertIsNone(self.transmitter.selected_transmit_ports)
+
+    def test_num_transmit_ports(self) -> None:
+        """Number of transmit ports property should return the correct number"""
+
+        self.assertEqual(2, self.transmitter.num_transmit_ports)
+
+        self.transmitter.selected_transmit_ports = [0, 1]
+        self.assertEqual(2, self.transmitter.num_transmit_ports)
+
+        teached_transmitter = TransmitterMock()
+        self.assertEqual(0, teached_transmitter.num_transmit_ports)
+
+        teached_transmitter.selected_transmit_ports = [0, 1, 2]
+        self.assertEqual(3, teached_transmitter.num_transmit_ports)
+
+    def test_num_transmit_antennas(self) -> None:
+        """Number of transmit antennas property should return the correct number"""
+
+        self.assertEqual(2, self.transmitter.num_transmit_antennas)
+
+        self.transmitter.selected_transmit_ports = [0, 1]
+        self.assertEqual(2, self.transmitter.num_transmit_antennas)
+
+        detached_transmitter = TransmitterMock()
+        self.assertEqual(0, detached_transmitter.num_transmit_antennas)
+
     def test_transmission_caching(self) -> None:
         """Transmission caching should be properly handled"""
-        
-        transmission = self.transmitter.transmit(0.)
+
+        transmission = self.transmitter.transmit(0.0)
         self.assertIs(transmission, self.transmitter.transmission)
-        
-        expected_transmission = Transmission(Signal(np.random.standard_normal((self.transmitter.device.antennas.num_transmit_antennas, 10)), 1.))
+
+        expected_transmission = Transmission(Signal(np.random.standard_normal((self.transmitter.device.antennas.num_transmit_antennas, 10)), 1.0))
         self.transmitter.cache_transmission(expected_transmission)
         self.assertIs(expected_transmission, self.transmitter.transmission)
 
     def test_transmission_recall(self) -> None:
         """Test transmission recall from HDF"""
         ...
-        
+
 
 class TestTransmitterSlot(TestCase):
     """Test transmitting operator device slot"""
 
     def setUp(self) -> None:
-
         self.device = DeviceMock()
         self.slot = TransmitterSlot(device=self.device)
         self.transmitter = TransmitterMock()
         self.slot.add(self.transmitter)
-        
+
     def test_add_validation(self) -> None:
         """Adding a transmission should raise ValueErrors for invalid arguments"""
-        
+
         with self.assertRaises(ValueError):
             self.slot.add_transmission(Mock(), Mock())
-            
+
         with self.assertRaises(ValueError):
-            self.slot.add_transmission(self.transmitter, Transmission(Signal(np.random.standard_normal((2, 10)), 1.)))
+            self.slot.add_transmission(self.transmitter, Transmission(Signal(np.random.standard_normal((3, 10)), 1.0)))
+
+    def test_get_transmissions(self) -> None:
+        """Getting transmissions should return the proper transmissions"""
+
+        expected_transmissions = Transmission(Signal(np.random.standard_normal((self.device.num_transmit_antennas, 10)), 1.0))
+        self.slot.add_transmission(self.transmitter, expected_transmissions)
+
+        self.assertSequenceEqual([expected_transmissions], self.slot.get_transmissions(clear_cache=True))
 
     def test_get_transmissions(self) -> None:
         """Getting transmissions should return the proper transmissions"""
@@ -704,7 +1001,6 @@ class TestReceiverSlot(TestCase):
     """Test transmitting operator device slot"""
 
     def setUp(self) -> None:
-
         self.device = DeviceMock()
         self.slot = ReceiverSlot(device=self.device)
         self.receiver = ReceiverMock()
@@ -715,13 +1011,12 @@ class TestUnsupportedSlot(TestCase):
     """Test unsupported operator device slot"""
 
     def setUp(self) -> None:
-        
         self.device = DeviceMock()
         self.slot = UnsupportedSlot(self.device)
-        
+
     def test_add(self) -> None:
         """Adding to an sunsupported slot should raise a RuntimeError"""
-        
+
         with self.assertRaises(RuntimeError):
             self.slot.add(Mock())
 
@@ -730,22 +1025,15 @@ class TestDevice(TestCase):
     """Test device base class"""
 
     def setUp(self) -> None:
-
         self.power = 1.5
         self.position = np.zeros(3)
         self.orientation = np.zeros(3)
-        self.antennas = Mock()
-        self.antennas.num_transmit_antennas = 1
-        self.antennas.num_receive_antennas = 1
 
-        self.device = DeviceMock(power=self.power,
-                                 pose=Transformation.From_RPY(rpy=self.orientation, pos=self.position),
-                                 antennas=self.antennas)
+        self.device = DeviceMock(power=self.power, pose=Transformation.From_RPY(rpy=self.orientation, pos=self.position))
 
     def test_init(self) -> None:
         """Initialization parameters should be properly stored as class attributes"""
 
-        self.assertIs(self.antennas, self.device.antennas)
         self.assertEqual(self.power, self.device.power)
         assert_array_equal(self.position, self.device.position)
         assert_array_equal(self.orientation, self.device.orientation)
@@ -762,10 +1050,10 @@ class TestDevice(TestCase):
         """Power property setter should raise ValueError on negative arguments"""
 
         with self.assertRaises(ValueError):
-            self.device.power = -1.
+            self.device.power = -1.0
 
         try:
-            self.device.power = 0.
+            self.device.power = 0.0
 
         except ValueError:
             self.fail()
@@ -786,6 +1074,19 @@ class TestDevice(TestCase):
     def test_max_frame_duration(self) -> None:
         """Maximum frame duration property should compute the correct duration"""
 
+    def test_snr(self) -> None:
+        """SNR property should return the proper SNR"""
+
+        self.assertEqual(float("inf"), self.device.snr)
+
+    def test_num_antennas(self) -> None:
+        """Number of antennas property should return the proper antenna count"""
+
+        self.assertEqual(2, self.device.num_antennas)
+
+    def test_max_frame_duration(self) -> None:
+        """Maximum frame duration property should compute the correct duration"""
+
         transmitter = Mock()
         transmitter.frame_duration = 10
         self.device.transmitters.add(transmitter)
@@ -798,7 +1099,7 @@ class TestDevice(TestCase):
 
     def test_wavelength(self) -> None:
         """Wavelength property should return the proper wavelength"""
-        
+
         self.assertEqual(speed_of_light / self.device.carrier_frequency, self.device.wavelength)
 
     def test_transmit_operators(self) -> None:
@@ -808,60 +1109,58 @@ class TestDevice(TestCase):
         transmitter = Mock()
         transmitter.transmit.return_value = expected_transmission
         self.device.transmitters.add(transmitter)
-        
+
         transmissions = self.device.transmit_operators()
         self.assertSequenceEqual([expected_transmission], transmissions)
 
     def test_generate_output_validation(self) -> None:
         """Generate output should raise a RuntimeError if no transmission is cached"""
-        
+
         transmitter = Mock()
         transmitter.transmission = None
         self.device.transmitters.add(transmitter)
-        
+
         with self.assertRaises(RuntimeError):
             self.device.generate_output()
 
     def test_generate_output(self) -> None:
         """Generate output should return the proper output"""
-        
-        expected_transmission = Transmission(Signal(np.random.standard_normal((1, 10)), self.device.sampling_rate, self.device.carrier_frequency))
-        transmitter = Mock()
-        transmitter.transmission = expected_transmission
+
+        transmitter = TransmitterMock()
         self.device.transmitters.add(transmitter)
-        
+        transmitter.transmit()
+
         output = self.device.generate_output()
-        assert_array_equal(expected_transmission.signal.samples, output.mixed_signal.samples)
+        assert_array_equal(transmitter.mock_transmission.signal.samples, output.mixed_signal.samples)
 
     def test_transmit(self) -> None:
         """Transmit should return the proper transmission"""
-        
-        expected_transmission = Transmission(Signal(np.random.standard_normal((1, 10)), self.device.sampling_rate, self.device.carrier_frequency))
-        transmitter = Mock()
-        transmitter.transmit.return_value = expected_transmission
+
+        transmitter = TransmitterMock()
         self.device.transmitters.add(transmitter)
-    
+
         transmission = self.device.transmit()
-        assert_array_equal(expected_transmission.signal.samples, transmission.mixed_signal.samples)
+        assert_array_equal(transmitter.mock_transmission.signal.samples, transmission.mixed_signal.samples)
 
     def test_cache_transmission(self) -> None:
         """Cache device transmission should properly cache operator transmissions"""
-        
+
         expected_operator_transmission = Transmission(Signal(np.random.standard_normal((1, 10)), self.device.sampling_rate, self.device.carrier_frequency))
         expected_device_transmission = DeviceTransmission([expected_operator_transmission], expected_operator_transmission.signal)
 
         transmitter = Mock()
         self.device.transmitters.add(transmitter)
-    
+
         self.device.cache_transmission(expected_device_transmission)
         transmitter.cache_transmission.assert_called()
 
     def test_process_input(self) -> None:
         """Process input should return the proper processed input"""
-        
+
         impinging_signal = Signal(np.random.standard_normal((1, 10)), self.device.sampling_rate, self.device.carrier_frequency)
 
         receiver = Mock()
+        receiver.selected_receive_ports = [0]
         self.device.receivers.add(receiver)
 
         processed_input = self.device.process_input(impinging_signal)
@@ -874,36 +1173,37 @@ class TestDevice(TestCase):
 
     def test_receive_operators_validation(self) -> None:
         """Receive operators should raise a ValueError if number of signals doesn't match number of receivers"""
-        
+
         with self.assertRaises(ValueError):
             _ = self.device.receive_operators([Mock()])
 
     def test_receive_operators(self) -> None:
         """Receive operators property should return the proper operators"""
-        
+
         signal = Mock()
-        csi = Mock()
+        signal.num_streams = 2
         self.receiver = ReceiverMock()
         self.device.receivers.add(self.receiver)
-        self.receiver.cache_reception(signal, csi)
-        
+        self.receiver.cache_reception(signal)
+
         operator_receptions = self.device.receive_operators()
         self.assertSequenceEqual([self.receiver.reception], operator_receptions)
-        
-        operator_receptions = self.device.receive_operators([(signal, csi),])
+
+        operator_receptions = self.device.receive_operators([signal])
         self.assertSequenceEqual([self.receiver.reception], operator_receptions)
 
-        impinging_signals = [Signal(np.random.standard_normal((1, 10)), self.device.sampling_rate, self.device.carrier_frequency)]
+        impinging_signals = [Signal(np.random.standard_normal((2, 10)), self.device.sampling_rate, self.device.carrier_frequency)]
         operator_receptions = self.device.receive_operators(self.device.process_input(impinging_signals))
         self.assertSequenceEqual([self.receiver.reception], operator_receptions)
-        
+
     def test_receive(self) -> None:
         """Receive should return the proper reception"""
-        
+
         impinging_signal = Signal(np.random.standard_normal((1, 10)), self.device.sampling_rate, self.device.carrier_frequency)
 
         receiver = Mock()
+        receiver.selected_receive_ports = [0]
         self.device.receivers.add(receiver)
-    
+
         reception = self.device.receive(impinging_signal)
         assert_array_equal(impinging_signal.samples, reception.impinging_signals[0].samples)

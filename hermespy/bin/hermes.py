@@ -76,7 +76,7 @@ __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["André Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -97,12 +97,22 @@ def hermes_simulation(args: List[str] | None = None) -> None:
     # Recover command line arguments from system if none are provided
     args = sys.argv[1:] if args is None else args
 
-    parser = argparse.ArgumentParser(description="HermesPy - The Heterogeneous Mobile Radio Simulator", prog="hermes")
+    parser = argparse.ArgumentParser(
+        description="HermesPy - The Heterogeneous Mobile Radio Simulator", prog="hermes"
+    )
     parser.add_argument("-o", help="output directory to which results will be dumped", type=str)
     parser.add_argument("-s", help="style of result plots", type=str)
-    parser.add_argument("-t", "--test", action="store_true", help="run in test-mode, does not dump results")
-    parser.add_argument("-l", "--log", action="store_true", help="log the console information to a txt file")
-    parser.add_argument("config", help="parameters source file from which to read the simulation configuration", type=str)
+    parser.add_argument(
+        "-t", "--test", action="store_true", help="run in test-mode, does not dump results"
+    )
+    parser.add_argument(
+        "-l", "--log", action="store_true", help="log the console information to a txt file"
+    )
+    parser.add_argument(
+        "config",
+        help="parameters source file from which to read the simulation configuration",
+        type=str,
+    )
     arguments = parser.parse_args(args)
 
     # Create console
@@ -117,7 +127,9 @@ def hermes_simulation(args: List[str] | None = None) -> None:
     console.print(f"Contact: {__email__}")
 
     console.print("\nFor detailed instructions, refer to the documentation https://hermespy.org/")
-    console.print("Please report any bugs to https://github.com/Barkhausen-Institut/hermespy/issues\n")
+    console.print(
+        "Please report any bugs to https://github.com/Barkhausen-Institut/hermespy/issues\n"
+    )
 
     console.print(f"Configuration will be read from '{arguments.config}'")
 
@@ -131,7 +143,9 @@ def hermes_simulation(args: List[str] | None = None) -> None:
             serializables: Sequence[Serializable] = factory.from_path(arguments.config)
 
             # Filter out non-executables from the serialization list
-            executables: Sequence[Executable] = [s for s in serializables if isinstance(s, Executable)]
+            executables: Sequence[Executable] = [
+                s for s in serializables if isinstance(s, Executable)
+            ]
 
             # Abort execution if no executable was found
             if len(executables) < 1:
@@ -140,10 +154,15 @@ def hermes_simulation(args: List[str] | None = None) -> None:
 
             # For now, only single executables are supported
             executable = executables[0]
-            executable.results_dir = Executable.default_results_dir() if arguments.o is None else arguments.o
+            executable.results_dir = (
+                Executable.default_results_dir() if arguments.o is None else arguments.o
+            )
 
         except ConstructorError as error:
-            console.log(f"YAML import failed during parsing of line {error.problem_mark.line} in file '{error.problem_mark.name}':\n\t{error.problem}", style="red")
+            console.log(
+                f"YAML import failed during parsing of line {error.problem_mark.line} in file '{error.problem_mark.name}':\n\t{error.problem}",
+                style="red",
+            )
             sys.exit(-1)
 
         # Configure console

@@ -6,45 +6,75 @@ Antenna Configuration
 """
 
 from __future__ import annotations
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from copy import deepcopy
 from math import cos, sin, exp, sqrt
-from typing import List, Literal, Optional, overload, Tuple, Type
+from typing import Generic, List, Literal, overload, Tuple, Type, TypeVar
 
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 import numpy as np
+from mpl_toolkits.mplot3d import Axes3D  # type: ignore
+from ruamel.yaml import Node, SafeRepresenter  # type: ignore
 from scipy.constants import pi, speed_of_light
 
 from .executable import Executable
-from .factory import Serializable
-from .signal_model import Signal
+from .factory import Serializable, SerializableEnum
 from .transformation import Direction, Transformable, Transformation
+from .visualize import VAT
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class Antenna(Transformable, Serializable):
+class AntennaMode(SerializableEnum):
+    """Mode of operation of the antenna."""
+
+    TX = 0
+    """Transmit-only antenna"""
+
+    RX = 1
+    """Receive-only antenna"""
+
+    DUPLEX = 2
+    """Transmit-receive antenna"""
+
+
+AAT = TypeVar("AAT", bound="AntennaArray")
+"""Type of antenna array."""
+
+APT = TypeVar("APT", bound="AntennaPort")
+"""Type of antenna port."""
+
+
+class Antenna(ABC, Generic[APT], Transformable, Serializable):
     """Model of a single antenna.
 
     A set of antenna models defines an antenna array model.
     """
 
     yaml_tag = "Antenna"
-    __array: Optional[AntennaArray]  # Array this antenna belongs to
+    property_blacklist = {"port"}.union(Transformable.property_blacklist)
+    __mode: AntennaMode  # The mode this antenna is operating in, i.e. DUPLEX, TX or RX
+    __port: APT | None  # Antenna port this antenna belongs to
 
-    def __init__(self, pose: Transformation | None = None) -> None:
+    def __init__(
+        self, mode: AntennaMode = AntennaMode.DUPLEX, pose: Transformation | None = None
+    ) -> None:
         """
         Args:
+
+            mode (AntennaMode, optional):
+                Antenna's mode of operation.
+                By default, a full duplex antenna is assumed.
 
             pose (Transformation, optional):
                 The antenna's position and orientation with respect to its array.
@@ -54,69 +84,50 @@ class Antenna(Transformable, Serializable):
         Serializable.__init__(self)
         Transformable.__init__(self, pose=pose)
 
-        self.__array = None
+        # Initialize attributes
+        self.__mode = mode
+        self.__port = None
 
     @property
-    def array(self) -> Optional[AntennaArray]:
-        """Array this antenna belongs to.
+    def mode(self) -> AntennaMode:
+        """Antenna's mode of operation."""
 
-        Returns:
-            Optional[AntennaArray]:
-                The array this antenna belong to.
-                `None` if this antenna is considered floating.
-        """
+        return self.__mode
 
-        return self.__array
-
-    @array.setter
-    def array(self, value: Optional[AntennaArray]) -> None:
-        # Do nothing if the state does not change
-        if self.__array == value:
+    @mode.setter
+    def mode(self, value: AntennaMode) -> None:
+        # Do nothing if the mode does not change
+        if self.__mode == value:
             return
 
-        if self.__array is not None:
-            self.__array.remove_antenna(self)
+        # Update the antenna's mode
+        self.__mode = value
 
-        self.__array = value
-        self.set_base(self.__array)
+        # Notify the port that the antenna's mode has changed
+        if self.port is not None:
+            self.port.antennas_updated()
 
-    def transmit(self, signal: Signal) -> Signal:
-        """Transmit a signal over this antenna.
+    @property
+    def port(self) -> APT | None:
+        """Antenna port this antenna is connected to."""
 
-        The transmission may be distorted by the antennas impulse response / frequency characteristics.
+        return self.__port
 
-        Args:
+    @port.setter
+    def port(self, value: APT | None) -> None:
+        # Do nothing if the port does not change
+        if self.__port == value:
+            return
 
-            signal (Signal):received
-                The signal model to be transmitted.
+        # Update this antenna's port reference and make it its reference coordinate frame
+        self.__port = value
 
-        Returns:
+        if value is None:
+            self.set_base(None)
 
-            Signal:
-                The actually transmitted (distorted) signal model.
-        """
-
-        # The default implementation is ideal, i.e. the signal is not distorted
-        return signal
-
-    def receive(self, signal: Signal) -> Signal:
-        """Receive a signal over this antenna.
-
-        The reception may be distorted by the antennas impulse response / frequency characteristics.
-
-        Args:
-
-            signal (Signal):
-                The signal model to be received.
-
-        Returns:
-
-            Signal:
-                The actually received (distorted) signal model.
-        """
-
-        # The default implementation is ideal, i.e. the signal is not distored
-        return signal
+        else:
+            self.port.add_antenna(self)
+            self.set_base(self.__port)
 
     @abstractmethod
     def local_characteristics(self, azimuth: float, elevation) -> np.ndarray:
@@ -168,7 +179,9 @@ class Antenna(Transformable, Serializable):
         """
 
         # Compute the local angle of interest for each antenna element
-        local_direction = self.backwards_transformation.transform_direction(global_direction, normalize=True)
+        local_direction = self.backwards_transformation.transform_direction(
+            global_direction, normalize=True
+        )
 
         # Query polarization vector for a-th antenna given local azimuth and zenith angles of interest
         local_antenna_character = self.local_characteristics(*local_direction.to_spherical())
@@ -179,18 +192,45 @@ class Antenna(Transformable, Serializable):
         azimuth_local, zenith_local = local_direction.to_spherical()
 
         # Phi unit vector implemention of equation (7.1-14) of ETSI TR 138901 version 17.0
-        azimuth_global_unit = np.array([-sin(azimuth_global), cos(azimuth_global), 0], dtype=np.float_)
+        azimuth_global_unit = np.array(
+            [-sin(azimuth_global), cos(azimuth_global), 0], dtype=np.float_
+        )
         azimuth_local_unit = np.array([-sin(azimuth_local), cos(azimuth_local), 0], dtype=np.float_)
 
         # Theta unit vector implemention of equation (7.1-13) of ETSI TR 138901 version 17.0
-        zenith_global_unit = np.array([cos(zenith_global) * cos(azimuth_global), cos(zenith_global) * sin(azimuth_global), -sin(zenith_global)], dtype=np.float_)
-        zenith_local_unit = np.array([cos(zenith_local) * cos(azimuth_local), cos(zenith_local) * sin(azimuth_local), -sin(zenith_local)], dtype=np.float_)
+        zenith_global_unit = np.array(
+            [
+                cos(zenith_global) * cos(azimuth_global),
+                cos(zenith_global) * sin(azimuth_global),
+                -sin(zenith_global),
+            ],
+            dtype=np.float_,
+        )
+        zenith_local_unit = np.array(
+            [
+                cos(zenith_local) * cos(azimuth_local),
+                cos(zenith_local) * sin(azimuth_local),
+                -sin(zenith_local),
+            ],
+            dtype=np.float_,
+        )
 
         # Implemention of equation (7.1-12) of ETSI TR 138901 version 17.0
         rotation = self.forwards_transformation[:3, :3]
         local_zenith_transformed = rotation @ zenith_local_unit
         local_azimuth_transformed = rotation @ azimuth_local_unit
-        polarization_transformation = np.array([[np.inner(zenith_global_unit, local_zenith_transformed), np.inner(zenith_global_unit, local_azimuth_transformed)], [np.inner(azimuth_global_unit, local_zenith_transformed), np.inner(azimuth_global_unit, local_azimuth_transformed)]])
+        polarization_transformation = np.array(
+            [
+                [
+                    np.inner(zenith_global_unit, local_zenith_transformed),
+                    np.inner(zenith_global_unit, local_azimuth_transformed),
+                ],
+                [
+                    np.inner(azimuth_global_unit, local_zenith_transformed),
+                    np.inner(azimuth_global_unit, local_azimuth_transformed),
+                ],
+            ]
+        )
 
         # Implemention of equation (7.1-11) of ETSI TR 138901 version 17.0
         global_antenna_character = polarization_transformation @ local_antenna_character
@@ -222,7 +262,9 @@ class Antenna(Transformable, Serializable):
             figure.suptitle("Antenna Polarization")
 
             azimuth_angles = 2 * pi * np.arange(angle_resolution) / angle_resolution - pi
-            elevation_angles = pi * np.arange(int(0.5 * angle_resolution)) / int(0.5 * angle_resolution) - 0.5 * pi
+            elevation_angles = (
+                pi * np.arange(int(0.5 * angle_resolution)) / int(0.5 * angle_resolution) - 0.5 * pi
+            )
 
             azimuth_samples, elevation_samples = np.meshgrid(azimuth_angles, elevation_angles)
             e_surface = np.empty((len(azimuth_angles) * len(elevation_angles), 3), dtype=float)
@@ -230,30 +272,60 @@ class Antenna(Transformable, Serializable):
             h_surface = np.empty((len(azimuth_angles) * len(elevation_angles), 3), dtype=float)
             h_magnitudes = np.empty(len(azimuth_angles) * len(elevation_angles), dtype=float)
 
-            for i, (azimuth, elevation) in enumerate(zip(azimuth_samples.flat, elevation_samples.flat)):
+            for i, (azimuth, elevation) in enumerate(
+                zip(azimuth_samples.flat, elevation_samples.flat)
+            ):
                 e_magnitude, h_magnitude = self.local_characteristics(azimuth, elevation)
 
                 e_magnitudes[i] = e_magnitude
                 h_magnitudes[i] = h_magnitude
 
-                e_surface[i, :] = (e_magnitude * cos(azimuth) * cos(elevation), e_magnitude * sin(azimuth) * cos(elevation), e_magnitude * sin(elevation))
-                h_surface[i, :] = (h_magnitude * cos(azimuth) * cos(elevation), h_magnitude * sin(azimuth) * cos(elevation), h_magnitude * sin(elevation))
+                e_surface[i, :] = (
+                    e_magnitude * cos(azimuth) * cos(elevation),
+                    e_magnitude * sin(azimuth) * cos(elevation),
+                    e_magnitude * sin(elevation),
+                )
+                h_surface[i, :] = (
+                    h_magnitude * cos(azimuth) * cos(elevation),
+                    h_magnitude * sin(azimuth) * cos(elevation),
+                    h_magnitude * sin(elevation),
+                )
 
             triangles = tri.Triangulation(azimuth_samples.flatten(), elevation_samples.flatten())
 
-            e_cmap = plt.cm.ScalarMappable(norm=colors.Normalize(e_magnitudes.min(), e_magnitudes.max()), cmap="jet")
+            e_cmap = plt.cm.ScalarMappable(
+                norm=colors.Normalize(e_magnitudes.min(), e_magnitudes.max()), cmap="jet"
+            )
             e_cmap.set_array(e_magnitudes)
-            h_cmap = plt.cm.ScalarMappable(norm=colors.Normalize(h_magnitudes.min(), h_magnitudes.max()), cmap="jet")
+            h_cmap = plt.cm.ScalarMappable(
+                norm=colors.Normalize(h_magnitudes.min(), h_magnitudes.max()), cmap="jet"
+            )
             h_cmap.set_array(h_magnitudes)
 
             axes[0].set_title("E-Field")
-            axes[0].plot_trisurf(e_surface[:, 0], e_surface[:, 1], e_surface[:, 2], triangles=triangles.triangles, cmap=e_cmap.cmap, norm=e_cmap.norm, linewidth=0.0)
+            axes[0].plot_trisurf(
+                e_surface[:, 0],
+                e_surface[:, 1],
+                e_surface[:, 2],
+                triangles=triangles.triangles,
+                cmap=e_cmap.cmap,
+                norm=e_cmap.norm,
+                linewidth=0.0,
+            )
             axes[0].set_xlabel("X")
             axes[0].set_ylabel("Y")
             axes[0].set_zlabel("Z")
 
             axes[1].set_title("H-Field")
-            axes[1].plot_trisurf(h_surface[:, 0], h_surface[:, 1], h_surface[:, 2], triangles=triangles.triangles, cmap=h_cmap.cmap, norm=h_cmap.norm, linewidth=0.0)
+            axes[1].plot_trisurf(
+                h_surface[:, 0],
+                h_surface[:, 1],
+                h_surface[:, 2],
+                triangles=triangles.triangles,
+                cmap=h_cmap.cmap,
+                norm=h_cmap.norm,
+                linewidth=0.0,
+            )
             axes[1].set_xlabel("X")
             axes[1].set_ylabel("Y")
             axes[1].set_zlabel("Z")
@@ -284,25 +356,43 @@ class Antenna(Transformable, Serializable):
             figure.suptitle("Antenna Gain")
 
             azimuth_angles = 2 * pi * np.arange(angle_resolution) / angle_resolution - pi
-            elevation_angles = pi * np.arange(int(0.5 * angle_resolution)) / int(0.5 * angle_resolution) - 0.5 * pi
+            elevation_angles = (
+                pi * np.arange(int(0.5 * angle_resolution)) / int(0.5 * angle_resolution) - 0.5 * pi
+            )
 
             azimuth_samples, elevation_samples = np.meshgrid(azimuth_angles, elevation_angles)
             surface = np.empty((len(azimuth_angles) * len(elevation_angles), 3), dtype=float)
             magnitudes = np.empty(len(azimuth_angles) * len(elevation_angles), dtype=float)
 
-            for i, (azimuth, elevation) in enumerate(zip(azimuth_samples.flat, elevation_samples.flat)):
+            for i, (azimuth, elevation) in enumerate(
+                zip(azimuth_samples.flat, elevation_samples.flat)
+            ):
                 e_magnitude, h_magnitude = self.local_characteristics(azimuth, elevation)
                 magnitude = sqrt(e_magnitude**2 + h_magnitude**2)
                 magnitudes[i] = magnitude
 
-                surface[i, :] = (magnitude * cos(azimuth) * cos(elevation), magnitude * sin(azimuth) * cos(elevation), magnitude * sin(elevation))
+                surface[i, :] = (
+                    magnitude * cos(azimuth) * cos(elevation),
+                    magnitude * sin(azimuth) * cos(elevation),
+                    magnitude * sin(elevation),
+                )
 
             triangles = tri.Triangulation(azimuth_samples.flatten(), elevation_samples.flatten())
 
-            cmap = plt.cm.ScalarMappable(norm=colors.Normalize(magnitudes.min(), magnitudes.max()), cmap="jet")
+            cmap = plt.cm.ScalarMappable(
+                norm=colors.Normalize(magnitudes.min(), magnitudes.max()), cmap="jet"
+            )
             cmap.set_array(magnitudes)
 
-            axes.plot_trisurf(surface[:, 0], surface[:, 1], surface[:, 2], triangles=triangles.triangles, cmap=cmap.cmap, norm=cmap.norm, linewidth=0.0)
+            axes.plot_trisurf(
+                surface[:, 0],
+                surface[:, 1],
+                surface[:, 2],
+                triangles=triangles.triangles,
+                cmap=cmap.cmap,
+                norm=cmap.norm,
+                linewidth=0.0,
+            )
             axes.set_xlabel("X")
             axes.set_ylabel("Y")
             axes.set_zlabel("Z")
@@ -310,7 +400,11 @@ class Antenna(Transformable, Serializable):
             return figure
 
 
-class IdealAntenna(Antenna):
+AT = TypeVar("AT", bound=Antenna)
+"""Type of antenna."""
+
+
+class IdealAntenna(Generic[APT], Antenna[APT], Serializable):
     """Theoretic model of an ideal antenna.
 
     .. figure:: /images/api_antenna_idealantenna_gain.png
@@ -336,11 +430,28 @@ class IdealAntenna(Antenna):
     yaml_tag = "IdealAntenna"
     """YAML serialization tag"""
 
+    def __init__(
+        self, mode: AntennaMode = AntennaMode.DUPLEX, pose: Transformation | None = None
+    ) -> None:
+        """
+        Args:
+
+            mode (AntennaMode, optional):
+                Antenna's mode of operation.
+                By default, a full duplex antenna is assumed.
+
+            pose (Transformation, optional):
+                The antenna's position and orientation with respect to its array.
+        """
+
+        # Initialize base class
+        Antenna.__init__(self, mode, pose)
+
     def local_characteristics(self, azimuth: float, elevation: float) -> np.ndarray:
         return np.array([2**-0.5, 2**-0.5], dtype=float)
 
 
-class LinearAntenna(Antenna):
+class LinearAntenna(Generic[APT], Antenna[APT], Serializable):
     """Model of a linearly polarized ideal antenna.
 
     The assumed characteristic is
@@ -360,10 +471,23 @@ class LinearAntenna(Antenna):
 
     __slant: float
 
-    def __init__(self, slant: float = 0.0, pose: Transformation | None = None):
+    def __init__(
+        self,
+        mode: AntennaMode = AntennaMode.DUPLEX,
+        slant: float = 0.0,
+        pose: Transformation | None = None,
+    ):
         """Initialize a new linear antenna.
 
         Args:
+
+            mode (AntennaMode, optional):
+                Antenna's mode of operation.
+                By default, a full duplex antenna is assumed.
+
+            mode (AntennaMode, optional):
+                Antenna's mode of operation.
+                By default, a full duplex antenna is assumed.
 
             slant (float):
                 Slant of the antenna in radians.
@@ -373,7 +497,8 @@ class LinearAntenna(Antenna):
         """
 
         # Initialize base class
-        Antenna.__init__(self, pose)
+        Antenna.__init__(self, mode, pose)
+        Antenna.__init__(self, mode, pose)
 
         # Initialize class attributes
         self.__slant = slant
@@ -392,7 +517,7 @@ class LinearAntenna(Antenna):
         return np.array([cos(self.slant), sin(self.slant)], dtype=np.float_)
 
 
-class PatchAntenna(Antenna):
+class PatchAntenna(Generic[APT], Antenna[APT], Serializable):
     """Realistic model of a vertically polarized patch antenna.
 
     .. figure:: /images/api_antenna_patchantenna_gain.png
@@ -408,6 +533,23 @@ class PatchAntenna(Antenna):
     yaml_tag = "PatchAntenna"
     """YAML serialization tag"""
 
+    def __init__(
+        self, mode: AntennaMode = AntennaMode.DUPLEX, pose: Transformation | None = None
+    ) -> None:
+        """
+        Args:
+
+            mode (AntennaMode, optional):
+                Antenna's mode of operation.
+                By default, a full duplex antenna is assumed.
+
+            pose (Transformation, optional):
+                The antenna's position and orientation with respect to its array.
+        """
+
+        # Initialize base class
+        Antenna.__init__(self, mode, pose)
+
     def local_characteristics(self, azimuth: float, elevation: float) -> np.ndarray:
         vertical_azimuth = 0.1 + 0.9 * exp(-1.315 * azimuth**2)
         vertical_elevation = cos(elevation) ** 2
@@ -415,7 +557,7 @@ class PatchAntenna(Antenna):
         return np.array([max(0.1, vertical_azimuth * vertical_elevation), 0.0], dtype=float)
 
 
-class Dipole(Antenna):
+class Dipole(Generic[APT], Antenna[APT]):
     """Model of vertically polarized half-wavelength dipole antenna.
 
     .. figure:: /images/api_antenna_dipole_gain.png
@@ -437,21 +579,294 @@ class Dipole(Antenna):
     yaml_tag = "DipoleAntenna"
     """YAML serialization tag"""
 
+    def __init__(
+        self, mode: AntennaMode = AntennaMode.DUPLEX, pose: Transformation | None = None
+    ) -> None:
+        """
+        Args:
+
+            mode (AntennaMode, optional):
+                Antenna's mode of operation.
+                By default, a full duplex antenna is assumed.
+
+            pose (Transformation, optional):
+                The antenna's position and orientation with respect to its array.
+        """
+
+        # Initialize base class
+        Antenna.__init__(self, mode, pose)
+
     def local_characteristics(self, azimuth: float, elevation: float) -> np.ndarray:
-        vertical_polarization = 0.0 if elevation == 0.0 else cos(0.5 * pi * cos(elevation)) / sin(elevation)
+        vertical_polarization = (
+            0.0 if elevation == 0.0 else cos(0.5 * pi * cos(elevation)) / sin(elevation)
+        )
         return np.array([vertical_polarization, 0.0], dtype=float)
 
 
-class AntennaArrayBase(Transformable):
+class AntennaPort(Generic[AT, AAT], Transformable, Serializable):
+    """A single antenna port linking a set of antennas to an antenna array."""
+
+    yaml_tag = "AntennaPort"
+    __antennas: List[AT]  # Antennas connected to this port
+    __transmit_antennas: List[AT]  # Transmitting antennas connected to this port
+    __receive_antennas: List[AT]  # Receiving antennas connected to this port
+    __array: AAT | None  # Array this antenna port belongs to
+
+    def __init__(
+        self,
+        antennas: Sequence[AT] | None = None,
+        pose: Transformation | None = None,
+        array: AAT | None = None,
+    ) -> None:
+        """
+        Args:
+
+            antennas (Sequence[AT], optional):
+                Sequence of antennas to be connected to this port.
+                If not specified, no antennas are connected by default.
+
+            pose (Transformation, optional):
+                The antenna port's position and orientation with respect to its array.
+
+            array (AAT, optional):
+                Antenna array this port belongs to.
+        """
+
+        # Initialize base class
+        Transformable.__init__(self, pose)
+
+        # Initialize class attributes
+        self.__antennas = []
+        self.__transmit_antennas = []
+        self.__receive_antennas = []
+        self.__array = None
+        self.array = array
+
+        _antennas = [] if antennas is None else antennas
+        for antenna in _antennas:
+            self.add_antenna(antenna)
+
+    @property
+    def antennas(self) -> Sequence[AT]:
+        """Antennas connected to this port."""
+
+        return self.__antennas.copy()
+
+    @property
+    def num_antennas(self) -> int:
+        """Number of antenna elements connected to this port."""
+
+        return len(self.antennas)
+
+    def antennas_updated(self) -> None:
+        """Callback that is called whenever the list of connected antennas is updated.
+
+        Should also be called after a connected antenna's mode has changed.
+        """
+
+        self.__transmit_antennas = []
+        self.__receive_antennas = []
+
+        for antenna in self.antennas:
+            if antenna.mode == AntennaMode.DUPLEX:
+                self.__transmit_antennas.append(antenna)
+                self.__receive_antennas.append(antenna)
+            elif antenna.mode == AntennaMode.TX:
+                self.__transmit_antennas.append(antenna)
+            elif antenna.mode == AntennaMode.RX:
+                self.__receive_antennas.append(antenna)
+            else:
+                # This exception should never be raised
+                raise RuntimeError("Unknow antenna mode encountered")
+
+    def add_antenna(self, antenna: AT) -> None:
+        """Add a new antenna to this port.
+
+        Args:
+
+            antenna (AT):
+                The antenna to be added.
+
+        Raises:
+
+            ValueError: If the antenna is already connected to a different port.
+        """
+
+        if antenna.port is not None and antenna.port != self:
+            raise ValueError("Antenna is already connected to a different port")
+
+        if antenna not in self.antennas:
+            self.__antennas.append(antenna)
+
+            # Update the internal antenna lists
+            self.antennas_updated()
+
+        # Update the antenna's port reference
+        antenna.port = self
+
+    def remove_antenna(self, antenna: AT) -> None:
+        """Remove an antenna from this port.
+
+        Args:
+
+            antenna (AT):
+                The antenna to be removed.
+        """
+
+        if antenna in self.antennas:
+            self.__antennas.remove(antenna)
+
+            # Update the internal antenna lists
+            self.antennas_updated()
+
+        # Update the antenna's port reference
+        if antenna.port is not None:
+            antenna.port = None
+
+    @property
+    def num_transmit_antennas(self) -> int:
+        """Number of transmitting antenna elements connected to this port."""
+
+        return len(self.__transmit_antennas)
+
+    @property
+    def num_receive_antennas(self) -> int:
+        """Number of receiving antenna elements connected to this port."""
+
+        return len(self.__receive_antennas)
+
+    @property
+    def transmitting(self) -> bool:
+        """Is this port connected to a transmitting antenna?"""
+
+        return self.num_transmit_antennas > 0
+
+    @property
+    def receiving(self) -> bool:
+        """Is this port connected to a receiving antenna?"""
+
+        return self.num_receive_antennas > 0
+
+    @property
+    def transmit_antennas(self) -> Sequence[AT]:
+        """Transmitting antennas connected to this port."""
+
+        return self.__transmit_antennas.copy()
+
+    @property
+    def receive_antennas(self) -> Sequence[AT]:
+        """Receiving antennas connected to this port."""
+
+        return self.__receive_antennas.copy()
+
+    @property
+    def array(self) -> AAT | None:
+        """Antenna array this antenna port belongs to."""
+
+        return self.__array
+
+    @array.setter
+    def array(self, value: AAT | None) -> None:
+        # Do nothing if the state does not change
+        if self.__array == value:
+            return
+
+        self.__array = value
+        self.set_base(self.__array)
+
+
+class AntennaArray(ABC, Generic[APT, AT], Transformable):
     """Base class of a model of a set of antennas."""
+
+    def __init__(self, pose: Transformation | None = None) -> None:
+        """
+        Args:
+
+            pose (Transformation, optional):
+                The antenna array's position and orientation with respect to its device.
+                If not specified, the same orientation and position as the device is assumed.
+        """
+
+        # Initialize base class
+        Transformable.__init__(self, pose=pose)
+
+    @property
+    def num_ports(self) -> int:
+        """Number of antenna ports within this array."""
+
+        return len(self.ports)
+
+    @property
+    def num_transmit_ports(self) -> int:
+        """Number of transmitting antenna ports within this array."""
+
+        return len(self.transmit_ports)
+
+    @property
+    def num_receive_ports(self) -> int:
+        """Number of receiving antenna ports within this array."""
+
+        return len(self.receive_ports)
+
+    @abstractmethod
+    def _new_port(self) -> APT:
+        """Create a new antenna port.
+
+        Returns: The newly connected port.
+        """
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
-    def num_antennas(self) -> int:
-        """Number of antenna elements within this array.
+    def ports(self) -> Sequence[APT]:
+        """Sequence of all antenna ports within this array."""
+        ...  # pragma: no cover
 
-        Returns:
-            int: Number of antenna elements.
+    @property
+    def transmit_ports(self) -> Sequence[APT]:
+        """Sequence of all transmitting ports within this array."""
+
+        return [port for port in self.ports if port.transmitting]
+
+    @property
+    def receive_ports(self) -> Sequence[APT]:
+        """Sequence of all receiving ports within this array."""
+
+        return [port for port in self.ports if port.receiving]
+
+    @property
+    def num_antennas(self) -> int:
+        """Number of antenna elements within this array."""
+
+        return len(self.antennas)
+
+    @property
+    def num_transmit_antennas(self) -> int:
+        """Number of transmitting antenna elements within this array."""
+
+        num_antennas = sum(port.num_transmit_antennas for port in self.transmit_ports)
+        return num_antennas
+
+    @property
+    def num_receive_antennas(self) -> int:
+        """Number of receiving antenna elements within this array."""
+
+        num_antennas = sum(port.num_receive_antennas for port in self.receive_ports)
+        return num_antennas
+
+    def count_antennas(self, ports: Sequence[int]) -> int:
+        """Count the number of antenna elements within a subset of ports.
+
+        Args:
+
+            ports (Sequence[int]):
+                Indices of the ports to be considered.
+
+        Returns: Number of antenna elements within the specified ports.
+
+        Raises:
+
+            IndexError: If an invalid port index is encountered.
         """
         ...  # pragma: no cover
 
@@ -471,16 +886,83 @@ class AntennaArrayBase(Transformable):
         Returns: Number of receiving elements.
         """
 
-        return self.num_antennas
+        num_antennas = 0
+        for port_index in ports:
+            num_antennas += self.ports[port_index].num_antennas
+
+        return num_antennas
+
+    def count_transmit_antennas(self, ports: Sequence[int]) -> int:
+        """Count the number of transmitting antenna elements within a subset of ports.
+
+        Args:
+
+            ports (Sequence[int]):
+                Indices of the ports to be considered.
+
+        Returns: Number of transmitting antenna elements within the specified ports.
+
+        Raises:
+
+            IndexError: If an invalid port index is encountered.
+        """
+
+        num_antennas = 0
+        for port_index in ports:
+            num_antennas += self.transmit_ports[port_index].num_transmit_antennas
+
+        return num_antennas
+
+    def count_receive_antennas(self, ports: Sequence[int]) -> int:
+        """Count the number of receiving antenna elements within a subset of ports.
+
+        Args:
+
+            ports (Sequence[int]):
+                Indices of the ports to be considered.
+
+        Returns: Number of receiving antenna elements within the specified ports.
+
+        Raises:
+
+            IndexError: If an invalid port index is encountered.
+        """
+
+        num_antennas = 0
+        for port_index in ports:
+            num_antennas += self.receive_ports[port_index].num_receive_antennas
+
+        return num_antennas
 
     @property
-    @abstractmethod
-    def antennas(self) -> List[Antenna]:
-        """All individual antenna elements within this array.
+    def antennas(self) -> List[AT]:
+        """All individual antenna elements within this array."""
 
-        Returns: List of antennas.
-        """
-        ...  # pragma: no cover
+        antennas: List[AT] = []
+        for port in self.ports:
+            antennas.extend(port.antennas)
+
+        return antennas
+
+    @property
+    def transmit_antennas(self) -> Sequence[AT]:
+        """Transmitting antennas within this array."""
+
+        antennas: List[AT] = []
+        for port in self.transmit_ports:
+            antennas.extend(port.transmit_antennas)
+
+        return antennas
+
+    @property
+    def receive_antennas(self) -> Sequence[AT]:
+        """Receiving antennas within this array."""
+
+        antennas: List[AT] = []
+        for port in self.receive_ports:
+            antennas.extend(port.receive_antennas)
+
+        return antennas
 
     @property
     def topology(self) -> np.ndarray:
@@ -491,19 +973,110 @@ class AntennaArrayBase(Transformable):
 
         Returns:
 
-            np.ndarray:
-                :math:`M \\times 3` topology matrix, where :math:`M` is the number of antenna elements.
+            :math:`M \\times 3` topology matrix,
+            where :math:`M` is the number of antenna elements.
         """
         return np.array([antenna.forwards_transformation.translation for antenna in self.antennas], dtype=float)
 
+        if self.num_antennas == 0:
+            return np.empty((0, 3), dtype=np.float_)
+
+        global_toplogy = np.array(
+            [a.forwards_transformation[:4, 3] for a in self.antennas], dtype=np.float_
+        )
+        local_topology = global_toplogy @ self.backwards_transformation.T
+
+        return local_topology[:, :3].view(np.ndarray)
+
+    @property
+    def transmit_topology(self) -> np.ndarray:
+        """Topology of transmitting antenna elements.
+
+        Access the array topology as a :math:`M_{\\mathrm{Tx}} \\times 3` matrix indicating the cartesian locations
+        of each transmitting antenna element within the local coordinate system.
+
+        Returns:
+
+            :math:`M_{\\mathrm{Tx}} \\times 3`
+            topology matrix, where :math:`M_{\\mathrm{Tx}}` is the number of antenna elements.
+        """
+
+        if self.num_transmit_antennas == 0:
+            return np.empty((0, 3), dtype=np.float_)
+
+        global_toplogy = np.array(
+            [a.forwards_transformation[:4, 3] for a in self.transmit_antennas], dtype=np.float_
+        )
+        local_topology = global_toplogy @ self.backwards_transformation.T
+
+        return local_topology[:, :3].view(np.ndarray)
+
+    @property
+    def receive_topology(self) -> np.ndarray:
+        """Topology of receiving antenna elements.
+
+        Access the array topology as a :math:`M_{\\mathrm{Rx}} \\times 3` matrix indicating the cartesian locations
+        of each receiving antenna element within the local coordinate system.
+
+        Returns:
+
+            :math:`M_{\\mathrm{Rx}} \\times 3` topology matrix,
+            where :math:`M_{\\mathrm{Rx}}` is the number of antenna elements.
+        """
+
+        if self.num_receive_antennas == 0:
+            return np.empty((0, 3), dtype=np.float_)
+
+        global_toplogy = np.array(
+            [a.forwards_transformation[:4, 3] for a in self.receive_antennas], dtype=np.float_
+        )
+        local_topology = global_toplogy @ self.backwards_transformation.T
+
+        return local_topology[:, :3].view(np.ndarray)
+
+    def _topology(self, mode: AntennaMode) -> np.ndarray:
+        """Topology of antenna elements of a certain mode.
+
+        Args:
+
+            mode (AntennaMode):
+                Antenna mode of interest.
+
+        Returns:
+
+            :math:`M \\times 3` topology matrix,
+            where :math:`M` is the number of antenna elements.
+
+        Raises:
+
+            ValueError: If an unknown antenna mode is encountered.
+        """
+
+        if mode == AntennaMode.DUPLEX:
+            return self.topology
+
+        elif mode == AntennaMode.TX:
+            return self.transmit_topology
+
+        elif mode == AntennaMode.RX:
+            return self.receive_topology
+
+        else:
+            raise ValueError("Unknown antenna mode encountered")
+
     @overload
-    def characteristics(self, location: np.ndarray, frame: Literal["global", "local"] = "local") -> np.ndarray:
+    def characteristics(
+        self, location: np.ndarray, mode: AntennaMode, frame: Literal["global", "local"] = "local"
+    ) -> np.ndarray:
         """Sensor array characteristics towards a certain angle.
 
         Args:
 
             location (np.ndarray):
                 Cartesian position of the target of interest.
+
+            mode (AntennaMode):
+                Antenna mode of interest.
 
             frame(Literal['local', 'global']):
                 Coordinate system reference frame.
@@ -518,13 +1091,18 @@ class AntennaArrayBase(Transformable):
         ...  # pragma: no cover
 
     @overload
-    def characteristics(self, direction: Direction, frame: Literal["global", "local"] = "local") -> np.ndarray:
+    def characteristics(
+        self, direction: Direction, mode: AntennaMode, frame: Literal["global", "local"] = "local"
+    ) -> np.ndarray:
         """Sensor array polarizations towards a certain angle.
 
         Args:
 
             direction (Direction):
                 Direction of the angles of interest.
+
+            mode (AntennaMode):
+                Antenna mode of interest.
 
             frame(Literal['local', 'global']):
                 Coordinate system reference frame.
@@ -538,47 +1116,102 @@ class AntennaArrayBase(Transformable):
         """
         ...  # pragma: no cover
 
-    def characteristics(self, arg_0: np.ndarray | Direction, frame: Literal["global", "local"] = "local") -> np.ndarray:  # type: ignore
+    def characteristics(self, arg_0: np.ndarray | Direction, mode: AntennaMode, frame: Literal["global", "local"] = "local") -> np.ndarray:  # type: ignore
         # Direction of interest with respect to the array's local coordinate system
         global_direction: Direction
 
         # Handle spherical parameters of function overload
         if not isinstance(arg_0, Direction):
-            global_direction = Direction.From_Cartesian(arg_0 - self.global_position if frame == "global" else arg_0, True)
+            global_direction = Direction.From_Cartesian(
+                arg_0 - self.global_position if frame == "global" else arg_0, True
+            )
 
         # Handle cartesian vector parameters of function overload
         else:
-            global_direction = arg_0 if frame == "global" else self.forwards_transformation.transform_direction(arg_0)
+            global_direction = (
+                arg_0
+                if frame == "global"
+                else self.forwards_transformation.transform_direction(arg_0)
+            )
 
-        antenna_characteristics = np.empty((self.num_antennas, 2), dtype=float)
-        for a, antenna in enumerate(self.antennas):
+        antennas: Sequence[AT]
+
+        if mode == AntennaMode.DUPLEX:
+            antenna_characteristics = np.empty((self.num_antennas, 2), dtype=float)
+            antennas = self.antennas
+
+        elif mode == AntennaMode.TX:
+            antenna_characteristics = np.empty((self.num_transmit_antennas, 2), dtype=float)
+            antennas = self.transmit_antennas
+
+        elif mode == AntennaMode.RX:
+            antenna_characteristics = np.empty((self.num_receive_antennas, 2), dtype=float)
+            antennas = self.receive_antennas
+
+        else:
+            raise ValueError("Unknown antenna mode encountered")
+
+        # Query the antenna characteristics for each antenna element
+        for a, antenna in enumerate(antennas):
             antenna_characteristics[a] = antenna.global_characteristics(global_direction)
 
         return antenna_characteristics
 
-    def plot_topology(self) -> plt.Figure:
+    def plot_topology(self, mode: AntennaMode = AntennaMode.DUPLEX) -> Tuple[plt.Figure, VAT]:
         """Plot a scatter representation of the array topology.
+
+        Args:
+
+            mode (AntennaMode, optional):
+                Antenna mode of interest.
+                `DUPLEX` by default, meaning that all antenna elements are considered.
 
         Returns:
             plt.Figure:
                 The created figure.
         """
 
-        topology = self.topology
-
         with Executable.style_context():
-            figure = plt.figure()
+            figure, axes = plt.subplots(1, 1, squeeze=False, subplot_kw={"projection": "3d"})
             figure.suptitle("Antenna Array Topology")
 
-            axes = figure.add_subplot(projection="3d")
-            axes.scatter(topology[:, 0], topology[:, 1], topology[:, 2])
-            axes.set_xlabel("X [m]")
-            axes.set_ylabel("Y [m]")
-            axes.set_zlabel("Z [m]")
+            ax: Axes3D = axes.flat[0]
 
-            return figure
+            if mode == AntennaMode.TX or mode == AntennaMode.DUPLEX:
+                topology = self._topology(AntennaMode.TX)
+                ax.scatter(
+                    topology[:, 0],
+                    topology[:, 1],
+                    topology[:, 2],
+                    marker="^",
+                    color="blue",
+                    depthshade=False,
+                )
 
-    def cartesian_phase_response(self, carrier_frequency: float, position: np.ndarray, frame: Literal["local", "global"] = "local") -> np.ndarray:
+            if mode == AntennaMode.RX or mode == AntennaMode.DUPLEX:
+                topology = self._topology(AntennaMode.RX)
+                ax.scatter(
+                    topology[:, 0],
+                    topology[:, 1],
+                    topology[:, 2],
+                    marker="o",
+                    color="blue",
+                    depthshade=False,
+                )
+
+            ax.set_xlabel("X [m]")
+            ax.set_ylabel("Y [m]")
+            ax.set_zlabel("Z [m]")
+
+            return figure, axes
+
+    def cartesian_phase_response(
+        self,
+        carrier_frequency: float,
+        position: np.ndarray,
+        frame: Literal["local", "global"] = "local",
+        mode: AntennaMode = AntennaMode.DUPLEX,
+    ) -> np.ndarray:
         """Phase response of the sensor array towards an impinging point source within its far-field.
 
         Assuming a point source at position :math:`\\mathbf{t} \\in \\mathbb{R}^{3}` within the sensor array's
@@ -605,11 +1238,15 @@ class AntennaArrayBase(Transformable):
             position (np.ndarray):
                 Cartesian location :math:`\\mathbf{t}` of the impinging target.
 
-            frame(Literal['local', 'global']):
+            frame (Literal['local', 'global']):
                 Coordinate system reference frame.
                 `local` by default.
                 `local` assumes `position` to be in the antenna array's native coordiante system.
                 `global` assumes `position` to be in the antenna array's root coordinate system.
+
+            mode (AntennaMode, optional):
+                Antenna mode of interest.
+                `DUPLEX` by default, meaning that all antenna elements are considered.
 
         Returns:
 
@@ -633,7 +1270,7 @@ class AntennaArrayBase(Transformable):
         position = position[:, np.newaxis]
 
         # Compute the distance between antenna elements and the point source
-        distances = np.linalg.norm(self.topology.T - position, axis=0, keepdims=False)
+        distances = np.linalg.norm(self._topology(mode).T - position, axis=0, keepdims=False)
 
         # Transform the distances to complex phases, i.e. the array response
         phase_response = np.exp(2j * pi * carrier_frequency * distances / speed_of_light)
@@ -641,8 +1278,14 @@ class AntennaArrayBase(Transformable):
         # That's it
         return phase_response
 
-    def cartesian_array_response(self, carrier_frequency: float, position: np.ndarray, frame: Literal["local", "global"] = "local") -> np.ndarray:
-        """Sensor array charactersitcis towards an impinging point source within its far-field.
+    def cartesian_array_response(
+        self,
+        carrier_frequency: float,
+        position: np.ndarray,
+        frame: Literal["local", "global"] = "local",
+        mode: AntennaMode = AntennaMode.DUPLEX,
+    ) -> np.ndarray:
+        """Sensor array characteristics towards an impinging point source within its far-field.
 
         Args:
 
@@ -657,6 +1300,10 @@ class AntennaArrayBase(Transformable):
                 `global` by default.
                 `local` assumes `position` to be in the antenna array's native coordiante system.
                 `global` assumes `position` to be in the antenna array's root coordinate system.
+
+            mode (AntennaMode, optional):
+                Antenna mode of interest.
+                `DUPLEX` by default, meaning that all antenna elements are considered.
 
         Returns:
 
@@ -673,15 +1320,21 @@ class AntennaArrayBase(Transformable):
             raise ValueError("Target position must be a cartesian (three-dimensional) vector")
 
         # Query far-field phase response and antenna element polarizations
-        phase_response = self.cartesian_phase_response(carrier_frequency, position, frame)
-        polarization = self.characteristics(position, frame)
+        phase_response = self.cartesian_phase_response(carrier_frequency, position, frame, mode)
+        polarization = self.characteristics(position, mode, frame)
 
         # The full array response is an element-wise multiplication of phase response and polarizations
         # Towards the assumed far-field source's position
         array_response = phase_response[:, None] * polarization
         return array_response
 
-    def horizontal_phase_response(self, carrier_frequency: float, azimuth: float, elevation: float) -> np.ndarray:
+    def horizontal_phase_response(
+        self,
+        carrier_frequency: float,
+        azimuth: float,
+        elevation: float,
+        mode: AntennaMode = AntennaMode.DUPLEX,
+    ) -> np.ndarray:
         """Response of the sensor array towards an impinging point source within its far-field.
 
         Assuming a far-field point source impinges onto the sensor array from horizontal angles of arrival
@@ -722,24 +1375,38 @@ class AntennaArrayBase(Transformable):
             elevation (float):
                 Elevation angle :math:`\\theta` in radians.
 
+            mode (AntennaMode, optional):
+                Antenna mode of interest.
+                `DUPLEX` by default, meaning that all antenna elements are considered.
+
         Returns:
 
-            np.ndarray:
-                The sensor array response vector :math:`\\mathbf{a}`.
-                A one-dimensional, complex-valued numpy array modeling the phase responses of each antenna element.
+            The sensor array response vector :math:`\\mathbf{a}`.
+            A one-dimensional, complex-valued numpy array modeling the phase responses of each antenna element.
 
         """
 
         # Compute the wave vector
-        k = np.array([cos(azimuth) * cos(elevation), sin(azimuth) * cos(elevation), sin(elevation)], dtype=float)
+        k = np.array(
+            [cos(azimuth) * cos(elevation), sin(azimuth) * cos(elevation), sin(elevation)],
+            dtype=float,
+        )
 
         # Transform the distances to complex phases, i.e. the array response
-        response = np.exp(2j * pi * carrier_frequency * np.inner(k, self.topology) / speed_of_light)
+        response = np.exp(
+            2j * pi * carrier_frequency * np.inner(k, self._topology(mode)) / speed_of_light
+        )
 
         # That's it
         return response
 
-    def spherical_phase_response(self, carrier_frequency: float, azimuth: float, zenith: float) -> np.ndarray:
+    def spherical_phase_response(
+        self,
+        carrier_frequency: float,
+        azimuth: float,
+        zenith: float,
+        mode: AntennaMode = AntennaMode.DUPLEX,
+    ) -> np.ndarray:
         """Response of the sensor array towards an impinging point source within its far-field.
 
         Assuming a far-field point source impinges onto the sensor array from spherical angles of arrival
@@ -780,80 +1447,118 @@ class AntennaArrayBase(Transformable):
             zenith (float):
                 Zenith angle :math:`\\theta` in radians.
 
+            mode (AntennaMode, optional):
+                Antenna mode of interest.
+                `DUPLEX` by default, meaning that all antenna elements are considered.
+
         Returns:
 
-            np.ndarray:
-                The sensor array response vector :math:`\\mathbf{a}`.
-                A one-dimensional, complex-valued numpy array modeling the phase responses of each antenna element.
+            The sensor array response vector :math:`\\mathbf{a}`.
+            A one-dimensional, complex-valued numpy array modeling the phase responses of each antenna element.
 
         """
 
         # Compute the wave vector
-        k = np.array([cos(azimuth) * sin(zenith), sin(azimuth) * sin(zenith), cos(zenith)], dtype=float)
+        k = np.array(
+            [cos(azimuth) * sin(zenith), sin(azimuth) * sin(zenith), cos(zenith)], dtype=float
+        )
 
         # Transform the distances to complex phases, i.e. the array response
-        response = np.exp(-2j * pi * carrier_frequency * np.inner(k, self.topology) / speed_of_light)
+        response = np.exp(
+            2j * pi * carrier_frequency * np.inner(k, self._topology(mode)) / speed_of_light
+        )
 
         # That's it
         return response
 
 
-class UniformArray(AntennaArrayBase, Serializable):
+class UniformArray(Generic[APT, AT], AntennaArray[APT, AT], Serializable):
     """Model of a Uniform Antenna Array."""
 
     yaml_tag = "UniformArray"
     property_blacklist = {"topology"}
-    __antenna: Type[Antenna] | Antenna
-    __antennas: List[Antenna]  # List of individual antenna elements
-    __spacing: float  # Spacing betwene the antenna elements
-    __dimensions: Tuple[int, int, int]  # Number of antennas in x-, y-, and z-direction
+    __base_port: APT
+    __ports: List[APT]  # List of individual antenna ports within this array
+    __spacing: float  # Spacing betwene the antenna ports in m
+    __dimensions: Tuple[int, int, int]  # Number of ports in x-, y-, and z-direction
 
-    def __init__(self, antenna: Type[Antenna] | Antenna, spacing: float, dimensions: Sequence[int], pose: Transformation | None = None) -> None:
+    def __init__(
+        self,
+        element: Type[AT] | AT | APT,
+        spacing: float,
+        dimensions: Sequence[int],
+        pose: Transformation | None = None,
+    ) -> None:
         """
         Args:
 
-            antenna (Type[Antenna] | Antenna):
-                The anntenna model this uniform array assumes.
+            element (Type[AT] | AT | APT):
+                The element uniformly repeated across the array.
+                If an antenna is passed instead of a port, a new port is automatically created.
 
             spacing (float):
-                Spacing between the antenna elements in m.
+                Spacing between the elements in m.
 
             dimensions (Sequence[int]):
-                The number of antennas in x-, y-, and z-dimension.
+                The number of elements in x-, y-, and z-dimension.
 
             pose (Tranformation, optional):
                 The anntena array's transformation with respect to its device.
         """
 
         # Initialize base class
-        AntennaArrayBase.__init__(self, pose=pose)
+        AntennaArray.__init__(self, pose=pose)
 
-        self.__antenna = antenna
+        _base_port: APT
+        if isinstance(element, AntennaPort):
+            _base_port = element  # type: ignore
+        else:
+            _base_port = self._new_port()
+            if isinstance(element, Antenna):
+                _base_port.add_antenna(element)
+            else:
+                _base_port.add_antenna(element())
+
+        self.__base_port = _base_port
         self.__spacing = 0.0
         self.__dimensions = (0, 0, 0)
 
         self.spacing = spacing
         self.dimensions = tuple(dimensions)
 
-        self.__update_antennas()
+        self.__update_ports()
 
-    def __update_antennas(self) -> None:
-        """Update antenna elements if the toplogy has changed in any way."""
+    def _new_port(self) -> APT:
+        return AntennaPort()  # type: ignore
 
-        grid = np.meshgrid(np.arange(self.__dimensions[0]), np.arange(self.__dimensions[1]), np.arange(self.__dimensions[2]))
+    @property
+    def ports(self) -> Sequence[APT]:
+        return self.__ports.copy()
+
+    def __update_ports(self) -> None:
+        """Update ports if the toplogy configuration has changed in any way."""
+
+        grid = np.meshgrid(
+            np.arange(self.__dimensions[0]),
+            np.arange(self.__dimensions[1]),
+            np.arange(self.__dimensions[2]),
+        )
         positions = self.__spacing * np.vstack((grid[0].flat, grid[1].flat, grid[2].flat)).T
 
-        if isinstance(self.__antenna, type):
-            self.__antennas = [self.__antenna(pose=Transformation.From_Translation(pos)) for pos in positions]
+        self.__ports = [deepcopy(self.__base_port) for _ in range(self.num_antennas)]
+        self.__antennas: List[AT] = []
 
-        else:
-            self.__antennas = [deepcopy(self.__antenna) for _ in range(self.num_antennas)]
-            for ant, pos in zip(self.__antennas, positions):
-                ant.position = pos
+        # ToDo:
+        # Currently the forward kinematic chain, i.e. self.linked_frames will still hold references
+        # to the old ports. This might cause a memory leak.
 
-        # Make sure the antennas recognize the antenna array as its cordinate system reference frame
-        for ant in self.__antennas:
-            ant.set_base(self)
+        for port, pos in zip(self.__ports, positions):
+            # Update the port transformation
+            port.position = pos
+            port.set_base(self)
+
+            # Update the internal antenna lists
+            self.__antennas.extend(port.antennas)
 
     @property
     def spacing(self) -> float:
@@ -875,7 +1580,7 @@ class UniformArray(AntennaArrayBase, Serializable):
             raise ValueError("Spacing must be greater than zero")
 
         self.__spacing = value
-        self.__update_antennas()
+        self.__update_ports()
 
     @property
     def num_antennas(self) -> int:
@@ -908,38 +1613,47 @@ class UniformArray(AntennaArrayBase, Serializable):
             raise ValueError("Number of antennas must have three or less entries")
 
         if any([num < 1 for num in value]):
-            raise ValueError("Number of antenna elements must be greater than zero in every dimension")
+            raise ValueError(
+                "Number of antenna elements must be greater than zero in every dimension"
+            )
 
         self.__dimensions = value  # type: ignore
-        self.__update_antennas()
+        self.__update_ports()
 
     @property
-    def antennas(self) -> List[Antenna]:
+    def antennas(self) -> List[AT]:
         return self.__antennas
 
     @property
-    def antenna(self) -> Type[Antenna] | Antenna:
-        """The assumed antenna model.
+    def base_port(self) -> APT:
+        """Base port repeated across the array topology."""
 
-        Returns: The antenna model.
-        """
+        return self.__base_port
 
-        return self.__antenna
+    @classmethod
+    def to_yaml(cls: type[UniformArray], representer: SafeRepresenter, node: UniformArray) -> Node:
+        # Ensure the antenna property is an instance and not a type
+        additional_fields = {"element": node.base_port}
+        return node._mapping_serialization_wrapper(representer, {"base_port"}, additional_fields)
 
 
-class AntennaArray(AntennaArrayBase, Serializable):
+class CustomAntennaArray(Generic[APT, AT], AntennaArray[APT, AT], Serializable):
     """Model of a set of arbitrary antennas."""
 
-    yaml_tag = "CustomArray"
+    yaml_tag = "CustomAntennaArray"
 
-    __antennas: List[Antenna]
+    __ports: List[APT]  # List of antenna ports within this array
 
-    def __init__(self, antennas: List[Antenna] = None, pose: Transformation | None = None) -> None:
+    def __init__(
+        self, ports: Sequence[APT | AT] = None, pose: Transformation | None = None
+    ) -> None:
         """
         Args:
 
-            antennas (List[Antenna], optional):
-                Antenna models of each array element.
+            ports (Sequence[APT | AT], optional):
+                Sequence of antenna ports available within this array.
+                If antennas are passed instead of ports, the ports are automatically created.
+                If not specified, an empty array is assumed.
 
             pose (Transformation, optional):
                 The anntena array's transformation with respect to its device.
@@ -950,67 +1664,85 @@ class AntennaArray(AntennaArrayBase, Serializable):
         """
 
         # Initialize base class
-        AntennaArrayBase.__init__(self, pose=pose)
+        AntennaArray.__init__(self, pose=pose)
 
-        self.__antennas = []
+        self.__ports = []
 
-        antennas = [] if antennas is None else antennas
-        for antenna in antennas:
-            self.add_antenna(antenna)
+        _ports = [] if ports is None else ports
+        for port in _ports:
+            if isinstance(port, AntennaPort):
+                self.add_port(port)  # type: ignore
+            else:
+                self.add_antenna(port)
 
-    @property
-    def antennas(self) -> List[Antenna]:
-        """Antennas within this array.
-
-        Returns:
-            List[Antenna]:
-                List of antenna elements.
-        """
-
-        return self.__antennas.copy()
+    def _new_port(self) -> APT:
+        return AntennaPort()  # type: ignore
 
     @property
-    def num_antennas(self) -> int:
-        """Number of antenna elements within this array.
+    def ports(self) -> Sequence[APT]:
+        return self.__ports.copy()
 
-        Returns:
-            int:
-                Number of antenna elements.
-        """
-
-        return len(self.__antennas)
-
-    def add_antenna(self, antenna: Antenna) -> None:
-        """Add a new antenna element to this array.
+    def add_port(self, port: APT) -> None:
+        """Add a new port to this array.
 
         Args:
 
-            antenna (Antenna):
-                The new antenna to be added.
+            port (APT):
+                The antenna port to be added.
         """
 
         # Do nothing if the antenna is already registered within this array
-        if antenna.array is self and antenna in self.antennas:
+        if port.array is self and port in self.ports:
             return
 
         # Add information to the internal lists
-        self.__antennas.append(antenna)
+        self.__ports.append(port)
+        port.array = self
 
-        # Register the antenna array at the antenna element
-        antenna.array = self
-
-    def remove_antenna(self, antenna: Antenna) -> None:
-        """Remove an antenna element from this array.
+    def remove_port(self, port: APT) -> None:
+        """Remove a port from this array.
 
         Args:
 
-            antenna (Antenna):
-                The antenna element to be removed.
+            port (APT):
+                The antenna port to be removed.
+
+        Raises:
+
+            ValueError: If the port is not connected to this array.
         """
 
         # Do nothing if the antenna is not within this array
-        if antenna not in self.__antennas:
-            return
+        if port not in self.__ports:
+            raise ValueError("Port is not connected to this array")
 
-        self.__antennas.remove(antenna)
-        antenna.array = None
+        self.__ports.remove(port)
+        port.array = None
+
+    def add_antenna(self, antenna: AT) -> APT:
+        """Add a new antenna element to this array.
+
+        Convenience wrapper around :meth:`.add_port`,
+        meaning a new port is automatically created and the antenna is added to it.
+
+        Args:
+
+            antenna (AT):
+                The antenna element to be added.
+
+        Raises
+
+            ValueError: If the antenna is already attached to another array or port.
+
+        Returns: The newly created port.
+        """
+
+        # Raise an error if the antenna is already attached to another array or port
+        if antenna.port is not None:
+            raise ValueError("Antenna is already attached to another port")
+
+        port = self._new_port()
+        port.add_antenna(antenna)
+        self.add_port(port)
+
+        return port

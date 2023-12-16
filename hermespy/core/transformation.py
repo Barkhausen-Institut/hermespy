@@ -20,7 +20,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -98,7 +98,9 @@ class Direction(np.ndarray):
         return self.__to_spherical().view(np.ndarray)
 
     @classmethod
-    def From_Cartesian(cls: Type[Direction], vector: np.ndarray, normalize: bool = False) -> Direction:
+    def From_Cartesian(
+        cls: Type[Direction], vector: np.ndarray, normalize: bool = False
+    ) -> Direction:
         """Initialize a direction from a cartesian vector.
 
         Raises:
@@ -108,13 +110,21 @@ class Direction(np.ndarray):
         Returns: The initialized direction.
         """
 
-        vector = vector.flatten()
-        ndmin = len(vector)
+        vector = vector.flatten().astype(np.float_)
+        ndmin = vector.size
         if ndmin > 3:
             raise ValueError("Vector is not a valid cartesian vector")
 
+        if normalize:
+            norm = np.linalg.norm(vector)
+
+            if norm == 0:
+                raise ValueError("Zero-vectors cannot be normalized")
+
+            vector /= norm
+
         unit_vector = np.zeros(3, dtype=np.float_)
-        unit_vector[:ndmin] = vector / np.linalg.norm(vector) if normalize else vector
+        unit_vector[:ndmin] = vector
 
         return unit_vector.view(Direction)
 
@@ -146,7 +156,9 @@ class Transformation(np.ndarray, Serializable):
         c = (self[0, 0] ** 2 + self[1, 0] ** 2) ** 0.5
 
         if c != 0:
-            rpy = np.arctan2([self[2, 1] / c, -self[2, 0], self[1, 0] / c], [self[2, 2] / c, c, self[0, 0] / c])
+            rpy = np.arctan2(
+                [self[2, 1] / c, -self[2, 0], self[1, 0] / c], [self[2, 2] / c, c, self[0, 0] / c]
+            )
 
         else:
             rpy = np.array([np.arctan2(self[0, 1], self[1, 1]), 0.5 * np.pi, 0], dtype=np.float_)
@@ -179,7 +191,22 @@ class Transformation(np.ndarray, Serializable):
         # Compute rotational transformation portion
         cos = np.cos(rpy)
         sin = np.sin(rpy)
-        rotation = np.array([[cos[2] * cos[1], cos[2] * sin[1] * sin[0] - sin[2] * cos[0], cos[2] * sin[1] * cos[0] + sin[2] * sin[0]], [sin[2] * cos[1], sin[2] * sin[1] * sin[0] + cos[2] * cos[0], sin[2] * sin[1] * cos[0] - cos[2] * sin[0]], [-sin[1], cos[1] * sin[0], cos[1] * cos[0]]], dtype=np.float_)
+        rotation = np.array(
+            [
+                [
+                    cos[2] * cos[1],
+                    cos[2] * sin[1] * sin[0] - sin[2] * cos[0],
+                    cos[2] * sin[1] * cos[0] + sin[2] * sin[0],
+                ],
+                [
+                    sin[2] * cos[1],
+                    sin[2] * sin[1] * sin[0] + cos[2] * cos[0],
+                    sin[2] * sin[1] * cos[0] - cos[2] * sin[0],
+                ],
+                [-sin[1], cos[1] * sin[0], cos[1] * cos[0]],
+            ],
+            dtype=np.float_,
+        )
 
         return rotation
 
@@ -285,16 +312,24 @@ class Transformation(np.ndarray, Serializable):
         return Direction.From_Cartesian(self.transform_position(direction), normalize=normalize)
 
     @classmethod
-    def to_yaml(cls: Type[Transformation], representer: SafeRepresenter, node: Transformation) -> MappingNode:
+    def to_yaml(
+        cls: Type[Transformation], representer: SafeRepresenter, node: Transformation
+    ) -> MappingNode:
         state = {"translation": node.translation, "rotation": node.rotation_rpy}
 
         return representer.represent_mapping(cls.yaml_tag, state)
 
     @classmethod
-    def from_yaml(cls: Type[Transformation], constructor: SafeConstructor, node: Node) -> Transformation:
+    def from_yaml(
+        cls: Type[Transformation], constructor: SafeConstructor, node: Node
+    ) -> Transformation:
         state = constructor.construct_mapping(node, deep=False)
         return cls.From_RPY(state.get("rotation", None), state.get("translation", None))
 
+    @classmethod
+    def from_yaml(cls: Type[Transformation], constructor: SafeConstructor, node: Node) -> Transformation:
+        state = constructor.construct_mapping(node, deep=False)
+        return cls.From_RPY(state.get("rotation", None), state.get("translation", None))
 
 class TransformableLink(metaclass=ABCMeta):
     """Abstract base class of kinetmatic chain links."""
@@ -548,7 +583,9 @@ class Transformable(Serializable, TransformableLink):
         ...  # pragma no cover
 
     @overload
-    def to_local_coordinates(self, position: np.ndarray, orientation: np.ndarray | None = None) -> Transformation:
+    def to_local_coordinates(
+        self, position: np.ndarray, orientation: np.ndarray | None = None
+    ) -> Transformation:
         ...  # pragma no cover
 
     def to_local_coordinates(self, arg_0: Transformable | Transformation | np.ndarray, arg_1: np.ndarray | None = None) -> Transformation:  # type: ignore

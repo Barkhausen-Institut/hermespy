@@ -25,7 +25,6 @@ class TestNoPhaseNoise(TestCase):
     """Test the phase noise stub"""
 
     def setUp(self) -> None:
-
         self.pn = NoPhaseNoise()
 
     def test_add_noise(self) -> None:
@@ -46,7 +45,7 @@ class TestOscillatorPhaseNoise(TestCase):
     """Test the doi: 10.1109/TCSI.2013.2285698 phase noise implementation"""
 
     def setUp(self) -> None:
-        self.K0 = 10**(-110 / 10)
+        self.K0 = 10 ** (-110 / 10)
         self.K2 = 10
         self.K3 = 10**4
         self.pn = OscillatorPhaseNoise(self.K0, self.K2, self.K3)
@@ -96,7 +95,7 @@ class TestOscillatorPhaseNoise(TestCase):
         # generate signal
         # taken from _examples/library/getting_started.py
         operator = DuplexModem()
-        operator.waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=40, oversampling_factor=8, roll_off=.9)
+        operator.waveform = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=40, oversampling_factor=8, roll_off=0.9)
         operator.device = SimulatedDevice()
         transmission = operator.transmit()
         signal = transmission.signal
@@ -111,8 +110,7 @@ class TestOscillatorPhaseNoise(TestCase):
         clear_signal_avg_amp = np.average(np.abs(signal.samples), axis=1)
         noisy_signal_avg_amp = np.average(np.abs(noisy_signal.samples), axis=1)
         for i in range(signal.num_streams):
-            np.testing.assert_approx_equal(clear_signal_avg_amp[i],
-                                           noisy_signal_avg_amp[i])
+            np.testing.assert_approx_equal(clear_signal_avg_amp[i], noisy_signal_avg_amp[i])
 
         # check if arg(x′[n])−arg(pn[n])≈arg(x[n])
         arg_diffs = np.angle(noisy_signal.samples) - np.angle(pn_samples)
@@ -120,7 +118,7 @@ class TestOscillatorPhaseNoise(TestCase):
         np.testing.assert_allclose(arg_diffs, arg_signal, atol=10e7)
 
         # check if the pn time domain starts close to zero
-        assert (np.all(np.abs(pn_samples[:, 0]) < 1e7))
+        assert np.all(np.abs(pn_samples[:, 0]) < 1e7)
 
     def test_yaml_serialization(self) -> None:
         """Test serialization to and from yaml"""

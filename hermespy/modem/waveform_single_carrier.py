@@ -1,21 +1,22 @@
 # -*- coding: utf-8 -*-
-"""
-=================================
-Filtered Single Carrier Waveforms
-=================================
-
-"""
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Any, Optional, Set, Tuple
+from typing import Any, Optional, Set
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-from hermespy.core import ChannelStateInformation, Executable, FloatingError, Serializable, Signal
-from hermespy.core.channel_state_information import ChannelStateFormat
-from .waveform import ConfigurablePilotWaveform, MappedPilotSymbolSequence, WaveformGenerator, ChannelEstimation, ChannelEqualization, PilotSymbolSequence, IdealChannelEstimation, ZeroForcingChannelEqualization
+from hermespy.core import Executable, FloatingError, Serializable, Signal
+from .waveform import (
+    ConfigurablePilotWaveform,
+    MappedPilotSymbolSequence,
+    CommunicationWaveform,
+    ChannelEstimation,
+    ChannelEqualization,
+    PilotSymbolSequence,
+    ZeroForcingChannelEqualization,
+)
 from hermespy.modem.tools.psk_qam_mapping import PskQamMapping
 from .symbols import StatedSymbols, Symbols
 from .waveform_correlation_synchronization import CorrelationSynchronization
@@ -24,7 +25,7 @@ __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -55,9 +56,20 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
     _data_symbol_idx: Optional[np.ndarray]
     _pulse_correlation_matrix: Optional[np.ndarray]
 
-    def __init__(self, symbol_rate: float, num_preamble_symbols: int, num_data_symbols: int, num_postamble_symbols: int = 0, pilot_rate: int = 0, guard_interval: float = 0.0, oversampling_factor: int = 4, pilot_symbol_sequence: Optional[PilotSymbolSequence] = None, repeat_pilot_symbol_sequence: bool = True, **kwargs: Any) -> None:
-        """Waveform Generator PSK-QAM initialization.
-
+    def __init__(
+        self,
+        symbol_rate: float,
+        num_preamble_symbols: int,
+        num_data_symbols: int,
+        num_postamble_symbols: int = 0,
+        pilot_rate: int = 0,
+        guard_interval: float = 0.0,
+        oversampling_factor: int = 4,
+        pilot_symbol_sequence: Optional[PilotSymbolSequence] = None,
+        repeat_pilot_symbol_sequence: bool = True,
+        **kwargs: Any,
+    ) -> None:
+        """
         Args:
 
             symbol_rate (float):
@@ -96,7 +108,12 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
         """
 
         # Init base class
-        ConfigurablePilotWaveform.__init__(self, repeat_symbol_sequence=repeat_pilot_symbol_sequence, oversampling_factor=oversampling_factor, **kwargs)
+        ConfigurablePilotWaveform.__init__(
+            self,
+            repeat_symbol_sequence=repeat_pilot_symbol_sequence,
+            oversampling_factor=oversampling_factor,
+            **kwargs,
+        )
 
         self.symbol_rate = symbol_rate
         self.num_preamble_symbols = num_preamble_symbols
@@ -104,7 +121,11 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
         self.num_postamble_symbols = num_postamble_symbols
         self.pilot_rate = pilot_rate
         self.guard_interval = guard_interval
-        self.pilot_symbol_sequence = MappedPilotSymbolSequence(self.__mapping) if pilot_symbol_sequence is None else pilot_symbol_sequence
+        self.pilot_symbol_sequence = (
+            MappedPilotSymbolSequence(self.__mapping)
+            if pilot_symbol_sequence is None
+            else pilot_symbol_sequence
+        )
 
     @abstractmethod
     def _transmit_filter(self) -> np.ndarray:
@@ -203,56 +224,76 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
 
         self.__num_postamble_symbols = value
 
-    @WaveformGenerator.modulation_order.setter  # type: ignore
+    @CommunicationWaveform.modulation_order.setter  # type: ignore
     def modulation_order(self, value: int) -> None:
         self.__mapping = PskQamMapping(value, soft_output=False)
-        self.pilot_symbol_sequence = MappedPilotSymbolSequence(self.__mapping)  # ToDo: Find a better way to update the pilot symbol sequence
-        WaveformGenerator.modulation_order.fset(self, value)  # type: ignore
+        self.pilot_symbol_sequence = MappedPilotSymbolSequence(
+            self.__mapping
+        )  # ToDo: Find a better way to update the pilot symbol sequence
+        CommunicationWaveform.modulation_order.fset(self, value)  # type: ignore
 
     @property
     def pilot_signal(self) -> Signal:
         if self.num_preamble_symbols < 1:
             return Signal.empty(self.sampling_rate)
 
-        pilot_symbols = np.zeros(1 + (self.num_preamble_symbols - 1) * self.oversampling_factor, dtype=complex)
+        pilot_symbols = np.zeros(
+            1 + (self.num_preamble_symbols - 1) * self.oversampling_factor, dtype=complex
+        )
         pilot_symbols[:: self.oversampling_factor] = self.pilot_symbols(self.num_preamble_symbols)
 
-        return Signal(np.convolve(pilot_symbols, self._transmit_filter()), sampling_rate=self.sampling_rate)
+        return Signal(
+            np.convolve(pilot_symbols, self._transmit_filter()), sampling_rate=self.sampling_rate
+        )
 
     def map(self, bits: np.ndarray) -> Symbols:
-        # Generate pilot and data symbol sequences
-        pilot_symbols = self.pilot_symbols(self.num_preamble_symbols + self._num_pilot_symbols + self.num_postamble_symbols)
-        data_symbols = self.__mapping.get_symbols(bits)
-
-        # Build the symbol frame
-        symbols = np.empty(self.symbols_per_frame, dtype=complex)
-
-        # Assign preamble symbols within the frame
-        symbols[: self.num_preamble_symbols] = pilot_symbols[: self.num_preamble_symbols]
-
-        # Assign postamble symbols within the frame
-        symbols[self.num_preamble_symbols + self._num_payload_symbols :] = pilot_symbols[self.num_preamble_symbols + self._num_pilot_symbols :]
-
-        # Assign payload symbols as a mixture of data and pilot symbols
-        payload_symbol_slice = symbols[self.num_preamble_symbols : self.num_preamble_symbols + self._num_payload_symbols]
-        payload_symbol_slice[self._data_symbol_indices] = data_symbols
-        payload_symbol_slice[self._pilot_symbol_indices] = pilot_symbols[self.num_preamble_symbols : self.num_preamble_symbols + self._num_pilot_symbols :]
-
-        return Symbols(symbols[np.newaxis, :, np.newaxis])
+        return Symbols(self.__mapping.get_symbols(bits))
 
     def unmap(self, symbols: Symbols) -> np.ndarray:
-        payload = symbols.raw[:, self.num_preamble_symbols : self.num_preamble_symbols + self._num_payload_symbols, :]
-        data_symbols = payload[:, self._data_symbol_indices, :].flatten()
+        return self.__mapping.detect_bits(symbols.raw.flatten())
 
-        return self.__mapping.detect_bits(data_symbols)
+    def place(self, data_symbols: Symbols) -> Symbols:
+        # Generate pilot symbol sequences
+        pilot_symbols = self.pilot_symbols(
+            self.num_preamble_symbols + self._num_pilot_symbols + self.num_postamble_symbols
+        )
+        placed_symbols = np.empty(self._num_frame_symbols, dtype=np.complex_)
 
-    def modulate(self, symbols: Symbols) -> Signal:
-        frame = np.zeros(1 + (self._num_frame_symbols - 1) * self.oversampling_factor, dtype=complex)
+        # Assign preamble symbols within the frame
+        placed_symbols[: self.num_preamble_symbols] = pilot_symbols[: self.num_preamble_symbols]
+
+        # Assign postamble symbols within the frame
+        placed_symbols[self.num_preamble_symbols + self._num_payload_symbols :] = pilot_symbols[
+            self.num_preamble_symbols + self._num_pilot_symbols :
+        ]
+
+        # Assign payload symbols within the frame
+        # The payload consists of data symbols interleaved with pilots according to the pilot rate
+        placed_symbols[self.num_preamble_symbols + self._pilot_symbol_indices] = pilot_symbols[
+            self.num_preamble_symbols : self.num_preamble_symbols + self._num_pilot_symbols
+        ]
+        placed_symbols[
+            self.num_preamble_symbols + self._data_symbol_indices
+        ] = data_symbols.raw.flatten()
+
+        return Symbols(placed_symbols[np.newaxis, :, np.newaxis])
+
+    def pick(self, symbols: StatedSymbols) -> StatedSymbols:
+        data_block_indices = self.num_preamble_symbols + self._data_symbol_indices
+        picked_symbol_blocks = symbols.raw[:, data_block_indices, :]
+        picked_state_blocks = symbols.states[:, :, data_block_indices, :]
+
+        return StatedSymbols(picked_symbol_blocks, picked_state_blocks)
+
+    def modulate(self, symbols: Symbols) -> np.ndarray:
+        frame = np.zeros(
+            1 + (self._num_frame_symbols - 1) * self.oversampling_factor, dtype=complex
+        )
         frame[:: self.oversampling_factor] = symbols.raw.flatten()
 
         # Generate waveforms by treating the frame as a comb and convolving with the impulse response
         output_signal = np.convolve(frame, self._transmit_filter())
-        return Signal(output_signal, self.sampling_rate)
+        return output_signal
 
     def demodulate(self, signal: np.ndarray) -> Symbols:
         # Query filters
@@ -260,9 +301,10 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
 
         # Filter the signal and csi
         filtered_signal = np.convolve(signal, self._receive_filter())
-
-        num_symbols = self.num_preamble_symbols + self.num_postamble_symbols + self._num_payload_symbols
-        symbols = filtered_signal[filter_delay : filter_delay + num_symbols * self.oversampling_factor : self.oversampling_factor]
+        symbols = filtered_signal[
+            filter_delay : filter_delay
+            + self._num_frame_symbols * self.oversampling_factor : self.oversampling_factor
+        ]
 
         return Symbols(symbols[np.newaxis, :, np.newaxis])
 
@@ -346,6 +388,10 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
         return num_symbols
 
     @property
+    def _num_frame_symbols(self) -> int:
+        return self.num_preamble_symbols + self._num_payload_symbols + self.num_postamble_symbols
+
+    @property
     def _pilot_symbol_indices(self) -> np.ndarray:
         """Indices of pilot symbols within the ful communication frame.
 
@@ -376,54 +422,31 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
         return data_indices
 
     @property
-    def _num_frame_symbols(self) -> int:
-        """Overall number of symbols per frame.
-
-        Includes preamble, postamble, data symbols and interleaved pilot symbols
-
-        Returns:
-            Number of symbols.
-        """
-
-        return self.num_preamble_symbols + self._num_payload_symbols + self.num_postamble_symbols
-
-    @property
     def num_data_symbols(self) -> int:
         """Number of data symbols per frame.
 
-        Returns:
-            int: Number of data symbols.
+        Raises:
+            ValueError: If `num` is smaller than zero.
         """
 
         return self.__num_data_symbols
 
     @num_data_symbols.setter
     def num_data_symbols(self, num: int) -> None:
-        """Modify number of data symbols per frame.
-
-        Args:
-            num (int): Number of data symbols.
-
-        Raises:
-            ValueError: If `num` is smaller than zero.
-        """
-
         if num < 0:
             raise ValueError("Number of data symbols must be greater or equal to zero")
 
         self.__num_data_symbols = num
 
     @property
-    def samples_in_frame(self) -> int:
-        return (self._num_frame_symbols - 1) * self.oversampling_factor + self._transmit_filter().shape[0]
+    def samples_per_frame(self) -> int:
+        return (
+            self._num_frame_symbols - 1
+        ) * self.oversampling_factor + self._transmit_filter().shape[0]
 
     @property
-    def bits_per_frame(self) -> int:
-        return self.__num_data_symbols * int(np.log2(self.modulation_order))
-
-    @property
-    def symbols_per_frame(self) -> int:
-        return self.num_preamble_symbols + self._num_payload_symbols + self.num_postamble_symbols
+    def symbol_duration(self) -> float:
+        return 1 / self.symbol_rate
 
     @property
     def bit_energy(self) -> float:
@@ -480,7 +503,9 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
         return fig
 
 
-class SingleCarrierCorrelationSynchronization(CorrelationSynchronization[FilteredSingleCarrierWaveform]):
+class SingleCarrierCorrelationSynchronization(
+    CorrelationSynchronization[FilteredSingleCarrierWaveform]
+):
     """Correlation-based clock-synchronization for PSK-QAM waveforms."""
 
     yaml_tag = "SC-Correlation"
@@ -489,31 +514,17 @@ class SingleCarrierCorrelationSynchronization(CorrelationSynchronization[Filtere
 class SingleCarrierChannelEstimation(ChannelEstimation[FilteredSingleCarrierWaveform], ABC):
     """Channel estimation for Psk Qam waveforms."""
 
-    def __init__(self, waveform_generator: Optional[FilteredSingleCarrierWaveform] = None, *args: Any) -> None:
+    def __init__(
+        self, waveform: Optional[FilteredSingleCarrierWaveform] = None, *args: Any
+    ) -> None:
         """
         Args:
 
-            waveform_generator (WaveformGenerator, optional):
+            waveform (CommunicationWaveform, optional):
                 The waveform generator this synchronization routine is attached to.
         """
 
-        ChannelEstimation.__init__(self, waveform_generator)
-
-
-class SingleCarrierIdealChannelEstimation(IdealChannelEstimation[FilteredSingleCarrierWaveform], Serializable):
-    """Ideal channel estimation for single carrier waveforms"""
-
-    yaml_tag = "SC-Ideal"
-    """YAML serialization tag"""
-
-    def estimate_channel(self, symbols: Symbols) -> Tuple[StatedSymbols, ChannelStateInformation]:
-        filter_characteristics = self.waveform_generator._transmit_filter() * self.waveform_generator._receive_filter()
-        csi = self._csi().state[:, :, :, [0]]
-        filtered_state = np.apply_along_axis(lambda c: np.convolve(c, filter_characteristics), axis=2, arr=csi)
-
-        delay = self.waveform_generator._filter_delay
-        demodulated_state = filtered_state[:, :, delay : delay + self.waveform_generator.symbols_per_frame * self.waveform_generator.oversampling_factor : self.waveform_generator.oversampling_factor, [0]]
-        return StatedSymbols(symbols.raw, demodulated_state), ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE, demodulated_state)
+        ChannelEstimation.__init__(self, waveform)
 
 
 class SingleCarrierLeastSquaresChannelEstimation(SingleCarrierChannelEstimation):
@@ -522,45 +533,63 @@ class SingleCarrierLeastSquaresChannelEstimation(SingleCarrierChannelEstimation)
     yaml_tag = "SC-LS"
     """YAML serialization tag"""
 
-    def __init__(self, waveform_generator: Optional[FilteredSingleCarrierWaveform] = None, *args: Any) -> None:
+    def __init__(
+        self, waveform: Optional[FilteredSingleCarrierWaveform] = None, *args: Any
+    ) -> None:
         """
         Args:
 
-            waveform_generator (WaveformGenerator, optional):
-                The waveform generator this synchronization routine is attached to.
+            waveform (CommunicationWaveform, optional):
+                The waveform generator this channel estimation routine is attached to.
         """
 
-        SingleCarrierChannelEstimation.__init__(self, waveform_generator)
+        SingleCarrierChannelEstimation.__init__(self, waveform)
 
-    def estimate_channel(self, symbols: Symbols) -> Tuple[StatedSymbols, ChannelStateInformation]:
-        if self.waveform_generator is None:
-            raise FloatingError("Error trying to fetch the pilot section of a floating channel estimator")
+    def estimate_channel(self, symbols: Symbols, delay: float = 0.0) -> StatedSymbols:
+        if self.waveform is None:
+            raise FloatingError(
+                "Error trying to fetch the pilot section of a floating channel estimator"
+            )
 
         # Query required waveform information
-        num_preamble_symbols = self.waveform_generator.num_preamble_symbols
-        num_postamble_symbols = self.waveform_generator.num_postamble_symbols
-        num_payload_symbols = self.waveform_generator._num_payload_symbols
-        num_pilot_symbols = self.waveform_generator._num_pilot_symbols
-        pilot_symbol_indices = self.waveform_generator._pilot_symbol_indices
-        transmitted_reference_symbols = self.waveform_generator.pilot_symbols(num_preamble_symbols + num_pilot_symbols + num_postamble_symbols)
+        num_preamble_symbols = self.waveform.num_preamble_symbols
+        num_postamble_symbols = self.waveform.num_postamble_symbols
+        num_payload_symbols = self.waveform._num_payload_symbols
+        num_pilot_symbols = self.waveform._num_pilot_symbols
+        pilot_symbol_indices = self.waveform._pilot_symbol_indices
+        transmitted_reference_symbols = self.waveform.pilot_symbols(
+            num_preamble_symbols + num_pilot_symbols + num_postamble_symbols
+        )
 
         # Extract reference symbols
         preamble_symbols = symbols.raw[:, :num_preamble_symbols, 0]
-        pilot_symbols = symbols.raw[:, num_preamble_symbols : num_preamble_symbols + num_payload_symbols, 0][:, pilot_symbol_indices]
+        pilot_symbols = symbols.raw[
+            :, num_preamble_symbols : num_preamble_symbols + num_payload_symbols, 0
+        ][:, pilot_symbol_indices]
         postamble_symbols = symbols.raw[:, num_preamble_symbols + num_payload_symbols :, 0]
-        received_reference_symbols = np.concatenate((preamble_symbols, pilot_symbols, postamble_symbols), axis=1)
+        received_reference_symbols = np.concatenate(
+            (preamble_symbols, pilot_symbols, postamble_symbols), axis=1
+        )
 
         # Estimate the channel over all reference symbols
         channel_estimation_stems = received_reference_symbols / transmitted_reference_symbols
-        channel_estimation_stem_indices = np.concatenate((np.arange(num_preamble_symbols), pilot_symbol_indices + num_preamble_symbols, np.arange(num_postamble_symbols) + num_preamble_symbols + num_payload_symbols))
+        channel_estimation_stem_indices = np.concatenate(
+            (
+                np.arange(num_preamble_symbols),
+                pilot_symbol_indices + num_preamble_symbols,
+                np.arange(num_postamble_symbols) + num_preamble_symbols + num_payload_symbols,
+            )
+        )
 
         # Interpolate to the whole channel estimation
-        channel_estimation_indices = np.arange(self.waveform_generator.symbols_per_frame)
+        channel_estimation_indices = np.arange(symbols.num_blocks)
         channel_estimation = np.empty((symbols.num_streams, symbols.num_blocks), dtype=complex)
         for s, stems in enumerate(channel_estimation_stems):
-            channel_estimation[s, :] = np.interp(channel_estimation_indices, channel_estimation_stem_indices, stems)
+            channel_estimation[s, :] = np.interp(
+                channel_estimation_indices, channel_estimation_stem_indices, stems
+            )
 
-        return StatedSymbols(symbols.raw, channel_estimation[:, np.newaxis, :, np.newaxis]), ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE, channel_estimation[:, np.newaxis, :, np.newaxis])
+        return StatedSymbols(symbols.raw, channel_estimation[:, np.newaxis, :, np.newaxis])
 
 
 class SingleCarrierChannelEqualization(ChannelEqualization[FilteredSingleCarrierWaveform], ABC):
@@ -570,14 +599,16 @@ class SingleCarrierChannelEqualization(ChannelEqualization[FilteredSingleCarrier
         """
         Args:
 
-            waveform (WaveformGenerator, optional):
+            waveform (CommunicationWaveform, optional):
                 The waveform generator this equalization routine is attached to.
         """
 
         ChannelEqualization.__init__(self, waveform)
 
 
-class SingleCarrierZeroForcingChannelEqualization(ZeroForcingChannelEqualization[FilteredSingleCarrierWaveform]):
+class SingleCarrierZeroForcingChannelEqualization(
+    ZeroForcingChannelEqualization[FilteredSingleCarrierWaveform]
+):
     """Zero-Forcing Channel estimation for Psk Qam waveforms."""
 
     yaml_tag = "SC-ZF"
@@ -590,29 +621,33 @@ class SingleCarrierMinimumMeanSquareChannelEqualization(SingleCarrierChannelEqua
     yaml_tag = "SC-MMSE"
     """YAML serialization tag"""
 
-    def __init__(self, waveform_generator: Optional[FilteredSingleCarrierWaveform] = None) -> None:
+    def __init__(self, waveform: Optional[FilteredSingleCarrierWaveform] = None) -> None:
         """
         Args:
 
-            waveform_generator (WaveformGenerator, optional):
+            waveform (CommunicationWaveform, optional):
                 The waveform generator this equalization routine is attached to.
         """
 
-        SingleCarrierChannelEqualization.__init__(self, waveform_generator)
+        SingleCarrierChannelEqualization.__init__(self, waveform)
 
     def equalize_channel(self, symbols: StatedSymbols) -> Symbols:
         # Query SNR and cached CSI from the device
-        snr = self.waveform_generator.modem.receiving_device.snr
+        snr = self.waveform.modem.receiving_device.snr
 
         # If no information about transmitted streams is available, assume orthogonal channels
         if symbols.num_transmit_streams < 2 and symbols.num_streams < 2:
             return Symbols(symbols.raw / (symbols.states[:, 0, :, :] + 1 / snr))
 
         if symbols.num_transmit_streams > symbols.num_streams:
-            raise RuntimeError("MMSE equalization is not supported for more transmit streams than receive streams")
+            raise RuntimeError(
+                "MMSE equalization is not supported for more transmit streams than receive streams"
+            )
 
         # Default behaviour for mimo systems is to use the pseudo-inverse for equalization
-        raw_equalized_symbols = np.empty((symbols.num_transmit_streams, symbols.num_blocks, symbols.num_symbols), dtype=complex)
+        raw_equalized_symbols = np.empty(
+            (symbols.num_transmit_streams, symbols.num_blocks, symbols.num_symbols), dtype=complex
+        )
         for b, s in np.ndindex(symbols.num_blocks, symbols.num_symbols):
             symbol_slice = symbols.raw[:, b, s]
             mimo_state = symbols.states[:, :, b, s]
@@ -636,7 +671,14 @@ class RolledOffSingleCarrierWaveform(FilteredSingleCarrierWaveform):
     def _arg_signature() -> Set[str]:
         return {"symbol_rate", "num_preamble_symbols", "num_data_symbols"}
 
-    def __init__(self, relative_bandwidth: float = 1.0, roll_off: float = 0.0, filter_length: int = 16, *args, **kwargs) -> None:
+    def __init__(
+        self,
+        relative_bandwidth: float = 1.0,
+        roll_off: float = 0.0,
+        filter_length: int = 16,
+        *args,
+        **kwargs,
+    ) -> None:
         """
         Args:
 
@@ -713,7 +755,9 @@ class RolledOffSingleCarrierWaveform(FilteredSingleCarrierWaveform):
     @roll_off.setter
     def roll_off(self, value: float) -> None:
         if value < 0.0 or value > 1.0:
-            raise ValueError("Filter pulse shape roll off factor value must be between zero and one")
+            raise ValueError(
+                "Filter pulse shape roll off factor value must be between zero and one"
+            )
 
         self.__roll_off = value
 
@@ -742,31 +786,7 @@ class RolledOffSingleCarrierWaveform(FilteredSingleCarrierWaveform):
 
 
 class RootRaisedCosineWaveform(RolledOffSingleCarrierWaveform, Serializable):
-    """Root-Raised-Cosine filtered single carrier mdulation.
-
-
-    .. plot::
-
-       import matplotlib.pyplot as plt
-
-       from hermespy.modem import RaisedCosineWaveform
-
-
-       waveform = RaisedCosineWaveform(oversampling_factor=16, symbol_rate=1e6, num_preamble_symbols=1, num_data_symbols=0)
-       waveform.plot_filter()
-       plt.show()
-
-    .. plot::
-
-       import matplotlib.pyplot as plt
-
-       from hermespy.modem import RaisedCosineWaveform
-
-
-       waveform = RaisedCosineWaveform(oversampling_factor=16, symbol_rate=1e6, num_preamble_symbols=1, num_data_symbols=0)
-       waveform.plot_filter_correlation()
-       plt.show()
-    """
+    """Root-Raised-Cosine filtered single carrier modulation."""
 
     yaml_tag = "SC-RootRaisedCosine"
     """YAML serialization tag"""
@@ -778,7 +798,15 @@ class RootRaisedCosineWaveform(RolledOffSingleCarrierWaveform, Serializable):
         impulse_response = np.zeros(self.oversampling_factor * self.filter_length)
 
         # Generate timestamps
-        time = np.linspace(-int(0.5 * self.filter_length), int(0.5 * self.filter_length), self.filter_length * self.oversampling_factor, endpoint=(self.filter_length % 2 == 1)) * self.relative_bandwidth
+        time = (
+            np.linspace(
+                -int(0.5 * self.filter_length),
+                int(0.5 * self.filter_length),
+                self.filter_length * self.oversampling_factor,
+                endpoint=(self.filter_length % 2 == 1),
+            )
+            * self.relative_bandwidth
+        )
 
         # Build filter response
         idx_0_by_0 = time == 0  # indices with division of zero by zero
@@ -790,39 +818,26 @@ class RootRaisedCosineWaveform(RolledOffSingleCarrierWaveform, Serializable):
             idx_x_by_0 = np.zeros_like(time, dtype=bool)
         idx = (~idx_0_by_0) & (~idx_x_by_0)
 
-        impulse_response[idx] = (np.sin(np.pi * time[idx] * (1 - self.roll_off)) + 4 * self.roll_off * time[idx] * np.cos(np.pi * time[idx] * (1 + self.roll_off))) / (np.pi * time[idx] * (1 - (4 * self.roll_off * time[idx]) ** 2))
+        impulse_response[idx] = (
+            np.sin(np.pi * time[idx] * (1 - self.roll_off))
+            + 4 * self.roll_off * time[idx] * np.cos(np.pi * time[idx] * (1 + self.roll_off))
+        ) / (np.pi * time[idx] * (1 - (4 * self.roll_off * time[idx]) ** 2))
         if np.any(idx_x_by_0):
-            impulse_response[idx_x_by_0] = self.roll_off / np.sqrt(2) * ((1 + 2 / np.pi) * np.sin(np.pi / (4 * self.roll_off)) + (1 - 2 / np.pi) * np.cos(np.pi / (4 * self.roll_off)))
+            impulse_response[idx_x_by_0] = (
+                self.roll_off
+                / np.sqrt(2)
+                * (
+                    (1 + 2 / np.pi) * np.sin(np.pi / (4 * self.roll_off))
+                    + (1 - 2 / np.pi) * np.cos(np.pi / (4 * self.roll_off))
+                )
+            )
         impulse_response[idx_0_by_0] = 1 + self.roll_off * (4 / np.pi - 1)
 
         return impulse_response / np.linalg.norm(impulse_response)
 
 
 class RaisedCosineWaveform(RolledOffSingleCarrierWaveform, Serializable):
-    """Root-Raised-Cosine filtered single carrier mdulation.
-
-    .. plot::
-
-       import matplotlib.pyplot as plt
-
-       from hermespy.modem import RootRaisedCosineWaveform
-
-
-       waveform = RootRaisedCosineWaveform(oversampling_factor=16, symbol_rate=1e6, num_preamble_symbols=1, num_data_symbols=0)
-       waveform.plot_filter()
-       plt.show()
-
-    .. plot::
-
-       import matplotlib.pyplot as plt
-
-       from hermespy.modem import RootRaisedCosineWaveform
-
-
-       waveform = RootRaisedCosineWaveform(oversampling_factor=16, symbol_rate=1e6, num_preamble_symbols=1, num_data_symbols=0)
-       waveform.plot_filter_correlation()
-       plt.show()
-    """
+    """Root-Raised-Cosine filtered single carrier modulation."""
 
     yaml_tag = "SC-RaisedCosine"
     """YAML serialization tag"""
@@ -834,7 +849,15 @@ class RaisedCosineWaveform(RolledOffSingleCarrierWaveform, Serializable):
         impulse_response = np.zeros(self.oversampling_factor * self.filter_length)
 
         # Generate timestamps
-        time = np.linspace(-int(0.5 * self.filter_length), int(0.5 * self.filter_length), self.filter_length * self.oversampling_factor, endpoint=(self.filter_length % 2 == 1)) * self.relative_bandwidth
+        time = (
+            np.linspace(
+                -int(0.5 * self.filter_length),
+                int(0.5 * self.filter_length),
+                self.filter_length * self.oversampling_factor,
+                endpoint=(self.filter_length % 2 == 1),
+            )
+            * self.relative_bandwidth
+        )
 
         # Build filter response
         if self.roll_off != 0:
@@ -843,7 +866,11 @@ class RaisedCosineWaveform(RolledOffSingleCarrierWaveform, Serializable):
         else:
             idx_0_by_0 = np.zeros_like(time, dtype=bool)
         idx = ~idx_0_by_0
-        impulse_response[idx] = np.sinc(time[idx]) * np.cos(np.pi * self.roll_off * time[idx]) / (1 - (2 * self.roll_off * time[idx]) ** 2)
+        impulse_response[idx] = (
+            np.sinc(time[idx])
+            * np.cos(np.pi * self.roll_off * time[idx])
+            / (1 - (2 * self.roll_off * time[idx]) ** 2)
+        )
         if np.any(idx_0_by_0):
             impulse_response[idx_0_by_0] = np.pi / 4 * np.sinc(1 / (2 * self.roll_off))
 
@@ -851,30 +878,7 @@ class RaisedCosineWaveform(RolledOffSingleCarrierWaveform, Serializable):
 
 
 class RectangularWaveform(FilteredSingleCarrierWaveform, Serializable):
-    """Rectangular filtered single carrier modulation.
-
-    .. plot::
-
-       import matplotlib.pyplot as plt
-
-       from hermespy.modem import RectangularWaveform
-
-
-       waveform = RectangularWaveform(oversampling_factor=16, symbol_rate=1e6, num_preamble_symbols=1, num_data_symbols=0)
-       waveform.plot_filter()
-       plt.show()
-
-    .. plot::
-
-       import matplotlib.pyplot as plt
-
-       from hermespy.modem import RectangularWaveform
-
-
-       waveform = RectangularWaveform(oversampling_factor=16, symbol_rate=1e6, num_preamble_symbols=1, num_data_symbols=0)
-       waveform.plot_filter_correlation()
-       plt.show()
-    """
+    """Rectangular filtered single carrier modulation."""
 
     yaml_tag = "SC-Rectangular"
     """YAML serialization tag"""
@@ -924,30 +928,7 @@ class RectangularWaveform(FilteredSingleCarrierWaveform, Serializable):
 
 
 class FMCWWaveform(FilteredSingleCarrierWaveform, Serializable):
-    """Frequency Modulated Continuous Waveform Filter Modulation Scheme.
-
-    .. plot::
-
-       import matplotlib.pyplot as plt
-
-       from hermespy.modem import FMCWWaveform
-
-
-       waveform = FMCWWaveform(oversampling_factor=16, bandwidth=1e6, symbol_rate=1e6, num_preamble_symbols=1, num_data_symbols=0)
-       waveform.plot_filter()
-       plt.show()
-
-    .. plot::
-
-       import matplotlib.pyplot as plt
-
-       from hermespy.modem import FMCWWaveform
-
-
-       waveform = FMCWWaveform(oversampling_factor=16, bandwidth=1e6, symbol_rate=1e6, num_preamble_symbols=1, num_data_symbols=0)
-       waveform.plot_filter_correlation()
-       plt.show()
-    """
+    """Frequency Modulated Continuous Waveform Filter Modulation Scheme."""
 
     yaml_tag = "SC-FMCW"
     """YAML serialization tag"""
@@ -1041,7 +1022,9 @@ class FMCWWaveform(FilteredSingleCarrierWaveform, Serializable):
 
     def _transmit_filter(self) -> np.ndarray:
         time = np.linspace(0, 1 / self.symbol_rate, self.oversampling_factor)
-        impulse_response = np.exp(1j * np.pi * (self.bandwidth * time + self.chirp_slope * time**2))
+        impulse_response = np.exp(
+            1j * np.pi * (self.bandwidth * time + self.chirp_slope * time**2)
+        )
         # Cut off the chirp appropriately
         impulse_response[time > self.__true_chirp_duration] = 0.0
 

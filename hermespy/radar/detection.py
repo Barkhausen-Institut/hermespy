@@ -12,16 +12,18 @@ from typing import List, Tuple, Type
 
 import matplotlib.pyplot as plt
 import numpy as np
+from mpl_toolkits.mplot3d import Axes3D  # type: ignore
 from scipy.ndimage import generate_binary_structure, maximum_filter
+from scipy.signal import convolve
 
-from hermespy.core import Serializable, Visualizable
+from hermespy.core import Serializable, VAT, Visualizable
 from .cube import RadarCube
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
-__credits__ = ["Jan Adler"]
+__credits__ = ["Jan Adler", "Egor Achkasov"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -68,7 +70,14 @@ class PointDetection(object):
         self.__power = power
 
     @classmethod
-    def FromSpherical(cls: Type[PointDetection], zenith: float, azimuth: float, range: float, velocity: float, power: float) -> PointDetection:
+    def FromSpherical(
+        cls: Type[PointDetection],
+        zenith: float,
+        azimuth: float,
+        range: float,
+        velocity: float,
+        power: float,
+    ) -> PointDetection:
         """Generate a point detection from radar cube spherical coordinates.
 
         Args:
@@ -89,7 +98,9 @@ class PointDetection(object):
                 Point power indicator.
         """
 
-        normal_vector = np.array([cos(azimuth) * sin(zenith), sin(azimuth) * sin(zenith), cos(zenith)], dtype=float)
+        normal_vector = np.array(
+            [cos(azimuth) * sin(zenith), sin(azimuth) * sin(zenith), cos(zenith)], dtype=float
+        )
 
         position = range * normal_vector
         velocity_vector = velocity * normal_vector
@@ -126,6 +137,15 @@ class PointDetection(object):
 
         return self.__power
 
+    def __eq__(self, __value: object) -> bool:
+        if not isinstance(__value, PointDetection):
+            return NotImplemented
+        return (
+            bool(np.all(self.position == __value.position))
+            and bool(np.all(self.velocity == __value.velocity))
+            and self.power == __value.power
+        )
+
 
 class RadarPointCloud(Visualizable):
     """A sparse radar point cloud."""
@@ -148,7 +168,9 @@ class RadarPointCloud(Visualizable):
         """
 
         if max_range <= 0.0:
-            raise ValueError(f"Maximal represented range must be greater than zero (not {max_range})")
+            raise ValueError(
+                f"Maximal represented range must be greater than zero (not {max_range})"
+            )
 
         # Initialize base class
         Visualizable.__init__(self)
@@ -203,22 +225,26 @@ class RadarPointCloud(Visualizable):
     def title(self) -> str:
         return "Radar Point Coud"
 
-    def _new_axes(self) -> Tuple[plt.Figure, plt.Axes]:
-        figure, axes = plt.subplots(subplot_kw={"projection": "3d"})
+    def _new_axes(self, **kwargs) -> Tuple[plt.Figure, VAT]:
+        figure, axes = plt.subplots(1, 1, squeeze=False, subplot_kw={"projection": "3d"})
         return figure, axes
 
-    def _plot(self, axes: plt.Axes) -> None:
+    def _plot(self, axes: VAT) -> None:
+        ax: Axes3D = axes.flat[0]  # type: ignore
+
         for point in self.points:
             position = point.position
-            axes.scatter(position[0], position[2], position[1], marker="o", c=point.power, cmap="Greens")
+            ax.scatter(
+                position[0], position[2], position[1], marker="o", c=point.power, cmap="Greens"
+            )
 
         # Configure axes
-        axes.set_xlim((-self.max_range, self.max_range))
-        axes.set_ylim((0, self.max_range))
-        axes.set_zlim((-self.max_range, self.max_range))
-        axes.set_xlabel("X [m]")
-        axes.set_ylabel("Z [m]")
-        axes.set_zlabel("Y [m]")
+        ax.set_xlim((-self.max_range, self.max_range))
+        ax.set_ylim((0, self.max_range))
+        ax.set_zlim((-self.max_range, self.max_range))
+        ax.set_xlabel("X [m]")
+        ax.set_ylabel("Z [m]")
+        ax.set_zlabel("Y [m]")
 
 
 class RadarDetector(object):
@@ -252,7 +278,9 @@ class ThresholdDetector(RadarDetector, Serializable):
     __normalize: bool
     __peak_detection: bool
 
-    def __init__(self, min_power: float, normalize: bool = True, peak_detection: bool = True) -> None:
+    def __init__(
+        self, min_power: float, normalize: bool = True, peak_detection: bool = True
+    ) -> None:
         """
         Args:
 
@@ -320,13 +348,19 @@ class ThresholdDetector(RadarDetector, Serializable):
     def detect(self, cube: RadarCube) -> RadarPointCloud:
         # Extract cube data and normalize if the respective flag is enabled
         cube_max = cube.data.max()
-        cube_data: np.ndarray = (cube.data - cube.data.min()) / cube_max if self.normalize and cube_max > 0.0 else cube.data
+        cube_data: np.ndarray = (
+            (cube.data - cube.data.min()) / cube_max
+            if self.normalize and cube_max > 0.0
+            else cube.data
+        )
 
         # Filter the raw cube data for peaks
         if self.peak_detection:
             footprint = generate_binary_structure(3, 1)
             candidates = maximum_filter(cube_data, footprint=footprint) == cube_data
-            detection_point_indices = np.argwhere(np.logical_and(candidates, cube_data >= self.min_power))
+            detection_point_indices = np.argwhere(
+                np.logical_and(candidates, cube_data >= self.min_power)
+            )
 
         else:
             # Apply the thershold and extract the coordinates matching the requirements
@@ -340,7 +374,9 @@ class ThresholdDetector(RadarDetector, Serializable):
             range = cube.range_bins[point_indices[2]]
             power_indicator = cube.data[tuple(point_indices)]
 
-            cloud.add_point(PointDetection.FromSpherical(zenith, azimuth, range, velocity, power_indicator))
+            cloud.add_point(
+                PointDetection.FromSpherical(zenith, azimuth, range, velocity, power_indicator)
+            )
 
         return cloud
 
@@ -365,6 +401,180 @@ class MaxDetector(RadarDetector, Serializable):
         range = cube.range_bins[point_index[2]]
 
         cloud = RadarPointCloud(cube.range_bins.max())
-        cloud.add_point(PointDetection.FromSpherical(angles_of_arrival[0], angles_of_arrival[1], range, velocity, point_power))
+        cloud.add_point(
+            PointDetection.FromSpherical(
+                angles_of_arrival[0], angles_of_arrival[1], range, velocity, point_power
+            )
+        )
+
+        return cloud
+
+
+class CFARDetector(RadarDetector, Serializable):
+    """Constant False Alarm Rate Detector.
+
+    Performs a two-dimensional detection over a :class:`RadarCube<hermespy.radar.cube.RadarCube>`'s range and doppler-frequency domain.
+    Refer to :footcite:t:`1983:Rohling` for more information.
+
+    The implemented detection kernel is of size
+
+    .. math::
+
+        \\left(1 + 2 N_{\\mathrm{T, R}} + 2 N_{\\mathrm{G, R}}\\right) \\times \\left(1 + 2 N_{\\mathrm{T, D}} + 2 N_{\\mathrm{G, D}}\\right)
+
+    as depicted in the following figure
+
+    .. figure:: /images/cfardetector_kernel_example.png
+        :alt: CFAR Detector kernel window example
+        :scale: 45%
+
+    where `c` indicates the cell under test, `g` the guard cells and `t` the training cells.
+    For each cell under test, the detector calculates the noise threshold over the available training cells
+
+    .. math::
+
+        P_{r,d} = \sum_{\\substack{
+            i \\in \\lbrace \\mathbb{Z} | N_\\mathrm{G, R} < \\lVert r + i \\rVert \\leq N_{\\mathrm{T, R}} \\rbrace \\\\
+            j \\in \\lbrace \\mathbb{Z} | N_\\mathrm{G, D} < \\lVert d + j \\rVert \\leq N_{\\mathrm{T, D}} \\rbrace
+        }}
+        x_{r+i,d+j}
+
+    and makes a detection descision
+
+    .. math::
+
+        x_{r,d} > \\left( P_{\\mathrm{Fa}}^{\\frac{-1}{2 N_{\\mathrm{T, R}}+ 2 N_{\\mathrm{T, D}}}} - 1 \\right) P_{r,d}
+
+    based on the configured probability of false alarm :math:`P_{\\mathrm{Fa}}`.
+    """
+
+    yaml_tag = "CFAR"
+    """YAML serialization tag."""
+
+    def __init__(self, num_training_cells: tuple, num_guard_cells: tuple, pfa: float) -> None:
+        """
+        CFAR Detector over the radar cube.
+
+        Args:
+
+            num_training_cells (tuple):
+                Number of training cells in a kernel slice. Must be a pair of even ints.
+
+            num_guard_cells (int):
+                Number of guard cells in a kernel slice. Must be a pair of even ints.
+
+            pfa (float):
+                Probability of False Alarm. Must be in the interval of [0, 1].
+        """
+
+        self.num_training_cells = num_training_cells
+        self.num_guard_cells = num_guard_cells
+        self.pfa = pfa
+
+    @property
+    def num_training_cells(self) -> tuple:
+        """Number of training cells in the detection kernel slice.
+
+        Denoted by :math:`N_{\\mathrm{T, R}}` and :math:`N_{\\mathrm{T, D}}`.
+        """
+
+        return self.__num_training_cells
+
+    @num_training_cells.setter
+    def num_training_cells(self, value: tuple) -> None:
+        if (
+            not isinstance(value, tuple)
+            or (len(value) != 2)
+            or not isinstance(value[0], int)
+            or not isinstance(value[1], int)
+        ):
+            raise ValueError("num_training_cells must be a tuple of two ints")
+        if (value[0] <= 0) or (value[1] <= 0):
+            raise ValueError("Number of training cells must be greater than zero")
+
+        self.__num_training_cells = value
+
+    @property
+    def num_guard_cells(self) -> tuple:
+        """Number of guard cells in the detection kernel slice.
+
+        Denoted by :math:`N_{\\mathrm{G, R}}` and :math:`N_{\\mathrm{G, D}}`.
+        """
+
+        return self.__num_guard_cells
+
+    @num_guard_cells.setter
+    def num_guard_cells(self, value: tuple) -> None:
+        if (
+            not isinstance(value, tuple)
+            or (len(value) != 2)
+            or not isinstance(value[0], int)
+            or not isinstance(value[1], int)
+        ):
+            raise ValueError("num_guard_cells must be a tuple of two ints")
+        if (value[0] < 0) or (value[1] < 0):
+            raise ValueError("Number of training cells must be non-negative")
+
+        self.__num_guard_cells = value
+
+    @property
+    def pfa(self) -> float:
+        """Probability of False Alarm.
+
+        Denoted by :math:`P_{\\mathrm{Fa}}`.
+        """
+
+        return self.__pfa
+
+    @pfa.setter
+    def pfa(self, value: float) -> None:
+        if (value < 0) or (value > 1):
+            raise ValueError("Probability of false alarm must be in [0, 1]")
+
+        self.__pfa = value
+
+    def detect(self, cube: RadarCube) -> RadarPointCloud:
+        # window is
+        # [half of training cells][half of guard cells][CUT][half of guard cells][half of training cells]
+        window_size_x = 2 * self.num_training_cells[0] + 2 * self.num_guard_cells[0] + 1
+        window_size_y = 2 * self.num_training_cells[1] + 2 * self.num_guard_cells[1] + 1
+
+        # check if data is bigger then the window
+        if (cube.data.shape[1] < window_size_x) or (cube.data.shape[2] < window_size_y):
+            raise ValueError(
+                "Radar cube 2nd and 3rd dimensions must be bigger then num_training_cells + num_guard_cells + 1"
+            )
+
+        # prepare convolution kernel
+        kernel = np.ones((1, window_size_x, window_size_y))
+        kernel[
+            :,
+            self.num_training_cells[0] : -self.num_training_cells[0],
+            self.num_training_cells[1] : -self.num_training_cells[1],
+        ] = 0
+
+        # calculate noise threshold matrix
+        noise_threshold = convolve(cube.data, kernel, mode="same", method="direct")
+        threshold_normalization = convolve(
+            np.ones(cube.data.shape), kernel, mode="same", method="direct"
+        )
+
+        # detect
+        threshold_factor = self.pfa ** (-1 / threshold_normalization) - 1
+        detection_point_indices = np.argwhere(
+            np.abs(cube.data) > np.abs(noise_threshold) * threshold_factor
+        )
+
+        # Transform the detections to a point cloud
+        cloud = RadarPointCloud(cube.range_bins.max())
+        for point_indices in detection_point_indices:
+            azimuth, zenith = cube.angle_bins[point_indices[0]]
+            velocity = cube.velocity_bins[point_indices[1]]
+            range = cube.range_bins[point_indices[2]]
+            power_indicator = cube.data[tuple(point_indices)]
+
+            cloud.add_point(
+                PointDetection.FromSpherical(zenith, azimuth, velocity, range, power_indicator)
+            )
 
         return cloud

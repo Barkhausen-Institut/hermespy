@@ -23,18 +23,20 @@ __status__ = "Prototype"
 
 class TestDrop(TestCase):
     "Test drop class"
+
+class TestEvaluatedDrop(TestCase):
+    """Test evaluated drop class"""
     
     def setUp(self) -> None:
-        
         self.transmission = DeviceTransmission([], Signal(np.random.standard_normal((1, 10)), 1.0))
         self.reception = DeviceReception(Signal(np.random.standard_normal((1, 10)), 1.0), [], [])
         self.timestamp = 1.2345
-        
+
         self.drop = Drop(self.timestamp, [self.transmission], [self.reception])
-        
+
     def test_properties(self) -> None:
         """Test properties"""
-        
+
         self.assertEqual(self.drop.timestamp, self.timestamp)
         self.assertSequenceEqual(self.drop.device_transmissions, [self.transmission])
         self.assertSequenceEqual(self.drop.device_receptions, [self.reception])
@@ -46,25 +48,24 @@ class TestDrop(TestCase):
         """Test HDF roundtrip serialization"""
 
         with TemporaryDirectory() as tempdir:
-            
-            file_path = join(tempdir, 'test.hdf')
+            file_path = join(tempdir, "test.hdf")
 
-            file = File(file_path, 'w')
-            group = file.create_group('g1')
+            file = File(file_path, "w")
+            group = file.create_group("g1")
             self.drop.to_HDF(group)
             file.close()
-            
-            file = File(file_path, 'r')
-            deserialization = Drop.from_HDF(file['g1'])
-            
+
+            file = File(file_path, "r")
+            deserialization = Drop.from_HDF(file["g1"])
+
             mock_scenario = Mock()
             mock_device = Mock()
             mock_device.receivers = []
             mock_device.transmitters = []
             mock_scenario.devices = [mock_device]
-            recalled_drop = RecalledDrop(file['g1'], mock_scenario)
+            recalled_drop = RecalledDrop(file["g1"], mock_scenario)
             file.close()
-        
+
         self.assertEqual(self.drop.timestamp, deserialization.timestamp)
         self.assertEqual(self.drop.num_device_transmissions, deserialization.num_device_transmissions)
         self.assertEqual(self.drop.num_device_receptions, deserialization.num_device_receptions)
@@ -76,18 +77,17 @@ class TestDrop(TestCase):
 
 class TestEvaluatedDrop(TestCase):
     """Test evaluated drop class"""
-    
+
     def setUp(self) -> None:
-        
         self.transmission = DeviceTransmission([], Signal(np.random.standard_normal((1, 10)), 1.0))
         self.reception = DeviceReception(Signal(np.random.standard_normal((1, 10)), 1.0), [], [])
         self.timestamp = 1.2345
         self.artifacts = [Mock()]
-        
+
         self.drop = EvaluatedDrop(self.timestamp, [self.transmission], [self.reception], self.artifacts)
 
     def test_properties(self) -> None:
         """Test properties"""
-        
+
         self.assertEqual(1, self.drop.num_artifacts)
         self.assertSequenceEqual(self.drop.artifacts, self.artifacts)

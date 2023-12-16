@@ -5,7 +5,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0a"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -31,6 +31,7 @@ setup(
     classifiers=[
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "License :: OSI Approved :: GNU Affero General Public License v3",
         "Operating System :: OS Independent",
         "Development Status :: 4 - Beta",
@@ -47,38 +48,37 @@ setup(
     include_package_data=True,
     extras_require={
         "test": [
-            'pytest>=7.3.1',
-            'coverage>=7.2.7',
-            'mypy>=1.3.0',
-            'nbformat',
-            'nbconvert'
+            'pytest>=7.4.3',
+            'coverage>=7.3.3',
+            'mypy>=1.3.0,<1.7.0',
+            'nbformat>=5.9.2',
+            'nbconvert>=7.12.0'
         ],
         "quadriga": ["oct2py>=5.6.0"],
         "documentation": [
-            'sphinx>=7.0.1',
-            'furo>=2023.5.20',
-            'sphinx-autodoc-typehints>=1.23.0',
-            'sphinxcontrib-apidoc>=0.3.0',
+            'sphinx>=7.2.6',
+            'furo>=2023.9.10',
+            'sphinx-autodoc-typehints>=1.25.2',
+            'sphinxcontrib-apidoc>=0.4.0',
             'sphinxcontrib-mermaid>=0.9.2',
-            'sphinxcontrib-bibtex>=2.5.0',
-            'sphinx-tabs>=3.4.1',
+            'sphinxcontrib-bibtex',  # Unspecified version required to resolve docutils version conflict
+            'sphinx-tabs>=3.4.4',
             'sphinx-copybutton>=0.5.2',
             'sphinx-carousel>=1.2.0',
-            'nbsphinx>=0.9.2',
-            'ipywidgets>=8.0.6',
-            'scikit-build>=0.17.6',
+            'nbsphinx>=0.9.3',
+            'ipywidgets>=8.1.1'
         ],
-        "uhd": ['usrp-uhd-client>=1.4.1'],
+        "uhd": ['usrp-uhd-client>=1.5.0'],
         "audio": ['sounddevice>=0.4.6'],
         "develop": [
-            "pybind11",
+            'pybind11>=2.10.4',
             "scikit-build>=0.17.6",
-            "cmake>=3.26.4",
-            "wheel>=0.40.0",
-            "black>=23.3.0",
+            "cmake>=3.27.2",
+            "wheel>=0.41.2",
+            "black>=23.9.1",
             "flake8>=6.0.0",
             'coverage>=7.2.7',
-            'mypy>=1.3.0',
+            'mypy>=1.3.0,<1.7.0',
         ]
     },
     zip_safe=False,
@@ -87,17 +87,16 @@ setup(
         'console_scripts': ['hermes=hermespy.bin:hermes_simulation'],
     },
     install_requires=[
-        "numpy>=1.24.3",
-        "matplotlib>=3.7.1",
-        'h5py>=3.8.0',
-        'scipy>=1.10.1',
-        'pybind11>=2.10.4',
-        'ray>=2.5.0',
-        'ruamel.yaml>=0.17.31',
+        "numpy>=1.26.2",
+        "matplotlib>=3.8.2",
+        'h5py>=3.10.0',
+        'scipy>=1.11.4',
+        'pybind11>=2.11.1',
+        'ray>=2.8.1',
+        'ruamel.yaml>=0.18.5',
         'sparse>=0.14.0',
-        'numba>=0.57.0',
-        'sphinx>=7.0.1',
-        'rich>=13.4.1',
-        'ZODB~=5.8.0',
+        'numba>=0.58.1',
+        'nptyping>=2.5.0',
+        'rich>=13.7.0'
     ],
 )

@@ -12,6 +12,8 @@ from typing import Optional, Union, Iterable, Type
 import matplotlib.pyplot as plt
 import numpy as np
 from h5py import Group
+from matplotlib import rcParams
+from sparse import SparseArray  # type: ignore
 
 from hermespy.core import Executable, HDFSerializable
 
@@ -19,7 +21,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -257,14 +259,16 @@ class Symbols(HDFSerializable):
         else:
             self.__symbols[section] = value
 
-    def plot_constellation(self, axes: Optional[plt.axes.Axes] = None, title: str = "Symbol Constellation") -> Optional[plt.Figure]:
+    def plot_constellation(
+        self, axes: plt.Axes | np.ndarray | None = None, title: str = "Symbol Constellation"
+    ) -> Optional[plt.Figure]:
         """Plot the symbol constellation.
 
         Essentially projects the time-series of symbols onto a single complex plane.
 
         Args:
 
-            axes (Optional[plt.axes.Axes], optional):
+            axes (Optional[plt.Axes], optional):
                 The axes to plot the graph to.
                 By default, a new matplotlib figure is created.
 
@@ -280,20 +284,27 @@ class Symbols(HDFSerializable):
         """
 
         symbols = self.__symbols.flatten()
-        figure: Optional[plt.figure.Figure] = None
+        figure: Optional[plt.Figure] = None
 
         # Create a new figure and the respective axes if none were provided
+        _axes: np.ndarray
         if axes is None:
             with Executable.style_context():
-                figure, axes = plt.subplots()
+                figure, _axes = plt.subplots(1, 1, squeeze=None)
                 figure.suptitle(title)
 
-        axes.scatter(symbols.real, symbols.imag)
-        axes.set(ylabel="Imag")
-        axes.set(xlabel="Real")
-        axes.grid(True, which="both")
-        axes.axhline(y=0, color="k")
-        axes.axvline(x=0, color="k")
+        elif isinstance(axes, plt.Axes):
+            _axes = np.array([[axes]])
+
+        else:
+            _axes = axes
+
+        _axes[0, 0].scatter(symbols.real, symbols.imag)
+        _axes[0, 0].set(ylabel="Imag")
+        _axes[0, 0].set(xlabel="Real")
+        _axes[0, 0].grid(True, which="both")
+        _axes[0, 0].axhline(y=0, color=rcParams['grid.color'])
+        _axes[0, 0].axvline(x=0, color=rcParams['grid.color'])
 
         return figure
 
@@ -321,7 +332,7 @@ class StatedSymbols(Symbols):
 
     __states: np.ndarray  # Symbol states, four-dimensional array
 
-    def __init__(self, symbols: Iterable | np.ndarray, states: np.ndarray) -> None:
+    def __init__(self, symbols: Iterable | np.ndarray, states: np.ndarray | SparseArray) -> None:
         """
         Args:
 
@@ -331,7 +342,7 @@ class StatedSymbols(Symbols):
                 the second dimension the number of symbol blocks per stream,
                 the the dimension the number of symbols per block.
 
-            states (np.ndarray):
+            states (np.ndarray | SparseArray):
                 Four-dimensional numpy array with the first two dimensions indicating the
                 MIMO receive and transmit streams, respectively and the last two dimensions
                 indicating the number of symbol blocks and symbols per block.
@@ -341,7 +352,7 @@ class StatedSymbols(Symbols):
         self.states = states
 
     @property
-    def states(self) -> np.ndarray:
+    def states(self) -> np.ndarray | SparseArray:
         """Symbol state information.
 
         Four-dimensional numpy array with the first two dimensions indicating the
@@ -357,20 +368,37 @@ class StatedSymbols(Symbols):
         return self.__states
 
     @states.setter
-    def states(self, value: np.ndarray) -> None:
+    def states(self, value: np.ndarray | SparseArray) -> None:
         if value.ndim != 4:
             raise ValueError("State must be a four-dimensional numpy array")
 
         if value.shape[0] != self.num_streams:
-            raise ValueError(f"Number of received streams don't match, expected {self.num_streams} instead of {value.shape[0]}")
+            raise ValueError(
+                f"Number of received streams don't match, expected {self.num_streams} instead of {value.shape[0]}"
+            )
 
         if value.shape[2] != self.num_blocks:
-            raise ValueError(f"Number of received blocks don't match, expected {self.num_blocks} instead of {value.shape[2]}")
+            raise ValueError(
+                f"Number of received blocks don't match, expected {self.num_blocks} instead of {value.shape[2]}"
+            )
 
         if value.shape[3] != self.num_symbols:
-            raise ValueError(f"Symbol block sizes don't match, expected {self.num_symbols} instead of {value.shape[3]}")
+            raise ValueError(
+                f"Symbol block sizes don't match, expected {self.num_symbols} instead of {value.shape[3]}"
+            )
 
         self.__states = value.copy()
+
+    def dense_states(self) -> np.ndarray:
+        """Return the channel state in dense format.
+
+        Note that this method will convert the channel state to dense format if it is currently in sparse format.
+        This operation may be computationally expensive and should be avoided if possible.
+
+        Returns: The channel state tensor in dense format.
+        """
+
+        return self.__states.todense() if isinstance(self.__states, SparseArray) else self.__states
 
     @property
     def num_transmit_streams(self) -> int:
@@ -398,4 +426,4 @@ class StatedSymbols(Symbols):
         Symbols.to_HDF(self, group)
 
         # Serialize datasets
-        group.create_dataset("states", data=self.__states)
+        group.create_dataset("states", data=self.dense_states())

@@ -23,23 +23,19 @@ class TestRepetitionEncoder(unittest.TestCase):
     """Test the `Repetition` encoding instance."""
 
     def setUp(self) -> None:
-
         self.generator = np.random.default_rng(42)
 
         # Default parameters
         self.bit_block_size = 8
         self.repetitions = 3
 
-        self.encoder = RepetitionEncoder(self.bit_block_size,
-                                         self.repetitions)
+        self.encoder = RepetitionEncoder(self.bit_block_size, self.repetitions)
 
     def test_init(self) -> None:
         """Test valid parameter initialization during object construction."""
 
-        self.assertEqual(self.bit_block_size, self.encoder.bit_block_size,
-                         "Unexpected bit block size initialized")
-        self.assertEqual(self.repetitions, self.encoder.repetitions,
-                         "Unexpected repetition count initialized")
+        self.assertEqual(self.bit_block_size, self.encoder.bit_block_size, "Unexpected bit block size initialized")
+        self.assertEqual(self.repetitions, self.encoder.repetitions, "Unexpected repetition count initialized")
 
     def test_encoding_repetitions(self) -> None:
         """Test the encoding behaviour of a single data block being repeated multiple times."""
@@ -69,12 +65,12 @@ class TestRepetitionEncoder(unittest.TestCase):
 
     def test_decoding_repetitions(self) -> None:
         """Test the decoding behaviour of a single code block
-           consisting of data being repeated multiple times."""
+        consisting of data being repeated multiple times."""
 
         expected_data = np.array([1, 0, 1, 0, 1, 0, 0, 1])
 
         code = np.tile(expected_data, self.repetitions)
-        code[0::self.repetitions] = np.array([0, 1, 0, 1, 0, 1, 1, 0])
+        code[0 :: self.repetitions] = np.array([0, 1, 0, 1, 0, 1, 1, 0])
 
         data = self.encoder.decode(code)
         assert_array_equal(expected_data, data)

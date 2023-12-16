@@ -37,7 +37,7 @@ modem.device = device
 sc = RootRaisedCosineWaveform(oversampling_factor=1, symbol_rate=100e6, num_data_symbols=1000, num_preamble_symbols=1, num_postamble_symbols=1)
 sc.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
 sc.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
-modem.waveform_generator = sc
+modem.waveform = sc
 
 simulation.results_dir = simulation.default_results_dir()
 simulation.new_dimension('pilot_rate', [0, 1, 2, 4, 8, 16, 32, 64, 128, 256, 512], sc)

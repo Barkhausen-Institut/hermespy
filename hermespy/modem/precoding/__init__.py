@@ -4,7 +4,7 @@ from .symbol_precoding import SymbolPrecoder, SymbolPrecoding
 from .single_carrier import SingleCarrier
 from .spatial_multiplexing import SpatialMultiplexing
 from .dft import DFT
-from .space_time_block_coding import Alamouti
+from .space_time_block_coding import Alamouti, Ganesan
 from .ratio_combining import MaximumRatioCombining
 
 __author__ = "Jan Adler"
@@ -17,4 +17,13 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-__all__ = ["SymbolPrecoder", "SymbolPrecoding", "SingleCarrier", "SpatialMultiplexing", "DFT", "Alamouti", "MaximumRatioCombining"]
+__all__ = [
+    "SymbolPrecoder",
+    "SymbolPrecoding",
+    "SingleCarrier",
+    "SpatialMultiplexing",
+    "DFT",
+    "Alamouti",
+    "Ganesan",
+    "MaximumRatioCombining",
+]

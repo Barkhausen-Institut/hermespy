@@ -7,11 +7,10 @@ Drop
 
 from __future__ import annotations
 from collections.abc import Sequence
-from typing import Tuple, Type, TYPE_CHECKING
+from typing import Type, TYPE_CHECKING
 
 from h5py import Group
 
-from .channel_state_information import ChannelStateInformation
 from .device import DeviceReception, DeviceTransmission
 from .factory import HDFSerializable
 from .signal_model import Signal
@@ -24,7 +23,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -38,7 +37,12 @@ class Drop(HDFSerializable):
     __device_transmissions: Sequence[DeviceTransmission]  # Transmitted device information
     __device_receptions: Sequence[DeviceReception]  # Received device information
 
-    def __init__(self, timestamp: float, device_transmissions: Sequence[DeviceTransmission], device_receptions: Sequence[DeviceReception]) -> None:
+    def __init__(
+        self,
+        timestamp: float,
+        device_transmissions: Sequence[DeviceTransmission],
+        device_receptions: Sequence[DeviceReception],
+    ) -> None:
         """
         Args:
 
@@ -87,7 +91,7 @@ class Drop(HDFSerializable):
         return len(self.__device_receptions)
 
     @property
-    def operator_inputs(self) -> Sequence[Sequence[Tuple[Signal, ChannelStateInformation | None]]]:
+    def operator_inputs(self) -> Sequence[Sequence[Signal]]:
         """Signals feeding into device's operators during reception.
 
         Returns: Operator inputs.
@@ -102,10 +106,17 @@ class Drop(HDFSerializable):
         num_transmissions = group.attrs.get("num_transmissions", 0)
         num_receptions = group.attrs.get("num_receptions", 0)
 
-        transmissions = [DeviceTransmission.from_HDF(group[f"transmission_{t:02d}"]) for t in range(num_transmissions)]
-        receptions = [DeviceReception.from_HDF(group[f"reception_{r:02d}"]) for r in range(num_receptions)]
+        transmissions = [
+            DeviceTransmission.from_HDF(group[f"transmission_{t:02d}"])
+            for t in range(num_transmissions)
+        ]
+        receptions = [
+            DeviceReception.from_HDF(group[f"reception_{r:02d}"]) for r in range(num_receptions)
+        ]
 
-        drop = cls(timestamp=timestamp, device_transmissions=transmissions, device_receptions=receptions)
+        drop = cls(
+            timestamp=timestamp, device_transmissions=transmissions, device_receptions=receptions
+        )
         return drop
 
     def to_HDF(self, group: Group) -> None:
@@ -134,11 +145,22 @@ class RecalledDrop(Drop):
         num_transmissions = group.attrs.get("num_transmissions", 0)
         num_receptions = group.attrs.get("num_receptions", 0)
 
-        device_transmissions = [DeviceTransmission.Recall(group[f"transmission_{t:02d}"], device) for t, device in zip(range(num_transmissions), scenario.devices)]
-        device_receptions = [DeviceReception.Recall(group[f"reception_{r:02d}"], device) for r, device in zip(range(num_receptions), scenario.devices)]
+        device_transmissions = [
+            DeviceTransmission.Recall(group[f"transmission_{t:02d}"], device)
+            for t, device in zip(range(num_transmissions), scenario.devices)
+        ]
+        device_receptions = [
+            DeviceReception.Recall(group[f"reception_{r:02d}"], device)
+            for r, device in zip(range(num_receptions), scenario.devices)
+        ]
 
         # Initialize base class
-        Drop.__init__(self, timestamp=timestamp, device_transmissions=device_transmissions, device_receptions=device_receptions)
+        Drop.__init__(
+            self,
+            timestamp=timestamp,
+            device_transmissions=device_transmissions,
+            device_receptions=device_receptions,
+        )
 
         # Initialize class attributes
         self.__group = group
@@ -160,7 +182,13 @@ class EvaluatedDrop(Drop):
     # Evaluation artifacts generated for this drop.
     __artifacts: Sequence[Artifact]
 
-    def __init__(self, timestamp: float, device_transmissions: Sequence[DeviceTransmission], device_receptions: Sequence[DeviceReception], artifacts: Sequence[Artifact]) -> None:
+    def __init__(
+        self,
+        timestamp: float,
+        device_transmissions: Sequence[DeviceTransmission],
+        device_receptions: Sequence[DeviceReception],
+        artifacts: Sequence[Artifact],
+    ) -> None:
         """
         Args:
 

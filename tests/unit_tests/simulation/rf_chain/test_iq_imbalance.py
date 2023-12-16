@@ -18,7 +18,6 @@ __status__ = "Prototype"
 
 
 class TestIqImbalance(unittest.TestCase):
-
     def setUp(self) -> None:
         
         i_samples = np.random.randint(low=1, high=4, size=100)
@@ -32,8 +31,8 @@ class TestIqImbalance(unittest.TestCase):
 
         rf_chain = RfChain(phase_offset, amplitude_imbalance)
 
-        expected_deteriorated_xt = 0.5j*self.x_t -1j * np.conj(self.x_t)
-        
+        expected_deteriorated_xt = 0.5j * self.x_t - 1j * np.conj(self.x_t)
+
         assert_array_almost_equal(expected_deteriorated_xt, rf_chain.add_iq_imbalance(self.x_t))
 
     def test_default_values_result_in_no_detoriation(self) -> None:
@@ -45,7 +44,6 @@ class TestIqImbalance(unittest.TestCase):
         assert_array_almost_equal(self.x_t, rf_chain.add_iq_imbalance(self.x_t))
 
     def test_exception_raised_if_amplitude_imbalance_not_within_interval(self) -> None:
-
         with self.assertRaises(ValueError):
             _ = RfChain(None, -3)
 

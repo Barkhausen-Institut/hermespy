@@ -22,7 +22,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -258,10 +258,10 @@ class Precoding(Sequence, Serializable, Generic[PrecoderType]):
 
         if precoder_index >= len(self.__precoders) - 1:
             if self.modem.transmitting_device is not None:
-                return self.modem.transmitting_device.antennas.num_transmit_antennas
+                return self.modem.num_transmit_ports
 
             else:
-                return self.modem.receiving_device.antennas.num_receive_antennas
+                return self.modem.num_receive_ports
 
         return self.__precoders[precoder_index + 1].num_input_streams
 

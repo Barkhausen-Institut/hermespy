@@ -1,225 +1,48 @@
 # -*- coding: utf-8 -*-
-"""
-=====
-Modem
-=====
-
-Within HermesPy, the Modem class represents the full signal processing chain configuration for the transmission
-of information in form of bits.
-Modems are a form of :class:`hermespy.core.device.DuplexOperator`,
-binding to both the transmitter and receiver slot of :class:`hermespy.core.device.Device` objects.
-In other words, they both transmit and receive complex waveforms over the devices.
-It acts as a managing container for 5 signal processing step abstractions:
-
-================================================= =======================================
-Processing Step                                   Description
-================================================= =======================================
-:class:`.BitsSource`                              Source of data bits to be transmitted
-:class:`hermespy.fec.EncoderManager`              Forward error correction configuration
-:class:`.WaveformGenerator`                       Communication waveform configuration
-:class:`hermespy.precoding.SymbolPrecoding`       Symbol precoding configuration
-:class:`hermespy.precoding.TransmitStreamCoding`  Transmit MIMO configuration
-:class:`hermespy.precoding.ReceiveStreamCoding`   Receive MIMO configuration
-================================================= =======================================
-
-.. mermaid::
-   :caption: Modem Signal Processing Chain
-
-   %%{init: {'theme': 'dark'}}%%
-   flowchart LR
-
-       subgraph Modem
-           direction LR
-
-           subgraph BitSource
-
-               direction TB
-               Bits
-
-           end
-
-           subgraph BitCoding
-
-               direction TB
-               BitEncoding[Encoding]
-               BitDecoding[Decoding]
-
-           end
-
-           subgraph Waveform
-
-               Mapping --> Modulation
-               ChannelEstimation[Channel Estimation]
-               Synchronization
-               Unmapping --- Demodulation
-           end
-
-           subgraph StreamCoding
-
-               StreamEncoding[Encoding]
-               StreamDecoding[Decoding]
-           end
-
-           subgraph BeamForming
-
-               TxBeamform[Tx Beamforming]
-               RxBeamform[Rx Beamforming]
-           end
-
-           Bits --> BitEncoding
-           BitEncoding --> Mapping
-           Modulation --> StreamEncoding
-           StreamEncoding --> TxBeamform
-           StreamDecoding --> RxBeamform
-           Demodulation --- StreamDecoding
-           Synchronization --- StreamDecoding
-           ChannelEstimation --- StreamEncoding
-           ChannelEstimation --- StreamDecoding
-           BitDecoding --- Unmapping
-       end
-
-       subgraph Device
-
-           direction TB
-           txslot>Tx Slot]
-           rxslot>Rx Slot]
-       end
-
-   txsignal{{Tx Signal Model}}
-   txbits{{Tx Bits}}
-   txsymbols{{Tx Symbols}}
-   rxsignal{{Rx Signal Model}}
-   rxbits{{Rx Bits}}
-   rxsymbols{{Rx Symbols}}
-
-   TxBeamform --> txsignal
-   RxBeamform --> rxsignal
-   txsignal --> txslot
-   rxsignal --> rxslot
-
-   Bits --> txbits
-   Mapping --> txsymbols
-   BitDecoding --> rxbits
-   Unmapping --> rxsymbols
-
-.. mermaid::
-
-   %%{init: {'theme': 'dark'}}%%
-   flowchart LR
-
-       subgraph Modem
-
-           direction LR
-
-           subgraph BitSource
-
-               direction TB
-
-               Random([RandomSource]) === Stream([StreamSource])
-
-
-           end
-
-           subgraph BitCoding
-
-                direction TB
-                LDPC[/LDPC/]
-                Interleaving[/Block-Interleaving/]
-                CRC[/CRC/]
-                Repetition[/Repetition/]
-                Scrambler3G[/3GPP Scrambling/]
-                Scrambler80211a[/802.11a Scrambling/]
-
-                LDPC === Interleaving
-                Interleaving === CRC
-                CRC === Repetition
-                Repetition === Scrambler3G
-                Scrambler3G === Scrambler80211a
-
-           end
-
-           subgraph Waveform
-
-                direction TB
-                FSK([FSK])
-                OFDM([OFDM])
-                GFDM([GFDM])
-                QAM([QAM])
-
-                FSK === OFDM
-                OFDM === GFDM
-                GFDM === QAM
-           end
-
-           subgraph StreamCoding
-
-              direction TB
-              SC[/Single Carrier/]
-              SM[/Spatial Multiplexing/]
-              DFT[/DFT/]
-              STBC[/STBC/]
-              MRC[/Maximum Ratio Combining/]
-
-              SC === SM === DFT === STBC === MRC
-
-           end
-
-           subgraph BeamForming
-
-               direction TB
-               Conventional[/Conventional/]
-           end
-
-            BitSource ===> BitCoding
-            BitCoding <===> Waveform
-            Waveform <===> StreamCoding
-            StreamCoding <===> BeamForming
-       end
-
-    linkStyle 0 display: None
-    linkStyle 1 display: None
-    linkStyle 2 display: None
-    linkStyle 3 display: None
-    linkStyle 4 display: None
-    linkStyle 5 display: None
-    linkStyle 6 display: None
-    linkStyle 7 display: None
-    linkStyle 8 display: None
-    linkStyle 9 display: None
-    linkStyle 10 display: None
-    linkStyle 11 display: None
-    linkStyle 12 display: None
-    linkStyle 11 display: None
-"""
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from functools import cached_property
-from typing import List, Set, Tuple, Type, Optional
+from typing import List, Set, Tuple, Type
 
 import numpy as np
 from h5py import Group
 
 from hermespy.fec import EncoderManager
-from hermespy.core import ChannelStateInformation, RandomNode, Transmission, Reception, Serializable, Signal, Device, Transmitter, Receiver, SNRType
+from hermespy.core import (
+    HDFSerializable,
+    RandomNode,
+    Transmission,
+    Reception,
+    Serializable,
+    Signal,
+    Device,
+    Transmitter,
+    Receiver,
+    SNRType,
+)
 from hermespy.precoding import ReceiveStreamCoding, TransmitStreamCoding
 from .precoding import SymbolPrecoding
 from .bits_source import BitsSource, RandomBitsSource
 from .symbols import StatedSymbols, Symbols
-from .waveform import WaveformGenerator
+from .waveform import CommunicationWaveform
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
 class CommunicationTransmissionFrame(Transmission):
-    """A single frame of information generated by transmitting over a communication operator."""
+    """A single synchronized frame of information generated by transmittgin over a modem.
+
+    Returned when calling the :meth:`transmit<hermespy.core.device.Transmitter.transmit>` method of a
+    :class:`TransmittingModem<hermespy.modem.modem.TransmittingModem>` instance.
+    """
 
     signal: Signal
     """Communication base-band waveform."""
@@ -239,7 +62,15 @@ class CommunicationTransmissionFrame(Transmission):
     timestamp: float
     """Time at which the frame was transmitted in seconds."""
 
-    def __init__(self, signal: Signal, bits: np.ndarray, encoded_bits: np.ndarray, symbols: Symbols, encoded_symbols: Symbols, timestamp: float) -> None:
+    def __init__(
+        self,
+        signal: Signal,
+        bits: np.ndarray,
+        encoded_bits: np.ndarray,
+        symbols: Symbols,
+        encoded_symbols: Symbols,
+        timestamp: float,
+    ) -> None:
         """
         Args:
 
@@ -270,7 +101,11 @@ class CommunicationTransmissionFrame(Transmission):
         self.timestamp = timestamp
 
     @classmethod
-    def from_HDF(cls: Type[CommunicationTransmissionFrame], group: Group, transmitter: Transmitter | None = None) -> CommunicationTransmissionFrame:
+    def from_HDF(
+        cls: Type[CommunicationTransmissionFrame],
+        group: Group,
+        transmitter: Transmitter | None = None,
+    ) -> CommunicationTransmissionFrame:
         # Recall groups
         signal = Signal.from_HDF(group["signal"])
         symbols = Symbols.from_HDF(group["symbols"])
@@ -284,7 +119,14 @@ class CommunicationTransmissionFrame(Transmission):
         timestamp = group.attrs.get("timestamp", 0)
 
         # Initialize object from recalled state
-        return cls(signal=signal, bits=bits, encoded_bits=encoded_bits, symbols=symbols, encoded_symbols=encoded_symbols, timestamp=timestamp)
+        return cls(
+            signal=signal,
+            bits=bits,
+            encoded_bits=encoded_bits,
+            symbols=symbols,
+            encoded_symbols=encoded_symbols,
+            timestamp=timestamp,
+        )
 
     def to_HDF(self, group: Group) -> None:
         # Serialize base class
@@ -303,12 +145,20 @@ class CommunicationTransmissionFrame(Transmission):
 
 
 class CommunicationTransmission(Transmission):
-    """Information generated by transmitting over a communication operator."""
+    """Collection of information generated by transmitting over a modem.
+
+    Returned when calling the :meth:`transmit<hermespy.core.device.Transmitter.transmit>` method of a
+    :class:`TransmittingModem<hermespy.modem.modem.TransmittingModem>` instance.
+    """
 
     frames: List[CommunicationTransmissionFrame]
     """Individual transmitted communication frames."""
 
-    def __init__(self, signal: Signal, frames: Optional[List[CommunicationTransmissionFrame]] = None) -> None:
+    def __init__(
+        self,
+        signal: Signal,
+        frames: List[CommunicationTransmissionFrame] | None = None
+    ) -> None:
         """
         Args:
 
@@ -360,7 +210,10 @@ class CommunicationTransmission(Transmission):
 
         # Recall individual detected frames
         num_frames = group.attrs.get("num_frames", 0)
-        frames = [CommunicationTransmissionFrame.from_HDF(group[f"frame_{f:02d}"]) for f in range(num_frames)]
+        frames = [
+            CommunicationTransmissionFrame.from_HDF(group[f"frame_{f:02d}"])
+            for f in range(num_frames)
+        ]
 
         return cls(signal=signal, frames=frames)
 
@@ -376,8 +229,12 @@ class CommunicationTransmission(Transmission):
             frame.to_HDF(group.create_group(f"frame_{f:02d}"))
 
 
-class CommunicationReceptionFrame(object):
-    """A single frame of information generated by receiving over a communication operator."""
+class CommunicationReceptionFrame(HDFSerializable):
+    """A single synchronized frame of information generated by receiving over a modem.
+
+    Returned when calling the :meth:`receive<hermespy.core.device.Receiver.receive>` method of a
+    :class:`ReceivingModem<hermespy.modem.modem.ReceivingModem>` instance.
+    """
 
     signal: Signal
     """Communication base-band waveform."""
@@ -403,10 +260,17 @@ class CommunicationReceptionFrame(object):
     decoded_bits: np.ndarray
     """Received decoded data bits after error correction."""
 
-    csi: ChannelStateInformation
-    """Estimated channel state."""
-
-    def __init__(self, signal: Signal, decoded_signal: Signal, symbols: Symbols, decoded_symbols: Symbols, timestamp: float, equalized_symbols: Symbols, encoded_bits: np.ndarray, decoded_bits: np.ndarray, csi: ChannelStateInformation) -> None:
+    def __init__(
+        self,
+        signal: Signal,
+        decoded_signal: Signal,
+        symbols: Symbols,
+        decoded_symbols: Symbols,
+        timestamp: float,
+        equalized_symbols: Symbols,
+        encoded_bits: np.ndarray,
+        decoded_bits: np.ndarray,
+    ) -> None:
         self.signal = signal
         self.decoded_signal = decoded_signal
         self.symbols = symbols
@@ -415,17 +279,17 @@ class CommunicationReceptionFrame(object):
         self.equalized_symbols = equalized_symbols
         self.encoded_bits = encoded_bits
         self.decoded_bits = decoded_bits
-        self.csi = csi
 
     @classmethod
-    def from_HDF(cls: Type[CommunicationReceptionFrame], group: Group) -> CommunicationReceptionFrame:
+    def from_HDF(
+        cls: Type[CommunicationReceptionFrame], group: Group
+    ) -> CommunicationReceptionFrame:
         # Recall groups
         signal = Signal.from_HDF(group["signal"])
         decoded_signal = Signal.from_HDF(group["decoded_signal"])
         symbols = Symbols.from_HDF(group["symbols"])
         decoded_symbols = Symbols.from_HDF(group["decoded_symbols"])
         equalized_symbols = Symbols.from_HDF(group["equalized_symbols"])
-        csi = ChannelStateInformation.from_HDF(group["csi"])
 
         # Recall datasets
         encoded_bits = np.array(group["encoded_bits"], dtype=np.uint8)
@@ -435,7 +299,16 @@ class CommunicationReceptionFrame(object):
         timestamp = group.attrs.get("timestamp", 0)
 
         # Initialize object from recalled state
-        return cls(signal=signal, decoded_signal=decoded_signal, symbols=symbols, decoded_symbols=decoded_symbols, equalized_symbols=equalized_symbols, csi=csi, encoded_bits=encoded_bits, decoded_bits=decoded_bits, timestamp=timestamp)
+        return cls(
+            signal=signal,
+            decoded_signal=decoded_signal,
+            symbols=symbols,
+            decoded_symbols=decoded_symbols,
+            equalized_symbols=equalized_symbols,
+            encoded_bits=encoded_bits,
+            decoded_bits=decoded_bits,
+            timestamp=timestamp,
+        )
 
     def to_HDF(self, group: Group) -> None:
         # Serialize groups
@@ -444,7 +317,6 @@ class CommunicationReceptionFrame(object):
         self.symbols.to_HDF(group.create_group("symbols"))
         self.decoded_symbols.to_HDF(group.create_group("decoded_symbols"))
         self.equalized_symbols.to_HDF(group.create_group("equalized_symbols"))
-        self.csi.to_HDF(group.create_group("csi"))
 
         # Serialize datasets
         group.create_dataset("encoded_bits", data=self.encoded_bits)
@@ -455,12 +327,18 @@ class CommunicationReceptionFrame(object):
 
 
 class CommunicationReception(Reception):
-    """Information generated by receiving over a communication operator."""
+    """Collection of information generated by receiving over a modem.
+
+    Returned when calling the :meth:`receive<hermespy.core.device.Receiver.receive>` method of a
+    :class:`ReceivingModem<hermespy.modem.modem.ReceivingModem>` instance.
+    """
 
     frames: List[CommunicationReceptionFrame]
     """Individual received communication frames."""
 
-    def __init__(self, signal: Signal, frames: Optional[List[CommunicationReceptionFrame]] = None) -> None:
+    def __init__(
+        self, signal: Signal, frames: List[CommunicationReceptionFrame] | None = None
+    ) -> None:
         """
         Args:
 
@@ -541,7 +419,9 @@ class CommunicationReception(Reception):
 
         # Recall individual detected frames
         num_frames = group.attrs.get("num_frames", 0)
-        frames = [CommunicationReceptionFrame.from_HDF(group[f"frame_{f:02d}"]) for f in range(num_frames)]
+        frames = [
+            CommunicationReceptionFrame.from_HDF(group[f"frame_{f:02d}"]) for f in range(num_frames)
+        ]
 
         return cls(signal=signal, frames=frames)
 
@@ -558,32 +438,47 @@ class CommunicationReception(Reception):
 
 
 class BaseModem(RandomNode, ABC):
-    """Base class for wireless modems transmitting or receiving information over devices"""
+    """Base class for wireless modems transmitting or receiving information over devices.
+
+    Configure a :class:`TransmittingModem`, :class:`ReceivingModem` or the convenience
+    wrappers :class:`SimplexLink` and :class:`DuplexModem` implementing this abstract interface.
+    """
 
     __encoder_manager: EncoderManager
     __precoding: SymbolPrecoding
-    __waveform_generator: Optional[WaveformGenerator]
+    __waveform: CommunicationWaveform | None
 
     @staticmethod
     def _arg_signature() -> Set[str]:
         return {"encoding", "precoding", "waveform", "seed"}
 
-    def __init__(self, encoding: Optional[EncoderManager] = None, precoding: Optional[SymbolPrecoding] = None, waveform: Optional[WaveformGenerator] = None, seed: Optional[int] = None) -> None:
+    def __init__(
+        self,
+        encoding: EncoderManager | None = None,
+        precoding: SymbolPrecoding | None = None,
+        waveform: CommunicationWaveform | None = None,
+        seed: int | None = None,
+    ) -> None:
         """
         Args:
 
-            encoding (EncoderManager, optional):
-                Bit coding configuration.
-                Encodes communication bit frames during transmission and decodes them during reception.
+            signal (Signal):
+                Transmitted communication base-band waveform.
 
-            precoding (SymbolPrecoding, optional):
-                Modulation symbol coding configuration.
+            bits (np.ndarray):
+                Transmitted communication data bits.
 
-            waveform (WaveformGenerator, optional):
+            waveform (CommunicationWaveform, optional):
                 The waveform to be transmitted by this modem.
 
-            seed (int, optional):
-                Seed used to initialize the pseudo-random number generator.
+            symbols (Symbols):
+                Transmitted communication data symbols.
+
+            encoded_symbols (Symbols):
+                Transmitted communication data symbols after symbol encoding.
+
+            timestamp (float):
+                Time at which the frame was transmitted in seconds.
         """
 
         # Base class initialization
@@ -591,106 +486,54 @@ class BaseModem(RandomNode, ABC):
 
         self.encoder_manager = EncoderManager() if encoding is None else encoding
         self.precoding = SymbolPrecoding(modem=self) if precoding is None else precoding
-        self.waveform_generator = waveform
+        self.waveform = waveform
 
     @property
     @abstractmethod
-    def transmitting_device(self) -> Optional[Device]:
+    def transmitting_device(self) -> Device | None:
         """Tranmsitting device operated by the modem.
 
-        Returns:
-
-            Handle to the transmitting device.
-            `None` if the device is unspecified.
+        :py:obj:`None` if the device is unspecified.
         """
         ...  # pragma no cover
 
     @property
     @abstractmethod
-    def receiving_device(self) -> Optional[Device]:
+    def receiving_device(self) -> Device | None:
         """Receiving device operated by the modem.
 
-        Returns:
-
-            Handle to the receiving device.
-            `None` if the device is unspecified.
+        :py:obj:`None` if the device is unspecified.
         """
         ...  # pragma no cover
-
-    @property
-    def num_transmit_streams(self) -> int:
-        """The number of data streams handled by the modem during transmission.
-
-        The number of data streams is always less or equal to the number of available antennas `num_antennas`.
-
-        Returns:
-            int:
-                The number of data streams generated by the modem.
-        """
-
-        if self.transmitting_device is None:
-            return 0
-
-        # For now, stream compression will not be supported
-        return self.transmitting_device.num_antennas
-
-    @property
-    def num_receive_streams(self) -> int:
-        """The number of data streams handled by the modem during reception.
-
-        The number of data streams is always less or equal to the number of available antennas `num_antennas`.
-
-        Returns:
-            int:
-                The number of data streams processed by the modem.
-        """
-
-        if self.receiving_device is None:
-            return 0
-
-        # For now, stream compression will not be supported
-        return self.receiving_device.num_antennas
 
     @property
     def encoder_manager(self) -> EncoderManager:
-        """Access the modem's encoder management.
+        """Description of the modem's forward error correction.
 
-        Returns:
-            EncoderManager:
-                Handle to the modem's encoder instance.
+        Refer to :doc:`fec` for further information.
         """
 
         return self.__encoder_manager
 
     @encoder_manager.setter
     def encoder_manager(self, new_manager: EncoderManager) -> None:
-        """Update the modem's encoder management.
-
-        Args:
-            new_manager (EncoderManger):
-                The new encoder manager.
-        """
-
         self.__encoder_manager = new_manager
         self.__encoder_manager.random_mother = self
         new_manager.modem = self
 
     @property
-    def waveform_generator(self) -> WaveformGenerator:
-        """Communication waveform emitted by this modem.
+    def waveform(self) -> CommunicationWaveform | None:
+        """Description of the communication waveform emitted by this modem.
 
-        Returns:
-            WaveformGenerator:
-                Handle to the modem's `WaveformGenerator` instance.
+        The only mandatory attribute required to transmit or receive over a
+        :class:`modem<BaseModem>`.
         """
 
-        return self.__waveform_generator
+        return self.__waveform
 
-    @waveform_generator.setter
-    def waveform_generator(self, value: Optional[WaveformGenerator]) -> None:
-        """Set the communication waveform emitted by this modem."""
-
-        self.__waveform_generator = value
+    @waveform.setter
+    def waveform(self, value: CommunicationWaveform | None) -> None:
+        self.__waveform = value
 
         if value is not None:
             value.modem = self
@@ -698,63 +541,117 @@ class BaseModem(RandomNode, ABC):
 
     @property
     def precoding(self) -> SymbolPrecoding:
-        """Access this modem's precoding configuration.
-
-        Returns:
-            SymbolPrecoding: Handle to the configuration.
-        """
+        """Description of the modem's precoding on a symbol level."""
 
         return self.__precoding
 
     @precoding.setter
     def precoding(self, coding: SymbolPrecoding) -> None:
-        """Modify the modem's precoding configuration.
-
-        Args:
-            coding (SymbolPrecoding): The new precoding configuration.
-        """
-
         self.__precoding = coding
         self.__precoding.modem = self
+
+    def _bit_requirements(self) -> Tuple[int, int]:
+        """Compute the bit generation requirements of the modem for the given configuration.
+
+        Returns: Tuple of required data bits and required code bits.
+
+        Raises:
+
+            RuntimeError: If the symbol precoding rate does not match the waveform configuration.
+        """
+
+        if self.waveform.num_data_symbols % self.precoding.rate.denominator != 0:
+            raise RuntimeError(
+                f"Symbol precoding rate does not match the waveform configuration ({self.waveform.num_data_symbols} % {self.precoding.rate.denominator} != 0)"
+            )
+
+        required_num_data_symbols = int(
+            self.waveform.num_data_symbols * self.precoding.rate
+        )
+        required_num_code_bits = (
+            self.waveform.bits_per_frame(required_num_data_symbols)
+            * self.precoding.num_input_streams
+        )
+        required_num_data_bits = self.encoder_manager.required_num_data_bits(required_num_code_bits)
+
+        return required_num_data_bits, required_num_code_bits
 
     @property
     def num_data_bits_per_frame(self) -> int:
         """Compute the number of required data bits to generate a single frame.
 
-        Returns:
-            int: The number of data bits.
+        The number of bits depends on the configured :attr:`waveform<BaseModem.waveform>`,
+        as well as the :attr:`encoder_manager<BaseModem.encoder_manager>` and :attr:`precoding<BaseModem.precoding>`.
         """
 
-        num_code_bits = self.waveform_generator.bits_per_frame
-        return self.encoder_manager.required_num_data_bits(num_code_bits)
+        required_num_data_bits, _ = self._bit_requirements()
+        return required_num_data_bits
+
+    @property
+    def samples_per_frame(self) -> int:
+        """Number of discrete-time samples per processed communication frame.
+
+        Convenience wrapper for the :attr:`waveform<BaseModem.waveform>`
+        :attr:`sampling_rate<hermespy.modem.waveform.CommunicationWaveform.sampling_rate>` property.
+        """
+        return self.waveform.samples_per_frame
 
     @property
     def frame_duration(self) -> float:
-        return self.waveform_generator.frame_duration
+        """Duration of a single communication frame in seconds.
+
+        Convenience wrapper for the :attr:`waveform<BaseModem.waveform>`
+        :attr:`frame_duration<hermespy.modem.waveform.CommunicationWaveform.frame_duration>` property.
+        """
+
+        return self.waveform.frame_duration
+
+    @property
+    def symbol_duration(self) -> float:
+        """Duration of a single communication symbol in seconds.
+
+        Convenience wrapper for the :attr:`waveform<BaseModem.waveform>`
+        :attr:`symbol_duration<hermespy.modem.waveform.CommunicationWaveform.symbol_duration>` property.
+        """
+
+        return self.waveform.symbol_duration
 
     @property
     def sampling_rate(self) -> float:
-        return self.waveform_generator.sampling_rate
+        """Sampling rate of the processed waveforms in Hz.
+
+        Convenience wrapper for the :attr:`waveform<BaseModem.waveform>`
+        :attr:`sampling_rate<hermespy.modem.waveform.CommunicationWaveform.sampling_rate>` property.
+        """
+        return self.waveform.sampling_rate
+
+    @property
+    def num_transmit_ports(self) -> int:
+        """Number of transmit antenna ports."""
+
+        return 0  # pragma: no cover
+
+    @property
+    def num_receive_ports(self) -> int:
+        """Number of receive antenna ports."""
+
+        return 0  # pragma: no cover
 
     def _noise_power(self, strength: float, snr_type: SNRType) -> float:
         # No waveform configured equals no noise required
-        if self.waveform_generator is None:
+        if self.waveform is None:
             return 0.0
 
         if snr_type == SNRType.EBN0:
-            return self.waveform_generator.bit_energy / strength
+            return self.waveform.bit_energy / strength
 
         if snr_type == SNRType.ESN0:
-            return self.waveform_generator.symbol_energy / strength
+            return self.waveform.symbol_energy / strength
 
         if snr_type == SNRType.PN0:
-            return self.waveform_generator.power / strength
+            return self.waveform.power / strength
 
         raise ValueError(f"SNR of type '{snr_type}' is not supported by modem operators")
-
-    @property
-    def csi(self) -> Optional[ChannelStateInformation]:
-        return None
 
 
 class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Serializable):
@@ -767,7 +664,9 @@ class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Seria
     # Stream MIMO coding configuration
     __transmit_stream_coding: TransmitStreamCoding
 
-    def __init__(self, bits_source: BitsSource | None = None, device: Device | None = None, *args, **kwargs) -> None:
+    def __init__(
+        self, bits_source: BitsSource | None = None, device: Device | None = None, *args, **kwargs
+    ) -> None:
         """
         Args:
 
@@ -786,12 +685,12 @@ class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Seria
         self.device = device
 
     @property
-    def transmitting_device(self) -> Optional[Device]:
+    def transmitting_device(self) -> Device | None:
         # The transmitting device resolves to the operated device
         return self.device
 
     @property
-    def receiving_device(self) -> Optional[Device]:
+    def receiving_device(self) -> Device | None:
         return None
 
     @Transmitter.device.setter  # type: ignore
@@ -815,6 +714,10 @@ class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Seria
     def bits_source(self, value: BitsSource):
         value.random_mother = self
         self.__bits_source = value
+
+    @property
+    def num_transmit_ports(self) -> int:
+        return 0 if self.transmitting_device is None else self.transmitting_device.num_transmit_ports
 
     @property
     def transmit_stream_coding(self) -> TransmitStreamCoding:
@@ -844,7 +747,7 @@ class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Seria
 
         symbols = Symbols()
         for frame_bits in np.reshape(bits, (num_streams, -1)):
-            symbols.append_stream(self.waveform_generator.map(frame_bits))
+            symbols.append_stream(self.waveform.map(frame_bits))
 
         return symbols
 
@@ -861,16 +764,24 @@ class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Seria
             The modualted base-band communication frame.
         """
 
-        signal = Signal.empty(self.waveform_generator.sampling_rate)
+        # For each stream resulting from the initial encoding stage
+        # Place and encode the symbols according to the stream transmit coding configuration
+        frame_samples = np.empty(
+            (symbols.num_streams, self.waveform.samples_per_frame), dtype=np.complex_
+        )
+        for s, stream_symbols in enumerate(symbols.raw):
+            placed_symbols = self.waveform.place(
+                Symbols(stream_symbols[np.newaxis, :, :])
+            )
 
-        if symbols.num_streams < 1:
-            signal.append_streams(self.waveform_generator.modulate(Symbols()))
+            # Modulate each placed symbol stream individually to its base-band signal representation
+            frame_samples[s, :] = self.waveform.modulate(placed_symbols)
 
-        else:
-            for symbol_stream in symbols.raw:
-                signal.append_streams(self.waveform_generator.modulate(Symbols(symbol_stream[np.newaxis, :, :])))
-
-        return signal
+        # Apply the stream transmit coding configuration
+        frame_signal = Signal(
+            frame_samples, self.waveform.sampling_rate, self.carrier_frequency
+        )
+        return frame_signal
 
     def _transmit(self, duration: float = -1.0) -> CommunicationTransmission:
         """Returns an array with the complex base-band samples of a waveform generator.
@@ -892,23 +803,31 @@ class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Seria
         # Infer required parameters
         frame_duration = self.frame_duration
         num_mimo_frames = int(duration / frame_duration)
-        code_bits_per_mimo_frame = int(self.waveform_generator.bits_per_frame * self.precoding.num_input_streams)
-        data_bits_per_mimo_frame = self.encoder_manager.required_num_data_bits(code_bits_per_mimo_frame)
+        (required_num_data_bits, required_num_code_bits) = self._bit_requirements()
 
+        # Ultimately, the number of resulting output streams is determined by the stream coding configuration
         if len(self.transmit_stream_coding) > 0:
             num_output_streams = self.transmit_stream_coding.num_output_streams
 
+        # If not stream coding configuration is available, the number of output streams is determined by the precoding configuration
         elif len(self.precoding) > 0:
             num_output_streams = self.precoding.num_output_streams
 
+        # The default number of output streams is one
         else:
             num_output_streams = 1
 
         # Assert that the number of output streams matches the antenna count
-        if self.device is not None and num_output_streams != self.device.num_antennas:
-            raise ValueError(f"Modem MIMO configuration generates invalid number of antenna streams ({num_output_streams} instead of {self.device.num_antennas})")
+        if self.device is not None and num_output_streams != self.num_transmit_ports:
+            raise RuntimeError(
+                f"Modem MIMO configuration generates invalid number of antenna streams ({num_output_streams} instead of {self.num_transmit_ports})"
+            )
 
-        signal = Signal.empty(self.waveform_generator.sampling_rate, num_output_streams)
+        signal = Signal.empty(
+            self.waveform.sampling_rate,
+            num_output_streams,
+            carrier_frequency=self.carrier_frequency,
+        )
 
         # Abort if no frame is to be transmitted within the current duration
         if num_mimo_frames < 1:
@@ -918,26 +837,48 @@ class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Seria
         frames: List[CommunicationTransmissionFrame] = []
         for n in range(num_mimo_frames):
             # Generate plain data bits
-            data_bits = self.bits_source.generate_bits(data_bits_per_mimo_frame)
+            data_bits = self.bits_source.generate_bits(required_num_data_bits)
 
             # Apply forward error correction
-            encoded_bits = self.encoder_manager.encode(data_bits, code_bits_per_mimo_frame)
+            encoded_bits = self.encoder_manager.encode(data_bits, required_num_code_bits)
 
             # Map bits to communication symbols
-            symbols = self.__map(encoded_bits, self.precoding.num_input_streams)
+            mapped_symbols = self.__map(encoded_bits, self.precoding.num_input_streams)
 
-            # Apply precoding cofiguration
-            encoded_symbols = self.precoding.encode(StatedSymbols(symbols.raw, np.ones((symbols.num_streams, 1, symbols.num_blocks, symbols.num_symbols), dtype=complex)))
+            # Apply the first symbol precoding cofiguration
+            encoded_symbols = self.precoding.encode(
+                StatedSymbols(
+                    mapped_symbols.raw,
+                    np.ones(
+                        (
+                            mapped_symbols.num_streams,
+                            1,
+                            mapped_symbols.num_blocks,
+                            mapped_symbols.num_symbols,
+                        ),
+                        dtype=np.complex_,
+                    ),
+                )
+            )
 
-            # Modulate to base-band signal representation
+            # Modulate symbols to a base-band signal
             frame_signal = self.__modulate(encoded_symbols)
 
-            # Apply the stream transmit coding configuration
+            # Apply stream encoding configuration
             encoded_frame_signal = self.__transmit_stream_coding.encode(frame_signal)
 
             # Save results
             signal.append_samples(encoded_frame_signal)
-            frames.append(CommunicationTransmissionFrame(signal=frame_signal, bits=data_bits, encoded_bits=encoded_bits, symbols=symbols, encoded_symbols=encoded_symbols, timestamp=n * frame_duration))
+            frames.append(
+                CommunicationTransmissionFrame(
+                    signal=frame_signal,
+                    bits=data_bits,
+                    encoded_bits=encoded_bits,
+                    symbols=mapped_symbols,
+                    encoded_symbols=encoded_symbols,
+                    timestamp=n * frame_duration,
+                )
+            )
 
         # Update the assumed signal carrier frequency to RF band
         signal.carrier_frequency = self.carrier_frequency
@@ -968,11 +909,11 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
         self.device = device
 
     @property
-    def transmitting_device(self) -> Optional[Device]:
+    def transmitting_device(self) -> Device | None:
         return None
 
     @property
-    def receiving_device(self) -> Optional[Device]:
+    def receiving_device(self) -> Device | None:
         # The receiving device resolves to the operated device
         return self.device
 
@@ -983,6 +924,13 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
 
         if value is not None and self not in value.receivers:
             value.receivers.add(self)
+
+    @property
+    def num_receive_ports(self) -> int:
+        if self.receiving_device is None:
+            return 0
+        else:
+            return self.receiving_device.num_receive_ports
 
     @property
     def receive_stream_coding(self) -> ReceiveStreamCoding:
@@ -1014,8 +962,10 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
         """
 
         # Synchronize raw MIMO data into frames
-        frame_start_indices = self.waveform_generator.synchronization.synchronize(received_signal.samples)
-        frame_length = self.waveform_generator.samples_in_frame
+        frame_start_indices = self.waveform.synchronization.synchronize(
+            received_signal.samples
+        )
+        frame_length = self.waveform.samples_per_frame
 
         synchronized_signals = []
         for frame_start in frame_start_indices:
@@ -1042,7 +992,7 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
 
         symbols = Symbols()
         for stream in frame.samples:
-            stream_symbols = self.waveform_generator.demodulate(stream)
+            stream_symbols = self.waveform.demodulate(stream)
             symbols.append_stream(stream_symbols)
 
         return symbols
@@ -1061,13 +1011,13 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
 
         bits = np.empty(0, dtype=np.uint8)
         for stream in symbols.raw:
-            bits = np.append(bits, self.waveform_generator.unmap(Symbols(stream[np.newaxis, :, :])))
+            bits = np.append(bits, self.waveform.unmap(Symbols(stream[np.newaxis, :, :])))
 
         return bits
 
-    def _receive(self, signal: Signal, csi: ChannelStateInformation) -> CommunicationReception:
+    def _receive(self, signal: Signal) -> CommunicationReception:
         # Resample the signal to match the waveform's requirements
-        signal = signal.resample(self.waveform_generator.sampling_rate)
+        signal = signal.resample(self.waveform.sampling_rate)
 
         # Synchronize incoming signals
         frame_start_indices, synchronized_signals = self.__synchronize(signal)
@@ -1077,9 +1027,8 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
             reception = CommunicationReception(signal)
             return reception
 
-        # Infer required parameters
-        code_bits_per_mimo_frame = int(self.waveform_generator.bits_per_frame * self.precoding.num_input_streams)
-        data_bits_per_mimo_frame = self.encoder_manager.required_num_data_bits(code_bits_per_mimo_frame)
+        # Compute the bit generation requirements
+        required_num_data_bits, _ = self._bit_requirements()
 
         # Process each frame independently
         frames: List[CommunicationReceptionFrame] = []
@@ -1091,22 +1040,36 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
             symbols = self.__demodulate(decoded_frame_signal)
 
             # Estimate the channel from each frame demodulation
-            stated_symbols, channel_estimate = self.waveform_generator.estimate_channel(symbols)
+            frame_delay = frame_index / self.waveform.sampling_rate
+            stated_symbols = self.waveform.estimate_channel(symbols, frame_delay)
+
+            picked_symbols = self.waveform.pick(stated_symbols)
 
             # Decode the pre-equalization symbol precoding stage
-            decoded_symbols = self.precoding.decode(stated_symbols)
+            decoded_symbols = self.precoding.decode(picked_symbols)
 
             # Equalize the received symbols for each frame given the estimated channel state
-            equalized_symbols = self.waveform_generator.equalize_symbols(decoded_symbols)
+            equalized_symbols = self.waveform.equalize_symbols(decoded_symbols)
 
             # Unmap equalized symbols to information bits
             encoded_bits = self.__unmap(equalized_symbols)
 
             # Apply inverse FEC configuration to correct errors and remove redundancies
-            decoded_bits = self.encoder_manager.decode(encoded_bits, data_bits_per_mimo_frame)
+            decoded_bits = self.encoder_manager.decode(encoded_bits, required_num_data_bits)
 
             # Store the received information
-            frames.append(CommunicationReceptionFrame(signal=frame_signal, decoded_signal=decoded_frame_signal, symbols=symbols, decoded_symbols=decoded_symbols, timestamp=frame_index * signal.sampling_rate, equalized_symbols=equalized_symbols, encoded_bits=encoded_bits, decoded_bits=decoded_bits, csi=channel_estimate))
+            frames.append(
+                CommunicationReceptionFrame(
+                    signal=frame_signal,
+                    decoded_signal=decoded_frame_signal,
+                    symbols=symbols,
+                    decoded_symbols=decoded_symbols,
+                    timestamp=frame_index * signal.sampling_rate,
+                    equalized_symbols=equalized_symbols,
+                    encoded_bits=encoded_bits,
+                    decoded_bits=decoded_bits,
+                )
+            )
 
         # Store the received information of all frames
         reception = CommunicationReception(signal=signal, frames=frames)
@@ -1115,27 +1078,30 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
     def _recall_reception(self, group: Group) -> CommunicationReception:
         return CommunicationReception.from_HDF(group)
 
-    @property
-    def csi(self) -> Optional[ChannelStateInformation]:
-        return Receiver.csi.fget(self)  # type: ignore
-
 
 class DuplexModem(TransmittingModem, ReceivingModem):
-    """Representation of a wireless modem simulatneously transmitting and receiving."""
+    """Representation of a wireless modem simultaneously transmitting and receiving."""
 
     yaml_tag = "Modem"
-    """YAML serialization tag"""
 
     def __init__(self, *args, **kwargs) -> None:
+        """
+        Args:
+
+            *args, \**kwargs:
+                Modem initialization parameters.
+                Refer to :class:`TransmittingModem` and :class:`ReceivingModem` for further details.
+        """
+
         ReceivingModem.__init__(self)
         TransmittingModem.__init__(self, *args, **kwargs)
 
     @property
-    def transmitting_device(self) -> Optional[Device]:
+    def transmitting_device(self) -> Device | None:
         return TransmittingModem.transmitting_device.fget(self)  # type: ignore
 
     @property
-    def receiving_device(self) -> Optional[Device]:
+    def receiving_device(self) -> Device | None:
         return ReceivingModem.receiving_device.fget(self)  # type: ignore
 
     @TransmittingModem.device.setter  # type: ignore
@@ -1143,36 +1109,28 @@ class DuplexModem(TransmittingModem, ReceivingModem):
         TransmittingModem.device.fset(self, value)
         ReceivingModem.device.fset(self, value)
 
-    @property
-    def csi(self) -> Optional[ChannelStateInformation]:
-        return Receiver.csi.fget(self)  # type: ignore
 
-
-class SimplexLink(TransmittingModem, ReceivingModem, Serializable):
+class SimplexLink(TransmittingModem, ReceivingModem):
     """Convenience class to manage a simplex communication link between two dedicated devices."""
 
     yaml_tag = "SimplexLink"
-    """YAML serialization tag"""
-
     __transmitting_device: Device  # Transmitting device
     __receiving_device: Device  # Receiving device
 
-    def __init__(self, transmitting_device: Device, receiving_device: Device, *args, **kwargs) -> None:
+    def __init__(
+        self, transmitting_device: Device, receiving_device: Device, *args, **kwargs
+    ) -> None:
         """
-
+        Args:
             transmitting_device (Device):
                 Transmitting device.
 
             receiving_device (Device):
                 Receiving device.
 
-            args, kwargs:
+            *args, \**kwargs:
                 Modem initialization parameters.
-                Refer to :class:`.TransmittingModem` and :class:`.ReceivingModem` for further details.
-
-        Raises:
-
-            ValueError: If `transmitting_device` and `receiving_device` are identical.
+                Refer to :class:`TransmittingModem` and :class:`ReceivingModem` for further details.
         """
 
         self.__transmitting_device = transmitting_device

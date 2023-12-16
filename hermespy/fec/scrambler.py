@@ -24,7 +24,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -118,7 +118,9 @@ class PseudoRandomGenerator:
         return x1
 
     def __forward_x2(self) -> int:
-        x2 = (self.__queue_x2[-3] + self.__queue_x2[-2] + self.__queue_x2[-1] + self.__queue_x1[0]) % 2
+        x2 = (
+            self.__queue_x2[-3] + self.__queue_x2[-2] + self.__queue_x2[-1] + self.__queue_x1[0]
+        ) % 2
 
         self.__queue_x2.append(x2)
         return x2
@@ -131,8 +133,9 @@ class Scrambler3GPP(Encoder, Serializable):
     """
 
     yaml_tag: str = "SCRAMBLER_3GPP"
-    # Random rng used to generate scramble sequences.
-    __random_generator: PseudoRandomGenerator
+
+    __transmit_rng: PseudoRandomGenerator
+    __receive_rng: PseudoRandomGenerator
     __default_seed = np.array([0, 1, 0, 1, 1, 0, 1], int)
 
     def __init__(self, seed: Optional[np.ndarray] = None) -> None:
@@ -147,18 +150,20 @@ class Scrambler3GPP(Encoder, Serializable):
         # Init base class (Encoder)
         Encoder.__init__(self)
 
-        # Initialize the pseudo random rng
+        # Initialize the pseudo random number generator
         seed = self.__default_seed.copy() if seed is None else seed
-        self.__random_generator = PseudoRandomGenerator(seed)
+
+        self.__transmit_rng = PseudoRandomGenerator(seed)
+        self.__receive_rng = PseudoRandomGenerator(seed)
 
     def encode(self, data: np.ndarray) -> np.ndarray:
-        codeword = self.__random_generator.generate_sequence(data.shape[0])
+        codeword = self.__transmit_rng.generate_sequence(data.shape[0])
         code = (data + codeword) % 2
 
         return code
 
     def decode(self, code: np.ndarray) -> np.ndarray:
-        codeword = self.__random_generator.generate_sequence(code.shape[0])
+        codeword = self.__receive_rng.generate_sequence(code.shape[0])
         data = (code + codeword) % 2
 
         return data
