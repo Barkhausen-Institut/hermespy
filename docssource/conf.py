@@ -91,22 +91,24 @@ autodoc_default_options = {
 inheritance_graph_attrs = dict(
     rankdir="TB",
     size='"6.0, 8.0"',
-    fontsize=14,
+    fontsize=16,
     ratio='compress',
-    fontcolor='"#d0d0d0"',
+    fontweight='bold',
+    fontcolor='white',
+    fontname='"Helvetica Neue, Helvetica, Arial, sans-serif"',
+    bgcolor='transparent',
 )
 inheritance_node_attrs = dict(
-    color='"#4c8bc6"',
-    fillcolor='"#4c8bc6"',
-    fontcolor='"#d0d0d0"',
-    penwidth=2,
+    color='"#263238"',
+    fillcolor='"#37474F"',
+    fontcolor='white',
 )
 inheritance_edge_attrs = dict(
-    color='"#4c8bc6"',
-    fillcolor='"#4c8bc6"',
-    arrowsize=1,
-    penwidth=2,
+    color='"#263238"',
+    fillcolor='"#37474F"',
 )
+
+graphviz_output_format = 'svg'
 
 # Intersphinx configuration
 intersphinx_mapping = {

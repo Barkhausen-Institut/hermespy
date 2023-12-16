@@ -5,7 +5,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
-__version__ = "1.1.1"
+__version__ = "1.2.0a"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -61,7 +61,7 @@ setup(
             'sphinx-autodoc-typehints>=1.25.2',
             'sphinxcontrib-apidoc>=0.4.0',
             'sphinxcontrib-mermaid>=0.9.2',
-            'sphinxcontrib-bibtex>=2.6.1',
+            'sphinxcontrib-bibtex',  # Unspecified version required to resolve docutils version conflict
             'sphinx-tabs>=3.4.4',
             'sphinx-copybutton>=0.5.2',
             'sphinx-carousel>=1.2.0',

@@ -32,18 +32,12 @@ class Visualizable(object):
 
     @property
     def title(self) -> str:
-        """Title of the visualizable.
-
-        Returns: Title string.
-        """
+        """Title of the visualizable."""
 
         return self.__class__.__name__
 
     def _get_color_cycle(self) -> Sequence[str]:
-        """Style color rotation.
-
-        Returns: Sequence of color codes.
-        """
+        """Style color rotation. """
 
         with Executable.style_context():
             return plt.rcParams["axes.prop_cycle"].by_key()["color"]
@@ -55,7 +49,7 @@ class Visualizable(object):
 
         Args:
 
-            **kwargs: Additional arguments which cane be used by subclasses.
+            \**kwargs: Additional arguments which cane be used by subclasses.
 
         Returns: Tuple of matplotlib figure and axes.
         """
@@ -144,7 +138,7 @@ class Visualizable(object):
             axes (VAT):
                 The axis object into which the information should be plotted.
 
-            **kwargs:
+            \**kwargs:
                 Additional plotting arguments.
         """
 
