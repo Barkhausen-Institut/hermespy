@@ -59,7 +59,7 @@ import numpy as np
 from h5py import File
 from scipy.stats import uniform
 
-from hermespy.core import ReplayScenario, Scenario, ScenarioMode, Serializable, VAT
+from hermespy.core import Executable, ReplayScenario, Scenario, ScenarioMode, Serializable, VAT
 from hermespy.core.monte_carlo import (
     Evaluator,
     Evaluation,
@@ -384,7 +384,8 @@ class RocEvaluationResult(EvaluationResult):
 
         # Only plot the legend for an existing sweep grid.
         if len(self.grid) > 0:
-            ax.legend()
+            with Executable.style_context():
+                ax.legend()
 
     def to_array(self) -> np.ndarray:
         return np.stack((self.__detection_probabilities, self.__false_alarm_probabilities), axis=-1)
