@@ -7,8 +7,8 @@ import numpy as np
 from numpy.random import default_rng
 from numpy.testing import assert_array_equal
 
-from hermespy.core import Signal, UniformArray, IdealAntenna
-from hermespy.simulation import SimulatedDevice, SpecificIsolation
+from hermespy.core import Signal
+from hermespy.simulation import SimulatedDevice, SimulatedUniformArray, SimulatedIdealAntenna, SpecificIsolation
 from hermespy.tools import db2lin, lin2db
 
 __author__ = "Jan Adler"
@@ -22,9 +22,7 @@ __status__ = "Prototype"
 
 
 class TestSpecificIsolation(TestCase):
-
     def setUp(self) -> None:
-
         self.rng = default_rng(42)
 
         self.device = SimulatedDevice()
@@ -36,11 +34,10 @@ class TestSpecificIsolation(TestCase):
         with self.assertRaises(ValueError):
             self.isolation.isolation = np.array([[[1.234]]])
 
-        self.device.antennas = UniformArray(IdealAntenna, 1., (2, 1, 1))
+        self.device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 1.0, (2, 1, 1))
 
         with self.assertRaises(ValueError):
             self.isolation.isolation = 4.56
-
 
     def test_isolation_setget(self) -> None:
         """Isolation property getter should return setter argument interpretation"""
@@ -62,9 +59,9 @@ class TestSpecificIsolation(TestCase):
         expected_isolation = 20
         self.isolation.isolation = db2lin(expected_isolation)
 
-        signal = Signal(self.rng.normal(size=(self.device.num_antennas, num_samples)) + 1j * self.rng.normal(size=(self.device.num_antennas, num_samples)), 1.)
+        signal = Signal(self.rng.normal(size=(self.device.num_antennas, num_samples)) + 1j * self.rng.normal(size=(self.device.num_antennas, num_samples)), 1.0)
         leaking_signal = self.isolation.leak(signal)
-        
+
         realised_isolation = lin2db(signal.power) - lin2db(leaking_signal.power)
         self.assertAlmostEqual(expected_isolation, realised_isolation)
 

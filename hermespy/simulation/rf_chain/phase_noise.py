@@ -97,7 +97,13 @@ class OscillatorPhaseNoise(PhaseNoise, Serializable):
 
     yaml_tag = "OscillatorPhaseNoise"
 
-    def __init__(self, K0: float = 10 ** (-110 / 10), K2: float = 10, K3: float = 10**4, seed: int | None = None) -> None:
+    def __init__(
+        self,
+        K0: float = 10 ** (-110 / 10),
+        K2: float = 10,
+        K3: float = 10**4,
+        seed: int | None = None,
+    ) -> None:
         """
         Args:
 
@@ -169,7 +175,9 @@ class OscillatorPhaseNoise(PhaseNoise, Serializable):
             raise ValueError("K3 must be non-negative")
         self.__K3 = value
 
-    def _get_noise_samples(self, num_samples: int, num_streams: int, sampling_rate: float) -> np.ndarray:
+    def _get_noise_samples(
+        self, num_samples: int, num_streams: int, sampling_rate: float
+    ) -> np.ndarray:
         """Generate phase noise samples.
 
         Subroutine of :meth:`add_noise`.

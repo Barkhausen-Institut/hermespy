@@ -62,6 +62,8 @@ Operators:
 
       # Post-Processing
       channel_estimation: !<SC-Ideal>
+        transmitter: *device_alpha
+        receiver: *device_alpha
       channel_equalization: !<SC-MMSE>
 
 # Performance indication evaluation configuration

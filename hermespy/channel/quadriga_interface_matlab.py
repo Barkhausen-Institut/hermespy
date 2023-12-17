@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 # pragma: no cover
-"""Matlab interface to the Quadriga channel model."""
 
 from __future__ import annotations
 
@@ -21,7 +20,7 @@ __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -52,13 +51,13 @@ class QuadrigaMatlabInterface(QuadrigaInterface):
                 else:  # pragma: no cover
                     value = matlab.object(value.tolist())
 
-            elif isinstance(value, float):
+            elif isinstance(value, float):  # pragma: no cover
                 value = matlab.double(value)
 
-            elif isinstance(value, int):
+            elif isinstance(value, int):  # pragma: no cover
                 value = matlab.int32(value)
 
-            else:
+            else:  # pragma: no cover
                 value = matlab.object(value)
 
             self.__engine.workspace[key] = value

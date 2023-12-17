@@ -14,13 +14,23 @@ import numpy as np
 from h5py import File, Group
 from scipy.signal import butter, sosfilt
 
-from hermespy.core import Device, DeviceInput, DeviceReception, DeviceTransmission, Factory, HDFSerializable, ProcessedDeviceInput, Serializable, Signal
+from hermespy.core import (
+    Device,
+    DeviceInput,
+    DeviceReception,
+    DeviceTransmission,
+    Factory,
+    HDFSerializable,
+    ProcessedDeviceInput,
+    Serializable,
+    Signal,
+)
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -34,7 +44,7 @@ CT = TypeVar("CT", bound="Calibration")
 """Type variable for :class:`Calibration` and its subclasses."""
 
 
-class PhysicalDevice(Device):
+class PhysicalDevice(Device, ABC):
     """Base representing any device controlling real hardware."""
 
     __max_receive_delay: float
@@ -46,7 +56,15 @@ class PhysicalDevice(Device):
     __leakage_calibration: LeakageCalibrationBase
     __delay_calibration: DelayCalibrationBase
 
-    def __init__(self, max_receive_delay: float = 0.0, noise_power: np.ndarray | None = None, leakage_calibration: LeakageCalibrationBase | None = None, delay_calibration: DelayCalibrationBase | None = None, *args, **kwargs) -> None:
+    def __init__(
+        self,
+        max_receive_delay: float = 0.0,
+        noise_power: np.ndarray | None = None,
+        leakage_calibration: LeakageCalibrationBase | None = None,
+        delay_calibration: DelayCalibrationBase | None = None,
+        *args,
+        **kwargs,
+    ) -> None:
         """
         Args:
 
@@ -68,7 +86,7 @@ class PhysicalDevice(Device):
             *args:
                 :class:`Device` base class initialization parameters.
 
-            **kwargs:
+            \**kwargs:
                 :class:`Device` base class initialization parameters.
         """
 
@@ -349,7 +367,11 @@ class PhysicalDevice(Device):
                 i.e. the variance of the unbiased received samples.
         """
 
-        silent_signal = Signal(np.zeros((self.antennas.num_transmit_antennas, num_samples)), self.sampling_rate, self.carrier_frequency)
+        silent_signal = Signal(
+            np.zeros((self.antennas.num_transmit_antennas, num_samples)),
+            self.sampling_rate,
+            self.carrier_frequency,
+        )
         noise_signal = self.trigger_direct(silent_signal)
 
         noise_power = noise_signal.power
@@ -377,29 +399,25 @@ class PhysicalDevice(Device):
             device_transmission = Device.transmit(self, clear_cache)
 
         else:
-            # Generate operator transmissions
             operator_transmissions = self.transmit_operators()
 
-            # Superimpose the operator transmissions
-            superimposed_signal = operator_transmissions[0].signal.copy()
-            for transmission in operator_transmissions[1:]:
-                if transmission.signal.sampling_rate != superimposed_signal.sampling_rate:
-                    raise RuntimeError("Adpative sampling does not support operators with differing sampling rates")
+            try:
+                output = self.generate_output(operator_transmissions, False)
 
-                superimposed_signal.superimpose(transmission.signal, resample=False)
+            except RuntimeError:
+                raise RuntimeError("Resampling is required for adaptive sampling but not allowed")
 
             # Adaptive sampling rate will simply assume the device's sampling rate
-            superimposed_signal.sampling_rate = self.sampling_rate
-            superimposed_signal.carrier_frequency = self.carrier_frequency
+            mixed_signal = output.mixed_signal
+            mixed_signal.carrier_frequency = self.carrier_frequency
+            mixed_signal.sampling_rate = self.sampling_rate
 
             # Generate the device transmission
-            device_transmission = DeviceTransmission(operator_transmissions, superimposed_signal)
+            device_transmission = DeviceTransmission(operator_transmissions, mixed_signal)
 
         # Upload the samples
         self._upload(device_transmission.mixed_signal)
         self.__recent_upload = device_transmission.mixed_signal
-
-        # Cache the uploaded samples for later calibration corrections at the receiver
 
         # Return transmission
         return device_transmission
@@ -436,10 +454,14 @@ class PhysicalDevice(Device):
         """
 
         if signal.carrier_frequency != self.carrier_frequency:
-            raise ValueError(f"Carrier frequency of the transmitted signal does not match the device's carrier frequency ({signal.carrier_frequency} != {self.carrier_frequency})")
+            raise ValueError(
+                f"Carrier frequency of the transmitted signal does not match the device's carrier frequency ({signal.carrier_frequency} != {self.carrier_frequency})"
+            )
 
         if signal.sampling_rate != self.sampling_rate:
-            raise ValueError(f"Sampling rate of the transmitted signal does not match the device's sampling rate ({signal.sampling_rate} != {self.sampling_rate})")
+            raise ValueError(
+                f"Sampling rate of the transmitted signal does not match the device's sampling rate ({signal.sampling_rate} != {self.sampling_rate})"
+            )
 
         # Upload signal to the device's memory
         self._upload(signal)
@@ -451,23 +473,25 @@ class PhysicalDevice(Device):
         received_signal = self._download()
 
         # Apply calibration correction
-        corrected_signal = received_signal if not calibrate or self.leakage_calibration is None else self.leakage_calibration.remove_leakage(signal, received_signal, self.delay_calibration.delay)
+        corrected_signal = (
+            received_signal
+            if not calibrate or self.leakage_calibration is None
+            else self.leakage_calibration.remove_leakage(
+                signal, received_signal, self.delay_calibration.delay
+            )
+        )
 
         return corrected_signal
 
-    def process_input(self, impinging_signals: DeviceInput | Signal | Sequence[Signal] | None = None, cache: bool = True) -> ProcessedDeviceInput:
+    def process_input(
+        self,
+        impinging_signals: DeviceInput | Signal | Sequence[Signal] | None = None,
+        cache: bool = True,
+    ) -> ProcessedDeviceInput:
         # Physical devices are able to infer their impinging signals by downloading them directly
         if impinging_signals is None:
             # Download signal samples
-            _impinging_signals = self._download()
-
-            if _impinging_signals.num_streams != self.num_antennas:
-                raise ValueError("Number of received signal streams does not match number of configured antennas")
-
-            if _impinging_signals.sampling_rate != self.sampling_rate:
-                raise ValueError(f"Received signal sampling rate ({_impinging_signals.sampling_rate}) does not match device sampling rate({self.sampling_rate})")
-
-            filtered_signal = _impinging_signals.copy()
+            filtered_signal = self._download().copy()
 
             # Apply a lowpass filter if the respective physical device flag is enabled
             if self.lowpass_filter:
@@ -480,6 +504,8 @@ class PhysicalDevice(Device):
                 filter = butter(5, filter_cutoff, output="sos", fs=self.sampling_rate)
                 filtered_signal.samples = sosfilt(filter, filtered_signal.samples, axis=1)
 
+            _impinging_signals = filtered_signal
+
         elif isinstance(impinging_signals, DeviceInput):
             _impinging_signals = impinging_signals.impinging_signals[0]
 
@@ -489,14 +515,38 @@ class PhysicalDevice(Device):
         else:
             _impinging_signals = impinging_signals
 
+        if _impinging_signals.num_streams != self.num_receive_ports:
+            raise ValueError(
+                "Number of received signal streams does not match number of configured antennas"
+            )
+
+        if _impinging_signals.sampling_rate != self.sampling_rate:
+            raise ValueError(
+                f"Received signal sampling rate ({_impinging_signals.sampling_rate}) does not match device sampling rate({self.sampling_rate})"
+            )
+
         # Apply calibration correction
-        transmitted_signal = self.__recent_upload if self.__recent_upload is not None else Signal.empty(_impinging_signals.sampling_rate, _impinging_signals.num_streams, carrier_frequency=_impinging_signals.carrier_frequency)
-        corrected_signal = self.leakage_calibration.remove_leakage(transmitted_signal, _impinging_signals, self.delay_calibration.delay)
+        transmitted_signal = (
+            self.__recent_upload
+            if self.__recent_upload is not None
+            else Signal.empty(
+                _impinging_signals.sampling_rate,
+                _impinging_signals.num_streams,
+                carrier_frequency=_impinging_signals.carrier_frequency,
+            )
+        )
+        corrected_signal = self.leakage_calibration.remove_leakage(
+            transmitted_signal, _impinging_signals, self.delay_calibration.delay
+        )
 
         # Defer to the default device input processing routine
         return Device.process_input(self, corrected_signal, cache)
 
-    def receive(self, impinging_signals: DeviceInput | Signal | Sequence[Signal] | None = None, cache: bool = True) -> DeviceReception:
+    def receive(
+        self,
+        impinging_signals: DeviceInput | Signal | Sequence[Signal] | None = None,
+        cache: bool = True,
+    ) -> DeviceReception:
         # Process input
         processed_input = self.process_input(impinging_signals)
 
@@ -594,7 +644,9 @@ class DelayCalibrationBase(Calibration, ABC):
     """Group name of the delay calibration in the HDF save file."""
 
     @classmethod
-    def _configure_slot(cls: Type[DelayCalibrationBase], device: PhysicalDevice, value: DelayCalibrationBase | None) -> None:
+    def _configure_slot(
+        cls: Type[DelayCalibrationBase], device: PhysicalDevice, value: DelayCalibrationBase | None
+    ) -> None:
         device.delay_calibration = NoDelayCalibration() if value is None else value
 
     @property
@@ -621,7 +673,13 @@ class DelayCalibrationBase(Calibration, ABC):
 
         # Prepend zeros to the signal to account for negative delays
         delay_in_samples = round(-self.delay * signal.sampling_rate)
-        signal.samples = np.concatenate((np.zeros((signal.num_streams, delay_in_samples), dtype=signal.samples.dtype), signal.samples), axis=1)
+        signal.samples = np.concatenate(
+            (
+                np.zeros((signal.num_streams, delay_in_samples), dtype=signal.samples.dtype),
+                signal.samples,
+            ),
+            axis=1,
+        )
 
         return signal
 
@@ -678,11 +736,17 @@ class LeakageCalibrationBase(Calibration):
     """Group name of the leakage calibration in the HDF save file."""
 
     @classmethod
-    def _configure_slot(cls: Type[LeakageCalibrationBase], device: PhysicalDevice, value: LeakageCalibrationBase | None) -> None:
+    def _configure_slot(
+        cls: Type[LeakageCalibrationBase],
+        device: PhysicalDevice,
+        value: LeakageCalibrationBase | None,
+    ) -> None:
         device.leakage_calibration = NoLeakageCalibration() if value is None else value
 
     @abstractmethod
-    def remove_leakage(self, transmitted_signal: Signal, received_signal: Signal, delay_correction: float = 0.0) -> Signal:
+    def remove_leakage(
+        self, transmitted_signal: Signal, received_signal: Signal, delay_correction: float = 0.0
+    ) -> Signal:
         """Remove leakage from a received signal.
 
         Args:
@@ -708,7 +772,9 @@ class NoLeakageCalibration(LeakageCalibrationBase, Serializable):
 
     yaml_tag = "NoLeakageCalibration"
 
-    def remove_leakage(self, transmitted_signal: Signal, received_signal: Signal, delay_correction: float = 0.0) -> Signal:
+    def remove_leakage(
+        self, transmitted_signal: Signal, received_signal: Signal, delay_correction: float = 0.0
+    ) -> Signal:
         return received_signal
 
     def to_HDF(self, group: Group) -> None:

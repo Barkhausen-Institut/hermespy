@@ -28,13 +28,13 @@ The following figure visualizes the gain characteristics for the implemented amp
 """
 
 from __future__ import annotations
-from typing import Any, Optional, Tuple
+from typing import Any
 
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.constants import pi
 
-from hermespy.core import Serializable
+from hermespy.core import Serializable, VAT, Visualizable
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -46,7 +46,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class PowerAmplifier(Serializable):
+class PowerAmplifier(Serializable, Visualizable):
     """Base class of a power-amplifier model.
 
     Implements a distortion-less amplification model
@@ -69,7 +69,9 @@ class PowerAmplifier(Serializable):
 
     __saturation_amplitude: float
 
-    def __init__(self, saturation_amplitude: float = float("inf"), adjust_power: bool = False) -> None:
+    def __init__(
+        self, saturation_amplitude: float = float("inf"), adjust_power: bool = False
+    ) -> None:
         """
         Args:
 
@@ -106,7 +108,9 @@ class PowerAmplifier(Serializable):
         """Set the cut-off point for the linear behaviour of the amplification."""
 
         if value < 0.0:
-            raise ValueError("Power-Amplifier model saturation amplitude must be greater or equal to zero")
+            raise ValueError(
+                "Power-Amplifier model saturation amplitude must be greater or equal to zero"
+            )
 
         self.__saturation_amplitude = value
 
@@ -148,21 +152,36 @@ class PowerAmplifier(Serializable):
         # No modeling in the prototype, just return the non-distorted input signal
         return input_signal
 
-    def plot(self, samples: Optional[np.ndarray] = None, axes: Optional[Tuple[plt.axes, plt.axes]] = None) -> None:
+    @property
+    def title(self) -> str:
+        return self.__class__.__name__ + " Characteristics"
+
+    def plot(
+        self,
+        axes: VAT | None = None,
+        *,
+        title: str | None = None,
+        samples: np.ndarray | None = None,
+    ) -> plt.FigureBase:
         """Plot the power amplifier distortion characteristics.
 
         Generates a matplotlib plot depicting the phase/amplitude.
 
         Args:
 
+            axes (VAT, optional):
+                The axis object into which the information should be plotted.
+                If not specified, the routine will generate and return a new figure.
+
+            title (str, optional):
+                Title of the generated plot.
+
             samples (np.ndarray, optional):
                 Sample points at which to evaluate the characteristics.
                 In other words, the x-axis of the resulting characteristics plot.
-
-            axes (Optional[Tuple[plt.axes, plt.axes]], optional):
-                Axes to which to plot the characteristics.
-                By default, a new figure is created.
         """
+
+        fig, ax = self._prepare_axes(axes, title)
 
         if samples is None:
             samples = np.arange(0, 2, 0.01) * self.saturation_amplitude
@@ -171,27 +190,19 @@ class PowerAmplifier(Serializable):
         amplitude = abs(model)
         phase = np.angle(model)
 
-        figure: Optional[plt.figure] = None
-        if axes is None:
-            figure, amplitude_axes = plt.subplots()
-            figure.suptitle(self.__class__.__name__ + " Characteristics")
+        amplitude_axes: plt.Axes = ax.flat[0]
+        phase_axes: plt.Axes = amplitude_axes.twinx()  # type: ignore
 
-            amplitude_axes.set_xlabel("Input Amplitude")
-            amplitude_axes.set_ylabel("Output Amplitude")
+        amplitude_axes.set_xlabel("Input Amplitude")
+        amplitude_axes.set_ylabel("Output Amplitude")
 
-            phase_axes = amplitude_axes.twinx()
-            phase_axes.set_ylabel("Output Phase")
-            phase_axes.set_ylim([-pi, pi])
-
-        else:
-            amplitude_axes = axes[0]
-            phase_axes = axes[1]
+        phase_axes.set_ylabel("Output Phase")
+        phase_axes.set_ylim((-pi, pi))
 
         amplitude_axes.plot(samples, amplitude)
         phase_axes.plot(samples, phase)
 
-        if figure is not None:
-            figure.tight_layout()
+        return fig
 
 
 class ClippingPowerAmplifier(PowerAmplifier):
@@ -223,7 +234,9 @@ class ClippingPowerAmplifier(PowerAmplifier):
         output_signal = input_signal.copy()
 
         clip_idx = np.nonzero(np.abs(input_signal) > self.saturation_amplitude)
-        output_signal[clip_idx] = self.saturation_amplitude * np.exp(1j * np.angle(input_signal[clip_idx]))
+        output_signal[clip_idx] = self.saturation_amplitude * np.exp(
+            1j * np.angle(input_signal[clip_idx])
+        )
 
         return output_signal
 
@@ -341,7 +354,14 @@ class SalehPowerAmplifier(PowerAmplifier):
     __amplitude_alpha: float  # Amplitude model factor alpha.
     __amplitude_beta: float  # Amplitude model factor beta.
 
-    def __init__(self, amplitude_alpha: float, amplitude_beta: float, phase_alpha: float, phase_beta: float, **kwargs: Any) -> None:
+    def __init__(
+        self,
+        amplitude_alpha: float,
+        amplitude_beta: float,
+        phase_alpha: float,
+        phase_beta: float,
+        **kwargs: Any,
+    ) -> None:
         """
         Args:
 
@@ -431,7 +451,9 @@ class CustomPowerAmplifier(PowerAmplifier):
     __gain: np.ndarray
     __phase: np.ndarray
 
-    def __init__(self, input: np.ndarray, gain: np.ndarray, phase: np.ndarray, **kwargs: Any) -> None:
+    def __init__(
+        self, input: np.ndarray, gain: np.ndarray, phase: np.ndarray, **kwargs: Any
+    ) -> None:
         """
         Args:
 
@@ -456,7 +478,9 @@ class CustomPowerAmplifier(PowerAmplifier):
             raise ValueError("Custom power amplifier phase must be a vector")
 
         if len(input) != len(gain) != len(phase):
-            raise ValueError("Custom power amplifier input, gain and phase vectors must be of identical length")
+            raise ValueError(
+                "Custom power amplifier input, gain and phase vectors must be of identical length"
+            )
 
         self.__input = input
         self.__gain = gain

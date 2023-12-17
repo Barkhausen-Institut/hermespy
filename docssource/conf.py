@@ -19,13 +19,12 @@ repository = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 for dir in path:
     if dir.lower() == repository:
         path.remove(dir)
-        
+
 # -- Project information -----------------------------------------------------
 
 project = 'HermesPy'
 copyright = '2023, Barkhausen Institut gGmbH'
 author = 'Barkhausen Institut gGmbH'
-
 
 # -- General configuration ---------------------------------------------------
 
@@ -40,12 +39,16 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.intersphinx',
     'sphinx.ext.ifconfig',
-    'sphinx.ext.napoleon',
+    'sphinx.ext.napoleon',                      # Support for google-style docstrings
     'sphinx_copybutton',                        # Copy script examples directly
     'sphinx_autodoc_typehints',                 # Type hinting support for the autodoc extension
     'sphinx_tabs.tabs',                         # Multiple tabs
     'matplotlib.sphinxext.plot_directive',      # Directly rendering plots as images
     'sphinx.ext.mathjax',                       # Rendering math equations for nbsphinx
+    'sphinx.ext.intersphinx',                   # Linking to other documentations
+    'sphinx.ext.viewcode',                      # Link to source code
+    'sphinx.ext.graphviz',                      # Graphviz support
+    'sphinx.ext.inheritance_diagram',           # Automatic section labels
 ]
 
 autoclass_content = "both"
@@ -72,12 +75,48 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 pygments_style = 'sphinx'
 
+
+# Autodoc configuration
+autodoc_typehints = 'signature'
 autodoc_default_options = {
     'members': True,
     'undoc-members': True,
-    'member-order': 'bysource',
+    'member-order': 'groupwise',
     'show-inheritance': True,
-    'exclude-members': '__weakref__'
+    'exclude-members': '__weakref__',
+    'inherited-members': False,
+}
+
+# Inheritanze GraphVis configuration
+inheritance_graph_attrs = dict(
+    rankdir="TB",
+    size='"6.0, 8.0"',
+    fontsize=16,
+    ratio='compress',
+    fontweight='bold',
+    fontcolor='white',
+    fontname='"Helvetica Neue, Helvetica, Arial, sans-serif"',
+    bgcolor='transparent',
+)
+inheritance_node_attrs = dict(
+    color='"#263238"',
+    fillcolor='"#37474F"',
+    fontcolor='white',
+)
+inheritance_edge_attrs = dict(
+    color='"#263238"',
+    fillcolor='"#37474F"',
+)
+
+graphviz_output_format = 'svg'
+
+# Intersphinx configuration
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3/', None),
+    'h5py': ('https://docs.h5py.org/en/latest/', None),
+    'matplotlib': ('https://matplotlib.org/stable/', None),
+    'numpy': ('https://numpy.org/doc/stable/', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy/', None),
 }
 
 nbsphinx_requirejs_path = ""
@@ -111,6 +150,11 @@ html_theme_options = {
 carousel_bootstrap_add_css_js = True
 #carousel_bootstrap_prefix = ""
 
+# Mermaid config
+mermaid_d3_zoom = True
+
+# Suppress index warnings
+suppress_warnings = []
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

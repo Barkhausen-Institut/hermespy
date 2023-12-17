@@ -119,15 +119,14 @@ from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from itertools import chain
 from math import ceil
-from typing import Generic, Iterator, List, Optional, overload, Tuple, Type, TypeVar
+from typing import Generic, Iterator, List, Optional, overload, Type, TypeVar
 
 import numpy as np
 from h5py import Group
 from scipy.constants import speed_of_light
 
-from .antennas import AntennaArrayBase, UniformArray, IdealAntenna
+from .antennas import AntennaArray
 from .definitions import SNRType
-from .channel_state_information import ChannelStateInformation
 from .factory import HDFSerializable, Serializable
 from .random_node import RandomNode
 from .signal_model import Signal
@@ -138,7 +137,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -166,7 +165,7 @@ class OperationResult(HDFSerializable):
     """Base class for outputs of device operators."""
 
     signal: Signal
-    """Base-band waveform."""
+    """Base-band model of the processed signal."""
 
     def __init__(self, signal: Signal) -> None:
         """
@@ -200,7 +199,7 @@ class Reception(OperationResult):
 
 
 ReceptionType = TypeVar("ReceptionType", bound=Reception)
-"""Type of operator reception"""
+"""Type variable of a :class:`Reception`."""
 
 
 SlotType = TypeVar("SlotType", bound="OperatorSlot")
@@ -235,14 +234,14 @@ class Operator(Generic[SlotType], Serializable):
         Returns:
             Handle to the device slot.
             `None` if the operator is currently considered floating.
+
+        :meta private:
         """
 
         return self.__slot
 
     @slot.setter
     def slot(self, value: Optional[SlotType]) -> None:
-        """Set device slot this operator operates on."""
-
         # A None argument indicates the slot should be unbound
         if value is None:
             if hasattr(self, "_Operator__slot") and self.__slot is not None:
@@ -272,12 +271,14 @@ class Operator(Generic[SlotType], Serializable):
                 self.__slot.add(self)
 
     @property
-    def slot_index(self) -> Optional[int]:
+    def slot_index(self) -> int | None:
         """Index of the operator within its slot.
 
         Returns:
             Index of the operator.
             `None` if the operator is currently considered floating.
+
+        :meta private:
         """
 
         if self.__slot is None:
@@ -286,13 +287,10 @@ class Operator(Generic[SlotType], Serializable):
         return self.__slot.operator_index(self)
 
     @property
-    def device(self) -> Optional[Device]:
-        """Device this operator is attached to.
+    def device(self) -> Device | None:
+        """Device this object is assigned to.
 
-        Returns:
-            device (Optional[Device]):
-                Handle to the operated device.
-                `None` if the operator is currently considered floating.
+        :obj:`None` if this object is currently considered floating / unassigned.
         """
 
         if self.__slot is None:
@@ -304,8 +302,7 @@ class Operator(Generic[SlotType], Serializable):
     def attached(self) -> bool:
         """Attachment state of the operator.
 
-        Returns:
-            bool: Boolean attachment indicator
+        Indicates whether this object is currently assigned a :class:`.Device` instance.
         """
 
         return self.__slot is not None
@@ -313,21 +310,18 @@ class Operator(Generic[SlotType], Serializable):
     @property
     @abstractmethod
     def frame_duration(self) -> float:
-        """Duration of a single sample frame.
+        """Duration of a single sample frame in seconds.
 
-        Returns:
-            duration (float): Frame duration in seconds.
+        Denoted as :math:`T_{\\mathrm{F}}` of unit :math:`\\left[ T_{\\mathrm{F}} \\right] = \\mathrm{s}` in literature.
         """
         ...  # pragma: no cover
 
     @property
     @abstractmethod
     def sampling_rate(self) -> float:
-        """The operator's preferred sampling rate.
+        """The operator's preferred sampling rate in Hz.
 
-        Returns:
-
-            Sampling rate in Hz.
+        Denoted as :math:`f_{\\mathrm{S}}` of unit :math:`\\left[ f_{\\mathrm{S}} \\right] = \\mathrm{Hz} = \\tfrac{1}{\\mathrm{s}}` in literature.
         """
         ...  # pragma: no cover
 
@@ -419,7 +413,9 @@ class DeviceTransmission(DeviceOutput):
 
     __operator_transmissions: Sequence[Transmission]
 
-    def __init__(self, operator_transmissions: Sequence[Transmission], mixed_signal: Signal) -> None:
+    def __init__(
+        self, operator_transmissions: Sequence[Transmission], mixed_signal: Signal
+    ) -> None:
         """
         Args:
 
@@ -437,7 +433,11 @@ class DeviceTransmission(DeviceOutput):
         self.__operator_transmissions = operator_transmissions
 
     @classmethod
-    def From_Output(cls: Type[DeviceTransmission], output: DeviceOutput, operator_transmissions: Sequence[Transmission]) -> DeviceTransmission:
+    def From_Output(
+        cls: Type[DeviceTransmission],
+        output: DeviceOutput,
+        operator_transmissions: Sequence[Transmission],
+    ) -> DeviceTransmission:
         """Initialize a device transmission from a device output.
 
         Args:
@@ -475,7 +475,9 @@ class DeviceTransmission(DeviceOutput):
         num_transmissions = group.attrs.get("num_transmissions", 1)
 
         # Recall transmissions
-        transmissions = [Transmission.from_HDF(group[f"transmission_{t:02d}"]) for t in range(num_transmissions)]
+        transmissions = [
+            Transmission.from_HDF(group[f"transmission_{t:02d}"]) for t in range(num_transmissions)
+        ]
 
         # Initialize object
         return cls.From_Output(device_output, transmissions)
@@ -488,7 +490,10 @@ class DeviceTransmission(DeviceOutput):
         # Recall attributes
         num_transmissions = group.attrs.get("num_transmissions", 1)
 
-        transmissions = [transmitter.recall_transmission(group[f"transmission_{t:02d}"]) for t, transmitter in zip(range(num_transmissions), device.transmitters)]
+        transmissions = [
+            transmitter.recall_transmission(group[f"transmission_{t:02d}"])
+            for t, transmitter in zip(range(num_transmissions), device.transmitters)
+        ]
 
         # Initialize object
         return cls.From_Output(device_output, transmissions)
@@ -517,7 +522,9 @@ class DeviceInput(HDFSerializable):
             impinging_signals (Union[Signal, List[Signal]]): Signals to be processed by the device.
         """
 
-        impinging_signals = [impinging_signals] if isinstance(impinging_signals, Signal) else impinging_signals
+        impinging_signals = (
+            [impinging_signals] if isinstance(impinging_signals, Signal) else impinging_signals
+        )
         self.__impinging_signals = impinging_signals
 
     @property
@@ -541,7 +548,10 @@ class DeviceInput(HDFSerializable):
     @classmethod
     def from_HDF(cls: Type[DeviceInput], group: Group) -> DeviceInput:
         num_impinging_signals = group.attrs.get("num_impinging_signals", 1)
-        impinging_signals = [Signal.from_HDF(group[f"impinging_signal_{s:02d}"]) for s in range(num_impinging_signals)]
+        impinging_signals = [
+            Signal.from_HDF(group[f"impinging_signal_{s:02d}"])
+            for s in range(num_impinging_signals)
+        ]
 
         return cls(impinging_signals)
 
@@ -557,16 +567,20 @@ class DeviceInput(HDFSerializable):
 class ProcessedDeviceInput(DeviceInput):
     """Information generated by receiving over a device."""
 
-    __operator_inputs: Sequence[Tuple[Signal, ChannelStateInformation | None]]
+    __operator_inputs: Sequence[Signal]
 
-    def __init__(self, impinging_signals: DeviceInput | Signal | Sequence[Signal], operator_inputs: Sequence[Tuple[Signal, ChannelStateInformation | None]]) -> None:
+    def __init__(
+        self,
+        impinging_signals: DeviceInput | Signal | Sequence[Signal],
+        operator_inputs: Sequence[Signal],
+    ) -> None:
         """
         Args:
 
             impinging_signals (DeviceInput | Signal | Sequence[Signal]):
                 Numpy vector containing lists of signals impinging onto the device.
 
-            operator_inputs (Sequence[Tuple[Signal, ChannelStateInformation | None]]):
+            operator_inputs (Sequence[Signal]):
                 Information cached by the device operators.
         """
 
@@ -580,7 +594,7 @@ class ProcessedDeviceInput(DeviceInput):
         self.__operator_inputs = operator_inputs
 
     @property
-    def operator_inputs(self) -> Sequence[Tuple[Signal, ChannelStateInformation | None]]:
+    def operator_inputs(self) -> Sequence[Signal]:
         return self.__operator_inputs
 
     @property
@@ -599,7 +613,9 @@ class ProcessedDeviceInput(DeviceInput):
 
         # Recall individual detected frames
         num_inputs = group.attrs.get("num_operator_inputs", 0)
-        operator_inputs = [(Signal.from_HDF(group[f"operator_input_{i:02d}"]), None) for i in range(num_inputs)]
+        operator_inputs = [
+            Signal.from_HDF(group[f"operator_input_{i:02d}"]) for i in range(num_inputs)
+        ]
 
         return cls(device_input, operator_inputs)
 
@@ -608,7 +624,7 @@ class ProcessedDeviceInput(DeviceInput):
         DeviceInput.to_HDF(self, group)
 
         # Serialize groups
-        for i, (input_signal, _) in enumerate(self.operator_inputs):
+        for i, input_signal in enumerate(self.operator_inputs):
             input_signal.to_HDF(self._create_group(group, f"operator_input_{i:02d}"))
 
         # Serialize attributes
@@ -624,14 +640,19 @@ class DeviceReception(ProcessedDeviceInput):
 
     __operator_receptions: Sequence[Reception]
 
-    def __init__(self, impinging_signals: Signal | Sequence[Signal], operator_inputs: Sequence[Tuple[Signal, ChannelStateInformation | None]], operator_receptions: Sequence[Reception]) -> None:
+    def __init__(
+        self,
+        impinging_signals: Signal | Sequence[Signal],
+        operator_inputs: Sequence[Signal],
+        operator_receptions: Sequence[Reception],
+    ) -> None:
         """
         Args:
 
             impinging_signals (Signal | Sequence[Signal]):
                 Numpy vector containing lists of signals impinging onto the device.
 
-            operator_inputs (Sequence[Tuple[Signal, ChannelStateInformation | None]]):
+            operator_inputs (Sequence[Signal]):
                 Information cached by the device operators.
 
             operator_separation (bool):
@@ -648,7 +669,9 @@ class DeviceReception(ProcessedDeviceInput):
         self.__operator_receptions = operator_receptions
 
     @classmethod
-    def From_ProcessedDeviceInput(cls: Type[DRT], device_input: ProcessedDeviceInput, operator_receptions: Sequence[Reception]) -> DRT:
+    def From_ProcessedDeviceInput(
+        cls: Type[DRT], device_input: ProcessedDeviceInput, operator_receptions: Sequence[Reception]
+    ) -> DRT:
         """Initialize an instance from a processed device input.
 
         Args:
@@ -662,7 +685,9 @@ class DeviceReception(ProcessedDeviceInput):
         Returns: The initialized object.
         """
 
-        return cls(device_input.impinging_signals, device_input.operator_inputs, operator_receptions)
+        return cls(
+            device_input.impinging_signals, device_input.operator_inputs, operator_receptions
+        )
 
     @property
     def operator_receptions(self) -> Sequence[Reception]:
@@ -691,7 +716,9 @@ class DeviceReception(ProcessedDeviceInput):
         num_receptions = group.attrs.get("num_operator_receptions", 0)
 
         # Recall operator receptions
-        operator_receptions = [Reception.from_HDF(group[f"reception_{f:02d}"]) for f in range(num_receptions)]
+        operator_receptions = [
+            Reception.from_HDF(group[f"reception_{f:02d}"]) for f in range(num_receptions)
+        ]
 
         # Initialize object
         return cls.From_ProcessedDeviceInput(device_input, operator_receptions)
@@ -705,7 +732,10 @@ class DeviceReception(ProcessedDeviceInput):
         num_receptions = group.attrs.get("num_operator_receptions", 0)
 
         # recall operator receptions
-        receptions = [receiver.recall_reception(group[f"reception_{r:02d}"]) for r, receiver in zip(range(num_receptions), device.receivers)]
+        receptions = [
+            receiver.recall_reception(group[f"reception_{r:02d}"])
+            for r, receiver in zip(range(num_receptions), device.receivers)
+        ]
 
         # Initialize object
         return cls.From_ProcessedDeviceInput(device_input, receptions)
@@ -727,7 +757,9 @@ class MixingOperator(Generic[SlotType], Operator[SlotType], ABC):
 
     __carrier_frequency: Optional[float]  # Carrier frequency
 
-    def __init__(self, carrier_frequency: Optional[float] = None, slot: Optional[SlotType] = None) -> None:
+    def __init__(
+        self, carrier_frequency: Optional[float] = None, slot: Optional[SlotType] = None
+    ) -> None:
         """
         Args:
 
@@ -743,13 +775,11 @@ class MixingOperator(Generic[SlotType], Operator[SlotType], ABC):
 
     @property
     def carrier_frequency(self) -> float:
-        """Central frequency of the mixed signal in radio-frequency transmission band.
+        """Central frequency of the mixed signal in radio-frequency transmission band in Hz.
 
-        By default, the carrier frequency of the operated device is returned.
-        If no device is being operated, we assume a base band, i.e. carrier frequency of zero.
-
-        Returns:
-            float: Carrier frequency in Hz.
+        Denoted by :math:`f_c` with unit :math:`\\left[ f_c \\right] = \\mathrm{Hz} = \\tfrac{1}{\\mathrm{s}}` in the literature.
+        By default, the carrier frequency of the assigned :class:`.Device` is returned.
+        If no device is assigned, we assume a base band, i.e. :math:`f_c = 0`.
 
         Raises:
             ValueError: If the carrier frequency is smaller than zero.
@@ -766,8 +796,6 @@ class MixingOperator(Generic[SlotType], Operator[SlotType], ABC):
 
     @carrier_frequency.setter
     def carrier_frequency(self, value: Optional[float]) -> None:
-        """Set the central frequency of the mixed signal in radio-frequency transmission band."""
-
         if value is None:
             self.__carrier_frequency = None
             return
@@ -783,10 +811,17 @@ class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType
 
     __reference: Device | None
     __signal: Signal | None
-    __csi: ChannelStateInformation | None
     __reception: ReceptionType | None
+    __selected_receive_ports: Sequence[int]
 
-    def __init__(self, seed: int | None = None, reference: Device | None = None, *args, **kwargs) -> None:
+    def __init__(
+        self,
+        seed: int | None = None,
+        reference: Device | None = None,
+        selected_receive_ports: Sequence[int] | None = None,
+        *args,
+        **kwargs,
+    ) -> None:
         """
         Args:
 
@@ -796,10 +831,14 @@ class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType
             reference (Device, optional):
                 Reference device to which the channel shall be estimated.
 
+            selected_receive_ports (Sequence[int] | None):
+                Indices of antenna ports selected for reception from the operated :class:`Device's<Device>` antenna array.
+                If not specified, all available antenna ports will be considered.
+
             *args:
                 Operator base class initialization parameters.
 
-            **kwargs:
+            \**kwargs:
                 Operator base class initialization parameters.
         """
 
@@ -807,13 +846,14 @@ class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType
         RandomNode.__init__(self, seed=seed)
         MixingOperator.__init__(self, *args, **kwargs)
 
+        # Initialize class attributes
         self.reference = reference
+        self.selected_receive_ports = selected_receive_ports
         self.__signal = None
-        self.__csi = None
         self.__reception = None
 
     @Operator.device.setter  # type: ignore
-    def device(self, value: Device) -> None:  # type: ignore
+    def device(self, value: Device | None) -> None:  # type: ignore
         value.receivers.add(self)
 
     @Operator.slot.setter  # type: ignore
@@ -837,27 +877,76 @@ class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType
         self.__reference = value
 
     @property
-    def reception(self) -> Optional[ReceptionType]:
-        """Information generated from the recent reception.
+    def selected_receive_ports(self) -> Sequence[int] | None:
+        """Indices of antenna ports selected for reception from the operated :class:`Device's<Device>` antenna array.
 
-        Updated when calling :meth:`.receive`.
+        If :py:obj:`None`, all available antenna ports will be considered.
 
-        Returns:
-            The cached information.
-            `None` if :meth:`.receive` has not been called yet.
+        Raises:
+
+            ValueError: If the selected ports don't match the configured device's receive antenna array configuration.
+        """
+
+        return self.__selected_receive_ports
+
+    @selected_receive_ports.setter
+    def selected_receive_ports(self, value: Sequence[int] | None) -> None:
+        if value is None:
+            self.__selected_receive_ports = None
+            return
+
+        # Make sure the provided indices match the underlying device's antenna array configuration
+        if self.device is not None:
+            if max(value) > (self.device.antennas.num_receive_ports - 1):
+                raise ValueError(
+                    "Receive antenna selection indices don't match the device's receive antenna configuration"
+                )
+
+        self.__selected_receive_ports = value
+
+    @property
+    def num_receive_ports(self) -> int:
+        """Number of considered receiving ports."""
+
+        if self.selected_receive_ports is None:
+            if self.device is None:
+                return 0
+
+            return self.device.antennas.num_receive_ports
+
+        return len(self.selected_receive_ports)
+
+    @property
+    def num_receive_antennas(self) -> int:
+        """Number of considered receiving antennas."""
+
+        if self.device is None:
+            return 0
+
+        if self.selected_receive_ports is None:
+            return self.device.antennas.num_receive_antennas
+
+        return self.device.antennas.count_receive_antennas(self.selected_receive_ports)
+
+    @property
+    def reception(self) -> ReceptionType | None:
+        """Information inferred from the most recent reception.
+
+        Updated during the :meth:`receive<receive>` routine.
+        :py:obj:`None` if the cache has been cleared or :meth:`receive<receive>`
+        has not been called yet.
         """
 
         return self.__reception
 
-    def receive(self, signal: Optional[Signal] = None, csi: Optional[ChannelStateInformation] = None, cache: bool = True) -> ReceptionType:
+    def receive(self, signal: Signal | None = None, cache: bool = True) -> ReceptionType:
         """Process a received signal by the receiver.
 
-        Wrapper around the abstract :meth:`._receive` method.
+        Wrapper around the abstract :meth:`_receive<Receiver._receive>` method.
 
         Args:
 
             signal (Signal, optional): Signal model to be processed.
-            csi (ChannelStateInformation, optional): Channel state information.
             cache (bool, optional): Cache the received information
 
         Returns: Information rceived by this operator.
@@ -865,6 +954,7 @@ class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType
         Raises:
 
             RuntimeError: If signal model was not provided and no signal is cached.
+            ValueError: If the number of signal streams does not match the number of receive ports.
         """
 
         if signal is None:
@@ -873,10 +963,13 @@ class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType
 
             signal = self.signal
 
-        csi = self.csi if csi is None else csi
+        if signal.num_streams != self.num_receive_ports and self.num_receive_ports > 0:
+            raise ValueError(
+                f"Number of signal streams does not match the number of receive ports ({signal.num_streams} != {self.num_receive_ports})"
+            )
 
         # Generate received information
-        reception = self._receive(signal, csi)
+        reception = self._receive(signal)
 
         # Cache the reception if the respective flag is enabled
         if cache:
@@ -886,63 +979,52 @@ class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType
         return reception
 
     @abstractmethod
-    def _receive(self, signal: Signal, csi: ChannelStateInformation) -> ReceptionType:
+    def _receive(self, signal: Signal) -> ReceptionType:
         """Process a received signal by the receiver.
 
-        Pulls the required signal model and channel state information from the underlying device.
+        Subroutine of the public :meth:`receive<hermespy.core.device.Receiver.receive>`
+        method that performs the pipeline-specific receive processing
+        and consolidates the inferred information into a single
+        :class:`Reception<hermespy.core.device.Reception>` object.
 
         Args:
+            signal (Signal): Multi-stream signal model to be processed.
 
-            signal (Signal, optional): Signal model to be processed.
-            csi (ChannelStateInformation, optional): Channel state information.
-
-        Returns: Information rceived by this operator.
+        Returns:
+            Information inferred from the received signal.
         """
         ...  # pragma: no cover
 
     @property
-    def signal(self) -> Optional[Signal]:
-        """Cached recently received signal model.
+    def signal(self) -> Signal | None:
+        """Cached signal model to be received.
 
-        Returns:
-            signal (Optional[Signal]):
-                Signal model.
-                `None` if no signal model is cached.
+        Signal model assumed by :meth:`receive` if no signal model is provided.
+        Updated with :meth:`cache_reception`.
+        :obj:`None` if cache has been cleared or :meth:`receive` has not been called yet.
         """
 
         return self.__signal
 
-    @property
-    def csi(self) -> Optional[ChannelStateInformation]:
-        """Cached recently received channel state information
-
-        Returns:
-            csi (Optional[ChannelStateInformation]):
-                Channel state information.
-                `None` if no state information is cached.
-        """
-
-        return self.__csi
-
-    def cache_reception(self, signal: Optional[Signal], csi: Optional[ChannelStateInformation] = None) -> None:
+    def cache_reception(self, signal: Signal | None) -> None:
         """Cache recent reception at this receiver.
 
         Args:
 
-            signal (Optional[Signal]):
-                Recently received signal.
+            signal (Signal | None):
+                Signal model to be cached for the next reception.
 
-            csi (Optional[ChannelStateInformation]):
+            channel_realization (ChannelRealizationBase | None):
                 Recently received channel state.
         """
 
         self.__signal = signal
-        self.__csi = csi
 
     def recall_reception(self, group: Group, cache: bool = True) -> ReceptionType:
         """Recall a specific reception from a serialization.
 
-        Internally calls the abstract method :meth:`Receiver._recall_reception`.
+        Internally calls the abstract method
+        :meth:`_recall_reception<Receiver._recall_reception>`.
         Caches the reception if the respective flag is enabled.
 
         Args:
@@ -955,6 +1037,8 @@ class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType
                 Enabled by default.
 
         Returns: The recalled reception.
+
+        :meta private:
         """
 
         recalled_reception = self._recall_reception(group)
@@ -980,13 +1064,13 @@ class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType
     def noise_power(self, strength: float, snr_type: SNRType) -> float:
         """Compute noise power for a given signal strength.
 
-        Internally calls :meth:`._noise_power` for some :meth:`.snr_type` .
+        Internally calls :meth:`_noise_power` for some :class:`SNRTypes<hermespy.core.definitions.SNRType>`.
 
         Args:
 
             strength (float):
                 Signal strength indicator.
-                The unit depends on :meth:`snr_type`.
+                The unit depends on the `snr_type`.
 
             snr_type (SNRType):
                 The considered signal to noise ratio type.
@@ -1010,7 +1094,7 @@ class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType
 
             strength (float):
                 Signal strength indicator.
-                The unit depends on `snr_type`.
+                The unit depends on the `snr_type`.
 
             snr_type (SNRType):
                 The considered signal to noise ratio type.
@@ -1026,7 +1110,7 @@ class OperatorSlot(Generic[OperatorType], Sequence[OperatorType]):
     """Slot list for operators of a single device."""
 
     __device: Device  # Device this operator belongs to
-    __operators: List[OperatorType]  # List of operators registered at this slot
+    __operators: List[OperatorType]  # List of registered operators
 
     def __init__(self, device: Device) -> None:
         """
@@ -1189,24 +1273,36 @@ class OperatorSlot(Generic[OperatorType], Sequence[OperatorType]):
 
 
 TransmissionType = TypeVar("TransmissionType", bound="Transmission")
+"""Type variable of a :class:`Transmission`."""
 
 
 class Transmitter(Generic[TransmissionType], RandomNode, MixingOperator["TransmitterSlot"]):
     """Operator transmitting over a device."""
 
     __transmission: TransmissionType | None
+    __selected_transmit_ports: Sequence[int] | None
 
-    def __init__(self, seed: Optional[int] = None, *args, **kwargs) -> None:
+    def __init__(
+        self,
+        seed: int | None = None,
+        selected_transmit_ports: Sequence[int] | None = None,
+        *args,
+        **kwargs,
+    ) -> None:
         """
         Args:
 
             seed (int, optional):
                 Random seed used to initialize the pseudo-random number generator.
 
+            selected_transmit_ports (Sequence[int] | None):
+                Indices of antenna ports selected for transmission from the operated :class:`Device's<Device>` antenna array.
+                If not specified, all available ports will be considered.
+
             *args:
                 Operator base class initialization parameters.
 
-            **kwargs:
+            \**kwargs:
                 Operator base class initialization parameters.
         """
 
@@ -1215,6 +1311,7 @@ class Transmitter(Generic[TransmissionType], RandomNode, MixingOperator["Transmi
         MixingOperator.__init__(self, *args, **kwargs)
 
         # Initialize class attributes
+        self.__selected_transmit_ports = selected_transmit_ports
         self.__transmission = None
 
     def transmit(self, duration: float = 0.0, cache: bool = True) -> TransmissionType:
@@ -1222,7 +1319,7 @@ class Transmitter(Generic[TransmissionType], RandomNode, MixingOperator["Transmi
 
         Registers the signal samples to be transmitted by the underlying device.
 
-        Wrapper around the abstract :meth:`._transmit` method.
+        Wrapper around the abstract :meth:`_transmit<Transmitter._transmit>` method.
 
         Args:
 
@@ -1252,13 +1349,18 @@ class Transmitter(Generic[TransmissionType], RandomNode, MixingOperator["Transmi
 
     @abstractmethod
     def _transmit(self, duration: float) -> TransmissionType:
-        """Generate information transmitted by the transmitter.
+        """Generate information to be transmitted.
 
-        duration (float, optional):
-            Duration of the transmitted signal.
-            If not specified, the duration will be inferred by the transmitter.
+        Subroutine of the public :meth:`transmit<Transmitter.transmit>` method that performs the pipeline-specific transmit-processing
+        and consolidates the generated information into a single :class:`Transmission` object.
 
-        Returns: The transmitted information.
+        Args:
+
+            duration (float, optional):
+                Duration of the transmitted signal in seconds.
+                If not specified, the duration of a single frame will be assumed.
+
+        Returns: Information to be transmitted.
         """
         ...  # pragma: no cover
 
@@ -1266,17 +1368,17 @@ class Transmitter(Generic[TransmissionType], RandomNode, MixingOperator["Transmi
     def transmission(self) -> TransmissionType | None:
         """Recent transmission of the transmitter.
 
-        Updated during the :meth:`.transmit` routine.
-
-        Returns:
-            The recent transmission.
-            `None` if the cache has been cleared or :meth:`.transmit` has not been called yet.
+        Updated during the :meth:`transmit<Transmitter.transmit>` routine.
+        :py:obj:`None` if the cache has been cleared or :meth:`transmit<Transmitter.transmit>`
+        has not been called yet.
         """
 
         return self.__transmission
 
     def cache_transmission(self, transmission: TransmissionType) -> None:
-        """Cache a transmission for this transmitter.
+        """Update the information resulting from the latest transmission.
+
+        Called by the :meth:`transmit<Transmitter.transmit>` routine.
 
         Args:
 
@@ -1302,6 +1404,8 @@ class Transmitter(Generic[TransmissionType], RandomNode, MixingOperator["Transmi
                 Enabled by default.
 
         Returns: The recalled transmission
+
+        :meta private:
         """
 
         recalled_transmission = self._recall_transmission(group)
@@ -1323,6 +1427,58 @@ class Transmitter(Generic[TransmissionType], RandomNode, MixingOperator["Transmi
         Returns: The recalled transmission
         """
         ...  # pragma: no cover
+
+    @property
+    def selected_transmit_ports(self) -> Sequence[int] | None:
+        """Indices of antenna ports selected for transmission from the operated :class:`Device's<Device>` antenna array.
+
+        If `None`, all available transmit ports will be considered.
+
+        Raises:
+
+            ValueError: If the selected ports don't match the configured device's transmit antenna array configuration.
+        """
+
+        return self.__selected_transmit_ports
+
+    @selected_transmit_ports.setter
+    def selected_transmit_ports(self, value: Sequence[int] | None) -> None:
+        if value is None:
+            self.__selected_transmit_ports = None
+            return
+
+        # Make sure the provided indices match the underlying device's antenna array configuration
+        if self.device is not None:
+            if max(value) > (self.device.antennas.num_transmit_ports - 1):
+                raise ValueError(
+                    "Transmit antenna selection indices don't match the device's receive antenna configuration"
+                )
+
+        self.__selected_transmit_ports = value
+
+    @property
+    def num_transmit_ports(self) -> int:
+        """Number of considered transmitting ports."""
+
+        if self.selected_transmit_ports is None:
+            if self.device is None:
+                return 0
+
+            return self.device.antennas.num_transmit_ports
+
+        return len(self.selected_transmit_ports)
+
+    @property
+    def num_transmit_antennas(self) -> int:
+        """Number of considered receiving antennas."""
+
+        if self.device is None:
+            return 0
+
+        if self.selected_transmit_ports is None:
+            return self.device.antennas.num_receive_antennas
+
+        return self.device.antennas.count_transmit_antennas(self.selected_transmit_ports)
 
     @Operator.device.setter  # type: ignore
     def device(self, value: Device) -> None:  # type: ignore
@@ -1377,8 +1533,10 @@ class TransmitterSlot(OperatorSlot[Transmitter]):
         if not self.registered(transmitter):
             raise ValueError("Transmitter not registered at this slot")
 
-        if transmission.signal.num_streams != self.device.num_antennas:
-            raise ValueError(f"Transmitted signal has invalid number of streams ({transmission.signal.num_streams} instead of {self.device.num_antennas})")
+        if transmission.signal.num_streams != transmitter.num_transmit_ports:
+            raise ValueError(
+                f"Transmitted signal has invalid number of streams ({transmission.signal.num_streams} instead of {transmitter.num_transmit_ports})"
+            )
 
         self.__transmissions[transmitter.slot_index] = transmission
 
@@ -1438,16 +1596,13 @@ class Device(ABC, Transformable, RandomNode, Serializable):
     receivers: ReceiverSlot
     """Receivers capturing signals from this device"""
 
-    __antennas: AntennaArrayBase  # Model of the device's antenna array.
     __power: float  # Average power of the transmitted signals
 
-    def __init__(self, antennas: Optional[AntennaArrayBase] = None, power: float = 1.0, pose: Transformation | None = None, seed: Optional[int] = None) -> None:
+    def __init__(
+        self, power: float = 1.0, pose: Transformation | None = None, seed: Optional[int] = None
+    ) -> None:
         """
         Args:
-
-            antennas (AntennaArrayBase, optional):
-                Model of the device's antenna array.
-                By default, a :class:`UniformArray` of ideal antennas is assumed.
 
             power (float, optional):
                 Average power of the transmitted signals in Watts.
@@ -1465,29 +1620,52 @@ class Device(ABC, Transformable, RandomNode, Serializable):
         Transformable.__init__(self, pose=pose)
 
         # Initalize device attributes and properties
-        self.antennas = UniformArray(IdealAntenna(), 5e-3, (1,)) if antennas is None else antennas
         self.transmitters = TransmitterSlot(self)
         self.receivers = ReceiverSlot(self)
 
         self.power = power
-        self.__received_signal = None
 
     @property
-    def antennas(self) -> AntennaArrayBase:
-        """Model of the device's antenna array.
+    @abstractmethod
+    def antennas(self) -> AntennaArray:
+        """Model of the device's antenna array."""
+        ...  # pragma: no cover
 
-        Returns: The antenna array.
+    @property
+    def num_transmit_ports(self) -> int:
+        """Number of available transmit antenna ports.
+
+        Shorthand to :attr:`antennas'<.antennas>` :attr:`num_transmit_ports<AntennaArray.num_transmit_ports>`.
         """
 
-        return self.__antennas
+        return self.antennas.num_transmit_ports
 
-    @antennas.setter
-    def antennas(self, value: AntennaArrayBase) -> None:
-        # Update the internal antenna array reference
-        self.__antennas = value
+    @property
+    def num_receive_ports(self) -> int:
+        """Number of available receive antenna ports.
 
-        # Register the device as the antenna array's reference frame
-        self.__antennas.set_base(self)
+        Short hand to :attr:`antennas'<.antennas>` :attr:`num_receive_ports<AntennaArray.num_receive_ports>`.
+        """
+
+        return self.antennas.num_receive_ports
+
+    @property
+    def num_transmit_antennas(self) -> int:
+        """Number of available transmit antennas.
+
+        Shorthand to :attr:`antennas'<antennas>` :meth:`num_transmit_antennas<AntennaArrayBase.num_transmit_antennas>`.
+        """
+
+        return self.antennas.num_transmit_antennas
+
+    @property
+    def num_receive_antennas(self) -> int:
+        """Number of available receive antennas.
+
+        Shorthand to :attr:`antennas'<antennas>` :meth:`num_receive_antennas<AntennaArrayBase.num_receive_antennas>`.
+        """
+
+        return self.antennas.num_receive_antennas
 
     @property
     def power(self) -> float:
@@ -1529,7 +1707,7 @@ class Device(ABC, Transformable, RandomNode, Serializable):
             int: Number of antennas, greater or equal to one.
         """
 
-        return self.__antennas.num_antennas
+        return self.antennas.num_antennas
 
     @property
     def max_frame_duration(self) -> float:
@@ -1614,7 +1792,9 @@ class Device(ABC, Transformable, RandomNode, Serializable):
 
         return [transmitter.transmit() for transmitter in self.transmitters]
 
-    def generate_output(self, operator_transmissions: Optional[List[Transmission]] = None) -> DeviceOutput:
+    def generate_output(
+        self, operator_transmissions: Optional[List[Transmission]] = None, resample: bool = True
+    ) -> DeviceOutput:
         """Generate the device's output.
 
         Args:
@@ -1631,16 +1811,28 @@ class Device(ABC, Transformable, RandomNode, Serializable):
         """
 
         # Generate operator transmissions if None were provided:
-        operator_transmissions = [o.transmission for o in self.transmitters] if operator_transmissions is None else operator_transmissions
+        operator_transmissions = (
+            [o.transmission for o in self.transmitters]
+            if operator_transmissions is None
+            else operator_transmissions
+        )
+        operator_streams = [o.selected_transmit_ports for o in self.transmitters]
 
         if any([t is None for t in operator_transmissions]):
-            raise RuntimeError("Error trying to generate outputs without specifying transmissions, caches are empty")
+            raise RuntimeError(
+                "Error trying to generate outputs without specifying transmissions, caches are empty"
+            )
 
         # Superimpose the operator transmissions to the device's RF configuration
-        superimposed_signal = Signal.empty(self.sampling_rate, self.antennas.num_transmit_antennas, carrier_frequency=self.carrier_frequency)
+        superimposed_signal = Signal.empty(
+            self.sampling_rate, self.num_transmit_ports, carrier_frequency=self.carrier_frequency
+        )
 
-        for transmission in operator_transmissions:
-            superimposed_signal.superimpose(transmission.signal)
+        for transmission, indices in zip(operator_transmissions, operator_streams):
+            if transmission is not None:
+                superimposed_signal.superimpose(
+                    transmission.signal, resample=resample, stream_indices=indices
+                )
 
         return DeviceOutput(superimposed_signal)
 
@@ -1662,10 +1854,14 @@ class Device(ABC, Transformable, RandomNode, Serializable):
         return DeviceTransmission.From_Output(device_output, operator_transmissions)
 
     def cache_transmission(self, transmission: DeviceTransmission) -> None:
-        for transmitter, operator_transmission in zip(self.transmitters, transmission.operator_transmissions):
+        for transmitter, operator_transmission in zip(
+            self.transmitters, transmission.operator_transmissions
+        ):
             transmitter.cache_transmission(operator_transmission)
 
-    def process_input(self, impinging_signals: DeviceInput | Signal | Sequence[Signal], cache: bool = True) -> ProcessedDeviceInput:
+    def process_input(
+        self, impinging_signals: DeviceInput | Signal | Sequence[Signal], cache: bool = True
+    ) -> ProcessedDeviceInput:
         """Process input signals impinging onto this device.
 
         Args:
@@ -1685,12 +1881,22 @@ class Device(ABC, Transformable, RandomNode, Serializable):
         """
 
         # Convert argument
-        impinging_signals = [impinging_signals] if isinstance(impinging_signals, Signal) else impinging_signals
-        impinging_signals = impinging_signals.impinging_signals if isinstance(impinging_signals, DeviceInput) else impinging_signals
+        impinging_signals = (
+            [impinging_signals] if isinstance(impinging_signals, Signal) else impinging_signals
+        )
+        impinging_signals = (
+            impinging_signals.impinging_signals
+            if isinstance(impinging_signals, DeviceInput)
+            else impinging_signals
+        )
 
         # Superimpose the impinging signal models
         if len(impinging_signals) != 1:
-            superimposed_signal = Signal.empty(self.sampling_rate, self.antennas.num_receive_antennas, carrier_frequency=self.carrier_frequency)
+            superimposed_signal = Signal.empty(
+                self.sampling_rate,
+                self.antennas.num_receive_antennas,
+                carrier_frequency=self.carrier_frequency,
+            )
             for signal in impinging_signals:
                 superimposed_signal.superimpose(signal)
 
@@ -1698,23 +1904,38 @@ class Device(ABC, Transformable, RandomNode, Serializable):
             superimposed_signal = impinging_signals[0]
 
         # Each operator is fed the superimposed signal by default
-        operator_inputs = [superimposed_signal for _ in self.receivers]
+        operator_inputs: List[Signal] = []
+        for receiver in self.receivers:
+            selected_receive_antennas = receiver.selected_receive_ports
+            stream_selector = (
+                slice(None) if selected_receive_antennas is None else selected_receive_antennas
+            )
+
+            stream_samples = superimposed_signal.samples[stream_selector, :]  # type: ignore
+            operator_input = Signal(
+                stream_samples,
+                superimposed_signal.sampling_rate,
+                superimposed_signal.carrier_frequency,
+            )
+            operator_inputs.append(operator_input)
 
         # Cache the operator inputs if the respective flag is enabled
         if cache:
-            receiver: Receiver
             for receiver, input in zip(self.receivers, operator_inputs):
                 receiver.cache_reception(input)
 
-        input_tuple = [(input, None) for input in operator_inputs]  # Hack for forwards compatibility, to be resolved
-        return ProcessedDeviceInput(impinging_signals, input_tuple)
+        return ProcessedDeviceInput(impinging_signals, operator_inputs)
 
-    def receive_operators(self, operator_inputs: ProcessedDeviceInput | Sequence[Tuple[Signal, ChannelStateInformation | None]] | None = None, cache: bool = True) -> List[Reception]:
+    def receive_operators(
+        self,
+        operator_inputs: ProcessedDeviceInput | Sequence[Signal | None] | None = None,
+        cache: bool = True,
+    ) -> List[Reception]:
         """Receive over the registered operators.
 
         Args:
 
-            operator_inputs (ProcessedDeviceInput | Sequence[Signal | Tuple[Signal, ChannelStateInformation | None]], optional):
+            operator_inputs (ProcessedDeviceInput | Sequence[Signal | None], optional):
                 Signal models fed to the receive operators.
                 If not provided, the operatores are expected to have inputs cached
 
@@ -1730,11 +1951,11 @@ class Device(ABC, Transformable, RandomNode, Serializable):
             RuntimeError: If no operator inputs were specified and an operator has no cached inputs.
         """
 
-        _operator_inputs: Sequence[Tuple[Signal, ChannelStateInformation | None]]
+        _operator_inputs: Sequence[Signal | None]
 
         # Refer to the operator caches if no inputs were specified
         if operator_inputs is None:
-            _operator_inputs = [(o.signal, o.csi) for o in self.receivers]
+            _operator_inputs = [o.signal for o in self.receivers]
 
         # Convert object oriented input
         elif isinstance(operator_inputs, ProcessedDeviceInput):
@@ -1744,17 +1965,21 @@ class Device(ABC, Transformable, RandomNode, Serializable):
             _operator_inputs = operator_inputs
 
         if len(_operator_inputs) != self.receivers.num_operators:
-            raise ValueError(f"Number of operator inputs ({len(_operator_inputs)}) does not match the number of receive operators ({self.receivers.num_operators})")
+            raise ValueError(
+                f"Number of operator inputs ({len(_operator_inputs)}) does not match the number of receive operators ({self.receivers.num_operators})"
+            )
 
         # Generate receive information
         receptions: List[Reception] = []
-        for operator, (signal, csi) in zip(self.receivers, _operator_inputs):
-            reception = operator.receive(signal, csi, cache)
+        for operator, signal in zip(self.receivers, _operator_inputs):
+            reception = operator.receive(signal, cache)
             receptions.append(reception)
 
         return receptions
 
-    def receive(self, impinging_signals: DeviceInput | Signal | Sequence[Signal], cache: bool = True) -> DeviceReception:
+    def receive(
+        self, impinging_signals: DeviceInput | Signal | Sequence[Signal], cache: bool = True
+    ) -> DeviceReception:
         """Receive over this device.
 
         Internally calls :meth:`Device.process_input` and :meth:`Device.receive_operators`.

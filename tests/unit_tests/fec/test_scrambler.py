@@ -20,7 +20,6 @@ class TestPseudoRandomGenerator(unittest.TestCase):
     """Test the pseudo random numbers rng"""
 
     def setUp(self) -> None:
-
         init_sequence = np.zeros(4)
         offset = 0
         self.expected_output = np.array([1, 0, 0, 0, 0, 0, 0, 1], dtype=int)
@@ -41,8 +40,7 @@ class TestPseudoRandomGenerator(unittest.TestCase):
     def test_generate_sequence(self) -> None:
         """Test the sequence generation"""
 
-        assert_array_equal(self.expected_output, self.generator.generate_sequence(self.expected_output.shape[0]),
-                           "Unexpected sequence generated")
+        assert_array_equal(self.expected_output, self.generator.generate_sequence(self.expected_output.shape[0]), "Unexpected sequence generated")
 
     def test_reset(self) -> None:
         """Test the rng reset behaviour"""
@@ -50,8 +48,7 @@ class TestPseudoRandomGenerator(unittest.TestCase):
         _ = self.generator.generate_sequence(1000)
         self.generator.reset()
 
-        assert_array_equal(self.expected_output, self.generator.generate_sequence(self.expected_output.shape[0]),
-                           "Unexpected sequence generated after reset")
+        assert_array_equal(self.expected_output, self.generator.generate_sequence(self.expected_output.shape[0]), "Unexpected sequence generated after reset")
 
 
 class TestScrambler3GPP(unittest.TestCase):
@@ -115,16 +112,11 @@ class TestScrambler80211a(unittest.TestCase):
         self.scrambler.seed = seed
         assert_array_equal(seed, self.scrambler.seed, "Seed getter does not return setter value")
 
-
     def test_sequence(self) -> None:
         """Make sure the scrambler produces an expected sequence internally"""
 
         self.scrambler.seed = np.ones(7, dtype=np.int8)
-        expected_sequence = np.array([0, 0, 0, 0, 1, 1, 1, 0,
-                                      1, 1, 1, 1, 0, 0, 1, 0,
-                                      1, 1, 0, 0, 1, 0, 0, 1,
-                                      0, 0, 0, 0, 0, 0, 1, 0,
-                                      0, 0, 1, 0, 0, 1, 1, 0])
+        expected_sequence = np.array([0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 1, 0])
 
         sequence = np.empty(expected_sequence.shape, dtype=int)
         for n in range(sequence.shape[0]):
@@ -142,8 +134,7 @@ class TestScrambler80211a(unittest.TestCase):
         data = np.zeros(72, dtype=np.int8)
         data[[18, 25, 41, 42, 43, 45, 61, 62, 67]] = 1
         expected_scramble = np.zeros(72, dtype=np.int8)
-        expected_scramble[[1, 2, 4, 5, 11, 12, 15, 16, 20, 23, 24, 28, 29, 30, 31, 33, 34,
-                           36, 42, 47, 48, 49, 50, 51, 53, 56, 58, 61, 63, 65, 66, 71]] = 1
+        expected_scramble[[1, 2, 4, 5, 11, 12, 15, 16, 20, 23, 24, 28, 29, 30, 31, 33, 34, 36, 42, 47, 48, 49, 50, 51, 53, 56, 58, 61, 63, 65, 66, 71]] = 1
 
         assert_array_equal(expected_scramble, self.scrambler.encode(data))
 
@@ -155,8 +146,7 @@ class TestScrambler80211a(unittest.TestCase):
 
         self.scrambler.seed = np.array([1, 0, 1, 1, 1, 0, 1])
         scramble = np.zeros(72, dtype=np.int8)
-        scramble[[1, 2, 4, 5, 11, 12, 15, 16, 20, 23, 24, 28, 29, 30, 31, 33, 34,
-                  36, 42, 47, 48, 49, 50, 51, 53, 56, 58, 61, 63, 65, 66, 71]] = 1
+        scramble[[1, 2, 4, 5, 11, 12, 15, 16, 20, 23, 24, 28, 29, 30, 31, 33, 34, 36, 42, 47, 48, 49, 50, 51, 53, 56, 58, 61, 63, 65, 66, 71]] = 1
         expected_data = np.zeros(72, dtype=np.int8)
         expected_data[[18, 25, 41, 42, 43, 45, 61, 62, 67]] = 1
 

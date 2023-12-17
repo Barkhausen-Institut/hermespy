@@ -21,7 +21,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -36,7 +36,14 @@ class RadarCube(HDFSerializable):
     __range_bins: np.ndarray
     __carrier_frequency: float
 
-    def __init__(self, data: np.ndarray, angle_bins: np.ndarray | None = None, doppler_bins: np.ndarray | None = None, range_bins: np.ndarray | None = None, carrier_frequency: float = 0.0) -> None:
+    def __init__(
+        self,
+        data: np.ndarray,
+        angle_bins: np.ndarray | None = None,
+        doppler_bins: np.ndarray | None = None,
+        range_bins: np.ndarray | None = None,
+        carrier_frequency: float = 0.0,
+    ) -> None:
         """
         Args:
 
@@ -71,7 +78,9 @@ class RadarCube(HDFSerializable):
         """
 
         if data.ndim != 3:
-            raise ValueError(f"Cube data must be a three-dimensional numpy tensor (has {data.ndim} dimenions)")
+            raise ValueError(
+                f"Cube data must be a three-dimensional numpy tensor (has {data.ndim} dimenions)"
+            )
 
         # Infer angle bins
         if angle_bins is None:
@@ -172,7 +181,12 @@ class RadarCube(HDFSerializable):
 
         return self.__range_bins
 
-    def plot_range(self, title: str | None = None, axes: plt.Axes | None = None, scale: Literal["lin", "log"] = "lin") -> plt.Figure:
+    def plot_range(
+        self,
+        title: str | None = None,
+        axes: plt.Axes | None = None,
+        scale: Literal["lin", "log"] = "lin",
+    ) -> plt.FigureBase:
         """Visualize the cube's range data.
 
         Args:
@@ -189,13 +203,14 @@ class RadarCube(HDFSerializable):
         # Collapse the cube into the range-dimension
         range_profile = np.sum(self.data, axis=(0, 1), keepdims=False)
 
+        figure: plt.FigureBase
         if axes is None:
             with Executable.style_context():
                 figure, axes = plt.subplots()
                 figure.suptitle(title)
 
         else:
-            figure = axes.figure
+            figure = axes.get_figure()
 
         axes.set_xlabel("Range [m]")
         axes.set_ylabel("Power")
@@ -211,7 +226,12 @@ class RadarCube(HDFSerializable):
 
         return figure
 
-    def plot_range_velocity(self, title: str | None = None, interpolate: bool = True, scale: Literal["frequency", "velocity"] | None = None) -> plt.Figure:
+    def plot_range_velocity(
+        self,
+        title: str | None = None,
+        interpolate: bool = True,
+        scale: Literal["frequency", "velocity"] | None = None,
+    ) -> plt.Figure:
         """Visualize the cube's range-velocity profile.
 
         Args:
@@ -268,7 +288,13 @@ class RadarCube(HDFSerializable):
         range_bins = np.array(group["range_bins"], dtype=np.float_)
         carrier_frequency = group.attrs.get("carrier_frequency", 0.0)
 
-        return cls(data=data, angle_bins=angle_bins, doppler_bins=doppler_bins, range_bins=range_bins, carrier_frequency=carrier_frequency)
+        return cls(
+            data=data,
+            angle_bins=angle_bins,
+            doppler_bins=doppler_bins,
+            range_bins=range_bins,
+            carrier_frequency=carrier_frequency,
+        )
 
     def to_HDF(self, group: Group) -> None:
         self._write_dataset(group, "data", self.data)

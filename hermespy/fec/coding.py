@@ -76,7 +76,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -203,10 +203,7 @@ class Encoder(ABC, Serializable):
         or the number of output bits during receive decoding.
         Referred to as :math:`K_n` within the respective equations.
 
-        Returns:
-
-            int:
-                Number of bits :math:`K_n`.
+        Returns: Number of bits :math:`K_n`.
         """
         ...  # pragma: no cover
 
@@ -219,10 +216,7 @@ class Encoder(ABC, Serializable):
         or the number of output bits during transmit encoding.
         Referred to as :math:`L_n` within the respective equations.
 
-        Returns:
-
-            int:
-                Number of bits :math:`L_n`.
+        Returns: Number of bits :math:`L_n`.
         """
         ...  # pragma: no cover
 
@@ -263,7 +257,9 @@ class EncoderManager(RandomNode, Serializable):
     # List of encoding steps defining the internal pipeline configuration
     _encoders: List[Encoder]
 
-    def __init__(self, modem: BaseModem = None, allow_padding: bool = True, allow_truncating: bool = True) -> None:
+    def __init__(
+        self, modem: BaseModem = None, allow_padding: bool = True, allow_truncating: bool = True
+    ) -> None:
         """
         Args:
 
@@ -292,7 +288,9 @@ class EncoderManager(RandomNode, Serializable):
         RandomNode.__init__(self)
 
     @classmethod
-    def to_yaml(cls: Type[EncoderManager], representer: SafeRepresenter, node: EncoderManager) -> Node:
+    def to_yaml(
+        cls: Type[EncoderManager], representer: SafeRepresenter, node: EncoderManager
+    ) -> Node:
         """Serialize an EncoderManager to YAML.
 
         Args:
@@ -313,7 +311,9 @@ class EncoderManager(RandomNode, Serializable):
         return representer.represent_sequence(cls.yaml_tag, node.encoders)
 
     @classmethod
-    def from_yaml(cls: Type[EncoderManager], constructor: SafeConstructor, node: Node) -> EncoderManager:
+    def from_yaml(
+        cls: Type[EncoderManager], constructor: SafeConstructor, node: Node
+    ) -> EncoderManager:
         """Recall a new `EncoderManager` instance from YAML.
 
         Args:
@@ -440,15 +440,23 @@ class EncoderManager(RandomNode, Serializable):
                     raise RuntimeError("Encoding would require padding, but padding is not allowed")
 
                 num_padding_bits = required_num_data_bits - len(data_state)
-                data_state = np.append(data_state, self._rng.integers(0, 2, num_padding_bits, dtype=bool))
+                data_state = np.append(
+                    data_state, self._rng.integers(0, 2, num_padding_bits, dtype=bool)
+                )
 
             # Encode all blocks sequentially
             for block_idx in range(num_blocks):
-                encoded_block = encoder.encode(data_state[block_idx * data_block_size : (1 + block_idx) * data_block_size])
-                code_state[block_idx * code_block_size : (1 + block_idx) * code_block_size] = encoded_block
+                encoded_block = encoder.encode(
+                    data_state[block_idx * data_block_size : (1 + block_idx) * data_block_size]
+                )
+                code_state[
+                    block_idx * code_block_size : (1 + block_idx) * code_block_size
+                ] = encoded_block
 
         if num_code_bits and len(code_state) > num_code_bits:
-            raise RuntimeError("Too many input bits provided for encoding, truncating would destroy information")
+            raise RuntimeError(
+                "Too many input bits provided for encoding, truncating would destroy information"
+            )
 
         if num_code_bits and len(code_state) < num_code_bits:
             if not self.allow_padding:
@@ -459,7 +467,9 @@ class EncoderManager(RandomNode, Serializable):
             if num_padding_bits >= self.code_block_size:
                 raise ValueError("Insufficient number of input blocks provided for encoding")
 
-            code_state = np.append(code_state, self._rng.integers(0, 2, num_padding_bits, dtype=bool))
+            code_state = np.append(
+                code_state, self._rng.integers(0, 2, num_padding_bits, dtype=bool)
+            )
 
         # Return resulting overall code
         return code_state
@@ -502,7 +512,10 @@ class EncoderManager(RandomNode, Serializable):
             num_data_bits_full = num_blocks * bit_block_size
 
             if num_data_bits > num_data_bits_full:
-                raise RuntimeError("The requested number of data bits is larger than number " "of bits recovered by decoding")
+                raise RuntimeError(
+                    "The requested number of data bits is larger than number "
+                    "of bits recovered by decoding"
+                )
 
             if not self.allow_truncating and num_data_bits != num_data_bits_full:
                 raise RuntimeError("Data truncating is required but not allowed")
@@ -530,7 +543,11 @@ class EncoderManager(RandomNode, Serializable):
 
             # Decode all blocks sequentially
             for block_idx in range(num_blocks):
-                data_state[block_idx * data_block_size : (1 + block_idx) * data_block_size] = encoder.decode(code_state[block_idx * code_block_size : (1 + block_idx) * code_block_size])
+                data_state[
+                    block_idx * data_block_size : (1 + block_idx) * data_block_size
+                ] = encoder.decode(
+                    code_state[block_idx * code_block_size : (1 + block_idx) * code_block_size]
+                )
 
         # Return resulting data
         return data_state[:num_data_bits]

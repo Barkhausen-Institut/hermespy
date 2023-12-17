@@ -13,24 +13,27 @@ It consists of the base classes for hardware bindings
 
 .. toctree::
 
-   hardware_loop.hardware_loop
-   hardware_loop.physical_device
-   hardware_loop.scenario
-   hardware_loop.physical_device_dummy
+   hardware_loop.hardware_loop.HardwareLoop
+   hardware_loop.scenario.PhysicalScenario
+   hardware_loop.physical_device.PhysicalDevice
+   hardware_loop.physical_device_dummy.PhysicalDeviceDummy
+   hardware_loop.physical_device_dummy.PhysicalScenarioDummy
+   hardware_loop.hardware_loop.HardwareLoopPlot
    hardware_loop.visualizers
 
 as well as specific bindings to UHD devices
 
 .. toctree::
 
-   hardware_loop.usrp
+   hardware_loop.uhd.usrp.UsrpDevice
+   hardware_loop.uhd.system.UsrpSystem
 
 and audio devices (sound cards)
 
 .. toctree::
    
-   hardware_loop.audio.device
-   hardware_loop.audio.scenario
+   hardware_loop.audio.device.AudioDevice
+   hardware_loop.audio.scenario.AudioScenario
 
 and offers calibration routines for testbed setups
 

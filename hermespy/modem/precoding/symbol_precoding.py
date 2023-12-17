@@ -1,12 +1,8 @@
 # -*- coding: utf-8 -*-
-"""
-================
-Symbol Precoding
-================
-"""
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
+from fractions import Fraction
 from typing import TYPE_CHECKING
 
 from hermespy.core import Serializable
@@ -69,7 +65,7 @@ class SymbolPrecoder(Precoder, ABC):
 
         Raises:
 
-            NotImplementedError: If an encoding operation is not supported.
+            NotImplementedError: If a decoding operation is not supported.
         """
         ...  # pragma no cover
 
@@ -84,15 +80,14 @@ class SymbolPrecoding(Precoding[SymbolPrecoder], Serializable):
     """
 
     yaml_tag = "SymbolCoding"
-    """YAML serialization tag."""
 
-    def __init__(self, modem: BaseModem = None) -> None:
+    def __init__(self, modem: BaseModem | None = None) -> None:
         """Symbol Precoding object initialization.
 
         Args:
 
-            modem (Modem, Optional):
-                The modem this `SymbolPrecoding` configuration is attached to.
+            modem (BaseModem, optional):
+                The modem this :class:`SymbolPrecoding` configuration is attached to.
         """
 
         Precoding.__init__(self, modem=modem)
@@ -104,7 +99,7 @@ class SymbolPrecoding(Precoding[SymbolPrecoder], Serializable):
 
         Args:
 
-            symbols (Symbols): Symbols to be encoded.
+            symbols (StatedSymbols): Symbols to be encoded.
 
         Returns: Encoded symbols.
 
@@ -127,7 +122,7 @@ class SymbolPrecoding(Precoding[SymbolPrecoder], Serializable):
 
         Args:
 
-            symbols (Symbols):
+            symbols (StatedSymbols):
                 Symbols to be decoded.
 
         Returns: Decoded symbols.
@@ -142,3 +137,21 @@ class SymbolPrecoding(Precoding[SymbolPrecoder], Serializable):
             decoded_symbols = precoder.decode(decoded_symbols)
 
         return decoded_symbols
+
+    def num_encoded_blocks(self, num_input_blocks: int) -> int:
+        """Number of blocks after encoding.
+
+        Args:
+
+            num_input_blocks (int):
+                Number of blocks before encoding.
+
+        Returns: Number of blocks after encoding.
+        """
+
+        num_blocks = Fraction(num_input_blocks, 1)
+
+        for precoder in self:
+            num_blocks /= precoder.rate
+
+        return int(num_blocks)
