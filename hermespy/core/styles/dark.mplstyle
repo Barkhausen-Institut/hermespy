@@ -21,6 +21,9 @@ figure.edgecolor: black
 savefig.facecolor: black
 savefig.edgecolor: black
 
+legend.facecolor: black
+legend.edgecolor: white
+
 ### Boxplots
 boxplot.boxprops.color: white
 boxplot.capprops.color: white

@@ -28,7 +28,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -266,18 +266,16 @@ class Executable(ABC):
         Returns:  Style context manager generator.
         """
 
-        if Executable.__style in Executable.__hermes_styles():
-            yield plt.style.context(
-                path.join(
-                    Executable.__hermes_root_dir(),
-                    "core",
-                    "styles",
-                    Executable.__style + ".mplstyle",
-                )
+        style_path = Executable.__style
+        if style_path in Executable.__hermes_styles():
+            style_path = path.join(
+                Executable.__hermes_root_dir(),
+                "core",
+                "styles",
+                Executable.__style + ".mplstyle",
             )
-
-        else:
-            yield plt.style.context(Executable.__style)
+        with plt.style.context(style_path):
+            yield
 
     @staticmethod
     def __hermes_root_dir() -> str:
