@@ -10,13 +10,17 @@ including noise and hardware modeling.
    :namespace: hermespy
 
 .. toctree::
+   :glob:
 
-   simulation.simulation
-   simulation.simulated_device
-   simulation.analog_digital_converter
+   simulation.simulation.Simulation
+   simulation.simulation.SimulationScenario
+   simulation.simulation.SimulatedDrop
+   simulation.simulated_device.*
+   simulation.antennas
    simulation.rf_chain
    simulation.rf_chain.power_amplifier
    simulation.rf_chain.phase_noise
+   simulation.rf_chain.adc
    simulation.noise
    simulation.coupling
    simulation.isolation

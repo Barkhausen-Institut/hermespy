@@ -1,34 +1,47 @@
 # -*- coding: utf-8 -*-
-"""
-====================================
-Single-Target Radar Channel Modeling
-====================================
-"""
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from itertools import product
-from typing import Generic, List, Sequence, Set, Tuple, TypeVar
+from math import ceil
+from typing import Any, Generic, List, Mapping, Sequence, Set, Tuple, Type, TypeVar
 
 import numpy as np
+from h5py import Group
 from scipy.constants import pi, speed_of_light
+from sparse import GCXS  # type: ignore
+
+from hermespy.channel.channel import InterpolationMode
 
 from .channel import Channel, ChannelRealization
-from hermespy.core import Device, Direction, FloatingError, Moveable, Serializable, Transformable, Transformation
-from hermespy.tools import amplitude_path_loss
+from hermespy.core import (
+    ChannelStateInformation,
+    ChannelStateFormat,
+    Device,
+    Direction,
+    FloatingError,
+    HDFSerializable,
+    Moveable,
+    Serializable,
+    Signal,
+    Transformable,
+    Transformation,
+)
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
 class RadarTarget(ABC):
-    """Abstract base class of radar targets."""
+    """Abstract base class of radar targets.
+
+    Radar targets represent reflectors of electromagnetic waves within :class:`RadarChannel` instances.
+    """
 
     __static: bool
 
@@ -44,8 +57,14 @@ class RadarTarget(ABC):
         self.__static = static
 
     @abstractmethod
-    def get_cross_section(self, impinging_direction: Direction, emerging_direction: Direction) -> float:
+    def get_cross_section(
+        self, impinging_direction: Direction, emerging_direction: Direction
+    ) -> float:
         """Query the target's radar cross section.
+
+
+        The target radr cross section is denoted by the vector :math:`\\sigma_{\\ell}`
+        within the respective equations.
 
         Args:
 
@@ -62,6 +81,9 @@ class RadarTarget(ABC):
     @abstractmethod
     def get_velocity(self) -> np.ndarray:
         """Query the target's velocity.
+
+        The target velocity is denoted by the vector :math:`\\mathbf{v}^{(\\ell)}`
+        within the respective equations.
 
         Returns: A cartesian velocity vector in m/s.
         """
@@ -94,7 +116,9 @@ class RadarCrossSectionModel(ABC):
     """Base class for spatial radar cross section models."""
 
     @abstractmethod
-    def get_cross_section(self, impinging_direction: Direction, emerging_direction: Direction) -> float:
+    def get_cross_section(
+        self, impinging_direction: Direction, emerging_direction: Direction
+    ) -> float:
         """Query the model's cross section.
 
         Args:
@@ -123,7 +147,7 @@ class FixedCrossSection(RadarCrossSectionModel):
         Args:
 
             cross_section (float):
-                The cross section in m^2.
+                The cross section in :math:`\\mathrm{m}^2`.
         """
 
         self.cross_section = cross_section
@@ -132,7 +156,7 @@ class FixedCrossSection(RadarCrossSectionModel):
     def cross_section(self) -> float:
         """The assumed cross section.
 
-        Returns: The cross section in m^2.
+        Returns: The cross section in :math:`\\mathrm{m}^2`.
 
         Raises:
 
@@ -160,7 +184,13 @@ class VirtualRadarTarget(Transformable, RadarTarget, Serializable):
     __velocity: np.ndarray
     __cross_section: RadarCrossSectionModel
 
-    def __init__(self, cross_section: RadarCrossSectionModel, velocity: np.ndarray | None = None, pose: Transformation | None = None, static: bool = False) -> None:
+    def __init__(
+        self,
+        cross_section: RadarCrossSectionModel,
+        velocity: np.ndarray | None = None,
+        pose: Transformation | None = None,
+        static: bool = False,
+    ) -> None:
         """
         Args:
 
@@ -199,7 +229,9 @@ class VirtualRadarTarget(Transformable, RadarTarget, Serializable):
     def cross_section(self, value: RadarCrossSectionModel) -> None:
         self.__cross_section = value
 
-    def get_cross_section(self, impinging_direction: Direction, emerging_direction: Direction) -> float:
+    def get_cross_section(
+        self, impinging_direction: Direction, emerging_direction: Direction
+    ) -> float:
         return self.cross_section.get_cross_section(impinging_direction, emerging_direction)
 
     @property
@@ -236,7 +268,9 @@ class PhysicalRadarTarget(RadarTarget, Serializable):
     __cross_section: RadarCrossSectionModel
     __moveable: Moveable
 
-    def __init__(self, cross_section: RadarCrossSectionModel, moveable: Moveable, static: bool = False) -> None:
+    def __init__(
+        self, cross_section: RadarCrossSectionModel, moveable: Moveable, static: bool = False
+    ) -> None:
         """
         Args:
 
@@ -278,7 +312,9 @@ class PhysicalRadarTarget(RadarTarget, Serializable):
 
         return self.__moveable
 
-    def get_cross_section(self, impinging_direction: Direction, emerging_direction: Direction) -> float:
+    def get_cross_section(
+        self, impinging_direction: Direction, emerging_direction: Direction
+    ) -> float:
         return self.cross_section.get_cross_section(impinging_direction, emerging_direction)
 
     def get_velocity(self) -> np.ndarray:
@@ -296,115 +332,99 @@ RCRT = TypeVar("RCRT", bound="RadarChannelRealization")
 
 
 class RadarChannelRealization(ChannelRealization):
-    """Realization of a radar channel."""
+    """Realization of a radar channel.
 
-    @staticmethod
-    def ImpulseResponse(path_realizations: Sequence[RadarPathRealization], gain: float, num_samples: int, sampling_rate: float, transmitter: Device, receiver: Device) -> np.ndarray:
-        """Generate the sampled impulse response of a set of radar path realizations.
-
-        Args:
-
-            path_realizations (Sequence[RadarPathRealization]):
-                Sequence of realized radar propagation paths to be sampled into the impulse response.
-
-            gain (float):
-                The linear applied channel gain factor.
-
-            num_samples (int):
-                Number of generated time-domain impulse response samples.
-
-            sampling_rate (float):
-                Sampling rate of the impulse response in Hz.
-
-            transmitter (Device):
-                The transmitting device feeding into the represented channel.
-
-            receiver (Device):
-                The device reiving from the represented channel.
-        """
-
-        # Impulse response sample timestamps
-        timestamps = np.arange(num_samples) / sampling_rate
-
-        # Infer parameter limits
-        max_time = float(timestamps[-1]) if num_samples > 0 else 0.0
-        max_propagation_delay = max(path_realizations, key=lambda t: t.delay).delay if len(path_realizations) > 0 else 0.0
-        max_velocity = max(path_realizations, key=lambda t: t.doppler_velocity).doppler_velocity if len(path_realizations) > 0 else 0.0
-        # This equation can be improved to compute the max delay for each target realization
-        max_delay = max_propagation_delay + 2 * max_velocity * max_time / speed_of_light
-        max_delay_in_samples = int(np.ceil(max_delay * sampling_rate))
-
-        # Generate impulse response
-        impulse_response = np.zeros((receiver.antennas.num_receive_antennas, transmitter.antennas.num_transmit_antennas, num_samples, 1 + max_delay_in_samples), dtype=complex)
-
-        # Impulse response delay timestamps
-        delay_taps = np.arange(1 + max_delay_in_samples) / sampling_rate
-
-        for (tidx, timestamp), target in product(enumerate(timestamps), path_realizations):  # type: ignore
-            echo_delay = target.delay + 2 * target.doppler_velocity * timestamp / speed_of_light
-            time = timestamp + delay_taps
-            echo_weights = target.power_factor * np.exp(2j * pi * (target.doppler_shift * time + target.phase_shift))
-
-            interpolated_impulse_tap = np.sinc(sampling_rate * (delay_taps - echo_delay)) * echo_weights
-
-            # Note that this impulse response selection is technically incorrect,
-            # since it is only feasible for planar arrays in the far-field
-            impulse_response[:, :, tidx, :] += np.tensordot(target.mimo_response, interpolated_impulse_tap, axes=0)
-
-        # Apply the channel gain
-        impulse_response *= gain**0.5
-        return impulse_response
-
-    def __init__(self, channel: Channel, gain: float, impulse_response: np.ndarray) -> None:
-        """
-        Args:
-
-            channel (Channel):
-                Reference to the realized channel.
-
-            gain (float):
-                Linear propagation power gain factor.
-
-            impulse_response (np.ndarray):
-                Channel impulse response tensor.
-
-        Raises:
-
-            ValueError: If `gain` is negative.
-        """
-
-        if gain < 0.0:
-            raise ValueError(f"Channel power gain must be greater or equal to zero (not {gain})")
-
-        # Initialize the base class
-        ChannelRealization.__init__(self, channel, impulse_response)
-
-        # Initialize class attributes
-        self.__gain = gain
+    Generated by :meth:`RadarChannelBase.realize` and :meth:`RadarChannelBase.realize_interference`.
+    """
 
     @property
-    def gain(self) -> float:
-        """Applied linear channel power gain factor.
+    @abstractmethod
+    def _path_realizations(self) -> Sequence[RadarPathRealization]:
+        """Sequence of realized radar propagation paths."""
+        ...  # pragma: no cover
 
-        Returns: Channel power gain.
-        """
+    def _propagate(
+        self,
+        signal: Signal,
+        transmitter: Device,
+        receiver: Device,
+        interpolation: InterpolationMode,
+    ) -> Signal:
+        delays = np.array(
+            [
+                path_realization.propagation_delay(transmitter, receiver)
+                for path_realization in self._path_realizations
+            ]
+        )
+        velocities = np.array(
+            [
+                path_realization.relative_velocity(transmitter, receiver)
+                for path_realization in self._path_realizations
+            ]
+        )
 
-        return self.__gain
+        # Compute the expected sample overhead of the propagated sample resultin from propagtion delays
+        if delays.size > 0:
+            max_delay_in_samples = ceil(
+                delays.max() * signal.sampling_rate
+                + 2
+                * velocities.max()
+                * signal.num_samples
+                / (signal.sampling_rate * speed_of_light)
+            )
+        else:
+            max_delay_in_samples = 0
+
+        propagated_samples = np.zeros(
+            (receiver.antennas.num_receive_antennas, signal.num_samples + max_delay_in_samples),
+            dtype=np.complex_,
+        )
+
+        # Compute the signal propagated along each respective path realization
+        for path_realization, delay, velocity in zip(self._path_realizations, delays, velocities):
+            path_realization.add_propagation(
+                transmitter, receiver, signal, propagated_samples, delay, velocity
+            )
+
+        # Apply the channel gain
+        propagated_samples *= self.gain**0.5
+
+        return Signal(propagated_samples, signal.sampling_rate, signal.carrier_frequency)
+
+    def state(
+        self,
+        transmitter: Device,
+        receiver: Device,
+        delay: float,
+        sampling_rate: float,
+        num_samples: int,
+        max_num_taps: int,
+    ) -> ChannelStateInformation:
+        raw_state = np.zeros(
+            (
+                receiver.antennas.num_receive_antennas,
+                transmitter.antennas.num_transmit_antennas,
+                num_samples,
+                max_num_taps,
+            ),
+            dtype=np.complex_,
+        )
+        for path_realization in self._path_realizations:
+            path_realization.add_state(transmitter, receiver, delay, sampling_rate, raw_state)
+
+        # Apply the channel gain
+        raw_state *= self.gain**0.5
+
+        return ChannelStateInformation(
+            ChannelStateFormat.IMPULSE_RESPONSE, GCXS.from_numpy(raw_state)
+        )
 
     @abstractmethod
-    def null_hypothesis(self: RCRT, num_samples: int, sampling_rate: float) -> RCRT:
+    def null_hypothesis(self: RCRT) -> RCRT:
         """Generate a null hypothesis realization. from a given channel realization.
 
         Null hypothesis realizations will remove non-static propagation components from the channel model.
         This function is, for example, accessed to evaluate a radar link's receiver operating characteristics.
-
-        Args:
-
-            num_samples (int):
-                Number of generated time-domain impulse response samples.
-
-            sampling_rate (float):
-                Sampling rate of the impulse response in Hz.
 
         Returns: The null hypothesis radar channel realization.
         """
@@ -455,13 +475,10 @@ class RadarChannelBase(Generic[RCRT], Channel[RCRT]):
     def attenuate(self, value: bool) -> None:
         self.__attenuate = value
 
-    def _realize_target(self, carrier_frequency: float, target: RadarTarget) -> RadarTargetRealization:
+    def _realize_target(self, target: RadarTarget) -> RadarTargetRealization:
         """Realize a single radar target's channel propagation path.
 
         Args:
-
-            carrier_frequency (float):
-                The assumed signal carrier frequency in Hz.
 
             target (RadarTarget):
                 The radar target to be realized.
@@ -475,70 +492,50 @@ class RadarChannelBase(Generic[RCRT], Channel[RCRT]):
             RuntimeError: If `target` and the channel's linked devices are located at identical global positions
         """
 
-        if carrier_frequency <= 0.0:
-            raise ValueError("Radar channel linked device carrier frequencies must be greater than zero")
-
-        if self.transmitter is None or self.receiver is None:
-            raise FloatingError("Radar channel's linked devices not specified")
-
         # Query target global coordiante system transformations
         target_backwards_transform = target.get_backwards_transformation()
         target_forwards_transform = target.get_forwards_transformation()
 
         # Make sure the transmitter / receiver positions don't collide with target locations
         # This implicitly violates the far-field assumption and leads to numeric instabilities
-        if np.array_equal(target_forwards_transform.translation, self.transmitter.global_position):
-            raise RuntimeError("Radar channel transmitter position colliding with an assumed target location")
+        if np.array_equal(target_forwards_transform.translation, self.alpha_device.global_position):
+            raise RuntimeError(
+                "Radar channel transmitter position colliding with an assumed target location"
+            )
 
-        if np.array_equal(target_forwards_transform.translation, self.receiver.global_position):
-            raise RuntimeError("Radar channel receiver position colliding with an assumed target location")
+        if np.array_equal(target_forwards_transform.translation, self.beta_device.global_position):
+            raise RuntimeError(
+                "Radar channel receiver position colliding with an assumed target location"
+            )
 
         # Compute the impinging and emerging far-field wave direction from the target in local target coordinates
-        target_impinging_direction = target_backwards_transform.transform_direction(self.transmitter.global_position, normalize=True)
-        target_emerging_direction = target_backwards_transform.transform_direction(self.receiver.global_position, normalize=True)
+        target_impinging_direction = target_backwards_transform.transform_direction(
+            self.alpha_device.global_position, normalize=True
+        )
+        target_emerging_direction = target_backwards_transform.transform_direction(
+            self.beta_device.global_position, normalize=True
+        )
 
         # Query the radar cross section from the target's model given impinging and emerging directions
-        cross_section = target.get_cross_section(target_impinging_direction, target_emerging_direction)
+        cross_section = target.get_cross_section(
+            target_impinging_direction, target_emerging_direction
+        )
 
         # Query reflection phase shift
-        reflection_phase = self._rng.uniform(0, 1)
-
-        # Compute the wave's propagated distance and propagation delay
-        emerging_vector = target_forwards_transform.translation - self.transmitter.global_position
-        impinging_vector = self.receiver.global_position - target_forwards_transform.translation
-        distance = np.linalg.norm(emerging_vector) + np.linalg.norm(impinging_vector)
-        delay = distance / speed_of_light
-
-        # Model the doppler-shift from transmitter to receiver
-        target_velocity = target.get_velocity()
-        relative_transmitter_velocity = np.dot(Direction.From_Cartesian(emerging_vector, normalize=True), target_velocity - self.transmitter.velocity)
-        relative_receiver_velocity = np.dot(Direction.From_Cartesian(impinging_vector, normalize=True), self.receiver.velocity - target_velocity)
-
-        doppler_velocity = relative_transmitter_velocity + relative_receiver_velocity
-        doppler_shift = doppler_velocity * carrier_frequency / speed_of_light
-
-        # Compute the power factor given the radar range equation
-        power_factor = 1.0
-        if self.attenuate:
-            wavelength = speed_of_light / carrier_frequency
-            power_factor = wavelength * np.sqrt(cross_section) / (4 * pi) ** 1.5 / distance**2  # * db2lin(self.__losses_db)
-
-        # Model the sensor arrays' spatial responses
-        rx_response = self.receiver.antennas.cartesian_array_response(carrier_frequency, target_forwards_transform.translation, "global").conj()  # Is the conjugate here correct?
-        tx_response = self.transmitter.antennas.cartesian_array_response(carrier_frequency, target_forwards_transform.translation, "global")
-        mimo_response = np.inner(rx_response, tx_response)
+        reflection_phase = self._rng.uniform(0, 2 * pi)
 
         # Return realized information wrapped in a target realization dataclass
-        return RadarTargetRealization(reflection_phase, delay, doppler_shift, doppler_velocity, power_factor, mimo_response, target_forwards_transform.translation, target_velocity, target.static)
+        return RadarTargetRealization(
+            target_forwards_transform.translation,
+            target.get_velocity(),
+            cross_section,
+            reflection_phase,
+            self.attenuate,
+            target.static,
+        )
 
-    def null_hypothesis(self, num_samples: int, sampling_rate: float, realization: RCRT | None = None) -> RCRT:
+    def null_hypothesis(self, realization: RCRT | None = None) -> RCRT:
         """Generate a channel realization missing the target to be estimated.
-
-        Args:
-
-            realization (RCRT, optional):
-                Channel realization for which to generated a null hypothesis.
-                By default, the recent channel realization will be assumed.
 
         Returns: Null hypothesis channel realization.
 
@@ -554,50 +551,22 @@ class RadarChannelBase(Generic[RCRT], Channel[RCRT]):
             if realization is None:
                 raise RuntimeError("Channel has not been propagated over yet")
 
-        return realization.null_hypothesis(num_samples, sampling_rate)
+        return realization.null_hypothesis()
 
 
-class RadarPathRealization(object):
+class RadarPathRealization(HDFSerializable):
     """Realization of a radar propagation path between transmitter and receiver"""
 
-    __phase_shift: float
-    __delay: float
-    __doppler_shift: float
-    __dopler_velocity: float
-    __power_factor: float
-    __mimo_response: np.ndarray
-    __global_position: np.ndarray
-    __global_velocity: np.ndarray
+    __attenuate: bool
     __static: bool
 
-    def __init__(self, phase_shift: float, delay: float, doppler_shift: float, doppler_velocity: float, power_factor: float, mimo_response: np.ndarray, global_position: np.ndarray, global_velocity: np.ndarray, static: bool = False) -> None:
+    def __init__(self, attenuate: bool = True, static: bool = False) -> None:
         """
         Args:
 
-            phase_shift (float):
-                Phase shift of the propagation path in radians.
-
-            doppler_shift (float):
-                Spectral doppler shift in Hz.
-
-            doppler_velocity:
-                Perceived target velocity in m/s.
-
-            delay (float):
-                Propagation delay in seconds.
-
-            power_factor (float):
-                Linear factor a propagated signal gets scaled by in its amplitude.
-
-            mimo_response (np.ndarray):
-                Spatial sensor array response of the propagation.
-                Must be numpy matrix.
-
-            global_position (np.ndarray):
-                Global position of the path's target as a cartesian vector.
-
-            global_velcity (np.ndarray):
-                Global velocity of the path's target a a cartesian vector of unit m/s.
+            attenuate (bool, optional):
+                Should the propagated signal be attenuated during propagation modeling?
+                Enabled by default.
 
             static (bool, optional):
                 Is the path considered static?
@@ -605,134 +574,478 @@ class RadarPathRealization(object):
                 Disabled by default.
         """
 
-        self.__phase_shift = phase_shift
-        self.__doppler_shift = doppler_shift
-        self.__dopler_velocity = doppler_velocity
-        self.__delay = delay
-        self.__power_factor = power_factor
-        self.__mimo_response = mimo_response
-        self.__global_position = global_position
-        self.__global_velocity = global_velocity
+        # Initialize class attributes
+        self.__attenuate = attenuate
         self.__static = static
 
     @property
-    def phase_shift(self) -> float:
-        """Phase shift of the wave during reflection at the target.
+    def attenuate(self) -> bool:
+        """Should a propagated signal be attenuated during propagation modeling?"""
 
-        Returns: Phase shift in the interval :math:`[0, 1]`.
-        """
+        return self.__attenuate
 
-        return self.__phase_shift
+    @attenuate.setter
+    def attenuate(self, value: bool) -> None:
+        self.__attenuate = value
 
     @property
-    def delay(self) -> float:
+    def static(self) -> bool:
+        """Is the path considered static?"""
+
+        return self.__static
+
+    @static.setter
+    def static(self, value: bool) -> None:
+        self.__static = value
+
+    @abstractmethod
+    def propagation_delay(self, transmitter: Device, receiver: Device) -> float:
         """Propagation delay of the wave from transmitter over target to receiver.
+
+        Denoted by :math:`\\tau_{\\ast}` within the respective equations.
+
+        Args:
+
+            transmitter (Device):
+                Transmitting device.
+
+            receiver (Device):
+                Receiving device.
 
         Returns: Propagation delay in seconds.
         """
+        ...  # pragma: no cover
 
-        return self.__delay
+    @abstractmethod
+    def relative_velocity(self, transmitter: Device, receiver: Device) -> float:
+        """Relative velocity between transmitter and receiver.
 
-    @property
-    def doppler_shift(self) -> float:
-        """Frequency shift perceived by the receiver with respected to the transmitted center frequency.
+        Denoted by :math:`v_{\\ast}` within the respective equations.
 
-        Returns: Shift in Hz.
+        Args:
+
+            transmitter (Device):
+                Transmitting device.
+
+            receiver (Device):
+                Receiving device.
+
+        Returns: Relative velocity in m/s.
         """
+        ...  # pragma: no cover
 
-        return self.__doppler_shift
-
-    @property
-    def doppler_velocity(self) -> float:
-        """Perceived doppler velocity in m/s."""
-
-        return self.__dopler_velocity
-
-    @property
-    def power_factor(self) -> float:
-        """Power loss factor the wave during free space propagation and reflection
-
-        Returns: Linear power factor.
-        """
-
-        return self.__power_factor
-
-    @property
-    def mimo_response(self) -> np.ndarray:
+    @abstractmethod
+    def propagation_response(
+        self, transmitter: Device, receiver: Device, carrier_frequency: float
+    ) -> np.ndarray:
         """Multipath sensor array response matrix from transmitter to receiver.
 
         Includes polarization losses.
 
-        Returns: Numpy matrix of antenna phase shift factors.
+        Args:
+
+            transmitter (Device):
+                Transmitting device.
+
+            receiver (Device):
+                Receiving device.
+
+            carrier_frequency (float):
+                Carrier frequency of the propagated signal in Hz.
+                Denoted by :math:`f_{\\mathrm{c}}^{(\\alpha)}` within the respective equations.
+
+        Returns: Numpy matrix of antenna response weights.
+        """
+        ...  # pragma: no cover
+
+    def add_propagation(
+        self,
+        transmitter: Device,
+        receiver: Device,
+        signal: Signal,
+        propagated_samples: np.ndarray,
+        propagation_delay: float | None = None,
+        relative_velocity: float | None = None,
+    ) -> None:
+        """Add propagation of a signal over this path realization to a given sample buffer.
+
+        Args:
+
+            transmitter (Device):
+                Transmitting device.
+
+            receiver (Device):
+                Receiving device.
+
+            signal (Signal):
+                Signal to be propagated.
+
+            propagated_samples (np.ndarray):
+                Sample buffer to be written to.
+
+            propagation_delay (float, optional):
+                Propagation delay of the wave from transmitter over target to receiver.
+                If not specified, the delay will be queried from :meth:`propagation_delay`.
+
+            relative_velocity (float, optional):
+                Relative velocity between transmitter and receiver.
+                If not specified, the velocity will be queried from :meth:`relative_velocity`.
         """
 
-        return self.__mimo_response
+        # Query the required parameters
+        propagation_delay = (
+            self.propagation_delay(transmitter, receiver)
+            if propagation_delay is None
+            else propagation_delay
+        )
+        relative_velocity = (
+            self.relative_velocity(transmitter, receiver)
+            if relative_velocity is None
+            else relative_velocity
+        )
+        propagation_response = self.propagation_response(
+            transmitter, receiver, signal.carrier_frequency
+        )
 
-    @property
-    def global_position(self) -> np.ndarray:
-        """Global position of the path's target.
+        delay_sample_offset = int(propagation_delay * signal.sampling_rate)
+        doppler_shift = relative_velocity * signal.carrier_frequency / speed_of_light
 
-        Returns: Cartesian numpy vector.
+        # ToDo: Exact time of flight resampling
+        # echo_timestamps = propagation_delay + 2 * relative_velocity * signal.timestamps / speed_of_light
+        # echo_weights = np.exp(2j * pi * (doppler_shift * echo_timestamps))
+        echo_weights = np.exp(2j * pi * (doppler_shift * signal.timestamps))
+
+        propagated_samples[
+            :, delay_sample_offset : delay_sample_offset + signal.num_samples
+        ] += np.einsum("ij,jk,k->ik", propagation_response, signal.samples, echo_weights)
+
+    def add_state(
+        self,
+        transmitter: Device,
+        receiver: Device,
+        delay: float,
+        sampling_rate: float,
+        state: np.ndarray,
+    ) -> None:
+        """Add propagation of a signal over this path realization to a given channel state information sample buffer.
+
+        Args:
+
+            transmitter (Device):
+                Transmitting device.
+
+            receiver (Device):
+                Receiving device.
+
+            delay (float):
+                Delay of the channel state information in seconds.
+
+            sampling_rate (float):
+                Sampling rate of the channel state information in Hz.
+
+            state (np.ndarray):
+                Sample buffer to be written to.
         """
 
-        return self.__global_position
+        # Query the required parameters
+        propagation_delay = self.propagation_delay(transmitter, receiver)
+        relative_velocity = self.relative_velocity(transmitter, receiver)
+        propagation_response = self.propagation_response(
+            transmitter, receiver, transmitter.carrier_frequency
+        )
 
-    @property
-    def global_velocity(self) -> np.ndarray:
-        """Global velocity of the path's target in m/s as a cartesian vector."""
+        delay_sample_offset = int(propagation_delay * sampling_rate - delay)
+        if delay_sample_offset < 0 or delay_sample_offset >= state.shape[3]:
+            return
 
-        return self.__global_velocity
+        doppler_shift = relative_velocity * transmitter.carrier_frequency / speed_of_light
 
-    @property
-    def static(self) -> bool:
-        return self.__static
+        # echo_timestamps = delay + 2 * relative_velocity * np.arange(state.shape[2]) / speed_of_light
+        # echo_weights = np.exp(2j * pi * (doppler_shift * echo_timestamps))
+        echo_weights = np.exp(2j * pi * (doppler_shift / sampling_rate * np.arange(state.shape[2])))
+
+        state[:, :, :, delay_sample_offset] += np.einsum(
+            "ij,k->ijk", propagation_response, echo_weights
+        )
+
+    def to_HDF(self, group: Group) -> None:
+        # Serialize the class attributes
+        group.attrs["attenuate"] = self.attenuate
+        group.attrs["static"] = self.static
+
+    @classmethod
+    def _parameters_from_HDF(cls: Type[RadarPathRealization], group: Group) -> Mapping[str, Any]:
+        """Deserialize the object's parameters from HDF5.
+
+        Intended to be used as a subroutine of :meth:`From_HDF`.
+
+        Returns: The object's parmeters as a keyword argument dictionary.
+        """
+
+        return {"attenuate": group.attrs["attenuate"], "static": group.attrs["static"]}
 
 
 class RadarTargetRealization(RadarPathRealization):
     """Realization of a radar propagation path resulting from a target scattering"""
 
-    ...  # pragma: no cover
+    def __init__(
+        self,
+        position: np.ndarray,
+        velocity: np.ndarray,
+        cross_section: float,
+        reflection_phase: float,
+        attenuate: bool = True,
+        static: bool = False,
+    ) -> None:
+        """
+        Args:
+
+            position (np.ndarray):
+                Global position of the path's target.
+
+            velocity (np.ndarray):
+                Global velocity of the path's target.
+
+            cross_section (float):
+                Radar cross section of the path's target in :math:`\\mathrm{m}^2`.
+
+            reflection_phase (float):
+                Reflection phase of the path's target in radians.
+
+            attenuate (bool, optional):
+                Should the propagated signal be attenuated during propagation modeling?
+                Enabled by default.
+
+            static (bool, optional):
+                Is the path considered static?
+                Static paths will remain during null hypothesis testing.
+                Disabled by default.
+        """
+
+        # Initialize the base class
+        RadarPathRealization.__init__(self, attenuate, static)
+
+        # Initialize class attributes
+        self.__global_position = position
+        self.__global_velocity = velocity
+        self.__cross_section = cross_section
+        self.__reflection_phase = reflection_phase
+
+    @property
+    def position(self) -> np.ndarray:
+        """Global position of the path's target.
+
+        Denoted by :math:`\\mathbf{p}^{(\\ell)}` within the respective equations.
+        """
+
+        return self.__global_position
+
+    @property
+    def velocity(self) -> np.ndarray:
+        """Global velocity of the path's target in m/s as a cartesian vector.
+
+        Denoted by :math:`\\mathbf{v}^{(\\ell)}` within the respective equations.
+        """
+
+        return self.__global_velocity
+
+    @property
+    def cross_section(self) -> float:
+        """Radar cross section of the path's target in :math:`\\mathrm{m}^2`.
+
+        Denoted by :math:`\\sigma_{\\ell}` within the respective equations.
+        """
+
+        return self.__cross_section
+
+    @property
+    def reflection_phase(self) -> float:
+        """Reflection phase of the path's target in radians.
+
+        Represented by :math:`\\phi_{\\mathrm{Target}}^{(\\ell)}` within the respective equations.
+        """
+
+        return self.__reflection_phase
+
+    def propagation_delay(self, transmitter: Device, receiver: Device) -> float:
+        emerging_vector = self.position - transmitter.global_position
+        impinging_vector = receiver.global_position - self.position
+
+        delay = (
+            np.linalg.norm(emerging_vector) + np.linalg.norm(impinging_vector)
+        ) / speed_of_light
+        return delay
+
+    def relative_velocity(self, transmitter: Device, receiver: Device) -> float:
+        target_position = self.position
+        emerging_vector = target_position - transmitter.global_position
+        impinging_vector = receiver.global_position - target_position
+
+        # Model the doppler-shift from transmitter to receiver
+        target_velocity = self.velocity
+        relative_transmitter_velocity = np.dot(
+            Direction.From_Cartesian(emerging_vector, normalize=True),
+            target_velocity - transmitter.velocity,
+        )
+        relative_receiver_velocity = np.dot(
+            Direction.From_Cartesian(impinging_vector, normalize=True),
+            receiver.velocity - target_velocity,
+        )
+
+        return relative_transmitter_velocity + relative_receiver_velocity
+
+    def propagation_response(
+        self, transmitter: Device, receiver: Device, carrier_frequency: float
+    ) -> np.ndarray:
+        # Query the sensor array responses
+        rx_response = receiver.antennas.cartesian_array_response(
+            carrier_frequency, self.position, "global"
+        ).conj()
+        tx_response = transmitter.antennas.cartesian_array_response(
+            carrier_frequency, self.position, "global"
+        )
+
+        if self.attenuate:
+            # Compute propagation distances
+            tx_distance = np.linalg.norm(self.position - transmitter.global_position)
+            rx_distance = np.linalg.norm(receiver.global_position - self.position)
+
+            wavelength = speed_of_light / carrier_frequency
+            amplitude_factor = (
+                wavelength
+                * self.cross_section**0.5
+                / ((4 * pi) ** 1.5 * tx_distance * rx_distance)
+            )
+
+        else:
+            amplitude_factor = 1.0
+
+        # Compute the MIMO response
+        return (
+            amplitude_factor
+            * np.exp(1j * self.reflection_phase)
+            * np.inner(rx_response, tx_response)
+        )
+
+    def to_HDF(self, group: Group) -> None:
+        # Serialize base class
+        RadarPathRealization.to_HDF(self, group)
+
+        # Serialize class attributes
+        self._write_dataset(group, "position", self.position)
+        self._write_dataset(group, "velocity", self.velocity)
+        group.attrs["cross_section"] = self.cross_section
+        group.attrs["reflection_phase"] = self.reflection_phase
+
+    @classmethod
+    def from_HDF(cls: Type[RadarTargetRealization], group: Group) -> RadarTargetRealization:
+        # Deserialize base class
+        parameters = RadarPathRealization._parameters_from_HDF(group)
+
+        # Deserialize class attributes
+        position = np.array(group["position"], dtype=np.float_)
+        velocity = np.array(group["velocity"], dtype=np.float_)
+        cross_section = group.attrs["cross_section"]
+        reflection_phase = group.attrs["reflection_phase"]
+
+        return RadarTargetRealization(
+            position, velocity, cross_section, reflection_phase, **parameters
+        )
 
 
 class RadarInterferenceRealization(RadarPathRealization):
     """Realization of a line of sight interference propgation path between a radar transmitter and receiver"""
 
-    ...  # pragma: no cover
+    def propagation_delay(self, transmitter: Device, receiver: Device) -> float:
+        delay = (
+            np.linalg.norm(receiver.global_position - transmitter.global_position) / speed_of_light
+        )
+        return delay
+
+    def relative_velocity(self, transmitter: Device, receiver: Device) -> float:
+        connection = Direction.From_Cartesian(
+            receiver.global_position - transmitter.global_position, normalize=True
+        ).view(np.ndarray)
+        return np.dot(transmitter.velocity - receiver.velocity, connection)
+
+    def propagation_response(
+        self, transmitter: Device, receiver: Device, carrier_frequency: float
+    ) -> np.ndarray:
+        # Model the sensor arrays' spatial responses
+        rx_response = receiver.antennas.cartesian_array_response(
+            carrier_frequency, transmitter.global_position, "global"
+        ).conj()
+        tx_response = transmitter.antennas.cartesian_array_response(
+            carrier_frequency, receiver.global_position, "global"
+        )
+
+        if self.attenuate:
+            # Compute propagation distance
+            distance = np.linalg.norm(receiver.global_position - transmitter.global_position)
+
+            wavelength = speed_of_light / carrier_frequency
+            amplitude_factor = wavelength / (4 * pi * distance)
+
+        else:
+            amplitude_factor = 1.0
+
+        # Compute the MIMO response
+        return amplitude_factor * np.inner(rx_response, tx_response)
+
+    @classmethod
+    def from_HDF(
+        cls: Type[RadarInterferenceRealization], group: Group
+    ) -> RadarInterferenceRealization:
+        # Deserialize base class
+        parameters = RadarPathRealization._parameters_from_HDF(group)
+        return RadarInterferenceRealization(**parameters)
 
 
 class SingleTargetRadarChannelRealization(RadarChannelRealization):
-    """Realization of a single target radar channel."""
+    """Realization of a single target radar channel.
+
+    Generated by the :meth:`realize<SingleTargetRadarChannel.realize>` method of :class:`SingleTargetRadarChannel`.
+    """
 
     __target_realization: RadarTargetRealization | None
 
-    def __init__(self, channel: Channel, gain: float, target_realization: RadarTargetRealization | None, num_samples: int, sampling_rate: float) -> None:
+    def __init__(
+        self,
+        alpha_device: Device,
+        beta_device: Device,
+        gain: float,
+        target_realization: RadarTargetRealization | None,
+        interpolation_mode: InterpolationMode = InterpolationMode.NEAREST,
+    ) -> None:
         """
         Args:
-            channel (Channel):
-                The represented channel instance.
+
+            alpha_device (Device):
+                First device linked by the :class:`.SingleTargetRadarChannelRealization` instance that generated this realization.
+
+            beta_device (Device):
+                Second device linked by the :class:`.SingleTargetRadarChannelRealization` instance that generated this realization.
 
             gain (float):
-                Linear propagation power gain factor.
+                Linear power gain factor a signal experiences when being propagated over this realization.
 
             target_realization (RadarTargetRealization | None):
                 Single target realization.
                 `None` if no target should be present.
 
-            num_samples (int):
-                Number of generated time-domain impulse response samples.
-
-            sampling_rate (float):
-                Sampling rate of the impulse response in Hz.
+            interpolation_mode (InterpolationMode, optional):
+                Interpolation behaviour of the channel realization's delay components with respect to the proagated signal's sampling rate.
         """
 
-        # Generate the realization's sampled impulse response
-        impulse_response = self.ImpulseResponse([target_realization] if target_realization is not None else [], channel.gain, num_samples, sampling_rate, channel.transmitter, channel.receiver)
-
         # Initialize the base class
-        RadarChannelRealization.__init__(self, channel, gain, impulse_response)
+        RadarChannelRealization.__init__(self, alpha_device, beta_device, gain, interpolation_mode)
 
         # Initialize class attributes
         self.__target_realization = target_realization
+
+    @property
+    def _path_realizations(self) -> Sequence[RadarPathRealization]:
+        return [self.target_realization] if self.target_realization is not None else []
 
     @property
     def target_realization(self) -> RadarTargetRealization | None:
@@ -740,32 +1053,78 @@ class SingleTargetRadarChannelRealization(RadarChannelRealization):
 
         Returns:
             Handle to the realized target.
-            `None` if no target was considered.
+            :py:obj:`None` if no target was considered.
         """
 
         return self.__target_realization
 
-    def null_hypothesis(self, num_samples: int, sampling_rate: float) -> SingleTargetRadarChannelRealization:
-        return SingleTargetRadarChannelRealization(self.channel, self.gain, None, num_samples, sampling_rate)
+    def null_hypothesis(self) -> SingleTargetRadarChannelRealization:
+        return SingleTargetRadarChannelRealization(
+            self.alpha_device, self.beta_device, self.gain, None, self.interpolation_mode
+        )
 
     def ground_truth(self) -> np.ndarray:
-        return np.empty((0, 3), dtype=float) if self.target_realization is None else self.target_realization.global_position[None, :]
+        return (
+            np.empty((0, 3), dtype=float)
+            if self.target_realization is None
+            else self.target_realization.position[None, :]
+        )
+
+    def to_HDF(self, group: Group) -> None:
+        # Serialize the base class
+        RadarChannelRealization.to_HDF(self, group)
+
+        # Serialize the target realization
+        if self.target_realization is not None:
+            target_group = group.create_group("target_realization")
+            self.target_realization.to_HDF(target_group)
+
+    @classmethod
+    def From_HDF(
+        cls: Type[SingleTargetRadarChannelRealization],
+        group: Group,
+        alpha_device: Device,
+        beta_device: Device,
+    ) -> SingleTargetRadarChannelRealization:
+        parameters = cls._parameters_from_HDF(group)
+        parameters["target_realization"] = (
+            RadarTargetRealization.from_HDF(group["target_realization"])
+            if "target_realization" in group
+            else None
+        )
+
+        return SingleTargetRadarChannelRealization(alpha_device, beta_device, **parameters)
 
 
 class MultiTargetRadarChannelRealization(RadarChannelRealization):
-    """Realization of a spatial multi target radar channel."""
+    """Realization of a spatial multi target radar channel.
+
+    Generated by the :meth:`realize<MultiTargetRadarChannel.realize>` method of :class:`MultiTargetRadarChannel`.
+    """
 
     __interference_realization: RadarInterferenceRealization | None
     __target_realizations: Sequence[RadarTargetRealization]
 
-    def __init__(self, channel: Channel, gain: float, interference_realization: RadarInterferenceRealization | None, target_realizations: Sequence[RadarTargetRealization], num_samples: int, sampling_rate: float) -> None:
+    def __init__(
+        self,
+        alpha_device: Device,
+        beta_device: Device,
+        gain: float,
+        interference_realization: RadarInterferenceRealization | None,
+        target_realizations: Sequence[RadarTargetRealization],
+        interpolation_mode: InterpolationMode = InterpolationMode.NEAREST,
+    ) -> None:
         """
         Args:
-            channel (Channel):
-                The represented channel instance.
+
+            alpha_device (Device):
+                First device linked by the :class:`.Channel` instance that generated this realization.
+
+            beta_device (Device):
+                Second device linked by the :class:`.Channel` instance that generated this realization.
 
             gain (float):
-                Linear propagation power gain factor.
+                Linear power gain factor a signal experiences when being propagated over this realization.
 
             interference_realizations (RadarInterferenceRealization | None):
                 Realization of the line of sight interference.
@@ -774,27 +1133,24 @@ class MultiTargetRadarChannelRealization(RadarChannelRealization):
             target_realizations (Sequence[RadarTargetRealization]):
                 Sequence of radar target realizations considered within the radar channel.
 
-            num_samples (int):
-                Number of generated time-domain impulse response samples.
-
-            sampling_rate (float):
-                Sampling rate of the impulse response in Hz.
+            interpolation_mode (InterpolationMode, optional):
+                Interpolation behaviour of the channel realization's delay components with respect to the proagated signal's sampling rate.
         """
 
-        # Generate the realization's sampled impulse response
-        impulse_response_paths: List[RadarPathRealization] = list(target_realizations)
-
-        if interference_realization is not None:
-            impulse_response_paths.append(interference_realization)
-
-        impulse_response = self.ImpulseResponse(target_realizations, gain, num_samples, sampling_rate, channel.transmitter, channel.receiver)
-
         # Initialize the base class
-        RadarChannelRealization.__init__(self, channel, gain, impulse_response)
+        RadarChannelRealization.__init__(self, alpha_device, beta_device, gain, interpolation_mode)
 
         # Initialize class attributes
         self.__interference_realization = interference_realization
         self.__target_realizations = target_realizations
+
+    @property
+    def _path_realizations(self) -> Sequence[RadarPathRealization]:
+        path_realizations: List[RadarPathRealization] = list(self.target_realizations)
+        if self.interference_realization is not None:
+            path_realizations.append(self.interference_realization)
+
+        return path_realizations
 
     @property
     def interference_realization(self) -> RadarInterferenceRealization | None:
@@ -822,7 +1178,7 @@ class MultiTargetRadarChannelRealization(RadarChannelRealization):
 
         return len(self.target_realizations)
 
-    def null_hypothesis(self, num_samples: int, sampling_rate: float) -> MultiTargetRadarChannelRealization:
+    def null_hypothesis(self) -> MultiTargetRadarChannelRealization:
         null_hypothesis_target_realizations = []
         for target_realization in self.target_realizations:
             if target_realization.static:
@@ -832,157 +1188,98 @@ class MultiTargetRadarChannelRealization(RadarChannelRealization):
         if null_hypothesis_interference is not None and not null_hypothesis_interference.static:
             null_hypothesis_interference = None
 
-        return MultiTargetRadarChannelRealization(self.channel, self.gain, null_hypothesis_interference, null_hypothesis_target_realizations, num_samples, sampling_rate)
+        return MultiTargetRadarChannelRealization(
+            self.alpha_device,
+            self.beta_device,
+            self.gain,
+            null_hypothesis_interference,
+            null_hypothesis_target_realizations,
+            self.interpolation_mode,
+        )
 
     def ground_truth(self) -> np.ndarray:
         truth = np.empty((self.num_targets, 3), dtype=np.float_)
         for t, target in enumerate(self.target_realizations):
-            truth[t, :] = target.global_position
+            truth[t, :] = target.position
 
         return truth
 
+    def to_HDF(self, group: Group) -> None:
+        # Serialize the base class
+        RadarChannelRealization.to_HDF(self, group)
 
-class MultiTargetRadarChannel(RadarChannelBase[MultiTargetRadarChannelRealization], Serializable):
-    yaml_tag = "SpatialRadarChannel"
+        # Serialize the interference realization
+        if self.interference_realization is not None:
+            target_group = group.create_group("interference_realization")
+            self.interference_realization.to_HDF(target_group)
 
-    interfernce: bool
-    """Consider interference between linked devices.
+        # Serialize target realizations
+        group.attrs["num_target_realizations"] = self.num_targets
+        for t, target_realization in enumerate(self.target_realizations):
+            target_realization.to_HDF(
+                HDFSerializable._create_group(group, f"target_realization{t:02d}")
+            )
 
-    Only applies in the bistatic case, where transmitter and receiver are two dedicated device instances.
-    """
+    @classmethod
+    def From_HDF(
+        cls: Type[MultiTargetRadarChannelRealization],
+        group: Group,
+        alpha_device: Device,
+        beta_device: Device,
+    ) -> MultiTargetRadarChannelRealization:
+        # Deserialize base class parameters
+        parameters = RadarChannelRealization._parameters_from_HDF(group)
+        parameters["interference_realization"] = (
+            RadarInterferenceRealization.from_HDF(group["interference_realization"])
+            if "interference_realization" in group
+            else None
+        )
 
-    __targets: Set[RadarTarget]
+        # Deserialize target realizations
+        num_target_realizations = group.attrs.get("num_target_realizations", 0)
+        target_realizations = [
+            RadarTargetRealization.from_HDF(group[f"target_realization{t:02d}"])
+            for t in range(num_target_realizations)
+        ]
 
-    def __init__(self, attenuate: bool = True, interference: bool = True, *args, **kwargs) -> None:
-        # Initialize base classes
-        RadarChannelBase.__init__(self, attenuate, *args, **kwargs)
-        Serializable.__init__(self)
-
-        # Initialize attributes
-        self.interference = interference
-        self.__targets = set()
-
-    @property
-    def targets(self) -> Set[RadarTarget]:
-        return self.__targets
-
-    def add_target(self, target: RadarTarget):
-        if target not in self.targets:
-            self.__targets.add(target)
-
-    def make_target(self, moveable: Moveable, cross_section: RadarCrossSectionModel, *args, **kwargs) -> PhysicalRadarTarget:
-        target = PhysicalRadarTarget(cross_section, moveable, *args, **kwargs)
-        self.add_target(target)
-
-        return target
-
-    def _realize_interference(self, carrier_frequency: float) -> RadarInterferenceRealization | None:
-        """Realize the channel model's line of sight interference.
-
-        Args:
-
-            carrier_frequency (float):
-                The assumed signal carrier frequency in Hz.
-
-        Returns:
-            The realized propagation path.
-            `None` if :attr:`.interference` is disabled or the channel models a monostatic radar
-
-        Raises:
-
-            ValueError: If `carrier_frequency` is smaller or equal to zero.
-            FloatingError: If transmitter or receiver are not specified.
-            RuntimeError: If transmitter and receiver are at the same global location.
-        """
-
-        if carrier_frequency <= 0.0:
-            raise ValueError("Radar channel linked device carrier frequencies must be greater than zero")
-
-        if self.transmitter is None or self.receiver is None:
-            raise FloatingError("Radar channel's linked devices not specified")
-
-        # Return None if interference modeling is disabled
-        if not self.interference or self.transmitter is self.receiver:
-            return None
-
-        if np.array_equal(self.transmitter.global_position, self.receiver.global_position):
-            raise RuntimeError("Linked devices may not be located at identical global positions")
-
-        # Generate a random phase shift between transmitter and receiver
-        phase = self._rng.uniform(0, 1)
-
-        # Compute a vector pointing from transmitter to receiver
-        connection = self.receiver.global_position - self.transmitter.global_position
-
-        # Compute the wave's propagated distance and propagation delay
-        distance = float(np.linalg.norm(connection))
-        delay = distance / speed_of_light
-
-        # Model the doppler-shift from transmitter to receiver
-        # ToDo: Non-reciprocity in this case
-        relative_velocity = np.dot(self.transmitter.velocity - self.receiver.velocity, connection / distance)
-        doppler_shift = relative_velocity * carrier_frequency / speed_of_light
-
-        # Compute the power factor given the radar range equation
-        power_factor = 1.0
-        if self.attenuate:
-            power_factor = amplitude_path_loss(carrier_frequency, distance)
-
-        # Model the sensor arrays' spatial responses
-        rx_response = self.receiver.antennas.cartesian_array_response(carrier_frequency, self.transmitter.global_position, "global").conj()  # Is the conjugate here correct?
-        tx_response = self.transmitter.antennas.cartesian_array_response(carrier_frequency, self.receiver.global_position, "global")
-        mimo_response = np.inner(rx_response, tx_response)
-
-        # Return realized information wrapped in a target realization dataclass
-        return RadarInterferenceRealization(phase, delay, doppler_shift, relative_velocity, power_factor, mimo_response, self.transmitter.global_position, self.transmitter.global_position, True)
-
-    def realize(self, num_samples: int, sampling_rate: float) -> MultiTargetRadarChannelRealization:
-        if self.transmitter is None or self.receiver is None:
-            raise FloatingError("Radar channel's linked devices not specified")
-
-        # Realize radar channel parameters
-        carrier_frequency = 0.5 * (self.transmitter.carrier_frequency + self.receiver.carrier_frequency)
-        interference_realization = self._realize_interference(carrier_frequency)
-        target_realizations = [self._realize_target(carrier_frequency, target) for target in self.targets]
-
-        # Realize channel
-        channel_realization = MultiTargetRadarChannelRealization(self, self.gain, interference_realization, target_realizations, num_samples, sampling_rate)
-        return channel_realization
+        return MultiTargetRadarChannelRealization(
+            alpha_device, beta_device, target_realizations=target_realizations, **parameters
+        )
 
 
 class SingleTargetRadarChannel(RadarChannelBase[SingleTargetRadarChannelRealization], Serializable):
-    """Model of a monostatic radar channel in base-band.
+    """Model of a radar channel featuring a single reflecting target.
 
-    The radar channel is currently implemented as a single-point reflector.
-    The model also considers the presence of self-interference due to leakage from transmitter to receiver.
+    The following minimal example outlines how to configure the channel model
+    within the context of a :doc:`simulation.simulation.Simulation`:
 
-    Attenuation is considered constant and calculated according to the radar range equation. The received signal is
-    considered to have the same power as the transmitted signal, and attenuation will be taken into account in the level
-    of the self-interference.
-
-    Moving targets are also taken into account, considering both Doppler and a change in the delay during a drop.
-
-    Both the reflected signal and the self interference will have a random phase.
-
-    Obs.:
-    Currently only one transmit and receive antennas is supported.
-    Clutter not yet modelled.
-
-    ToDo: Add literature references for this channel model.
+    .. literalinclude:: ../scripts/examples/channel_SingleTargetRadarChannel.py
+       :language: python
+       :linenos:
+       :lines: 11-30
     """
 
     yaml_tag = "RadarChannel"
-    serialized_attributes = {"impulse_response_interpolation", "target_exists", "attenuate"}
 
     __target: VirtualRadarTarget
     __target_range: float | Tuple[float, float]
     __radar_cross_section: float
     __target_azimuth: float
     __target_zenith: float
-    target_exists: bool
+    __target_exists: bool
     __target_velocity: float | np.ndarray
 
-    def __init__(self, target_range: float | Tuple[float, float], radar_cross_section: float, target_azimuth: float = 0.0, target_zenith: float = 0.0, target_exists: bool = True, velocity: float | np.ndarray = 0, attenuate: bool = True, **kwargs) -> None:
+    def __init__(
+        self,
+        target_range: float | Tuple[float, float],
+        radar_cross_section: float,
+        target_azimuth: float = 0.0,
+        target_zenith: float = 0.0,
+        target_exists: bool = True,
+        velocity: float | np.ndarray = 0,
+        attenuate: bool = True,
+        **kwargs,
+    ) -> None:
         """
         Args:
 
@@ -1134,22 +1431,170 @@ class SingleTargetRadarChannel(RadarChannelBase[SingleTargetRadarChannelRealizat
     def target_zenith(self, value: float) -> None:
         self.__target_zenith = value
 
-    def realize(self, num_samples: int, sampling_rate: float) -> SingleTargetRadarChannelRealization:
-        if self.transmitter is None or self.receiver is None:
-            raise FloatingError("Radar channel's linked devices not specified")
+    @property
+    def target_exists(self) -> bool:
+        """Does an illuminated target exist?"""
 
+        return self.__target_exists
+
+    @target_exists.setter
+    def target_exists(self, value: bool) -> None:
+        self.__target_exists = value
+
+    def _realize(self) -> SingleTargetRadarChannelRealization:
         # Realize targets
-        carrier_frequency = 0.5 * (self.transmitter.carrier_frequency + self.receiver.carrier_frequency)
         target_range = self.target_range if isinstance(self.target_range, (np.int_, np.float_, int, float)) else self._rng.uniform(*self.target_range)  # type: ignore
 
         # Update the internal target model, kinda hacky
-        unit_direction = Direction.From_Spherical(self.target_azimuth, self.target_zenith)
+        unit_direction = Direction.From_Spherical(self.target_azimuth, self.target_zenith).view(
+            np.ndarray
+        )
         self.__target.position = unit_direction * target_range
         self.__target.velocity = unit_direction * self.target_velocity
         self.__cross_section.cross_section = self.radar_cross_section
 
-        target_realization = self._realize_target(carrier_frequency, self.__target) if self.target_exists else None
+        target_realization = self._realize_target(self.__target) if self.target_exists else None
 
         # Realize channel
-        channel_realization = SingleTargetRadarChannelRealization(self, self.gain, target_realization, num_samples, sampling_rate)
+        channel_realization = SingleTargetRadarChannelRealization(
+            self.alpha_device,
+            self.beta_device,
+            self.gain,
+            target_realization,
+            self.interpolation_mode,
+        )
         return channel_realization
+
+    def recall_realization(self, group: Group) -> SingleTargetRadarChannelRealization:
+        return SingleTargetRadarChannelRealization.From_HDF(
+            group, self.alpha_device, self.beta_device
+        )
+
+
+class MultiTargetRadarChannel(RadarChannelBase[MultiTargetRadarChannelRealization], Serializable):
+    """Model of a spatial radar channel featuring multiple reflecting targets.
+
+    The following minimal example outlines how to configure the channel model
+    within the context of a :doc:`simulation.simulation.Simulation`:
+
+    .. literalinclude:: ../scripts/examples/channel_MultiTargetRadarChannel.py
+       :language: python
+       :linenos:
+       :lines: 11-43
+    """
+
+    yaml_tag = "SpatialRadarChannel"
+
+    interfernce: bool
+    """Consider interference between linked devices.
+
+    Only applies in the bistatic case, where transmitter and receiver are two dedicated device instances.
+    """
+
+    __targets: Set[RadarTarget]
+
+    def __init__(self, attenuate: bool = True, interference: bool = True, *args, **kwargs) -> None:
+        """
+        Args:
+
+            attenuate (bool, optional):
+                Should the propagated signal be attenuated during propagation modeling?
+                Enabled by default.
+
+            interference (bool, optional):
+                Should the channel model consider interference between the linked devices?
+                Enabled by default.
+        """
+
+        # Initialize base classes
+        RadarChannelBase.__init__(self, attenuate, *args, **kwargs)
+        Serializable.__init__(self)
+
+        # Initialize attributes
+        self.interference = interference
+        self.__targets = set()
+
+    @property
+    def targets(self) -> Set[RadarTarget]:
+        """Set of targets considered within the radar channel."""
+
+        return self.__targets
+
+    def add_target(self, target: RadarTarget) -> None:
+        """Add a new target to the radar channel.
+
+        Args:
+
+            target (RadarTarget):
+                Target to be added.
+        """
+
+        if target not in self.targets:
+            self.__targets.add(target)
+
+    def make_target(
+        self, moveable: Moveable, cross_section: RadarCrossSectionModel, *args, **kwargs
+    ) -> PhysicalRadarTarget:
+        """Declare a moveable to be a target within the radar channel.
+
+        Args:
+
+            moveable (Moveable):
+                Moveable to be declared as a target.
+
+            cross_section (RadarCrossSectionModel):
+                Radar cross section model of the target.
+
+            *args:
+                Additional positional arguments passed to the target's constructor.
+
+            **kwargs:
+                Additional keyword arguments passed to the target's constructor.
+
+        Returns:
+
+            PhysicalRadarTarget: The newly created target.
+        """
+
+        target = PhysicalRadarTarget(cross_section, moveable, *args, **kwargs)
+        self.add_target(target)
+
+        return target
+
+    def _realize_interference(self) -> RadarInterferenceRealization | None:
+        """Realize the channel model's line of sight interference.
+
+        Returns:
+            The realized propagation path.
+            `None` if :attr:`.interference` is disabled or the channel models a monostatic radar.
+        """
+
+        return (
+            RadarInterferenceRealization(self.attenuate, True)
+            if self.alpha_device is not self.beta_device
+            else None
+        )
+
+    def _realize(self) -> MultiTargetRadarChannelRealization:
+        if self.alpha_device is None or self.beta_device is None:
+            raise FloatingError("Radar channel's linked devices not specified")
+
+        # Realize radar channel parameters
+        interference_realization = self._realize_interference()
+        target_realizations = [self._realize_target(target) for target in self.targets]
+
+        # Realize channel
+        channel_realization = MultiTargetRadarChannelRealization(
+            self.alpha_device,
+            self.beta_device,
+            self.gain,
+            interference_realization,
+            target_realizations,
+            self.interpolation_mode,
+        )
+        return channel_realization
+
+    def recall_realization(self, group: Group) -> MultiTargetRadarChannelRealization:
+        return MultiTargetRadarChannelRealization.From_HDF(
+            group, self.alpha_device, self.beta_device
+        )

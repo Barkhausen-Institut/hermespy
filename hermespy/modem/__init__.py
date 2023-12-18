@@ -2,21 +2,88 @@
 
 from .bits_source import RandomBitsSource, StreamBitsSource
 from .symbols import Symbol, Symbols, StatedSymbols
-from .modem import CommunicationReception, CommunicationReceptionFrame, CommunicationTransmission, CommunicationTransmissionFrame, BaseModem, TransmittingModem, ReceivingModem, DuplexModem, SimplexLink
-from .waveform import WaveformGenerator, Synchronization, PilotWaveformGenerator, PilotSymbolSequence, UniformPilotSymbolSequence, CustomPilotSymbolSequence, MappedPilotSymbolSequence, ConfigurablePilotWaveform, ChannelEstimation, IdealChannelEstimation, ChannelEqualization, ZeroForcingChannelEqualization
-from .waveform_chirp_fsk import ChirpFSKWaveform, ChirpFSKSynchronization, ChirpFSKCorrelationSynchronization
+from .modem import (
+    CommunicationReception,
+    CommunicationReceptionFrame,
+    CommunicationTransmission,
+    CommunicationTransmissionFrame,
+    BaseModem,
+    TransmittingModem,
+    ReceivingModem,
+    DuplexModem,
+    SimplexLink,
+)
+from .waveform import (
+    CommunicationWaveform,
+    WaveformType,
+    Synchronization,
+    PilotCommunicationWaveform,
+    PilotSymbolSequence,
+    UniformPilotSymbolSequence,
+    CustomPilotSymbolSequence,
+    MappedPilotSymbolSequence,
+    ConfigurablePilotWaveform,
+    ChannelEstimation,
+    ChannelEqualization,
+    ZeroForcingChannelEqualization,
+)
+from .waveform_chirp_fsk import (
+    ChirpFSKWaveform,
+    ChirpFSKSynchronization,
+    ChirpFSKCorrelationSynchronization,
+)
 from .waveform_correlation_synchronization import CorrelationSynchronization
-from .waveform_single_carrier import FilteredSingleCarrierWaveform, SingleCarrierLeastSquaresChannelEstimation, SingleCarrierZeroForcingChannelEqualization, SingleCarrierMinimumMeanSquareChannelEqualization, SingleCarrierCorrelationSynchronization, RaisedCosineWaveform, RootRaisedCosineWaveform, FMCWWaveform, RectangularWaveform, SingleCarrierIdealChannelEstimation
-from .waveform_ofdm import OFDMWaveform, FrameGuardSection, FrameSymbolSection, FrameResource, PilotSection, SchmidlCoxPilotSection, FrameElement, ElementType, PrefixType, OFDMCorrelationSynchronization, SchmidlCoxSynchronization, OFDMChannelEqualization, OFDMZeroForcingChannelEqualization, OFDMIdealChannelEstimation, OFDMLeastSquaresChannelEstimation, ReferencePosition
-from .precoding import Alamouti, SymbolPrecoding, SymbolPrecoder, SingleCarrier, SpatialMultiplexing, DFT, MaximumRatioCombining
-from .evaluators import BitErrorEvaluator, BlockErrorEvaluator, FrameErrorEvaluator, ThroughputEvaluator
+from .waveform_single_carrier import (
+    FilteredSingleCarrierWaveform,
+    SingleCarrierLeastSquaresChannelEstimation,
+    SingleCarrierZeroForcingChannelEqualization,
+    SingleCarrierMinimumMeanSquareChannelEqualization,
+    SingleCarrierCorrelationSynchronization,
+    RaisedCosineWaveform,
+    RootRaisedCosineWaveform,
+    FMCWWaveform,
+    RectangularWaveform,
+)
+from .waveform_ofdm import (
+    OFDMWaveform,
+    FrameGuardSection,
+    FrameSymbolSection,
+    FrameResource,
+    PilotSection,
+    SchmidlCoxPilotSection,
+    FrameElement,
+    ElementType,
+    PrefixType,
+    OFDMCorrelationSynchronization,
+    SchmidlCoxSynchronization,
+    OFDMChannelEqualization,
+    OFDMZeroForcingChannelEqualization,
+    OFDMLeastSquaresChannelEstimation,
+    ReferencePosition,
+)
+from .precoding import (
+    Alamouti,
+    Ganesan,
+    SymbolPrecoding,
+    SymbolPrecoder,
+    SingleCarrier,
+    SpatialMultiplexing,
+    DFT,
+    MaximumRatioCombining,
+)
+from .evaluators import (
+    BitErrorEvaluator,
+    BlockErrorEvaluator,
+    FrameErrorEvaluator,
+    ThroughputEvaluator,
+)
 from .tools import PskQamMapping
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -30,7 +97,6 @@ SCCorrelationSynchronization = SingleCarrierCorrelationSynchronization
 RCWaveform = RaisedCosineWaveform
 RRCWaveform = RootRaisedCosineWaveform
 RectWaveform = RectangularWaveform
-SCIdealChannelEstimation = SingleCarrierIdealChannelEstimation
 
 
 __all__ = [
@@ -48,16 +114,16 @@ __all__ = [
     "ReceivingModem",
     "DuplexModem",
     "SimplexLink",
-    "WaveformGenerator",
+    "CommunicationWaveform",
+    "WaveformType",
     "Synchronization",
-    "PilotWaveformGenerator",
+    "PilotCommunicationWaveform",
     "PilotSymbolSequence",
     "UniformPilotSymbolSequence",
     "CustomPilotSymbolSequence",
     "MappedPilotSymbolSequence",
     "ConfigurablePilotWaveform",
     "ChannelEstimation",
-    "IdealChannelEstimation",
     "ChannelEqualization",
     "ZeroForcingChannelEqualization",
     "ChirpFSKWaveform",
@@ -73,7 +139,6 @@ __all__ = [
     "RootRaisedCosineWaveform",
     "FMCWWaveform",
     "RectangularWaveform",
-    "SingleCarrierIdealChannelEstimation",
     "OFDMWaveform",
     "PilotSection",
     "SchmidlCoxPilotSection",
@@ -87,11 +152,11 @@ __all__ = [
     "SchmidlCoxSynchronization",
     "OFDMChannelEqualization",
     "OFDMZeroForcingChannelEqualization",
-    "OFDMIdealChannelEstimation",
     "OFDMLeastSquaresChannelEstimation",
     "ReferencePosition",
     "Synchronization",
     "Alamouti",
+    "Ganesan",
     "SymbolPrecoding",
     "SymbolPrecoder",
     "SingleCarrier",
@@ -110,5 +175,4 @@ __all__ = [
     "RCWaveform",
     "RRCWaveform",
     "RectWaveform",
-    "SCIdealChannelEstimation",
 ]

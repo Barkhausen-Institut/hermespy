@@ -12,10 +12,6 @@ span.brackets > a:after {
     content: "]"; 
 }
 
-div.mermaid {
-    margin-bottom: 42px;
-}
-
 .sidebar-logo {
     max-width: 60%;
 }
@@ -25,6 +21,13 @@ div.mermaid {
     margin: 0 auto !important;
 }
 
-.docutils.container {
-    margin-top: 42px !important;
+img.inheritance {
+    margin: 0 auto;
+    display: block;
+}
+
+.inheritance.graphviz {
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
 }

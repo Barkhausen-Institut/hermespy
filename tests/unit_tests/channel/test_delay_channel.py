@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 
 from unittest import TestCase
-from unittest.mock import patch, PropertyMock 
+from unittest.mock import patch, PropertyMock
 
 import numpy as np
-from numpy.testing import assert_array_equal
+from h5py import File
+from numpy.testing import assert_array_almost_equal
 from scipy.constants import speed_of_light
 
-from hermespy.channel import DelayChannelBase, SpatialDelayChannel, RandomDelayChannel
-from hermespy.core import UniformArray, IdealAntenna, Signal
+from hermespy.channel import InterpolationMode, SpatialDelayChannel, SpatialDelayChannelRealization, RandomDelayChannel, RandomDelayChannelRealization
+from hermespy.channel.delay import DelayChannelBase, DelayChannelRealization
+from hermespy.core import Signal, Transformation
 from hermespy.simulation import SimulatedDevice
 from hermespy.tools import amplitude_path_loss
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
@@ -23,153 +25,226 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class MockDelayChannel(DelayChannelBase):
-    """Delay channel for testing only"""
-
-    def _realize_delay(self) -> float:
-        return 1.234
-
-    def _realize_response(self) -> np.ndarray:
-
-        return np.eye(1, 2, dtype=complex)
-
-
-class TestDelayChannelBase(TestCase):
+class _TestDelayChannelRealization(TestCase):
+    def _init_realization(self, *args, **kwargs) -> DelayChannelRealization:
+        ...
 
     def setUp(self) -> None:
+        self.rng = np.random.default_rng(42)
 
-        self.transmitter = SimulatedDevice(carrier_frequency=1.234)
-        self.receiver = SimulatedDevice(carrier_frequency=1.234)
-        
-        self.channel = MockDelayChannel(transmitter=self.transmitter, receiver=self.receiver)
+        self.carrier_frequency = 1.234e9
 
-    def test_realize(self) -> None:
-        """Test impulse response generation"""
+        self.alpha_device = SimulatedDevice(pose=Transformation.From_Translation(np.array([0, 0, 0])), carrier_frequency=self.carrier_frequency)
+        self.beta_device = SimulatedDevice(pose=Transformation.From_Translation(np.array([0, 0, 10])), carrier_frequency=self.carrier_frequency)
+        self.delay = 1.234
+        self.gain = 0.987
 
-        num_samples = 10
-        sampling_rate = 1.234
-        realization = self.channel.realize(num_samples, sampling_rate)
-        expected_signal_scale = amplitude_path_loss(self.transmitter.carrier_frequency, self.channel._realize_delay() * speed_of_light)
+        self.realization = self._init_realization(alpha_device=self.alpha_device, beta_device=self.beta_device, delay=self.delay, gain=self.gain, model_propagation_loss=True, interpolation_mode=InterpolationMode.NEAREST)
 
-        self.assertSequenceEqual((1, 2, 10, 2), realization.state.shape)
-        self.assertAlmostEqual(10. * expected_signal_scale, np.sum(realization.state))
-        assert_array_equal(expected_signal_scale * np.eye(1, 2), realization.state[:, :, 0, -1])
+    def test_properties(self) -> None:
+        """Initialization parameters should be properly stored as class attributes"""
 
-    def test_realize_validation(self) -> None:
-        """Realization routine should raise RuntimeError for base band transmissions"""
+        self.assertIs(self.alpha_device, self.realization.alpha_device)
+        self.assertIs(self.beta_device, self.realization.beta_device)
+        self.assertEqual(self.delay, self.realization.delay)
+        self.assertEqual(self.gain, self.realization.gain)
 
-        self.transmitter.carrier_frequency = 0.
+    def test_propagate_validation(self) -> None:
+        """Propagation routine should raise RuntimeError for base band transmissions"""
+
+        test_signal = Signal(np.ones((1, 1), dtype=np.complex_), sampling_rate=1.0, carrier_frequency=0.0)
 
         with self.assertRaises(RuntimeError):
-            _ = self.channel.realize(1, 1.234)
+            _ = self.realization.propagate(test_signal)
+
+    def test_propagate(self) -> None:
+        """Signal propagation should result in the correct path losses and delays"""
+
+        num_samples = 10
+        expected_delay_in_samples = 3
+        sampling_rate = expected_delay_in_samples / self.delay
+        expected_signal_scale = self.gain * amplitude_path_loss(self.carrier_frequency, self.delay * speed_of_light)
+        test_signal = Signal(np.ones((1, num_samples), dtype=np.complex_), sampling_rate=sampling_rate, carrier_frequency=self.carrier_frequency)
+
+        propagation = self.realization.propagate(test_signal)
+
+        self.assertAlmostEqual(num_samples * expected_signal_scale, np.sum(propagation.signal.samples))
+        self.assertEqual(expected_delay_in_samples + num_samples, propagation.signal.num_samples)
+
+    def test_propagate_state(self) -> None:
+        """Propagation should result in a signal with the correct number of samples"""
+
+        sampling_rate = 1e6
+        samples = self.rng.standard_normal((self.alpha_device.antennas.num_transmit_antennas, 100)) + 1j * self.rng.standard_normal((self.alpha_device.antennas.num_transmit_antennas, 100))
+        signal = Signal(samples, sampling_rate, self.carrier_frequency)
+
+        signal_propagation = self.realization.propagate(signal)
+        state_propagation = self.realization.state(self.alpha_device, self.beta_device, 0.0, sampling_rate, signal.num_samples, 1 + signal_propagation.signal.num_samples - signal.num_samples).propagate(signal)
+
+        assert_array_almost_equal(signal_propagation.signal.samples, state_propagation.samples)
 
 
-class TestSpatialDelayChannel(TestCase):
+class TestSpatialDelayChannelRealization(_TestDelayChannelRealization):
+    """Test the spatial delay channel realization"""
+
+    def _init_realization(self, *args, **kwargs) -> SpatialDelayChannelRealization:
+        return SpatialDelayChannelRealization(*args, **kwargs)
+
+
+class TestRandomDelayChannelRealization(_TestDelayChannelRealization):
+    """Test the random delay channel realization"""
+
+    def _init_realization(self, *args, **kwargs) -> RandomDelayChannelRealization:
+        return RandomDelayChannelRealization(*args, **kwargs)
+
+
+class _TestDelayChannelBase(TestCase):
+    """Test base class of all delay channels"""
+
+    def _init_channel(self, *args, **kwargs) -> DelayChannelBase:
+        ...
 
     def setUp(self) -> None:
+        self.carrier_frequency = 1.234e9
+        self.alpha_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, pose=Transformation.From_Translation(np.array([0, 0, 0])))
+        self.beta_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, pose=Transformation.From_Translation(np.array([0, 0, 10])))
 
-        self.carrier_frequency = 60e9
+        self.channel = self._init_channel(alpha_device=self.alpha_device, beta_device=self.beta_device)
 
-        self.transmitter = SimulatedDevice(carrier_frequency=self.carrier_frequency, antennas=UniformArray(IdealAntenna(), .5 * speed_of_light / self.carrier_frequency, (2, 1, 1)))
-        self.receiver = SimulatedDevice(carrier_frequency=self.carrier_frequency, antennas=UniformArray(IdealAntenna(), .5 * speed_of_light / self.carrier_frequency, (3, 1, 1)))
+    def test_properties(self) -> None:
+        """Properties should be properly initialized"""
+
+        self.assertIs(self.alpha_device, self.channel.alpha_device)
+        self.assertIs(self.beta_device, self.channel.beta_device)
+
+    def test_realize(self) -> None:
+        """Test channel realization"""
+
+        realization = self.channel.realize()
+
+        self.assertIs(self.alpha_device, realization.alpha_device)
+        self.assertIs(self.beta_device, realization.beta_device)
+        self.assertEqual(self.channel.gain, realization.gain)
+
+    def test_recall_realization(self) -> None:
+        """Test realization recall"""
+
+        file = File("test.h5", "w", driver="core", backing_store=False)
+        group = file.create_group("g")
+
+        expected_realization = self.channel.realize()
+        expected_realization.to_HDF(group)
+
+        recalled_realization = self.channel.recall_realization(group)
+        file.close()
+
+        self.assertIsInstance(recalled_realization, type(expected_realization))
+        self.assertEqual(expected_realization.delay, recalled_realization.delay)
+
+    def test_serialization(self) -> None:
+        """Test YAML serialization"""
+
+        with patch("hermespy.channel.Channel.alpha_device", new_callable=PropertyMock) as transmitter_mock, patch("hermespy.channel.Channel.beta_device", new_callable=PropertyMock) as receiver_mock, patch("hermespy.channel.Channel.random_mother", new_callable=PropertyMock) as random_mock:
+            transmitter_mock.return_value = None
+            receiver_mock.return_value = None
+            random_mock.return_value = None
+
+            test_yaml_roundtrip_serialization(self, self.channel)
+
+    def test_recall_realization(self) -> None:
+        """Test realization recall from HDF"""
+
+        file = File("test.h5", "w", driver="core", backing_store=False)
+        group = file.create_group("g")
+
+        expected_realization = self.channel.realize()
+        expected_realization.to_HDF(group)
+
+        recalled_realization = self.channel.recall_realization(group)
+        file.close()
+
+        self.assertEqual(expected_realization.delay, recalled_realization.delay)
+
+
+class TestSpatialDelayChannel(_TestDelayChannelBase):
+    """Test the spatial delay channel"""
+
+    def _init_channel(self, *args, **kwargs) -> SpatialDelayChannel:
+        return SpatialDelayChannel(*args, **kwargs)
+
+    def setUp(self) -> None:
+        super().setUp()
 
         self.expected_delay = 1.4567
-        self.transmitter.position = np.zeros(3)
-        self.receiver.position = np.ones(3) / np.sqrt(3) * self.expected_delay * speed_of_light
-
-        self.channel = SpatialDelayChannel(transmitter=self.transmitter, receiver=self.receiver)
+        self.alpha_device.position = np.zeros(3)
+        self.beta_device.position = np.ones(3) / np.sqrt(3) * self.expected_delay * speed_of_light
 
     def test_delay_realization_validation(self) -> None:
         """Delay realization should raise RuntimeErrors on invalid internal states"""
-        
-        self.channel.transmitter = None
+
+        self.channel.alpha_device = None
         with self.assertRaises(RuntimeError):
             self.channel._realize_delay()
 
     def test_delay_realization(self) -> None:
         """Delay realization should yield the correct time delay"""
 
-        delay = self.channel._realize_delay()
-        self.assertAlmostEqual(self.expected_delay, delay)
-
-    def test_response_realization(self) -> None:
-        """Channel realization should yield the correct sensor array response"""
-
-        response = self.channel._realize_response()
-        
-        # Assert general response shape
-        self.assertSequenceEqual((self.receiver.num_antennas, self.transmitter.num_antennas), response.shape)
+        realization = self.channel.realize()
+        self.assertAlmostEqual(self.expected_delay, realization.delay, places=7)
 
     def test_power_loss(self) -> None:
         """Propagated signals should loose power according to the free space propagation loss"""
-        
-        # Assert free space propagation power loss
-        power_signal = Signal(np.zeros((self.transmitter.num_antennas, 10)), self.transmitter.sampling_rate, self.transmitter.carrier_frequency)
-        power_signal.samples[0, :] = np.ones(10)
-        
-        initial_energy = np.sum(power_signal.energy)
-        expected_received_energy = initial_energy * amplitude_path_loss(self.transmitter.carrier_frequency, self.expected_delay * speed_of_light) ** 2
 
-        propagated_signals, _, _ = self.channel.propagate(power_signal)
-        received_energy = np.mean(propagated_signals[0].energy)
-        
+        # Assert free space propagation power loss
+        power_signal = Signal(np.zeros((self.alpha_device.num_antennas, 10)), self.alpha_device.sampling_rate, self.alpha_device.carrier_frequency)
+        power_signal.samples[0, :] = np.ones(10)
+
+        initial_energy = np.sum(power_signal.energy)
+        expected_received_energy = initial_energy * amplitude_path_loss(self.alpha_device.carrier_frequency, self.expected_delay * speed_of_light) ** 2
+
+        propagation = self.channel.propagate(power_signal)
+        received_energy = np.mean(propagation.signal.energy)
+
         self.assertAlmostEqual(expected_received_energy, received_energy)
-        
+
         # Assert no power loss (flag disabled)
         self.channel.model_propagation_loss = False
-        propagated_signals, _, _ = self.channel.propagate(power_signal)
-        
-        self.assertAlmostEqual(initial_energy, np.mean(propagated_signals[0].energy))     
+        propagation = self.channel.propagate(power_signal)
 
-    def test_serialization(self) -> None:
-        """Test YAML serialization"""
-        
-        with patch('hermespy.channel.Channel.transmitter', new_callable=PropertyMock) as transmitter_mock, \
-             patch('hermespy.channel.Channel.receiver', new_callable=PropertyMock) as receiver_mock, \
-             patch('hermespy.channel.Channel.random_mother', new_callable=PropertyMock) as random_mock:
-            
-            transmitter_mock.return_value = None
-            receiver_mock.return_value = None
-            random_mock.return_value = None
-            
-            test_yaml_roundtrip_serialization(self, self.channel)
+        self.assertAlmostEqual(initial_energy, np.mean(propagation.signal.energy))
 
 
-class TestRandomDelayChannel(TestCase):
-
-    def setUp(self) -> None:
-
-        self.transmitter = SimulatedDevice(antennas=UniformArray(IdealAntenna(), .1, (2, 1, 1)))
-        self.receiver = SimulatedDevice(antennas=UniformArray(IdealAntenna(), .1, (3, 1, 1)))
-
-        self.channel = RandomDelayChannel(0., seed=42, transmitter=self.transmitter, receiver=self.receiver)
+class TestRandomDelayChannel(_TestDelayChannelBase):
+    def _init_channel(self, *args, **kwargs) -> SpatialDelayChannel:
+        return RandomDelayChannel(0.0, *args, seed=42, **kwargs)
 
     def test_delay_validation(self) -> None:
         """Invalid delay arguments should raise ValueErrors"""
 
         with self.assertRaises(ValueError):
-            self.channel.delay = -1.
+            self.channel.delay = -1.0
 
         with self.assertRaises(ValueError):
-            self.channel.delay = (-1., 1.)
+            self.channel.delay = (-1.0, 1.0)
 
         with self.assertRaises(ValueError):
-            self.channel.delay = (2., 1.)
+            self.channel.delay = (2.0, 1.0)
 
         with self.assertRaises(ValueError):
-            self.channel.delay = (1., 2., 3.)
-            
+            self.channel.delay = (1.0, 2.0, 3.0)
+
         with self.assertRaises(ValueError):
-            self.channel.delay = 'wrong param'
+            self.channel.delay = "wrong param"
 
     def test_constant_delay_realization(self) -> None:
         """Setting the delay as a scalar should realize a constant delay"""
 
-        expected_delay = 1.
+        expected_delay = 1.0
         self.channel.delay = expected_delay
 
         for _ in range(3):
-            self.assertEqual(expected_delay, self.channel._realize_delay())
+            realization = self.channel.realize()
+            self.assertEqual(expected_delay, realization.delay)
 
     def test_random_delay_realization(self) -> None:
         """Setting the delay as a scalar should realize a draw from the uniform distribution"""
@@ -180,36 +255,18 @@ class TestRandomDelayChannel(TestCase):
         self.channel.delay = min_delay, max_delay
 
         for _ in range(5):
+            realization = self.channel.realize()
+            self.assertTrue(min_delay <= realization.delay <= max_delay)
 
-            realization = self.channel._realize_delay()
-            self.assertTrue(min_delay <= realization <= max_delay)
-            
     def test_delay_realization_validation(self) -> None:
         """Delay realization should raise a runtime error on invalid delay configurations"""
-            
-        with patch('hermespy.channel.delay.RandomDelayChannel.delay', new_callable=PropertyMock) as delay_patch:
-            
-            delay_patch.return_value = 'wrong value'
-            
-            with self.assertRaises(RuntimeError):
-                _ = self.channel._realize_delay()
-            
-    def test_response_realization(self) -> None:
-        """Response should return a diagonal matrix"""
-        
-        response = self.channel._realize_response()
-        self.assertSequenceEqual((3, 2), response.shape)
-        self.assertAlmostEqual(np.sqrt(2), np.linalg.norm(response))
 
-    def test_serialization(self) -> None:
-        """Test YAML serialization"""
-        
-        with patch('hermespy.channel.Channel.transmitter', new_callable=PropertyMock) as transmitter_mock, \
-             patch('hermespy.channel.Channel.receiver', new_callable=PropertyMock) as receiver_mock, \
-             patch('hermespy.channel.Channel.random_mother', new_callable=PropertyMock) as random_mock:
-            
-            transmitter_mock.return_value = None
-            receiver_mock.return_value = None
-            random_mock.return_value = None
-            
-            test_yaml_roundtrip_serialization(self, self.channel)
+        with patch("hermespy.channel.delay.RandomDelayChannel.delay", new_callable=PropertyMock) as delay_patch:
+            delay_patch.return_value = "wrong value"
+
+            with self.assertRaises(RuntimeError):
+                _ = self.channel.realize()
+
+
+del _TestDelayChannelRealization
+del _TestDelayChannelBase

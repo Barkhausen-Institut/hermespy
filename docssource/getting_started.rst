@@ -20,404 +20,403 @@ into both the library and command line interface in order to get new users quick
 HermesPy Architecture
 =====================
 
-In its core, the HermesPy API aims to abstract the process of wireless communication and sensing signal processing
+In its core, the HermesPy API aims to abstract the process of wireless signal processing
 within a strictly object-oriented class structure.
 Each processing step is represented by a dedicated class and can be adapted and customized by the software user.
 
-Consider a single link between a receiving and transmitting wireless :doc:`Device</api/core.device>`.
-HermesPy does not natively distinguish between Up- Down- and Side-Link,
-instead every link between two spatially separated wireless entities is characterized by
-two :doc:`Device</api/core.device>` instances and a :doc:`Channel</api/channel.channel>`,
-as visualized in the following flowchart:
-
+Consider a typically heterogeneous wireless scenario featuring multiple entities transmitting and receiving electromagnetic waveforms.
+The physical description of said entities is referred to as a :doc:`Device<api/core.device.Device>` in Hermes.
+:doc:`Devices<api/core.device.Device>` provide general information required for the modeling of electromagnetic propagation,
+such as carrier frequency, spatial position, orientation, number of available antennas and the respective antenna array topology.
+Now, while :doc:`Devices<api/core.device.Device>` describe the physical properties,
+the digital signal processing required for generating waveform transmissions and receptions is modeled by :doc:`Transmitters<api/core.device.Transmitter>`
+and :doc:`Receivers<api/core.device.Receiver>`, respectively.
+They form HermesPy's general abstraction for digital signal processing applied before digital-to-analog conversion and after analog-to-digital conversion, respectively:
 
 .. mermaid::
    :align: center
 
-   %%{init: {'theme': 'dark'}}%%
-   flowchart LR
+   %%{init: {"flowchart":{"useMaxWidth": false}}}%%
+   graph LR
 
-   channel{Channel Model}
+   subgraph dspi [DSP Transmit Layer]
 
-   subgraph devicea[SimulatedDevice]
+      oai[Transmitter A]
+      obi[Transmitter B]
+   end
+      
+   subgraph phys [Physical Layer]
 
-       direction TB
-       deviceatx>Tx Slot]
-       devicearx>Rx Slot]
+      dai[Device A]
+      dbi[Device B]
 
+
+      dao[Device A]
+      dbo[Device B]
    end
 
-   subgraph deviceb[SimulatedDevice]
+   subgraph dspo [DSP Receive Layer]
 
-       direction TB
-       devicebtx>Tx Slot]
-       devicebrx>Rx Slot]
+      oao[Receiver A]
+      obo[Receiver B]
    end
 
-   deviceatx --> channel --> devicearx
-   devicebtx --> channel --> devicebrx
+   oai --> dai
+   obi --> dbi
+   dai --> dao
+   dai --> dbo
+   dbi --> dbo
+   dbi --> dao
+   dao --> oao
+   dbo --> obo
 
-Currently two types of devices are supported,
-namely :doc:`Simulated Devices</api/simulation.simulated_device>` and
-:doc:`Physical Devices</api/hardware_loop.physical_device>`, used within simulation and hardware
-verification contexts, respectively.
-For the scope of this introduction we will focus on simulated devices, since they, as the name suggests,
-do not require any additional hardware from the user.
-Complex wireless :doc:`Scenarios</api/core.scenario/>` can theoretically be configured to feature
-an unlimited amount of devices.
-Within :doc:`Simulations</api/simulation.simulation/>`,
-the devices and the channels linking them form a symmetric matrix of channel instances:
+   click oai "api/core.device.Transmitter.html" "Transmitter"
+   click obi "api/core.device.Transmitter.html" "Transmitter"
+   click dai "api/core.device.Device.html" "Device"  
+   click dbi "api/core.device.Device.html" "Device"
+   click dao "api/core.device.Device.html" "Device"
+   click dbo "api/core.device.Device.html" "Device"
+   click oao "api/core.device.Receiver.html" "Receiver"
+   click obo "api/core.device.Receiver.html" "Receiver"
 
-.. list-table:: Channel Matrix
-   :header-rows: 1
-   :stub-columns: 1
+A typical information flow consists of a :doc:`Transmitter<api/core.device.Transmitter>` generating a base-band waveform,
+submitting it to its assigned :doc:`Device<api/core.device.Device>`,
+followed by the :doc:`Device<api/core.device.Device>` emitting the submitted transmission in RF-band, while simultaneously recording impinging broadcasts.
+The recorded broadcasts are submitted to the assigend :doc:`Receivers<api/core.device.Receiver>` to be processed.
 
-   * -
-     - Device #1
-     - Device #2
-     - ...
-     - Device #N
+There are two types of devices, namely :doc:`Simulated<api/simulation.simulated_device.SimulatedDevice>` and :doc:`Physical<api/hardware_loop.physical_device.PhysicalDevice>`,
+which both inherit from the abstract :doc:`Device<api/core.device.Device>` base:
 
-   * - Device #1
-     - Channel Model (1, 1)
-     - Channel Model (1, 2)
-     - ...
-     - Channel Model (1, N)
+.. mermaid::
+   :align: center
 
-   * - Device #2
-     - Channel Model (1, 2)
-     - Channel Model (2, 2)
-     - ...
-     - Channel Model (2, N)
+   classDiagram
 
-   * - ...
-     - ...
-     - ...
-     - ...
-     - ...
+   class Device {
+      <<Abstract>>
+      +transmit() : DeviceTransmisison*
+      +receive() : DeviceReception*
+   }
 
-   * - Device #N
-     - Channel Model (1, N)
-     - Channel Model (2, N)
-     - ...
-     - Channel Model (N, N)
+   class PhysicalDevice {
+      <<Abstract>>
+      +transmit() : PhyiscalDeviceTransmisison
+      +receive() : PhysicalDeviceReception
+   }
 
-Each link channel model may be configured according to the scenario assumptions.
-Note that the diagonal of this channel matrix approach patches the devices transmission back as receptions,
-enabling, for example, self-interference or sensing investigations.
-Currently available channel models are provided by the :doc:`Channel</api/channel>` package.
+   class SimulatedDevice {
+      +transmit() : SimulatedDeviceTransmisison
+      +receive() : SimulatedDeviceReception
+   }
 
-Each device may transmit and arbitrary :doc:`Signal Model</api/core.signal_model>` over its transmit slot and
-receive an arbitrary signal over its receive slot after propagation.
-:doc:`Signal Models</api/core.signal_model>` contain base-band samples of the signals transmitted / received by each
-device antenna as well as meta-information about the assumed radio-frequency band center frequency and sampling rate.
-In general, an unlimited amount of :class:`Operators<hermespy.core.device.Operator>` may be configured to operate on any
-device's slots.
-Transmit operators may submit individual :doc:`Signal Models</api/core.signal_model>` to its configured device slot.
-The signal transmitted by the device will then be formed by a superposition of all submitted operator signals.
-Inversely, receive operators are provided with the signal received by its configured device after propagation.
-Currently two types of :class:`Duplex Operators<hermespy.core.device.DuplexOperator>`,
-operating both the transmit and receive slot of their configured device, are implemented:
+   class Transmitter {
 
-* :doc:`Communication Modems</api/modem.modem>` for information exchange in form of bits
-* :doc:`Radars</api/radar.radar>` for wireless sensing
+      +transmit() : Transmission
+   }
 
-These operators each model the sequential signal processing steps for the transmission and reception of their
-respective waveforms in a modular fashion.
-Each processing step is represented by a customizable or interchangeable class slot.
-The :doc:`Communication Modem</api/modem.modem>` operator class currently considers
+   class Receiver {
 
-* :doc:`Bit Sources</api/modem.bits_source>` as the source of data bits to be transmitted
-* :doc:`Channel Codings</api/fec.coding>` as the channel coding configuration
-* :doc:`Waveform Generators</api/modem.waveform>` as the transmit waveform configuration
-* :doc:`Channel Precodings</api/precoding.precoding>` as the channel precoding configuration
+      +receive() : Reception
+   }
 
-while the :doc:`Radar</api/radar.radar>` operator only considers
+   PhysicalDevice ..|> Device
+   SimulatedDevice ..|> Device
+   Device *--* Transmitter
+   Device *--* Receiver
 
-* :doc:`Radar Waveforms</api/radar.radar>` as the transmit waveform configuration
+   link Device "api/core.device.Device.html" "Device"
+   link PhysicalDevice "api/hardware_loop.physical_device.PhysicalDevice.html" "Physical Device"
+   link SimulatedDevice "api/simulation.simulated_device.SimulatedDevice.html" "Simulated Device"
+   link Transmitter "api/core.device.Transmitter.html"
+   link Receiver "api/core.device.Receiver.html"
 
-making it much easier to configure.
+Depending on which :doc:`Device<api/core.device.Device>` realization is selected,
+Hermes acts as  either a physical layer simulation platform or a hardware testbed,
+with the advantage that implemented signal processing algorithms, which are simply classes inheriting from
+either :doc:`Transmitter<api/core.device.Transmitter>`, :doc:`Receiver<api/core.device.Receiver>`, or both,
+integrate seamlessly into both simulation and hardware testbed setups over a unifying API without the need for any code modifications.
+Three types of signal processing pipelines are currently provided by Hermes out of the box and shipped in individual namespace packages:
 
+* :doc:`Modems<api/modem>` provide the typical physical layer signal processing pipeline for digital communication systems, including mapping, modulation, forward error corretion,
+  precoding / beamforming, synchronization, channel estimation and channel equalization.
+* :doc:`Radars<api/radar>` provide the typical physical layer signal processing pipeline for sensing systems, including beamforming and target detection.
+* :doc:`JCAS<api/jcas>` is a combination of both, providing a physical layer signal processing pipeline for joint communication and sensing systems.
 
-.. _GettingStarted_Library:
+The following subsections will introduce how to set up simulations and run hardware testbed setups.
 
-========
-Library
-========
-
-This chapter provides several examples outlining the utilization of HermesPy as a library within custom Python projects.
-A full description of the application programming interface can be found in the section :doc:`/api/api`.
-
--------------
-Transmissions
--------------
-
-The following code generates the samples of a single communication frame
-transmitted by a PSK/QAM modem:
-
-.. literalinclude:: /../_examples/library/getting_started.py
-   :language: python
-   :linenos:
-
-Within this snippet, multiple statements lead to the generation and simulation of a single communication frame signal.
-
-* Initially, the required Python modules are imported *(lines 1-4)*.
-* A new modem operator instance is created *(line 6)*.
-* The waveform to be generated by the modem is configured by assigning a specific
-  :doc:`Waveform Generator </api/modem.waveform>` instance to the modem's
-  waveform_generator property *(line 7)*. |br|
-  In our case, this is an instance of a :doc:`Single Carrier </api/modem.waveform_single_carrier>`
-  waveform.
-* The device on which the modem operates is defined *(line 9)*.
-* An signal model, encoding a single communication frame, emitted by the modem operator
-  is generated and plotted *(lines 10-13)*
-
-Executing the snippet will result in a plot similar to
-
-.. figure:: images/getting_started_signal_plot.png
-  :align: center
-  :alt: PSK/QAM default waveform plot
-  :scale: 75%
-
-  Signal Model Plot
-
-which visualizes the generated samples in time-domain (left sub-plot) and its respective
-discrete fourier transform (right sub-plot).
-
-While this is only a minimal example, it highlights the philosophy behind the HermesPy API, namely that
-each signal processing step is represented by a class modeling its functionality.
-Instances of those classes are assigned to property slots, where they will be executed sequentially
-during signal generation.
-Changing the waveform generated by the modem operator defined in the previous snippet
-is therefore as simple as assigning a different type of
-:doc:`Waveform Generator </api/modem.waveform>`
-to its :meth:`hermespy.modem.modem.Modem.waveform_generator` property slot.
-
-Of course, a multitude of parameters can be configured to customize the behaviour of each processing step.
-For instance, the frame generated by a :doc:`Single Carrier </api/modem.waveform_single_carrier>` waveform
-generator features no preamble by default.
-A preamble is defined as a static set of known reference symbols at the beginning of the communication frame.
-By modifying the property
-
-.. code-block:: python
-
-   operator.waveform_generator.num_preamble_symbols = 20
-
-
-the user may freely chose the number of preamble symbols.
-In this case, requesting :math:`20` symbols results in a generated frame
-
-.. figure:: images/getting_started_signal_plot_preamble.png
-  :alt: PSK/QAM waveform plot with preamble
-  :align: center
-  :scale: 75%
-
-  Signal Model Plot with Preamble
-
-featuring the added preamble.
-Describing all configurable parameters is beyond the scope of this introduction,
-the :doc:`API <api/api>` documentation of each processing step should be consulted for detailed descriptions.
-In general, each settable property may be freely configured by the user.
-
-While the previous code snippet highlighted how to generate basic waveform models,
-link-level simulations usually consider the signal exchange between two dedicated devices.
-A full communication link over an ideal channel model between two dedicated simulated devices
-is implemented in the next example:
-
-.. literalinclude:: /../_examples/library/getting_started_link.py
-   :language: python
-   :linenos:
-
-While this code may seem somewhat complex at first glance, it expands the previous example by some important
-concepts, namely :class:`Channels <hermespy.channel.channel.Channel>`
-and :class:`Evaluators <hermespy.core.monte_carlo.Evaluator>`.
-:class:`Channels <hermespy.channel.channel.Channel>` are the key simulation entity modeling
-waveform propagation between devices.
-Depending on the simulation assumptions, users may select from a multitude of different classes providing specific
-model implementations.
-Refer to the :doc:`Channel Module<api/channel>` for a detailed overview.
-:class:`Evaluators <hermespy.core.monte_carlo.Evaluator>` HermesPy's abstraction for the extraction of specific
-performance indicators from simulation objects.
-In theory, almost any object and its respective properties can be used to implement custom evaluation routines.
-For communication evaluations, several default evaluation routines are already shipped within the
-:doc:`Communication Evaluators<api/modem.evaluators>` module.
-
-Executing the snippet above results in two visualizations being rendered after propagation simulation,
-
-.. list-table::
-
-    * - .. figure:: /images/getting_started_constellation_low_noise.png
-           :align: center
-           :alt: Constellation
-
-           Symbol Constellation, Noiseless
-
-      - .. figure:: /images/getting_started_errors_low_noise.png
-           :align: center
-           :alt: BER
-
-           Bit Errors, Noiseless
-
-namely a symbol constellation diagram at the receiver side and a bit error evaluation stem graph.
-Since the channel we model is actually an ideal channel and no noise is added at the receiver,
-no bit errors occur during data transmission.
-Adapting line 28 of the snippet according to
-
-.. code-block:: python
-
-   rx_device.receive(rx_signal, snr=4.)
-
-will result in additive white gaussian being added at the receiver side with a signal to noise ratio of :math:`4`.
-As a consequence, the constellation gets distorted, leading to false decisions during demodulation and therefore
-to a number of bit errors during data transmission.
-Executing the snippet with noise consideration results in a visualization similar to
-
-.. list-table::
-
-    * - .. figure:: /images/getting_started_constellation_high_noise.png
-           :align: center
-           :alt: Constellation
-
-           Symbol Constellation, Noisy
-
-      - .. figure:: /images/getting_started_errors_high_noise.png
-           :align: center
-           :alt: BER
-
-           Bit Errors, Noisy
-
-where said effects are clearly visible.
-
-Propagating signal models over a channel linking two devices is an example of one of the fundamental
-routines commonly executed in link-level simulations.
-However, complex investigations usually consider multiple devices and channel models,
-as well as perform Monte Carlo style simulations over a grid of model parametrizations,
-which can lead to computationally complex routines, even for seemingly simple scenarios.
-In order to streamline simulation definition and execution, HermesPy provides the
-:doc:`Simulation</api/simulation.simulation>` helper class, which automizes the process
-of distributing the simulation workload in multicore systems and parameter grid evaluations.
-Its usage is introduced in the next section.
-
------------
+============
 Simulations
------------
+============
 
-Consider the simulation scenario of a single device transmitting its waveforms and receiving them back
-after reflections from surroundings, assuming ideal isolation between transmit and receive chain.
-One of the most frequently conducted investigations in communication signal processing is the estimation of the
-bit error rate (BER) in relation to the noise power at the receiver side of the communication link.
-Within HermesPy, :doc:`Simulations</api/simulation.simulation>` can be configured to estimate performance indicators
-such as bit error rate over arbitrary parameter dimensions.
-For example, the following snippet
+:doc:`Simulation<api/simulation>` campaigns are defined by a set of :doc:`SimulatedDevices<api/simulation.simulated_device.SimulatedDevice>` interconnected by :doc:`Channel Models<api/channel.channel.Channel>`,
+with the combination of both forming a :doc:`SimulationScenario<api/simulation.simulation.SimulationScenario>`.
+Therefore, considering channel reciprocity, a :doc:`SimulationScenario<api/simulation.simulation.SimulationScenario>` featuring :math:`D` devices requires the specification of :math:`\tfrac{D(D+1)}{2}` :doc:`Channel Models<api/channel.channel.Channel>`.
+Considering a model featuring :math:`D=2` dedicated devices, the following simulated physical layer model is formed:
 
-.. literalinclude:: /../_examples/library/getting_started_simulation.py
+.. mermaid::
+   :align: center
+
+   %%{init: {"flowchart":{"useMaxWidth": false, "curve": "linear"}}}%%
+   graph LR
+
+   subgraph phys [Simulated Physical Layer]
+      direction LR
+
+      dai[SimulatedDevice A]
+      dbi[SimulatedDevice B]
+
+      caa{{Channel A,A}}
+      cab{{Channel A,B}}
+      cba{{Channel B,A}}
+      cbb{{Channel B,B}}
+
+      dao[SimulatedDevice A]
+      dbo[SimulatedDevice B]
+   end
+
+   dai -.-> caa -.-> dao
+   dai -.-> cab -.-> dbo
+   dbi -.-> cbb -.-> dbo
+   dbi -.-> cba -.-> dao
+
+   click dai "api/simulation.simulated_device.SimulatedDevice.html" "Simulated Device"
+   click dbi "api/simulation.simulated_device.SimulatedDevice.html" "Simulated Device"
+   click dao "api/simulation.simulated_device.SimulatedDevice.html" "Simulated Device"
+   click dbo "api/simulation.simulated_device.SimulatedDevice.html" "Simulated Device"
+   click caa "api/channel.channel.Channel.html" "Channel Model"
+   click cab "api/channel.channel.Channel.html" "Channel Model"
+   click cba "api/channel.channel.Channel.html" "Channel Model"
+   click cbb "api/channel.channel.Channel.html" "Channel Model"
+
+Each device is linked to two channel instances.
+Note that, even though four channels are depicted, channel `B, A` links to the same channel instance as `A, B` due to the reciprocity assumption,
+leading to a total of :math:`\tfrac{2(2+1)}{2}=3` unique channel instances for the depicted scenario.
+Initializing said scenario is as simple as creating a new simulation instance and adding two
+devices: 
+
+.. literalinclude:: ../_examples/library/getting_started_simulation.py
    :language: python
    :linenos:
+   :lines: 08-13
 
-defines the described scenario, adds a bit error rate evaluation and, most importantly,
-defines a sweep over the (linear) signal to noise ratio from :math:`10` to :math:`5`,
-collecting :math:`1000` samples for each sweep point, respectively.
-Executing the script will launch a full simulation run and a rendered result
+When adding new devices to a simulation, the simulation will automatically intialize the required channel instances
+as :doc:`IdealChannels<api/channel.ideal.IdealChannel>`.
+However, the user may freely select from a multitude of different channel models, which are provided by the :doc:`Channel<api/channel>` package.
+For example, the following snippet configures the depicted scenario with a :doc:`5G Multipath Fading Channel<api/channel.multipath_fading_templates.MultipathFading5GTDL>`:
 
-.. figure:: images/getting_started_ber_evaluation.png
-   :alt: Bit Error Rate Plot
-   :align: center
-   :scale: 75%
-
-   Bit Error Rate Evaluation
-
-of the bit error rate graph.
-
-Now, a typical approach to reduce the bit errors is the introduction of :doc:`Channel Coding<api/fec>`
-schemes for error correction.
-They introduce redundancy within the transmitted bit stream during transmission
-and exploit said redundancy at the receiver to correct errors.
-One of the most basic error-correcting channel codes is the :doc:`Repetition Encoder<api/fec.repetition>`,
-which simply repeats bits to be transmitted and decodes by majority voting after reception.
-In theory, the more repetitions per transmitted data frame, the higher the error correction capabilites.
-But the more redundancy is introduced, the lower the actual information throughput becomes.
-Therefore, there is a sweet-spot within the tradeoff between data throughput and repetitions for a given signal to noise
-ratio.
-
-The following snippet configures HermesPy to conduct a simulation visualizing the data rate relative
-to number of repetitions and noise ratio:
-
-.. literalinclude:: /../_examples/library/getting_started_simulation_multidim.py
+.. literalinclude:: ../_examples/library/getting_started_simulation.py
    :language: python
    :linenos:
+   :lines: 15-16
 
-Executing it leads to the rendering of a surface plot visualization, from which engineers
-can infer the selection of a proper repetition rate in order to achieve a required data rate for
-a given noise ratio:
+While :doc:`SimulatedDevices<api/simulation.simulated_device.SimulatedDevice>` and :doc:`Channel Models<api/channel.channel.Channel>` form the physical layer description
+of a simulation, the signal processing, i.e. the transmit and receive layer, generates the waveforms that will actually be generated by devices and transmitted
+over the channels.
+For communication cases in which we want to declare one device as the sole transmitter and one device as the sole receiver,
+HermesPy offers the :doc:`SimplexLink<api/modem.modem.SimplexLink>` class, which automatically configures the transmit and receive layer of the devices:
 
-.. figure:: /images/getting_started_simulation_multidim_drx.png
-   :align: center
-   :alt: Throughput
-   :scale: 75%
-
-   Data Throughput
-
-.. _GettingStarted_CommandLineTool:
-
-=================
-Command Line Tool
-=================
-
-This section outlines how to use HermesPy as a command line tool
-and provides some reference examples to get new users accustomed with the process of configuring scenarios.
-
-Once HermesPy is installed within any Python environment,
-users may call the command line interface by executing the command :mod:`hermes <hermespy.bin.hermes>`
-in both Linux and Windows command line terminals.
-Consult :doc:`/api/bin.hermes` for a detailed description of all available command line options.
-
-In short, entering
-
-.. code-block:: bash
-
-   hermes /path/to/config.yml -o /path/to/output
-
-is the most common use-case of the command line interface.
-The configuration */path/to/config.yml* is subsequently being executed.
-All data resulting from this execution will be stored within */path/to/output*.
-
-If the ``-o`` is left out, then the results will be stored in a unique sub-folder of */results/*.
-
-
------------
-First Steps
------------
-
-Let's begin by configuring a basic simulation scenario.
-It should consist of:
-
-#. A single device featuring a single omnidirectional antenna
-#. A modem operator with
-
-   * :math:`R = \frac{1}{3}` repetition coding
-   * 100GHz symbol rate
-   * Root-Raised-Cosine waveforms
-   * a modulation order of 16
-   * a frame consisting of 10 preamble- and 1000 data symbols
-
-#. An evaluation routine for the bit error rate
-#. A parameter sweep over the SNR between 0 and 20 dB
-
-This scenario is represented by the following *simulation.yml* file:
-
-.. literalinclude:: /../_examples/settings/chirp_qam.yml
-   :language: yaml
+.. literalinclude:: ../_examples/library/getting_started_simulation.py
+   :language: python
    :linenos:
+   :lines: 18-19
 
-Assuming *simulation.yml* is located within */path/to/settings*, calling
+The :doc:`Modem<api/modem>` package provides a range of communication waveform implementations,
+for this minimal introduction we will choose a :doc:`Root-Raised-Cosine<api/modem.waveform.single_carrier.RootRaisedCosine>` single carrier waveform:
 
-.. code-block:: bash
+.. literalinclude:: ../_examples/library/getting_started_simulation.py
+   :language: python
+   :linenos:
+   :lines: 21-24
 
-   hermes /path/to/config.yml
+We may now already directly call the :doc:`SimplexLink<api/modem.modem.SimplexLink>`'s transmit and receive rountines to directly generate, process and visualize
+the generated information such as base-band waveforms and symbol constellations:
 
-will result in the rendering of four plots displaying the respective information.
-The resulting plots and a matlab dump of the evaluation data will be saved in your current working directory.
-For different types of configurations, please refer to the `Examples`_ folder within the HermesPy
-Github repository.
+.. literalinclude:: ../_examples/library/getting_started_simulation.py
+   :language: python
+   :linenos:
+   :lines: 28-34
 
-.. _examples: https://github.com/Barkhausen-Institut/hermespy/tree/main/_examples/settings
+This will bypass physical layer simulations including device and channel models and directly receive the transmitted waveform, resulting in perfect information recovery.
+Refering back to the intial architecture graph, we patched the transmit layer directly into the receive layer.
+
+During simulations, however, the full physical layer is considered.
+HermesPy is drop-based, meaning with each call of the :doc:`Simulation<api/simulation.simulation.Simulation>`'s drop method,
+new realizations of the configured channel models are generated, the transmit routines of all :doc:`Transmitters<api/core.device.Transmitter>` are called,
+the generated waveforms are propagated over the configured channels and the receive routines of all :doc:`Receivers<api/core.device.Receiver>`.
+The generated information is collected in :doc:`SimulatedDrops<api/simulation.simulation.SimulatedDrop>` to be accessed by the user:
+
+.. literalinclude:: ../_examples/library/getting_started_simulation.py
+   :language: python
+   :linenos:
+   :lines: 36-39
+
+After the generation of a new :doc:`SimulatedDrop<api/simulation.simulation.SimulatedDrop>`,
+:doc:`Evaluators<api/core.monte_carlo.Evaluator>` may be used to conveniently extract performance information.
+For instance, the bit error rate of the generated drop may be extracted by a :doc:`BitErrorEvaluator<api/modem.evaluators.ber>`:
+
+.. literalinclude:: ../_examples/library/getting_started_simulation.py
+   :language: python
+   :linenos:
+   :lines: 41-43
+
+This is the core routine of a typical Monte Carlo simulation, which is usually conducted over a grid of parameter values.
+For each parameter combination, a new :doc:`SimulatedDrop<api/simulation.simulation.SimulatedDrop>` is generated and evaluated.
+This process is executed multiple times in parallel, depending on the number of available CPU cores and the user's configuration.
+Finally, the generated evaluations are concatenated towards a single result.
+
+.. mermaid::
+   :align: center
+
+   %%{init: {"flowchart":{"useMaxWidth": false}}}%%
+   flowchart TD
+
+   pla[Simulated Physical Layer]
+   plb[Simulated Physical Layer]
+
+   c{Simulation}
+
+   plc[Simulated Physical Layer]
+
+   pla --> |Evaluations| c 
+   c --> |Parameters| pla
+   plb --> |Evaluations| c 
+   c --> |Parameters| plb
+   plc --> |Evaluations| c 
+   c --> |Parameters| plc
+
+A simulation iterating over the receiving device's signal to noise ratio as parameters and estimating the respective bit error RootRaisedCosine
+can be launched by executing
+
+.. literalinclude:: ../_examples/library/getting_started_simulation.py
+   :language: python
+   :linenos:
+   :lines: 45-50
+
+which will result in a rendered plot being generated.
+The full code snippet implementing the above introduction can be downloaded from `GitHub - Getting Started Simulation <https://github.com/Barkhausen-Institut/hermespy/blob/main/_examples/library/getting_started_simulation.py>`_.
+For more complex simulation examples and instructions on how to integrate and evaluate your own signal processing algorithms in HermesPy,
+please refer to the :doc:`Tutorials <tutorials>` section.
+
+=============
+Hardware Loop
+=============
+
+:doc:`Hardware Loops<api/hardware_loop>` allow for the execution and measurement collection of signal processing algorithms in the transmit and receive processing layer
+on real hardware.
+They are defined by a set of :doc:`PhysicalDevices<api/hardware_loop.physical_device.PhysicalDevice>` forming a :doc:`PhysicalScenario<api/hardware_loop.scenario.PhysicalScenario>`,
+which represents the physical layer description of the hardware loop.
+
+.. mermaid::
+   :align: center
+
+   %%{init: {"flowchart":{"useMaxWidth": false}}}%%
+   graph LR
+    
+   subgraph phys [Hardware Loop Physical Layer]
+      direction LR
+      dai[PhysicalDevice A]
+      dbi[PhysicalDevice B]
+
+      world((Real World))
+
+      dao[PhysicalDevice A]
+      dbo[PhysicalDevice B]
+   end
+
+   dai -.-> world -.-> dao
+   dai -.-> world -.-> dbo
+   dbi -.-> world -.-> dbo
+   dbi -.-> world -.-> dao
+
+   click dai "api/hardware_loop.physical_device.PhysicalDevice.html" "Physical Device"
+   click dbi "api/hardware_loop.physical_device.PhysicalDevice.html" "Physical Device"
+   click dao "api/hardware_loop.physical_device.PhysicalDevice.html" "Physical Device"
+   click dbo "api/hardware_loop.physical_device.PhysicalDevice.html" "Physical Device"
+
+When compared to simulations, :doc:`Hardware Loops<api/hardware_loop>` obvisouly lack channel and hardware modeling capabilities.
+Instead, each trigger of a :doc:`PhysicalDevice<api/hardware_loop.physical_device.PhysicalDevice>` will generate a transmission and transmit the
+respective base-band samples over the air.
+In other words, the simulated device and channel models have been replaced by the real world.
+
+Setting up a :doc:`Hardware Loop<api/hardware_loop>` is as simple as creating a new :doc:`PhysicalScenario<api/hardware_loop.scenario.PhysicalScenario>`
+and passing it to a new :doc:`HardwareLoop<api/hardware_loop.hardware_loop.HardwareLoop>` instance:
+
+.. literalinclude:: ../_examples/library/getting_started_loop.py
+   :language: python
+   :linenos:
+   :lines: 07-13
+
+The :doc:`PhysicalScenarioDummy<api/hardware_loop.physical_device_dummy.PhysicalScenarioDummy>` is a physical scenario implementation intended for testing and demonstration
+purposes and does not require real hardware.
+Instead, the :doc:`PhysicalDeviceDummies<api/hardware_loop.physical_device_dummy.PhysicalDeviceDummy>` instances behave identical to :doc:`SimulatedDevices<api/simulation.simulated_device.SimulatedDevice>`.
+For this reason, we can also assign channel models to the managing :doc:`PhysicalScenarioDummy<api/hardware_loop.physical_device_dummy.PhysicalScenarioDummy>` instances:
+
+.. literalinclude:: ../_examples/library/getting_started_loop.py
+   :language: python
+   :linenos:
+   :lines: 15-17
+
+This is, of course, not possible in real hardware scenarios such as 
+:doc:`USRP Systems<api/hardware_loop.uhd.system.UsrpSystem>` featuring :doc:`USRP Devices<api/hardware_loop.uhd.usrp.UsrpDevice>` or
+:doc:`Audio Scenarios<api/hardware_loop.audio.scenario.AudioScenario>` featuring :doc:`Audio Devices<api/hardware_loop.audio.device.AudioDevice>`.
+
+For communication cases in which we want to declare one device as the sole transmitter and one device as the sole receiver,
+HermesPy offers the :doc:`SimplexLink<api/modem.modem.SimplexLink>` class, which automatically configures the transmit and receive layer of the devices:
+
+.. literalinclude:: ../_examples/library/getting_started_loop.py
+   :language: python
+   :linenos:
+   :lines: 19-20
+
+The :doc:`Modem<api/modem>` package provides a range of communication waveform implementations,
+for this minimal introduction we will choose a :doc:`Root-Raised-Cosine<api/modem.waveform.single_carrier.RootRaisedCosine>` single carrier waveform:
+
+.. literalinclude:: ../_examples/library/getting_started_loop.py
+   :language: python
+   :linenos:
+   :lines: 22-27
+
+Just like the simulation pipeline, the hardware loop runtime will generate drops to be evaluated.
+However, instead of multiple drops being generated in parallel, the hardware loop's drop generation is performed sequentially by triggering
+the configured :doc:`PhysicalDevices<api/hardware_loop.physical_device.PhysicalDevice>`.
+
+After the generation of a new :doc:`Drop<api/core.drop.Drop>`,
+:doc:`Evaluators<api/core.monte_carlo.Evaluator>` may be used to conveniently extract performance information.
+For instance, the bit error rate of the generated drop may be extracted by a :doc:`BitErrorEvaluator<api/modem.evaluators.ber>`:
+
+.. literalinclude:: ../_examples/library/getting_started_loop.py
+   :language: python
+   :linenos:
+   :lines: 29-31
+
+Working with real hardware usually requires a lot of oversight and debugging,
+so the :doc:`HardwareLoop<api/hardware_loop.hardware_loop.HardwareLoop>` features a visualization
+interface which will render plots of required information in real-time:
+
+.. literalinclude:: ../_examples/library/getting_started_loop.py
+   :language: python
+   :linenos:
+   :lines: 33-36
+
+The plots will be updated with each new :doc:`Drop<api/core.drop.Drop>`.
+An overview of existing visualization routines can be found in :doc:`Visualizers<api/hardware_loop.visualizers>`.
+
+Identically to the simulation pipeline, the :doc:`HardwareLoop<api/hardware_loop.hardware_loop.HardwareLoop>`
+can be configured to iterate over a grid of parameter values and generate a fixed number of drops per parameter combination:
+
+.. literalinclude:: ../_examples/library/getting_started_loop.py
+   :language: python
+   :linenos:
+   :lines: 38-43
+
+Setting the `results_dir` parameter will result in a consolidation of all drop data and evaluations into a single `drops.h5` file within the respective directory.
+The data can be accessed by the user for further processing, or even directly replayed by the :doc:`HardwareLoop<api/hardware_loop.hardware_loop.HardwareLoop>`:
+
+.. literalinclude:: ../_examples/library/getting_started_loop.py
+   :language: python
+   :linenos:
+   :lines: 45-46
+
+The full code snippet implementing the above introduction can be downloaded from `GitHub - Getting Started Loop <https://github.com/Barkhausen-Institut/hermespy/blob/main/_examples/library/getting_started_loop.py>`_.
+For more complex simulation examples and instructions on how to integrate and evaluate your own signal processing algorithms in HermesPy,
+please refer to the :doc:`Tutorials <tutorials>` section.

@@ -4,7 +4,7 @@ import numpy as np
 from scipy.constants import speed_of_light
 
 from hermespy.channel import IndoorFactoryLineOfSight
-from hermespy.modem.waveform_generator_ofdm import FrameElement, FrameSymbolSection
+from hermespy.modem.waveform_ofdm import FrameElement, FrameSymbolSection
 from hermespy.modem import DuplexModem, OFDMWaveform, FrameResource, BitErrorEvaluator
 from hermespy.precoding import ZFTimeEqualizer
 from hermespy.simulation import Simulation
@@ -46,18 +46,18 @@ ofdm_receive_tructure = [
 ]
 
 transmit_operator = DuplexModem()
-transmit_operator.waveform_generator = OFDMWaveform(modulation_order=256, subcarrier_spacing=15e3, dc_suppression=False, num_subcarriers=2048, resources=ofdm_resources, structure=ofdm_transmit_tructure, oversampling_factor=1)
+transmit_operator.waveform = OFDMWaveform(modulation_order=256, subcarrier_spacing=15e3, dc_suppression=False, num_subcarriers=2048, resources=ofdm_resources, structure=ofdm_transmit_tructure, oversampling_factor=1)
 transmit_operator.device = tx_device
 receive_operator = DuplexModem()
-receive_operator.waveform_generator = OFDMWaveform(modulation_order=256, subcarrier_spacing=15e3, dc_suppression=False, num_subcarriers=2048, resources=ofdm_resources, structure=ofdm_receive_tructure, oversampling_factor=1)
+receive_operator.waveform = OFDMWaveform(modulation_order=256, subcarrier_spacing=15e3, dc_suppression=False, num_subcarriers=2048, resources=ofdm_resources, structure=ofdm_receive_tructure, oversampling_factor=1)
 receive_operator.device = rx_device
 receive_operator.precoding[0] = ZFTimeEqualizer()
 transmit_operator.reference_transmitter = receive_operator
 receive_operator.reference_transmitter = transmit_operator
 interfering_opeartor = Radar()
-interfering_opeartor.waveform = FMCW(sampling_rate=transmit_operator.waveform_generator.sampling_rate,
-                                     bandwidth=transmit_operator.waveform_generator.bandwidth,
-                                     max_range=transmit_operator.waveform_generator.samples_in_frame * speed_of_light / (2 * transmit_operator.waveform_generator.bandwidth))
+interfering_opeartor.waveform = FMCW(sampling_rate=transmit_operator.waveform.sampling_rate,
+                                     bandwidth=transmit_operator.waveform.bandwidth,
+                                     max_range=transmit_operator.waveform.samples_in_frame * speed_of_light / (2 * transmit_operator.waveform.bandwidth))
 interfering_opeartor.waveform.num_chirps = 1
 interfering_opeartor.device = in_device
 

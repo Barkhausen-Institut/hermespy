@@ -44,8 +44,8 @@ for modulation_order, (waveform_name, waveform), (channel_name, channel) in prod
 
     modem = DuplexModem()
     modem.device = device
-    modem.waveform_generator = waveform
-    modem.waveform_generator.modulation_order = modulation_order
+    modem.waveform = waveform
+    modem.waveform.modulation_order = modulation_order
     simulation.scenario.set_channel(device, device, channel)
 
     simulation.new_dimension('snr', [db2lin(x) for x in np.arange(-10, 20, .5)])

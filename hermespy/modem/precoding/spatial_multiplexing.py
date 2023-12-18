@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-====================
-Spatial Multiplexing
-====================
-"""
 
 from __future__ import annotations
 from fractions import Fraction

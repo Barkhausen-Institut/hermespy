@@ -27,7 +27,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -52,7 +52,12 @@ def screen_geometry(monitor: int = 0) -> Tuple[int, ...]:
 
     else:
         selected_monitor = monitors[monitor]
-        return (selected_monitor.x, selected_monitor.y, selected_monitor.width, selected_monitor.height)
+        return (
+            selected_monitor.x,
+            selected_monitor.y,
+            selected_monitor.width,
+            selected_monitor.height,
+        )
 
 
 def set_figure_geometry(fig, backend, x, y, w, h) -> None:

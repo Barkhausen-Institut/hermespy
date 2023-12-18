@@ -11,12 +11,12 @@ rx_device = SimulatedDevice()
 
 # Define a transmit operation on the first device
 tx_operator = TransmittingModem()
-tx_operator.waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=40, oversampling_factor=8, roll_off=.9)
+tx_operator.waveform = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=40, oversampling_factor=8, roll_off=.9)
 tx_device.transmitters.add(tx_operator)
 
 # Define a receive operation on the second device
 rx_operator = ReceivingModem()
-rx_operator.waveform_generator = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=40, oversampling_factor=8, roll_off=.9)
+rx_operator.waveform = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=40, oversampling_factor=8, roll_off=.9)
 rx_device.receivers.add(rx_operator)
 
 # Simulate a channel between the two devices
@@ -24,8 +24,8 @@ channel = IdealChannel(tx_device, rx_device)
 
 # Simulate the signal transmission over the channel
 transmission = tx_operator.transmit()
-rx_signal, _, channel_state = channel.propagate(tx_device.transmit())
-rx_device.process_input(rx_signal)
+propagation = channel.propagate(tx_device.transmit())
+rx_device.process_input(propagation)
 reception = rx_operator.receive()
 
 # Evaluate bit errors during transmission and visualize the received symbol constellation

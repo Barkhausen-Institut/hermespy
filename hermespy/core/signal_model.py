@@ -8,7 +8,7 @@ Signal Modeling
 from __future__ import annotations
 from copy import deepcopy
 from math import floor
-from typing import Literal, Optional, Type
+from typing import Literal, Sequence, Tuple, Type
 
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
@@ -22,13 +22,13 @@ from scipy.signal import butter, sosfilt, firwin
 
 from .executable import Executable
 from .factory import HDFSerializable
-from .visualize import Visualizable
+from .visualize import VAT, Visualizable
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -60,7 +60,14 @@ class Signal(HDFSerializable, Visualizable):
     __noise_power: float
     delay: float
 
-    def __init__(self, samples: np.ndarray, sampling_rate: float, carrier_frequency: float = 0.0, delay: float = 0.0, noise_power: float = 0.0) -> None:
+    def __init__(
+        self,
+        samples: np.ndarray,
+        sampling_rate: float,
+        carrier_frequency: float = 0.0,
+        delay: float = 0.0,
+        noise_power: float = 0.0,
+    ) -> None:
         """Signal model initialization.
 
         Args:
@@ -101,7 +108,9 @@ class Signal(HDFSerializable, Visualizable):
         return "Signal Model"
 
     @classmethod
-    def empty(cls, sampling_rate: float, num_streams: int = 0, num_samples: int = 0, **kwargs) -> Signal:
+    def empty(
+        cls, sampling_rate: float, num_streams: int = 0, num_samples: int = 0, **kwargs
+    ) -> Signal:
         """Create a new empty signal model instance.
 
         Args:
@@ -202,7 +211,8 @@ class Signal(HDFSerializable, Visualizable):
 
     @property
     def carrier_frequency(self) -> float:
-        """The center frequency of the modeled signal in the radio-frequency transmit band.
+        """The center frequency of the modeled signal in the radio-frequency
+        transmit band.
 
         Returns:
             float: The carrier frequency in Hz.
@@ -222,7 +232,9 @@ class Signal(HDFSerializable, Visualizable):
         """
 
         if value < 0.0:
-            raise ValueError("The carrier frequency of modeled signals must be greater or equal to zero")
+            raise ValueError(
+                "The carrier frequency of modeled signals must be greater or equal to zero"
+            )
 
         self.__carrier_frequency = value
 
@@ -258,7 +270,9 @@ class Signal(HDFSerializable, Visualizable):
         if self.num_samples < 1:
             return np.zeros(self.num_streams)
 
-        stream_power = np.sum(self.__samples.real**2 + self.__samples.imag**2, axis=1) / self.num_samples
+        stream_power = (
+            np.sum(self.__samples.real**2 + self.__samples.imag**2, axis=1) / self.num_samples
+        )
         return stream_power
 
     @property
@@ -303,6 +317,15 @@ class Signal(HDFSerializable, Visualizable):
         if sampling_rate <= 0.0:
             raise ValueError("Sampling rate for resampling must be greater than zero.")
 
+        if self.num_samples < 1:
+            return Signal(
+                np.empty((self.num_streams, 0), dtype=np.complex_),
+                sampling_rate,
+                carrier_frequency=self.__carrier_frequency,
+                delay=self.delay,
+                noise_power=self.noise_power,
+            )
+
         # Resample the internal samples
         if self.__sampling_rate != sampling_rate:
             # Apply an anti-aliasing filter if the respective flag is enabled
@@ -311,12 +334,16 @@ class Signal(HDFSerializable, Visualizable):
                 if sampling_rate > self.sampling_rate:
                     samples = Signal.__resample(self.__samples, self.__sampling_rate, sampling_rate)
 
-                    aliasing_filter = butter(8, self.sampling_rate / sampling_rate, btype="low", output="sos")
+                    aliasing_filter = butter(
+                        8, self.sampling_rate / sampling_rate, btype="low", output="sos"
+                    )
                     samples = sosfilt(aliasing_filter, samples, axis=1)
 
                 # Apply an anti-aliasing filter before resampling if the signal is downsampled
                 elif sampling_rate < self.sampling_rate:
-                    aliasing_filter = butter(8, sampling_rate / self.sampling_rate, btype="low", output="sos")
+                    aliasing_filter = butter(
+                        8, sampling_rate / self.sampling_rate, btype="low", output="sos"
+                    )
                     samples = sosfilt(aliasing_filter, self.__samples, axis=1)
 
                     samples = Signal.__resample(samples, self.__sampling_rate, sampling_rate)
@@ -329,9 +356,21 @@ class Signal(HDFSerializable, Visualizable):
             samples = self.__samples.copy()
 
         # Create a new signal object from the resampled samples and return it as result
-        return Signal(samples, sampling_rate, carrier_frequency=self.__carrier_frequency, delay=self.delay, noise_power=self.noise_power)
+        return Signal(
+            samples,
+            sampling_rate,
+            carrier_frequency=self.__carrier_frequency,
+            delay=self.delay,
+            noise_power=self.noise_power,
+        )
 
-    def superimpose(self, added_signal: Signal, resample: bool = True, aliasing_filter: bool = True) -> None:
+    def superimpose(
+        self,
+        added_signal: Signal,
+        resample: bool = True,
+        aliasing_filter: bool = True,
+        stream_indices: Sequence[int] | None = None,
+    ) -> None:
         """Superimpose an additive signal model to this model.
 
         Internally re-samples `added_signal` to this model's sampling rate, if required.
@@ -342,6 +381,7 @@ class Signal(HDFSerializable, Visualizable):
             added_signal (Signal): The signal to be superimposed onto this one.
             resample (bool): Allow for dynamic resampling during superposition.
             aliasing_filter (bool, optional): Apply an anti-aliasing filter during mixing.
+            stream_indices (Sequence[int], optional): Indices of the streams to be mixed.
 
         Raises:
 
@@ -350,23 +390,50 @@ class Signal(HDFSerializable, Visualizable):
             NotImplementedError: If the delays if this signal and `added_signal` differ.
         """
 
-        if added_signal.num_streams != self.num_streams:
-            raise ValueError(f"Superimposing signal models with different stream counts ({added_signal.num_streams} to {self.num_streams}) is not defined")
+        num_streams = added_signal.num_streams if stream_indices is None else len(stream_indices)
+        _stream_indices = (
+            np.arange(num_streams)
+            if stream_indices is None
+            else np.array(stream_indices, dtype=np.int_)
+        )
+
+        # Abort if not streams are selected
+        # This case occurs frequently when devices transmit to devices without receiving antennas
+        if len(_stream_indices) < 1:
+            return
+
+        if _stream_indices.max() >= self.num_streams:
+            raise ValueError(f"Stream indices must be in the interval [0, {self.num_streams - 1}]")
 
         if self.delay != added_signal.delay:
-            raise NotImplementedError("Superimposing signal models of differing delay is not yet supported")
+            raise NotImplementedError(
+                "Superimposing signal models of differing delay is not yet supported"
+            )
 
         # Apply an aliasing filter to the added signal
         frequency_distance = added_signal.carrier_frequency - self.carrier_frequency
         filter_center_frequency = 0.5 * frequency_distance
-        filter_bandwidth = 0.5 * (added_signal.sampling_rate + self.sampling_rate) - abs(frequency_distance)
+        filter_bandwidth = 0.5 * (added_signal.sampling_rate + self.sampling_rate) - abs(
+            frequency_distance
+        )
 
         if filter_bandwidth <= 0.0:
             return
 
         if aliasing_filter and filter_bandwidth < added_signal.sampling_rate:
-            filter_coefficients = firwin(1 + self.filter_order, 0.5 * filter_bandwidth, width=0.5 * filter_bandwidth, fs=added_signal.sampling_rate).astype(complex)
-            filter_coefficients *= np.exp(2j * np.pi * (filter_center_frequency - added_signal.carrier_frequency) / added_signal.sampling_rate * np.arange(1 + self.filter_order))
+            filter_coefficients = firwin(
+                1 + self.filter_order,
+                0.5 * filter_bandwidth,
+                width=0.5 * filter_bandwidth,
+                fs=added_signal.sampling_rate,
+            ).astype(complex)
+            filter_coefficients *= np.exp(
+                2j
+                * np.pi
+                * (filter_center_frequency - added_signal.carrier_frequency)
+                / added_signal.sampling_rate
+                * np.arange(1 + self.filter_order)
+            )
 
             added_samples = convolve1d(added_signal.samples, filter_coefficients, axis=1)
 
@@ -378,20 +445,41 @@ class Signal(HDFSerializable, Visualizable):
             if not resample:
                 raise RuntimeError("Resampling required but not allowed")
 
-            resampled_added_samples = self.__resample(added_samples, added_signal.sampling_rate, self.sampling_rate)
+            resampled_added_samples = self.__resample(
+                added_samples, added_signal.sampling_rate, self.sampling_rate
+            )
 
         else:
             resampled_added_samples = added_samples
 
         if self.num_samples < resampled_added_samples.shape[1]:
-            self.__samples = np.append(self.__samples, np.zeros((self.num_streams, resampled_added_samples.shape[1] - self.num_samples), dtype=complex), axis=1)
+            self.__samples = np.append(
+                self.__samples,
+                np.zeros(
+                    (self.num_streams, resampled_added_samples.shape[1] - self.num_samples),
+                    dtype=complex,
+                ),
+                axis=1,
+            )
 
         # Mix the added signal onto this signal's samples according to the carrier frequency distance
-        self.__mix(self.__samples, resampled_added_samples, self.__sampling_rate, frequency_distance)
+        self.__mix(
+            self.__samples,
+            _stream_indices,
+            resampled_added_samples,
+            self.__sampling_rate,
+            frequency_distance,
+        )
 
     @staticmethod
     @jit(nopython=True)
-    def __mix(target_samples: np.ndarray, added_samples: np.ndarray, sampling_rate: float, frequency_distance: float) -> None:  # pragma: no cover
+    def __mix(
+        target_samples: np.ndarray,
+        stream_indices: np.ndarray,
+        added_samples: np.ndarray,
+        sampling_rate: float,
+        frequency_distance: float,
+    ) -> None:  # pragma: no cover
         """Internal subroutine to mix two sets of signal model samples.
 
         Args:
@@ -411,10 +499,11 @@ class Signal(HDFSerializable, Visualizable):
         num_added_samples = added_samples.shape[1]
 
         # ToDo: Reminder, mixing like this currently does not account for possible delays.
-        mix_sinusoid = np.exp(2j * pi * np.arange(num_added_samples) * frequency_distance / sampling_rate)
+        mix_sinusoid = np.exp(
+            2j * pi * np.arange(num_added_samples) * frequency_distance / sampling_rate
+        )
 
-        for stream_idx in range(added_samples.shape[0]):
-            target_samples[stream_idx, :num_added_samples] += added_samples[stream_idx, :] * mix_sinusoid
+        target_samples[stream_indices, :num_added_samples] += added_samples * mix_sinusoid[None, :]
 
     @property
     def timestamps(self) -> np.ndarray:
@@ -435,7 +524,43 @@ class Signal(HDFSerializable, Visualizable):
 
         return fftfreq(self.num_samples, 1 / self.sampling_rate)
 
-    def plot(self, axes: np.ndarray | None = None, *, title: Optional[str] = None, angle: bool = False, space: Literal["time", "frequency", "both"] = "both", legend: bool = True) -> None | plt.Figure:
+    def _new_axes(
+        self,
+        num_streams: int | None = None,
+        space: Literal["time", "frequency", "both"] = "both",
+        **kwargs,
+    ) -> Tuple[plt.Figure, np.ndarray[plt.Axes, np.dtype[np.object_]]]:
+        """Generate a new figure and axes to plot into.
+
+        Can be overriden by subclasses to configure custom axes flags.
+
+        Args:
+
+            space (Literal["time", "frequency", "both"], optional):
+                Signal space to be plotted.
+                Both by default.
+
+            **kwargs:
+                Additional keyword arguments to be used by subclasses.
+
+        Returns: Tuple of matplotlib figure and axes.
+        """
+
+        num_streams = self.num_streams if num_streams is None else num_streams
+        num_axes = 2 if space == "both" else 1
+
+        figure, axes = plt.subplots(num_streams, num_axes, squeeze=False)
+        return figure, axes
+
+    def plot(
+        self,
+        axes: VAT | None = None,
+        *,
+        title: str | None = None,
+        angle: bool = False,
+        space: Literal["time", "frequency", "both"] = "both",
+        legend: bool = True,
+    ) -> plt.FigureBase:
         """Plot the current signal in time- and frequency-domain.
 
         .. plot::
@@ -454,12 +579,12 @@ class Signal(HDFSerializable, Visualizable):
 
         Args:
 
-            axes (Optional[np.ndarray], optional):
-                Axes to which the graphs should be plotted to.
-                If none are provided, the routine will create a new figure.
+            axes (plt.Axes, optional):
+                The axis object into which the information should be plotted.
+                If not specified, the routine will generate and return a new figure.
 
             title (str, optional):
-                Figure title.
+                Title of the generated plot.
 
             angle (bool, optional):
                 Plot the angle of complex frequency bins.
@@ -478,61 +603,73 @@ class Signal(HDFSerializable, Visualizable):
         """
 
         title = "Signal Model" if title is None else title
-        figure: Optional[plt.figure] = None
-        axes = np.array([[axes]], dtype=object) if isinstance(axes, plt.Axes) else axes
+        figure, _axes = self._prepare_axes(axes, title, num_streams=self.num_streams, space=space)
 
-        with Executable.style_context():
-            # Create a new figure if no axes were provided
-            if axes is None:
-                num_axes = 2 if space == "both" else 1
+        # Generate timestamps for time-domain plotting
+        timestamps = self.timestamps
 
-                figure, axes = plt.subplots(self.num_streams, num_axes, squeeze=False)
-                figure.suptitle(title)
+        # Infer the axis indices to account for different plot
+        time_axis_idx = 0
+        frequency_axis_idx = 1 if space == "both" else 0
 
-            # Generate timestamps for time-domain plotting
-            timestamps = self.timestamps
+        for stream_idx, stream_samples in enumerate(self.__samples):
+            # Plot time space
+            if space in {"both", "time"}:
+                if self.num_samples < 1:
+                    _axes[stream_idx, time_axis_idx].text(
+                        0.5, 0.5, "NO SAMPLES", horizontalalignment="center"
+                    )
 
-            # Infer the axis indices to account for different plot
-            time_axis_idx = 0
-            frequency_axis_idx = 1 if space == "both" else 0
+                else:
+                    _axes[stream_idx, time_axis_idx].plot(
+                        timestamps, stream_samples.real, label="Real"
+                    )
+                    _axes[stream_idx, time_axis_idx].plot(
+                        timestamps, stream_samples.imag, label="Imag"
+                    )
 
-            for stream_idx, stream_samples in enumerate(self.__samples):
-                # Plot time space
-                if space in {"both", "time"}:
-                    if self.num_samples < 1:
-                        axes[stream_idx, time_axis_idx].text(0.5, 0.5, "NO SAMPLES", horizontalalignment="center")
+                _axes[stream_idx, time_axis_idx].set_xlabel("Time-Domain [s]")
 
-                    else:
-                        axes[stream_idx, time_axis_idx].plot(timestamps, stream_samples.real, label="Real")
-                        axes[stream_idx, time_axis_idx].plot(timestamps, stream_samples.imag, label="Imag")
+                if legend:
+                    with Executable.style_context():
+                        _axes[stream_idx, time_axis_idx].legend(
+                            loc="upper left", fancybox=True, shadow=True
+                        )
 
-                    axes[stream_idx, time_axis_idx].set_xlabel("Time-Domain [s]")
+            # Plot frequency space
+            if space in {"both", "frequency"}:
+                if self.num_samples < 1:
+                    _axes[stream_idx, time_axis_idx].text(
+                        0.5, 0.5, "NO SAMPLES", horizontalalignment="center"
+                    )
 
-                    if legend:
-                        axes[stream_idx, time_axis_idx].legend(loc="upper left", fancybox=True, shadow=True)
+                else:
+                    frequencies = fftshift(fftfreq(self.num_samples, 1 / self.sampling_rate))
+                    bins = fftshift(fft(stream_samples))
 
-                # Plot frequency space
-                if space in {"both", "frequency"}:
-                    if self.num_samples < 1:
-                        axes[stream_idx, time_axis_idx].text(0.5, 0.5, "NO SAMPLES", horizontalalignment="center")
+                    _axes[stream_idx, frequency_axis_idx].plot(frequencies, np.abs(bins))
 
-                    else:
-                        frequencies = fftshift(fftfreq(self.num_samples, 1 / self.sampling_rate))
-                        bins = fftshift(fft(stream_samples))
+                _axes[stream_idx, frequency_axis_idx].set_ylabel("Abs")
+                _axes[stream_idx, frequency_axis_idx].set_xlabel("Frequency-Domain [Hz]")
 
-                        axes[stream_idx, frequency_axis_idx].plot(frequencies, np.abs(bins))
-
-                    axes[stream_idx, frequency_axis_idx].set_ylabel("Abs")
-                    axes[stream_idx, frequency_axis_idx].set_xlabel("Frequency-Domain [Hz]")
-
-                    if angle:
-                        phase = axes[stream_idx, frequency_axis_idx].twinx()
-                        phase.plot(frequencies, np.angle(bins))
-                        phase.set_ylabel("Angle [Rad]")
+                if angle:
+                    phase = _axes[stream_idx, frequency_axis_idx].twinx()
+                    phase.plot(frequencies, np.angle(bins))
+                    phase.set_ylabel("Angle [Rad]")
 
         return figure
 
-    def plot_eye(self, symbol_duration: float, axes: plt.Axes | None = None, *, title: str | None = None, domain: Literal["time", "complex"] = "time", legend: bool = True, linewidth: float = 0.75, symbol_cutoff: float = 0.1) -> None | plt.Figure:
+    def plot_eye(
+        self,
+        symbol_duration: float,
+        axes: VAT | None = None,
+        *,
+        title: str | None = None,
+        domain: Literal["time", "complex"] = "time",
+        legend: bool = True,
+        linewidth: float = 0.75,
+        symbol_cutoff: float = 0.1,
+    ) -> plt.FigureBase:
         """Plot the signal model's eye diagram.
 
         Depending on the `domain` flag the eye diagram will either be rendered with the time-domain on the plot's x-axis
@@ -545,7 +682,7 @@ class Signal(HDFSerializable, Visualizable):
 
             transmitter = TransmittingModem()
             waveform = RaisedCosineWaveform(modulation_order=16, oversampling_factor=16, num_preamble_symbols=0, symbol_rate=1e8, num_data_symbols=1000, roll_off=.9)
-            transmitter.waveform_generator = waveform
+            transmitter.waveform = waveform
 
             transmitter.transmit().signal.plot_eye(1 / waveform.symbol_rate, domain='complex')
             plt.show()
@@ -561,7 +698,7 @@ class Signal(HDFSerializable, Visualizable):
 
             transmitter = TransmittingModem()
             waveform = RaisedCosineWaveform(modulation_order=16, oversampling_factor=16, num_preamble_symbols=0, symbol_rate=1e8, num_data_symbols=1000, roll_off=.9)
-            transmitter.waveform_generator = waveform
+            transmitter.waveform = waveform
 
             transmitter.transmit().signal.plot_eye(1 / waveform.symbol_rate, domain='time')
             plt.show()
@@ -619,29 +756,51 @@ class Signal(HDFSerializable, Visualizable):
         colors = self._get_color_cycle()
 
         if domain == "time":
-            timestamps = np.linspace(-symbol_duration, symbol_duration, 1 + 2 * symbol_num_samples, endpoint=True)
+            timestamps = (
+                np.arange(-symbol_num_samples, 1 + symbol_num_samples, 1) / symbol_num_samples
+            )
 
             for n in range(num_cutoff_symbols, num_symbols - num_cutoff_symbols):
-                stream_slice = self.__samples[0, symbol_num_samples * n : symbol_num_samples * (2 + n) + 1]
-                axes.plot(timestamps[: len(stream_slice)], stream_slice.real, color=colors[0], linewidth=linewidth)
-                axes.plot(timestamps[: len(stream_slice)], stream_slice.imag, color=colors[1], linewidth=linewidth)
+                stream_slice = self.__samples[
+                    0, symbol_num_samples * n : symbol_num_samples * (2 + n) + 1
+                ]
+                axes.flat[0].plot(
+                    timestamps[: len(stream_slice)],
+                    stream_slice.real,
+                    color=colors[0],
+                    linewidth=linewidth,
+                )
+                axes.flat[0].plot(
+                    timestamps[: len(stream_slice)],
+                    stream_slice.imag,
+                    color=colors[1],
+                    linewidth=linewidth,
+                )
 
-            axes.set_xlabel("Time-Domain [s]")
-            axes.set_ylabel("Amplitude")
+            axes.flat[0].set_xlabel("Time-Domain [s]")
+            axes.flat[0].set_ylabel("Amplitude")
 
             if legend:
-                legend_elements = [Line2D([0], [0], color=colors[0], label="Real"), Line2D([0], [0], color=colors[1], label="Imag")]
-                axes.legend(handles=legend_elements, loc="upper left", fancybox=True, shadow=True)
+                legend_elements = [
+                    Line2D([0], [0], color=colors[0], label="Real"),
+                    Line2D([0], [0], color=colors[1], label="Imag"),
+                ]
+                with Executable.style_context():
+                    axes.flat[0].legend(
+                        handles=legend_elements, loc="upper left", fancybox=True, shadow=True
+                    )
 
         elif domain == "complex":
             symbol_num_samples = floor(symbol_duration * self.sampling_rate)
             num_cutoff_samples = num_cutoff_symbols * symbol_num_samples
 
             stream_slice = self.__samples[0, num_cutoff_samples:-num_cutoff_samples]
-            axes.plot(stream_slice.real, stream_slice.imag, color=colors[0], linewidth=linewidth)
+            axes.flat[0].plot(
+                stream_slice.real, stream_slice.imag, color=colors[0], linewidth=linewidth
+            )
 
-            axes.set_xlabel("Real")
-            axes.set_ylabel("Imag")
+            axes.flat[0].set_xlabel("Real")
+            axes.flat[0].set_ylabel("Imag")
 
         else:
             raise ValueError(f"Unsupported plotting domain '{domain}'")
@@ -651,7 +810,9 @@ class Signal(HDFSerializable, Visualizable):
 
     @staticmethod
     @jit(nopython=True)
-    def __resample(signal: np.ndarray, input_sampling_rate: float, output_sampling_rate: float) -> np.ndarray:  # pragma: no cover
+    def __resample(
+        signal: np.ndarray, input_sampling_rate: float, output_sampling_rate: float
+    ) -> np.ndarray:  # pragma: no cover
         """Internal subroutine to resample a given set of samples to a new sampling rate.
 
         Uses sinc-interpolation, therefore `signal` is assumed to be band-limited.
@@ -685,7 +846,10 @@ class Signal(HDFSerializable, Visualizable):
         output = np.empty((num_streams, num_output_samples), dtype=complex128)
         for output_idx in np.arange(num_output_samples):
             # Sinc interpolation weights for single output sample
-            interpolation_weights = np.sinc((input_timestamps - output_timestamps[output_idx]) * input_sampling_rate) + 0j
+            interpolation_weights = (
+                np.sinc((input_timestamps - output_timestamps[output_idx]) * input_sampling_rate)
+                + 0j
+            )
 
             # Resample all streams simultaneously
             output[:, output_idx] = signal @ interpolation_weights
@@ -707,7 +871,9 @@ class Signal(HDFSerializable, Visualizable):
             self.__samples = np.empty((signal.num_streams, 0), dtype=complex)
 
         if signal.num_streams != self.num_streams:
-            raise ValueError("Appending signal models with differing amount of streams is not defined")
+            raise ValueError(
+                "Appending signal models with differing amount of streams is not defined"
+            )
 
         if signal.carrier_frequency != self.__carrier_frequency:
             raise ValueError("Appending signals of differing carrier frequencies is not defined")
@@ -733,7 +899,9 @@ class Signal(HDFSerializable, Visualizable):
             self.__samples = np.empty((0, signal.num_samples), dtype=complex)
 
         if signal.num_samples != self.num_samples:
-            raise ValueError("Appending signal models streams with differing amount of samples is not supported")
+            raise ValueError(
+                "Appending signal models streams with differing amount of samples is not supported"
+            )
 
         if signal.carrier_frequency != self.__carrier_frequency:
             raise ValueError("Appending signals of differing carrier frequencies is not defined")
@@ -781,7 +949,9 @@ class Signal(HDFSerializable, Visualizable):
         return samples.view(np.float64).astype(data_type)
 
     @classmethod
-    def from_interleaved(cls, interleaved_samples: np.ndarray, scale: bool = True, **kwargs) -> Signal:
+    def from_interleaved(
+        cls, interleaved_samples: np.ndarray, scale: bool = True, **kwargs
+    ) -> Signal:
         """Initialize a signal model from interleaved samples.
 
         Args:
@@ -814,7 +984,13 @@ class Signal(HDFSerializable, Visualizable):
         # De-serialize samples
         samples = np.array(group["samples"], dtype=np.complex_)
 
-        return Signal(samples=samples, sampling_rate=sampling_rate, carrier_frequency=carrier_frequency, delay=delay, noise_power=noise_power)
+        return Signal(
+            samples=samples,
+            sampling_rate=sampling_rate,
+            carrier_frequency=carrier_frequency,
+            delay=delay,
+            noise_power=noise_power,
+        )
 
     def to_HDF(self, group: Group) -> None:
         # Serialize attributes

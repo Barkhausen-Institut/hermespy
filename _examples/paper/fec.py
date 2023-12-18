@@ -30,8 +30,8 @@ waveform = OFDMWaveform(oversampling_factor=1, modulation_order=64, resources=[F
 tx_modem = TransmittingModem()
 rx_modem = ReceivingModem()
 
-tx_modem.waveform_generator = deepcopy(waveform) 
-rx_modem.waveform_generator = deepcopy(waveform)
+tx_modem.waveform = deepcopy(waveform) 
+rx_modem.waveform = deepcopy(waveform)
 tx_modem.encoder_manager.add_encoder(TurboCoding(40, 13, 15, 10))
 rx_modem.encoder_manager.add_encoder(TurboCoding(40, 13, 15, 10))
 

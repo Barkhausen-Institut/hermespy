@@ -42,11 +42,32 @@ from io import TextIOBase, StringIO
 import os
 from pkgutil import iter_modules
 from re import compile, Pattern, Match
-from typing import Any, Dict, Set, Sequence, Mapping, Union, KeysView, List, Optional, Type, TypeVar, ValuesView
+from typing import (
+    Any,
+    Dict,
+    Set,
+    Sequence,
+    Mapping,
+    Union,
+    KeysView,
+    List,
+    Optional,
+    Type,
+    TypeVar,
+    ValuesView,
+)
 
 import numpy as np
 from h5py import Group
-from ruamel.yaml import YAML, SafeConstructor, SafeRepresenter, ScalarNode, Node, MappingNode, SequenceNode
+from ruamel.yaml import (
+    YAML,
+    SafeConstructor,
+    SafeRepresenter,
+    ScalarNode,
+    Node,
+    MappingNode,
+    SequenceNode,
+)
 from ruamel.yaml.constructor import ConstructorError
 
 import hermespy
@@ -56,7 +77,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -73,25 +94,38 @@ class Serializable(object):
     """
 
     yaml_tag: Optional[str] = None
-    """YAML serialization tag."""
+    """YAML serialization tag.
+
+    :meta private:
+    """
 
     property_blacklist: Set[str] = set()
-    """Set of properties to be ignored during serialization."""
+    """Set of properties to be ignored during serialization.
+
+    :meta private:
+    """
 
     serialized_attributes: Set[str] = set()
-    """Set of object attributes to be serialized."""
+    """Set of object attributes to be serialized.
+
+    :meta private:
+    """
 
     @staticmethod
     def _arg_signature() -> Set[str]:
         """Argument signature.
 
         Returns: Additional arguments not inferable from the init signature.
+
+        :meta private:
         """
 
         return set()
 
     @classmethod
-    def _serializable_attributes(cls: Type[Serializable], blacklist: Optional[Set[str]] = None) -> Set[str]:
+    def _serializable_attributes(
+        cls: Type[Serializable], blacklist: Optional[Set[str]] = None
+    ) -> Set[str]:
         """Extract the set of serializable class attributes.
 
         Args:
@@ -99,6 +133,8 @@ class Serializable(object):
             blacklist (Set[str], optional): List of attribute names to be ignored during extraction.
 
         Returns: Set of serializable attribute names.
+
+        :meta private:
         """
 
         if blacklist:
@@ -138,7 +174,9 @@ class Serializable(object):
         return attributes
 
     @classmethod
-    def to_yaml(cls: Type[SerializableType], representer: SafeRepresenter, node: SerializableType) -> Node:
+    def to_yaml(
+        cls: Type[SerializableType], representer: SafeRepresenter, node: SerializableType
+    ) -> Node:
         """Serialize a serializable object to YAML.
 
         Args:
@@ -151,11 +189,18 @@ class Serializable(object):
                 The channel instance to be serialized.
 
         Returns: The serialized YAML node.
+
+        :meta private:
         """
 
         return node._mapping_serialization_wrapper(representer)
 
-    def _mapping_serialization_wrapper(self, representer: SafeRepresenter, blacklist: Optional[Set[str]] = None, additional_fields: Optional[Dict[str, Any]] = None) -> MappingNode:
+    def _mapping_serialization_wrapper(
+        self,
+        representer: SafeRepresenter,
+        blacklist: Optional[Set[str]] = None,
+        additional_fields: Optional[Dict[str, Any]] = None,
+    ) -> MappingNode:
         """Conveniently serializes the class to a YAML mapping node.
 
         Args:
@@ -164,6 +209,8 @@ class Serializable(object):
             additional_fields (Dict[str, Any], optional): Additional fields to be serialized.
 
         Returns: A YAML mapping node representing this object.
+
+        :meta private:
         """
 
         # Init additional fields
@@ -191,7 +238,9 @@ class Serializable(object):
         return representer.represent_mapping(self.yaml_tag, state)
 
     @classmethod
-    def from_yaml(cls: Type[SerializableType], constructor: SafeConstructor, node: Node) -> SerializableType:
+    def from_yaml(
+        cls: Type[SerializableType], constructor: SafeConstructor, node: Node
+    ) -> SerializableType:
         """Recall a new serializable class instance from YAML.
 
         Args:
@@ -203,6 +252,8 @@ class Serializable(object):
                 YAML node representing the `Serializable` serialization.
 
         Returns: The de-serialized object.
+
+        :meta private:
         """
 
         # Handle empty yaml nodes
@@ -212,7 +263,9 @@ class Serializable(object):
         return cls.InitializationWrapper(constructor.construct_mapping(node, deep=True))
 
     @classmethod
-    def InitializationWrapper(cls: Type[SerializableType], configuration: Dict[str, Any]) -> SerializableType:
+    def InitializationWrapper(
+        cls: Type[SerializableType], configuration: Dict[str, Any]
+    ) -> SerializableType:
         """Conveniently initializes serializable classes.
 
         Args:
@@ -222,6 +275,8 @@ class Serializable(object):
 
         Returns:
             SerializableArray: Initialized class instance.
+
+        :meta private:
         """
 
         # Extract initialization signature
@@ -270,7 +325,9 @@ class Serializable(object):
                 setattr(instance, property_name, property_value)
 
             except AttributeError as e:
-                raise AttributeError(f"Error while attempting to configure '{property_name}', {str(e)}")
+                raise AttributeError(
+                    f"Error while attempting to configure '{property_name}', {str(e)}"
+                )
 
         # Return configured class instance
         return instance
@@ -313,7 +370,9 @@ class SerializableEnum(Serializable, Enum):
         return cls[node.value]
 
     @classmethod
-    def to_yaml(cls: Type[SerializableEnum], representer: SafeRepresenter, node: SerializableEnum) -> ScalarNode:
+    def to_yaml(
+        cls: Type[SerializableEnum], representer: SafeRepresenter, node: SerializableEnum
+    ) -> ScalarNode:
         # Convert enum to scalar string representation
         return representer.represent_scalar(cls.yaml_tag, "{.name}".format(node))
 
@@ -357,7 +416,9 @@ class Factory:
         # Iterate over all modules within the hermespy namespace
         # Scan for serializable classes
 
-        lookup_paths = list(hermespy.__path__) + [os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))]
+        lookup_paths = list(hermespy.__path__) + [
+            os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+        ]
         for _, name, is_module in iter_modules(lookup_paths, hermespy.__name__ + "."):
             if not is_module:
                 continue  # pragma: no cover
@@ -365,7 +426,9 @@ class Factory:
             module = import_module(name)
 
             for _, serializable_class in getmembers(module):
-                if not isclass(serializable_class) or not issubclass(serializable_class, Serializable):
+                if not isclass(serializable_class) or not issubclass(
+                    serializable_class, Serializable
+                ):
                     continue
 
                 # Register serializable class at the YAML factory
@@ -376,7 +439,9 @@ class Factory:
                     self.__tag_registry[serializable_class.yaml_tag] = serializable_class
 
         # Construct regular expressions for purging
-        self.__range_regex = compile(r"([0-9.e-]*)[ ]*,[ ]*([0-9.e-]*)[ ]*,[ ]*\.\.\.[ ]*,[ ]*([0-9.e-]*)")
+        self.__range_regex = compile(
+            r"([0-9.e-]*)[ ]*,[ ]*([0-9.e-]*)[ ]*,[ ]*\.\.\.[ ]*,[ ]*([0-9.e-]*)"
+        )
         self.__db_regex = compile(r"\[([ 0-9.,-]*)\][ ]*dB")
 
     @property
@@ -507,7 +572,9 @@ class Factory:
             return constructor.construct_object(node)
 
     @staticmethod
-    def __logarithmic_constructor(constructor: SafeConstructor, node: Union[ScalarNode, SequenceNode]) -> Union[Logarithmic, LogarithmicSequence]:
+    def __logarithmic_constructor(
+        constructor: SafeConstructor, node: Union[ScalarNode, SequenceNode]
+    ) -> Union[Logarithmic, LogarithmicSequence]:
         """Construct a logarithmic value or sequence from YAML.
 
         Args:
@@ -579,7 +646,9 @@ class Factory:
 
         return hermes_objects
 
-    def from_folder(self, path: str, recurse: bool = True, follow_links: bool = False) -> Sequence[Any] | Any:
+    def from_folder(
+        self, path: str, recurse: bool = True, follow_links: bool = False
+    ) -> Sequence[Any] | Any:
         """Load a configuration from a folder.
 
         Args:
@@ -606,7 +675,9 @@ class Factory:
                 _, extension = os.path.splitext(file)
                 if extension in self.extensions:
                     deserialization = self.from_file(os.path.join(directory, file))
-                    hermes_objects += deserialization if isinstance(deserialization, list) else [deserialization]
+                    hermes_objects += (
+                        deserialization if isinstance(deserialization, list) else [deserialization]
+                    )
 
             if not recurse:
                 break
@@ -763,8 +834,8 @@ HDFSerializableType = TypeVar("HDFSerializableType", bound="HDFSerializable")
 class HDFSerializable(metaclass=ABCMeta):
     """Base class for object serializable to the HDF5 format.
 
-    Structures are serialized to HDF5 files by the :meth:`.to_HDF` routine and
-    de-serialized by the :meth:`.from_HDF` method, respectively.
+    Structures are serialized to HDF5 files by the :meth:`to_HDF<HDFSerializable.to_HDF>` routine and
+    de-serialized by the :meth:`from_HDF<HDFSerializable.from_HDF>` method, respectively.
     """
 
     @abstractmethod
@@ -775,8 +846,10 @@ class HDFSerializable(metaclass=ABCMeta):
 
         Args:
 
-            group (Group):
+            group (h5py.Group):
                 The HDF5 group to which the object is serialized.
+
+        :meta private:
         """
         ...  # pragma no cover
 
@@ -789,10 +862,12 @@ class HDFSerializable(metaclass=ABCMeta):
 
         Args:
 
-            group (Group):
+            group (h5py.Group):
                 The HDF5 group from which the object state is recalled.
 
         Returns: The object initialized from the HDF5 group state.
+
+        :meta private:
         """
         ...  # pragma no cover
 
@@ -802,13 +877,15 @@ class HDFSerializable(metaclass=ABCMeta):
 
         Args:
 
-            group (Group):
+            group (h5py.Group):
                 The HDF5 group from which the object state is recalled.
 
             name (str):
                 Name of the group to be created.
 
         Returns: A handle to group `name`.
+
+        :meta private:
         """
 
         if name not in group:
@@ -823,7 +900,7 @@ class HDFSerializable(metaclass=ABCMeta):
 
         Args:
 
-            group (Group):
+            group (h5py.Group):
                 The HDF5 group from which the object state is recalled.
 
             dataset (str):
@@ -831,6 +908,8 @@ class HDFSerializable(metaclass=ABCMeta):
 
             data (Any | None):
                 The data to be written to `dataset`.
+
+        :meta private:
         """
 
         if dataset in group:

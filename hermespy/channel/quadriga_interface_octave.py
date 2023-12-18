@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-"""Octave interface to the Quadriga channel model."""
 
 from __future__ import annotations
 from contextlib import redirect_stdout
@@ -25,7 +24,7 @@ __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"

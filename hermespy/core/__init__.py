@@ -1,27 +1,79 @@
-from .antennas import Antenna, IdealAntenna, Dipole, LinearAntenna, PatchAntenna, AntennaArrayBase, AntennaArray, UniformArray
+# -*- coding: utf-8 -*-
+
+from .antennas import (
+    Antenna,
+    AntennaMode,
+    AntennaPort,
+    IdealAntenna,
+    Dipole,
+    LinearAntenna,
+    PatchAntenna,
+    AntennaArray,
+    CustomAntennaArray,
+    UniformArray,
+)
 from .definitions import ConsoleMode, SNRType
+from .evaluators import (
+    ReceivedPowerEvaluator,
+    ReceivedPowerResult,
+    ReceivePowerArtifact,
+    ReceivedPowerEvaluation,
+)
 from .logarithmic import dB, Logarithmic, LogarithmicSequence, ValueType
 from .operators import StaticOperator, SilentTransmitter, SignalTransmitter, SignalReceiver
-from .channel_state_information import ChannelStateFormat, ChannelStateInformation, ChannelStateDimension
+from .channel import ChannelStateFormat, ChannelStateInformation, ChannelStateDimension
 from .transformation import Direction, Transformable, TransformableBase, Transformation
 from .animation import Moveable
-from .device import Operator, OperatorSlot, MixingOperator, ProcessedDeviceInput, TransmitterSlot, ReceiverSlot, Transmitter, Receiver, Device, FloatingError, Transmission, Reception, ReceptionType, DeviceReception, DeviceTransmission, DeviceInput, DeviceOutput
+from .device import (
+    Operator,
+    OperatorSlot,
+    MixingOperator,
+    ProcessedDeviceInput,
+    TransmitterSlot,
+    ReceiverSlot,
+    Transmitter,
+    Receiver,
+    Device,
+    FloatingError,
+    Transmission,
+    Reception,
+    ReceptionType,
+    DeviceReception,
+    DeviceTransmission,
+    DeviceInput,
+    DeviceOutput,
+)
 from .duplex import DuplexOperator
 from .executable import Executable, Verbosity
 from .pipeline import Pipeline
 from .factory import Factory, Serializable, SerializableEnum, HDFSerializable
-from .monte_carlo import Artifact, ArtifactTemplate, Evaluator, Evaluation, EvaluationResult, EvaluationTemplate, GridDimension, ScalarEvaluationResult, MonteCarlo, MonteCarloActor, MonteCarloResult, MonteCarloSample, register
+from .monte_carlo import (
+    Artifact,
+    ArtifactTemplate,
+    Evaluator,
+    Evaluation,
+    EvaluationResult,
+    EvaluationTemplate,
+    GridDimension,
+    SamplePoint,
+    ScalarEvaluationResult,
+    MonteCarlo,
+    MonteCarloActor,
+    MonteCarloResult,
+    MonteCarloSample,
+    register,
+)
 from .random_node import RandomRealization, RandomNode
 from .drop import Drop, RecalledDrop
 from .scenario import Scenario, ScenarioMode, ScenarioType, ReplayScenario
 from .signal_model import Signal
-from .visualize import Visualizable
+from .visualize import VAT, Visualizable
 
 __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["André Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -29,14 +81,20 @@ __status__ = "Prototype"
 
 __all__ = [
     "Antenna",
+    "AntennaMode",
+    "AntennaPort",
     "IdealAntenna",
     "Dipole",
     "LinearAntenna",
     "PatchAntenna",
-    "AntennaArrayBase",
     "AntennaArray",
+    "CustomAntennaArray",
     "UniformArray",
     "SNRType",
+    "ReceivedPowerEvaluator",
+    "ReceivedPowerResult",
+    "ReceivePowerArtifact",
+    "ReceivedPowerEvaluation",
     "dB",
     "Logarithmic",
     "LogarithmicSequence",
@@ -82,6 +140,7 @@ __all__ = [
     "EvaluationResult",
     "EvaluationTemplate",
     "GridDimension",
+    "SamplePoint",
     "ScalarEvaluationResult",
     "MonteCarlo",
     "MonteCarloActor",
@@ -103,5 +162,6 @@ __all__ = [
     "Signal",
     "ProcessedDeviceInput",
     "DeviceInput",
+    "VAT",
     "Visualizable",
 ]

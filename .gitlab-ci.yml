@@ -1,11 +1,13 @@
 #image: $CI_REGISTRY/barkhauseninstitut/wicon/hermespy:python-39-linux
-image: python:3.10
+image: python:3.11
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   GIT_SUBMODULE_STRATEGY: recursive
-  HERMES_VERSION: "1.1.0"
-  HERMES_WHEEL: "hermespy-$HERMES_VERSION-cp310-cp310-linux_x86_64.whl"
+  HERMES_VERSION: "1.2.0"
+  HERMES_WHEEL_11: "hermespy-$HERMES_VERSION-cp311-cp311-linux_x86_64.whl"
+  HERMES_WHEEL_10: "hermespy-$HERMES_VERSION-cp310-cp310-linux_x86_64.whl"
+  HERMES_WHEEL_09: "hermespy-$HERMES_VERSION-cp39-cp39-linux_x86_64.whl"
 
 stages:
   - build
@@ -18,28 +20,56 @@ cache:
   paths:
     - dist/
 
-Build Package:
+Build Python 3.11:
   stage: build
+  image: python:3.11
   before_script:
     - apt update && apt-get install -y build-essential octave pandoc python-dev-is-python3
     - pip install --upgrade setuptools wheel pybind11 scikit-build cmake build
   script:
     - export MAKEFLAGS="-j $(grep -c ^processor /proc/cpuinfo)"
     - python -m build
-#    - pip install --no-cache-dir -U -e .\[test,quadriga,documentation,uhd,audio,develop\]  # remove for docker
+#    - pip install --no-cache-dir -U -e .\[test,quadriga,documentation,audio,develop\]  # remove for docker
 #    - pip uninstall -y hermespy  # remove for docker
   artifacts:
     paths:
-      - dist/$HERMES_WHEEL
+      - dist/$HERMES_WHEEL_11
+
+Build Python 3.10:
+  stage: build
+  image: python:3.10
+  before_script:
+    - apt update && apt-get install -y build-essential octave pandoc python-dev-is-python3
+    - pip install --upgrade setuptools wheel pybind11 scikit-build cmake build
+  script:
+    - export MAKEFLAGS="-j $(grep -c ^processor /proc/cpuinfo)"
+    - python -m build
+  artifacts:
+    paths:
+      - dist/$HERMES_WHEEL_10
+
+Build Python 3.9:
+  stage: build
+  image: python:3.9
+  before_script:
+    - apt update && apt-get install -y build-essential octave pandoc python-dev-is-python3
+    - pip install --upgrade setuptools wheel pybind11 scikit-build cmake build
+  script:
+    - export MAKEFLAGS="-j $(grep -c ^processor /proc/cpuinfo)"
+    - python -m build
+  artifacts:
+    paths:
+      - dist/$HERMES_WHEEL_09
 
 Unit Testing:
   stage: test
   dependencies:
-    - Build Package
+    - Build Python 3.11
   before_script:
     - apt update && apt-get install -y octave portaudio19-dev python-dev-is-python3 unzip  # remove for docker
-    - pip install -e .\[develop,test,quadriga,uhd,audio\]
-    - unzip dist/$HERMES_WHEEL "hermespy/fec/aff3ct/*.so"
+    - pip install -e .\[develop,test,quadriga,audio\]
+    - unzip dist/$HERMES_WHEEL_11 "hermespy/fec/aff3ct/*.so"
+    - pip install pyzmq>=25.1.1 usrp-uhd-client
   script:
     - coverage run --include=hermespy/* ./tests/test_install.py ./tests/unit_tests/ 
   after_script:
@@ -55,28 +85,49 @@ Unit Testing:
 Integration Testing:
   stage: test
   dependencies:
-    - Build Package
+    - Build Python 3.11
   before_script:
     - apt update && apt-get install -y octave portaudio19-dev python-dev-is-python3  # remove for docker
-    - pip install dist/$HERMES_WHEEL\[test,quadriga,uhd,audio\]
+    - pip install dist/$HERMES_WHEEL_11\[test,quadriga,audio\]
   script:
     - python ./tests/test_install.py ./tests/integration_tests/ 
 
-Integrity Testing:
+Integrity Python 3.11:
   stage: test
+  image: python:3.11
   dependencies:
-    - Build Package
+    - Build Python 3.11
   before_script:
     - apt update && apt-get install -y octave portaudio19-dev python-dev-is-python3  # remove for docker
-    - pip install dist/$HERMES_WHEEL\[test,quadriga,uhd,audio\]
+    - pip install dist/$HERMES_WHEEL_11\[test,quadriga,audio\]
+  script:
+    - python ./tests/test_install.py ./tests/integrity_tests/
+
+Integrity Python 3.10:
+  stage: test
+  image: python:3.10
+  dependencies:
+    - Build Python 3.10
+  before_script:
+    - apt update && apt-get install -y octave portaudio19-dev python-dev-is-python3  # remove for docker
+    - pip install dist/$HERMES_WHEEL_10\[test,quadriga,audio\]
+  script:
+    - python ./tests/test_install.py ./tests/integrity_tests/
+
+Integrity Python 3.9:
+  stage: test
+  image: python:3.9
+  dependencies:
+    - Build Python 3.9
+  before_script:
+    - pip install dist/$HERMES_WHEEL_09\[test,quadriga,audio\]
   script:
     - python ./tests/test_install.py ./tests/integrity_tests/ 
 
 PEP8 Testing:
   stage: lint
   before_script:
-    - apt update && apt-get install -y octave portaudio19-dev python-dev-is-python3  # remove for docker
-    - pip install dist/$HERMES_WHEEL\[test,quadriga,uhd,audio\]
+    - pip install dist/$HERMES_WHEEL_11\[test,quadriga,audio\]
     - pip install flake8
   script:
     - flake8 hermespy/
@@ -84,8 +135,7 @@ PEP8 Testing:
 Type Checking:
   stage: lint
   before_script:
-    - apt update && apt-get install -y octave portaudio19-dev python-dev-is-python3  # remove for docker
-    - pip install dist/$HERMES_WHEEL\[test,quadriga,uhd,audio\]
+    - pip install dist/$HERMES_WHEEL_11\[test,quadriga,audio\]
     - pip install mypy
   script:
     - mypy
@@ -95,8 +145,8 @@ pages:
   only:
     - master
   before_script:
-    - apt update && apt-get install -y octave portaudio19-dev python-dev-is-python3 pandoc  # remove for docker
-    - pip install dist/$HERMES_WHEEL\[test,documentation,quadriga,uhd,audio\]
+    - apt update && apt-get install -y octave portaudio19-dev python-dev-is-python3 pandoc graphviz  # remove for docker
+    - pip install dist/$HERMES_WHEEL_11\[test,documentation,quadriga,audio\]
   script:
     - sphinx-build ./docssource/ ./public/
   artifacts:

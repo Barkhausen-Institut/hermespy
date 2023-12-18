@@ -16,7 +16,7 @@ from numpy.linalg import svd
 from scipy.fft import fft, fftfreq, fftshift, ifft
 from scipy.signal import convolve
 
-from hermespy.core import Serializable, Signal, Visualizable
+from hermespy.core import Serializable, Signal, VAT, Visualizable
 from ..physical_device import LeakageCalibrationBase, PhysicalDevice
 from .delay import DelayCalibration
 
@@ -39,7 +39,13 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Visualizable, Serializ
     __sampling_rate: float  # Sampling rate of the leakage model
     __delay: float  # Implicit delay of the leakage model
 
-    def __init__(self, leakage_response: np.ndarray, sampling_rate: float, delay: float = 0.0, physical_device: PhysicalDevice | None = None) -> None:
+    def __init__(
+        self,
+        leakage_response: np.ndarray,
+        sampling_rate: float,
+        delay: float = 0.0,
+        physical_device: PhysicalDevice | None = None,
+    ) -> None:
         """
         Args:
 
@@ -55,7 +61,9 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Visualizable, Serializ
         """
 
         if leakage_response.ndim != 3:
-            raise ValueError(f"Leakage response matrix must be a three-dimensional array (has {leakage_response.ndim} dimensions)")
+            raise ValueError(
+                f"Leakage response matrix must be a three-dimensional array (has {leakage_response.ndim} dimensions)"
+            )
 
         if sampling_rate <= 0.0:
             raise ValueError(f"Sampling rate must be non-negative (not {sampling_rate} Hz)")
@@ -94,18 +102,28 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Visualizable, Serializ
 
         return self.__delay
 
-    def remove_leakage(self, transmitted_signal: Signal, received_signal: Signal, delay_correction: float = 0.0) -> Signal:
+    def remove_leakage(
+        self, transmitted_signal: Signal, received_signal: Signal, delay_correction: float = 0.0
+    ) -> Signal:
         if transmitted_signal.num_streams != self.leakage_response.shape[1]:
-            raise ValueError(f"Transmitted signal has unxpected number of streams ({transmitted_signal.num_streams} instead of {self.leakage_response.shape[1]})")
+            raise ValueError(
+                f"Transmitted signal has unxpected number of streams ({transmitted_signal.num_streams} instead of {self.leakage_response.shape[1]})"
+            )
 
         if received_signal.num_streams != self.leakage_response.shape[0]:
-            raise ValueError(f"Received signal has unxpected number of streams ({received_signal.num_streams} instead of {self.leakage_response.shape[0]})")
+            raise ValueError(
+                f"Received signal has unxpected number of streams ({received_signal.num_streams} instead of {self.leakage_response.shape[0]})"
+            )
 
         if transmitted_signal.sampling_rate != received_signal.sampling_rate:
-            raise ValueError(f"Transmitted and received signal must have the same sampling rate ({transmitted_signal.sampling_rate} != {received_signal.sampling_rate})")
+            raise ValueError(
+                f"Transmitted and received signal must have the same sampling rate ({transmitted_signal.sampling_rate} != {received_signal.sampling_rate})"
+            )
 
         if transmitted_signal.carrier_frequency != received_signal.carrier_frequency:
-            raise ValueError(f"Transmitted and received signal must have the same carrier frequency ({transmitted_signal.carrier_frequency} != {received_signal.carrier_frequency})")
+            raise ValueError(
+                f"Transmitted and received signal must have the same carrier frequency ({transmitted_signal.carrier_frequency} != {received_signal.carrier_frequency})"
+            )
 
         # The received signal is corrected by subtracting the leaked samples
         corrected_signal = received_signal.copy()
@@ -115,14 +133,37 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Visualizable, Serializ
 
         for m, n in np.ndindex(received_signal.num_streams, transmitted_signal.num_streams):
             # The leaked signal is the convolution of the transmitted signal with the leakage response
-            predicted_siso_signal = convolve(self.__leakage_response[m, n, :], transmitted_signal.samples[n, :], "full")
+            predicted_siso_signal = convolve(
+                self.__leakage_response[m, n, :], transmitted_signal.samples[n, :], "full"
+            )
 
             # The correction is achieved by subtracting the leaked signal from the received signal
             if delay_sample_shift >= 0:
-                corrected_signal.samples[m, delay_sample_shift : min(delay_sample_shift + len(predicted_siso_signal), corrected_signal.num_samples)] -= predicted_siso_signal[: min(corrected_signal.num_samples - delay_sample_shift, len(predicted_siso_signal))]
+                corrected_signal.samples[
+                    m,
+                    delay_sample_shift : min(
+                        delay_sample_shift + len(predicted_siso_signal),
+                        corrected_signal.num_samples,
+                    ),
+                ] -= predicted_siso_signal[
+                    : min(
+                        corrected_signal.num_samples - delay_sample_shift,
+                        len(predicted_siso_signal),
+                    )
+                ]
 
             else:
-                corrected_signal.samples[m, 0 : min(delay_sample_shift + len(predicted_siso_signal), corrected_signal.num_samples + delay_sample_shift)] -= predicted_siso_signal[-delay_sample_shift : min(corrected_signal.num_samples, len(predicted_siso_signal))]
+                corrected_signal.samples[
+                    m,
+                    0 : min(
+                        delay_sample_shift + len(predicted_siso_signal),
+                        corrected_signal.num_samples + delay_sample_shift,
+                    ),
+                ] -= predicted_siso_signal[
+                    -delay_sample_shift : min(
+                        corrected_signal.num_samples, len(predicted_siso_signal)
+                    )
+                ]
 
         return corrected_signal
 
@@ -130,20 +171,29 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Visualizable, Serializ
     def title(self) -> str:
         return "Frequency Selective Leakage Calibration"
 
-    def _new_axes(self) -> Tuple[plt.Figure, plt.Axes]:
-        figure, axes = plt.subplots(ncols=2)
+    def _new_axes(self, **kwargs) -> Tuple[plt.Figure, VAT]:
+        figure, axes = plt.subplots(1, 2, squeeze=False)
         return figure, axes
 
-    def _plot(self, axes: plt.Axes) -> None:
+    def _plot(self, axes: VAT) -> None:
+        time_axes: plt.Axes = axes[0, 0]
+        freq_axes: plt.Axes = axes[0, 1]
+
         for m, n in np.ndindex(self.__leakage_response.shape[0], self.__leakage_response.shape[1]):
             sample_instances = np.arange(self.__leakage_response.shape[2]) / self.__sampling_rate
             frequency_bins = fftshift(fftfreq(self.__leakage_response.shape[2]))
 
-            axes[0].plot(sample_instances, self.__leakage_response[m, n, :].real, label=f"Tx: {n} Rx{m}")
-            axes[1].plot(frequency_bins, fftshift(abs(fft(self.__leakage_response[m, n, :]))), label=f"Tx: {n} Rx{m}")
+            time_axes.plot(
+                sample_instances, self.__leakage_response[m, n, :].real, label=f"Tx: {n} Rx{m}"
+            )
+            freq_axes.plot(
+                frequency_bins,
+                fftshift(abs(fft(self.__leakage_response[m, n, :]))),
+                label=f"Tx: {n} Rx{m}",
+            )
 
-            axes[0].set_xlabel("Time [s]")
-            axes[1].set_xlabel("Frequency [Hz]")
+            time_axes.set_xlabel("Time [s]")
+            freq_axes.set_xlabel("Frequency [Hz]")
 
     def to_HDF(self, group: Group) -> None:
         self._write_dataset(group, "leakage_response", self.leakage_response)
@@ -151,7 +201,9 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Visualizable, Serializ
         group.attrs["delay"] = self.delay
 
     @classmethod
-    def from_HDF(cls: Type[SelectiveLeakageCalibration], group: Group) -> SelectiveLeakageCalibration:
+    def from_HDF(
+        cls: Type[SelectiveLeakageCalibration], group: Group
+    ) -> SelectiveLeakageCalibration:
         leakage_response = np.asarray(group.get("leakage_response"), dtype=np.complex_)
         sampling_rate = group.attrs.get("sampling_rate")
         delay = group.attrs.get("delay")
@@ -171,7 +223,13 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Visualizable, Serializ
         return DelayCalibration(delay)
 
     @staticmethod
-    def MMSEEstimate(device: PhysicalDevice, num_probes: int = 7, num_wavelet_samples: int = 127, noise_power: np.ndarray | None = None, configure_device: bool = True) -> SelectiveLeakageCalibration:
+    def MMSEEstimate(
+        device: PhysicalDevice,
+        num_probes: int = 7,
+        num_wavelet_samples: int = 127,
+        noise_power: np.ndarray | None = None,
+        configure_device: bool = True,
+    ) -> SelectiveLeakageCalibration:
         """Estimate the transmit receive leakage for a physical device using Minimum Mean Square Error (MMSE) estimation.
 
         Args:
@@ -209,7 +267,9 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Visualizable, Serializ
             raise ValueError(f"Number of probes must be greater than zero (not {num_probes})")
 
         if num_wavelet_samples < 1:
-            raise ValueError(f"Number of samples must be greater than zero (not {num_wavelet_samples}")
+            raise ValueError(
+                f"Number of samples must be greater than zero (not {num_wavelet_samples}"
+            )
 
         # Estimate noise power if not specified
         if noise_power is None:
@@ -235,20 +295,41 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Visualizable, Serializ
         q = 0
         sample_indices = np.arange(num_wavelet_samples)
         probe_indices = 1 + 2 * np.arange(0, num_probes)
-        probing_waveforms = np.exp(-1j * np.pi * np.outer(probe_indices, sample_indices * (sample_indices + cf + 2 * q)) / num_wavelet_samples)
+        probing_waveforms = np.exp(
+            -1j
+            * np.pi
+            * np.outer(probe_indices, sample_indices * (sample_indices + cf + 2 * q))
+            / num_wavelet_samples
+        )
 
         # Add zero padding to waveforms to account for possible transmit delays
-        probing_waveforms = np.append(probing_waveforms, np.zeros((num_probes, num_padding_samples)), axis=1)
+        probing_waveforms = np.append(
+            probing_waveforms, np.zeros((num_probes, num_padding_samples)), axis=1
+        )
 
         # Compute probing frequency spectra
         probing_frequencies = fft(probing_waveforms, axis=1)
 
         # Collect received samples
-        received_waveforms = np.zeros((num_probes, device.antennas.num_receive_antennas, device.antennas.num_transmit_antennas, num_samples), dtype=np.complex_)
+        received_waveforms = np.zeros(
+            (
+                num_probes,
+                device.antennas.num_receive_antennas,
+                device.antennas.num_transmit_antennas,
+                num_samples,
+            ),
+            dtype=np.complex_,
+        )
         for p, n in np.ndindex(num_probes, device.antennas.num_transmit_antennas):
-            tx_samples = np.zeros((device.antennas.num_transmit_antennas, num_samples), dtype=np.complex_)
+            tx_samples = np.zeros(
+                (device.antennas.num_transmit_antennas, num_samples), dtype=np.complex_
+            )
             tx_samples[n, :] = probing_waveforms[p, :]
-            tx_signal = Signal(tx_samples, sampling_rate=device.sampling_rate, carrier_frequency=device.carrier_frequency)
+            tx_signal = Signal(
+                tx_samples,
+                sampling_rate=device.sampling_rate,
+                carrier_frequency=device.carrier_frequency,
+            )
 
             rx_signal = device.trigger_direct(tx_signal, calibrate=False)
             rx_signal.samples = rx_signal.samples[:, :num_samples]
@@ -270,7 +351,12 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Visualizable, Serializ
         mean_noise_power = np.mean(noise_power)
 
         # Compute the pseudo-inverse of the received frequency spectra by singular value decomposition
-        u, s, vh = svd(h @ h.T.conj() + mean_noise_power * np.eye(num_samples * num_probes, num_samples * num_probes), full_matrices=False, hermitian=True)
+        u, s, vh = svd(
+            h @ h.T.conj()
+            + mean_noise_power * np.eye(num_samples * num_probes, num_samples * num_probes),
+            full_matrices=False,
+            hermitian=True,
+        )
         u_select = u[:, :num_samples]
         s_select = s[:num_samples]
         vh_select = vh[:num_samples, :]
@@ -278,14 +364,27 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Visualizable, Serializ
         mmse_estimator = h.T.conj() @ vh_select.T.conj() @ np.diag(1 / s_select) @ u_select.T.conj()
 
         # Estimate the frequency spectra for each antenna probing independently
-        mmse_frequency_selectivity_estimation = np.zeros((device.antennas.num_receive_antennas, device.antennas.num_transmit_antennas, num_samples), dtype=np.complex_)
-        for m, n in np.ndindex(device.antennas.num_receive_antennas, device.antennas.num_transmit_antennas):
+        mmse_frequency_selectivity_estimation = np.zeros(
+            (
+                device.antennas.num_receive_antennas,
+                device.antennas.num_transmit_antennas,
+                num_samples,
+            ),
+            dtype=np.complex_,
+        )
+        for m, n in np.ndindex(
+            device.antennas.num_receive_antennas, device.antennas.num_transmit_antennas
+        ):
             probing_estimation = mmse_estimator @ received_frequencies[:, m, n, :].flatten()
             mmse_frequency_selectivity_estimation[m, n, :] = probing_estimation
 
         # Initialize the calibration from the estimated frequency spectra
-        leakage_response = ifft(mmse_frequency_selectivity_estimation, axis=2)[:, :, :num_wavelet_samples]
-        calibration = SelectiveLeakageCalibration(leakage_response, device.sampling_rate, device.delay_calibration.delay)
+        leakage_response = ifft(mmse_frequency_selectivity_estimation, axis=2)[
+            :, :, :num_wavelet_samples
+        ]
+        calibration = SelectiveLeakageCalibration(
+            leakage_response, device.sampling_rate, device.delay_calibration.delay
+        )
 
         # Configure the device with the estimated calibration if the respective flag is enabled
         if configure_device:
