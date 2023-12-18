@@ -754,26 +754,13 @@ class Signal(HDFSerializable, Visualizable):
         colors = self._get_color_cycle()
 
         if domain == "time":
-            timestamps = (
-                np.arange(-symbol_num_samples, 1 + symbol_num_samples, 1) / symbol_num_samples
-            )
-
-            for n in range(num_cutoff_symbols, num_symbols - num_cutoff_symbols):
-                stream_slice = self.__samples[
-                    0, symbol_num_samples * n : symbol_num_samples * (2 + n) + 1
-                ]
-                axes.flat[0].plot(
-                    timestamps[: len(stream_slice)],
-                    stream_slice.real,
-                    color=colors[0],
-                    linewidth=linewidth,
-                )
-                axes.flat[0].plot(
-                    timestamps[: len(stream_slice)],
-                    stream_slice.imag,
-                    color=colors[1],
-                    linewidth=linewidth,
-                )
+            timestamps = np.arange(-symbol_num_samples - 1, 1 + symbol_num_samples, 1) / symbol_num_samples
+            values = np.hstack([self.__samples[0, symbol_num_samples * n:symbol_num_samples * n + len(timestamps)]
+                                for n in range(num_cutoff_symbols, num_symbols - num_cutoff_symbols)])
+            times = np.hstack([timestamps] * (num_symbols - 2 * num_cutoff_symbols + 1))[:len(values)]
+            values[::len(timestamps)] = float("nan") + 1j*float("nan")  # delete first element to interrupt continuous lines
+            axes.flat[0].plot(times, values.real, color=colors[0], linewidth=linewidth)
+            axes.flat[0].plot(times, values.imag, color=colors[1], linewidth=linewidth)
 
             axes.flat[0].set_xlabel("Time-Domain [s]")
             axes.flat[0].set_ylabel("Amplitude")
