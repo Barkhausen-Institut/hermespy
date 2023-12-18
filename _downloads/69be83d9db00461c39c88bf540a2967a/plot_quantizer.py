@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from hermespy.core import Executable, Signal
-from hermespy.simulation.analog_digital_converter import AnalogDigitalConverter, QuantizerType, GainControlType
-    
+from hermespy.simulation import AnalogDigitalConverter, QuantizerType
+
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Jan Adler"]
@@ -17,7 +17,7 @@ __status__ = "Prototype"
 
 
 with Executable.style_context():
-    
+
     figure, fig_axes = plt.subplots(1, 2)
     figure.suptitle("ADC Quantization Model")
 

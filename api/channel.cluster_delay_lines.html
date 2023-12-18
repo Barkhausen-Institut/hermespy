@@ -1,19 +1,20 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="3GPP Cluster Delay Line Indoor Factory Model" href="channel.cluster_delay_line_indoor_factory.html" /><link rel="prev" title="Multipath Fading Standard Templates" href="channel.multipath_fading_templates.html" />
+<link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Indoor Factory Base" href="channel.cluster_delay_line_indoor_factory.IndoorFactoryBase.html" /><link rel="prev" title="Exponential Channel Model" href="channel.multipath_fading_templates.MultipathFadingExponential.html" />
 
-    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
-        <title>3GPP Cluster Delay Line Model - HermesPy</title>
-      <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
-    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css" />
+    <!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
+        <title>3GPP Cluster Delay Line Models - HermesPy</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/tweaks.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/tabs.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=eafc0fe6" />
+    <link rel="stylesheet" type="text/css" href="../_static/tweaks.css?v=72d4c74a" />
+    <link rel="stylesheet" type="text/css" href="../_static/tabs.css?v=a5c4661c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
     
     
 
@@ -165,13 +166,13 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../index.html">HermesPy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../getting_started.html">Getting Started</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="../tutorials.html">Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/channel.html">Implementing Channels</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/fec_coding.html">Implementing FEC codings</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../notebooks/beamformer.html">Implementing Beamformers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/beamforming_usage.html">Using Beamformers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../notebooks/beamforming_implementation.html">Implementing Beamformers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/waveform.html">Implementing Communication Waveforms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/precoding.html">Implementing Precodings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/roc.html">Receiver Operating Characteristics</a></li>
@@ -180,7 +181,302 @@
 <li class="toctree-l2"><a class="reference internal" href="../notebooks/evaluator.html">Implementing Evaluators</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Configuration Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 current has-children"><a class="reference internal" href="api.html">HermesPy API</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of HermesPy API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 has-children"><a class="reference internal" href="modem.html">Communication</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Communication</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="modem.waveform.html">Waveforms</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Waveforms</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="modem.waveform.single_carrier.html">Single Carrier</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Single Carrier</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="modem.waveform.single_carrier.FMCW.html">FMCW</a></li>
+<li class="toctree-l5"><a class="reference internal" href="modem.waveform.single_carrier.RaisedCosine.html">Raised Cosine</a></li>
+<li class="toctree-l5"><a class="reference internal" href="modem.waveform.single_carrier.Rectangular.html">Rectangular</a></li>
+<li class="toctree-l5"><a class="reference internal" href="modem.waveform.single_carrier.RootRaisedCosine.html">Root Raised Cosine</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="modem.waveform.ofdm.html">OFDM</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of OFDM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="modem.waveform.ofdm.FrameElement.html">Frame Element</a></li>
+<li class="toctree-l5"><a class="reference internal" href="modem.waveform.ofdm.FrameGuardSection.html">Guard Section</a></li>
+<li class="toctree-l5"><a class="reference internal" href="modem.waveform.ofdm.FrameResource.html">Resource</a></li>
+<li class="toctree-l5"><a class="reference internal" href="modem.waveform.ofdm.FrameSection.html">Section</a></li>
+<li class="toctree-l5"><a class="reference internal" href="modem.waveform.ofdm.FrameSymbolSection.html">Symbol Section</a></li>
+<li class="toctree-l5"><a class="reference internal" href="modem.waveform.ofdm.OFDMChannelEqualization.html">Channel Equalization</a></li>
+<li class="toctree-l5"><a class="reference internal" href="modem.waveform.ofdm.OFDMCorrelationSynchronization.html">Correlation Synchronization</a></li>
+<li class="toctree-l5"><a class="reference internal" href="modem.waveform.ofdm.OFDMLeastSquaresChannelEstimation.html">Least Squares Channel Estimation</a></li>
+<li class="toctree-l5"><a class="reference internal" href="modem.waveform.ofdm.OFDMSynchronization.html">Synchronization</a></li>
+<li class="toctree-l5"><a class="reference internal" href="modem.waveform.ofdm.OFDMWaveform.html">OFDM Waveform</a></li>
+<li class="toctree-l5"><a class="reference internal" href="modem.waveform.ofdm.OFDMZeroForcingChannelEqualization.html">Zero Forcing Equalization</a></li>
+<li class="toctree-l5"><a class="reference internal" href="modem.waveform.ofdm.PilotSection.html">Pilot Section</a></li>
+<li class="toctree-l5"><a class="reference internal" href="modem.waveform.ofdm.SchmidlCoxPilotSection.html">Schmidl Cox Pilot</a></li>
+<li class="toctree-l5"><a class="reference internal" href="modem.waveform.ofdm.SchmidlCoxSynchronization.html">Schmidl Cox Synchronization</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="modem.waveform.chirp_fsk.html">C-FSK</a></li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="modem.waveform.Synchronization.html">Synchronization</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Synchronization</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="modem.waveform.correlation_synchronization.html">Correlation</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="modem.waveform.ChannelEstimation.html">Channel Estimation</a></li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="modem.waveform.ChannelEqualization.html">Channel Equalization</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Channel Equalization</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="modem.waveform.ZeroForcingChannelEqualization.html">Zero-Forcing</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="modem.evaluators.html">Evaluators</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Evaluators</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="modem.evaluators.ber.html">Bit Error Rate</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modem.evaluators.bler.html">Block Error Rate</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modem.evaluators.fer.html">Frame Error Rate</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modem.evaluators.throughput.html">Throughput</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modem.evaluators.CommunicationEvaluator.html">Communication Evaluator</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="modem.precoding.html">Communication Precoding</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of Communication Precoding</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="modem.precoding.dft.html">Discrete Fourier Transform</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modem.precoding.ratio_combining.html">Maximal Ratio Combining</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modem.precoding.single_carrier.html">Single Carrier Decoding</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modem.precoding.space_time_block_coding.html">Space-Time Block Codes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modem.precoding.spatial_multiplexing.html">Spatial Multiplexing</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modem.precoding.symbol_precoding.SymbolPrecoder.html">Symbol Precoder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modem.precoding.symbol_precoding.SymbolPrecoding.html">Symbol Precoding</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="modem.symbols.html">Communication Symbols</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.bits_source.html">Bit Sources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.TransmittingModem.html">Transmitting Modem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.ReceivingModem.html">Receiving Modem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.SimplexLink.html">Simplex Link</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.DuplexModem.html">Duplex Modem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.BaseModem.html">Base Modem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.CommunicationTransmission.html">Transmission</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.CommunicationTransmissionFrame.html">Transmission Frame</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.CommunicationReception.html">Reception</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.modem.CommunicationReceptionFrame.html">Reception Frame</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="radar.html">Sensing</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Sensing</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="radar.radar.Radar.html">Radar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.radar.RadarReception.html">Radar Reception</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.radar.RadarTransmission.html">Radar Transmission</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="radar.radar.RadarWaveform.html">Radar Waveform</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of Radar Waveform</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="radar.fmcw.html">FMCW</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="radar.cube.RadarCube.html">Radar Cube</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="radar.detection.RadarDetector.html">Radar Detector</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Radar Detector</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="radar.detection.ThresholdDetector.html">Threshold</a></li>
+<li class="toctree-l4"><a class="reference internal" href="radar.detection.MaxDetector.html">Max</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="radar.detection.PointDetection.html">Point Detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="radar.detection.RadarPointCloud.html">Radar Point Cloud</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="radar.evaluators.RadarEvaluator.html">Radar Evaluator</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Radar Evaluator</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="radar.evaluators.DetectionProbEvaluator.html">Detection Probability Evaluator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="radar.evaluators.ReceiverOperatingCharacteristic.html">Reiver Operating Characteristic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="radar.evaluators.RootMeanSquareError.html">Root Mean Square Error</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 current has-children"><a class="reference internal" href="channel.html">Channel Modeling</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of Channel Modeling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="channel.channel.Channel.html">Channel Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.channel.ChannelPropagation.html">Channel Propagation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.channel.ChannelRealization.html">Channel Realization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.channel.DirectiveChannelRealization.html">Directive Channel Realization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel.channel.InterpolationMode.html">Interpolation Mode</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="channel.ideal.html">Ideal Channel</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of Ideal Channel</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="channel.ideal.IdealChannel.html">Ideal Channel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.ideal.IdealChannelRealization.html">Ideal Channel Realization</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="channel.multipath_fading_channel.html">Multipath Fading Channels</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of Multipath Fading Channels</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="channel.multipath_fading_channel.MultipathFadingChannel.html">Multipath Fading Channel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.multipath_fading_channel.MultipathFadingRealization.html">Multipath Fading Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.multipath_fading_channel.PathRealization.html">Path Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.multipath_fading_channel.AntennaCorrelation.html">Antenna Correlation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.multipath_fading_channel.CustomAntennaCorrelation.html">Custom Antenna Correlation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.multipath_fading_templates.MultipathFading5GTDL.html">5G TDL Channel Model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.multipath_fading_templates.MultipathFadingCost259.html">Cost 259 Channel Model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.multipath_fading_templates.MultipathFadingExponential.html">Exponential Channel Model</a></li>
+</ul>
+</li>
+<li class="toctree-l3 current has-children current-page"><a class="current reference internal" href="#">3GPP Cluster Delay Line Models</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of 3GPP Cluster Delay Line Models</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.IndoorFactoryBase.html">Indoor Factory Base</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.html">Indoor Factory LOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.html">Indoor Factory NLOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.html">Indoor Office LOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.html">Indoor Office NLOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.html">Rural Marocells LOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.html">Rural Marocells NLOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.html">Rural Marocells O2I</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.html">Street Canyon LOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight.html">Street Canyon NLOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside.html">Street Canyon O2I</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.html">Urban Macrocells LOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.html">Urban Macrocells NLOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.html">Urban Macrocells O2I</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_lines.ClusterDelayLineBase.html">Cluster Delay Line Base</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_lines.ClusterDelayLine.html">Custom Cluster Delay Line</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_lines.ClusterDelayLineRealization.html">Cluster Delay Line Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_lines.DelayNormalization.html">Delay Normalization</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="channel.delay.html">Delay Channels</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of Delay Channels</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="channel.delay.DelayChannelBase.html">Delay Channel Base</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.delay.DelayChannelRealization.html">Delay Channel Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.delay.RandomDelayChannel.html">Random Delay Channel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.delay.RandomDelayChannelRealization.html">Random Delay Channel Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.delay.SpatialDelayChannel.html">Spatial Delay Channel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.delay.SpatialDelayChannelRealization.html">Spatial Delay Channel Realization</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="channel.radar.html">Radar Channels</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of Radar Channels</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="channel.radar.FixedCrossSection.html">Fixed Cross Section</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.radar.MultiTargetRadarChannel.html">Multi Target Channel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.radar.MultiTargetRadarChannelRealization.html">Multi Target Channel Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.radar.PhysicalRadarTarget.html">Physical Target</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.radar.RadarChannelBase.html">Radar Channel Base</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.radar.RadarChannelRealization.html">Radar Channel Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.radar.RadarCrossSectionModel.html">Radar Cross Section</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.radar.RadarInterferenceRealization.html">Radar Interference Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.radar.RadarPathRealization.html">Radar Path Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.radar.RadarTarget.html">Radar Target</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.radar.RadarTargetRealization.html">Radar Target Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.radar.SingleTargetRadarChannel.html">Single Target Channel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.radar.SingleTargetRadarChannelRealization.html">Single Target Channel Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.radar.VirtualRadarTarget.html">Virtual Target</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="channel.quadriga.html">Quadriga</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of Quadriga</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="channel.quadriga.QuadrigaChannel.html">Quadriga Channel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.quadriga.QuadrigaChannelRealization.html">Quadriga Channel Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel.quadriga.QuadrigaInterface.html">Quadriga Interface</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="simulation.html">Simulation</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of Simulation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="simulation.simulation.Simulation.html">Simulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.simulation.SimulationScenario.html">Simulation Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.simulation.SimulatedDrop.html">Simulated Drop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.simulated_device.SimulatedDevice.html">Simulated Device</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.simulated_device.SimulatedDeviceReception.html">Device Reception</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.simulated_device.SimulatedDeviceTransmission.html">Device Transmission</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="simulation.antennas.html">Antenna Arrays Modeling</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Antenna Arrays Modeling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="simulation.antennas.SimulatedAntenna.html">Simulated Antenna</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.antennas.SimulatedAntennaPort.html">Simulated Antenna Port</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.antennas.SimulatedAntennas.html">Simulated Antennas</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.antennas.SimulatedCustomArray.html">Simulated Custom Array</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.antennas.SimulatedDipole.html">Simulated Dipole Antenna</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.antennas.SimulatedIdealAntenna.html">Simulated Ideal Antenna</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.antennas.SimulatedLinearAntenna.html">Simulated Linear Antenna</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.antennas.SimulatedPatchAntenna.html">Simulated Patch Antenna</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.antennas.SimulatedUniformArray.html">Simulated Uniform Array</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.html">Hardware Radio Frequency Chain Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html">Power Amplifier Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.phase_noise.html">Phase Noise Modeling</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="simulation.rf_chain.adc.html">Analog-to-Digital Conversion</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of Analog-to-Digital Conversion</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="simulation.rf_chain.adc.AnalogDigitalConverter.html">Analog Digital Converter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.rf_chain.adc.AutomaticGainControl.html">Automatic Gain Control</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.rf_chain.adc.Gain.html">Constant Gain</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.rf_chain.adc.GainControlBase.html">Gain Control Base</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.noise.html">Noise Modeling</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="simulation.coupling.html">Mutual Coupling</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Mutual Coupling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="simulation.coupling.perfect.html">Perfect Coupling</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.coupling.impedance.html">Impedance Coupling</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="simulation.isolation.html">Antenna Isolation Modeling</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Antenna Isolation Modeling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="simulation.isolation.perfect.html">Perfect Isolation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.isolation.impedance.html">Impedance Isolation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.isolation.specific.html">Specific Isolation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a><input class="toctree-checkbox" id="toctree-checkbox-27" name="toctree-checkbox-27" role="switch" type="checkbox"/><label for="toctree-checkbox-27"><div class="visually-hidden">Toggle navigation of Hardware Loop</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.hardware_loop.HardwareLoop.html">Hardaware Loop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.scenario.PhysicalScenario.html">Physical Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device.PhysicalDevice.html">Physical Device</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device_dummy.PhysicalDeviceDummy.html">Physical Device Dummy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device_dummy.PhysicalScenarioDummy.html">Physical Scenario Dummy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.hardware_loop.HardwareLoopPlot.html">Hardware Loop Plot</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.visualizers.html">Visualizers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.uhd.usrp.UsrpDevice.html">USRP Device</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.uhd.system.UsrpSystem.html">USRP System</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.audio.device.AudioDevice.html">Audio Device</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.audio.scenario.AudioScenario.html">Audio Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.calibration.delay.html">Delay Calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="hardware_loop.calibration.leakage.html">Leakage Calibration</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="core.html">Core</a><input class="toctree-checkbox" id="toctree-checkbox-28" name="toctree-checkbox-28" role="switch" type="checkbox"/><label for="toctree-checkbox-28"><div class="visually-hidden">Toggle navigation of Core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html">PyMonte</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.executable.html">Executable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.factory.html">Serialization Factory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.definitions.html">General Definitions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.Device.html">Device</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.DeviceOutput.html">Device Output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.Transmitter.html">Transmitter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.Receiver.html">Receiver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.Transmission.html">Transmission</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.Reception.html">Reception</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.device.OperationResult.html">Operation Result</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.drop.Drop.html">Drop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.Evaluator.html">Evaluator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.operators.html">Extra Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.duplex.html">Duplex Operation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.logarithmic.html">Logarithmics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.pipeline.html">Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.random_node.html">Random Graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.scenario.html">Wireless Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.signal_model.Signal.html">Signal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.channel_state_information.html">Channel State Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.antennas.html">Antenna Descriptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.transformation.html">Coordinate System Transformations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.animation.html">Animation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core.visualize.html">Visualization</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="fec.html">Error Correction</a><input class="toctree-checkbox" id="toctree-checkbox-29" name="toctree-checkbox-29" role="switch" type="checkbox"/><label for="toctree-checkbox-29"><div class="visually-hidden">Toggle navigation of Error Correction</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="fec.coding.html">Coding Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fec.block_interleaver.html">Interleaving</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fec.crc.html">Cyclic Redundancy Checks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fec.repetition.html">Repetition Coding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fec.scrambler.html">Scrambling</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="jcas.html">JCAS</a><input class="toctree-checkbox" id="toctree-checkbox-30" name="toctree-checkbox-30" role="switch" type="checkbox"/><label for="toctree-checkbox-30"><div class="visually-hidden">Toggle navigation of JCAS</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="jcas.matched_filtering.html">Matched Filter JCAS</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="precoding.html">Precoding</a><input class="toctree-checkbox" id="toctree-checkbox-31" name="toctree-checkbox-31" role="switch" type="checkbox"/><label for="toctree-checkbox-31"><div class="visually-hidden">Toggle navigation of Precoding</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="precoding.precoding.html">Precoding Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="precoding.stream_precoding.html">Stream Precoding</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="beamforming.html">Beamforming</a><input class="toctree-checkbox" id="toctree-checkbox-32" name="toctree-checkbox-32" role="switch" type="checkbox"/><label for="toctree-checkbox-32"><div class="visually-hidden">Toggle navigation of Beamforming</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="beamforming.beamformer.html">Beamformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="beamforming.conventional.html">Conventional Beamformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="beamforming.capon.html">Capon Beamformer</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="bin.html">Entry Points</a><input class="toctree-checkbox" id="toctree-checkbox-33" name="toctree-checkbox-33" role="switch" type="checkbox"/><label for="toctree-checkbox-33"><div class="visually-hidden">Toggle navigation of Entry Points</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="bin.hermes.html">Hermes Command Line Interface</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tools.html">Tools</a><input class="toctree-checkbox" id="toctree-checkbox-34" name="toctree-checkbox-34" role="switch" type="checkbox"/><label for="toctree-checkbox-34"><div class="visually-hidden">Toggle navigation of Tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="tools.math.html">Math Tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tools.resampling.html">Resampling Routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="tools.tile.html">Tile Figures</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../examples/examples.html">YAML Examples</a><input class="toctree-checkbox" id="toctree-checkbox-35" name="toctree-checkbox-35" role="switch" type="checkbox"/><label for="toctree-checkbox-35"><div class="visually-hidden">Toggle navigation of YAML Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../examples/chirp_fsk_lora.html">Chirp FSK LORA</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../examples/chirp_qam.html">Chirp QAM</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../examples/hardware_model.html">Hardware Modeling</a></li>
@@ -193,140 +489,6 @@
 <li class="toctree-l2"><a class="reference internal" href="../examples/audio.html">Audio Hardware Binding</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current has-children"><a class="reference internal" href="api.html">HermesPy API</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of HermesPy API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l2 has-children"><a class="reference internal" href="core.html">Core</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html">PyMonte</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.executable.html">Executable</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.factory.html">Serialization Factory</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.definitions.html">General Definitions</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.html">Device Modeling</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.operators.html">Extra Operators</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.logarithmic.html">Logarithmics</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.pipeline.html">Pipeline</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.random_node.html">Random Graph</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.scenario.html">Wireless Scenario</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.signal_model.html">Signal Modeling</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.channel_state_information.html">Channel State Information Model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.antennas.html">Antenna Configuration</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.transformation.html">Coordinate System Transformations</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.animation.html">Animation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.visualize.html">Visualization</a></li>
-</ul>
-</li>
-<li class="toctree-l2 current has-children"><a class="reference internal" href="channel.html">Channel Modeling</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Channel Modeling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="channel.channel.html">Channel Modeling</a></li>
-<li class="toctree-l3"><a class="reference internal" href="channel.ideal.html">Ideal Channel</a></li>
-<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_channel.html">Multipath Fading</a></li>
-<li class="toctree-l3"><a class="reference internal" href="channel.multipath_fading_templates.html">Multipath Fading Standard Templates</a></li>
-<li class="toctree-l3 current current-page"><a class="current reference internal" href="#">3GPP Cluster Delay Line Model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.html">3GPP Cluster Delay Line Indoor Factory Model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_indoor_office.html">3GPP Cluster Delay Line Indoor Office Model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.html">3GPP Rural Macrocells Model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_street_canyon.html">3GPP Street Canyon (Urban Microcells) Model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.html">3GPP Urban Macrocells Model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="channel.delay.html">Delay Channel</a></li>
-<li class="toctree-l3"><a class="reference internal" href="channel.radar_channel.html">Single-Target Radar Channel Modeling</a></li>
-<li class="toctree-l3"><a class="reference internal" href="channel.quadriga.html">Quadriga Channel Model</a></li>
-</ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="fec.html">Error Correction</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Error Correction</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="fec.coding.html">Coding Pipeline</a></li>
-<li class="toctree-l3"><a class="reference internal" href="fec.block_interleaver.html">Interleaving</a></li>
-<li class="toctree-l3"><a class="reference internal" href="fec.crc.html">Cyclic Redundancy Checks</a></li>
-<li class="toctree-l3"><a class="reference internal" href="fec.repetition.html">Repetition Coding</a></li>
-<li class="toctree-l3"><a class="reference internal" href="fec.scrambler.html">Scrambling</a></li>
-</ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Hardware Loop</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="hardware_loop.hardware_loop.html">Hardware Loop</a></li>
-<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device.html">Physical Devices</a></li>
-<li class="toctree-l3"><a class="reference internal" href="hardware_loop.scenario.html">Physical Device Scenario</a></li>
-<li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device_dummy.html">Physical Device Dummy</a></li>
-<li class="toctree-l3"><a class="reference internal" href="hardware_loop.visualizers.html">Visualizers</a></li>
-<li class="toctree-l3"><a class="reference internal" href="hardware_loop.usrp.html">UHD System</a></li>
-<li class="toctree-l3"><a class="reference internal" href="hardware_loop.usrp.html#uhd-device">UHD Device</a></li>
-<li class="toctree-l3"><a class="reference internal" href="hardware_loop.audio.device.html">Audio Device Binding</a></li>
-<li class="toctree-l3"><a class="reference internal" href="hardware_loop.audio.scenario.html">Audio Device Scenario</a></li>
-<li class="toctree-l3"><a class="reference internal" href="hardware_loop.calibration.delay.html">Delay Calibration</a></li>
-<li class="toctree-l3"><a class="reference internal" href="hardware_loop.calibration.leakage.html">Leakage Calibration</a></li>
-</ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="jcas.html">JCAS</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of JCAS</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="jcas.matched_filtering.html">Matched Filter JCAS</a></li>
-</ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="modem.html">Communication</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Communication</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="modem.modem.html">Modem</a></li>
-<li class="toctree-l3"><a class="reference internal" href="modem.bits_source.html">Bit Source</a></li>
-<li class="toctree-l3"><a class="reference internal" href="modem.symbols.html">Communication Symbols</a></li>
-<li class="toctree-l3"><a class="reference internal" href="modem.waveform.html">Communication Waveform Base</a></li>
-<li class="toctree-l3"><a class="reference internal" href="modem.evaluators.html">Communication Evaluators</a></li>
-<li class="toctree-l3"><a class="reference internal" href="modem.waveform_single_carrier.html">Filtered Single Carrier Waveforms</a></li>
-<li class="toctree-l3"><a class="reference internal" href="modem.waveform_chirp_fsk.html">Chirp Frequency Shift Keying</a></li>
-<li class="toctree-l3"><a class="reference internal" href="modem.waveform_ofdm.html">Orthogonal Frequency Division Multiplexing</a></li>
-<li class="toctree-l3"><a class="reference internal" href="modem.waveform_correlation_synchronization.html">Correlation-Based Waveform Synchronization</a></li>
-<li class="toctree-l3"><a class="reference internal" href="modem.precoding.symbol_precoding.html">Symbol Precoding</a></li>
-<li class="toctree-l3"><a class="reference internal" href="modem.precoding.dft.html">Discrete Fourier Transform Precoding</a></li>
-<li class="toctree-l3"><a class="reference internal" href="modem.precoding.single_carrier.html">Single Carrier Encoding</a></li>
-<li class="toctree-l3"><a class="reference internal" href="modem.precoding.spatial_multiplexing.html">Spatial Multiplexing</a></li>
-<li class="toctree-l3"><a class="reference internal" href="modem.precoding.ratio_combining.html">Maximum Ratio Combining</a></li>
-<li class="toctree-l3"><a class="reference internal" href="modem.precoding.space_time_block_coding.html">Space-Time Block Coding</a></li>
-</ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="precoding.html">Precoding</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of Precoding</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="precoding.precoding.html">Precoding Configuration</a></li>
-<li class="toctree-l3"><a class="reference internal" href="precoding.stream_precoding.html">Stream Precoding</a></li>
-</ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="beamforming.html">Beamforming</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Beamforming</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="beamforming.beamformer.html">Beamformer</a></li>
-<li class="toctree-l3"><a class="reference internal" href="beamforming.conventional.html">Conventional Beamformer</a></li>
-<li class="toctree-l3"><a class="reference internal" href="beamforming.capon.html">Capon Beamformer</a></li>
-</ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="radar.html">Sensing</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of Sensing</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="radar.radar.html">Radar Device Operation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="radar.cube.html">Radar Cube</a></li>
-<li class="toctree-l3"><a class="reference internal" href="radar.detection.html">Radar Detection</a></li>
-<li class="toctree-l3"><a class="reference internal" href="radar.evaluation.html">Radar Evaluation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="radar.fmcw.html">Frequency Modulated Continuous Waveform Radar</a></li>
-</ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="simulation.html">Simulation</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Simulation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="simulation.simulation.html">Simulation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.simulated_device.html">Simulated Devices</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.analog_digital_converter.html">Analog-to-Digital Converter</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.html">Hardware Radio Frequency Chain Modeling</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html">Power Amplifier Modeling</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.phase_noise.html">Phase Noise Modeling</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.noise.html">Noise Modeling</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="simulation.coupling.html">Mutual Coupling</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Mutual Coupling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="simulation.coupling.perfect.html">Perfect Coupling</a></li>
-<li class="toctree-l4"><a class="reference internal" href="simulation.coupling.impedance.html">Impedance Coupling</a></li>
-</ul>
-</li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="simulation.isolation.html">Antenna Isolation Modeling</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of Antenna Isolation Modeling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="simulation.isolation.perfect.html">Perfect Isolation</a></li>
-<li class="toctree-l4"><a class="reference internal" href="simulation.isolation.impedance.html">Impedance Isolation</a></li>
-<li class="toctree-l4"><a class="reference internal" href="simulation.isolation.specific.html">Specific Isolation</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="bin.html">Entry Points</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of Entry Points</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="bin.hermes.html">Hermes Command Line Interface</a></li>
-</ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="tools.html">Tools</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of Tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="tools.math.html">Math Tools</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tools.resampling.html">Resampling Routines</a></li>
-<li class="toctree-l3"><a class="reference internal" href="tools.tile.html">Tile Figures</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../developer_hints.html">For Developers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../license.html">License</a></li>
 </ul>
@@ -363,15 +525,27 @@
           </label>
         </div>
         <article role="main">
-          <span class="target" id="module-hermespy.channel.cluster_delay_lines"></span><section id="gpp-cluster-delay-line-model">
-<h1>3GPP Cluster Delay Line Model<a class="headerlink" href="#gpp-cluster-delay-line-model" title="Permalink to this heading">#</a></h1>
+          <section id="gpp-cluster-delay-line-models">
+<h1>3GPP Cluster Delay Line Models<a class="headerlink" href="#gpp-cluster-delay-line-models" title="Link to this heading">#</a></h1>
 <p>Within this module, HermesPy implements the 3GPP standard for cluster delay line models
-as defined in <em>Study on channel model for frequencies from 0.5 to 100 GHz</em><a class="footnote-reference brackets" href="#footcite-3gpp-tr38901" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.
+as defined in the <em>Study on channel model for frequencies from 0.5 to 100 GHz</em><a class="footnote-reference brackets" href="#footcite-3gpp-tr38901" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p>
+<p>For a link between two devices <span class="math notranslate nohighlight">\(\alpha\)</span> and <span class="math notranslate nohighlight">\(\beta\)</span> featuring <span class="math notranslate nohighlight">\(N^{(\alpha)}\)</span> and <span class="math notranslate nohighlight">\(N^{(\beta)}\)</span> antennas, respectively,
+the model assumes that the channel impulse response is composed of a sum of propagation paths between <span class="math notranslate nohighlight">\(C\)</span> clusters of scatterers perceived by both devices,
+with each cluster containing <span class="math notranslate nohighlight">\(L\)</span> individual scatterers, therefore resulting in <span class="math notranslate nohighlight">\(C \cdot L\)</span> propagation paths between each antenna pair
+and <span class="math notranslate nohighlight">\(C \cdot L \cdot N^{(\alpha)} \cdot N^{(\beta)}\)</span> propagation paths in total.</p>
+<p>The impulse response of each propagation path within the cluster delay model</p>
+<div class="math-wrapper docutils container">
+<div class="math notranslate nohighlight">
+\[h^{(\alpha, \beta)}(t, \tau) = \sqrt{\frac{1}{1 + K}} h^{(\alpha, \beta)}_{\mathrm{NLOS}}(t, \tau) + \sqrt{\frac{K}{1 + K}} h^{(\alpha, \beta)}_{\mathrm{LOS}}(t, \tau)\]</div>
+</div>
+<p>is a sum of a non-line-of-sight (NLOS) and a line-of-sight (LOS) component, balanced by the Ricean <span class="math notranslate nohighlight">\(K\)</span>-factor.
+Both the NLOS and LOS components</p>
+<p>are functions of the two <a class="reference internal" href="core.antennas.html"><span class="doc">Antennas’</span></a> polarization <a class="reference internal" href="core.antennas.html#hermespy.core.antennas.Antenna.local_characteristics" title="hermespy.core.antennas.Antenna.local_characteristics"><code class="xref py py-meth docutils literal notranslate"><span class="pre">characteristics</span></code></a>
+<span class="math notranslate nohighlight">\(\mathbf{F}^{(a)}(\theta, \phi)\)</span>
+towards angle-of-arrival <span class="math notranslate nohighlight">\(\theta_{\mathrm{ZOA}}, \phi_{\mathrm{AOA}}\)</span>
+and angle-of-departure <span class="math notranslate nohighlight">\(\theta_{\mathrm{ZOD}}, \phi_{\mathrm{AOD}}\)</span>.
 For a comprehensive description of all the parameters involved, please refer to the standard document.</p>
-<p>The abstract base class <a class="reference internal" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase" title="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClusterDelayLineBase</span></code></a> defines all required parameters as abstrat properties
-and is required to be implemented by each specific cluster delay line model.
-HermesPy features the full customizable model <a class="reference internal" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine" title="hermespy.channel.cluster_delay_lines.ClusterDelayLine"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClusterDelayLine</span></code></a> as well as
-implementations describing standard-compliant benchmark scenarios</p>
+<p>The following standard parameterizations are currently provided by HermesPy:</p>
 <div class="table-wrapper docutils container">
 <table class="docutils align-default">
 <thead>
@@ -382,999 +556,93 @@ implementations describing standard-compliant benchmark scenarios</p>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.html"><span class="doc">Indoor Factory</span></a></p></td>
-<td><p><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight" title="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight"><code class="xref py py-class docutils literal notranslate"><span class="pre">IndoorFactoryLineOfSight</span></code></a></p></td>
-<td><p><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.html#hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight" title="hermespy.channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight"><code class="xref py py-class docutils literal notranslate"><span class="pre">IndoorFactoryNoLineOfSight</span></code></a></p></td>
-<td><p><em>Undefined</em></p></td>
+<tr class="row-even"><td><p>Indoor Factory</p></td>
+<td><p><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.html"><span class="doc">Indoor Factory LOS</span></a></p></td>
+<td><p><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.html"><span class="doc">Indoor Factory NLOS</span></a></p></td>
+<td></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="channel.cluster_delay_line_indoor_office.html"><span class="doc">Indoor Office</span></a></p></td>
-<td><p><a class="reference internal" href="channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight" title="hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight"><code class="xref py py-class docutils literal notranslate"><span class="pre">IndoorOfficeLineOfSight</span></code></a></p></td>
-<td><p><a class="reference internal" href="channel.cluster_delay_line_indoor_office.html#hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight" title="hermespy.channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight"><code class="xref py py-class docutils literal notranslate"><span class="pre">IndoorOfficeNoLineOfSight</span></code></a></p></td>
-<td><p><em>Undefined</em></p></td>
+<tr class="row-odd"><td><p>Indoor Office</p></td>
+<td><p><a class="reference internal" href="channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.html"><span class="doc">Indoor Office LOS</span></a></p></td>
+<td><p><a class="reference internal" href="channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.html"><span class="doc">Indoor Office NLOS</span></a></p></td>
+<td></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.html"><span class="doc">Rural Macrocells</span></a></p></td>
-<td><p><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight" title="hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight"><code class="xref py py-class docutils literal notranslate"><span class="pre">RuralMacrocellsLineOfSight</span></code></a></p></td>
-<td><p><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight" title="hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight"><code class="xref py py-class docutils literal notranslate"><span class="pre">RuralMacrocellsNoLineOfSight</span></code></a></p></td>
-<td><p><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.html#hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside" title="hermespy.channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside"><code class="xref py py-class docutils literal notranslate"><span class="pre">RuralMacrocellsOutsideToInside</span></code></a></p></td>
+<tr class="row-even"><td><p>Rural Macrocells</p></td>
+<td><p><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.html"><span class="doc">Rural Marocells LOS</span></a></p></td>
+<td><p><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.html"><span class="doc">Rural Marocells NLOS</span></a></p></td>
+<td><p><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.html"><span class="doc">Rural Marocells O2I</span></a></p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="channel.cluster_delay_line_street_canyon.html"><span class="doc">Street Canyhon</span></a></p></td>
-<td><p><a class="reference internal" href="channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight" title="hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreetCanyonLineOfSight</span></code></a></p></td>
-<td><p><a class="reference internal" href="channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight" title="hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreetCanyonNoLineOfSight</span></code></a></p></td>
-<td><p><a class="reference internal" href="channel.cluster_delay_line_street_canyon.html#hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside" title="hermespy.channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreetCanyonOutsideToInside</span></code></a></p></td>
+<tr class="row-odd"><td><p>Street Canyon</p></td>
+<td><p><a class="reference internal" href="channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.html"><span class="doc">Street Canyon LOS</span></a></p></td>
+<td><p><a class="reference internal" href="channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight.html"><span class="doc">Street Canyon NLOS</span></a></p></td>
+<td><p><a class="reference internal" href="channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside.html"><span class="doc">Street Canyon O2I</span></a></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.html"><span class="doc">Urban Macrocells</span></a></p></td>
-<td><p><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight" title="hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight"><code class="xref py py-class docutils literal notranslate"><span class="pre">UrbanMacrocellsLineOfSight</span></code></a></p></td>
-<td><p><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight" title="hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight"><code class="xref py py-class docutils literal notranslate"><span class="pre">UrbanMacrocellsNoLineOfSight</span></code></a></p></td>
-<td><p><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.html#hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside" title="hermespy.channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside"><code class="xref py py-class docutils literal notranslate"><span class="pre">UrbanMacrocellsOutsideToInside</span></code></a></p></td>
+<tr class="row-even"><td><p>Urban Macrocells</p></td>
+<td><p><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.html"><span class="doc">Urban Macrocells LOS</span></a></p></td>
+<td><p><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.html"><span class="doc">Urban Macrocells NLOS</span></a></p></td>
+<td><p><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.html"><span class="doc">Urban Macrocells O2I</span></a></p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<p>with pre-defined parameters.
-In general, the HermesPy cluster delay line implementation mixes deterministic with
-statistical information:
-<a class="reference internal" href="simulation.simulated_device.html"><span class="doc">Devices</span></a> linked by cluster delay line models are required to specify their assumed
-positions and orientations, since the specular line of sight ray components are deterministic.</p>
-</section>
-<dl class="py class">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.DelayNormalization">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DelayNormalization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.DelayNormalization" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Enum</span></code></p>
-<p>Normalization routine applied to a set of sampled delays.</p>
-<p>Configuration option to :class:.ClusterDelayLineBase models.</p>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.DelayNormalization.ZERO">
-<span class="sig-name descname"><span class="pre">ZERO</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.DelayNormalization.ZERO" title="Permalink to this definition">#</a></dt>
-<dd><p>Normalize the delays, so that the minimal delay is zero</p>
-</dd></dl>
+<p>These preset standard parameterizations distinguish between line-of-sight, no line-of-sight and, in some cases, outside-to-inside propagation conditions.
+For custom parameterizations, <a class="reference internal" href="channel.cluster_delay_lines.ClusterDelayLine.html"><span class="doc">Custom Cluster Delay Line</span></a> offers an extended interface to define each parameter of the cluster delay line model individually.</p>
+<div class="mermaid">
+            classDiagram
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.DelayNormalization.TOF">
-<span class="sig-name descname"><span class="pre">TOF</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.DelayNormalization.TOF" title="Permalink to this definition">#</a></dt>
-<dd><p>The minimal delay is the time of flight between two devices</p>
-</dd></dl>
+    class Channel {
 
-<dl class="py attribute">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.DelayNormalization.NONE">
-<span class="sig-name descname"><span class="pre">NONE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.DelayNormalization.NONE" title="Permalink to this definition">#</a></dt>
-<dd><p>No delay normalization is applied.</p>
-<p>Only relevant for debugging purposes.</p>
-</dd></dl>
+        &lt;&lt;Abstract&gt;&gt;
 
-</dd></dl>
+        _realize()
+    }
 
-<dl class="py class">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ClusterDelayLineBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">delay_normalization</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">DelayNormalization.ZERO</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="channel.channel.html#hermespy.channel.channel.Channel" title="hermespy.channel.channel.Channel"><code class="xref py py-class docutils literal notranslate"><span class="pre">Channel</span></code></a></p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>delay_normalization</strong> (<a class="reference internal" href="#hermespy.channel.cluster_delay_lines.DelayNormalization" title="hermespy.channel.cluster_delay_lines.DelayNormalization"><em>DelayNormalization</em></a><em>, </em><em>optional</em>) – The delay normalization routine applied during channel sampling.</p>
-</dd>
-</dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.delay_normalization">
-<span class="sig-name descname"><span class="pre">delay_normalization</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">DelayNormalization</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.delay_normalization" title="Permalink to this definition">#</a></dt>
-<dd><p>The delay normalization routine applied during channel sampling.</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.line_of_sight">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">line_of_sight</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.line_of_sight" title="Permalink to this definition">#</a></dt>
-<dd><p>Does this model assume direct line of sight between the two devices?</p>
-<p>Referred to as <span class="math notranslate nohighlight">\(LOS\)</span> within the standard.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Line of sight indicator.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>bool</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.delay_spread_mean">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delay_spread_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.delay_spread_mean" title="Permalink to this definition">#</a></dt>
-<dd><p>Mean of the cluster delay spread.</p>
-<p>The spread realization and its mean are referred to as
-<span class="math notranslate nohighlight">\(\mathrm{DS}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{lgDS}}\)</span> within the the standard, respectively.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Mean delay spread in seconds.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.delay_spread_std">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delay_spread_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.delay_spread_std" title="Permalink to this definition">#</a></dt>
-<dd><p>Standard deviation of the cluster delay spread.</p>
-<p>The spread realization and its standard deviation are referred to as
-<span class="math notranslate nohighlight">\(\mathrm{DS}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{lgDS}}\)</span> within the the standard, respectively.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Delay spread standard deviation in seconds.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.aod_spread_mean">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">aod_spread_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.aod_spread_mean" title="Permalink to this definition">#</a></dt>
-<dd><p>Mean of the Azimuth Angle-of-Departure spread.</p>
-<p>The spread realization and its mean are referred to as
-<span class="math notranslate nohighlight">\(\mathrm{ASD}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{lgASD}}\)</span> within the the standard, respectively.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Mean angle spread in seconds</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.aod_spread_std">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">aod_spread_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.aod_spread_std" title="Permalink to this definition">#</a></dt>
-<dd><p>Standard deviation of the Azimuth Angle-of-Departure spread.</p>
-<p>The spread realization and its standard deviation are referred to as
-<span class="math notranslate nohighlight">\(\mathrm{ASD}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{lgASD}}\)</span> within the the standard, respectively.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Angle spread standard deviation in seconds.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.aoa_spread_mean">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">aoa_spread_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.aoa_spread_mean" title="Permalink to this definition">#</a></dt>
-<dd><p>Mean of the Azimuth Angle-of-Arriaval spread.</p>
-<p>The spread realization and its mean are referred to as
-<span class="math notranslate nohighlight">\(\mathrm{ASA}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{lgASA}}\)</span> within the the standard, respectively.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Mean angle spread in seconds</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.aoa_spread_std">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">aoa_spread_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.aoa_spread_std" title="Permalink to this definition">#</a></dt>
-<dd><p>Standard deviation of the Azimuth Angle-of-Arrival spread.</p>
-<p>The spread realization and its standard deviation are referred to as
-<span class="math notranslate nohighlight">\(\mathrm{ASA}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{lgASA}}\)</span> within the the standard, respectively.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Angle spread standard deviation in seconds.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.zoa_spread_mean">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zoa_spread_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.zoa_spread_mean" title="Permalink to this definition">#</a></dt>
-<dd><p>Mean of the Zenith Angle-of-Arriaval spread.</p>
-<p>The spread realization and its mean are referred to as
-<span class="math notranslate nohighlight">\(\mathrm{ZSA}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{lgZSA}}\)</span> within the the standard, respectively.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Mean angle spread in seconds</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.zoa_spread_std">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zoa_spread_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.zoa_spread_std" title="Permalink to this definition">#</a></dt>
-<dd><p>Standard deviation of the Zenith Angle-of-Arrival spread.</p>
-<p>The spread realization and its standard deviation are referred to as
-<span class="math notranslate nohighlight">\(\mathrm{ZSA}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{lgZSA}}\)</span> within the the standard, respectively.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Angle spread standard deviation in seconds.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.zod_spread_mean">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zod_spread_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.zod_spread_mean" title="Permalink to this definition">#</a></dt>
-<dd><p>Mean of the Zenith Angle-of-Departure spread.</p>
-<p>The spread realization and its mean are referred to as
-<span class="math notranslate nohighlight">\(\mathrm{ZOD}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{lgZSD}}\)</span> within the the standard, respectively.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Mean angle spread in degrees</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.zod_spread_std">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zod_spread_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.zod_spread_std" title="Permalink to this definition">#</a></dt>
-<dd><p>Standard deviation of the Zenith Angle-of-Departure spread.</p>
-<p>The spread realization and its standard deviation are referred to as
-<span class="math notranslate nohighlight">\(\mathrm{ZOD}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{lgZOD}}\)</span> within the the standard, respectively.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Angle spread standard deviation in degrees.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.zod_offset">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zod_offset</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.zod_offset" title="Permalink to this definition">#</a></dt>
-<dd><p>Offset between Zenith Angle-of-Arrival and Angle-of-Departure.</p>
-<p>The offset is referred to as <span class="math notranslate nohighlight">\(\mu_{\mathrm{offset,ZOD}}\)</span> within the standard.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>The offset in degrees.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.rice_factor_mean">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rice_factor_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.rice_factor_mean" title="Permalink to this definition">#</a></dt>
-<dd><p>Mean of the rice factor distribution.</p>
-<p>The rice factor realization and its mean are referred to as
-<span class="math notranslate nohighlight">\(K\)</span> and <span class="math notranslate nohighlight">\(\mu_K\)</span> within the the standard, respectively.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Rice factor mean in dB.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.rice_factor_std">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rice_factor_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.rice_factor_std" title="Permalink to this definition">#</a></dt>
-<dd><p>Standard deviation of the rice factor distribution.</p>
-<p>The rice factor realization and its standard deviation are referred to as
-<span class="math notranslate nohighlight">\(K\)</span> and <span class="math notranslate nohighlight">\(\sigma_K\)</span> within the the standard, respectively.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Rice factor standard deviation in dB.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.delay_scaling">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delay_scaling</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.delay_scaling" title="Permalink to this definition">#</a></dt>
-<dd><p>Delay scaling proportionality factor</p>
-<p>Referred to as <span class="math notranslate nohighlight">\(r_{\tau}\)</span> within the standard.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Scaling factor.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If scaling factor is smaller than one.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cross_polarization_power_mean">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cross_polarization_power_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cross_polarization_power_mean" title="Permalink to this definition">#</a></dt>
-<dd><p>Mean of the cross-polarization power.</p>
-<p>The cross-polarization power and its mean are referred to as
-<span class="math notranslate nohighlight">\(\mathrm{XPR}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{XPR}}\)</span> within the the standard, respectively.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Mean power in dB.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cross_polarization_power_std">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cross_polarization_power_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cross_polarization_power_std" title="Permalink to this definition">#</a></dt>
-<dd><p>Standard deviation of the cross-polarization power.</p>
-<p>The cross-polarization power and its standard deviation are referred to as
-<span class="math notranslate nohighlight">\(\mathrm{XPR}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{XPR}}\)</span> within the the standard, respectively.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Power standard deviation in dB.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.num_clusters">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_clusters</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.num_clusters" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of clusters.</p>
-<p>Referred to as <span class="math notranslate nohighlight">\(M\)</span> within the standard.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Number of clusters.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If the number of clusters is smaller than one.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.num_rays">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_rays</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.num_rays" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of rays per cluster.</p>
-<p>Referred to as <span class="math notranslate nohighlight">\(N\)</span> within the standard.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Number of rays.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cluster_delay_spread">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_delay_spread</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cluster_delay_spread" title="Permalink to this definition">#</a></dt>
-<dd><p>Delay spread within an individual cluster.</p>
-<p>Referred to as <span class="math notranslate nohighlight">\(c_{DS}\)</span> within the standard.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Delay spread in seconds.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If spread is smaller than zero.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cluster_aod_spread">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_aod_spread</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cluster_aod_spread" title="Permalink to this definition">#</a></dt>
-<dd><p>Azimuth Angle-of-Departure spread within an individual cluster.</p>
-<p>Referred to as <span class="math notranslate nohighlight">\(c_{ASD}\)</span> within the standard.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Angle spread in degrees.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If spread is smaller than zero.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cluster_aoa_spread">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_aoa_spread</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cluster_aoa_spread" title="Permalink to this definition">#</a></dt>
-<dd><p>Azimuth Angle-of-Arrival spread within an individual cluster.</p>
-<p>Referred to as <span class="math notranslate nohighlight">\(c_{ASA}\)</span> within the standard.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Angle spread in degrees.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If spread is smaller than zero.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cluster_zoa_spread">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_zoa_spread</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cluster_zoa_spread" title="Permalink to this definition">#</a></dt>
-<dd><p>Zenith Angle-of-Arrival spread within an individual cluster.</p>
-<p>Referred to as <span class="math notranslate nohighlight">\(c_{ZSA}\)</span> within the standard.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Angle spread in degrees.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If spread is smaller than zero.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cluster_shadowing_std">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_shadowing_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.cluster_shadowing_std" title="Permalink to this definition">#</a></dt>
-<dd><p>Standard deviation of the cluster shadowing.</p>
-<p>Referred to as <span class="math notranslate nohighlight">\(\zeta\)</span> within the the standard.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Cluster shadowing standard deviation.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If the deviation is smaller than zero.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.realize">
-<span class="sig-name descname"><span class="pre">realize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampling_rate</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase.realize" title="Permalink to this definition">#</a></dt>
-<dd><p>Generate a new channel impulse response.</p>
-<p>Note that this is the core routine from which <code class="xref py py-meth docutils literal notranslate"><span class="pre">Channel.propagate()</span></code> will create the channel state.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>num_samples</strong> (<em>int</em>) – Number of samples <span class="math notranslate nohighlight">\(N\)</span> within the impulse response.</p></li>
-<li><p><strong>sampling_rate</strong> (<em>float</em>) – The rate at which the delay taps will be sampled, i.e. the delay resolution.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference internal" href="channel.channel.html#hermespy.channel.channel.ChannelRealization" title="hermespy.channel.channel.ChannelRealization"><code class="xref py py-class docutils literal notranslate"><span class="pre">ChannelRealization</span></code></a></p>
-</dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Numpy aray representing the impulse response for all propagation paths between antennas.
-4-dimensional tensor of size <span class="math notranslate nohighlight">\(M_\mathrm{Rx} \times M_\mathrm{Tx} \times N \times (L+1)\)</span> where
-<span class="math notranslate nohighlight">\(M_\mathrm{Rx}\)</span> is the number of receiving antennas,
-<span class="math notranslate nohighlight">\(M_\mathrm{Tx}\)</span> is the number of transmitting antennas,
-<span class="math notranslate nohighlight">\(N\)</span> is the number of propagated samples and
-<span class="math notranslate nohighlight">\(L\)</span> is the maximum path delay (in samples).
-For the ideal  channel in the base class <span class="math notranslate nohighlight">\(L = 0\)</span>.</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ClusterDelayLine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">line_of_sight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay_spread_mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">7.14</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay_spread_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.38</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aod_spread_mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.21</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aod_spread_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.41</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aoa_spread_mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.73</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aoa_spread_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.28</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zoa_spread_mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.73</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zoa_spread_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.34</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zod_spread_mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zod_spread_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zod_offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rice_factor_mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">9.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rice_factor_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">delay_scaling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cross_polarization_power_mean</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">9.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cross_polarization_power_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_clusters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_rays</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_delay_spread</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5e-09</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_aod_spread</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_aoa_spread</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">17.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_zoa_spread</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">7.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cluster_shadowing_std</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine" title="Permalink to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLineBase" title="hermespy.channel.cluster_delay_lines.ClusterDelayLineBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClusterDelayLineBase</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
-<p>3GPP Cluster Delay Line Channel Model.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>num_clusters</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of generated clusters per channel sample.</p></li>
-<li><p><strong>delay_spread</strong> (<em>float</em><em>, </em><em>optional</em>) – Root-Mean-Square spread of the cluster delay in seconds.</p></li>
-<li><p><strong>delay_scaling</strong> (<em>float</em><em>, </em><em>optional</em>) – Delay distribution proportionality factor.</p></li>
-<li><p><strong>rice_factor_mean</strong> (<em>float</em><em>, </em><em>optional</em>) – Mean of the rice factor K.</p></li>
-<li><p><strong>rice_factor_std</strong> (<em>float</em><em>, </em><em>optional</em>) – Standard deviation of the rice factor K.</p></li>
-<li><p><strong>cluster_shadowing_std</strong> (<em>float</em><em>, </em><em>optional</em>) – Cluster shadowing standard deviation in dB.</p></li>
-<li><p><strong>line_of_sight</strong> (<em>bool</em><em>, </em><em>optional</em>) – Is this model a line-of-sight model?</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.yaml_tag">
-<span class="sig-name descname"><span class="pre">yaml_tag</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Optional[str]</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'ClusterDelayLine'</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.yaml_tag" title="Permalink to this definition">#</a></dt>
-<dd><p>YAML serialization tag.</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.line_of_sight">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">line_of_sight</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.line_of_sight" title="Permalink to this definition">#</a></dt>
-<dd><p>Does this model assume direct line of sight between the two devices?</p>
-<p>Referred to as <span class="math notranslate nohighlight">\(LOS\)</span> within the standard.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Line of sight indicator.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>bool</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.delay_spread_mean">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delay_spread_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.delay_spread_mean" title="Permalink to this definition">#</a></dt>
-<dd><p>Mean of the cluster delay spread.</p>
-<p>The spread realization and its mean are referred to as
-<span class="math notranslate nohighlight">\(\mathrm{DS}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{lgDS}}\)</span> within the the standard, respectively.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Mean delay spread in seconds.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.delay_spread_std">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delay_spread_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.delay_spread_std" title="Permalink to this definition">#</a></dt>
-<dd><p>Standard deviation of the cluster delay spread.</p>
-<p>The spread realization and its standard deviation are referred to as
-<span class="math notranslate nohighlight">\(\mathrm{DS}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{lgDS}}\)</span> within the the standard, respectively.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Delay spread standard deviation in seconds.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.aod_spread_mean">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">aod_spread_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.aod_spread_mean" title="Permalink to this definition">#</a></dt>
-<dd><p>Mean of the Azimuth Angle-of-Departure spread.</p>
-<p>The spread realization and its mean are referred to as
-<span class="math notranslate nohighlight">\(\mathrm{ASD}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{lgASD}}\)</span> within the the standard, respectively.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Mean angle spread in seconds</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.aod_spread_std">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">aod_spread_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.aod_spread_std" title="Permalink to this definition">#</a></dt>
-<dd><p>Standard deviation of the Azimuth Angle-of-Departure spread.</p>
-<p>The spread realization and its standard deviation are referred to as
-<span class="math notranslate nohighlight">\(\mathrm{ASD}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{lgASD}}\)</span> within the the standard, respectively.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Angle spread standard deviation in seconds.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.aoa_spread_mean">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">aoa_spread_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.aoa_spread_mean" title="Permalink to this definition">#</a></dt>
-<dd><p>Mean of the Azimuth Angle-of-Arriaval spread.</p>
-<p>The spread realization and its mean are referred to as
-<span class="math notranslate nohighlight">\(\mathrm{ASA}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{lgASA}}\)</span> within the the standard, respectively.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Mean angle spread in seconds</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.aoa_spread_std">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">aoa_spread_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.aoa_spread_std" title="Permalink to this definition">#</a></dt>
-<dd><p>Standard deviation of the Azimuth Angle-of-Arrival spread.</p>
-<p>The spread realization and its standard deviation are referred to as
-<span class="math notranslate nohighlight">\(\mathrm{ASA}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{lgASA}}\)</span> within the the standard, respectively.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Angle spread standard deviation in seconds.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.zoa_spread_mean">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zoa_spread_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.zoa_spread_mean" title="Permalink to this definition">#</a></dt>
-<dd><p>Mean of the Zenith Angle-of-Arriaval spread.</p>
-<p>The spread realization and its mean are referred to as
-<span class="math notranslate nohighlight">\(\mathrm{ZSA}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{lgZSA}}\)</span> within the the standard, respectively.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Mean angle spread in seconds</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.zoa_spread_std">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zoa_spread_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.zoa_spread_std" title="Permalink to this definition">#</a></dt>
-<dd><p>Standard deviation of the Zenith Angle-of-Arrival spread.</p>
-<p>The spread realization and its standard deviation are referred to as
-<span class="math notranslate nohighlight">\(\mathrm{ZSA}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{lgZSA}}\)</span> within the the standard, respectively.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Angle spread standard deviation in seconds.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.zod_spread_mean">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zod_spread_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.zod_spread_mean" title="Permalink to this definition">#</a></dt>
-<dd><p>Mean of the Zenith Angle-of-Departure spread.</p>
-<p>The spread realization and its mean are referred to as
-<span class="math notranslate nohighlight">\(\mathrm{ZOD}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{lgZSD}}\)</span> within the the standard, respectively.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Mean angle spread in degrees</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.zod_spread_std">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zod_spread_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.zod_spread_std" title="Permalink to this definition">#</a></dt>
-<dd><p>Standard deviation of the Zenith Angle-of-Departure spread.</p>
-<p>The spread realization and its standard deviation are referred to as
-<span class="math notranslate nohighlight">\(\mathrm{ZOD}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{lgZOD}}\)</span> within the the standard, respectively.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Angle spread standard deviation in degrees.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.zod_offset">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zod_offset</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.zod_offset" title="Permalink to this definition">#</a></dt>
-<dd><p>Offset between Zenith Angle-of-Arrival and Angle-of-Departure.</p>
-<p>The offset is referred to as <span class="math notranslate nohighlight">\(\mu_{\mathrm{offset,ZOD}}\)</span> within the standard.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>The offset in degrees.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.rice_factor_mean">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rice_factor_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.rice_factor_mean" title="Permalink to this definition">#</a></dt>
-<dd><p>Mean of the rice factor distribution.</p>
-<p>The rice factor realization and its mean are referred to as
-<span class="math notranslate nohighlight">\(K\)</span> and <span class="math notranslate nohighlight">\(\mu_K\)</span> within the the standard, respectively.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Rice factor mean in dB.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.rice_factor_std">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rice_factor_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.rice_factor_std" title="Permalink to this definition">#</a></dt>
-<dd><p>Standard deviation of the rice factor distribution.</p>
-<p>The rice factor realization and its standard deviation are referred to as
-<span class="math notranslate nohighlight">\(K\)</span> and <span class="math notranslate nohighlight">\(\sigma_K\)</span> within the the standard, respectively.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Rice factor standard deviation in dB.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.delay_scaling">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delay_scaling</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.delay_scaling" title="Permalink to this definition">#</a></dt>
-<dd><p>Delay scaling proportionality factor</p>
-<p>Referred to as <span class="math notranslate nohighlight">\(r_{\tau}\)</span> within the standard.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Scaling factor.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If scaling factor is smaller than one.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.cross_polarization_power_mean">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cross_polarization_power_mean</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.cross_polarization_power_mean" title="Permalink to this definition">#</a></dt>
-<dd><p>Mean of the cross-polarization power.</p>
-<p>The cross-polarization power and its mean are referred to as
-<span class="math notranslate nohighlight">\(\mathrm{XPR}\)</span> and <span class="math notranslate nohighlight">\(\mu_{\mathrm{XPR}}\)</span> within the the standard, respectively.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Mean power in dB.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.cross_polarization_power_std">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cross_polarization_power_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.cross_polarization_power_std" title="Permalink to this definition">#</a></dt>
-<dd><p>Standard deviation of the cross-polarization power.</p>
-<p>The cross-polarization power and its standard deviation are referred to as
-<span class="math notranslate nohighlight">\(\mathrm{XPR}\)</span> and <span class="math notranslate nohighlight">\(\sigma_{\mathrm{XPR}}\)</span> within the the standard, respectively.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Power standard deviation in dB.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If the standard deviation is smaller than zero.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.num_clusters">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_clusters</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.num_clusters" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of clusters.</p>
-<p>Referred to as <span class="math notranslate nohighlight">\(M\)</span> within the standard.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Number of clusters.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If the number of clusters is smaller than one.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.num_rays">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_rays</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.num_rays" title="Permalink to this definition">#</a></dt>
-<dd><p>Number of rays per cluster.</p>
-<p>Referred to as <span class="math notranslate nohighlight">\(N\)</span> within the standard.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Number of rays.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>int</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.cluster_delay_spread">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_delay_spread</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.cluster_delay_spread" title="Permalink to this definition">#</a></dt>
-<dd><p>Delay spread within an individual cluster.</p>
-<p>Referred to as <span class="math notranslate nohighlight">\(c_{DS}\)</span> within the standard.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Delay spread in seconds.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If spread is smaller than zero.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.cluster_aod_spread">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_aod_spread</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.cluster_aod_spread" title="Permalink to this definition">#</a></dt>
-<dd><p>Azimuth Angle-of-Departure spread within an individual cluster.</p>
-<p>Referred to as <span class="math notranslate nohighlight">\(c_{ASD}\)</span> within the standard.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Angle spread in degrees.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If spread is smaller than zero.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.cluster_aoa_spread">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_aoa_spread</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.cluster_aoa_spread" title="Permalink to this definition">#</a></dt>
-<dd><p>Azimuth Angle-of-Arrival spread within an individual cluster.</p>
-<p>Referred to as <span class="math notranslate nohighlight">\(c_{ASA}\)</span> within the standard.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Angle spread in degrees.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If spread is smaller than zero.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.cluster_zoa_spread">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_zoa_spread</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.cluster_zoa_spread" title="Permalink to this definition">#</a></dt>
-<dd><p>Zenith Angle-of-Arrival spread within an individual cluster.</p>
-<p>Referred to as <span class="math notranslate nohighlight">\(c_{ZSA}\)</span> within the standard.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Angle spread in degrees.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If spread is smaller than zero.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.channel.cluster_delay_lines.ClusterDelayLine.cluster_shadowing_std">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">cluster_shadowing_std</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#hermespy.channel.cluster_delay_lines.ClusterDelayLine.cluster_shadowing_std" title="Permalink to this definition">#</a></dt>
-<dd><p>Standard deviation of the cluster shadowing.</p>
-<p>Referred to as <span class="math notranslate nohighlight">\(\zeta\)</span> within the the standard.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Cluster shadowing standard deviation.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>float</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If the deviation is smaller than zero.</p>
-</dd>
-</dl>
-</dd></dl>
-
-</dd></dl>
-
+    Channel --o ChannelRealization
+    ClusterDelayLineRealization --|&gt; ChannelRealization
+    ClusterDelayLineBase --|&gt; Channel
+    ClusterDelayLineBase --o ClusterDelayLineRealization
+    IndoorFactoryBase --|&gt; ClusterDelayLineBase
+    UrbanMicroCellsNoLineOfSight --|&gt; ClusterDelayLineBase
+    ClusterDelayLine --|&gt; ClusterDelayLineBase
+    ClusterDelayLineIndoorFactory --|&gt; IndoorFactoryBase
+    ClusterDelayLineIndoorOffice --|&gt; ClusterDelayLineBase
+    ClusterDelayLineRuralMacrocells --|&gt; ClusterDelayLineBase
+    ClusterDelayLineStreetCanyon --|&gt; ClusterDelayLineBase
+    ClusterDelayLineUrbanMacrocells --|&gt; ClusterDelayLineBase
+    StreetCanyonNoLineOfSight --|&gt; UrbanMicroCellsNoLineOfSight
+    StreetCanyonOutsideToInside --&gt; UrbanMicroCellsNoLineOfSight
+        </div><div class="toctree-wrapper compound">
+</div>
 <div class="docutils container" id="id2">
 <aside class="footnote brackets" id="footcite-3gpp-tr38901" role="note">
 <span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
-<p><em>Study on channel model for frequencies from 0.5 to 100 GHz</em>. 3GPP TSG-RAN, 2020. version 16.1.0 Release 16. URL: <a class="reference external" href="https://www.etsi.org/deliver/etsi_tr/138900_138999/138901/16.01.00_60/tr_138901v160100p.pdf">https://www.etsi.org/deliver/etsi_tr/138900_138999/138901/16.01.00_60/tr_138901v160100p.pdf</a>.</p>
+<p><em>Study on channel model for frequencies from 0.5 to 100 GHz</em>. 3GPP TSG-RAN, 2020. version 17.0.0 Release 17. URL: <a class="reference external" href="https://www.etsi.org/deliver/etsi_tr/138900_138999/138901/17.00.00_60/tr_138901v170000p.pdf">https://www.etsi.org/deliver/etsi_tr/138900_138999/138901/17.00.00_60/tr_138901v170000p.pdf</a>.</p>
 </aside>
 </aside>
 </div>
+</section>
 
         </article>
       </div>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="channel.cluster_delay_line_indoor_factory.html">
+          <a class="next-page" href="channel.cluster_delay_line_indoor_factory.IndoorFactoryBase.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">3GPP Cluster Delay Line Indoor Factory Model</div>
+                <div class="title">Indoor Factory Base</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
-          <a class="prev-page" href="channel.multipath_fading_templates.html">
+          <a class="prev-page" href="channel.multipath_fading_templates.MultipathFadingExponential.html">
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
               <div class="page-info">
                 <div class="context">
                   <span>Previous</span>
                 </div>
                 
-                <div class="title">Multipath Fading Standard Templates</div>
+                <div class="title">Exponential Channel Model</div>
                 
               </div>
             </a>
@@ -1402,13 +670,30 @@ For the ideal  channel in the base class <span class="math notranslate nohighlig
       
     </aside>
   </div>
-</div><script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-    <script src="../_static/doctools.js"></script>
-    <script src="../_static/sphinx_highlight.js"></script>
-    <script src="../_static/scripts/furo.js"></script>
-    <script src="../_static/clipboard.min.js"></script>
-    <script src="../_static/copybutton.js"></script>
+</div><script src="../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://unpkg.com/mermaid@10.2.0/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({startOnLoad:true});</script>
+    <script src="https://unpkg.com/d3/dist/d3.min.js"></script>
+    <script>
+            window.addEventListener("load", function () {
+              var svgs = d3.selectAll(".mermaid svg");
+              svgs.each(function() {
+                var svg = d3.select(this);
+                svg.html("<g>" + svg.html() + "</g>");
+                var inner = svg.select("g");
+                var zoom = d3.zoom().on("zoom", function(event) {
+                  inner.attr("transform", event.transform);
+                });
+                svg.call(zoom);
+              });
+            });
+            </script>
     </body>
 </html>

@@ -1,0 +1,44 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="164pt" height="82pt" viewBox="0.00 0.00 163.50 82.00">
+<ns0:g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 78)">
+<ns0:title>inheritance681e559838</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>ABC</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="https://docs.python.org/3/library/abc.html#abc.ABC" ns1:title="Helper class that provides a standard way to create an ABC using" target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="54,-74 0,-74 0,-55 54,-55 54,-74" />
+<ns0:text text-anchor="middle" x="27" y="-62" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">ABC</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>BaseModem</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="../api/modem.modem.BaseModem.html#hermespy.modem.modem.BaseModem" ns1:title="Base class for wireless modems transmitting or receiving information over devices." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="111.5,-19 34.5,-19 34.5,0 111.5,0 111.5,-19" />
+<ns0:text text-anchor="middle" x="73" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">BaseModem</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge2" class="edge">
+<ns0:title>ABC-&gt;BaseModem</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M34.6,-54.75C42.1,-46.1 53.65,-32.8 62.12,-23.03" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="63.59,-24.01 65.55,-19.09 60.95,-21.72 63.59,-24.01" />
+</ns0:g>
+
+<ns0:g id="node3" class="node">
+<ns0:title>RandomNode</ns0:title>
+<ns0:g id="a_node3"><ns0:a ns1:href="../api/core.random_node.html#hermespy.core.random_node.RandomNode" ns1:title="Random Node within a random dependency graph." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="155.5,-74 72.5,-74 72.5,-55 155.5,-55 155.5,-74" />
+<ns0:text text-anchor="middle" x="114" y="-62" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">RandomNode</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>RandomNode-&gt;BaseModem</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M107.23,-54.75C100.6,-46.18 90.43,-33.03 82.9,-23.3" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="84.09,-21.97 79.64,-19.09 81.32,-24.11 84.09,-21.97" />
+</ns0:g>
+</ns0:g>
+</ns0:svg>

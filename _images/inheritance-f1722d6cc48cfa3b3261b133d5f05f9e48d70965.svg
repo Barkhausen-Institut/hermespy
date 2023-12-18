@@ -1,0 +1,44 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="140pt" height="82pt" viewBox="0.00 0.00 139.50 82.00">
+<ns0:g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 78)">
+<ns0:title>inheritance606123ea9c</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>ABC</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="https://docs.python.org/3/library/abc.html#abc.ABC" ns1:title="Helper class that provides a standard way to create an ABC using" target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="54,-74 0,-74 0,-55 54,-55 54,-74" />
+<ns0:text text-anchor="middle" x="27" y="-62" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">ABC</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node3" class="node">
+<ns0:title>SymbolPrecoder</ns0:title>
+<ns0:g id="a_node3"><ns0:a ns1:href="../api/modem.precoding.symbol_precoding.SymbolPrecoder.html#hermespy.modem.precoding.symbol_precoding.SymbolPrecoder" ns1:title="Abstract base class for signal processing algorithms operating on complex data symbols streams." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="118,-19 22,-19 22,0 118,0 118,-19" />
+<ns0:text text-anchor="middle" x="70" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">SymbolPrecoder</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge2" class="edge">
+<ns0:title>ABC-&gt;SymbolPrecoder</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M34.1,-54.75C41.11,-46.1 51.91,-32.8 59.83,-23.03" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="61.24,-24.07 63.03,-19.09 58.52,-21.87 61.24,-24.07" />
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>Precoder</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="../api/precoding.precoding.html#hermespy.precoding.precoding.Precoder" ns1:title="Abstract base class for signal processing algorithms operating on complex data symbols streams." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="131.5,-74 72.5,-74 72.5,-55 131.5,-55 131.5,-74" />
+<ns0:text text-anchor="middle" x="102" y="-62" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">Precoder</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>Precoder-&gt;SymbolPrecoder</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M96.72,-54.75C91.59,-46.26 83.75,-33.27 77.88,-23.56" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="79.27,-22.46 75.19,-19.09 76.27,-24.27 79.27,-22.46" />
+</ns0:g>
+</ns0:g>
+</ns0:svg>

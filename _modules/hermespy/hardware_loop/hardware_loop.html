@@ -1,0 +1,1406 @@
+<!doctype html>
+<html class="no-js" lang="en" data-content_root="../../../">
+  <head><meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <meta name="color-scheme" content="light dark"><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" />
+
+    <!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
+        <title>hermespy.hardware_loop.hardware_loop - HermesPy</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=eafc0fe6" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/tweaks.css?v=72d4c74a" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/tabs.css?v=a5c4661c" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/styles/furo-extensions.css?v=36a5483c" />
+    
+    
+
+
+<style>
+  body {
+    --color-code-background: #eeffcc;
+  --color-code-foreground: black;
+  --color-brand-primary: #4C8BC6;
+  --color-brand-content: #4C8BC6;
+  
+  }
+  @media not print {
+    body[data-theme="dark"] {
+      --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+    }
+    @media (prefers-color-scheme: dark) {
+      body:not([data-theme="light"]) {
+        --color-code-background: #202020;
+  --color-code-foreground: #d0d0d0;
+  
+      }
+    }
+  }
+</style></head>
+  <body>
+    
+    <script>
+      document.body.dataset.theme = localStorage.getItem("theme") || "auto";
+    </script>
+    
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+  <symbol id="svg-toc" viewBox="0 0 24 24">
+    <title>Contents</title>
+    <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 1024 1024">
+      <path d="M408 442h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8zm-8 204c0 4.4 3.6 8 8 8h480c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8H408c-4.4 0-8 3.6-8 8v56zm504-486H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zm0 632H120c-4.4 0-8 3.6-8 8v56c0 4.4 3.6 8 8 8h784c4.4 0 8-3.6 8-8v-56c0-4.4-3.6-8-8-8zM115.4 518.9L271.7 642c5.8 4.6 14.4.5 14.4-6.9V388.9c0-7.4-8.5-11.5-14.4-6.9L115.4 505.1a8.74 8.74 0 0 0 0 13.8z"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-menu" viewBox="0 0 24 24">
+    <title>Menu</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-menu">
+      <line x1="3" y1="12" x2="21" y2="12"></line>
+      <line x1="3" y1="6" x2="21" y2="6"></line>
+      <line x1="3" y1="18" x2="21" y2="18"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-arrow-right" viewBox="0 0 24 24">
+    <title>Expand</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather-chevron-right">
+      <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+  </symbol>
+  <symbol id="svg-sun" viewBox="0 0 24 24">
+    <title>Light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      <circle cx="12" cy="12" r="5"></circle>
+      <line x1="12" y1="1" x2="12" y2="3"></line>
+      <line x1="12" y1="21" x2="12" y2="23"></line>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+      <line x1="1" y1="12" x2="3" y2="12"></line>
+      <line x1="21" y1="12" x2="23" y2="12"></line>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon" viewBox="0 0 24 24">
+    <title>Dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-half" viewBox="0 0 24 24">
+    <title>Auto light/dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M13 12h5" />
+      <path d="M13 15h4" />
+      <path d="M13 18h1" />
+      <path d="M13 9h4" />
+      <path d="M13 6h1" />
+    </svg>
+  </symbol>
+</svg>
+
+<input type="checkbox" class="sidebar-toggle" name="__navigation" id="__navigation">
+<input type="checkbox" class="sidebar-toggle" name="__toc" id="__toc">
+<label class="overlay sidebar-overlay" for="__navigation">
+  <div class="visually-hidden">Hide navigation sidebar</div>
+</label>
+<label class="overlay toc-overlay" for="__toc">
+  <div class="visually-hidden">Hide table of contents sidebar</div>
+</label>
+
+
+
+<div class="page">
+  <header class="mobile-header">
+    <div class="header-left">
+      <label class="nav-overlay-icon" for="__navigation">
+        <div class="visually-hidden">Toggle site navigation sidebar</div>
+        <i class="icon"><svg><use href="#svg-menu"></use></svg></i>
+      </label>
+    </div>
+    <div class="header-center">
+      <a href="../../../index.html"><div class="brand">HermesPy</div></a>
+    </div>
+    <div class="header-right">
+      <div class="theme-toggle-container theme-toggle-header">
+        <button class="theme-toggle">
+          <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+          <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+        </button>
+      </div>
+      <label class="toc-overlay-icon toc-header-icon no-toc" for="__toc">
+        <div class="visually-hidden">Toggle table of contents sidebar</div>
+        <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+      </label>
+    </div>
+  </header>
+  <aside class="sidebar-drawer">
+    <div class="sidebar-container">
+      
+      <div class="sidebar-sticky"><a class="sidebar-brand" href="../../../index.html">
+  
+  <div class="sidebar-logo-container">
+    <img class="sidebar-logo" src="../../../_static/bi.svg" alt="Logo"/>
+  </div>
+  
+  <span class="sidebar-brand-text">HermesPy</span>
+  
+</a><form class="sidebar-search-container" method="get" action="../../../search.html" role="search">
+  <input class="sidebar-search" placeholder="Search" name="q" aria-label="Search">
+  <input type="hidden" name="check_keywords" value="yes">
+  <input type="hidden" name="area" value="default">
+</form>
+<div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
+  <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../index.html">HermesPy</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting_started.html">Getting Started</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../tutorials.html">Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../notebooks/channel.html">Implementing Channels</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../notebooks/fec_coding.html">Implementing FEC codings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../notebooks/beamforming_usage.html">Using Beamformers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../notebooks/beamforming_implementation.html">Implementing Beamformers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../notebooks/waveform.html">Implementing Communication Waveforms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../notebooks/precoding.html">Implementing Precodings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../notebooks/roc.html">Receiver Operating Characteristics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../notebooks/datasets.html">Recording Datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../notebooks/audio.html">Using Audio Equipment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../notebooks/evaluator.html">Implementing Evaluators</a></li>
+</ul>
+</li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../api/api.html">HermesPy API</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of HermesPy API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/modem.html">Communication</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Communication</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/modem.waveform.html">Waveforms</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Waveforms</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../../api/modem.waveform.single_carrier.html">Single Carrier</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Single Carrier</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../../api/modem.waveform.single_carrier.FMCW.html">FMCW</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../api/modem.waveform.single_carrier.RaisedCosine.html">Raised Cosine</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../api/modem.waveform.single_carrier.Rectangular.html">Rectangular</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../api/modem.waveform.single_carrier.RootRaisedCosine.html">Root Raised Cosine</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../../api/modem.waveform.ofdm.html">OFDM</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of OFDM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../../api/modem.waveform.ofdm.FrameElement.html">Frame Element</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../api/modem.waveform.ofdm.FrameGuardSection.html">Guard Section</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../api/modem.waveform.ofdm.FrameResource.html">Resource</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../api/modem.waveform.ofdm.FrameSection.html">Section</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../api/modem.waveform.ofdm.FrameSymbolSection.html">Symbol Section</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../api/modem.waveform.ofdm.OFDMChannelEqualization.html">Channel Equalization</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../api/modem.waveform.ofdm.OFDMCorrelationSynchronization.html">Correlation Synchronization</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../api/modem.waveform.ofdm.OFDMLeastSquaresChannelEstimation.html">Least Squares Channel Estimation</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../api/modem.waveform.ofdm.OFDMSynchronization.html">Synchronization</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../api/modem.waveform.ofdm.OFDMWaveform.html">OFDM Waveform</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../api/modem.waveform.ofdm.OFDMZeroForcingChannelEqualization.html">Zero Forcing Equalization</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../api/modem.waveform.ofdm.PilotSection.html">Pilot Section</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../api/modem.waveform.ofdm.SchmidlCoxPilotSection.html">Schmidl Cox Pilot</a></li>
+<li class="toctree-l5"><a class="reference internal" href="../../../api/modem.waveform.ofdm.SchmidlCoxSynchronization.html">Schmidl Cox Synchronization</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/modem.waveform.chirp_fsk.html">C-FSK</a></li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../../api/modem.waveform.Synchronization.html">Synchronization</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Synchronization</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../../api/modem.waveform.correlation_synchronization.html">Correlation</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/modem.waveform.ChannelEstimation.html">Channel Estimation</a></li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="../../../api/modem.waveform.ChannelEqualization.html">Channel Equalization</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Channel Equalization</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="../../../api/modem.waveform.ZeroForcingChannelEqualization.html">Zero-Forcing</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/modem.evaluators.html">Evaluators</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Evaluators</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/modem.evaluators.ber.html">Bit Error Rate</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/modem.evaluators.bler.html">Block Error Rate</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/modem.evaluators.fer.html">Frame Error Rate</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/modem.evaluators.throughput.html">Throughput</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/modem.evaluators.CommunicationEvaluator.html">Communication Evaluator</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/modem.precoding.html">Communication Precoding</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of Communication Precoding</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/modem.precoding.dft.html">Discrete Fourier Transform</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/modem.precoding.ratio_combining.html">Maximal Ratio Combining</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/modem.precoding.single_carrier.html">Single Carrier Decoding</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/modem.precoding.space_time_block_coding.html">Space-Time Block Codes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/modem.precoding.spatial_multiplexing.html">Spatial Multiplexing</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/modem.precoding.symbol_precoding.SymbolPrecoder.html">Symbol Precoder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/modem.precoding.symbol_precoding.SymbolPrecoding.html">Symbol Precoding</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/modem.symbols.html">Communication Symbols</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/modem.bits_source.html">Bit Sources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/modem.modem.TransmittingModem.html">Transmitting Modem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/modem.modem.ReceivingModem.html">Receiving Modem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/modem.modem.SimplexLink.html">Simplex Link</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/modem.modem.DuplexModem.html">Duplex Modem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/modem.modem.BaseModem.html">Base Modem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/modem.modem.CommunicationTransmission.html">Transmission</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/modem.modem.CommunicationTransmissionFrame.html">Transmission Frame</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/modem.modem.CommunicationReception.html">Reception</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/modem.modem.CommunicationReceptionFrame.html">Reception Frame</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/radar.html">Sensing</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Sensing</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/radar.radar.Radar.html">Radar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/radar.radar.RadarReception.html">Radar Reception</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/radar.radar.RadarTransmission.html">Radar Transmission</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/radar.radar.RadarWaveform.html">Radar Waveform</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of Radar Waveform</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/radar.fmcw.html">FMCW</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/radar.cube.RadarCube.html">Radar Cube</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/radar.detection.RadarDetector.html">Radar Detector</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Radar Detector</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/radar.detection.ThresholdDetector.html">Threshold</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/radar.detection.MaxDetector.html">Max</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/radar.detection.PointDetection.html">Point Detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/radar.detection.RadarPointCloud.html">Radar Point Cloud</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/radar.evaluators.RadarEvaluator.html">Radar Evaluator</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Radar Evaluator</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/radar.evaluators.DetectionProbEvaluator.html">Detection Probability Evaluator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/radar.evaluators.ReceiverOperatingCharacteristic.html">Reiver Operating Characteristic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/radar.evaluators.RootMeanSquareError.html">Root Mean Square Error</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/channel.html">Channel Modeling</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of Channel Modeling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/channel.channel.Channel.html">Channel Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/channel.channel.ChannelPropagation.html">Channel Propagation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/channel.channel.ChannelRealization.html">Channel Realization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/channel.channel.DirectiveChannelRealization.html">Directive Channel Realization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/channel.channel.InterpolationMode.html">Interpolation Mode</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/channel.ideal.html">Ideal Channel</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of Ideal Channel</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.ideal.IdealChannel.html">Ideal Channel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.ideal.IdealChannelRealization.html">Ideal Channel Realization</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/channel.multipath_fading_channel.html">Multipath Fading Channels</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of Multipath Fading Channels</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.multipath_fading_channel.MultipathFadingChannel.html">Multipath Fading Channel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.multipath_fading_channel.MultipathFadingRealization.html">Multipath Fading Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.multipath_fading_channel.PathRealization.html">Path Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.multipath_fading_channel.AntennaCorrelation.html">Antenna Correlation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.multipath_fading_channel.CustomAntennaCorrelation.html">Custom Antenna Correlation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.multipath_fading_templates.MultipathFading5GTDL.html">5G TDL Channel Model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.multipath_fading_templates.MultipathFadingCost259.html">Cost 259 Channel Model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.multipath_fading_templates.MultipathFadingExponential.html">Exponential Channel Model</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/channel.cluster_delay_lines.html">3GPP Cluster Delay Line Models</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of 3GPP Cluster Delay Line Models</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.cluster_delay_line_indoor_factory.IndoorFactoryBase.html">Indoor Factory Base</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.html">Indoor Factory LOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.html">Indoor Factory NLOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.html">Indoor Office LOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.html">Indoor Office NLOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.html">Rural Marocells LOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.html">Rural Marocells NLOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.html">Rural Marocells O2I</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.html">Street Canyon LOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight.html">Street Canyon NLOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside.html">Street Canyon O2I</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.html">Urban Macrocells LOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.html">Urban Macrocells NLOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.html">Urban Macrocells O2I</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.cluster_delay_lines.ClusterDelayLineBase.html">Cluster Delay Line Base</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.cluster_delay_lines.ClusterDelayLine.html">Custom Cluster Delay Line</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.cluster_delay_lines.ClusterDelayLineRealization.html">Cluster Delay Line Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.cluster_delay_lines.DelayNormalization.html">Delay Normalization</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/channel.delay.html">Delay Channels</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of Delay Channels</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.delay.DelayChannelBase.html">Delay Channel Base</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.delay.DelayChannelRealization.html">Delay Channel Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.delay.RandomDelayChannel.html">Random Delay Channel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.delay.RandomDelayChannelRealization.html">Random Delay Channel Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.delay.SpatialDelayChannel.html">Spatial Delay Channel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.delay.SpatialDelayChannelRealization.html">Spatial Delay Channel Realization</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/channel.radar.html">Radar Channels</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of Radar Channels</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.radar.FixedCrossSection.html">Fixed Cross Section</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.radar.MultiTargetRadarChannel.html">Multi Target Channel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.radar.MultiTargetRadarChannelRealization.html">Multi Target Channel Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.radar.PhysicalRadarTarget.html">Physical Target</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.radar.RadarChannelBase.html">Radar Channel Base</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.radar.RadarChannelRealization.html">Radar Channel Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.radar.RadarCrossSectionModel.html">Radar Cross Section</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.radar.RadarInterferenceRealization.html">Radar Interference Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.radar.RadarPathRealization.html">Radar Path Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.radar.RadarTarget.html">Radar Target</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.radar.RadarTargetRealization.html">Radar Target Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.radar.SingleTargetRadarChannel.html">Single Target Channel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.radar.SingleTargetRadarChannelRealization.html">Single Target Channel Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.radar.VirtualRadarTarget.html">Virtual Target</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/channel.quadriga.html">Quadriga</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of Quadriga</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.quadriga.QuadrigaChannel.html">Quadriga Channel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.quadriga.QuadrigaChannelRealization.html">Quadriga Channel Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/channel.quadriga.QuadrigaInterface.html">Quadriga Interface</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/simulation.html">Simulation</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of Simulation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/simulation.simulation.Simulation.html">Simulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/simulation.simulation.SimulationScenario.html">Simulation Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/simulation.simulation.SimulatedDrop.html">Simulated Drop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/simulation.simulated_device.SimulatedDevice.html">Simulated Device</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/simulation.simulated_device.SimulatedDeviceReception.html">Device Reception</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/simulation.simulated_device.SimulatedDeviceTransmission.html">Device Transmission</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/simulation.antennas.html">Antenna Arrays Modeling</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Antenna Arrays Modeling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/simulation.antennas.SimulatedAntenna.html">Simulated Antenna</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/simulation.antennas.SimulatedAntennaPort.html">Simulated Antenna Port</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/simulation.antennas.SimulatedAntennas.html">Simulated Antennas</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/simulation.antennas.SimulatedCustomArray.html">Simulated Custom Array</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/simulation.antennas.SimulatedDipole.html">Simulated Dipole Antenna</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/simulation.antennas.SimulatedIdealAntenna.html">Simulated Ideal Antenna</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/simulation.antennas.SimulatedLinearAntenna.html">Simulated Linear Antenna</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/simulation.antennas.SimulatedPatchAntenna.html">Simulated Patch Antenna</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/simulation.antennas.SimulatedUniformArray.html">Simulated Uniform Array</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/simulation.rf_chain.html">Hardware Radio Frequency Chain Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/simulation.rf_chain.power_amplifier.html">Power Amplifier Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/simulation.rf_chain.phase_noise.html">Phase Noise Modeling</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/simulation.rf_chain.adc.html">Analog-to-Digital Conversion</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of Analog-to-Digital Conversion</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/simulation.rf_chain.adc.AnalogDigitalConverter.html">Analog Digital Converter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/simulation.rf_chain.adc.AutomaticGainControl.html">Automatic Gain Control</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/simulation.rf_chain.adc.Gain.html">Constant Gain</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/simulation.rf_chain.adc.GainControlBase.html">Gain Control Base</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/simulation.noise.html">Noise Modeling</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/simulation.coupling.html">Mutual Coupling</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Mutual Coupling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/simulation.coupling.perfect.html">Perfect Coupling</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/simulation.coupling.impedance.html">Impedance Coupling</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="../../../api/simulation.isolation.html">Antenna Isolation Modeling</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Antenna Isolation Modeling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/simulation.isolation.perfect.html">Perfect Isolation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/simulation.isolation.impedance.html">Impedance Isolation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="../../../api/simulation.isolation.specific.html">Specific Isolation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/hardware_loop.html">Hardware Loop</a><input class="toctree-checkbox" id="toctree-checkbox-27" name="toctree-checkbox-27" role="switch" type="checkbox"/><label for="toctree-checkbox-27"><div class="visually-hidden">Toggle navigation of Hardware Loop</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/hardware_loop.hardware_loop.HardwareLoop.html">Hardaware Loop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/hardware_loop.scenario.PhysicalScenario.html">Physical Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/hardware_loop.physical_device.PhysicalDevice.html">Physical Device</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/hardware_loop.physical_device_dummy.PhysicalDeviceDummy.html">Physical Device Dummy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/hardware_loop.physical_device_dummy.PhysicalScenarioDummy.html">Physical Scenario Dummy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/hardware_loop.hardware_loop.HardwareLoopPlot.html">Hardware Loop Plot</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/hardware_loop.visualizers.html">Visualizers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/hardware_loop.uhd.usrp.UsrpDevice.html">USRP Device</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/hardware_loop.uhd.system.UsrpSystem.html">USRP System</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/hardware_loop.audio.device.AudioDevice.html">Audio Device</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/hardware_loop.audio.scenario.AudioScenario.html">Audio Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/hardware_loop.calibration.delay.html">Delay Calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/hardware_loop.calibration.leakage.html">Leakage Calibration</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/core.html">Core</a><input class="toctree-checkbox" id="toctree-checkbox-28" name="toctree-checkbox-28" role="switch" type="checkbox"/><label for="toctree-checkbox-28"><div class="visually-hidden">Toggle navigation of Core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/core.monte_carlo.html">PyMonte</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/core.executable.html">Executable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/core.factory.html">Serialization Factory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/core.definitions.html">General Definitions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/core.device.Device.html">Device</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/core.device.DeviceOutput.html">Device Output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/core.device.Transmitter.html">Transmitter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/core.device.Receiver.html">Receiver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/core.device.Transmission.html">Transmission</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/core.device.Reception.html">Reception</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/core.device.OperationResult.html">Operation Result</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/core.drop.Drop.html">Drop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/core.monte_carlo.Evaluator.html">Evaluator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/core.operators.html">Extra Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/core.duplex.html">Duplex Operation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/core.logarithmic.html">Logarithmics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/core.pipeline.html">Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/core.random_node.html">Random Graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/core.scenario.html">Wireless Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/core.signal_model.Signal.html">Signal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/core.channel_state_information.html">Channel State Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/core.antennas.html">Antenna Descriptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/core.transformation.html">Coordinate System Transformations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/core.animation.html">Animation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/core.visualize.html">Visualization</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/fec.html">Error Correction</a><input class="toctree-checkbox" id="toctree-checkbox-29" name="toctree-checkbox-29" role="switch" type="checkbox"/><label for="toctree-checkbox-29"><div class="visually-hidden">Toggle navigation of Error Correction</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/fec.coding.html">Coding Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/fec.block_interleaver.html">Interleaving</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/fec.crc.html">Cyclic Redundancy Checks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/fec.repetition.html">Repetition Coding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/fec.scrambler.html">Scrambling</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/jcas.html">JCAS</a><input class="toctree-checkbox" id="toctree-checkbox-30" name="toctree-checkbox-30" role="switch" type="checkbox"/><label for="toctree-checkbox-30"><div class="visually-hidden">Toggle navigation of JCAS</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/jcas.matched_filtering.html">Matched Filter JCAS</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/precoding.html">Precoding</a><input class="toctree-checkbox" id="toctree-checkbox-31" name="toctree-checkbox-31" role="switch" type="checkbox"/><label for="toctree-checkbox-31"><div class="visually-hidden">Toggle navigation of Precoding</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/precoding.precoding.html">Precoding Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/precoding.stream_precoding.html">Stream Precoding</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/beamforming.html">Beamforming</a><input class="toctree-checkbox" id="toctree-checkbox-32" name="toctree-checkbox-32" role="switch" type="checkbox"/><label for="toctree-checkbox-32"><div class="visually-hidden">Toggle navigation of Beamforming</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/beamforming.beamformer.html">Beamformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/beamforming.conventional.html">Conventional Beamformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/beamforming.capon.html">Capon Beamformer</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/bin.html">Entry Points</a><input class="toctree-checkbox" id="toctree-checkbox-33" name="toctree-checkbox-33" role="switch" type="checkbox"/><label for="toctree-checkbox-33"><div class="visually-hidden">Toggle navigation of Entry Points</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/bin.hermes.html">Hermes Command Line Interface</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../../../api/tools.html">Tools</a><input class="toctree-checkbox" id="toctree-checkbox-34" name="toctree-checkbox-34" role="switch" type="checkbox"/><label for="toctree-checkbox-34"><div class="visually-hidden">Toggle navigation of Tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/tools.math.html">Math Tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/tools.resampling.html">Resampling Routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/tools.tile.html">Tile Figures</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../matlab.html">Matlab</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../references.html">References</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../../../examples/examples.html">YAML Examples</a><input class="toctree-checkbox" id="toctree-checkbox-35" name="toctree-checkbox-35" role="switch" type="checkbox"/><label for="toctree-checkbox-35"><div class="visually-hidden">Toggle navigation of YAML Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/chirp_fsk_lora.html">Chirp FSK LORA</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/chirp_qam.html">Chirp QAM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/hardware_model.html">Hardware Modeling</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/interference_ofdm_single_carrier.html">OFDM Interference</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/jcas.html">JCAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/ofdm_5g.html">OFDM 5G</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/ofdm_single_carrier.html">OFDM Single Carrier</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/operator_separation.html">Operator Separation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/uhd.html">USRP Hardware Driver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../examples/audio.html">Audio Hardware Binding</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer_hints.html">For Developers</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../license.html">License</a></li>
+</ul>
+
+</div>
+</div>
+
+      </div>
+      
+    </div>
+  </aside>
+  <div class="main">
+    <div class="content">
+      <div class="article-container">
+        <a href="#" class="back-to-top muted-link">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+            <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+          </svg>
+          <span>Back to top</span>
+        </a>
+        <div class="content-icon-container">
+          <div class="theme-toggle-container theme-toggle-content">
+            <button class="theme-toggle">
+              <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
+              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
+              <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
+            </button>
+          </div>
+          <label class="toc-overlay-icon toc-content-icon no-toc" for="__toc">
+            <div class="visually-hidden">Toggle table of contents sidebar</div>
+            <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
+          </label>
+        </div>
+        <article role="main">
+          <h1>Source code for hermespy.hardware_loop.hardware_loop</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">=============</span>
+<span class="sd">Hardware Loop</span>
+<span class="sd">=============</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">annotations</span>
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">contextlib</span> <span class="kn">import</span> <span class="n">ExitStack</span>
+<span class="kn">from</span> <span class="nn">os</span> <span class="kn">import</span> <span class="n">path</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Type</span>
+
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">rich.progress</span> <span class="kn">import</span> <span class="n">Progress</span><span class="p">,</span> <span class="n">SpinnerColumn</span><span class="p">,</span> <span class="n">TimeElapsedColumn</span>
+<span class="kn">from</span> <span class="nn">rich.prompt</span> <span class="kn">import</span> <span class="n">Confirm</span>
+<span class="kn">from</span> <span class="nn">ruamel.yaml</span> <span class="kn">import</span> <span class="n">SafeConstructor</span><span class="p">,</span> <span class="n">Node</span><span class="p">,</span> <span class="n">SafeRepresenter</span><span class="p">,</span> <span class="n">MappingNode</span>
+
+<span class="kn">from</span> <span class="nn">hermespy.core</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Artifact</span><span class="p">,</span>
+    <span class="n">ConsoleMode</span><span class="p">,</span>
+    <span class="n">Drop</span><span class="p">,</span>
+    <span class="n">Evaluation</span><span class="p">,</span>
+    <span class="n">EvaluationResult</span><span class="p">,</span>
+    <span class="n">Evaluator</span><span class="p">,</span>
+    <span class="n">MonteCarloResult</span><span class="p">,</span>
+    <span class="n">Pipeline</span><span class="p">,</span>
+    <span class="n">Serializable</span><span class="p">,</span>
+    <span class="n">SerializableEnum</span><span class="p">,</span>
+    <span class="n">VAT</span><span class="p">,</span>
+    <span class="n">Verbosity</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">hermespy.core.monte_carlo</span> <span class="kn">import</span> <span class="n">GridDimension</span><span class="p">,</span> <span class="n">SampleGrid</span><span class="p">,</span> <span class="n">MonteCarloSample</span>
+<span class="kn">from</span> <span class="nn">hermespy.tools</span> <span class="kn">import</span> <span class="n">tile_figures</span>
+<span class="kn">from</span> <span class="nn">.physical_device</span> <span class="kn">import</span> <span class="n">PDT</span>
+<span class="kn">from</span> <span class="nn">.physical_device_dummy</span> <span class="kn">import</span> <span class="n">PhysicalScenarioDummy</span>
+<span class="kn">from</span> <span class="nn">.scenario</span> <span class="kn">import</span> <span class="n">PhysicalScenarioType</span>
+
+<span class="n">__author__</span> <span class="o">=</span> <span class="s2">&quot;Jan Adler&quot;</span>
+<span class="n">__copyright__</span> <span class="o">=</span> <span class="s2">&quot;Copyright 2023, Barkhausen Institut gGmbH&quot;</span>
+<span class="n">__credits__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Jan Adler&quot;</span><span class="p">]</span>
+<span class="n">__license__</span> <span class="o">=</span> <span class="s2">&quot;AGPLv3&quot;</span>
+<span class="n">__version__</span> <span class="o">=</span> <span class="s2">&quot;1.2.0&quot;</span>
+<span class="n">__maintainer__</span> <span class="o">=</span> <span class="s2">&quot;Jan Adler&quot;</span>
+<span class="n">__email__</span> <span class="o">=</span> <span class="s2">&quot;jan.adler@barkhauseninstitut.org&quot;</span>
+<span class="n">__status__</span> <span class="o">=</span> <span class="s2">&quot;Prototype&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">IterationPriority</span><span class="p">(</span><span class="n">SerializableEnum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Iteration priority of the hardware loop.</span>
+
+<span class="sd">    Used by the :meth:`HardwareLoop.run` method.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">DROPS</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Iterate over drops first before iterating over the parameter grid.&quot;&quot;&quot;</span>
+
+    <span class="n">GRID</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Iterate over the parameter grid first before iterating over drops.&quot;&quot;&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">EvaluatorPlotMode</span><span class="p">(</span><span class="n">SerializableEnum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Evalution plot mode during hardware loop runtime.&quot;&quot;&quot;</span>
+
+    <span class="n">HIDE</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Do not plot evaluation results during hardware loop runtime.&quot;&quot;&quot;</span>
+
+    <span class="n">EVALUATION</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot the evaluation during hardware loop runtime.&quot;&quot;&quot;</span>
+
+    <span class="n">ARTIFACTS</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot the series of generated scalar artifacts during hardware loop runtime.&quot;&quot;&quot;</span>
+
+
+<span class="k">class</span> <span class="nc">EvaluatorRegistration</span><span class="p">(</span><span class="n">Evaluator</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Evaluator registration for the hardware loop.</span>
+
+<span class="sd">    Created by the :meth:`HardwareLoop.add_evaluator` method.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">__evaluator</span><span class="p">:</span> <span class="n">Evaluator</span>
+    <span class="n">__plot_mode</span><span class="p">:</span> <span class="n">EvaluatorPlotMode</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evaluator</span><span class="p">:</span> <span class="n">Evaluator</span><span class="p">,</span> <span class="n">plot_mode</span><span class="p">:</span> <span class="n">EvaluatorPlotMode</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+
+<span class="sd">            evaluator (Evaluator):</span>
+<span class="sd">                Registered evaluator.</span>
+
+<span class="sd">            plot_mode (EvaluatorPlotMode):</span>
+<span class="sd">                Plot mode of the registered evaluator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Initialize class attributes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__evaluator</span> <span class="o">=</span> <span class="n">evaluator</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__plot_mode</span> <span class="o">=</span> <span class="n">plot_mode</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">evaluator</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Evaluator</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Registered evaluator.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__evaluator</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">plot_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EvaluatorPlotMode</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Plot mode of the registered evaluator.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__plot_mode</span>
+
+    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Evaluation</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__evaluator</span><span class="o">.</span><span class="n">evaluate</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">abbreviation</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__evaluator</span><span class="o">.</span><span class="n">abbreviation</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">title</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__evaluator</span><span class="o">.</span><span class="n">title</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__evaluator</span><span class="o">.</span><span class="n">confidence</span>
+
+    <span class="nd">@confidence</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">confidence</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__evaluator</span><span class="o">.</span><span class="n">confidence</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">tolerance</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__evaluator</span><span class="o">.</span><span class="n">tolerance</span>
+
+    <span class="nd">@tolerance</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">tolerance</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__evaluator</span><span class="o">.</span><span class="n">tolerance</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="k">def</span> <span class="nf">generate_result</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">grid</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">GridDimension</span><span class="p">],</span> <span class="n">artifacts</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EvaluationResult</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__evaluator</span><span class="o">.</span><span class="n">generate_result</span><span class="p">(</span><span class="n">grid</span><span class="p">,</span> <span class="n">artifacts</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">HardwareLoopSample</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sample of the hardware loop.</span>
+
+<span class="sd">    Generated during :meth:`HardwareLoop.run`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">__drop</span><span class="p">:</span> <span class="n">Drop</span>
+    <span class="n">__evaluations</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Evaluation</span><span class="p">]</span>
+    <span class="n">__artifacts</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Artifact</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">drop</span><span class="p">:</span> <span class="n">Drop</span><span class="p">,</span> <span class="n">evaluations</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Evaluation</span><span class="p">],</span> <span class="n">artifacts</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Artifact</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Initialize class attributes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__drop</span> <span class="o">=</span> <span class="n">drop</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__evaluations</span> <span class="o">=</span> <span class="n">evaluations</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__artifacts</span> <span class="o">=</span> <span class="n">artifacts</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">drop</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Drop</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Drop of the hardware loop sample.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__drop</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">evaluations</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Evaluation</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluations of the hardware loop sample.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__evaluations</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">artifacts</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Artifact</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Artifacts of the hardware loop sample.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__artifacts</span>
+
+
+<div class="viewcode-block" id="HardwareLoopPlot">
+<a class="viewcode-back" href="../../../api/hardware_loop.hardware_loop.HardwareLoopPlot.html#hermespy.hardware_loop.hardware_loop.HardwareLoopPlot">[docs]</a>
+<span class="k">class</span> <span class="nc">HardwareLoopPlot</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="n">__hardware_loop</span><span class="p">:</span> <span class="n">HardwareLoop</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">__title</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">__figure</span><span class="p">:</span> <span class="n">plt</span><span class="o">.</span><span class="n">Figure</span> <span class="o">|</span> <span class="kc">None</span>
+    <span class="n">__axes</span><span class="p">:</span> <span class="n">VAT</span> <span class="o">|</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">title</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Initialize class attributes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__hardware_loop</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__title</span> <span class="o">=</span> <span class="n">title</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__figure</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__axes</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">hardware_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HardwareLoop</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Hardware loop this plot is attached to.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__hardware_loop</span>
+
+    <span class="nd">@hardware_loop</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">hardware_loop</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">HardwareLoop</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Hardware loop this plot is attached to.&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__hardware_loop</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Plot already assigned to a hardware loop.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__hardware_loop</span> <span class="o">=</span> <span class="n">value</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">title</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Title of the hardware loop plot.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__title</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">figure</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Figure of the hardware loop plot.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__figure</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">axes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">VAT</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Axes of the hardware loop plot.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__axes</span>
+
+<div class="viewcode-block" id="HardwareLoopPlot.prepare_figure">
+<a class="viewcode-back" href="../../../api/hardware_loop.hardware_loop.HardwareLoopPlot.html#hermespy.hardware_loop.hardware_loop.HardwareLoopPlot.prepare_figure">[docs]</a>
+    <span class="k">def</span> <span class="nf">prepare_figure</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">VAT</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Prepare the figure for the hardware loop plot.</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">            Tuple[plt.Figure, plt.Axes]:</span>
+<span class="sd">                Figure and axes of the hardware loop plot.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Prepare figure</span>
+        <span class="n">figure</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_figure</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__figure</span> <span class="o">=</span> <span class="n">figure</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__axes</span> <span class="o">=</span> <span class="n">axes</span>
+
+        <span class="c1"># Return created figure and axes</span>
+        <span class="k">return</span> <span class="n">figure</span><span class="p">,</span> <span class="n">axes</span></div>
+
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_prepare_figure</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">plt</span><span class="o">.</span><span class="n">Figure</span><span class="p">,</span> <span class="n">VAT</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Prepare the figure for the hardware loop plot.</span>
+
+<span class="sd">        Returns:</span>
+
+<span class="sd">            Tuple[plt.Figure, VAT]:</span>
+<span class="sd">                Figure and axes of the hardware loop plot.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="o">...</span>  <span class="c1"># pragma: no cover</span>
+
+<div class="viewcode-block" id="HardwareLoopPlot.update_plot">
+<a class="viewcode-back" href="../../../api/hardware_loop.hardware_loop.HardwareLoopPlot.html#hermespy.hardware_loop.hardware_loop.HardwareLoopPlot.update_plot">[docs]</a>
+    <span class="k">def</span> <span class="nf">update_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample</span><span class="p">:</span> <span class="n">HardwareLoopSample</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update the hardware loop plot.</span>
+
+<span class="sd">        Internally calls the abstract :meth:`_update_plot` method.</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">            sample (HardwareLoopSample):</span>
+<span class="sd">                Hardware loop sample to be plotted.</span>
+
+<span class="sd">        Raises:</span>
+
+<span class="sd">            RuntimeError: If the hardware loop is not set.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Assert correct state</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hardware_loop</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Unable to update transmitted signal plot without device.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_plot</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span></div>
+
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_update_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample</span><span class="p">:</span> <span class="n">HardwareLoopSample</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Update the hardware loop plot.</span>
+
+<span class="sd">        Abstract subroutine of :meth:`HardwareLoopPlot.update_plot`.</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">            sample (HardwareLoopSample):</span>
+<span class="sd">                Hardware loop sample to be plotted.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="o">...</span>  <span class="c1"># pragma: no cover</span></div>
+
+
+
+<div class="viewcode-block" id="HardwareLoop">
+<a class="viewcode-back" href="../../../api/hardware_loop.hardware_loop.HardwareLoop.html#hermespy.hardware_loop.hardware_loop.HardwareLoop">[docs]</a>
+<span class="k">class</span> <span class="nc">HardwareLoop</span><span class="p">(</span>
+    <span class="n">Serializable</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">PhysicalScenarioType</span><span class="p">,</span> <span class="n">PDT</span><span class="p">],</span> <span class="n">Pipeline</span><span class="p">[</span><span class="n">PhysicalScenarioType</span><span class="p">,</span> <span class="n">PDT</span><span class="p">]</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Hermespy hardware loop configuration.&quot;&quot;&quot;</span>
+
+    <span class="n">yaml_tag</span> <span class="o">=</span> <span class="s2">&quot;HardwareLoop&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;YAML serialization tag&quot;&quot;&quot;</span>
+
+    <span class="n">property_blacklist</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;console&quot;</span><span class="p">}</span>
+    <span class="n">serialized_attributes</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;scenario&quot;</span><span class="p">,</span> <span class="s2">&quot;manual_triggering&quot;</span><span class="p">,</span> <span class="s2">&quot;plot_information&quot;</span><span class="p">,</span> <span class="s2">&quot;record_drops&quot;</span><span class="p">}</span>
+
+    <span class="n">manual_triggering</span><span class="p">:</span> <span class="nb">bool</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Require a user input to trigger each drop manually&quot;&quot;&quot;</span>
+
+    <span class="n">plot_information</span><span class="p">:</span> <span class="nb">bool</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Plot information during loop runtime&quot;&quot;&quot;</span>
+
+    <span class="n">record_drops</span><span class="p">:</span> <span class="nb">bool</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Record drops during loop runtime&quot;&quot;&quot;</span>
+
+    <span class="n">__dimensions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">GridDimension</span><span class="p">]</span>  <span class="c1"># Parameter dimension over which a run sweeps</span>
+    <span class="n">__evaluators</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Evaluator</span><span class="p">]</span>  <span class="c1"># Evaluators further processing drop information</span>
+    <span class="n">__plots</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">HardwareLoopPlot</span><span class="p">]</span>
+    <span class="n">__iteration_priority</span><span class="p">:</span> <span class="n">IterationPriority</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">scenario</span><span class="p">:</span> <span class="n">PhysicalScenarioType</span><span class="p">,</span>
+        <span class="n">manual_triggering</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">plot_information</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="n">iteration_priority</span><span class="p">:</span> <span class="n">IterationPriority</span> <span class="o">=</span> <span class="n">IterationPriority</span><span class="o">.</span><span class="n">DROPS</span><span class="p">,</span>
+        <span class="n">record_drops</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+
+<span class="sd">            scenario (PhysicalScenarioType):</span>
+<span class="sd">                The physical scenario being controlled by the hardware loop.</span>
+
+<span class="sd">            manual_triggering (bool, optional):</span>
+<span class="sd">                Require a keyboard user input to trigger each drop manually.</span>
+<span class="sd">                Disabled by default.</span>
+
+<span class="sd">            plot_information (bool, optional):</span>
+<span class="sd">                Plot information during loop runtime.</span>
+<span class="sd">                Enabled by default.</span>
+
+<span class="sd">            iteration_priority (IterationPriority, optional):</span>
+<span class="sd">                Which dimension to iterate over first.</span>
+<span class="sd">                Defaults to :attr:`IterationPriority.DROPS`.</span>
+
+<span class="sd">            record_drops (bool, optional):</span>
+<span class="sd">                Record drops during loop runtime.</span>
+<span class="sd">                Enabled by default.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Initialize base classes</span>
+        <span class="n">Pipeline</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scenario</span><span class="o">=</span><span class="n">scenario</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Initialize class attributes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">manual_triggering</span> <span class="o">=</span> <span class="n">manual_triggering</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plot_information</span> <span class="o">=</span> <span class="n">plot_information</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">iteration_priority</span> <span class="o">=</span> <span class="n">iteration_priority</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">record_drops</span> <span class="o">=</span> <span class="n">record_drops</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__dimensions</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__evaluators</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__plots</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="HardwareLoop.new_dimension">
+<a class="viewcode-back" href="../../../api/hardware_loop.hardware_loop.HardwareLoop.html#hermespy.hardware_loop.hardware_loop.HardwareLoop.new_dimension">[docs]</a>
+    <span class="k">def</span> <span class="nf">new_dimension</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">dimension</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">sample_points</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GridDimension</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a dimension to the sweep grid.</span>
+
+<span class="sd">        Must be a property of the :meth:`HardwareLoop.scenario`.</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">            dimension (str):</span>
+<span class="sd">                String representation of dimension location relative to the investigated object.</span>
+
+<span class="sd">            sample_points (List[Any]):</span>
+<span class="sd">                List points at which the dimension will be sampled into a grid.</span>
+<span class="sd">                The type of points must be identical to the grid arguments / type.</span>
+
+<span class="sd">            *args (Tuple[Any], optional):</span>
+<span class="sd">                References to the object the imension belongs to.</span>
+<span class="sd">                Resolved to the investigated object by default,</span>
+<span class="sd">                but may be an attribute or sub-attribute of the investigated object.</span>
+
+<span class="sd">        Returns: The newly created dimension object.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">considered_objects</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__scenario</span><span class="p">)</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">args</span>
+        <span class="n">grid_dimension</span> <span class="o">=</span> <span class="n">GridDimension</span><span class="p">(</span><span class="n">considered_objects</span><span class="p">,</span> <span class="n">dimension</span><span class="p">,</span> <span class="n">sample_points</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_dimension</span><span class="p">(</span><span class="n">grid_dimension</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">grid_dimension</span></div>
+
+
+<div class="viewcode-block" id="HardwareLoop.add_dimension">
+<a class="viewcode-back" href="../../../api/hardware_loop.hardware_loop.HardwareLoop.html#hermespy.hardware_loop.hardware_loop.HardwareLoop.add_dimension">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_dimension</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dimension</span><span class="p">:</span> <span class="n">GridDimension</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a new dimension to the simulation grid.</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">            dimension (GridDimension):</span>
+<span class="sd">                Dimension to be added.</span>
+
+<span class="sd">        Raises:</span>
+
+<span class="sd">            ValueError:</span>
+<span class="sd">                If the `dimension` already exists within the grid.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">dimension</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dimensions</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Dimension instance already registered within the grid&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__dimensions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dimension</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HardwareLoop.add_evaluator">
+<a class="viewcode-back" href="../../../api/hardware_loop.hardware_loop.HardwareLoop.html#hermespy.hardware_loop.hardware_loop.HardwareLoop.add_evaluator">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_evaluator</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evaluator</span><span class="p">:</span> <span class="n">Evaluator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add new evaluator to the hardware loop.</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">            evaluator (Evaluator):</span>
+<span class="sd">                The evaluator to be added.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">__evaluators</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">evaluator</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HardwareLoop.add_plot">
+<a class="viewcode-back" href="../../../api/hardware_loop.hardware_loop.HardwareLoop.html#hermespy.hardware_loop.hardware_loop.HardwareLoop.add_plot">[docs]</a>
+    <span class="k">def</span> <span class="nf">add_plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plot</span><span class="p">:</span> <span class="n">HardwareLoopPlot</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a new plot to be  visualized by the hardware loop during runtime.</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">            plot (HardwareLoopPlot):</span>
+<span class="sd">                The plot to be added.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">plot</span><span class="o">.</span><span class="n">hardware_loop</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__plots</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">plot</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">evaluators</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Evaluator</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;List of registered evaluators.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__evaluators</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">num_evaluators</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of registered evaluators.</span>
+
+<span class="sd">        Returns: The number of evaluators.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__evaluators</span><span class="p">)</span>
+
+<div class="viewcode-block" id="HardwareLoop.evaluator_index">
+<a class="viewcode-back" href="../../../api/hardware_loop.hardware_loop.HardwareLoop.html#hermespy.hardware_loop.hardware_loop.HardwareLoop.evaluator_index">[docs]</a>
+    <span class="k">def</span> <span class="nf">evaluator_index</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">evaluator</span><span class="p">:</span> <span class="n">Evaluator</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Index of the given evaluator.</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">            evaluator (Evaluator):</span>
+<span class="sd">                The evaluator to be searched for.</span>
+
+<span class="sd">        Returns: The index of the evaluator.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__evaluators</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">evaluator</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">iteration_priority</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">IterationPriority</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Iteration priority of the hardware loop.&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__iteration_priority</span>
+
+    <span class="nd">@iteration_priority</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">iteration_priority</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">IterationPriority</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__iteration_priority</span> <span class="o">=</span> <span class="n">value</span>
+
+<div class="viewcode-block" id="HardwareLoop.run">
+<a class="viewcode-back" href="../../../api/hardware_loop.hardware_loop.HardwareLoop.html#hermespy.hardware_loop.hardware_loop.HardwareLoop.run">[docs]</a>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">campaign</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;default&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run the hardware loop configuration.</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">            overwrite (bool, optional):</span>
+<span class="sd">                Allow the replacement of an already existing savefile.</span>
+
+<span class="sd">            campaing (str, optional):</span>
+<span class="sd">                Name of the measurement campaign.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Prepare the results file</span>
+        <span class="c1"># Only required if the results directory is set and drops are recorded</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_dir</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">record_drops</span><span class="p">:</span>
+                <span class="n">file_location</span> <span class="o">=</span> <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results_dir</span><span class="p">,</span> <span class="s2">&quot;drops.h5&quot;</span><span class="p">)</span>
+
+                <span class="c1"># Workaround for scenarios which might not be serializable:</span>
+                <span class="c1"># Create a dummy scenario and patch the operators for recording</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">scenario</span><span class="p">,</span> <span class="n">Serializable</span><span class="p">):</span>
+                    <span class="n">state</span> <span class="o">=</span> <span class="n">PhysicalScenarioDummy</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">device</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">devices</span><span class="p">:</span>
+                        <span class="n">state</span><span class="o">.</span><span class="n">new_device</span><span class="p">(</span>
+                            <span class="n">carrier_frequency</span><span class="o">=</span><span class="n">device</span><span class="o">.</span><span class="n">carrier_frequency</span><span class="p">,</span>
+                            <span class="n">sampling_rate</span><span class="o">=</span><span class="n">device</span><span class="o">.</span><span class="n">sampling_rate</span><span class="p">,</span>
+                        <span class="p">)</span>
+
+                    <span class="c1"># Patch operators for recording</span>
+                    <span class="n">operator_devices</span> <span class="o">=</span> <span class="p">[</span>
+                        <span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">device_index</span><span class="p">(</span><span class="n">operator</span><span class="o">.</span><span class="n">device</span><span class="p">))</span>
+                        <span class="k">for</span> <span class="n">operator</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">operators</span>
+                    <span class="p">]</span>
+
+                    <span class="k">for</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">device_idx</span><span class="p">),</span> <span class="n">operator</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">operator_devices</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">operators</span><span class="p">):</span>
+                        <span class="n">operator</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">devices</span><span class="p">[</span><span class="n">device_idx</span><span class="p">]</span>  <span class="c1"># type: ignore</span>
+
+                    <span class="bp">self</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">record</span><span class="p">(</span>
+                        <span class="n">file_location</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span><span class="p">,</span> <span class="n">campaign</span><span class="o">=</span><span class="n">campaign</span><span class="p">,</span> <span class="n">state</span><span class="o">=</span><span class="n">state</span>
+                    <span class="p">)</span>
+
+                    <span class="k">for</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">device_idx</span><span class="p">),</span> <span class="n">operator</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">operator_devices</span><span class="p">,</span> <span class="n">state</span><span class="o">.</span><span class="n">operators</span><span class="p">):</span>
+                        <span class="n">operator</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">devices</span><span class="p">[</span><span class="n">device_idx</span><span class="p">]</span>  <span class="c1"># type: ignore</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="n">file_location</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span><span class="p">,</span> <span class="n">campaign</span><span class="o">=</span><span class="n">campaign</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">console_mode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">ConsoleMode</span><span class="o">.</span><span class="n">SILENT</span>
+                    <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="o">.</span><span class="n">value</span> <span class="o">&gt;=</span> <span class="n">Verbosity</span><span class="o">.</span><span class="n">INFO</span><span class="o">.</span><span class="n">value</span>
+                <span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">(</span><span class="s2">&quot;Skipping drop recording&quot;</span><span class="p">,</span> <span class="n">style</span><span class="o">=</span><span class="s2">&quot;bright_yellow&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Run internally</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__run</span><span class="p">()</span>
+
+        <span class="c1"># Save results and close file streams</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="HardwareLoop.replay">
+<a class="viewcode-back" href="../../../api/hardware_loop.hardware_loop.HardwareLoop.html#hermespy.hardware_loop.hardware_loop.HardwareLoop.replay">[docs]</a>
+    <span class="k">def</span> <span class="nf">replay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_location</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Replay a stored pipeline run.</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">            file_location (str):</span>
+<span class="sd">                File system location of the replay.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Start the scenario replay</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">replay</span><span class="p">(</span><span class="n">file_location</span><span class="p">)</span>
+
+        <span class="c1"># Run internally</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__run</span><span class="p">()</span>
+
+        <span class="c1"># Stop the scenario replay</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span> <span class="nf">__generate_sample</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">section_indices</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">sample_index</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HardwareLoopSample</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Generate a sample from the grid.</span>
+
+<span class="sd">        Args:</span>
+
+<span class="sd">            section_indices (Tuple[int, ...]):</span>
+<span class="sd">                The indices of the section within the sample grid.</span>
+
+<span class="sd">            sample_index (int):</span>
+<span class="sd">                Index of the sample within the section.</span>
+
+<span class="sd">        Returns: The generated sample.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Configure the parameters according to the grid indces</span>
+        <span class="k">for</span> <span class="n">dim</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__dimensions</span><span class="p">,</span> <span class="n">section_indices</span><span class="p">):</span>
+            <span class="n">dim</span><span class="o">.</span><span class="n">configure_point</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+        <span class="c1"># Generate a new drop (triggers the hardware)</span>
+        <span class="n">drop</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scenario</span><span class="o">.</span><span class="n">drop</span><span class="p">()</span>
+
+        <span class="c1"># Generate evaluations and artifacts</span>
+        <span class="n">evaluations</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">evaluate</span><span class="p">()</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__evaluators</span><span class="p">]</span>
+        <span class="n">artifacts</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span><span class="o">.</span><span class="n">artifact</span><span class="p">()</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">evaluations</span><span class="p">]</span>
+
+        <span class="c1"># Return sample</span>
+        <span class="k">return</span> <span class="n">HardwareLoopSample</span><span class="p">(</span><span class="n">drop</span><span class="p">,</span> <span class="n">evaluations</span><span class="p">,</span> <span class="n">artifacts</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Internal run method executing drops&quot;&quot;&quot;</span>
+
+        <span class="c1"># Initialize plots</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_information</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">plt</span><span class="o">.</span><span class="n">ion</span><span class="p">()</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">style_context</span><span class="p">():</span>  <span class="c1"># pragma: no cover</span>
+                <span class="k">for</span> <span class="n">plot</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__plots</span><span class="p">:</span>
+                    <span class="n">plot</span><span class="o">.</span><span class="n">prepare_figure</span><span class="p">()</span>
+
+        <span class="c1"># Tile the generated figures</span>
+        <span class="n">tile_figures</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+
+        <span class="c1"># runtime = HardwareLoopRuntime(self.__devices, self.__dimensions, self.__evaluators, self.plot_information)</span>
+        <span class="n">sample_grid</span> <span class="o">=</span> <span class="n">SampleGrid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__dimensions</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__evaluators</span><span class="p">)</span>
+
+        <span class="c1"># Print indicator that the simulation is starting</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">console_mode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">ConsoleMode</span><span class="o">.</span><span class="n">SILENT</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="o">.</span><span class="n">value</span> <span class="o">&gt;=</span> <span class="n">Verbosity</span><span class="o">.</span><span class="n">INFO</span><span class="o">.</span><span class="n">value</span>
+        <span class="p">):</span>  <span class="c1"># pragma: no cover</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">()</span>  <span class="c1"># Just an empty line</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">rule</span><span class="p">(</span><span class="s2">&quot;Hardware Loop&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">print</span><span class="p">()</span>  <span class="c1"># Just an empty line</span>
+
+        <span class="c1"># Prepare the console</span>
+        <span class="n">progress</span> <span class="o">=</span> <span class="n">Progress</span><span class="p">(</span>
+            <span class="n">SpinnerColumn</span><span class="p">(),</span>
+            <span class="o">*</span><span class="n">Progress</span><span class="o">.</span><span class="n">get_default_columns</span><span class="p">(),</span>
+            <span class="n">TimeElapsedColumn</span><span class="p">(),</span>
+            <span class="n">transient</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">console</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">confirm</span> <span class="o">=</span> <span class="n">Confirm</span><span class="p">(</span><span class="n">console</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="p">)</span>
+
+        <span class="n">num_total_drops</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_drops</span>
+        <span class="n">grid_tasks</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">grid_dimension</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dimensions</span><span class="p">:</span>
+            <span class="n">grid_tasks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="n">progress</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span>
+                    <span class="s2">&quot;[cyan]&quot;</span> <span class="o">+</span> <span class="n">grid_dimension</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="n">grid_dimension</span><span class="o">.</span><span class="n">num_sample_points</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">num_total_drops</span> <span class="o">*=</span> <span class="n">grid_dimension</span><span class="o">.</span><span class="n">num_sample_points</span>
+
+        <span class="n">loop_drop_progress</span> <span class="o">=</span> <span class="n">progress</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="s2">&quot;[green]Drops&quot;</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">num_drops</span><span class="p">)</span>
+        <span class="n">total_progress</span> <span class="o">=</span> <span class="n">progress</span><span class="o">.</span><span class="n">add_task</span><span class="p">(</span><span class="s2">&quot;[red]Progress&quot;</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="n">num_total_drops</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">ExitStack</span><span class="p">()</span> <span class="k">as</span> <span class="n">stack</span><span class="p">:</span>
+            <span class="c1"># Add the progress bar to the context stack</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">console_mode</span> <span class="o">==</span> <span class="n">ConsoleMode</span><span class="o">.</span><span class="n">INTERACTIVE</span><span class="p">:</span>
+                <span class="n">stack</span><span class="o">.</span><span class="n">enter_context</span><span class="p">(</span><span class="n">progress</span><span class="p">)</span>
+
+            <span class="c1"># If the plot information is enabled,</span>
+            <span class="c1"># add the interactive plot to the context stack to enable live updates</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_information</span><span class="p">:</span>
+                <span class="n">stack</span><span class="o">.</span><span class="n">enter_context</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">ion</span><span class="p">())</span>
+
+            <span class="c1"># Start counting the total number of completed drops</span>
+            <span class="n">total</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="c1"># Generate the number of required drops</span>
+            <span class="n">index_grid</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">iteration_priority</span> <span class="ow">is</span> <span class="n">IterationPriority</span><span class="o">.</span><span class="n">GRID</span><span class="p">:</span>
+                <span class="n">index_grid</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">num_drops</span><span class="p">,</span> <span class="o">*</span><span class="p">[</span><span class="n">d</span><span class="o">.</span><span class="n">num_sample_points</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dimensions</span><span class="p">])</span>
+                <span class="n">grid_selector</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__dimensions</span><span class="p">))</span>
+                <span class="n">drop_selector</span> <span class="o">=</span> <span class="mi">0</span>
+
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">iteration_priority</span> <span class="ow">is</span> <span class="n">IterationPriority</span><span class="o">.</span><span class="n">DROPS</span><span class="p">:</span>
+                <span class="n">index_grid</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">d</span><span class="o">.</span><span class="n">num_sample_points</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__dimensions</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_drops</span><span class="p">)</span>
+                <span class="n">grid_selector</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__dimensions</span><span class="p">))</span>
+                <span class="n">drop_selector</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__dimensions</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># This should never happen</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Invalid iteration priority: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">iteration_priority</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">indices</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">ndindex</span><span class="p">(</span><span class="n">index_grid</span><span class="p">):</span>
+                <span class="n">sample_index</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[</span><span class="n">drop_selector</span><span class="p">]</span>
+                <span class="n">section_indices</span> <span class="o">=</span> <span class="n">indices</span><span class="p">[</span><span class="n">grid_selector</span><span class="p">]</span>
+
+                <span class="c1"># Ask for a trigger input if manual mode is enabled</span>
+                <span class="c1"># Abort execution if user denies</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">manual_triggering</span><span class="p">:</span>  <span class="c1"># pragma: no cover</span>
+                    <span class="n">progress</span><span class="o">.</span><span class="n">live</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">confirm</span><span class="o">.</span><span class="n">ask</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Trigger next drop (</span><span class="si">{</span><span class="n">total</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">)?&quot;</span><span class="p">):</span>
+                        <span class="k">break</span>
+
+                    <span class="n">progress</span><span class="o">.</span><span class="n">live</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+                <span class="c1"># Generate the next drop</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="c1"># Generate a new samples</span>
+                    <span class="n">loop_sample</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__generate_sample</span><span class="p">(</span><span class="n">section_indices</span><span class="p">,</span> <span class="n">sample_index</span><span class="p">)</span>
+                    <span class="n">grid_sample</span> <span class="o">=</span> <span class="n">MonteCarloSample</span><span class="p">(</span>
+                        <span class="n">section_indices</span><span class="p">,</span> <span class="n">sample_index</span><span class="p">,</span> <span class="n">loop_sample</span><span class="o">.</span><span class="n">artifacts</span>
+                    <span class="p">)</span>
+
+                    <span class="c1"># Save sample</span>
+                    <span class="n">sample_grid</span><span class="p">[</span><span class="n">section_indices</span><span class="p">]</span><span class="o">.</span><span class="n">add_samples</span><span class="p">(</span><span class="n">grid_sample</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__evaluators</span><span class="p">)</span>
+
+                    <span class="c1"># Print results</span>
+                    <span class="k">if</span> <span class="p">(</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">console_mode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">ConsoleMode</span><span class="o">.</span><span class="n">SILENT</span>
+                        <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">verbosity</span><span class="o">.</span><span class="n">value</span> <span class="o">&lt;=</span> <span class="n">Verbosity</span><span class="o">.</span><span class="n">INFO</span><span class="o">.</span><span class="n">value</span>
+                    <span class="p">):</span>
+                        <span class="n">result_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;# </span><span class="si">{</span><span class="n">total</span><span class="si">:</span><span class="s2">&lt;5</span><span class="si">}</span><span class="s2">&quot;</span>
+
+                        <span class="k">for</span> <span class="n">dimesion</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__dimensions</span><span class="p">,</span> <span class="n">indices</span><span class="p">[</span><span class="n">grid_selector</span><span class="p">]):</span>
+                            <span class="n">result_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">dimesion</span><span class="o">.</span><span class="n">title</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="n">dimesion</span><span class="o">.</span><span class="n">sample_points</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">title</span><span class="si">}</span><span class="s2">&quot;</span>
+
+                        <span class="k">for</span> <span class="n">evaluator</span><span class="p">,</span> <span class="n">artifact</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__evaluators</span><span class="p">,</span> <span class="n">loop_sample</span><span class="o">.</span><span class="n">artifacts</span><span class="p">):</span>
+                            <span class="n">result_str</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot; </span><span class="si">{</span><span class="n">evaluator</span><span class="o">.</span><span class="n">abbreviation</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">artifact</span><span class="p">)</span><span class="si">:</span><span class="s2">5</span><span class="si">}</span><span class="s2">&quot;</span>
+
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">console_mode</span> <span class="o">==</span> <span class="n">ConsoleMode</span><span class="o">.</span><span class="n">INTERACTIVE</span><span class="p">:</span>
+                            <span class="n">progress</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">result_str</span><span class="p">)</span>
+
+                        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">console_mode</span> <span class="o">!=</span> <span class="n">ConsoleMode</span><span class="o">.</span><span class="n">SILENT</span><span class="p">:</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">console</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">result_str</span><span class="p">)</span>
+
+                    <span class="c1"># Update plots</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_information</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">plot</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__plots</span><span class="p">:</span>
+                            <span class="n">plot</span><span class="o">.</span><span class="n">update_plot</span><span class="p">(</span><span class="n">loop_sample</span><span class="p">)</span>
+
+                <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_handle_exception</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">confirm</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+                <span class="c1"># Update progress</span>
+                <span class="n">total</span> <span class="o">+=</span> <span class="mi">1</span>
+
+                <span class="k">for</span> <span class="n">task</span><span class="p">,</span> <span class="n">completed</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">grid_tasks</span><span class="p">,</span> <span class="n">indices</span><span class="p">[</span><span class="n">grid_selector</span><span class="p">]):</span>
+                    <span class="n">progress</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">task</span><span class="p">,</span> <span class="n">completed</span><span class="o">=</span><span class="n">completed</span><span class="p">)</span>
+
+                <span class="n">progress</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">loop_drop_progress</span><span class="p">,</span> <span class="n">completed</span><span class="o">=</span><span class="n">indices</span><span class="p">[</span><span class="n">drop_selector</span><span class="p">])</span>
+                <span class="n">progress</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">total_progress</span><span class="p">,</span> <span class="n">completed</span><span class="o">=</span><span class="n">total</span><span class="p">)</span>
+
+        <span class="c1"># Compute the evaluation results</span>
+        <span class="n">result</span><span class="p">:</span> <span class="n">MonteCarloResult</span> <span class="o">=</span> <span class="n">MonteCarloResult</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__dimensions</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__evaluators</span><span class="p">,</span> <span class="n">sample_grid</span><span class="p">,</span> <span class="mf">0.0</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Generate result plots</span>
+        <span class="n">result_figures</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+
+        <span class="c1"># Save results if a directory was provided</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">results_dir</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">save_to_matlab</span><span class="p">(</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results_dir</span><span class="p">,</span> <span class="s2">&quot;results.mat&quot;</span><span class="p">))</span>
+
+            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="p">(</span><span class="n">figure_base</span><span class="p">,</span> <span class="n">evaluator</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">result_figures</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__evaluators</span><span class="p">)):</span>
+                <span class="n">figure</span> <span class="o">=</span> <span class="n">figure_base</span><span class="o">.</span><span class="n">get_figure</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">figure</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">figure</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span>
+                        <span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">results_dir</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;result_</span><span class="si">{</span><span class="n">idx</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">evaluator</span><span class="o">.</span><span class="n">abbreviation</span><span class="si">}</span><span class="s2">.png&quot;</span><span class="p">),</span>
+                        <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;png&quot;</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">plot_information</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">to_yaml</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">HardwareLoop</span><span class="p">],</span> <span class="n">representer</span><span class="p">:</span> <span class="n">SafeRepresenter</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">HardwareLoop</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">MappingNode</span><span class="p">:</span>
+        <span class="c1"># Prepare dimensions</span>
+        <span class="n">dimension_fields</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">dimension</span> <span class="ow">in</span> <span class="n">node</span><span class="o">.</span><span class="n">__dimensions</span><span class="p">:</span>
+            <span class="n">dimension_fields</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;objects&quot;</span><span class="p">:</span> <span class="n">dimension</span><span class="o">.</span><span class="n">considered_objects</span><span class="p">,</span>
+                    <span class="s2">&quot;property&quot;</span><span class="p">:</span> <span class="n">dimension</span><span class="o">.</span><span class="n">dimension</span><span class="p">,</span>
+                    <span class="s2">&quot;points&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">dimension</span><span class="o">.</span><span class="n">sample_points</span><span class="p">],</span>
+                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">dimension</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+
+        <span class="n">additional_fields</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Evaluators&quot;</span><span class="p">:</span> <span class="n">node</span><span class="o">.</span><span class="n">__evaluators</span><span class="p">,</span> <span class="s2">&quot;Dimensions&quot;</span><span class="p">:</span> <span class="n">dimension_fields</span><span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">node</span><span class="o">.</span><span class="n">_mapping_serialization_wrapper</span><span class="p">(</span><span class="n">representer</span><span class="p">,</span> <span class="n">additional_fields</span><span class="o">=</span><span class="n">additional_fields</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_yaml</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">HardwareLoop</span><span class="p">],</span> <span class="n">constructor</span><span class="p">:</span> <span class="n">SafeConstructor</span><span class="p">,</span> <span class="n">node</span><span class="p">:</span> <span class="n">Node</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">HardwareLoop</span><span class="p">:</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="n">constructor</span><span class="o">.</span><span class="n">construct_mapping</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="n">state</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;Operators&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">evaluators</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Evaluator</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;Evaluators&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">dimensions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="n">state</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;Dimensions&quot;</span><span class="p">,</span> <span class="p">[])</span>
+
+        <span class="c1"># Initialize the hardware loop</span>
+        <span class="n">hardware_loop</span><span class="p">:</span> <span class="n">HardwareLoop</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">InitializationWrapper</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+
+        <span class="c1"># Register evaluators</span>
+        <span class="k">for</span> <span class="n">evaluator</span> <span class="ow">in</span> <span class="n">evaluators</span><span class="p">:</span>
+            <span class="n">hardware_loop</span><span class="o">.</span><span class="n">add_evaluator</span><span class="p">(</span><span class="n">evaluator</span><span class="p">)</span>
+
+        <span class="c1"># Add sweeping dimensions</span>
+        <span class="k">for</span> <span class="n">dimension</span> <span class="ow">in</span> <span class="n">dimensions</span><span class="p">:</span>
+            <span class="n">new_dim</span> <span class="o">=</span> <span class="n">hardware_loop</span><span class="o">.</span><span class="n">new_dimension</span><span class="p">(</span>
+                <span class="n">dimension</span><span class="p">[</span><span class="s2">&quot;property&quot;</span><span class="p">],</span> <span class="n">dimension</span><span class="p">[</span><span class="s2">&quot;points&quot;</span><span class="p">],</span> <span class="o">*</span><span class="n">dimension</span><span class="p">[</span><span class="s2">&quot;objects&quot;</span><span class="p">]</span>
+            <span class="p">)</span>
+
+            <span class="n">title</span> <span class="o">=</span> <span class="n">dimension</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">title</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">new_dim</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">title</span>
+
+        <span class="c1"># Return fully configured hardware loop</span>
+        <span class="k">return</span> <span class="n">hardware_loop</span></div>
+
+</pre></div>
+        </article>
+      </div>
+      <footer>
+        
+        <div class="related-pages">
+          
+          
+        </div>
+        <div class="bottom-of-page">
+          <div class="left-details">
+            <div class="copyright">
+                Copyright &#169; 2023, Barkhausen Institut gGmbH
+            </div>
+            Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
+            
+            <a href="https://github.com/pradyunsg/furo">Furo</a>
+            
+          </div>
+          <div class="right-details">
+            
+          </div>
+        </div>
+        
+      </footer>
+    </div>
+    <aside class="toc-drawer no-toc">
+      
+      
+      
+    </aside>
+  </div>
+</div><script src="../../../_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script src="../../../_static/tabs.js?v=3030b3cb"></script>
+    <script src="https://unpkg.com/mermaid@10.2.0/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({startOnLoad:true});</script>
+    <script src="https://unpkg.com/d3/dist/d3.min.js"></script>
+    <script>
+            window.addEventListener("load", function () {
+              var svgs = d3.selectAll(".mermaid svg");
+              svgs.each(function() {
+                var svg = d3.select(this);
+                svg.html("<g>" + svg.html() + "</g>");
+                var inner = svg.select("g");
+                var zoom = d3.zoom().on("zoom", function(event) {
+                  inner.attr("transform", event.transform);
+                });
+                svg.call(zoom);
+              });
+            });
+            </script>
+    </body>
+</html>

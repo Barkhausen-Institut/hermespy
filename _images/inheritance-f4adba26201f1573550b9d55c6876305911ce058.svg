@@ -1,0 +1,50 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="148pt" height="137pt" viewBox="0.00 0.00 148.00 137.00">
+<ns0:g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 133)">
+<ns0:title>inheritancec9f0eacaf3</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>ABC</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="https://docs.python.org/3/library/abc.html#abc.ABC" ns1:title="Helper class that provides a standard way to create an ABC using" target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="56,-129 2,-129 2,-110 56,-110 56,-129" />
+<ns0:text text-anchor="middle" x="29" y="-117" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">ABC</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>CommunicationEvaluator</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="../api/modem.evaluators.CommunicationEvaluator.html#hermespy.modem.evaluators.CommunicationEvaluator" ns1:title="Base class for evaluating communication processes between two modems." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="140,-19 0,-19 0,0 140,0 140,-19" />
+<ns0:text text-anchor="middle" x="70" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">CommunicationEvaluator</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge2" class="edge">
+<ns0:title>ABC-&gt;CommunicationEvaluator</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M28.93,-109.95C29.11,-97.44 30.53,-73.6 38,-55 42.76,-43.16 51.31,-31.52 58.37,-23.11" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="59.76,-24.19 61.7,-19.26 57.11,-21.9 59.76,-24.19" />
+</ns0:g>
+
+<ns0:g id="node3" class="node">
+<ns0:title>Evaluator</ns0:title>
+<ns0:g id="a_node3"><ns0:a ns1:href="../api/core.monte_carlo.Evaluator.html#hermespy.core.monte_carlo.Evaluator" ns1:title="Evaluation routine for investigated object states, extracting performance indicators of interest." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="110.5,-74 47.5,-74 47.5,-55 110.5,-55 110.5,-74" />
+<ns0:text text-anchor="middle" x="79" y="-62" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">Evaluator</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge3" class="edge">
+<ns0:title>ABC-&gt;Evaluator</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M37.26,-109.75C45.48,-101.03 58.19,-87.56 67.42,-77.77" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="68.74,-78.93 70.9,-74.09 66.19,-76.53 68.74,-78.93" />
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>Evaluator-&gt;CommunicationEvaluator</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M77.51,-54.75C76.1,-46.41 73.95,-33.74 72.31,-24.09" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="74.02,-23.73 71.46,-19.09 70.57,-24.31 74.02,-23.73" />
+</ns0:g>
+</ns0:g>
+</ns0:svg>

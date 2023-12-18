@@ -1,0 +1,59 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="226pt" height="82pt" viewBox="0.00 0.00 226.00 82.00">
+<ns0:g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 78)">
+<ns0:title>inheritancec7778726d0</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>ABC</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="https://docs.python.org/3/library/abc.html#abc.ABC" ns1:title="Helper class that provides a standard way to create an ABC using" target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="54,-74 0,-74 0,-55 54,-55 54,-74" />
+<ns0:text text-anchor="middle" x="27" y="-62" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">ABC</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>ChannelEqualization</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="../api/modem.waveform.ChannelEqualization.html#hermespy.modem.waveform.ChannelEqualization" ns1:title="Abstract base class for channel equalization routines of waveform generators." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="157,-19 41,-19 41,0 157,0 157,-19" />
+<ns0:text text-anchor="middle" x="99" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">ChannelEqualization</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge2" class="edge">
+<ns0:title>ABC-&gt;ChannelEqualization</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M38.57,-54.98C50.57,-46.15 69.43,-32.27 82.88,-22.36" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="84.23,-23.54 87.22,-19.17 82.16,-20.73 84.23,-23.54" />
+</ns0:g>
+
+<ns0:g id="node3" class="node">
+<ns0:title>Generic</ns0:title>
+<ns0:g id="a_node3"><ns0:a ns1:href="https://docs.python.org/3/library/typing.html#typing.Generic" ns1:title="Abstract base class for generic types." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="126,-74 72,-74 72,-55 126,-55 126,-74" />
+<ns0:text text-anchor="middle" x="99" y="-62" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">Generic</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>Generic-&gt;ChannelEqualization</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M99,-54.75C99,-46.41 99,-33.74 99,-24.09" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="100.75,-24.09 99,-19.09 97.25,-24.09 100.75,-24.09" />
+</ns0:g>
+
+<ns0:g id="node4" class="node">
+<ns0:title>Serializable</ns0:title>
+<ns0:g id="a_node4"><ns0:a ns1:href="../api/core.factory.html#hermespy.core.factory.Serializable" ns1:title="Base class for serializable classes." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="218,-74 144,-74 144,-55 218,-55 218,-74" />
+<ns0:text text-anchor="middle" x="181" y="-62" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">Serializable</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge3" class="edge">
+<ns0:title>Serializable-&gt;ChannelEqualization</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M167.83,-54.98C154.04,-46.07 132.31,-32.03 116.96,-22.11" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="117.56,-20.41 112.41,-19.17 115.66,-23.35 117.56,-20.41" />
+</ns0:g>
+</ns0:g>
+</ns0:svg>

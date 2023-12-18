@@ -1,0 +1,80 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="236pt" height="137pt" viewBox="0.00 0.00 236.00 137.00">
+<ns0:g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 133)">
+<ns0:title>inheritanceb1eb418da9</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>ABC</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="https://docs.python.org/3/library/abc.html#abc.ABC" ns1:title="Helper class that provides a standard way to create an ABC using" target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="54,-129 0,-129 0,-110 54,-110 54,-129" />
+<ns0:text text-anchor="middle" x="27" y="-117" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">ABC</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>ChannelEqualization</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="../api/modem.waveform.ChannelEqualization.html#hermespy.modem.waveform.ChannelEqualization" ns1:title="Abstract base class for channel equalization routines of waveform generators." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="156,-74 40,-74 40,-55 156,-55 156,-74" />
+<ns0:text text-anchor="middle" x="98" y="-62" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">ChannelEqualization</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge2" class="edge">
+<ns0:title>ABC-&gt;ChannelEqualization</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M38.41,-109.98C50.24,-101.15 68.84,-87.27 82.11,-77.36" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="83.43,-78.56 86.39,-74.17 81.33,-75.76 83.43,-78.56" />
+</ns0:g>
+
+<ns0:g id="node5" class="node">
+<ns0:title>ZeroForcingChannelEqualization</ns0:title>
+<ns0:g id="a_node5"><ns0:a ns1:href="../api/modem.waveform.ZeroForcingChannelEqualization.html#hermespy.modem.waveform.ZeroForcingChannelEqualization" ns1:title="Zero-Forcing channel equalization for arbitrary waveforms." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="228,-19 54,-19 54,0 228,0 228,-19" />
+<ns0:text text-anchor="middle" x="141" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">ZeroForcingChannelEqualization</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge4" class="edge">
+<ns0:title>ChannelEqualization-&gt;ZeroForcingChannelEqualization</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M105.1,-54.75C112.11,-46.1 122.91,-32.8 130.83,-23.03" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="132.24,-24.07 134.03,-19.09 129.52,-21.87 132.24,-24.07" />
+</ns0:g>
+
+<ns0:g id="node3" class="node">
+<ns0:title>Generic</ns0:title>
+<ns0:g id="a_node3"><ns0:a ns1:href="https://docs.python.org/3/library/typing.html#typing.Generic" ns1:title="Abstract base class for generic types." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="126,-129 72,-129 72,-110 126,-110 126,-129" />
+<ns0:text text-anchor="middle" x="99" y="-117" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">Generic</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>Generic-&gt;ChannelEqualization</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M98.83,-109.75C98.68,-101.41 98.44,-88.74 98.26,-79.09" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="100.01,-79.06 98.16,-74.09 96.51,-79.12 100.01,-79.06" />
+</ns0:g>
+
+<ns0:g id="node4" class="node">
+<ns0:title>Serializable</ns0:title>
+<ns0:g id="a_node4"><ns0:a ns1:href="../api/core.factory.html#hermespy.core.factory.Serializable" ns1:title="Base class for serializable classes." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="220,-129 146,-129 146,-110 220,-110 220,-129" />
+<ns0:text text-anchor="middle" x="183" y="-117" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">Serializable</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge3" class="edge">
+<ns0:title>Serializable-&gt;ChannelEqualization</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M169.34,-109.98C154.93,-101 132.14,-86.79 116.2,-76.85" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="117.07,-75.33 111.91,-74.17 115.22,-78.3 117.07,-75.33" />
+</ns0:g>
+
+<ns0:g id="edge5" class="edge">
+<ns0:title>Serializable-&gt;ZeroForcingChannelEqualization</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M181.14,-109.67C178.37,-97.22 172.67,-73.9 165,-55 160.55,-44.02 154.11,-32.24 149.03,-23.57" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="150.43,-22.49 146.37,-19.09 147.42,-24.28 150.43,-22.49" />
+</ns0:g>
+</ns0:g>
+</ns0:svg>

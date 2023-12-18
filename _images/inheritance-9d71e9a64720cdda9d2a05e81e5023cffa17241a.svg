@@ -1,0 +1,116 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="346pt" height="137pt" viewBox="0.00 0.00 345.50 137.00">
+<ns0:g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 133)">
+<ns0:title>inheritance5824af06b9</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>BaseModem</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="../api/modem.modem.BaseModem.html#hermespy.modem.modem.BaseModem" ns1:title="Base class for wireless modems transmitting or receiving information over devices." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="167.5,-129 90.5,-129 90.5,-110 167.5,-110 167.5,-129" />
+<ns0:text text-anchor="middle" x="129" y="-117" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">BaseModem</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node3" class="node">
+<ns0:title>TransmittingModem</ns0:title>
+<ns0:g id="a_node3"><ns0:a ns1:href="../api/modem.modem.TransmittingModem.html#hermespy.modem.modem.TransmittingModem" ns1:title="Representation of a wireless modem exclusively transmitting." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="170,-74 56,-74 56,-55 170,-55 170,-74" />
+<ns0:text text-anchor="middle" x="113" y="-62" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">TransmittingModem</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge6" class="edge">
+<ns0:title>BaseModem-&gt;TransmittingModem</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M126.36,-109.75C123.84,-101.41 120.02,-88.74 117.1,-79.09" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="118.71,-78.37 115.59,-74.09 115.36,-79.38 118.71,-78.37" />
+</ns0:g>
+
+<ns0:g id="node4" class="node">
+<ns0:title>ReceivingModem</ns0:title>
+<ns0:g id="a_node4"><ns0:a ns1:href="../api/modem.modem.ReceivingModem.html#hermespy.modem.modem.ReceivingModem" ns1:title="Representation of a wireless modem exclusively receiving." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="289.5,-74 188.5,-74 188.5,-55 289.5,-55 289.5,-74" />
+<ns0:text text-anchor="middle" x="239" y="-62" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">ReceivingModem</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge3" class="edge">
+<ns0:title>BaseModem-&gt;ReceivingModem</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M146.67,-109.98C165.64,-100.84 195.83,-86.3 216.49,-76.35" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="217.26,-77.92 221.01,-74.17 215.74,-74.76 217.26,-77.92" />
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>DuplexModem</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="../api/modem.modem.DuplexModem.html#hermespy.modem.modem.DuplexModem" ns1:title="Representation of a wireless modem simultaneously transmitting and receiving." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="220,-19 132,-19 132,0 220,0 220,-19" />
+<ns0:text text-anchor="middle" x="176" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">DuplexModem</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>TransmittingModem-&gt;DuplexModem</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M123.12,-54.98C133.53,-46.23 149.84,-32.51 161.59,-22.62" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="162.99,-23.73 165.69,-19.17 160.74,-21.05 162.99,-23.73" />
+</ns0:g>
+
+<ns0:g id="edge2" class="edge">
+<ns0:title>ReceivingModem-&gt;DuplexModem</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M228.88,-54.98C218.47,-46.23 202.16,-32.51 190.41,-22.62" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="191.26,-21.05 186.31,-19.17 189.01,-23.73 191.26,-21.05" />
+</ns0:g>
+
+<ns0:g id="node5" class="node">
+<ns0:title>Receiver</ns0:title>
+<ns0:g id="a_node5"><ns0:a ns1:href="../api/core.device.Receiver.html#hermespy.core.device.Receiver" ns1:title="Operator receiving from a device." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="337.5,-129 278.5,-129 278.5,-110 337.5,-110 337.5,-129" />
+<ns0:text text-anchor="middle" x="308" y="-117" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">Receiver</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge4" class="edge">
+<ns0:title>Receiver-&gt;ReceivingModem</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M296.91,-109.98C285.41,-101.15 267.34,-87.27 254.45,-77.36" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="255.32,-75.83 250.29,-74.17 253.19,-78.6 255.32,-75.83" />
+</ns0:g>
+
+<ns0:g id="node6" class="node">
+<ns0:title>Serializable</ns0:title>
+<ns0:g id="a_node6"><ns0:a ns1:href="../api/core.factory.html#hermespy.core.factory.Serializable" ns1:title="Base class for serializable classes." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="260,-129 186,-129 186,-110 260,-110 260,-129" />
+<ns0:text text-anchor="middle" x="223" y="-117" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">Serializable</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge8" class="edge">
+<ns0:title>Serializable-&gt;TransmittingModem</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M205.33,-109.98C186.36,-100.84 156.17,-86.3 135.51,-76.35" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="136.26,-74.76 130.99,-74.17 134.74,-77.92 136.26,-74.76" />
+</ns0:g>
+
+<ns0:g id="edge5" class="edge">
+<ns0:title>Serializable-&gt;ReceivingModem</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M225.64,-109.75C228.16,-101.41 231.98,-88.74 234.9,-79.09" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="236.64,-79.38 236.41,-74.09 233.29,-78.37 236.64,-79.38" />
+</ns0:g>
+
+<ns0:g id="node7" class="node">
+<ns0:title>Transmitter</ns0:title>
+<ns0:g id="a_node7"><ns0:a ns1:href="../api/core.device.Transmitter.html#hermespy.core.device.Transmitter" ns1:title="Operator transmitting over a device." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="72,-129 0,-129 0,-110 72,-110 72,-129" />
+<ns0:text text-anchor="middle" x="36" y="-117" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">Transmitter</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge7" class="edge">
+<ns0:title>Transmitter-&gt;TransmittingModem</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M48.37,-109.98C61.32,-101.07 81.72,-87.03 96.14,-77.11" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="97.28,-78.45 100.4,-74.17 95.29,-75.56 97.28,-78.45" />
+</ns0:g>
+</ns0:g>
+</ns0:svg>

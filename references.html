@@ -1,19 +1,20 @@
 <!doctype html>
-<html class="no-js" lang="en">
+<html class="no-js" lang="en" data-content_root="./">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
-<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="For Developers" href="developer_hints.html" /><link rel="prev" title="Matlab" href="matlab.html" />
+<link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="YAML Examples" href="examples/examples.html" /><link rel="prev" title="Matlab" href="matlab.html" />
 
-    <!-- Generated with Sphinx 7.0.1 and Furo 2023.05.20 -->
+    <!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
         <title>References - HermesPy</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?digest=e6660623a769aa55fea372102b9bf3151b292993" />
-    <link rel="stylesheet" type="text/css" href="_static/copybutton.css" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
-    <link rel="stylesheet" type="text/css" href="_static/tweaks.css" />
-    <link rel="stylesheet" type="text/css" href="_static/tabs.css" />
-    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?digest=30d1aed668e5c3a91c3e3bf6a60b675221979f0e" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=eafc0fe6" />
+    <link rel="stylesheet" type="text/css" href="_static/tweaks.css?v=72d4c74a" />
+    <link rel="stylesheet" type="text/css" href="_static/tabs.css?v=a5c4661c" />
+    <link rel="stylesheet" type="text/css" href="_static/styles/furo-extensions.css?v=36a5483c" />
     
     
 
@@ -165,13 +166,13 @@
 <div id="searchbox"></div><div class="sidebar-scroll"><div class="sidebar-tree">
   <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="index.html">HermesPy</a></li>
-<li class="toctree-l1"><a class="reference internal" href="features.html">Features</a></li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a></li>
 <li class="toctree-l1 has-children"><a class="reference internal" href="tutorials.html">Tutorials</a><input class="toctree-checkbox" id="toctree-checkbox-1" name="toctree-checkbox-1" role="switch" type="checkbox"/><label for="toctree-checkbox-1"><div class="visually-hidden">Toggle navigation of Tutorials</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="notebooks/channel.html">Implementing Channels</a></li>
 <li class="toctree-l2"><a class="reference internal" href="notebooks/fec_coding.html">Implementing FEC codings</a></li>
-<li class="toctree-l2"><a class="reference internal" href="notebooks/beamformer.html">Implementing Beamformers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="notebooks/beamforming_usage.html">Using Beamformers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="notebooks/beamforming_implementation.html">Implementing Beamformers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="notebooks/waveform.html">Implementing Communication Waveforms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="notebooks/precoding.html">Implementing Precodings</a></li>
 <li class="toctree-l2"><a class="reference internal" href="notebooks/roc.html">Receiver Operating Characteristics</a></li>
@@ -180,7 +181,302 @@
 <li class="toctree-l2"><a class="reference internal" href="notebooks/evaluator.html">Implementing Evaluators</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="examples/examples.html">Configuration Examples</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of Configuration Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="api/api.html">HermesPy API</a><input class="toctree-checkbox" id="toctree-checkbox-2" name="toctree-checkbox-2" role="switch" type="checkbox"/><label for="toctree-checkbox-2"><div class="visually-hidden">Toggle navigation of HermesPy API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/modem.html">Communication</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of Communication</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/modem.waveform.html">Waveforms</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Waveforms</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="api/modem.waveform.single_carrier.html">Single Carrier</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Single Carrier</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="api/modem.waveform.single_carrier.FMCW.html">FMCW</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/modem.waveform.single_carrier.RaisedCosine.html">Raised Cosine</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/modem.waveform.single_carrier.Rectangular.html">Rectangular</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/modem.waveform.single_carrier.RootRaisedCosine.html">Root Raised Cosine</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="api/modem.waveform.ofdm.html">OFDM</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of OFDM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="api/modem.waveform.ofdm.FrameElement.html">Frame Element</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/modem.waveform.ofdm.FrameGuardSection.html">Guard Section</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/modem.waveform.ofdm.FrameResource.html">Resource</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/modem.waveform.ofdm.FrameSection.html">Section</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/modem.waveform.ofdm.FrameSymbolSection.html">Symbol Section</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/modem.waveform.ofdm.OFDMChannelEqualization.html">Channel Equalization</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/modem.waveform.ofdm.OFDMCorrelationSynchronization.html">Correlation Synchronization</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/modem.waveform.ofdm.OFDMLeastSquaresChannelEstimation.html">Least Squares Channel Estimation</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/modem.waveform.ofdm.OFDMSynchronization.html">Synchronization</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/modem.waveform.ofdm.OFDMWaveform.html">OFDM Waveform</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/modem.waveform.ofdm.OFDMZeroForcingChannelEqualization.html">Zero Forcing Equalization</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/modem.waveform.ofdm.PilotSection.html">Pilot Section</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/modem.waveform.ofdm.SchmidlCoxPilotSection.html">Schmidl Cox Pilot</a></li>
+<li class="toctree-l5"><a class="reference internal" href="api/modem.waveform.ofdm.SchmidlCoxSynchronization.html">Schmidl Cox Synchronization</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="api/modem.waveform.chirp_fsk.html">C-FSK</a></li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="api/modem.waveform.Synchronization.html">Synchronization</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Synchronization</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="api/modem.waveform.correlation_synchronization.html">Correlation</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="api/modem.waveform.ChannelEstimation.html">Channel Estimation</a></li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="api/modem.waveform.ChannelEqualization.html">Channel Equalization</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Channel Equalization</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="api/modem.waveform.ZeroForcingChannelEqualization.html">Zero-Forcing</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/modem.evaluators.html">Evaluators</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Evaluators</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/modem.evaluators.ber.html">Bit Error Rate</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/modem.evaluators.bler.html">Block Error Rate</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/modem.evaluators.fer.html">Frame Error Rate</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/modem.evaluators.throughput.html">Throughput</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/modem.evaluators.CommunicationEvaluator.html">Communication Evaluator</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/modem.precoding.html">Communication Precoding</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of Communication Precoding</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/modem.precoding.dft.html">Discrete Fourier Transform</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/modem.precoding.ratio_combining.html">Maximal Ratio Combining</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/modem.precoding.single_carrier.html">Single Carrier Decoding</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/modem.precoding.space_time_block_coding.html">Space-Time Block Codes</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/modem.precoding.spatial_multiplexing.html">Spatial Multiplexing</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/modem.precoding.symbol_precoding.SymbolPrecoder.html">Symbol Precoder</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/modem.precoding.symbol_precoding.SymbolPrecoding.html">Symbol Precoding</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/modem.symbols.html">Communication Symbols</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/modem.bits_source.html">Bit Sources</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/modem.modem.TransmittingModem.html">Transmitting Modem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/modem.modem.ReceivingModem.html">Receiving Modem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/modem.modem.SimplexLink.html">Simplex Link</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/modem.modem.DuplexModem.html">Duplex Modem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/modem.modem.BaseModem.html">Base Modem</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/modem.modem.CommunicationTransmission.html">Transmission</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/modem.modem.CommunicationTransmissionFrame.html">Transmission Frame</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/modem.modem.CommunicationReception.html">Reception</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/modem.modem.CommunicationReceptionFrame.html">Reception Frame</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/radar.html">Sensing</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Sensing</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/radar.radar.Radar.html">Radar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/radar.radar.RadarReception.html">Radar Reception</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/radar.radar.RadarTransmission.html">Radar Transmission</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/radar.radar.RadarWaveform.html">Radar Waveform</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of Radar Waveform</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/radar.fmcw.html">FMCW</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/radar.cube.RadarCube.html">Radar Cube</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/radar.detection.RadarDetector.html">Radar Detector</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Radar Detector</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/radar.detection.ThresholdDetector.html">Threshold</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/radar.detection.MaxDetector.html">Max</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/radar.detection.PointDetection.html">Point Detection</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/radar.detection.RadarPointCloud.html">Radar Point Cloud</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/radar.evaluators.RadarEvaluator.html">Radar Evaluator</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Radar Evaluator</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/radar.evaluators.DetectionProbEvaluator.html">Detection Probability Evaluator</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/radar.evaluators.ReceiverOperatingCharacteristic.html">Reiver Operating Characteristic</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/radar.evaluators.RootMeanSquareError.html">Root Mean Square Error</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/channel.html">Channel Modeling</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of Channel Modeling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/channel.channel.Channel.html">Channel Model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/channel.channel.ChannelPropagation.html">Channel Propagation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/channel.channel.ChannelRealization.html">Channel Realization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/channel.channel.DirectiveChannelRealization.html">Directive Channel Realization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/channel.channel.InterpolationMode.html">Interpolation Mode</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/channel.ideal.html">Ideal Channel</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of Ideal Channel</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.ideal.IdealChannel.html">Ideal Channel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.ideal.IdealChannelRealization.html">Ideal Channel Realization</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/channel.multipath_fading_channel.html">Multipath Fading Channels</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of Multipath Fading Channels</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.multipath_fading_channel.MultipathFadingChannel.html">Multipath Fading Channel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.multipath_fading_channel.MultipathFadingRealization.html">Multipath Fading Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.multipath_fading_channel.PathRealization.html">Path Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.multipath_fading_channel.AntennaCorrelation.html">Antenna Correlation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.multipath_fading_channel.CustomAntennaCorrelation.html">Custom Antenna Correlation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.multipath_fading_templates.MultipathFading5GTDL.html">5G TDL Channel Model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.multipath_fading_templates.MultipathFadingCost259.html">Cost 259 Channel Model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.multipath_fading_templates.MultipathFadingExponential.html">Exponential Channel Model</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/channel.cluster_delay_lines.html">3GPP Cluster Delay Line Models</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of 3GPP Cluster Delay Line Models</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.cluster_delay_line_indoor_factory.IndoorFactoryBase.html">Indoor Factory Base</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.html">Indoor Factory LOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.html">Indoor Factory NLOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.html">Indoor Office LOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.html">Indoor Office NLOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.html">Rural Marocells LOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.html">Rural Marocells NLOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.html">Rural Marocells O2I</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.html">Street Canyon LOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight.html">Street Canyon NLOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside.html">Street Canyon O2I</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.html">Urban Macrocells LOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.html">Urban Macrocells NLOS</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.html">Urban Macrocells O2I</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.cluster_delay_lines.ClusterDelayLineBase.html">Cluster Delay Line Base</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.cluster_delay_lines.ClusterDelayLine.html">Custom Cluster Delay Line</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.cluster_delay_lines.ClusterDelayLineRealization.html">Cluster Delay Line Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.cluster_delay_lines.DelayNormalization.html">Delay Normalization</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/channel.delay.html">Delay Channels</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of Delay Channels</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.delay.DelayChannelBase.html">Delay Channel Base</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.delay.DelayChannelRealization.html">Delay Channel Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.delay.RandomDelayChannel.html">Random Delay Channel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.delay.RandomDelayChannelRealization.html">Random Delay Channel Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.delay.SpatialDelayChannel.html">Spatial Delay Channel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.delay.SpatialDelayChannelRealization.html">Spatial Delay Channel Realization</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/channel.radar.html">Radar Channels</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of Radar Channels</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.radar.FixedCrossSection.html">Fixed Cross Section</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.radar.MultiTargetRadarChannel.html">Multi Target Channel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.radar.MultiTargetRadarChannelRealization.html">Multi Target Channel Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.radar.PhysicalRadarTarget.html">Physical Target</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.radar.RadarChannelBase.html">Radar Channel Base</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.radar.RadarChannelRealization.html">Radar Channel Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.radar.RadarCrossSectionModel.html">Radar Cross Section</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.radar.RadarInterferenceRealization.html">Radar Interference Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.radar.RadarPathRealization.html">Radar Path Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.radar.RadarTarget.html">Radar Target</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.radar.RadarTargetRealization.html">Radar Target Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.radar.SingleTargetRadarChannel.html">Single Target Channel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.radar.SingleTargetRadarChannelRealization.html">Single Target Channel Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.radar.VirtualRadarTarget.html">Virtual Target</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/channel.quadriga.html">Quadriga</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of Quadriga</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.quadriga.QuadrigaChannel.html">Quadriga Channel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.quadriga.QuadrigaChannelRealization.html">Quadriga Channel Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/channel.quadriga.QuadrigaInterface.html">Quadriga Interface</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/simulation.html">Simulation</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of Simulation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/simulation.simulation.Simulation.html">Simulation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/simulation.simulation.SimulationScenario.html">Simulation Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/simulation.simulation.SimulatedDrop.html">Simulated Drop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/simulation.simulated_device.SimulatedDevice.html">Simulated Device</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/simulation.simulated_device.SimulatedDeviceReception.html">Device Reception</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/simulation.simulated_device.SimulatedDeviceTransmission.html">Device Transmission</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/simulation.antennas.html">Antenna Arrays Modeling</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Antenna Arrays Modeling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/simulation.antennas.SimulatedAntenna.html">Simulated Antenna</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/simulation.antennas.SimulatedAntennaPort.html">Simulated Antenna Port</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/simulation.antennas.SimulatedAntennas.html">Simulated Antennas</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/simulation.antennas.SimulatedCustomArray.html">Simulated Custom Array</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/simulation.antennas.SimulatedDipole.html">Simulated Dipole Antenna</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/simulation.antennas.SimulatedIdealAntenna.html">Simulated Ideal Antenna</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/simulation.antennas.SimulatedLinearAntenna.html">Simulated Linear Antenna</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/simulation.antennas.SimulatedPatchAntenna.html">Simulated Patch Antenna</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/simulation.antennas.SimulatedUniformArray.html">Simulated Uniform Array</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/simulation.rf_chain.html">Hardware Radio Frequency Chain Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/simulation.rf_chain.power_amplifier.html">Power Amplifier Modeling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/simulation.rf_chain.phase_noise.html">Phase Noise Modeling</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/simulation.rf_chain.adc.html">Analog-to-Digital Conversion</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of Analog-to-Digital Conversion</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/simulation.rf_chain.adc.AnalogDigitalConverter.html">Analog Digital Converter</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/simulation.rf_chain.adc.AutomaticGainControl.html">Automatic Gain Control</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/simulation.rf_chain.adc.Gain.html">Constant Gain</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/simulation.rf_chain.adc.GainControlBase.html">Gain Control Base</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="api/simulation.noise.html">Noise Modeling</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/simulation.coupling.html">Mutual Coupling</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Mutual Coupling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/simulation.coupling.perfect.html">Perfect Coupling</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/simulation.coupling.impedance.html">Impedance Coupling</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="api/simulation.isolation.html">Antenna Isolation Modeling</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Antenna Isolation Modeling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="api/simulation.isolation.perfect.html">Perfect Isolation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/simulation.isolation.impedance.html">Impedance Isolation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="api/simulation.isolation.specific.html">Specific Isolation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/hardware_loop.html">Hardware Loop</a><input class="toctree-checkbox" id="toctree-checkbox-27" name="toctree-checkbox-27" role="switch" type="checkbox"/><label for="toctree-checkbox-27"><div class="visually-hidden">Toggle navigation of Hardware Loop</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/hardware_loop.hardware_loop.HardwareLoop.html">Hardaware Loop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/hardware_loop.scenario.PhysicalScenario.html">Physical Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/hardware_loop.physical_device.PhysicalDevice.html">Physical Device</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/hardware_loop.physical_device_dummy.PhysicalDeviceDummy.html">Physical Device Dummy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/hardware_loop.physical_device_dummy.PhysicalScenarioDummy.html">Physical Scenario Dummy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/hardware_loop.hardware_loop.HardwareLoopPlot.html">Hardware Loop Plot</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/hardware_loop.visualizers.html">Visualizers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/hardware_loop.uhd.usrp.UsrpDevice.html">USRP Device</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/hardware_loop.uhd.system.UsrpSystem.html">USRP System</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/hardware_loop.audio.device.AudioDevice.html">Audio Device</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/hardware_loop.audio.scenario.AudioScenario.html">Audio Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/hardware_loop.calibration.delay.html">Delay Calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/hardware_loop.calibration.leakage.html">Leakage Calibration</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/core.html">Core</a><input class="toctree-checkbox" id="toctree-checkbox-28" name="toctree-checkbox-28" role="switch" type="checkbox"/><label for="toctree-checkbox-28"><div class="visually-hidden">Toggle navigation of Core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/core.monte_carlo.html">PyMonte</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/core.executable.html">Executable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/core.factory.html">Serialization Factory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/core.definitions.html">General Definitions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/core.device.Device.html">Device</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/core.device.DeviceOutput.html">Device Output</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/core.device.Transmitter.html">Transmitter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/core.device.Receiver.html">Receiver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/core.device.Transmission.html">Transmission</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/core.device.Reception.html">Reception</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/core.device.OperationResult.html">Operation Result</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/core.drop.Drop.html">Drop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/core.monte_carlo.Evaluator.html">Evaluator</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/core.operators.html">Extra Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/core.duplex.html">Duplex Operation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/core.logarithmic.html">Logarithmics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/core.pipeline.html">Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/core.random_node.html">Random Graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/core.scenario.html">Wireless Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/core.signal_model.Signal.html">Signal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/core.channel_state_information.html">Channel State Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/core.antennas.html">Antenna Descriptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/core.transformation.html">Coordinate System Transformations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/core.animation.html">Animation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/core.visualize.html">Visualization</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/fec.html">Error Correction</a><input class="toctree-checkbox" id="toctree-checkbox-29" name="toctree-checkbox-29" role="switch" type="checkbox"/><label for="toctree-checkbox-29"><div class="visually-hidden">Toggle navigation of Error Correction</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/fec.coding.html">Coding Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fec.block_interleaver.html">Interleaving</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fec.crc.html">Cyclic Redundancy Checks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fec.repetition.html">Repetition Coding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/fec.scrambler.html">Scrambling</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/jcas.html">JCAS</a><input class="toctree-checkbox" id="toctree-checkbox-30" name="toctree-checkbox-30" role="switch" type="checkbox"/><label for="toctree-checkbox-30"><div class="visually-hidden">Toggle navigation of JCAS</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/jcas.matched_filtering.html">Matched Filter JCAS</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/precoding.html">Precoding</a><input class="toctree-checkbox" id="toctree-checkbox-31" name="toctree-checkbox-31" role="switch" type="checkbox"/><label for="toctree-checkbox-31"><div class="visually-hidden">Toggle navigation of Precoding</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/precoding.precoding.html">Precoding Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/precoding.stream_precoding.html">Stream Precoding</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/beamforming.html">Beamforming</a><input class="toctree-checkbox" id="toctree-checkbox-32" name="toctree-checkbox-32" role="switch" type="checkbox"/><label for="toctree-checkbox-32"><div class="visually-hidden">Toggle navigation of Beamforming</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/beamforming.beamformer.html">Beamformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/beamforming.conventional.html">Conventional Beamformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/beamforming.capon.html">Capon Beamformer</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/bin.html">Entry Points</a><input class="toctree-checkbox" id="toctree-checkbox-33" name="toctree-checkbox-33" role="switch" type="checkbox"/><label for="toctree-checkbox-33"><div class="visually-hidden">Toggle navigation of Entry Points</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/bin.hermes.html">Hermes Command Line Interface</a></li>
+</ul>
+</li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="api/tools.html">Tools</a><input class="toctree-checkbox" id="toctree-checkbox-34" name="toctree-checkbox-34" role="switch" type="checkbox"/><label for="toctree-checkbox-34"><div class="visually-hidden">Toggle navigation of Tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/tools.math.html">Math Tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/tools.resampling.html">Resampling Routines</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/tools.tile.html">Tile Figures</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="matlab.html">Matlab</a></li>
+<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">References</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="examples/examples.html">YAML Examples</a><input class="toctree-checkbox" id="toctree-checkbox-35" name="toctree-checkbox-35" role="switch" type="checkbox"/><label for="toctree-checkbox-35"><div class="visually-hidden">Toggle navigation of YAML Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="examples/chirp_fsk_lora.html">Chirp FSK LORA</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/chirp_qam.html">Chirp QAM</a></li>
 <li class="toctree-l2"><a class="reference internal" href="examples/hardware_model.html">Hardware Modeling</a></li>
@@ -193,140 +489,6 @@
 <li class="toctree-l2"><a class="reference internal" href="examples/audio.html">Audio Hardware Binding</a></li>
 </ul>
 </li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="api/api.html">HermesPy API</a><input class="toctree-checkbox" id="toctree-checkbox-3" name="toctree-checkbox-3" role="switch" type="checkbox"/><label for="toctree-checkbox-3"><div class="visually-hidden">Toggle navigation of HermesPy API</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/core.html">Core</a><input class="toctree-checkbox" id="toctree-checkbox-4" name="toctree-checkbox-4" role="switch" type="checkbox"/><label for="toctree-checkbox-4"><div class="visually-hidden">Toggle navigation of Core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/core.monte_carlo.html">PyMonte</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/core.executable.html">Executable</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/core.factory.html">Serialization Factory</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/core.definitions.html">General Definitions</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/core.device.html">Device Modeling</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/core.operators.html">Extra Operators</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/core.logarithmic.html">Logarithmics</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/core.pipeline.html">Pipeline</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/core.random_node.html">Random Graph</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/core.scenario.html">Wireless Scenario</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/core.signal_model.html">Signal Modeling</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/core.channel_state_information.html">Channel State Information Model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/core.antennas.html">Antenna Configuration</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/core.transformation.html">Coordinate System Transformations</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/core.animation.html">Animation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/core.visualize.html">Visualization</a></li>
-</ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/channel.html">Channel Modeling</a><input class="toctree-checkbox" id="toctree-checkbox-5" name="toctree-checkbox-5" role="switch" type="checkbox"/><label for="toctree-checkbox-5"><div class="visually-hidden">Toggle navigation of Channel Modeling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/channel.channel.html">Channel Modeling</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/channel.ideal.html">Ideal Channel</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/channel.multipath_fading_channel.html">Multipath Fading</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/channel.multipath_fading_templates.html">Multipath Fading Standard Templates</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/channel.cluster_delay_lines.html">3GPP Cluster Delay Line Model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/channel.cluster_delay_line_indoor_factory.html">3GPP Cluster Delay Line Indoor Factory Model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/channel.cluster_delay_line_indoor_office.html">3GPP Cluster Delay Line Indoor Office Model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/channel.cluster_delay_line_rural_macrocells.html">3GPP Rural Macrocells Model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/channel.cluster_delay_line_street_canyon.html">3GPP Street Canyon (Urban Microcells) Model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/channel.cluster_delay_line_urban_macrocells.html">3GPP Urban Macrocells Model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/channel.delay.html">Delay Channel</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/channel.radar_channel.html">Single-Target Radar Channel Modeling</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/channel.quadriga.html">Quadriga Channel Model</a></li>
-</ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/fec.html">Error Correction</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Error Correction</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/fec.coding.html">Coding Pipeline</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fec.block_interleaver.html">Interleaving</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fec.crc.html">Cyclic Redundancy Checks</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fec.repetition.html">Repetition Coding</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/fec.scrambler.html">Scrambling</a></li>
-</ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/hardware_loop.html">Hardware Loop</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Hardware Loop</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/hardware_loop.hardware_loop.html">Hardware Loop</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/hardware_loop.physical_device.html">Physical Devices</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/hardware_loop.scenario.html">Physical Device Scenario</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/hardware_loop.physical_device_dummy.html">Physical Device Dummy</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/hardware_loop.visualizers.html">Visualizers</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/hardware_loop.usrp.html">UHD System</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/hardware_loop.usrp.html#uhd-device">UHD Device</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/hardware_loop.audio.device.html">Audio Device Binding</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/hardware_loop.audio.scenario.html">Audio Device Scenario</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/hardware_loop.calibration.delay.html">Delay Calibration</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/hardware_loop.calibration.leakage.html">Leakage Calibration</a></li>
-</ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/jcas.html">JCAS</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of JCAS</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/jcas.matched_filtering.html">Matched Filter JCAS</a></li>
-</ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/modem.html">Communication</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Communication</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/modem.modem.html">Modem</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/modem.bits_source.html">Bit Source</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/modem.symbols.html">Communication Symbols</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/modem.waveform.html">Communication Waveform Base</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/modem.evaluators.html">Communication Evaluators</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/modem.waveform_single_carrier.html">Filtered Single Carrier Waveforms</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/modem.waveform_chirp_fsk.html">Chirp Frequency Shift Keying</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/modem.waveform_ofdm.html">Orthogonal Frequency Division Multiplexing</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/modem.waveform_correlation_synchronization.html">Correlation-Based Waveform Synchronization</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/modem.precoding.symbol_precoding.html">Symbol Precoding</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/modem.precoding.dft.html">Discrete Fourier Transform Precoding</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/modem.precoding.single_carrier.html">Single Carrier Encoding</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/modem.precoding.spatial_multiplexing.html">Spatial Multiplexing</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/modem.precoding.ratio_combining.html">Maximum Ratio Combining</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/modem.precoding.space_time_block_coding.html">Space-Time Block Coding</a></li>
-</ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/precoding.html">Precoding</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of Precoding</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/precoding.precoding.html">Precoding Configuration</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/precoding.stream_precoding.html">Stream Precoding</a></li>
-</ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/beamforming.html">Beamforming</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Beamforming</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/beamforming.beamformer.html">Beamformer</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/beamforming.conventional.html">Conventional Beamformer</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/beamforming.capon.html">Capon Beamformer</a></li>
-</ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/radar.html">Sensing</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of Sensing</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/radar.radar.html">Radar Device Operation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/radar.cube.html">Radar Cube</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/radar.detection.html">Radar Detection</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/radar.evaluation.html">Radar Evaluation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/radar.fmcw.html">Frequency Modulated Continuous Waveform Radar</a></li>
-</ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/simulation.html">Simulation</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Simulation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/simulation.simulation.html">Simulation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/simulation.simulated_device.html">Simulated Devices</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/simulation.analog_digital_converter.html">Analog-to-Digital Converter</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/simulation.rf_chain.html">Hardware Radio Frequency Chain Modeling</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/simulation.rf_chain.power_amplifier.html">Power Amplifier Modeling</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/simulation.rf_chain.phase_noise.html">Phase Noise Modeling</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/simulation.noise.html">Noise Modeling</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="api/simulation.coupling.html">Mutual Coupling</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Mutual Coupling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="api/simulation.coupling.perfect.html">Perfect Coupling</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/simulation.coupling.impedance.html">Impedance Coupling</a></li>
-</ul>
-</li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="api/simulation.isolation.html">Antenna Isolation Modeling</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of Antenna Isolation Modeling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="api/simulation.isolation.perfect.html">Perfect Isolation</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/simulation.isolation.impedance.html">Impedance Isolation</a></li>
-<li class="toctree-l4"><a class="reference internal" href="api/simulation.isolation.specific.html">Specific Isolation</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/bin.html">Entry Points</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of Entry Points</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/bin.hermes.html">Hermes Command Line Interface</a></li>
-</ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="api/tools.html">Tools</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of Tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="api/tools.math.html">Math Tools</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/tools.resampling.html">Resampling Routines</a></li>
-<li class="toctree-l3"><a class="reference internal" href="api/tools.tile.html">Tile Figures</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="matlab.html">Matlab</a></li>
-<li class="toctree-l1 current current-page"><a class="current reference internal" href="#">References</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer_hints.html">For Developers</a></li>
 <li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
 </ul>
@@ -364,36 +526,44 @@
         </div>
         <article role="main">
           <section id="references">
-<h1>References<a class="headerlink" href="#references" title="Permalink to this heading">#</a></h1>
+<h1>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h1>
 <p>HermesPy contains numerous submodules implementing algorithms,
 concepts and models published in peer-reviewed mediums.</p>
 <p>The following list provides an overview over all references:</p>
 <div class="docutils container" id="id1">
-<div class="citation" id="id15" role="doc-biblioentry">
+<div class="citation" id="id13" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>{3GPP}16<span class="fn-bracket">]</span></span>
+<p><em>Universal Mobile Telecommunications System (UMTS); Deployment aspects</em>. 3GPP, 2016. version 13.0.0 Release 13. URL: <a class="reference external" href="https://www.etsi.org/deliver/etsi_tr/125900_125999/125943/13.00.00_60/tr_125943v130000p.pdf">https://www.etsi.org/deliver/etsi_tr/125900_125999/125943/13.00.00_60/tr_125943v130000p.pdf</a>.</p>
+</div>
+<div class="citation" id="id16" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>ETSI18<span class="fn-bracket">]</span></span>
 <p><em>Physical Channels and Modulation</em>. ETSI, 07 2018. Version 15.2.0 Release 15. URL: <a class="reference external" href="https://www.etsi.org/deliver/etsi_ts/138200_138299/138211/15.02.00_60/ts_138211v150200p.pdf">https://www.etsi.org/deliver/etsi_ts/138200_138299/138211/15.02.00_60/ts_138211v150200p.pdf</a>.</p>
 </div>
 <div class="citation" id="id12" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>{3GPP TSG-RAN}20<span class="fn-bracket">]</span></span>
-<p><em>Study on channel model for frequencies from 0.5 to 100 GHz</em>. 3GPP TSG-RAN, 2020. version 16.1.0 Release 16. URL: <a class="reference external" href="https://www.etsi.org/deliver/etsi_tr/138900_138999/138901/16.01.00_60/tr_138901v160100p.pdf">https://www.etsi.org/deliver/etsi_tr/138900_138999/138901/16.01.00_60/tr_138901v160100p.pdf</a>.</p>
+<p><em>Study on channel model for frequencies from 0.5 to 100 GHz</em>. 3GPP TSG-RAN, 2020. version 17.0.0 Release 17. URL: <a class="reference external" href="https://www.etsi.org/deliver/etsi_tr/138900_138999/138901/17.00.00_60/tr_138901v170000p.pdf">https://www.etsi.org/deliver/etsi_tr/138900_138999/138901/17.00.00_60/tr_138901v170000p.pdf</a>.</p>
 </div>
-<div class="citation" id="id31" role="doc-biblioentry">
+<div class="citation" id="id32" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>AKB22<span class="fn-bracket">]</span></span>
 <p>Jan Adler, Tobias Kronauer, and André Noll Barreto. HermesPy: An Open-Source Link-Level Evaluator for 6G. <em>IEEE Access</em>, 10():120256–120273, 2022. <a class="reference external" href="https://doi.org/10.1109/ACCESS.2022.3222063">doi:10.1109/ACCESS.2022.3222063</a>.</p>
 </div>
-<div class="citation" id="id32" role="doc-biblioentry">
+<div class="citation" id="id33" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>Ala98<span class="fn-bracket">]</span></span>
 <p>S.M. Alamouti. A simple transmit diversity technique for wireless communications. <em>IEEE Journal on Selected Areas in Communications</em>, 16(8):1451–1458, 1998. <a class="reference external" href="https://doi.org/10.1109/49.730453">doi:10.1109/49.730453</a>.</p>
 </div>
-<div class="citation" id="id21" role="doc-biblioentry">
+<div class="citation" id="id22" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>Ari09<span class="fn-bracket">]</span></span>
 <p>Erdal Arikan. Channel polarization: a method for constructing capacity-achieving codes for symmetric binary-input memoryless channels. <em>IEEE Transactions on Information Theory</em>, 55(7):3051–3073, 2009. <a class="reference external" href="https://doi.org/10.1109/TIT.2009.2021379">doi:10.1109/TIT.2009.2021379</a>.</p>
 </div>
-<div class="citation" id="id24" role="doc-biblioentry">
+<div class="citation" id="id37" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>AGM+06<span class="fn-bracket">]</span></span>
+<p>Henrik Asplund, Andres Alayon Glazunov, Andreas F. Molisch, Klaus I. Pedersen, and Martin Steinbauer. The cost 259 directional channel model-part ii: macrocells. <em>IEEE Transactions on Wireless Communications</em>, 5(12):3434–3450, 2006. <a class="reference external" href="https://doi.org/10.1109/TWC.2006.256967">doi:10.1109/TWC.2006.256967</a>.</p>
+</div>
+<div class="citation" id="id25" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>BCJR74<span class="fn-bracket">]</span></span>
 <p>L. Bahl, J. Cocke, F. Jelinek, and J. Raviv. Optimal decoding of linear codes for minimizing symbol error rate (corresp.). <em>IEEE Transactions on Information Theory</em>, 20(2):284–287, 1974. <a class="reference external" href="https://doi.org/10.1109/TIT.1974.1055186">doi:10.1109/TIT.1974.1055186</a>.</p>
 </div>
-<div class="citation" id="id27" role="doc-biblioentry">
+<div class="citation" id="id28" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>Bar50<span class="fn-bracket">]</span></span>
 <p>M. S. Bartlett. Periodogram analysis and continuous spectra. <em>Biometrika</em>, 37(1/2):1–16, 1950. URL: <a class="reference external" href="http://www.jstor.org/stable/2332141">http://www.jstor.org/stable/2332141</a> (visited on 2022-06-28).</p>
 </div>
@@ -401,43 +571,59 @@ concepts and models published in peer-reviewed mediums.</p>
 <span class="label"><span class="fn-bracket">[</span>BHvST14<span class="fn-bracket">]</span></span>
 <p>Christian Bayer, Håkon Hoel, Erik von Schwerin, and Raúl Tempone. On Non-Asymptotic Optimal Stopping Criteria in Monte Carlo Simulations. <em>SIAM Journal on Scientific Computing</em>, 36(2):A869–A885, 2014. <a class="reference external" href="https://doi.org/10.1137/130911433">doi:10.1137/130911433</a>.</p>
 </div>
-<div class="citation" id="id18" role="doc-biblioentry">
+<div class="citation" id="id19" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>BGT93<span class="fn-bracket">]</span></span>
 <p>C. Berrou, A. Glavieux, and P. Thitimajshima. Near shannon limit error-correcting coding and decoding: turbo-codes. 1. In <em>Proceedings of ICC '93 - IEEE International Conference on Communications</em>, volume 2, 1064–1070 vol.2. 1993. <a class="reference external" href="https://doi.org/10.1109/ICC.1993.397441">doi:10.1109/ICC.1993.397441</a>.</p>
 </div>
-<div class="citation" id="id25" role="doc-biblioentry">
+<div class="citation" id="id26" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>BRC60<span class="fn-bracket">]</span></span>
 <p>R. C. Bose and Dwijendra K. Ray-Chaudhuri. On a class of error correcting binary group codes. <em>Inf. Control.</em>, 3:68–79, 1960.</p>
 </div>
-<div class="citation" id="id26" role="doc-biblioentry">
+<div class="citation" id="id41" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>BJEPC14<span class="fn-bracket">]</span></span>
+<p>F. Burkhardt, S. Jaeckel, E. Eberlein, and R. Prieto-Cerdeira. Quadriga: a mimo channel model for land mobile satellite. In <em>The 8th European Conference on Antennas and Propagation (EuCAP 2014)</em>, volume, 1274–1278. 2014. <a class="reference external" href="https://doi.org/10.1109/EuCAP.2014.6902008">doi:10.1109/EuCAP.2014.6902008</a>.</p>
+</div>
+<div class="citation" id="id27" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>Cap69<span class="fn-bracket">]</span></span>
 <p>J. Capon. High-resolution frequency-wavenumber spectrum analysis. <em>Proceedings of the IEEE</em>, 57(8):1408–1418, 1969. <a class="reference external" href="https://doi.org/10.1109/PROC.1969.7278">doi:10.1109/PROC.1969.7278</a>.</p>
 </div>
-<div class="citation" id="id19" role="doc-biblioentry">
+<div class="citation" id="id20" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>CHLeonardon+19<span class="fn-bracket">]</span></span>
 <p>A. Cassagne, O. Hartmann, M. Léonardon, K. He, C. Leroux, R. Tajan, O. Aumage, D. Barthou, T. Tonnellier, V. Pignoly, B. Le Gal, and C. Jégo. Aff3ct: a fast forward error correction toolbox! <em>Elsevier SoftwareX</em>, 10:100345, October 2019. URL: <a class="reference external" href="http://www.sciencedirect.com/science/article/pii/S2352711019300457">http://www.sciencedirect.com/science/article/pii/S2352711019300457</a>, <a class="reference external" href="https://doi.org/https://doi.org/10.1016/j.softx.2019.100345">doi:https://doi.org/10.1016/j.softx.2019.100345</a>.</p>
 </div>
-<div class="citation" id="id29" role="doc-biblioentry">
+<div class="citation" id="id30" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>CB06<span class="fn-bracket">]</span></span>
 <p>A. Chorti and M. Brookes. A spectral model for rf oscillators with power-law phase noise. <em>IEEE Transactions on Circuits and Systems I: Regular Papers</em>, 53(9):1989–1999, 2006. <a class="reference external" href="https://doi.org/10.1109/TCSI.2006.881182">doi:10.1109/TCSI.2006.881182</a>.</p>
 </div>
-<div class="citation" id="id30" role="doc-biblioentry">
+<div class="citation" id="id31" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>CB07<span class="fn-bracket">]</span></span>
 <p>Arsenia Chorti and Mike Brookes. Resolving near-carrier spectral infinities due to 1/f phase noise in oscillators. In <em>2007 IEEE International Conference on Acoustics, Speech and Signal Processing - ICASSP '07</em>, volume 3, III–1005–III–1008. 2007. <a class="reference external" href="https://doi.org/10.1109/ICASSP.2007.366852">doi:10.1109/ICASSP.2007.366852</a>.</p>
 </div>
-<div class="citation" id="id20" role="doc-biblioentry">
+<div class="citation" id="id21" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>Gal63<span class="fn-bracket">]</span></span>
 <p>Robert G. Gallager. Low-density parity-check codes. 1963.</p>
+</div>
+<div class="citation" id="id38" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>GS01<span class="fn-bracket">]</span></span>
+<p>G. Ganesan and P. Stoica. Space-time block codes: a maximum snr approach. <em>IEEE Transactions on Information Theory</em>, 47(4):1650–1656, 2001. <a class="reference external" href="https://doi.org/10.1109/18.923754">doi:10.1109/18.923754</a>.</p>
 </div>
 <div class="citation" id="id5" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>IEE99<span class="fn-bracket">]</span></span>
 <p>IEEE. IEEE standard for telecommunications and information exchange between systems - LAN/MAN specific requirements - Part 11: wireless medium access control (MAC) and physical layer (PHY) specifications: high speed physical layer in the 5 GHz band. <em>IEEE Std 802.11a-1999</em>, 1999. <a class="reference external" href="https://doi.org/10.1109/IEEESTD.1999.90606">doi:10.1109/IEEESTD.1999.90606</a>.</p>
 </div>
-<div class="citation" id="id16" role="doc-biblioentry">
+<div class="citation" id="id17" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>JBTJ12<span class="fn-bracket">]</span></span>
 <p>Stephan Jaeckel, Kai Borner, Lars Thiele, and Volker Jungnickel. A geometric polarization rotation model for the 3-d spatial channel model. <em>IEEE Transactions on Antennas and Propagation</em>, 60(12):5966–5977, 2012. <a class="reference external" href="https://doi.org/10.1109/TAP.2012.2214017">doi:10.1109/TAP.2012.2214017</a>.</p>
 </div>
-<div class="citation" id="id33" role="doc-biblioentry">
+<div class="citation" id="id40" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>JRBT14<span class="fn-bracket">]</span></span>
+<p>Stephan Jaeckel, Leszek Raschkowski, Kai Börner, and Lars Thiele. Quadriga: a 3-d multi-cell channel model with time evolution for enabling virtual field trials. <em>IEEE Transactions on Antennas and Propagation</em>, 62(6):3242–3256, 2014. <a class="reference external" href="https://doi.org/10.1109/TAP.2014.2310220">doi:10.1109/TAP.2014.2310220</a>.</p>
+</div>
+<div class="citation" id="id42" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>Kah54<span class="fn-bracket">]</span></span>
+<p>Leanoard Kahn. Ratio squarer. <em>Proceedings of the IRE</em>, 42(11):1698–1704, 1954. <a class="reference external" href="https://doi.org/10.1109/JRPROC.1954.274666">doi:10.1109/JRPROC.1954.274666</a>.</p>
+</div>
+<div class="citation" id="id34" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>KKP+14<span class="fn-bracket">]</span></span>
 <p>M. Reza Khanzadi, Dan Kuylenstierna, Ashkan Panahi, Thomas Eriksson, and Herbert Zirath. Calculation of the performance of communication systems from measured oscillator phase noise. <em>IEEE Transactions on Circuits and Systems I: Regular Papers</em>, 61(5):1553–1565, 2014. <a class="reference external" href="https://doi.org/10.1109/TCSI.2013.2285698">doi:10.1109/TCSI.2013.2285698</a>.</p>
 </div>
@@ -445,9 +631,17 @@ concepts and models published in peer-reviewed mediums.</p>
 <span class="label"><span class="fn-bracket">[</span>KWA+18<span class="fn-bracket">]</span></span>
 <p>Adnan Kiayani, Muhammad Zeeshan Waheed, Lauri Anttila, Mahmoud Abdelaziz, Dani Korpi, Ville Syrjälä, Marko Kosunen, Kari Stadius, Jussi Ryynänen, and Mikko Valkama. Adaptive nonlinear rf cancellation for improved isolation in simultaneous transmit–receive systems. <em>IEEE Transactions on Microwave Theory and Techniques</em>, 66(5):2299–2312, 2018. <a class="reference external" href="https://doi.org/10.1109/TMTT.2017.2786729">doi:10.1109/TMTT.2017.2786729</a>.</p>
 </div>
-<div class="citation" id="id28" role="doc-biblioentry">
+<div class="citation" id="id29" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>KC76<span class="fn-bracket">]</span></span>
 <p>C. Knapp and G. Carter. The generalized correlation method for estimation of time delay. <em>IEEE Transactions on Acoustics, Speech, and Signal Processing</em>, 24(4):320–327, 1976. <a class="reference external" href="https://doi.org/10.1109/TASSP.1976.1162830">doi:10.1109/TASSP.1976.1162830</a>.</p>
+</div>
+<div class="citation" id="id39" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>Mei02<span class="fn-bracket">]</span></span>
+<p>E. Meijering. A chronology of interpolation: from ancient astronomy to modern signal and image processing. <em>Proceedings of the IEEE</em>, 90(3):319–342, 2002. <a class="reference external" href="https://doi.org/10.1109/5.993400">doi:10.1109/5.993400</a>.</p>
+</div>
+<div class="citation" id="id36" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>MAH+06<span class="fn-bracket">]</span></span>
+<p>Andreas F. Molisch, Henrik Asplund, Ralf Heddergott, Martin Steinbauer, and Thomas Zwick. The cost259 directional channel model-part i: overview and methodology. <em>IEEE Transactions on Wireless Communications</em>, 5(12):3421–3433, 2006. <a class="reference external" href="https://doi.org/10.1109/TWC.2006.256966">doi:10.1109/TWC.2006.256966</a>.</p>
 </div>
 <div class="citation" id="id7" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>NDM+16<span class="fn-bracket">]</span></span>
@@ -461,15 +655,19 @@ concepts and models published in peer-reviewed mediums.</p>
 <span class="label"><span class="fn-bracket">[</span>Rap91<span class="fn-bracket">]</span></span>
 <p>Ch. Rapp. Effects of HPA-nonlinearity on a 4-DPSK/OFDM-signal for a digital sound broadcasting system. In <em>Second European Conf. on Sat. Comm., 22. - 24.10.91, Liege, Belgium.</em>, 179–184. 1991. URL: <a class="reference external" href="https://elib.dlr.de/33776/">https://elib.dlr.de/33776/</a>.</p>
 </div>
-<div class="citation" id="id23" role="doc-biblioentry">
+<div class="citation" id="id24" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>RS60<span class="fn-bracket">]</span></span>
 <p>I. S. Reed and G. Solomon. Polynomial codes over certain finite fields. <em>Journal of the Society for Industrial and Applied Mathematics</em>, 8(2):300–304, 1960. URL: <a class="reference external" href="https://doi.org/10.1137/0108018">https://doi.org/10.1137/0108018</a>, <a class="reference external" href="https://arxiv.org/abs/https://doi.org/10.1137/0108018">arXiv:https://doi.org/10.1137/0108018</a>, <a class="reference external" href="https://doi.org/10.1137/0108018">doi:10.1137/0108018</a>.</p>
+</div>
+<div class="citation" id="id35" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>Roh83<span class="fn-bracket">]</span></span>
+<p>Hermann Rohling. Radar cfar thresholding in clutter and multiple target situations. <em>IEEE Transactions on Aerospace and Electronic Systems</em>, AES-19(4):608–621, 1983. <a class="reference external" href="https://doi.org/10.1109/TAES.1983.309350">doi:10.1109/TAES.1983.309350</a>.</p>
 </div>
 <div class="citation" id="id3" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>Sal81<span class="fn-bracket">]</span></span>
 <p>A.A.M. Saleh. Frequency-independent and frequency-dependent nonlinear models of TWT amplifiers. <em>IEEE Transactions on Communications</em>, 29(11):1715–1720, November 1981. <a class="reference external" href="https://doi.org/10.1109/TCOM.1981.1094911">doi:10.1109/TCOM.1981.1094911</a>.</p>
 </div>
-<div class="citation" id="id17" role="doc-biblioentry">
+<div class="citation" id="id18" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>SC97<span class="fn-bracket">]</span></span>
 <p>T.M. Schmidl and D.C. Cox. Robust frequency and timing synchronization for ofdm. <em>IEEE Transactions on Communications</em>, 45(12):1613–1621, 1997. <a class="reference external" href="https://doi.org/10.1109/26.650240">doi:10.1109/26.650240</a>.</p>
 </div>
@@ -477,7 +675,7 @@ concepts and models published in peer-reviewed mediums.</p>
 <span class="label"><span class="fn-bracket">[</span>SLG04<span class="fn-bracket">]</span></span>
 <p>E. Sharon, S. Litsyn, and J. Goldberger. An efficient message-passing schedule for LDPC decoding. In <em>2004 23rd IEEE Convention of Electrical and Electronics Engineers in Israel</em>, volume, 223–226. 2004. <a class="reference external" href="https://doi.org/10.1109/EEEI.2004.1361130">doi:10.1109/EEEI.2004.1361130</a>.</p>
 </div>
-<div class="citation" id="id22" role="doc-biblioentry">
+<div class="citation" id="id23" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>TV15<span class="fn-bracket">]</span></span>
 <p>Ido Tal and Alexander Vardy. List decoding of polar codes. <em>IEEE Transactions on Information Theory</em>, 61(5):2213–2226, 2015. <a class="reference external" href="https://doi.org/10.1109/TIT.2015.2410251">doi:10.1109/TIT.2015.2410251</a>.</p>
 </div>
@@ -485,11 +683,11 @@ concepts and models published in peer-reviewed mediums.</p>
 <span class="label"><span class="fn-bracket">[</span>Vit67<span class="fn-bracket">]</span></span>
 <p>A. Viterbi. Error bounds for convolutional codes and an asymptotically optimum decoding algorithm. <em>IEEE Transactions on Information Theory</em>, 13(2):260–269, April 1967. <a class="reference external" href="https://doi.org/10.1109/TIT.1967.1054010">doi:10.1109/TIT.1967.1054010</a>.</p>
 </div>
-<div class="citation" id="id13" role="doc-biblioentry">
+<div class="citation" id="id14" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>XZB06<span class="fn-bracket">]</span></span>
 <p>Chengshan Xiao, Yahong Rosa Zheng, and Norman C. Beaulieu. Novel sum-of-sinusoids simulation models for rayleigh and rician fading channels. <em>IEEE Transactions on Wireless Communications</em>, 5(12):3667–3679, 2006. <a class="reference external" href="https://doi.org/10.1109/TWC.2006.256990">doi:10.1109/TWC.2006.256990</a>.</p>
 </div>
-<div class="citation" id="id14" role="doc-biblioentry">
+<div class="citation" id="id15" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>YBO+02<span class="fn-bracket">]</span></span>
 <p>Kai Yu, M. Bengtsson, B. Ottersten, D. McNamara, P. Karlsson, and M. Beach. A wideband statistical model for nlos indoor mimo channels. In <em>Vehicular Technology Conference. IEEE 55th Vehicular Technology Conference. VTC Spring 2002 (Cat. No.02CH37367)</em>, volume 1, 370–374 vol.1. 2002. <a class="reference external" href="https://doi.org/10.1109/VTC.2002.1002729">doi:10.1109/VTC.2002.1002729</a>.</p>
 </div>
@@ -506,12 +704,12 @@ concepts and models published in peer-reviewed mediums.</p>
       <footer>
         
         <div class="related-pages">
-          <a class="next-page" href="developer_hints.html">
+          <a class="next-page" href="examples/examples.html">
               <div class="page-info">
                 <div class="context">
                   <span>Next</span>
                 </div>
-                <div class="title">For Developers</div>
+                <div class="title">YAML Examples</div>
               </div>
               <svg class="furo-related-icon"><use href="#svg-arrow-right"></use></svg>
             </a>
@@ -550,11 +748,11 @@ concepts and models published in peer-reviewed mediums.</p>
       
     </aside>
   </div>
-</div><script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
-    <script src="_static/scripts/furo.js"></script>
-    <script src="_static/clipboard.min.js"></script>
-    <script src="_static/copybutton.js"></script>
+</div><script src="_static/documentation_options.js?v=5929fcd5"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="_static/copybutton.js?v=f281be69"></script>
     </body>
 </html>

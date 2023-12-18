@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 
 import matplotlib.pyplot as plt
-from scipy.constants import pi
 
 from hermespy.core import Executable
 from hermespy.simulation import PowerAmplifier, SalehPowerAmplifier, RappPowerAmplifier, \
     ClippingPowerAmplifier
-    
+
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
@@ -18,16 +17,16 @@ __status__ = "Prototype"
 
 
 with Executable.style_context():
-    
-    figure, amplitude_axes = plt.subplots()
+
+    figure, axes = plt.subplots(squeeze=False)
     figure.suptitle("Power Amplifier Model Characteristics")
 
-    amplitude_axes.set_xlabel("Input Amplitude")
+    """amplitude_axes.set_xlabel("Input Amplitude")
     amplitude_axes.set_ylabel("Output Amplitude")
 
-    phase_axes = amplitude_axes.twinx()
+    phase_axes = amplitude_axes.flat[0].twinx()
     phase_axes.set_ylabel("Output Phase")
-    phase_axes.set_ylim([-pi, pi])
+    phase_axes.set_ylim([-pi, pi])"""
 
     saturation_amplitude = 1.0
     amplifiers = [
@@ -38,9 +37,9 @@ with Executable.style_context():
     ]
 
     for amplifier in amplifiers:
-        amplifier.plot(axes=(amplitude_axes, phase_axes))
-        
-    amplitude_axes.legend(['Linear', 'Rapp', 'Clipping', 'Saleh'])
-    phase_axes.set_visible(False)
+        amplifier.plot(axes=axes)
+
+    axes.flat[0].legend(['Linear', 'Rapp', 'Clipping', 'Saleh'])
+    axes.flat[0].twinx().set_visible(False)
 
     plt.show()

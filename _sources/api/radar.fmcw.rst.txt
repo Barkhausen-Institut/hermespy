@@ -1,3 +1,7 @@
-.. automodule:: hermespy.radar.fmcw
+====
+FMCW
+====
+
+.. autoclass:: hermespy.radar.fmcw.FMCW
 
 .. footbibliography::

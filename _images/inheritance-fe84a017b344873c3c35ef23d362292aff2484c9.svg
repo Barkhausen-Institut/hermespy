@@ -1,0 +1,179 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="432pt" height="121pt" viewBox="0.00 0.00 432.00 121.28">
+<ns0:g id="graph0" class="graph" transform="scale(1.13 1.13) rotate(0) translate(4 133)">
+<ns0:title>inheritance6ddb84bd14</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>ABC</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="https://docs.python.org/3/library/abc.html#abc.ABC" ns1:title="Helper class that provides a standard way to create an ABC using" target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="284,-129 230,-129 230,-110 284,-110 284,-129" />
+<ns0:text text-anchor="middle" x="257" y="-117" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">ABC</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node7" class="node">
+<ns0:title>EvaluationTemplate</ns0:title>
+<ns0:g id="a_node7"><ns0:a ns1:href="../api/core.monte_carlo.html#hermespy.core.monte_carlo.EvaluationTemplate" ns1:title="EvaluationTemplate" target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="113.5,-74 0.5,-74 0.5,-55 113.5,-55 113.5,-74" />
+<ns0:text text-anchor="middle" x="57" y="-62" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">EvaluationTemplate</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge11" class="edge">
+<ns0:title>ABC-&gt;EvaluationTemplate</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M229.61,-111.24C194.59,-101.96 133.81,-85.85 94.51,-75.44" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="94.63,-73.66 89.35,-74.07 93.74,-77.05 94.63,-73.66" />
+</ns0:g>
+
+<ns0:g id="node9" class="node">
+<ns0:title>CommunicationEvaluator</ns0:title>
+<ns0:g id="a_node9"><ns0:a ns1:href="../api/modem.evaluators.CommunicationEvaluator.html#hermespy.modem.evaluators.CommunicationEvaluator" ns1:title="Base class for evaluating communication processes between two modems." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="388,-74 248,-74 248,-55 388,-55 388,-74" />
+<ns0:text text-anchor="middle" x="318" y="-62" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">CommunicationEvaluator</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge8" class="edge">
+<ns0:title>ABC-&gt;CommunicationEvaluator</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M266.8,-109.98C276.88,-101.23 292.67,-87.51 304.05,-77.62" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="305.39,-78.77 308.02,-74.17 303.1,-76.13 305.39,-78.77" />
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>Artifact</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="../api/core.monte_carlo.html#hermespy.core.monte_carlo.Artifact" ns1:title="Result of an investigated object evaluation." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="212,-129 158,-129 158,-110 212,-110 212,-129" />
+<ns0:text text-anchor="middle" x="185" y="-117" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">Artifact</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node3" class="node">
+<ns0:title>ArtifactTemplate</ns0:title>
+<ns0:g id="a_node3"><ns0:a ns1:href="../api/core.monte_carlo.html#hermespy.core.monte_carlo.ArtifactTemplate" ns1:title="Scalar numerical result of an investigated object evaluation." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="230,-74 132,-74 132,-55 230,-55 230,-74" />
+<ns0:text text-anchor="middle" x="181" y="-62" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">ArtifactTemplate</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge2" class="edge">
+<ns0:title>Artifact-&gt;ArtifactTemplate</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M184.34,-109.75C183.71,-101.41 182.75,-88.74 182.03,-79.09" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="183.77,-78.94 181.65,-74.09 180.28,-79.21 183.77,-78.94" />
+</ns0:g>
+
+<ns0:g id="node5" class="node">
+<ns0:title>BlockErrorArtifact</ns0:title>
+<ns0:g id="a_node5"><ns0:a ns1:href="../api/modem.evaluators.bler.html#hermespy.modem.evaluators.BlockErrorArtifact" ns1:title="Artifact of a block error evaluation between two modems exchanging information." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="240.5,-19 137.5,-19 137.5,0 240.5,0 240.5,-19" />
+<ns0:text text-anchor="middle" x="189" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">BlockErrorArtifact</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge3" class="edge">
+<ns0:title>ArtifactTemplate-&gt;BlockErrorArtifact</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M182.32,-54.75C183.58,-46.41 185.49,-33.74 186.95,-24.09" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="188.69,-24.29 187.7,-19.09 185.23,-23.77 188.69,-24.29" />
+</ns0:g>
+
+<ns0:g id="node4" class="node">
+<ns0:title>Generic</ns0:title>
+<ns0:g id="a_node4"><ns0:a ns1:href="https://docs.python.org/3/library/typing.html#typing.Generic" ns1:title="Abstract base class for generic types." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="140,-129 86,-129 86,-110 140,-110 140,-129" />
+<ns0:text text-anchor="middle" x="113" y="-117" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">Generic</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>Generic-&gt;ArtifactTemplate</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M123.93,-109.98C135.26,-101.15 153.07,-87.27 165.78,-77.36" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="167.01,-78.62 169.88,-74.17 164.86,-75.86 167.01,-78.62" />
+</ns0:g>
+
+<ns0:g id="edge9" class="edge">
+<ns0:title>Generic-&gt;EvaluationTemplate</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M104,-109.98C94.75,-101.23 80.26,-87.51 69.81,-77.62" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="71,-76.34 66.16,-74.17 68.59,-78.88 71,-76.34" />
+</ns0:g>
+
+<ns0:g id="node6" class="node">
+<ns0:title>BlockErrorEvaluation</ns0:title>
+<ns0:g id="a_node6"><ns0:a ns1:href="../api/modem.evaluators.bler.html#hermespy.modem.evaluators.BlockErrorEvaluation" ns1:title="Block error evaluation of a single communication process between modems." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="119.5,-19 0.5,-19 0.5,0 119.5,0 119.5,-19" />
+<ns0:text text-anchor="middle" x="60" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">BlockErrorEvaluation</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge4" class="edge">
+<ns0:title>EvaluationTemplate-&gt;BlockErrorEvaluation</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M57.5,-54.75C57.97,-46.41 58.68,-33.74 59.23,-24.09" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="60.98,-24.18 59.51,-19.09 57.48,-23.98 60.98,-24.18" />
+</ns0:g>
+
+<ns0:g id="node8" class="node">
+<ns0:title>BlockErrorEvaluator</ns0:title>
+<ns0:g id="a_node8"><ns0:a ns1:href="../api/modem.evaluators.bler.html#hermespy.modem.evaluators.BlockErrorEvaluator" ns1:title="Evaluate block errors between two modems exchanging information." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="426.5,-19 313.5,-19 313.5,0 426.5,0 426.5,-19" />
+<ns0:text text-anchor="middle" x="370" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">BlockErrorEvaluator</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge5" class="edge">
+<ns0:title>CommunicationEvaluator-&gt;BlockErrorEvaluator</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M326.59,-54.75C335.14,-46.03 348.36,-32.56 357.96,-22.77" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="359.32,-23.88 361.57,-19.09 356.82,-21.43 359.32,-23.88" />
+</ns0:g>
+
+<ns0:g id="node10" class="node">
+<ns0:title>Serializable</ns0:title>
+<ns0:g id="a_node10"><ns0:a ns1:href="../api/core.factory.html#hermespy.core.factory.Serializable" ns1:title="Base class for serializable classes." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="480,-74 406,-74 406,-55 480,-55 480,-74" />
+<ns0:text text-anchor="middle" x="443" y="-62" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">Serializable</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge6" class="edge">
+<ns0:title>Serializable-&gt;BlockErrorEvaluator</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M431.27,-54.98C419.1,-46.15 399.99,-32.27 386.34,-22.36" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="387.02,-20.69 381.94,-19.17 384.96,-23.52 387.02,-20.69" />
+</ns0:g>
+
+<ns0:g id="node11" class="node">
+<ns0:title>Evaluator</ns0:title>
+<ns0:g id="a_node11"><ns0:a ns1:href="../api/core.monte_carlo.Evaluator.html#hermespy.core.monte_carlo.Evaluator" ns1:title="Evaluation routine for investigated object states, extracting performance indicators of interest." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="365.5,-129 302.5,-129 302.5,-110 365.5,-110 365.5,-129" />
+<ns0:text text-anchor="middle" x="334" y="-117" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">Evaluator</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge7" class="edge">
+<ns0:title>Evaluator-&gt;CommunicationEvaluator</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M331.36,-109.75C328.84,-101.41 325.02,-88.74 322.1,-79.09" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="323.71,-78.37 320.59,-74.09 320.36,-79.38 323.71,-78.37" />
+</ns0:g>
+
+<ns0:g id="node12" class="node">
+<ns0:title>Evaluation</ns0:title>
+<ns0:g id="a_node12"><ns0:a ns1:href="../api/core.monte_carlo.html#hermespy.core.monte_carlo.Evaluation" ns1:title="Evaluation of a single simulation sample." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="68,-129 0,-129 0,-110 68,-110 68,-129" />
+<ns0:text text-anchor="middle" x="34" y="-117" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">Evaluation</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge10" class="edge">
+<ns0:title>Evaluation-&gt;EvaluationTemplate</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M37.8,-109.75C41.45,-101.34 47.02,-88.51 51.22,-78.83" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="52.89,-79.37 53.27,-74.09 49.68,-77.98 52.89,-79.37" />
+</ns0:g>
+</ns0:g>
+</ns0:svg>

@@ -1,0 +1,65 @@
+<ns0:svg xmlns:ns0="http://www.w3.org/2000/svg" xmlns:ns1="http://www.w3.org/1999/xlink" width="196pt" height="82pt" viewBox="0.00 0.00 196.00 82.00">
+<ns0:g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 78)">
+<ns0:title>inheritance0a9e294bac</ns0:title>
+
+<ns0:g id="node1" class="node">
+<ns0:title>Alamouti</ns0:title>
+<ns0:g id="a_node1"><ns0:a ns1:href="../api/modem.precoding.space_time_block_coding.html#hermespy.modem.precoding.space_time_block_coding.Alamouti" ns1:title="Alamouti precoder distributing symbols in space and time." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="84.5,-19 23.5,-19 23.5,0 84.5,0 84.5,-19" />
+<ns0:text text-anchor="middle" x="54" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">Alamouti</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="node2" class="node">
+<ns0:title>SymbolPrecoder</ns0:title>
+<ns0:g id="a_node2"><ns0:a ns1:href="../api/modem.precoding.symbol_precoding.SymbolPrecoder.html#hermespy.modem.precoding.symbol_precoding.SymbolPrecoder" ns1:title="Abstract base class for signal processing algorithms operating on complex data symbols streams." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="96,-74 0,-74 0,-55 96,-55 96,-74" />
+<ns0:text text-anchor="middle" x="48" y="-62" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">SymbolPrecoder</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge1" class="edge">
+<ns0:title>SymbolPrecoder-&gt;Alamouti</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M48.99,-54.75C49.93,-46.41 51.37,-33.74 52.46,-24.09" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="54.2,-24.25 53.03,-19.09 50.73,-23.86 54.2,-24.25" />
+</ns0:g>
+
+<ns0:g id="node4" class="node">
+<ns0:title>Ganesan</ns0:title>
+<ns0:g id="a_node4"><ns0:a ns1:href="../api/modem.precoding.space_time_block_coding.html#hermespy.modem.precoding.space_time_block_coding.Ganesan" ns1:title="Girish Ganesan and Petre Stoica general precoder distributing symbols in space and time." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="173.5,-19 114.5,-19 114.5,0 173.5,0 173.5,-19" />
+<ns0:text text-anchor="middle" x="144" y="-7" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">Ganesan</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge3" class="edge">
+<ns0:title>SymbolPrecoder-&gt;Ganesan</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M63.42,-54.98C79.84,-45.92 105.89,-31.54 123.9,-21.6" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="124.76,-23.12 128.3,-19.17 123.07,-20.05 124.76,-23.12" />
+</ns0:g>
+
+<ns0:g id="node3" class="node">
+<ns0:title>Serializable</ns0:title>
+<ns0:g id="a_node3"><ns0:a ns1:href="../api/core.factory.html#hermespy.core.factory.Serializable" ns1:title="Base class for serializable classes." target="_top">
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="188,-74 114,-74 114,-55 188,-55 188,-74" />
+<ns0:text text-anchor="middle" x="151" y="-62" font-family="Vera Sans, DejaVu Sans, Liberation Sans, Arial, Helvetica, sans" font-size="10.00" fill="white">Serializable</ns0:text>
+</ns0:a>
+</ns0:g>
+</ns0:g>
+
+<ns0:g id="edge2" class="edge">
+<ns0:title>Serializable-&gt;Alamouti</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M135.42,-54.98C118.83,-45.92 92.51,-31.54 74.31,-21.6" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="75.1,-20.03 69.87,-19.17 73.42,-23.1 75.1,-20.03" />
+</ns0:g>
+
+<ns0:g id="edge4" class="edge">
+<ns0:title>Serializable-&gt;Ganesan</ns0:title>
+<ns0:path fill="none" stroke="#263238" stroke-width="0.5" d="M149.84,-54.75C148.74,-46.41 147.07,-33.74 145.8,-24.09" />
+<ns0:polygon fill="#37474f" stroke="#263238" stroke-width="0.5" points="147.52,-23.82 145.13,-19.09 144.05,-24.28 147.52,-23.82" />
+</ns0:g>
+</ns0:g>
+</ns0:svg>
