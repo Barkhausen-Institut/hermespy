@@ -1,7 +1,19 @@
+# -*- coding: utf-8 -*-
+
 import os
 from sys import path, argv
 from unittest.loader import TestLoader
 from unittest.runner import TextTestRunner
+
+__author__ = "Jan Adler"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__credits__ = ["Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "1.2.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
+
 
 if __name__ == "__main__":
     # Remove the source directory from path lookup to prevent aliasing

@@ -133,6 +133,7 @@ from scipy.io import savemat
 from scipy.stats import norm
 
 from hermespy.tools import lin2db
+from .executable import Executable
 from .definitions import ConsoleMode
 from .logarithmic import LogarithmicSequence, ValueType
 from .visualize import VAT, Visualizable
@@ -141,7 +142,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -546,7 +547,8 @@ class EvaluationResult(Visualizable, ABC):
             ax.plot(x_points, line_scalars, label=line_label)
 
         if len(section_magnitudes) > 0 and section_magnitudes[0] > 1:
-            ax.legend()
+            with Executable.style_context():
+                ax.legend()
 
     @staticmethod
     def _plot_empty(axes: VAT) -> None:

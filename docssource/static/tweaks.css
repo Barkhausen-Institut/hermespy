@@ -25,3 +25,9 @@ img.inheritance {
     margin: 0 auto;
     display: block;
 }
+
+.inheritance.graphviz {
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+}

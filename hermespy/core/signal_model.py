@@ -20,6 +20,7 @@ from scipy.fft import fft, fftshift, fftfreq
 from scipy.ndimage import convolve1d
 from scipy.signal import butter, sosfilt, firwin
 
+from .executable import Executable
 from .factory import HDFSerializable
 from .visualize import VAT, Visualizable
 
@@ -27,7 +28,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -630,9 +631,10 @@ class Signal(HDFSerializable, Visualizable):
                 _axes[stream_idx, time_axis_idx].set_xlabel("Time-Domain [s]")
 
                 if legend:
-                    _axes[stream_idx, time_axis_idx].legend(
-                        loc="upper left", fancybox=True, shadow=True
-                    )
+                    with Executable.style_context():
+                        _axes[stream_idx, time_axis_idx].legend(
+                            loc="upper left", fancybox=True, shadow=True
+                        )
 
             # Plot frequency space
             if space in {"both", "frequency"}:
@@ -770,9 +772,10 @@ class Signal(HDFSerializable, Visualizable):
                     Line2D([0], [0], color=colors[0], label="Real"),
                     Line2D([0], [0], color=colors[1], label="Imag"),
                 ]
-                axes.flat[0].legend(
-                    handles=legend_elements, loc="upper left", fancybox=True, shadow=True
-                )
+                with Executable.style_context():
+                    axes.flat[0].legend(
+                        handles=legend_elements, loc="upper left", fancybox=True, shadow=True
+                    )
 
         elif domain == "complex":
             symbol_num_samples = floor(symbol_duration * self.sampling_rate)
