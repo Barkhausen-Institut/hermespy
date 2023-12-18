@@ -12,6 +12,7 @@ from typing import Optional, Union, Iterable, Type
 import matplotlib.pyplot as plt
 import numpy as np
 from h5py import Group
+from matplotlib import rcParams
 from sparse import SparseArray  # type: ignore
 
 from hermespy.core import Executable, HDFSerializable
@@ -20,7 +21,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -302,8 +303,8 @@ class Symbols(HDFSerializable):
         _axes[0, 0].set(ylabel="Imag")
         _axes[0, 0].set(xlabel="Real")
         _axes[0, 0].grid(True, which="both")
-        _axes[0, 0].axhline(y=0, color="k")
-        _axes[0, 0].axvline(x=0, color="k")
+        _axes[0, 0].axhline(y=0, color=rcParams['grid.color'])
+        _axes[0, 0].axvline(x=0, color=rcParams['grid.color'])
 
         return figure
 
