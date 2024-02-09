@@ -15,8 +15,11 @@ from numpy.random import default_rng
 from numpy.testing import assert_array_equal
 from rich.console import Console
 
-from hermespy.core import ConsoleMode, LogarithmicSequence
+from hermespy.core import ConsoleMode, LogarithmicSequence, Visualization
 from hermespy.core.monte_carlo import ActorRunResult, Evaluation, EvaluationTemplate, EvaluationResult, GridSection, MonteCarlo, MonteCarloActor, MonteCarloSample, SampleGrid, SamplePoint, Evaluator, ArtifactTemplate, GridDimension, register, RegisteredDimension, ScalarEvaluationResult, ValueType, MonteCarloResult
+from hermespy.core.visualize import PlotVisualization, VAT, Visualization
+
+from unit_tests.utils import SimulationTestContext
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -31,9 +34,15 @@ __status__ = "Prototype"
 GENERATE_OUTPUT = getenv("HERMES_TEST_PLOT", "False").lower() == "true"
 
 
-class EvaluationMock(EvaluationTemplate[float]):
+class EvaluationMock(EvaluationTemplate[float, Visualization]):
     def artifact(self) -> ArtifactTemplate[float]:
         return ArtifactTemplate[float](self.evaluation)
+
+    def _prepare_visualization(self, figure: plt.Figure | None, axes: VAT, **kwargs) -> Visualization:
+        return MagicMock(spec=Visualization)
+
+    def _update_visualization(self, visualization: Visualization, **kwargs) -> None:
+        pass
 
 
 class TestArtifactTemplate(TestCase):
@@ -230,6 +239,11 @@ class EvaluationResultMock(EvaluationResult):
     def to_array(self) -> np.ndarray:
         return np.random.standard_normal([d.num_sample_points for d in self.grid])
 
+    def _prepare_visualization(self, figure: plt.Figure | None, axes: VAT, **kwargs) -> PlotVisualization:
+        return MagicMock(spec=PlotVisualization)
+
+    def _update_visualization(self, visualization: Visualization, **kwargs) -> None:
+        pass
 
 class TestEvaluationResult(TestCase):
     """Test evaluation result base class"""
@@ -279,31 +293,6 @@ class TestEvaluationResult(TestCase):
             console.print.assert_called()
             console.print.reset_mock()
 
-    def test_linear_plotting_validation(self) -> None:
-        """Linear plotting should raise a RuntimeError for multidimensional results"""
-
-        self.grid = [GridDimension(TestObjectMock(), "property_b", np.arange(10)) for _ in range(2)]
-        self.result = EvaluationResultMock(self.grid, self.evaluator)
-
-        with self.assertRaises(RuntimeError):
-            self.result._plot_linear(Mock(), Mock())
-
-    def test_linear_plotting(self) -> None:
-        """Linear plotting should call the correct plotting routine"""
-
-        scalar_data = np.arange(10)
-        axes = Mock()
-        axes_collection = np.array([[axes]], dtype=np.object_)
-
-        self.result._plot_linear(scalar_data, axes_collection)
-        axes.plot.assert_called_once()
-
-    def test_surface_plotting_validation(self) -> None:
-        """Surface plotting should raise a RuntimeError for non-2D results"""
-
-        with self.assertRaises(RuntimeError):
-            self.result._plot_surface(Mock(), Mock())
-
     def test_surface_plotting(self) -> None:
         """Surface plotting should call the correct plotting routine"""
 
@@ -311,62 +300,55 @@ class TestEvaluationResult(TestCase):
         self.result = EvaluationResultMock(grid, self.evaluator)
 
         scalar_data = np.random.uniform(size=(10, 10))
-        axes = Mock()
-        axes_collection = np.array([[axes]], dtype=np.object_)
 
-        self.result._plot_surface(scalar_data, axes_collection)
-        axes.plot_surface.assert_called_once()
+        with SimulationTestContext():
+            figure, axes = plt.subplots(1, 1, squeeze=False)
+
+            # Prepare plot
+            lines = self.result._prepare_surface_visualization(axes[0, 0])
+
+            lines_array = np.empty((1, 1), dtype=np.object_)
+            lines_array[0, 0] = lines
+            visualization = PlotVisualization(figure, axes, lines_array)
+
+            # Update plot
+            self.result._update_surface_visualization(scalar_data, visualization)
+            axes[0, 0].plot_surface.assert_called()
 
     def test_multidim_plotting(self) -> None:
         """Multidimensional plotting should call the correct plotting routine"""
 
-        scalar_data = np.random.uniform(size=(10, 10, 10))
-        axes = Mock()
-        axes_collection = np.array([[axes]], dtype=np.object_)
-
-        self.result._plot_multidim(scalar_data, 0, "lin", "lin", "lin", axes_collection)
-        axes.plot.assert_called()
-
-    def test_multidim_plotting_no_labels(self) -> None:
-        """Multidimensional plotting should call the correct plotting routine"""
-
         scalar_data = np.random.uniform(size=(10))
-        axes = Mock()
-        axes_collection = np.array([[axes]], dtype=np.object_)
 
-        self.result._plot_multidim(scalar_data, 0, "lin", "lin", "lin", axes_collection)
-        axes.plot.assert_called()
+        with SimulationTestContext():
+            figure, axes = plt.subplots(1, 1, squeeze=False)
+
+            # Prepare plot
+            lines = self.result._prepare_multidim_visualization(axes[0, 0])
+            axes[0, 0].plot.assert_called()
+
+            lines_array = np.empty((1, 1), dtype=np.object_)
+            lines_array[0, 0] = lines
+            visualization = PlotVisualization(figure, axes, lines_array)
+
+            # Update plot
+            self.result._update_multidim_visualization(scalar_data, visualization)
+            lines[0].set_ydata.assert_called()
 
     def test_empty_plotting(self) -> None:
         """Empty plotting should call the correct plotting routine"""
 
+        visualization = MagicMock(spec=PlotVisualization)
         axes = Mock()
         axes_collection = np.array([[axes]], dtype=np.object_)
+        visualization.axes = axes_collection
 
-        self.result._plot_empty(axes_collection)
+        self.result._plot_empty(visualization)
         axes.text.assert_called_once()
 
 
 class TestScalarEvaluationResult(TestCase):
     """Test processed scalar evaluation result class"""
-
-    def test_linear_plotting(self) -> None:
-        """Linear plotting should call the correct plotting routine"""
-
-        grid = [GridDimension(TestObjectMock(), "property_b", np.arange(10)) for _ in range(1)]
-        scalar_data = np.random.uniform(size=(10, 10))
-        evaluator = Mock()
-
-        result = ScalarEvaluationResult(grid, scalar_data, evaluator)
-
-        axes = MagicMock(spec=np.ndarray)
-        figure = MagicMock(spec=plt.Figure)
-
-        with patch("matplotlib.pyplot.subplots") as subplots_mock:
-            subplots_mock.return_value = (figure, axes)
-            _ = result.plot()
-
-        axes.flat[0].plot.assert_called_once()
 
     def test_surface_plotting(self) -> None:
         """Surface plotting should call the correct plotting routine"""
@@ -376,14 +358,10 @@ class TestScalarEvaluationResult(TestCase):
         evaluator = Mock()
 
         result = ScalarEvaluationResult(grid, scalar_data, evaluator)
-
-        axes = MagicMock(spec=np.ndarray)
-        figure = MagicMock(spec=plt.Figure)
-        with patch("matplotlib.pyplot.subplots") as subplots_mock:
-            subplots_mock.return_value = (figure, axes)
-            _ = result.plot()
-
-        axes.flat[0].plot_surface.assert_called_once()
+        
+        with SimulationTestContext():
+            visualization = result.visualize()
+            visualization.axes[0, 0].plot_surface.assert_called()
 
     def test_multidim_plotting(self) -> None:
         """Multidimensional plotting should call the correct plotting routine"""
@@ -393,22 +371,19 @@ class TestScalarEvaluationResult(TestCase):
         evaluator = Mock()
 
         result = ScalarEvaluationResult(grid, scalar_data, evaluator)
-
-        axes = MagicMock(spec=np.ndarray)
-        figure = MagicMock(spec=plt.Figure)
-        with patch("matplotlib.pyplot.subplots") as subplots_mock:
-            subplots_mock.return_value = (figure, axes)
-            _ = result.plot()
-
-        axes.flat[0].plot.assert_called()
+        
+        with SimulationTestContext():
+            visualization = result.visualize()
+            visualization.axes[0, 0].plot.assert_called()
 
     def test_plot_no_data(self) -> None:
         """Even without grid dimensions an empty figure should be generated"""
 
-        with patch("matplotlib.pyplot.figure"):
-            evaluation_result = ScalarEvaluationResult([], np.empty(0, dtype=object), EvaluatorMock())
-            figure = evaluation_result.plot()
-            self.assertIsInstance(figure, Mock)
+        result = ScalarEvaluationResult([], np.empty(0, dtype=object), EvaluatorMock())
+        
+        with SimulationTestContext():
+            visualization = result.visualize()
+            visualization.axes[0, 0].text.assert_called()
 
     def test_to_array(self) -> None:
         """Array conversion should return the correct array"""
@@ -743,14 +718,13 @@ class TestMonteCarloResult(TestCase):
 
     def test_plot(self) -> None:
         """Plotting should call the correct plotting routine"""
+        
+        with SimulationTestContext():
+            visualizations = self.result.plot()
+            
+            for visualization in visualizations:
+                visualization.axes[0, 0].plot.assert_called()
 
-        figure_mock = MagicMock(spec=plt.Figure)
-        axes_mock = MagicMock(spec=np.ndarray)
-        with patch("matplotlib.pyplot.subplots") as subplots_mock:
-            subplots_mock.return_value = figure_mock, axes_mock
-            _ = self.result.plot()
-
-        subplots_mock.assert_called()
 
     def test_save_to_matlab(self) -> None:
         """Saving to Matlab should call the correct routine"""

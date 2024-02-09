@@ -2,12 +2,11 @@
 
 import logging
 import os.path as path
-from importlib import import_module
 from unittest import TestCase
 
 import ray as ray
 
-from ..helpers import SimulationTestContext
+from unit_tests.utils import SimulationTestContext
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"

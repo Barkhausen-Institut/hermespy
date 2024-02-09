@@ -207,11 +207,12 @@ class TestRocEvaluationResult(TestCase):
 
         figure_mock = Mock()
         axes_mock = Mock()
+        axes_mock.plot.return_value = [Mock()]
         axes_collection = np.array([[axes_mock]], dtype=np.object_)
 
         with patch("matplotlib.pyplot.subplots") as subplots_mock:
             subplots_mock.return_value = (figure_mock, axes_collection)
-            self.result.plot()
+            self.result.visualize()
             axes_mock.plot.assert_called()
 
     def test_to_array(self) -> None:
@@ -283,7 +284,7 @@ class TestReciverOperatingCharacteristics(TestCase):
         """Test evaluation extraction"""
 
         evaluation = self._generate_evaluation()
-        self.assertCountEqual(evaluation.data_h0.shape, evaluation.data_h1.shape)
+        self.assertCountEqual(evaluation.cube_h0.data.shape, evaluation.cube_h1.data.shape)
 
     def test_generate_result_empty_grid(self) -> None:
         """Test result generation over an empty grid"""

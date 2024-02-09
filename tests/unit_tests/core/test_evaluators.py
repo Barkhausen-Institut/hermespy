@@ -68,7 +68,7 @@ class TestReceivedPowerEvaluation(TestCase):
         axes = Mock()
         axes_array = np.empty((1, 1), dtype=np.object_)
         axes_array[0, 0] = axes
-        self.evaluation.plot(axes_array)
+        self.evaluation.visualize(axes_array)
         axes.stem.assert_called_once()
 
 

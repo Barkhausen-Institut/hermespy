@@ -8,7 +8,7 @@ from numpy.testing import assert_array_almost_equal
 
 from hermespy.beamforming import BeamformingReceiver, BeamformingTransmitter, CaponBeamformer, ConventionalBeamformer
 from hermespy.core import AntennaMode, Signal
-from hermespy.simulation import RfChain, SimulatedAntenna, SimulatedAntennaPort, SimulatedAntennas, SimulatedCustomArray, SimulatedDevice, SimulatedDipole, SimulatedIdealAntenna, SimulatedLinearAntenna, SimulatedPatchAntenna, SimulatedUniformArray
+from hermespy.simulation import RfChain, SimulatedAntenna, SimulatedAntennaPort, SimulatedAntennaArray, SimulatedCustomArray, SimulatedDevice, SimulatedDipole, SimulatedIdealAntenna, SimulatedLinearAntenna, SimulatedPatchAntenna, SimulatedUniformArray
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -42,7 +42,7 @@ class TestSimulatedAntennaPort(TestCase):
     def test_rf_chain_setget(self) -> None:
         """RF chain porperty getter should return setter argument"""
 
-        array = Mock(spec=SimulatedAntennas)
+        array = Mock(spec=SimulatedAntennaArray)
         self.port.array = array
 
         rf_chain = Mock(spec=RfChain)
@@ -136,7 +136,7 @@ class TestSimulatedPatchAntenna(_TestSimulatedAntenna):
 
 class _TestSimulatedAntennas(TestCase):
 
-    array: SimulatedAntennas
+    array: SimulatedAntennaArray
 
     def test_rf_transmit_chains_caching(self) -> None:
         """RF transmit chains should be properly cached"""

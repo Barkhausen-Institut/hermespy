@@ -661,14 +661,17 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
         Returns: List of device outputs.
         """
 
-        transmissions = [None] * self.num_devices if transmissions is None else transmissions
+        # Assume cached operator transmissions if none were provided
+        _transmissions: List[None] | List[List[Transmission]] = (
+            [None] * self.num_devices if not transmissions else transmissions
+        )
 
-        if len(transmissions) != self.num_devices:
+        if len(_transmissions) != self.num_devices:
             raise ValueError(
-                f"Number of device transmissions ({len(transmissions)}) does not match number of registered devices ({self.num_devices}"
+                f"Number of device transmissions ({len(_transmissions)}) does not match number of registered devices ({self.num_devices}"
             )
 
-        outputs = [d.generate_output(t) for d, t in zip(self.devices, transmissions)]
+        outputs = [d.generate_output(t) for d, t in zip(self.devices, _transmissions)]
         return outputs
 
     def transmit_devices(self) -> Sequence[DeviceTransmission]:

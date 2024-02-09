@@ -85,7 +85,7 @@ class TestCube(TestCase):
         """Plotting range should raise ValueErrors on invalid arguments"""
 
         with self.assertRaises(ValueError):
-            self.cube.plot_range(axes=Mock(), scale="invalid")
+            self.cube.plot_range(axes=np.array([[Mock()]]), scale="invalid")
 
     def test_plot_range(self) -> None:
         """Range plots should be created properly"""
@@ -93,14 +93,15 @@ class TestCube(TestCase):
         with patch("matplotlib.pyplot.subplots") as mock_subplots:
             figure = Mock()
             axes = Mock()
-            mock_subplots.return_value = (figure, axes)
+            axes_array = np.array([[axes]])
+            mock_subplots.return_value = (figure, axes_array)
 
             self.cube.plot_range()
             mock_subplots.assert_called_once()
 
             mock_subplots.reset_mock()
             axes.reset_mock()
-            self.cube.plot_range(axes=axes)
+            self.cube.plot_range(axes=axes_array)
             mock_subplots.assert_not_called()
 
             axes.reset_mock()

@@ -66,10 +66,7 @@ class Synchronization(Generic[WaveformType], ABC, Serializable):
         """Set waveform generator this synchronization routine is attached to."""
 
         # Un-register this synchronization routine from its previously assigned waveform
-        if (
-            self.__waveform is not None
-            and self.__waveform.synchronization is self
-        ):
+        if self.__waveform is not None and self.__waveform.synchronization is self:
             self.__waveform.synchronization = Synchronization()
 
         self.__waveform = value

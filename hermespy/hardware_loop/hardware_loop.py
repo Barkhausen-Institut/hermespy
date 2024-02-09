@@ -31,7 +31,7 @@ from hermespy.core import (
     VAT,
     Verbosity,
 )
-from hermespy.core.monte_carlo import GridDimension, SampleGrid, MonteCarloSample
+from hermespy.core.monte_carlo import GridDimension, SampleGrid, MonteCarloSample, VT
 from hermespy.tools import tile_figures
 from .physical_device import PDT
 from .physical_device_dummy import PhysicalScenarioDummy
@@ -179,18 +179,30 @@ class HardwareLoopSample(object):
         return self.__artifacts
 
 
-class HardwareLoopPlot(ABC):
+class HardwareLoopPlot(ABC, Generic[VT]):
+    """Base class for all plots visualized during hardware loop runtime."""
+
     __hardware_loop: HardwareLoop | None
     __title: str
     __figure: plt.Figure | None
     __axes: VAT | None
+    __visualization: VT | None
 
-    def __init__(self, title: str = "") -> None:
+    def __init__(self, title: str | None = None) -> None:
+        """
+        Args:
+
+            title (str, optional):
+                Title of the hardware loop plot.
+                If not specified, resorts to the default title of the plot.
+        """
+
         # Initialize class attributes
         self.__hardware_loop = None
         self.__title = title
         self.__figure = None
         self.__axes = None
+        self.__visualization = None
 
     @property
     def hardware_loop(self) -> HardwareLoop | None:
@@ -208,49 +220,33 @@ class HardwareLoopPlot(ABC):
         self.__hardware_loop = value
 
     @property
+    @abstractmethod
+    def _default_title(self) -> str:
+        """Default title of the hardware loop plot."""
+        ...  # pragma: no cover
+
+    @property
     def title(self) -> str:
         """Title of the hardware loop plot."""
 
-        return self.__title
+        return self.__title if self.__title else self._default_title
 
-    @property
-    def figure(self) -> plt.Figure:
-        """Figure of the hardware loop plot."""
-
-        return self.__figure
-
-    @property
-    def axes(self) -> VAT:
-        """Axes of the hardware loop plot."""
-
-        return self.__axes
-
-    def prepare_figure(self) -> Tuple[plt.Figure, VAT]:
+    def prepare_plot(self) -> Tuple[plt.Figure, VAT]:
         """Prepare the figure for the hardware loop plot.
 
-        Returns:
-
-            Tuple[plt.Figure, plt.Axes]:
-                Figure and axes of the hardware loop plot.
+        Returns: The prepared figure and axes to be plotted into.
         """
 
-        # Prepare figure
-        figure, axes = self._prepare_figure()
+        self.__figure, self.__axes = self._prepare_plot()
+        self.__figure.suptitle(self.title)
 
-        self.__figure = figure
-        self.__axes = axes
-
-        # Return created figure and axes
-        return figure, axes
+        return self.__figure, self.__axes
 
     @abstractmethod
-    def _prepare_figure(self) -> Tuple[plt.Figure, VAT]:
+    def _prepare_plot(self) -> Tuple[plt.Figure, VAT]:
         """Prepare the figure for the hardware loop plot.
 
-        Returns:
-
-            Tuple[plt.Figure, VAT]:
-                Figure and axes of the hardware loop plot.
+        Returns: The prepared figure and axes to be plotted into.
         """
         ...  # pragma: no cover
 
@@ -271,12 +267,45 @@ class HardwareLoopPlot(ABC):
 
         # Assert correct state
         if self.hardware_loop is None:
-            raise RuntimeError("Unable to update transmitted signal plot without device.")
+            raise RuntimeError("Unable plot if hardware loop is not set")
 
-        self._update_plot(sample)
+        # Prepare the plot if not done yet
+        _axes: VAT
+        if self.__axes is None or self.__figure is None:
+            figure, _axes = self.prepare_plot()
+        else:
+            figure = self.__figure
+            _axes = self.__axes
+
+        # If the visualizable has not been plotted yet, prepare the plot
+        if self.__visualization is None:
+            self.__visualization = self._initial_plot(sample, _axes)
+
+        # Otherwise, update the plot data
+        else:
+            self._update_plot(sample, self.__visualization)
+
+        # Re-draw the plot
+        figure.canvas.draw()
+        figure.canvas.flush_events()
 
     @abstractmethod
-    def _update_plot(self, sample: HardwareLoopSample) -> None:
+    def _initial_plot(self, sample: HardwareLoopSample, axes: VAT) -> VT:
+        """Initial plot of the hardware loop plot.
+
+        Abstract subroutine of :meth:`HardwareLoopPlot.update_plot`.
+
+        Args:
+
+            sample (HardwareLoopSample): Hardware loop sample to be plotted.
+            axes (VAT): The visualization to be plotted into.
+
+        Returns: The plotted information including axes and lines.
+        """
+        ...  # pragma: no cover
+
+    @abstractmethod
+    def _update_plot(self, sample: HardwareLoopSample, visualization: VT) -> None:
         """Update the hardware loop plot.
 
         Abstract subroutine of :meth:`HardwareLoopPlot.update_plot`.
@@ -285,6 +314,8 @@ class HardwareLoopPlot(ABC):
 
             sample (HardwareLoopSample):
                 Hardware loop sample to be plotted.
+
+            visualization (VT): The visualization to be updated.
         """
         ...  # pragma: no cover
 
@@ -583,7 +614,7 @@ class HardwareLoop(
         if self.plot_information:
             with plt.ion() and self.style_context():  # pragma: no cover
                 for plot in self.__plots:
-                    plot.prepare_figure()
+                    plot.prepare_plot()
 
         # Tile the generated figures
         tile_figures(2, 4)
@@ -721,16 +752,17 @@ class HardwareLoop(
         )
 
         # Generate result plots
-        result_figures = result.plot()
+        visualizations = result.plot()
 
         # Save results if a directory was provided
         if self.results_dir:
             result.save_to_matlab(path.join(self.results_dir, "results.mat"))
 
-            for idx, (figure_base, evaluator) in enumerate(zip(result_figures, self.__evaluators)):
-                figure = figure_base.get_figure()
-                if figure is not None:
-                    figure.savefig(
+            for idx, (visualization, evaluator) in enumerate(
+                zip(visualizations, self.__evaluators)
+            ):
+                if visualization.figure is not None:
+                    visualization.figure.savefig(
                         path.join(self.results_dir, f"result_{idx}_{evaluator.abbreviation}.png"),
                         format="png",
                     )

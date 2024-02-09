@@ -15,7 +15,7 @@ import numpy as np
 from h5py import Group
 from scipy.constants import speed_of_light
 
-from hermespy.core import Executable, HDFSerializable
+from hermespy.core import Executable, HDFSerializable, PlotVisualization, VAT
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -184,9 +184,9 @@ class RadarCube(HDFSerializable):
     def plot_range(
         self,
         title: str | None = None,
-        axes: plt.Axes | None = None,
+        axes: VAT | None = None,
         scale: Literal["lin", "log"] = "lin",
-    ) -> plt.FigureBase:
+    ) -> PlotVisualization:
         """Visualize the cube's range data.
 
         Args:
@@ -194,8 +194,7 @@ class RadarCube(HDFSerializable):
             title (str, optional):
                 Plot title.
 
-        Returns:
-            plt.Figure:
+        Returns: Newly generated visualization.
         """
 
         title = "Radar Range Profile" if title is None else title
@@ -203,28 +202,35 @@ class RadarCube(HDFSerializable):
         # Collapse the cube into the range-dimension
         range_profile = np.sum(self.data, axis=(0, 1), keepdims=False)
 
-        figure: plt.FigureBase
+        figure: plt.Figure
         if axes is None:
             with Executable.style_context():
-                figure, axes = plt.subplots()
+                figure, _axes = plt.subplots(1, 1, squeeze=False)
                 figure.suptitle(title)
 
         else:
-            figure = axes.get_figure()
+            _axes = axes
+            figure = _axes[0, 0].get_figure()
 
-        axes.set_xlabel("Range [m]")
-        axes.set_ylabel("Power")
+        _axes[0, 0].set_xlabel("Range [m]")
+        _axes[0, 0].set_ylabel("Power")
 
+        lines = np.empty((1, 1), dtype=np.object_)
         if scale == "lin":
-            axes.plot(self.range_bins, range_profile)
+            lines[0, 0] = _axes[0, 0].plot(self.range_bins, range_profile)
 
         elif scale == "log":
-            axes.semilogy(self.range_bins, range_profile)
+            lines[0, 0] = _axes[0, 0].semilogy(self.range_bins, range_profile)
 
         else:
             raise ValueError(f"Unsupported plotting scale option '{scale}'")
 
-        return figure
+        return PlotVisualization(figure, _axes, lines)
+
+    def update_range_plot(self, visualization: PlotVisualization) -> None:
+        # Collapse the cube into the range-dimension
+        range_profile = np.sum(self.data, axis=(0, 1), keepdims=False)
+        visualization.lines[0, 0][0].set_ydata(range_profile)
 
     def plot_range_velocity(
         self,

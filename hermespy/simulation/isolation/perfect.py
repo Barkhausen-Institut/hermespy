@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-=================
-Perfect Isolation
-=================
-"""
 
 from __future__ import annotations
 

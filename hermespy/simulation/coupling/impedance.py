@@ -1,12 +1,7 @@
 # -*- coding: utf-8 -*-
-"""
-==================
-Impedance Coupling
-==================
-"""
 
 from __future__ import annotations
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 import numpy as np
 
@@ -27,24 +22,24 @@ __status__ = "Prototype"
 
 
 class ImpedanceCoupling(Serializable, Coupling):
-    """Ideal mutual coupling between two antenna arrays."""
+    """Imedance based mutual coupling model"""
 
     yaml_tag = "Impedance-Coupling"
 
-    __transmit_correlation: Optional[np.ndarray]
-    __receive_correlation: Optional[np.ndarray]
-    __transmit_impedance: Optional[np.ndarray]
-    __receive_impedance: Optional[np.ndarray]
-    __matching_impedance: Optional[np.ndarray]
+    __transmit_correlation: np.ndarray | None
+    __receive_correlation: np.ndarray | None
+    __transmit_impedance: np.ndarray | None
+    __receive_impedance: np.ndarray | None
+    __matching_impedance: np.ndarray | None
 
     def __init__(
         self,
-        device: Optional[SimulatedDevice] = None,
-        transmit_correlation: Optional[np.ndarray] = None,
-        receive_correlation: Optional[np.ndarray] = None,
-        transmit_impedance: Optional[np.ndarray] = None,
-        receive_impedance: Optional[np.ndarray] = None,
-        matching_impedance: Optional[np.ndarray] = None,
+        device: SimulatedDevice | None = None,
+        transmit_correlation: np.ndarray | None = None,
+        receive_correlation: np.ndarray | None = None,
+        transmit_impedance: np.ndarray | None = None,
+        receive_impedance: np.ndarray | None = None,
+        matching_impedance: np.ndarray | None = None,
     ) -> None:
         """
         Args:
@@ -82,11 +77,11 @@ class ImpedanceCoupling(Serializable, Coupling):
         self.matching_impedance = matching_impedance
 
     @property
-    def transmit_correlation(self) -> Optional[np.ndarray]:
+    def transmit_correlation(self) -> np.ndarray | None:
         return self.__transmit_correlation
 
     @transmit_correlation.setter
-    def transmit_correlation(self, value: Optional[np.ndarray]) -> None:
+    def transmit_correlation(self, value: np.ndarray | None) -> None:
         if value is None:
             self.__transmit_correlation = None
             return
@@ -104,7 +99,7 @@ class ImpedanceCoupling(Serializable, Coupling):
         return self.__receive_correlation
 
     @receive_correlation.setter
-    def receive_correlation(self, value: Optional[np.ndarray]) -> None:
+    def receive_correlation(self, value: np.ndarray | None) -> None:
         if value is None:
             self.__receive_correlation = None
             return
@@ -118,11 +113,11 @@ class ImpedanceCoupling(Serializable, Coupling):
         self.__receive_correlation = value
 
     @property
-    def transmit_impedance(self) -> Optional[np.ndarray]:
+    def transmit_impedance(self) -> np.ndarray | None:
         return self.__transmit_impedance
 
     @transmit_impedance.setter
-    def transmit_impedance(self, value: Optional[np.ndarray]) -> None:
+    def transmit_impedance(self, value: np.ndarray | None) -> None:
         if value is None:
             self.__transmit_impedance = None
             return
@@ -136,11 +131,11 @@ class ImpedanceCoupling(Serializable, Coupling):
         self.__transmit_impedance = value
 
     @property
-    def receive_impedance(self) -> Optional[np.ndarray]:
+    def receive_impedance(self) -> np.ndarray | None:
         return self.__receive_impedance
 
     @receive_impedance.setter
-    def receive_impedance(self, value: Optional[np.ndarray]) -> None:
+    def receive_impedance(self, value: np.ndarray | None) -> None:
         if value is None:
             self.__receive_impedance = None
             return
@@ -154,11 +149,11 @@ class ImpedanceCoupling(Serializable, Coupling):
         self.__receive_impedance = value
 
     @property
-    def matching_impedance(self) -> Optional[np.ndarray]:
+    def matching_impedance(self) -> np.ndarray | None:
         return self.__matching_impedance
 
     @matching_impedance.setter
-    def matching_impedance(self, value: Optional[np.ndarray]) -> None:
+    def matching_impedance(self, value: np.ndarray | None) -> None:
         if value is None:
             self.__matching_impedance = None
             return

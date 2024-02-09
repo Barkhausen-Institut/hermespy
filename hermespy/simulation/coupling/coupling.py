@@ -1,18 +1,7 @@
 # -*- coding: utf-8 -*-
-"""
-===============
-Mutual Coupling
-===============
-
-.. toctree::
-   :glob:
-
-   simulation.coupling.perfect
-   simulation.coupling.impedance
-"""
 
 from __future__ import annotations
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 from abc import ABC, abstractmethod
 
 from hermespy.core import Signal, FloatingError
@@ -33,9 +22,9 @@ __status__ = "Prototype"
 class Coupling(ABC):
     """Base class for mutual coupling model implementations."""
 
-    __device: Optional[SimulatedDevice]
+    __device: SimulatedDevice | None
 
-    def __init__(self, device: Optional[SimulatedDevice] = None) -> None:
+    def __init__(self, device: SimulatedDevice | None = None) -> None:
         """
         Args:
 
@@ -45,7 +34,7 @@ class Coupling(ABC):
         self.device = device
 
     @property
-    def device(self) -> Optional[SimulatedDevice]:
+    def device(self) -> SimulatedDevice | None:
         """Device the model is configured to.
 
         Returns:
@@ -56,7 +45,7 @@ class Coupling(ABC):
         return self.__device
 
     @device.setter
-    def device(self, value: Optional[SimulatedDevice]) -> None:
+    def device(self, value: SimulatedDevice | None) -> None:
         self.__device = value
 
     def transmit(self, signal: Signal) -> Signal:

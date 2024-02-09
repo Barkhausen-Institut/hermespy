@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-=============================
-Frequency-Selective Isolation
-=============================
-"""
 
 from __future__ import annotations
 from typing import Type, TYPE_CHECKING

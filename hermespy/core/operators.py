@@ -144,7 +144,13 @@ class SignalTransmitter(StaticOperator, Transmitter[Transmission]):
         self.__signal = value
 
     def _transmit(self, duration: float = 0.0) -> Transmission:
-        transmission = Transmission(self.__signal)
+        transmitted_signal = self.__signal.copy()
+
+        # Update the transmitted signal's carrier frequency if it is specified as base-band
+        if transmitted_signal.carrier_frequency == 0.0:
+            transmitted_signal.carrier_frequency = self.device.carrier_frequency
+
+        transmission = Transmission(transmitted_signal)
         return transmission
 
     def _recall_transmission(self, group: Group) -> Transmission:
