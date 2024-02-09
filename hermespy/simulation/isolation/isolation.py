@@ -1,20 +1,7 @@
 # -*- coding: utf-8 -*-
-"""
-==========================
-Antenna Isolation Modeling
-==========================
-
-
-.. toctree::
-   :glob:
-
-   simulation.isolation.perfect
-   simulation.isolation.impedance
-   simulation.isolation.specific
-"""
 
 from __future__ import annotations
-from typing import Optional, TYPE_CHECKING
+from typing import TYPE_CHECKING
 from abc import ABC, abstractmethod
 
 from hermespy.core import Signal, FloatingError
@@ -35,9 +22,9 @@ __status__ = "Prototype"
 class Isolation(ABC):
     """Base class for antenna isolation modeling."""
 
-    __device: Optional[SimulatedDevice]
+    __device: SimulatedDevice | None
 
-    def __init__(self, device: Optional[SimulatedDevice] = None) -> None:
+    def __init__(self, device: SimulatedDevice | None = None) -> None:
         """
         Args:
 
@@ -47,7 +34,7 @@ class Isolation(ABC):
         self.device = device
 
     @property
-    def device(self) -> Optional[SimulatedDevice]:
+    def device(self) -> SimulatedDevice | None:
         """Device the model is configured to.
 
         Returns:
@@ -58,7 +45,7 @@ class Isolation(ABC):
         return self.__device
 
     @device.setter
-    def device(self, value: Optional[SimulatedDevice]) -> None:
+    def device(self, value: SimulatedDevice | None) -> None:
         self.__device = value
 
     @abstractmethod

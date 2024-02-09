@@ -9,7 +9,7 @@ import numpy as np
 from h5py import File
 from numpy.testing import assert_array_equal
 
-from hermespy.core import Signal
+from hermespy.core import Signal, SNRType
 from hermespy.modem import CommunicationReception, CommunicationTransmission, DuplexModem, Symbols, CommunicationWaveform
 from hermespy.radar import Radar, RadarCube, RadarReception
 from hermespy.simulation import SimulatedDevice
@@ -199,6 +199,12 @@ class TestMatchedFilterJoint(TestCase):
                 recalled_reception = self.joint._recall_reception(file["testgroup"])
 
         self.assertEqual(reception.signal.num_samples, recalled_reception.signal.num_samples)
+
+    def test_noise_power(self) -> None:
+        """Test the noise power calculation"""
+
+        noise_power = self.joint._noise_power(1, SNRType.PN0)
+        self.assertAlmostEqual(1.0, noise_power)
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""

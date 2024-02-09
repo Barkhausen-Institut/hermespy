@@ -1,11 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-=======================================
-Hardware Radio Frequency Chain Modeling
-=======================================
-
-Isolation model (to be implemented): :footcite:t:`2018:kiayni`
-"""
 
 from __future__ import annotations
 
@@ -28,10 +21,7 @@ __status__ = "Prototype"
 
 
 class RfChain(Serializable):
-    """Implements an RF chain model.
-
-    Only PA is modelled.
-    """
+    """Radio-frequency (RF) chain model."""
 
     yaml_tag = "RfChain"
 
@@ -46,19 +36,38 @@ class RfChain(Serializable):
         phase_offset: float | None = None,
         amplitude_imbalance: float | None = None,
         adc: AnalogDigitalConverter | None = None,
+        power_amplifier: PowerAmplifier | None = None,
+        phase_noise: PhaseNoise | None = None,
     ) -> None:
+        """
+        Args:
+
+            phase_offset (float, optional):
+                I/Q phase offset in radians.
+
+            amplitude_imbalance (float, optional):
+                I/Q amplitude imbalance.
+
+            adc (AnalogDigitalConverter, optional):
+                The analog to digital converter at the end of the RF receive chain.
+                If not specified, ideal analog-to-digital conversion introducing no
+                additional noise is assumed.
+
+            power_amplifier (PowerAmplifier, optional):
+                The power amplifier at the beginning of the RF transmit chain.
+                If not specified, ideal linear power amplification is assumed.
+
+            phase_noise (PhaseNoise, optional):
+                Phase noise model configuration.
+                If not specified, an ideal oscillator introducing no phase noise is assumed.
+        """
+
         # Initialize class attributes
-        self.__phase_offset = 0.0
-        self.__amplitude_imbalance = 0.0
-        self.__power_amplifier = None
-        self.__phase_noise = NoPhaseNoise()
+        self.phase_offset = 0.0 if phase_offset is None else phase_offset
+        self.amplitude_imbalance = 0.0 if amplitude_imbalance is None else amplitude_imbalance
         self.adc = AnalogDigitalConverter() if adc is None else adc
-
-        if phase_offset is not None:
-            self.__phase_offset = phase_offset
-
-        if amplitude_imbalance is not None:
-            self.amplitude_imbalance = amplitude_imbalance
+        self.power_amplifier = power_amplifier
+        self.phase_noise = NoPhaseNoise() if phase_noise is None else phase_noise
 
     @property
     def amplitude_imbalance(self) -> float:
@@ -66,15 +75,15 @@ class RfChain(Serializable):
 
         Raises:
 
-            ValueError: If the imbalance is less than -1 or more than one.
+            ValueError: If the imbalance is less than zero or more than one.
         """
 
         return self.__amplitude_imbalance
 
     @amplitude_imbalance.setter
     def amplitude_imbalance(self, val) -> None:
-        if abs(val) >= 1:
-            raise ValueError("Amplitude imbalance must be within interval (-1, 1).")
+        if 0 > val or val > 1.0:
+            raise ValueError("Amplitude imbalance must be within interval [0, 1].")
 
         self.__amplitude_imbalance = val
 
@@ -176,10 +185,7 @@ class RfChain(Serializable):
 
     @property
     def phase_noise(self) -> PhaseNoise:
-        """Phase Noise model configuration.
-
-        Returns: Handle to the pase noise model.
-        """
+        """Phase Noise model configuration."""
 
         return self.__phase_noise
 

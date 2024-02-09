@@ -38,7 +38,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class SimulatedAntennaPort(AntennaPort["SimulatedAntenna", "SimulatedAntennas"]):
+class SimulatedAntennaPort(AntennaPort["SimulatedAntenna", "SimulatedAntennaArray"]):
     """Port within a simulated antenna array."""
 
     yaml_tag = "SimulatedAntennaPort"
@@ -314,7 +314,7 @@ class SimulatedPatchAntenna(SimulatedAntenna, PatchAntenna[SimulatedAntennaPort]
         PatchAntenna.__init__(self, mode, pose)
 
 
-class SimulatedAntennas(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]):
+class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]):
     """Array of simulated antennas."""
 
     __cached_default_rf_chain: RfChain | None
@@ -556,7 +556,26 @@ class SimulatedAntennas(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]):
         leaking_signal: Signal | None = None,
         coupling_model: Coupling | None = None,
     ) -> Signal:
-        """Receive a signal over the antenna array."""
+        """Receive a signal over the antenna array.
+
+        Args:
+
+            impinging_signal (Signal):
+                The signal model iminging onto the antenna array over the air.
+
+            default_rf_chain (RfChain):
+                The default RF chain to be used if no RF chain is specified for a port.
+
+            leaking_signal (Signal, optional):
+                The signal model leaking from the antenna array's transmit chains.
+                If not specified, no leakage is assumed.
+
+            coupling_model (Coupling, optional):
+                The coupling model to be used to simulate mutual coupling between the antenna elements.
+                If not specified, no mutual coupling is assumed.
+
+        Returns: The base-band digital signal model after analog-digital conversion.
+        """
 
         if impinging_signal.num_streams != self.num_receive_antennas:
             raise ValueError(
@@ -618,6 +637,22 @@ class SimulatedAntennas(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]):
     def analog_digital_conversion(
         self, rf_signal: Signal, default_rf_chain: RfChain, frame_duration: float
     ) -> Signal:
+        """Model analog-digital conversion during reception.
+
+        Args:
+
+            rf_signal (Signal):
+                The signal model received by the antenna array's RF chains.
+
+            default_rf_chain (RfChain):
+                The default RF chain to be used if no RF chain is specified for a port.
+
+            frame_duration (float):
+                The duration of the frame to be modeled in seconds.
+
+        Returns: The base-band digital signal model after analog-digital conversion.
+        """
+
         # Recall RF chain map
         rf_chains = self._rf_receive_chains(default_rf_chain)
 
@@ -849,7 +884,7 @@ class SimulatedAntennas(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]):
 
 
 class SimulatedUniformArray(
-    SimulatedAntennas, UniformArray[SimulatedAntennaPort, SimulatedAntenna]
+    SimulatedAntennaArray, UniformArray[SimulatedAntennaPort, SimulatedAntenna]
 ):
     """A uniform array of simulated antennas."""
 
@@ -874,18 +909,18 @@ class SimulatedUniformArray(
             dimensions (Sequence[int]):
                 The number of antennas in x-, y-, and z-dimension.
 
-            pose (Tranformation, optional):
+            pose (Transformation, optional):
                 The anntena array's transformation with respect to its device.
         """
 
         # Initialize base classes
         # Not that the order of the base class initialization is important here to presrve the kinematic chain!
-        SimulatedAntennas.__init__(self, pose)
+        SimulatedAntennaArray.__init__(self, pose)
         UniformArray.__init__(self, element, spacing, dimensions, pose)
 
 
 class SimulatedCustomArray(
-    SimulatedAntennas, CustomAntennaArray[SimulatedAntennaPort, SimulatedAntenna]
+    SimulatedAntennaArray, CustomAntennaArray[SimulatedAntennaPort, SimulatedAntenna]
 ):
     """A custom array of simulated antennas."""
 
@@ -904,13 +939,13 @@ class SimulatedCustomArray(
                 If antennas are passed instead of ports, the ports are automatically created.
                 If not specified, an empty array is assumed.
 
-            pose (Tranformation, optional):
+            pose (Transformation, optional):
                 The anntena array's transformation with respect to its device.
         """
 
         # Initialize base classes
         CustomAntennaArray.__init__(self, ports, pose)
-        SimulatedAntennas.__init__(self, pose)
+        SimulatedAntennaArray.__init__(self, pose)
 
     def add_port(self, port: SimulatedAntennaPort) -> None:
         CustomAntennaArray.add_port(self, port)

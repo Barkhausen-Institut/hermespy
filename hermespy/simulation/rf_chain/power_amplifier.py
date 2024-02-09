@@ -1,31 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-=========================
-Power Amplifier Modeling
-=========================
-
-Power amplification modeling represents a single processing step within the radio-frequency hardware model of
-transmitting modems.
-
-.. autoclasstree:: hermespy.simulation.rf_chain.power_amplifier
-   :strict:
-   :full:
-
-Each power amplifier model instance implements an equation
-
-.. math::
-
-   s'(t) = f\\lbrace s(t), t \\rbrace \\in \\mathbb{C}
-
-distorting complex-valued signal samples :math:`s(t) \\in \\mathbb{C}` feeding into the power amplifier.
-For time-invariant (i.e. memoryless) models :math:`f\\lbrace s(t), t \\rbrace = f\\lbrace s(t) \\rbrace`.
-The following figure visualizes the gain characteristics for the implemented amplification models for a saturation point :math:`s_\\mathrm{sat} = 1`.
-
-.. plot:: scripts/plot_pa_characteristics.py
-   :align: center
-
-
-"""
 
 from __future__ import annotations
 from typing import Any
@@ -34,7 +7,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.constants import pi
 
-from hermespy.core import Serializable, VAT, Visualizable
+from hermespy.core import Serializable
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -46,17 +19,8 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class PowerAmplifier(Serializable, Visualizable):
-    """Base class of a power-amplifier model.
-
-    Implements a distortion-less amplification model
-
-    .. math::
-
-       s'(t) = s(t) \\text{,}
-
-    which may be overwritten by classes inheriting from this base.
-    """
+class PowerAmplifier(Serializable):
+    """Base class of a distorionless power-amplifier model."""
 
     yaml_tag: str = "Distortionless"
     serialized_attributes = {"adjust_power"}
@@ -156,13 +120,13 @@ class PowerAmplifier(Serializable, Visualizable):
     def title(self) -> str:
         return self.__class__.__name__ + " Characteristics"
 
-    def plot(
+    def plot_characteristics(
         self,
-        axes: VAT | None = None,
+        axes: plt.Axes | None = None,
         *,
         title: str | None = None,
         samples: np.ndarray | None = None,
-    ) -> plt.FigureBase:
+    ) -> plt.Figure:
         """Plot the power amplifier distortion characteristics.
 
         Generates a matplotlib plot depicting the phase/amplitude.
@@ -181,7 +145,12 @@ class PowerAmplifier(Serializable, Visualizable):
                 In other words, the x-axis of the resulting characteristics plot.
         """
 
-        fig, ax = self._prepare_axes(axes, title)
+        if axes:
+            _axes = axes
+            fig = axes.get_figure()
+        else:
+            fig, _axes = plt.subplots(1, 1, squeeze=True)
+            fig.suptitle(title if title else self.title)
 
         if samples is None:
             samples = np.arange(0, 2, 0.01) * self.saturation_amplitude
@@ -190,7 +159,7 @@ class PowerAmplifier(Serializable, Visualizable):
         amplitude = abs(model)
         phase = np.angle(model)
 
-        amplitude_axes: plt.Axes = ax.flat[0]
+        amplitude_axes: plt.Axes = _axes
         phase_axes: plt.Axes = amplitude_axes.twinx()  # type: ignore
 
         amplitude_axes.set_xlabel("Input Amplitude")
@@ -206,16 +175,7 @@ class PowerAmplifier(Serializable, Visualizable):
 
 
 class ClippingPowerAmplifier(PowerAmplifier):
-    """Model of a clipping power amplifier.
-
-    Complex signal samples with amplitudes above :math:`s_\\mathrm{sat} \\in \\mathbb{R}` will be clipped
-    to the maximum amplitude value.
-    In case of clipping, the respective sample angles will be preserved, so that
-
-    .. math::
-
-       s'(t) = \\frac{s(t)}{|s(t)|} \\cdot \\min{(|s(t)|, s_\\mathrm{sat})} \\text{.}
-    """
+    """Model of a clipping power amplifier."""
 
     yaml_tag = "Clipping"
     """YAML serialization tag."""
@@ -223,7 +183,7 @@ class ClippingPowerAmplifier(PowerAmplifier):
     def __init__(self, **kwargs: Any) -> None:
         """
         Args:
-            kwargs (Any):
+            \**kwargs (Any):
                 PowerAmplifier base class initialization arguments.
         """
 
@@ -244,16 +204,6 @@ class ClippingPowerAmplifier(PowerAmplifier):
 class RappPowerAmplifier(PowerAmplifier):
     """Model of a power amplifier according to Rapp's model.
 
-    Implements a saturation characteristic according to
-
-    .. math::
-
-       s'(t) = s(t) \\cdot \\left( 1 + \\left( \\frac{|s(t)|}{s_\\mathrm{sat}} \\right)^{2p_\\mathrm{Rapp}} \\right)^{-\\frac{1}{2p_\\mathrm{Rapp}}}
-       \\text{,}
-
-    where :math:`p_\\mathrm{Rapp} \\in \\lbrace x \\in \\mathbb{R} | x \\geq 1 \\rbrace`
-    denotes the smoothness factor of the saturation curve.
-
     See :footcite:t:`1991:rapp` for further details.
     """
 
@@ -261,14 +211,13 @@ class RappPowerAmplifier(PowerAmplifier):
     """YAML serialization tag."""
 
     def __init__(self, smoothness_factor: float = 1.0, **kwargs: Any) -> None:
-        """Clipping Power Amplifier object initialization.
-
+        """
         Args:
 
             smoothness_factor(float, optional):
                 Smoothness factor of the amplification saturation characteristics.
 
-            kwargs (Any):
+            \**kwargs (Any):
                 PowerAmplifier base class initialization arguments.
         """
 
@@ -311,34 +260,6 @@ class RappPowerAmplifier(PowerAmplifier):
 class SalehPowerAmplifier(PowerAmplifier):
     """Model of a power amplifier according to Saleh.
 
-    Implements a saturation characteristic according to
-
-    .. math::
-
-       s'(t) = s(t) \\cdot A\\lbrace s(t) \\rbrace e^{\\mathrm{j} \\Phi\\lbrace s(t) \\rbrace}
-
-    where
-
-    .. math::
-
-       A\\lbrace s \\rbrace =
-       \\frac{ \\alpha_\\mathrm{a} \\frac{|s|}{s_\\mathrm{sat}} }
-             { 1 + \\beta_\\mathrm{a} \\frac{|s|^2}{s_\\mathrm{sat}^2} }
-
-    describes the amplitude model depending on two parameters
-    :math:`\\alpha_\\mathrm{a}, \\beta_\\mathrm{a} \\in \\mathbb{R}_{+}`
-    and
-
-    .. math::
-
-       \\Phi\\lbrace s \\rbrace =
-       \\frac{ \\alpha_\\Phi \\frac{|s|}{s_\\mathrm{sat}} }
-             { 1 + \\beta_\\Phi \\frac{|s|^2}{s_\\mathrm{sat}^2} }
-
-    describes the phase model depending on
-    :math:`\\alpha_\\Phi, \\beta_\\Phi \\in \\mathbb{R}`, respectively.
-
-
     See :footcite:t:`1981:saleh` for further details.
     """
 
@@ -377,7 +298,7 @@ class SalehPowerAmplifier(PowerAmplifier):
             phase_beta (float):
                 Phase model factor beta.
 
-            kwargs (Any):
+            \**kwargs (Any):
                 PowerAmplifier base class initialization arguments.
         """
 
@@ -461,7 +382,7 @@ class CustomPowerAmplifier(PowerAmplifier):
             gain (np.ndarray):
             phase (np.ndarray):
 
-            kwargs (Any):
+            \**kwargs (Any):
                 PowerAmplifier base class initialization arguments.
 
         Raises:

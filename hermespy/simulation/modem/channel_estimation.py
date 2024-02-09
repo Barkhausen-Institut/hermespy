@@ -94,10 +94,7 @@ class IdealChannelEstimation(Generic[WaveformType], ChannelEstimation[WaveformTy
         if self.waveform is None:
             raise RuntimeError("Ideal channel state estimation routine floating")
 
-        if (
-            self.waveform.modem is None
-            or self.waveform.modem.receiving_device is None
-        ):
+        if self.waveform.modem is None or self.waveform.modem.receiving_device is None:
             raise RuntimeError("Operating modem floating")
 
         cached_realization = self.receiver.channel_realization(self.transmitter)
@@ -106,12 +103,8 @@ class IdealChannelEstimation(Generic[WaveformType], ChannelEstimation[WaveformTy
                 "No channel realization available from which to estimate the ideal channel state information"
             )
 
-        sampling_rate = (
-            self.waveform.sampling_rate if sampling_rate is None else sampling_rate
-        )
-        num_samples = (
-            self.waveform.samples_per_frame if num_samples is None else num_samples
-        )
+        sampling_rate = self.waveform.sampling_rate if sampling_rate is None else sampling_rate
+        num_samples = self.waveform.samples_per_frame if num_samples is None else num_samples
 
         channel_state_information = cached_realization.state(
             delay, sampling_rate, num_samples, num_samples
@@ -133,15 +126,9 @@ class SingleCarrierIdealChannelEstimation(
         # sync_delay = int(frame_delay * self.waveform.sampling_rate)
 
         # Compute the CSI including inter-symbol interference
-        filter_characteristics = (
-            self.waveform._transmit_filter() * self.waveform._receive_filter()
-        )
+        filter_characteristics = self.waveform._transmit_filter() * self.waveform._receive_filter()
         state = (
-            self._csi(
-                frame_delay,
-                self.waveform.sampling_rate,
-                self.waveform.samples_per_frame,
-            )
+            self._csi(frame_delay, self.waveform.sampling_rate, self.waveform.samples_per_frame)
             .to_impulse_response()
             .dense_state()
         )

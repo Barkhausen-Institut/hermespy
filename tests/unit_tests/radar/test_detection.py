@@ -116,10 +116,10 @@ class TestRadarPointCloud(TestCase):
             subplots_patch.return_value = (figure_mock, axes_collection)
 
             self.cloud.add_point(PointDetection(np.zeros(3), np.zeros(3), 1.0))
-            self.cloud.plot()
+            self.cloud.visualize()
 
             subplots_patch.assert_called_once()
-            axes_mock.scatter.assert_called_once()
+            axes_mock.scatter.assert_called()
 
 
 class TestThresholdDetector(TestCase):

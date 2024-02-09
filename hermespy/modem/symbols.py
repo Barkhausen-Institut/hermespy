@@ -15,7 +15,7 @@ from h5py import Group
 from matplotlib import rcParams
 from sparse import SparseArray  # type: ignore
 
-from hermespy.core import Executable, HDFSerializable
+from hermespy.core import HDFSerializable, VisualizableAttribute, ScatterVisualization, VAT
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -38,6 +38,72 @@ class SymbolType(Enum):
 
     PILOT = 2
     """Pilot symbol for frame detection."""
+
+
+class _ConstellationPlot(VisualizableAttribute[ScatterVisualization]):
+    """Plot the symbol constellation.
+
+    Essentially projects the time-series of symbols onto a single complex plane.
+
+    Args:
+
+        axes (Optional[plt.Axes], optional):
+            The axes to plot the graph to.
+            By default, a new matplotlib figure is created.
+
+        title (str, optional):
+            Plot title.
+            Only relevant if no axes were provided.
+
+    Returns:
+
+        Optional[plt.Figure]:
+            Handle to the created matplotlib.pyplot figure object.
+            None if the axes were provided.
+    """
+
+    __symbols: Symbols
+
+    def __init__(self, symbols: Symbols) -> None:
+        """
+        Args:
+
+            symbols (Symbols): The symbols to be plotted.
+        """
+
+        # Initialize the base class
+        super().__init__()
+
+        # Initialize attributes
+        self.__symbols = symbols
+
+    @property
+    def title(self) -> str:
+        return "Symbol Constellation"
+
+    def _prepare_visualization(
+        self, figure: plt.Figure | None, axes: VAT, **kwargs
+    ) -> ScatterVisualization:
+        ax: plt.Axes = axes.flat[0]
+        ax.set(ylabel="Imag")
+        ax.set(xlabel="Real")
+        ax.grid(True, which="both")
+        ax.axhline(y=0, color=rcParams["grid.color"])
+        ax.axvline(x=0, color=rcParams["grid.color"])
+        ax.set_xlim(-1.25, 1.25)
+        ax.set_ylim(-1.25, 1.25)
+
+        num_symbols = (
+            self.__symbols.num_symbols * self.__symbols.num_blocks * self.__symbols.num_streams
+        )
+        zeros = np.zeros(num_symbols, dtype=np.float_)
+        path_collection = ax.scatter(zeros, zeros)
+
+        return ScatterVisualization(figure, axes, path_collection)
+
+    def _update_visualization(self, visualization: ScatterVisualization, **kwargs) -> None:
+        symbols = self.__symbols.raw.flatten()
+        visualization.paths.set_offsets(np.array([symbols.real, symbols.imag]).T)
 
 
 class Symbol(object):
@@ -69,6 +135,7 @@ class Symbols(HDFSerializable):
     """A time-series of communication symbols located somewhere on the complex plane."""
 
     __symbols: np.ndarray  # Internal symbol storage
+    __constellation_plot: _ConstellationPlot  # Symbol constellation plot
 
     def __init__(self, symbols: Optional[Union[Iterable, np.ndarray]] = None) -> None:
         """
@@ -96,6 +163,7 @@ class Symbols(HDFSerializable):
             symbols = symbols[:, :, np.newaxis]
 
         self.__symbols = symbols
+        self.__constellation_plot = _ConstellationPlot(self)
 
     @property
     def num_streams(self) -> int:
@@ -259,54 +327,11 @@ class Symbols(HDFSerializable):
         else:
             self.__symbols[section] = value
 
-    def plot_constellation(
-        self, axes: plt.Axes | np.ndarray | None = None, title: str = "Symbol Constellation"
-    ) -> Optional[plt.Figure]:
-        """Plot the symbol constellation.
+    @property
+    def plot_constellation(self) -> _ConstellationPlot:
+        """Plot the symbol constellation."""
 
-        Essentially projects the time-series of symbols onto a single complex plane.
-
-        Args:
-
-            axes (Optional[plt.Axes], optional):
-                The axes to plot the graph to.
-                By default, a new matplotlib figure is created.
-
-            title (str, optional):
-                Plot title.
-                Only relevant if no axes were provided.
-
-        Returns:
-
-            Optional[plt.Figure]:
-                Handle to the created matplotlib.pyplot figure object.
-                None if the axes were provided.
-        """
-
-        symbols = self.__symbols.flatten()
-        figure: Optional[plt.Figure] = None
-
-        # Create a new figure and the respective axes if none were provided
-        _axes: np.ndarray
-        if axes is None:
-            with Executable.style_context():
-                figure, _axes = plt.subplots(1, 1, squeeze=None)
-                figure.suptitle(title)
-
-        elif isinstance(axes, plt.Axes):
-            _axes = np.array([[axes]])
-
-        else:
-            _axes = axes
-
-        _axes[0, 0].scatter(symbols.real, symbols.imag)
-        _axes[0, 0].set(ylabel="Imag")
-        _axes[0, 0].set(xlabel="Real")
-        _axes[0, 0].grid(True, which="both")
-        _axes[0, 0].axhline(y=0, color=rcParams['grid.color'])
-        _axes[0, 0].axvline(x=0, color=rcParams['grid.color'])
-
-        return figure
+        return self.__constellation_plot
 
     @classmethod
     def from_HDF(cls: Type[Symbols], group: Group) -> Symbols:

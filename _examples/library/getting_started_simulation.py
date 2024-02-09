@@ -40,7 +40,7 @@ drop.device_receptions[1].operator_receptions[0].equalized_symbols.plot_constell
 
 # Add a bit error rate evaluation to the simulation
 ber = BitErrorEvaluator(link, link)
-ber.evaluate().plot()
+ber.evaluate().visualize()
 
 # Iterate over the receiving device's SNR and estimate the respective bit error rates
 simulation.new_dimension('snr', dB(20, 16, 12, 8, 4, 0), rx_device)

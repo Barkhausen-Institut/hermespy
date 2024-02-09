@@ -35,6 +35,6 @@ radar.transmission.signal.plot(title='Transmitted Radar Signal')
 radar.reception.signal.plot(title='Received Radar Signal')
 radar.reception.cube.plot_range(title='Range Power Profile')
 radar.reception.cube.plot_range_velocity(title='Range Velocity Map')
-radar.reception.cloud.plot(title='Radar Point Cloud')
+radar.reception.cloud.visualize(title='Radar Point Cloud')
 
 plt.show()

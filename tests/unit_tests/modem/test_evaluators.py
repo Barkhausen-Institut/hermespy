@@ -84,7 +84,7 @@ class TestBitErrorEvaluation(TestCase):
         with patch("matplotlib.pyplot.subplots") as subplots_mock:
             subplots_mock.return_value = (figure_mock, axes_collection)
 
-            self.evaluation.plot()
+            self.evaluation.visualize()
             subplots_mock.assert_called_once()
 
 
@@ -148,7 +148,7 @@ class TestBlockErrorEvaluation(TestCase):
         with patch("matplotlib.pyplot.subplots") as subplots_mock:
             subplots_mock.return_value = (figure_mock, axes_collection)
 
-            self.evaluation.plot()
+            self.evaluation.visualize()
             subplots_mock.assert_called_once()
 
 
@@ -225,7 +225,7 @@ class TestFrameErrorEvaluation(TestCase):
         with patch("matplotlib.pyplot.subplots") as subplots_mock:
             subplots_mock.return_value = (figure_mock, axes_collection)
 
-            self.evaluation.plot()
+            self.evaluation.visualize()
             subplots_mock.assert_called_once()
 
 
@@ -315,7 +315,7 @@ class TestThroughputEvaluation(TestCase):
         with patch("matplotlib.pyplot.subplots") as subplots_mock:
             subplots_mock.return_value = (figure_mock, axes_collection)
 
-            self.evaluation.plot()
+            self.evaluation.visualize()
             subplots_mock.assert_called_once()
 
 

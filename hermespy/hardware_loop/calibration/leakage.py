@@ -16,7 +16,7 @@ from numpy.linalg import svd
 from scipy.fft import fft, fftfreq, fftshift, ifft
 from scipy.signal import convolve
 
-from hermespy.core import Serializable, Signal, VAT, Visualizable
+from hermespy.core import Serializable, Signal, VAT
 from ..physical_device import LeakageCalibrationBase, PhysicalDevice
 from .delay import DelayCalibration
 
@@ -30,7 +30,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class SelectiveLeakageCalibration(LeakageCalibrationBase, Visualizable, Serializable):
+class SelectiveLeakageCalibration(LeakageCalibrationBase, Serializable):
     """Calibration of a frequency-selective leakage model."""
 
     yaml_tag = "SelectiveLeakageCalibration"
@@ -167,15 +167,11 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Visualizable, Serializ
 
         return corrected_signal
 
-    @property
-    def title(self) -> str:
-        return "Frequency Selective Leakage Calibration"
+    def plot(self) -> Tuple[plt.FigureBase, VAT]:
+        """Plot the leakage response in the time and frequency domain."""
 
-    def _new_axes(self, **kwargs) -> Tuple[plt.Figure, VAT]:
         figure, axes = plt.subplots(1, 2, squeeze=False)
-        return figure, axes
 
-    def _plot(self, axes: VAT) -> None:
         time_axes: plt.Axes = axes[0, 0]
         freq_axes: plt.Axes = axes[0, 1]
 
@@ -194,6 +190,8 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Visualizable, Serializ
 
             time_axes.set_xlabel("Time [s]")
             freq_axes.set_xlabel("Frequency [Hz]")
+
+        return figure, axes
 
     def to_HDF(self, group: Group) -> None:
         self._write_dataset(group, "leakage_response", self.leakage_response)
