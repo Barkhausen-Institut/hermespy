@@ -143,8 +143,8 @@ A :doc:`ChannelRealization<channel.channel.ChannelRealization>` fixes the realiz
 meaning calling the :doc:`Realization<channel.channel.ChannelRealization>`'s :meth:`propagate<hermespy.channel.channel.ChannelRealization.propagate>` method with the identical :doc:`Signal<core.signal_model.Signal>` object will always result in the identical :doc:`ChannelPropagation<channel.channel.ChannelPropagation>` object.
 Note that this is not the case for calling the :doc:`Channel<channel.channel.Channel>`'s :meth:`propagate<hermespy.channel.channel.Channel.propagate>` method, which internally generates a new :doc:`ChannelRealization<channel.channel.ChannelRealization>`.
 
-Channels always link at least two :doc:`Simulated Devices<simulation.simulated_device.SimulatedDevice>`,
-which :meth:`transmit<hermespy.simulation.simulated_device.SimulatedDevice.transmit>` and :meth:`receive<hermespy.simulation.simulated_device.SimulatedDevice.receive>` :doc:`Signals<core.signal_model.Signal>`.
+Channels always link at least two :doc:`Simulated Devices<simulation.simulated_device>`,
+which :meth:`transmit<hermespy.simulation.simulated_device.transmit>` and :meth:`receive<hermespy.simulation.simulated_device.receive>` :doc:`Signals<core.signal_model.Signal>`.
 The emitted signal is propagated over a :doc:`ChannelRealization<channel.channel.ChannelRealization>` and result in a :doc:`ChannelPropagation<channel.channel.ChannelPropagation>` object.
 The :doc:`ChannelPropagation<channel.channel.ChannelPropagation>` contains the propagated :doc:`Signal<core.signal_model.Signal>` and additional information about the propagtion direction (which device transmitted and which device received).
 
@@ -178,16 +178,16 @@ The :doc:`ChannelPropagation<channel.channel.ChannelPropagation>` contains the p
     click channel_realization href "channel.channel.ChannelRealization.html"
     click device_alpha_propagation href "channel.channel.ChannelPropagation.html"
     click device_beta_propagation href "channel.channel.ChannelPropagation.html"
-    click device_alpha href "simulation.simulated_device.SimulatedDevice.html"
-    click device_beta href "simulation.simulated_device.SimulatedDevice.html"
-    click device_alpha_reception "simulation.simulated_device.SimulatedDeviceReception.html"
-    click device_beta_reception "simulation.simulated_device.SimulatedDeviceReception.html"
-    click device_alpha_transmission "simulation.simulated_device.SimulatedDeviceTransmission.html"
-    click device_beta_transmission "simulation.simulated_device.SimulatedDeviceTransmission.html"
+    click device_alpha href "simulation.simulated_device.html"
+    click device_beta href "simulation.simulated_device.html"
+    click device_alpha_reception "simulation.simulated_deviceReception.html"
+    click device_beta_reception "simulation.simulated_deviceReception.html"
+    click device_alpha_transmission "simulation.simulated_deviceTransmission.html"
+    click device_beta_transmission "simulation.simulated_deviceTransmission.html"
 
 
 Operating the described interface requires the import of a :doc:`Channel<channel.channel.Channel>` implementation and
-the :doc:`Simulated Devices<simulation.simulated_device.SimulatedDevice>` to be linked.
+the :doc:`Simulated Devices<simulation.simulated_device>` to be linked.
 
 .. literalinclude:: ../scripts/examples/channel.py
    :language: python
@@ -196,7 +196,7 @@ the :doc:`Simulated Devices<simulation.simulated_device.SimulatedDevice>` to be 
 
 Note that, since it is an abstract base class, the :doc:`Channel<channel.channel.Channel>` used in this example cannot be instantiated directly.
 Instead, a concrete implementation such as the :doc:`Ideal Channel<channel.ideal.IdealChannel>` must be used.
-Now, the :doc:`Channel<channel.channel.Channel>` can be linked to the :doc:`Simulated Devices<simulation.simulated_device.SimulatedDevice>`.
+Now, the :doc:`Channel<channel.channel.Channel>` can be linked to the :doc:`Simulated Devices<simulation.simulated_device>`.
 
 .. literalinclude:: ../scripts/examples/channel.py
    :language: python
@@ -222,7 +222,7 @@ For example, a :doc:`SimplexLink<modem.modem.SimplexLink>` transmitting a :doc:`
    :lines: 20-27
 
 Investigating the performance of the configured waveform over the specific :doc:`Channel<channel.channel.Channel>` within a :doc:`Simulation<simulation.simulation.Simulation>`
-requires the instantiation of a new :doc:`Simulation<simulation.simulation.Simulation>` and adding the already existing :doc:`Channel<channel.channel.Channel>` and :doc:`Simulated Devices<simulation.simulated_device.SimulatedDevice>`.
+requires the instantiation of a new :doc:`Simulation<simulation.simulation.Simulation>` and adding the already existing :doc:`Channel<channel.channel.Channel>` and :doc:`Simulated Devices<simulation.simulated_device>`.
 
 .. literalinclude:: ../scripts/examples/channel.py
    :language: python
@@ -257,7 +257,7 @@ their antennas or the propagation environment
 
 In addition, geometry-based stochastical and deterministic channel models are provided,
 which model the propagation environment as a collection of scatterers.
-Note that these models might require specifying the linked devices :meth:`position<hermespy.simulation.simulated_device.SimulatedDevice.global_position>`.
+Note that these models might require specifying the linked devices :meth:`position<hermespy.simulation.simulated_device.global_position>`.
 
 .. toctree::
    :maxdepth: 1

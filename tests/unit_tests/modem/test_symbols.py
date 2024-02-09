@@ -153,7 +153,7 @@ class TestSymbols(TestCase):
             axes = np.empty((1, 1), dtype=np.object_)
             axes[0, 0] = ax_mock
             self.symbols.plot_constellation(axes=axes)
-            ax_mock.scatter.assert_called_once()
+            ax_mock.scatter.assert_called()
 
     def test_hdf_serialization(self) -> None:
         """Serialization to and from HDF5 should yield the correct object reconstruction"""

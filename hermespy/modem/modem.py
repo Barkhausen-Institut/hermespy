@@ -155,9 +155,7 @@ class CommunicationTransmission(Transmission):
     """Individual transmitted communication frames."""
 
     def __init__(
-        self,
-        signal: Signal,
-        frames: List[CommunicationTransmissionFrame] | None = None
+        self, signal: Signal, frames: List[CommunicationTransmissionFrame] | None = None
     ) -> None:
         """
         Args:
@@ -560,9 +558,7 @@ class BaseModem(RandomNode, ABC):
                 f"Symbol precoding rate does not match the waveform configuration ({self.waveform.num_data_symbols} % {self.precoding.rate.denominator} != 0)"
             )
 
-        required_num_data_symbols = int(
-            self.waveform.num_data_symbols * self.precoding.rate
-        )
+        required_num_data_symbols = int(self.waveform.num_data_symbols * self.precoding.rate)
         required_num_code_bits = (
             self.waveform.bits_per_frame(required_num_data_symbols)
             * self.precoding.num_input_streams
@@ -712,7 +708,9 @@ class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Seria
 
     @property
     def num_transmit_ports(self) -> int:
-        return 0 if self.transmitting_device is None else self.transmitting_device.num_transmit_ports
+        return (
+            0 if self.transmitting_device is None else self.transmitting_device.num_transmit_ports
+        )
 
     @property
     def transmit_stream_coding(self) -> TransmitStreamCoding:
@@ -765,17 +763,13 @@ class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Seria
             (symbols.num_streams, self.waveform.samples_per_frame), dtype=np.complex_
         )
         for s, stream_symbols in enumerate(symbols.raw):
-            placed_symbols = self.waveform.place(
-                Symbols(stream_symbols[np.newaxis, :, :])
-            )
+            placed_symbols = self.waveform.place(Symbols(stream_symbols[np.newaxis, :, :]))
 
             # Modulate each placed symbol stream individually to its base-band signal representation
             frame_samples[s, :] = self.waveform.modulate(placed_symbols)
 
         # Apply the stream transmit coding configuration
-        frame_signal = Signal(
-            frame_samples, self.waveform.sampling_rate, self.carrier_frequency
-        )
+        frame_signal = Signal(frame_samples, self.waveform.sampling_rate, self.carrier_frequency)
         return frame_signal
 
     def _transmit(self, duration: float = -1.0) -> CommunicationTransmission:
@@ -957,9 +951,7 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
         """
 
         # Synchronize raw MIMO data into frames
-        frame_start_indices = self.waveform.synchronization.synchronize(
-            received_signal.samples
-        )
+        frame_start_indices = self.waveform.synchronization.synchronize(received_signal.samples)
         frame_length = self.waveform.samples_per_frame
 
         synchronized_signals = []

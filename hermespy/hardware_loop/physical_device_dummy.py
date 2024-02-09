@@ -16,7 +16,7 @@ from hermespy.core import DeviceInput, Serializable, Signal, SNRType
 from hermespy.channel import ChannelPropagation
 from hermespy.simulation import (
     ProcessedSimulatedDeviceInput,
-    SimulatedAntennas,
+    SimulatedAntennaArray,
     SimulatedDevice,
     SimulatedDeviceOutput,
     SimulatedDeviceReception,
@@ -52,7 +52,7 @@ class PhysicalDeviceDummy(SimulatedDevice, PhysicalDevice, Serializable):
     def __init__(
         self,
         max_receive_delay: float = 0.0,
-        antennas: SimulatedAntennas | None = None,
+        antennas: SimulatedAntennaArray | None = None,
         noise_power: np.ndarray | None = None,
         receive_transmission: bool = True,
         **kwargs,

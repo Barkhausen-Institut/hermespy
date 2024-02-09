@@ -22,7 +22,6 @@ from hermespy.core import (
     HDFSerializable,
     Serializable,
     Signal,
-    Visualizable,
 )
 from hermespy.tools import db2lin
 from .channel import Channel, ChannelRealization, InterpolationMode
@@ -59,7 +58,7 @@ class DelayNormalization(Enum):
     """
 
 
-class ClusterDelayLineRealization(ChannelRealization, Visualizable):
+class ClusterDelayLineRealization(ChannelRealization):
     """Realization of a 3GPP Cluster Delay Line channel model."""
 
     __line_of_sight: bool

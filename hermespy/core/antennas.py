@@ -1712,7 +1712,7 @@ class CustomAntennaArray(Generic[APT, AT], AntennaArray[APT, AT], Serializable):
             antenna (AT):
                 The antenna element to be added.
 
-        Raises
+        Raises:
 
             ValueError: If the antenna is already attached to another array or port.
 

@@ -6,7 +6,7 @@ from unittest import TestCase
 
 import ray as ray
 
-from ..helpers import SimulationTestContext
+from unit_tests.utils import SimulationTestContext
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -150,7 +150,7 @@ class TestDocumentationExamples(TestCase):
         """Test example snippet for channel"""
 
         self.__run_example("channel.py")
-        
+
     def test_modem_DuplexModem(self) -> None:
         """Test example snippet for duplex modem"""
 
@@ -230,27 +230,27 @@ class TestDocumentationExamples(TestCase):
         """Test example snippet for CFSK waveforms"""
 
         self.__run_example("modem_waveforms_cfsk.py")
-        
+
     def test_modem_waveforms_fmcw(self) -> None:
         """Test example snippet for FMCW waveforms"""
 
         self.__run_example("modem_waveforms_fmcw.py")
-        
+
     def test_modem_waveforms_rc(self) -> None:
         """Test example snippet for RC waveforms"""
 
         self.__run_example("modem_waveforms_rc.py")
-        
+
     def test_modem_waveforms_rect(self) -> None:
         """Test example snippet for rect waveforms"""
 
         self.__run_example("modem_waveforms_rect.py")
-        
+
     def test_modem_waveforms_rrc(self) -> None:
         """Test example snippet for RRC waveforms"""
 
         self.__run_example("modem_waveforms_rrc.py")
-        
+
     def test_modem(self) -> None:
         """Test example snippet for modem"""
 
@@ -275,3 +275,88 @@ class TestDocumentationExamples(TestCase):
         """Test example snippet for FMCW waveforms"""
 
         self.__run_example("radar_fmcw_FMCW.py")
+
+    def test_simulation_adc(self) -> None:
+        """Test example snippet for ADC"""
+
+        self.__run_example("simulation_adc.py")
+
+    def test_simulation_antennas_SimulatedAntennaArray(self) -> None:
+        """Test example snippet for simulated antenna array"""
+
+        self.__run_example("simulation_antennas_SimulatedAntennaArray.py")
+
+    def test_simulation_antennas(self) -> None:
+        """Test example snippet for antennas"""
+
+        self.__run_example("simulation_antennas.py")
+
+    def test_simulation_amplifier(self) -> None:
+        """Test example snippet for amplifier"""
+
+        self.__run_example("simulation_amplifier.py")
+
+    def test_simulation_isolation(self) -> None:
+        """Test example snippet for isolation"""
+
+        self.__run_example("simulation_isolation.py")
+
+    def test_simulation_isolation_selective(self) -> None:
+        """Test example snippet for selective isolation"""
+
+        self.__run_example("simulation_isolation_selective.py")
+
+    def test_simulation_isolation_specific(self) -> None:
+        """Test example snippet for specific isolation"""
+
+        self.__run_example("simulation_isolation_specific.py")
+
+    def test_simulation_isolation_perfect(self) -> None:
+        """Test example snippet for perfect isolation"""
+
+        self.__run_example("simulation_isolation_perfect.py")
+
+    def test_simulation_noise(self) -> None:
+        """Test example snippet for noise"""
+
+        self.__run_example("simulation_noise.py")
+
+    def test_simulation_phase_noise(self) -> None:
+        """Test example snippet for phase noise"""
+
+        self.__run_example("simulation_phase_noise.py")
+
+    def test_simulation_SimulatedDevice(self) -> None:
+        """Test example snippet for simulated device"""
+
+        self.__run_example("simulation_SimulatedDevice.py")
+
+    def test_simulation_synchronization_RandomTrigger(self) -> None:
+        """Test example snippet for random trigger"""
+
+        self.__run_example("simulation_synchronization_RandomTrigger.py")
+
+    def test_simulation_synchronization_SampleOffsetTrigger(self) -> None:
+        """Test example snippet for sample offset trigger"""
+
+        self.__run_example("simulation_synchronization_SampleOffsetTrigger.py")
+
+    def test_simulation_synchronization_StaticTrigger(self) -> None:
+        """Test example snippet for static trigger"""
+
+        self.__run_example("simulation_synchronization_StaticTrigger.py")
+
+    def test_simulation_synchronization_TimeOffsetTrigger(self) -> None:
+        """Test example snippet for time offset trigger"""
+
+        self.__run_example("simulation_synchronization_TimeOffsetTrigger.py")
+
+    def test_simulation_synchronization(self) -> None:
+        """Test example snippet for synchronization"""
+
+        self.__run_example("simulation_synchronization.py")
+
+    def test_simulation(self) -> None:
+        """Test example snippet for simulation"""
+
+        self.__run_example("simulation.py")

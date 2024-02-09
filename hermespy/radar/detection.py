@@ -16,7 +16,7 @@ from mpl_toolkits.mplot3d import Axes3D  # type: ignore
 from scipy.ndimage import generate_binary_structure, maximum_filter
 from scipy.signal import convolve
 
-from hermespy.core import Serializable, VAT, Visualizable
+from hermespy.core import ScatterVisualization, Serializable, VAT, Visualizable
 from .cube import RadarCube
 
 __author__ = "Jan Adler"
@@ -147,7 +147,7 @@ class PointDetection(object):
         )
 
 
-class RadarPointCloud(Visualizable):
+class RadarPointCloud(Visualizable[ScatterVisualization]):
     """A sparse radar point cloud."""
 
     __points: List[PointDetection]
@@ -225,26 +225,33 @@ class RadarPointCloud(Visualizable):
     def title(self) -> str:
         return "Radar Point Coud"
 
-    def _new_axes(self, **kwargs) -> Tuple[plt.Figure, VAT]:
+    def create_figure(self, **kwargs) -> Tuple[plt.Figure, VAT]:
         figure, axes = plt.subplots(1, 1, squeeze=False, subplot_kw={"projection": "3d"})
         return figure, axes
 
-    def _plot(self, axes: VAT) -> None:
-        ax: Axes3D = axes.flat[0]  # type: ignore
-
-        for point in self.points:
-            position = point.position
-            ax.scatter(
-                position[0], position[2], position[1], marker="o", c=point.power, cmap="Greens"
-            )
-
+    def _prepare_visualization(
+        self, figure: plt.Figure | None, axes: VAT, **kwargs
+    ) -> ScatterVisualization:
         # Configure axes
+        ax: Axes3D = axes.flat[0]
         ax.set_xlim((-self.max_range, self.max_range))
         ax.set_ylim((0, self.max_range))
         ax.set_zlim((-self.max_range, self.max_range))
         ax.set_xlabel("X [m]")
         ax.set_ylabel("Z [m]")
         ax.set_zlabel("Y [m]")
+
+        paths = ax.scatter([], [], [], marker="o", c=0, cmap="Greens")
+        return ScatterVisualization(figure, axes, paths)
+
+    def _update_visualization(self, visualization: ScatterVisualization, **kwargs) -> None:
+        ax: Axes3D = visualization.axes.flat[0]  # type: ignore
+        ax.clear()
+        for point in self.points:
+            position = point.position
+            ax.scatter(
+                position[0], position[2], position[1], marker="o", c=point.power, cmap="Greens"
+            )
 
 
 class RadarDetector(object):

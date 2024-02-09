@@ -1793,7 +1793,7 @@ class Device(ABC, Transformable, RandomNode, Serializable):
         return [transmitter.transmit() for transmitter in self.transmitters]
 
     def generate_output(
-        self, operator_transmissions: Optional[List[Transmission]] = None, resample: bool = True
+        self, operator_transmissions: List[Transmission] | None = None, resample: bool = True
     ) -> DeviceOutput:
         """Generate the device's output.
 
@@ -1816,12 +1816,9 @@ class Device(ABC, Transformable, RandomNode, Serializable):
             if operator_transmissions is None
             else operator_transmissions
         )
-        operator_streams = [o.selected_transmit_ports for o in self.transmitters]
 
-        if any([t is None for t in operator_transmissions]):
-            raise RuntimeError(
-                "Error trying to generate outputs without specifying transmissions, caches are empty"
-            )
+        # Query the intended transmission ports of each operator
+        operator_streams = [o.selected_transmit_ports for o in self.transmitters]
 
         # Superimpose the operator transmissions to the device's RF configuration
         superimposed_signal = Signal.empty(

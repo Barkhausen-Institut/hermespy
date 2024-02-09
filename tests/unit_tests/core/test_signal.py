@@ -16,6 +16,7 @@ from scipy.constants import pi
 from scipy.fft import ifft, ifftshift
 
 from hermespy.core.signal_model import Signal
+from unit_tests.utils import SimulationTestContext
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -363,10 +364,10 @@ class TestSignal(TestCase):
     def test_plot_eye(self) -> None:
         """Visualizing eye diagrams in time-dime domain should yield a plot"""
 
-        with patch("matplotlib.pyplot.figure") if getenv("HERMES_TEST_PLOT", "False").lower() == "true" else nullcontext():
+        with SimulationTestContext():
             try:
-                _ = self.signal.plot_eye(1e-3, domain="time")
-                _ = self.signal.plot_eye(1e-3, domain="complex")
+                _ = self.signal.eye(symbol_duration=10/self.signal.sampling_rate, domain="time")
+                _ = self.signal.eye(symbol_duration=10/self.signal.sampling_rate, domain="complex")
 
             except Exception as e:
                 self.fail(e)
@@ -377,16 +378,16 @@ class TestSignal(TestCase):
         """The eye plotting routine should raise ValueErrors on invalid arguments"""
 
         with self.assertRaises(ValueError):
-            _ = self.signal.plot_eye(-1.0)
+            _ = self.signal.eye(symbol_duration=-1.0)
 
         with self.assertRaises(ValueError):
-            _ = self.signal.plot_eye(1e-3, domain="blablabla")
+            _ = self.signal.eye(symbol_duration=1e-3, domain="blablabla")
 
         with self.assertRaises(ValueError):
-            _ = self.signal.plot_eye(1e-3, linewidth=0.0)
+            _ = self.signal.eye(symbol_duration=1e-3, linewidth=0.0)
 
         with self.assertRaises(ValueError):
-            _ = self.signal.plot_eye(1e-3, symbol_cutoff=2.0)
+            _ = self.signal.eye(symbol_duration=1e-3, symbol_cutoff=2.0)
 
     def test_append_samples(self) -> None:
         """Appending a signal model should yield the proper result"""

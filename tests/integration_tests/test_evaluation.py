@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from unittest import TestCase
-from unittest.mock import patch
 
 import numpy as np
 
@@ -8,6 +7,7 @@ from hermespy.modem import DuplexModem, RootRaisedCosineWaveform, BitErrorEvalua
 from hermespy.simulation import SimulatedDevice
 from hermespy.core.evaluators import ReceivedPowerEvaluator
 from hermespy.core.monte_carlo import Evaluator, GridDimension
+from unit_tests.utils import SimulationTestContext
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -60,8 +60,8 @@ class TestEvaluators(TestCase):
 
             result = evaluator.generate_result([self.dimension], artifact_grid)
 
-            with patch("matplotlib.pyplot.figure"):
-                _ = result.plot()
+            with SimulationTestContext():
+                _ = result.visualize()
 
         except BaseException as e:
             self.fail(msg=str(e))

@@ -92,20 +92,19 @@ class TestPowerAmplifier(unittest.TestCase):
 
         assert_array_equal(expected_signal, signal)
 
-    def test_plot(self) -> None:
+    def test_plot_characteristics(self) -> None:
         """The plotting routine should generate matplotlib plots"""
 
         figure = Mock(spec=plt.Figure)
         axes = MagicMock(spec=plt.Axes)
-        axes_collection = np.array([[axes]], dtype=np.object_)
 
         with patch("matplotlib.pyplot.subplots") as subplots_patch:
-            subplots_patch.return_value = figure, axes_collection
+            subplots_patch.return_value = figure, axes
 
-            self.pa.plot()
+            self.pa.plot_characteristics()
             subplots_patch.assert_called_once()
 
-            self.pa.plot(axes=axes_collection)
+            self.pa.plot_characteristics(axes=axes)
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""

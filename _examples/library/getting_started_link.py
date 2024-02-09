@@ -30,6 +30,6 @@ reception = rx_operator.receive()
 
 # Evaluate bit errors during transmission and visualize the received symbol constellation
 evaluator = BitErrorEvaluator(tx_operator, rx_operator)
-evaluator.evaluate().plot()
+evaluator.evaluate().visualize()
 reception.symbols.plot_constellation()
 plt.show()
