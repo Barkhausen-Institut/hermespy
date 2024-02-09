@@ -268,11 +268,7 @@ class Logarithmic(float):
         self,
     ) -> Tuple[
         Callable[[float, float, DbConversionType], Logarithmic],
-        Tuple[
-            float,
-            float,
-            DbConversionType,
-        ],
+        Tuple[float, float, DbConversionType],
     ]:
         """Serialization callback for the Ray framework / pickle."""
 

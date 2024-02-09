@@ -249,6 +249,6 @@ class MatchedFilterJcas(  # type: ignore[misc]
     def _recall_reception(self, group: Group) -> JCASReception:
         return JCASReception.from_HDF(group)
 
-    def _noise_power(self, strength: float, snr_type=SNRType) -> float:
+    def _noise_power(self, strength: float, snr_type: SNRType) -> float:
         # Defer to the DuplexModem noise power calculation
         return DuplexModem._noise_power(self, strength, snr_type)

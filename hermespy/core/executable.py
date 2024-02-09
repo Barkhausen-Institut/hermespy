@@ -269,10 +269,7 @@ class Executable(ABC):
         style_path = Executable.__style
         if style_path in Executable.__hermes_styles():
             style_path = path.join(
-                Executable.__hermes_root_dir(),
-                "core",
-                "styles",
-                Executable.__style + ".mplstyle",
+                Executable.__hermes_root_dir(), "core", "styles", Executable.__style + ".mplstyle"
             )
         with plt.style.context(style_path):
             yield
@@ -333,7 +330,13 @@ class Executable(ABC):
             force (bool): If True, print the traceback regardless of Verbosity level
             show_locals (bool): Output the local variables.
             confirm (bool): Confirm for continuing execution.
+
+        Raises: The original exception if debug mode is enabled.
         """
+
+        # If debug mode is enabled, re-raise the exception without any additional handling
+        if self.debug:
+            raise exception
 
         # Check if the exception should be ignored
         if (
@@ -346,7 +349,3 @@ class Executable(ABC):
             if confirm:
                 if not Confirm.ask("Continue execution?", console=self.console, choices=["y", "n"]):
                     exit(0)
-
-        # If debug mode is enabled, re-raise the exception
-        if self.debug:
-            raise exception

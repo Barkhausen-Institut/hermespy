@@ -2,8 +2,9 @@
 Automatic Gain Control
 =======================
 
-.. autoclass:: hermespy.simulation.rf_chain.analog_digital_converter.AutomaticGainControl
+.. inheritance-diagram:: hermespy.simulation.rf_chain.analog_digital_converter.AutomaticGainControl
+   :parts: 1
 
-.. autoclass:: hermespy.simulation.rf_chain.analog_digital_converter.GainControlType
+.. autoclass:: hermespy.simulation.rf_chain.analog_digital_converter.AutomaticGainControl
 
 .. footbibliography::

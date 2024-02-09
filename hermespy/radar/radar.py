@@ -463,7 +463,7 @@ class Radar(DuplexOperator[RadarTransmission, RadarReception], Serializable):
 
         return self.waveform.frame_duration
 
-    def _noise_power(self, strength: float, snr_type=SNRType) -> float:
+    def _noise_power(self, strength: float, snr_type: SNRType) -> float:
         # No waveform configured equals no noise required
         if self.waveform is None:
             return 0.0

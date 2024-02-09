@@ -8,7 +8,7 @@ from tempfile import TemporaryDirectory
 import ray as ray
 
 from hermespy.bin.hermes import hermes_simulation
-from ..helpers import SimulationTestContext
+from unit_tests.utils import SimulationTestContext
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"

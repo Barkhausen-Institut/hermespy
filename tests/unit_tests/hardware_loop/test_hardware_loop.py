@@ -12,13 +12,15 @@ from unittest.mock import MagicMock, Mock, patch
 from tempfile import TemporaryDirectory
 
 import matplotlib.pyplot as plt
+import numpy as np
 from rich.console import Console
 
-from hermespy.core import ConsoleMode, GridDimension
+from hermespy.core import VAT, ConsoleMode, GridDimension, Visualization
 from hermespy.hardware_loop.hardware_loop import HardwareLoopSample
 from hermespy.modem import BitErrorEvaluator, DuplexModem, RRCWaveform
 from hermespy.hardware_loop import DeviceTransmissionPlot, EvaluatorPlotMode, EvaluatorRegistration, HardwareLoop, HardwareLoopPlot, IterationPriority, PhysicalScenarioDummy, PhysicalDeviceDummy
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.utils import SimulationTestContext
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -30,14 +32,23 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class HardwareLoopPlotMock(HardwareLoopPlot):
+class HardwareLoopPlotMock(HardwareLoopPlot[Visualization]):
     """Hardware loop plot implementation for testing purposes."""
 
-    def _prepare_figure(self) -> Tuple[plt.Figure, plt.Axes]:
-        return (Mock(), Mock())
+    @property
+    def _default_title(self) -> str:
+        return "Hardware Loop Plot Mock"
 
-    def _update_plot(self, _: HardwareLoopSample) -> None:
-        return
+    def _prepare_plot(self) -> Tuple[plt.Figure, plt.Axes]:
+        figure_mock = Mock(spec=plt.Figure)
+        figure_mock.canvas = Mock(spec=plt.FigureCanvasBase)
+        return (figure_mock, np.array([[Mock(spec=plt.Axes)]], dtype=np.object_))
+
+    def _initial_plot(self, sample: HardwareLoopSample, axes: VAT) -> Visualization:
+        return Mock(spec=Visualization)
+
+    def _update_plot(self, sample: HardwareLoopSample, visualization: Visualization) -> None:
+        pass
 
 
 class TestEvaluatorRegistration(TestCase):
@@ -113,7 +124,7 @@ class TestHardwareLoopPlot(TestCase):
     def setUp(self) -> None:
         self.title = "Test Plot"
         self.plot = HardwareLoopPlotMock(self.title)
-        self.figure, self.axes = self.plot.prepare_figure()
+        self.figure, self.axes = self.plot._prepare_plot()
 
     def test_hardware_loop_valiadtion(self) -> None:
         """Hardware loop property setter should raise RuntimeError if already set"""
@@ -137,15 +148,12 @@ class TestHardwareLoopPlot(TestCase):
 
         self.assertEqual(self.title, self.plot.title)
 
-    def test_figure(self) -> None:
-        """Figure property should return correct plot figure"""
+    def test_prepare_plot(self) -> None:
+        """Test the prepare plot routine"""
 
-        self.assertIs(self.figure, self.plot.figure)
-
-    def test_axes(self) -> None:
-        """Axes property should return correct plot axes"""
-
-        self.assertIs(self.axes, self.plot.axes)
+        figure, axes = self.plot.prepare_plot()
+        self.assertIsInstance(figure, plt.Figure)
+        self.assertIsInstance(axes, np.ndarray)
 
     def test_update_plot_validation(self) -> None:
         """Update plot routine should raise RuntimeError if hardware loop not set"""
@@ -153,15 +161,34 @@ class TestHardwareLoopPlot(TestCase):
         with self.assertRaises(RuntimeError):
             self.plot.update_plot(HardwareLoopSample(Mock(), [], []))
 
-    def test_update_plot(self) -> None:
-        self.plot._update_plot = MagicMock()
+    def test_update_plot_prepared(self) -> None:
+        """Test updateing the plot with a previous call to prepare"""
 
         loop = HardwareLoop[PhysicalScenarioDummy, PhysicalDeviceDummy](PhysicalScenarioDummy())
+        self.plot._update_plot = MagicMock()
+        self.plot._initial_plot = MagicMock()
+        self.plot.hardware_loop = loop
+        self.plot.prepare_plot()
+
+        # First call should call initial plot
+        self.plot.update_plot(HardwareLoopSample(Mock(), [], []))
+        self.plot._initial_plot.assert_called_once()
+        self.plot._update_plot.assert_not_called()
+
+        # Second call should not call initial plot
+        self.plot.update_plot(HardwareLoopSample(Mock(), [], []))
+        self.plot._initial_plot.assert_called_once()
+        self.plot._update_plot.assert_called_once()
+
+    def test_update_plot_unprepared(self) -> None:
+        """Updating a plot unprepared should result in a call to prepare plot"""
+
+        loop = HardwareLoop[PhysicalScenarioDummy, PhysicalDeviceDummy](PhysicalScenarioDummy())
+        self.plot._prepare_plot = MagicMock(return_value=(self.figure, self.axes))
         self.plot.hardware_loop = loop
 
         self.plot.update_plot(HardwareLoopSample(Mock(), [], []))
-
-        self.plot._update_plot.assert_called_once()
+        self.plot._prepare_plot.assert_called_once()
 
 
 class TestHardwareLoop(TestCase):
@@ -222,13 +249,7 @@ class TestHardwareLoop(TestCase):
         self.hardware_loop.results_dir = temp.name
         self.hardware_loop.num_drops = 10 if generate_output else 2
 
-        with ExitStack() as stack:
-            if not generate_output:
-                subplots_patch = stack.enter_context(patch("matplotlib.pyplot.subplots"))
-                subplots_patch.return_value = MagicMock(), MagicMock()
-
-                stack.enter_context(patch("matplotlib.pyplot.figure"))
-
+        with SimulationTestContext():
             # Make a verbose run
             self.hardware_loop.run()
 
@@ -270,7 +291,7 @@ class TestHardwareLoop(TestCase):
         device = self.hardware_loop.new_device()
         self.hardware_loop.new_dimension("carrier_frequency", [0.0, 1e6, 1e9], device)
 
-        result = self.hardware_loop.run()
+        _ = self.hardware_loop.run()
 
     def test_run_invald_grid_flag(self) -> None:
         """Run rountine should raise a RuntimeError if an invalid grid flag is set"""

@@ -151,7 +151,8 @@ carousel_bootstrap_add_css_js = True
 #carousel_bootstrap_prefix = ""
 
 # Mermaid config
-mermaid_d3_zoom = True
+mermaid_d3_zoom = False
+mermaid_version = "10.6.1"
 
 # Suppress index warnings
 suppress_warnings = []

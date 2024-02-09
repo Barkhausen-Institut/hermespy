@@ -51,7 +51,7 @@ reception = rx_device.receive(propagation)
 
 # Evaluate bit errors during transmission and visualize the received symbol constellation
 evaluator = BitErrorEvaluator(link, link)
-evaluator.evaluate().plot()
+evaluator.evaluate().visualize()
 link.reception.symbols.plot_constellation()
 link.reception.signal.plot()
 plt.show()

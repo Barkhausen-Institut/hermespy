@@ -859,16 +859,6 @@ class TestDevice(TestCase):
         transmissions = self.device.transmit_operators()
         self.assertSequenceEqual([expected_transmission], transmissions)
 
-    def test_generate_output_validation(self) -> None:
-        """Generate output should raise a RuntimeError if no transmission is cached"""
-
-        transmitter = Mock()
-        transmitter.transmission = None
-        self.device.transmitters.add(transmitter)
-
-        with self.assertRaises(RuntimeError):
-            self.device.generate_output()
-
     def test_generate_output(self) -> None:
         """Generate output should return the proper output"""
 

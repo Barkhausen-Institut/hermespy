@@ -18,6 +18,7 @@ from hermespy.channel import MultipathFadingChannel, MultipathFadingRealization,
 from hermespy.core import Signal
 from hermespy.simulation import SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.utils import SimulationTestContext
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -152,11 +153,18 @@ class TestMultipathFadingRealization(unittest.TestCase):
         with self.assertRaises(ValueError):
             _ = self.realization.propagate(Signal(np.zeros((2, 100)), self.sampling_rate), self.tx_device, Mock())
 
-    def test_plot(self) -> None:
-        """Plotting should not raise any errors"""
+    def test_plot_power_delay(self) -> None:
+        """Plotting power delay profile should not raise any errors"""
 
-        with patch("matplotlib.pyplot.figure"):
-            self.realization.plot()
+        with SimulationTestContext(patch_plot=True):
+            
+            figure, axes = self.realization.plot_power_delay()
+            axes[0, 0].stem.assert_called()
+            
+            axes[0, 0].stem.reset_mock()
+            figure, axes = self.realization.plot_power_delay(axes=axes)
+            axes[0, 0].get_figure.assert_called()
+            axes[0, 0].stem.assert_called()
 
 
 class TestMultipathFadingChannel(unittest.TestCase):

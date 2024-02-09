@@ -11,7 +11,6 @@ from sys import maxsize
 from time import time
 from typing import Any, Callable, Dict, List, Mapping, Optional, overload, Type, Union
 
-import matplotlib.pyplot as plt
 import numpy as np
 from h5py import Group
 from os import path
@@ -36,6 +35,7 @@ from hermespy.core import (
     Signal,
     DeviceOutput,
     SNRType,
+    Visualization,
 )
 from hermespy.channel import (
     Channel,
@@ -184,6 +184,8 @@ class SimulatedDrop(Drop):
 
 
 class SimulationScenario(Scenario[SimulatedDevice]):
+    """Description of a physical layer wireless communication scenario."""
+
     yaml_tag = "SimulationScenario"
 
     __channels: np.ndarray  # Channel matrix linking devices
@@ -874,7 +876,7 @@ class SimulationActor(MonteCarloActor[SimulationScenario], SimulationRunner):
 class Simulation(
     Serializable, Pipeline[SimulationScenario, SimulatedDevice], MonteCarlo[SimulationScenario]
 ):
-    """HermesPy simulation configuration."""
+    """Executable HermesPy simulation configuration."""
 
     yaml_tag = "Simulation"
     property_blacklist = {"console", "console_mode", "scenario"}
@@ -899,39 +901,47 @@ class Simulation(
         seed: int | None = None,
         num_actors: int | None = None,
     ) -> None:
-        """Args:
+        """
+        Args:
 
-        scenario (SimulationScenario, optional):
-            The simulated scenario.
-            If none is provided, an empty one will be initialized.
+            scenario (SimulationScenario, optional):
+                The simulated scenario.
+                If none is provided, an empty one will be initialized.
 
-        num_samples (int, optional):
-            Number of drops generated per sweeping grid section.
-            100 by default.
+            num_samples (int, optional):
+                Number of drops generated per sweeping grid section.
+                100 by default.
 
-        drop_duration(float, optional):
-            Duration of simulation drops in seconds.
+            drop_duration(float, optional):
+                Duration of simulation drops in seconds.
 
-        plot_results (bool, optional):
-            Plot results after simulation runs.
-            Disabled by default.
+            plot_results (bool, optional):
+                Plot results after simulation runs.
+                Disabled by default.
 
-        dump_results (bool, optional):
-            Dump results to files after simulation runs.
-            Enabled by default.
+            dump_results (bool, optional):
+                Dump results to files after simulation runs.
+                Enabled by default.
 
-        ray_address (str, optional):
-            The address of the ray head node.
-            If None is provided, the head node will be launched in this machine.
+            console_mode (ConsoleMode, optional):
+                Console output behaviour during execution.
 
-        results_dir (str, optional):
-            Directory in which all simulation artifacts will be dropped.
+            ray_address (str, optional):
+                The address of the ray head node.
+                If None is provided, the head node will be launched in this machine.
 
-        verbosity (Union[str, Verbosity], optional):
-            Information output behaviour during execution.
+            results_dir (str, optional):
+                Directory in which all simulation artifacts will be dropped.
 
-        seed (int, optional):
-            Random seed used to initialize the pseudo-random number generator.
+            verbosity (Union[str, Verbosity], optional):
+                Information output behaviour during execution.
+
+            seed (int, optional):
+                Random seed used to initialize the pseudo-random number generator.
+
+            num_actors (int, optional):
+                Number of actors to be deployed for parallel execution.
+                If None is provided, the number of actors will be set to the number of available CPU cores.
         """
 
         scenario = SimulationScenario() if scenario is None else scenario
@@ -987,18 +997,17 @@ class Simulation(
         result = self.simulate(SimulationActor)
 
         # Visualize results if the flag respective is enabled
-        figures: List[plt.FigureBase] = []
+        visualizations: Sequence[Visualization] = []
         if self.plot_results:
             with self.style_context():
-                figures = result.plot()
+                visualizations = result.plot()
 
         # Dump results if the respective flag is enabled
         if self.dump_results and self.results_dir is not None:
             # Save figures to png files
-            for figure_idx, base_figure in enumerate(figures):
-                figure_instace = base_figure.get_figure()
-                if figure_instace is not None:
-                    figure_instace.savefig(
+            for figure_idx, visualization in enumerate(visualizations):
+                if visualization.figure is not None:
+                    visualization.figure.savefig(
                         path.join(self.results_dir, f"figure_{figure_idx}.png"), format="png"
                     )
 
@@ -1017,7 +1026,9 @@ class Simulation(
     ) -> None:
         """Specify a channel within the channel matrix.
 
-        Convenience method resolving to :meth:`.SimulationScenario.set_channel`.
+        Convenience method resolving to the :meth:`set_channel<SimulationScenario.set_channel>` method
+        of the managed :class:`SimulationScenario` instance,
+        which can be accessed via the :attr:`scenario<hermespy.core.monte_carlo.MonteCarlo.scenario>` property.
 
         Args:
 

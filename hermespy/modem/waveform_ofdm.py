@@ -1456,9 +1456,7 @@ class SchmidlCoxSynchronization(OFDMSynchronization):
     """YAML serialization tag"""
 
     def synchronize(self, signal: np.ndarray) -> List[int]:
-        symbol_length = (
-            self.waveform.oversampling_factor * self.waveform.num_subcarriers
-        )
+        symbol_length = self.waveform.oversampling_factor * self.waveform.num_subcarriers
 
         # Abort if the supplied signal is shorter than one symbol length
         if signal.shape[-1] < symbol_length:

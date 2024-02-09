@@ -46,6 +46,9 @@ class TestIqImbalance(unittest.TestCase):
         with self.assertRaises(ValueError):
             _ = RfChain(None, -3)
 
+        with self.assertRaises(ValueError):
+            _ = RfChain(None, 3)
+
     def test_serialization(self) -> None:
         """Test YAML serialization"""
 

@@ -437,14 +437,15 @@ class TestSimulation(TestCase):
 
         self.simulation.plot_results = True
         self.simulation.dump_results = True
-        mock_figure = Mock()
+        mock_visualization = Mock()
+        mock_visualization.figure = Mock()
 
-        with patch("hermespy.core.monte_carlo.MonteCarloResult.plot", return_value=[mock_figure]), TemporaryDirectory() as temp:
+        with patch("hermespy.core.monte_carlo.MonteCarloResult.plot", return_value=[mock_visualization]), TemporaryDirectory() as temp:
             self.simulation.results_dir = temp
             result = self.simulation.run()
 
             self.assertIsInstance(result, MonteCarloResult)
-            mock_figure.get_figure.assert_called()
+            mock_visualization.figure.savefig.assert_called() 
 
     def test_silent_run(self) -> None:
         """Test running the simulation without output"""
