@@ -100,6 +100,15 @@ class TestEyePlot(_HardwareLoopPlotTest, TestCase):
         self.modem.waveform = RRCWaveform(oversampling_factor=4, symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=50)
 
         self._prepare_plot(EyePlot, self.modem)
+        
+    def test_initial_plot_validation(self) -> None:
+        """Initial plot should raise a RuntimeError if no synchronized frame is available"""
+        
+        plot = EyePlot(DuplexModem())
+        self.loop.add_plot(plot)
+        with self.assertRaises(RuntimeError):
+            with SimulationTestContext():
+                plot.update_plot(MagicMock(spec=HardwareLoopSample))
 
 
 class TestReceivedConstellationPlot(_HardwareLoopPlotTest, TestCase):

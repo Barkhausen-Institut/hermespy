@@ -5,7 +5,7 @@ from scipy.constants import speed_of_light
 
 from hermespy.channel import IndoorFactoryLineOfSight
 from hermespy.modem.waveform_ofdm import FrameElement, FrameSymbolSection
-from hermespy.modem import DuplexModem, OFDMWaveform, FrameResource, BitErrorEvaluator
+from hermespy.modem import DuplexModem, OFDMWaveform, GridResource, BitErrorEvaluator
 from hermespy.precoding import ZFTimeEqualizer
 from hermespy.simulation import Simulation
 from hermespy.radar import FMCW, Radar
@@ -33,9 +33,9 @@ rx_device.position = np.array([40., 30., 0.])
 
 # Configure waveforms and device operators
 ofdm_resources = [
-    FrameResource(200, 0.078125, [FrameElement('REFERENCE', 1), FrameElement('DATA', 5)]),
-    FrameResource(1200, 0.0703125, [FrameElement('DATA')]),
-    FrameResource(100, 0.0703125, [FrameElement('DATA', 3), FrameElement('REFERENCE', 1), FrameElement('DATA', 5), FrameElement('REFERENCE', 1), FrameElement('DATA', 2)]),
+    GridResource(200, 0.078125, [FrameElement('REFERENCE', 1), FrameElement('DATA', 5)]),
+    GridResource(1200, 0.0703125, [FrameElement('DATA')]),
+    GridResource(100, 0.0703125, [FrameElement('DATA', 3), FrameElement('REFERENCE', 1), FrameElement('DATA', 5), FrameElement('REFERENCE', 1), FrameElement('DATA', 2)]),
 ]
 ofdm_transmit_tructure = [
     FrameSymbolSection(16, [0, 1, 1, 1, 2, 1, 1]),

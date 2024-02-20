@@ -6,7 +6,7 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.fft import fft, fftshift
 
 from hermespy.hardware_loop.audio import AudioDevice
-from hermespy.modem import DuplexModem, RootRaisedCosineWaveform, OFDMWaveform, FrameElement, FrameResource, FrameSymbolSection, ElementType
+from hermespy.modem import DuplexModem, RootRaisedCosineWaveform, OFDMWaveform, GridElement, GridResource, SymbolSection, ElementType
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -56,10 +56,10 @@ class TestAudioDevice(TestCase):
     def test_ofdm(self) -> None:
         """Test OFDM data transmission over audio devices"""
 
-        resources = [FrameResource(12, 0.01, elements=[FrameElement(ElementType.DATA, 9), FrameElement(ElementType.REFERENCE, 1)])]
-        structure = [FrameSymbolSection(3, [0])]
+        resources = [GridResource(12, 0.01, elements=[GridElement(ElementType.DATA, 9), GridElement(ElementType.REFERENCE, 1)])]
+        structure = [SymbolSection(3, [0])]
 
-        waveform = OFDMWaveform(subcarrier_spacing=1e2, num_subcarriers=120, dc_suppression=True, resources=resources, structure=structure, oversampling_factor=4)
+        waveform = OFDMWaveform(subcarrier_spacing=1e2, num_subcarriers=120, dc_suppression=True, grid_resources=resources, grid_structure=structure, oversampling_factor=4)
         self.modem.waveform = waveform
 
         self.propagate()
