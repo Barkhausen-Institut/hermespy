@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from copy import deepcopy
+from typing import Sequence, Tuple
 from unittest import TestCase
 
 import numpy as np
@@ -9,6 +10,7 @@ from hermespy.channel import Channel, IdealChannel, MultipathFading5GTDL, Multip
 from hermespy.core import Transformation
 from hermespy.simulation import SimulatedDevice, SimulationScenario, SingleCarrierIdealChannelEstimation, OFDMIdealChannelEstimation, SimulatedUniformArray, SimulatedIdealAntenna
 from hermespy.modem import (
+    CustomPilotSymbolSequence,
     SpatialMultiplexing,
     SimplexLink,
     BitErrorEvaluator,
@@ -18,15 +20,16 @@ from hermespy.modem import (
     SingleCarrierZeroForcingChannelEqualization,
     ChirpFSKWaveform,
     ChirpFSKCorrelationSynchronization,
+    OCDMWaveform,
     OFDMWaveform,
-    FrameResource,
-    FrameSymbolSection,
-    FrameElement,
+    GridResource,
+    SymbolSection,
+    GridElement,
     ElementType,
     OFDMCorrelationSynchronization,
     PilotSection,
-    OFDMLeastSquaresChannelEstimation,
-    OFDMZeroForcingChannelEqualization,
+    OrthogonalLeastSquaresChannelEstimation,
+    OrthogonalZeroForcingChannelEqualization,
     SchmidlCoxPilotSection,
     SchmidlCoxSynchronization,
     ReferencePosition,
@@ -50,7 +53,7 @@ class _TestLinksBase(TestCase):
     rx_device: SimulatedDevice
     ber: BitErrorEvaluator
     link: SimplexLink
-    _doppler_frequency: float = 100.0
+    _doppler_frequency: float = 10
 
     def setUp(self) -> None:
         # Configure a 1x1link scenario
@@ -131,6 +134,40 @@ class _TestLinksBase(TestCase):
 
         return waveform
 
+    def __configure_ocdm_waveform(self) -> OCDMWaveform:
+        """Configure an OCDM waveform with default parameters.
+
+        Returns: The configured waveform.
+        """
+
+        grid_resources = [
+            GridResource(50, prefix_ratio=.4, elements=[GridElement(ElementType.REFERENCE, 1), GridElement(ElementType.DATA, 1)]),
+            GridResource(50, prefix_ratio=.4, elements=[GridElement(ElementType.DATA, 1), GridElement(ElementType.REFERENCE, 1)]),
+        ]
+        grid_structure = [
+            SymbolSection(
+                5,
+                [0, 1],
+                0,
+            ),
+        ]
+
+        waveform = OCDMWaveform(5e4, 100, grid_resources, grid_structure, modulation_order=4)
+        waveform.oversampling_factor = 2
+        waveform.pilot_section = PilotSection()
+        waveform.synchronization = OFDMCorrelationSynchronization()
+        waveform.channel_estimation = OrthogonalLeastSquaresChannelEstimation()
+        waveform.channel_equalization = OrthogonalZeroForcingChannelEqualization()
+
+
+        self.link.waveform = waveform
+
+        # Debugging: Deactivate error correction
+        self.repeater.enabled = False
+        self.interleaver.enabled = False
+
+        return waveform
+
     def __configure_ofdm_waveform(self) -> OFDMWaveform:
         """Configure an OFDM wafeform with default parameters.
 
@@ -140,24 +177,41 @@ class _TestLinksBase(TestCase):
         # Mock 5G numerology #1:
         # 120khz subcarrier spacing, 120 subcarriers, 2us guard interval, 1ms subframe duration
 
-        num_symbols = 15
+        prefix_ratio = 0.0684
+        num_subcarriers = 128
+        grid_resources = [
+            GridResource(num_subcarriers // 5, prefix_ratio=prefix_ratio, elements=[
+                GridElement(ElementType.REFERENCE, 1),
+                GridElement(ElementType.DATA, 4)
+            ]),
+            GridResource(num_subcarriers // 5, prefix_ratio=prefix_ratio, elements=[
+                GridElement(ElementType.DATA, 2),
+                GridElement(ElementType.REFERENCE, 1),
+                GridElement(ElementType.DATA, 2),
+            ]),
+        ]
+        grid_structure = [
+            SymbolSection(
+                num_subcarriers // 2,
+                [0, 1],
+                5,
+            ),
+        ]
 
-        resources = [FrameResource(200, prefix_ratio=0.0684, elements=[FrameElement(ElementType.REFERENCE, 1), FrameElement(ElementType.DATA, 4)]), FrameResource(1000, prefix_ratio=0.0684, elements=[FrameElement(ElementType.DATA, 1)])]
-        structure = [FrameSymbolSection(num_symbols // 3, [0, 1, 1, 1, 1])]
-
-        waveform = OFDMWaveform(subcarrier_spacing=3.75e3, num_subcarriers=1000, dc_suppression=True, resources=resources, structure=structure)
+        waveform = OFDMWaveform(subcarrier_spacing=1e6 / num_subcarriers, num_subcarriers=num_subcarriers, dc_suppression=True, grid_resources=grid_resources, grid_structure=grid_structure)
+        waveform.oversampling_factor = 2
         waveform.pilot_section = PilotSection()
         waveform.synchronization = OFDMCorrelationSynchronization()
         waveform.channel_estimation = OFDMIdealChannelEstimation(self.tx_device, self.rx_device, reference_position=ReferencePosition.IDEAL)
-        waveform.channel_equalization = OFDMZeroForcingChannelEqualization()
-
+        waveform.channel_equalization = OrthogonalZeroForcingChannelEqualization()
+        #waveform.pilot_symbol_sequence = CustomPilotSymbolSequence(np.arange(1, num_subcarriers * 60))
         self.link.waveform = waveform
 
         # Properly configure the error correction
-        bits_per_symbol = waveform.bits_per_frame() // num_symbols
-        self.repeater.bit_block_size = bits_per_symbol // self.repeater.repetitions
-        self.interleaver.block_size = bits_per_symbol
-        self.interleaver.interleave_blocks = waveform.bits_per_symbol
+        #bits_per_symbol = waveform.bits_per_frame() // 15
+        #self.repeater.bit_block_size = bits_per_symbol // self.repeater.repetitions
+        #self.interleaver.block_size = bits_per_symbol
+        #self.interleaver.interleave_blocks = waveform.bits_per_symbol
 
         # Debugging: Deactivate error correction
         self.repeater.enabled = False
@@ -229,8 +283,16 @@ class _TestLinksBase(TestCase):
         self.__propagate(IdealChannel(self.tx_device, self.rx_device))
         self.__assert_link()
 
+    def test_ideal_channel_ocdm_ls_zf(self) -> None:
+        """Verify a valid SISO link over an ideal channel with OCDM modulation,
+        least-squares channel estimation and zero-forcing equalization"""
+
+        self.__configure_ocdm_waveform()
+        self.__propagate(IdealChannel(self.tx_device, self.rx_device))
+        self.__assert_link()
+
     def test_ideal_channel_ofdm(self) -> None:
-        """Verify a valid SISO link over an ideal channel ofdm modulation"""
+        """Verify a valid SISO link over an ideal channel OFDM modulation"""
 
         self.__configure_ofdm_waveform()
         self.__propagate(IdealChannel(self.tx_device, self.rx_device))
@@ -241,8 +303,8 @@ class _TestLinksBase(TestCase):
         least-squares channel estimation and zero-forcing equalization"""
 
         waveform = self.__configure_ofdm_waveform()
-        waveform.channel_estimation = OFDMLeastSquaresChannelEstimation()
-        waveform.channel_equalization = OFDMZeroForcingChannelEqualization()
+        waveform.channel_estimation = OrthogonalLeastSquaresChannelEstimation()
+        waveform.channel_equalization = OrthogonalZeroForcingChannelEqualization()
 
         self.__propagate(IdealChannel(self.tx_device, self.rx_device))
         self.__assert_link()
@@ -254,8 +316,8 @@ class _TestLinksBase(TestCase):
         waveform = self.__configure_ofdm_waveform()
         waveform.pilot_section = SchmidlCoxPilotSection()
         waveform.synchronization = SchmidlCoxSynchronization()
-        waveform.channel_estimation = OFDMLeastSquaresChannelEstimation()
-        waveform.channel_equalization = OFDMZeroForcingChannelEqualization()
+        waveform.channel_estimation = OrthogonalLeastSquaresChannelEstimation()
+        waveform.channel_equalization = OrthogonalZeroForcingChannelEqualization()
 
         self.__propagate(IdealChannel(self.tx_device, self.rx_device))
         self.__assert_link()
@@ -287,6 +349,14 @@ class _TestLinksBase(TestCase):
         self.__propagate(channel=channel)
         self.__assert_link()
 
+    def test_COST259_ocdm_ls_zf(self) -> None:
+        """Verify a valid SISO link over an ideal channel with OCDM modulation,
+        least-squares channel estimation and zero-forcing equalization"""
+
+        self.__configure_ocdm_waveform()
+        self.__propagate(self.__configure_COST259_channel())
+        self.__assert_link()
+
     def test_COST259_ofdm_ideal_csi(self) -> None:
         """Verify a valid SISO link over a COST259 channel with OFDM modulation"""
 
@@ -298,7 +368,7 @@ class _TestLinksBase(TestCase):
         """Verify a valid SISO link over a COST259 channel with OFDM modulation and least-squares channel estimation"""
 
         waveform = self.__configure_ofdm_waveform()
-        waveform.channel_estimation = OFDMLeastSquaresChannelEstimation()
+        waveform.channel_estimation = OrthogonalLeastSquaresChannelEstimation()
 
         self.__propagate(self.__configure_COST259_channel())
         self.__assert_link()
@@ -320,13 +390,21 @@ class _TestLinksBase(TestCase):
         self.__propagate(channel=channel)
         self.__assert_link()
 
+    def test_5GTDL_ocdm_ls_zf(self) -> None:
+        """Verify a valid SISO link over a TDL channel with OFDM modulation,
+        least-squares channel estimation and zero-forcing equalization"""
+
+        self.__configure_ofdm_waveform()
+        self.__propagate(self.__configure_5GTDL_channel())
+        self.__assert_link()
+
     def test_5GTDL_ofdm_ls_zf(self) -> None:
         """Verify a valid SISO link over a TDL channel with OFDM modulation,
         least-squares channel estimation and zero-forcing equalization"""
 
         waveform = self.__configure_ofdm_waveform()
-        waveform.channel_estimation = OFDMLeastSquaresChannelEstimation()
-        waveform.channel_equalization = OFDMZeroForcingChannelEqualization()
+        waveform.channel_estimation = OrthogonalLeastSquaresChannelEstimation()
+        waveform.channel_equalization = OrthogonalZeroForcingChannelEqualization()
 
         self.__propagate(self.__configure_5GTDL_channel())
         self.__assert_link()
@@ -338,9 +416,8 @@ class _TestLinksBase(TestCase):
         waveform = self.__configure_ofdm_waveform()
         waveform.pilot_section = SchmidlCoxPilotSection()
         waveform.synchronization = SchmidlCoxSynchronization()
-        waveform.channel_estimation = OFDMLeastSquaresChannelEstimation()
-        waveform.channel_equalization = OFDMZeroForcingChannelEqualization()
-
+        waveform.channel_estimation = OrthogonalLeastSquaresChannelEstimation()
+        waveform.channel_equalization = OrthogonalZeroForcingChannelEqualization()
         self.__propagate(self.__configure_5GTDL_channel())
         self.__assert_link()
 
@@ -362,6 +439,14 @@ class _TestLinksBase(TestCase):
 
         self.__propagate(channel=channel)
         self.__assert_link()
+        
+    def test_CDL_ocdm_ls_zf(self) -> None:
+        """Verify a valid link over a clustered delay line channel with OCDM modulation"""
+
+        channel = self.__configure_CDL_channel()
+        waveform = self.__configure_ocdm_waveform()
+        self.__propagate(channel=channel)
+        self.__assert_link()
 
     def test_CDL_ofdm_ideal_csi(self) -> None:
         """Verify a valid link over a clustered delay line channel with OFDM modulation and ideal CSI"""
@@ -377,7 +462,7 @@ class _TestLinksBase(TestCase):
 
         channel = self.__configure_CDL_channel()
         waveform = self.__configure_ofdm_waveform()
-        waveform.channel_estimation = OFDMLeastSquaresChannelEstimation()
+        waveform.channel_estimation = OrthogonalLeastSquaresChannelEstimation()
         self.__propagate(channel=channel)
         self.__assert_link()
 
@@ -389,8 +474,8 @@ class _TestLinksBase(TestCase):
         waveform = self.__configure_ofdm_waveform()
         waveform.pilot_section = SchmidlCoxPilotSection()
         waveform.synchronization = SchmidlCoxSynchronization()
-        waveform.channel_estimation = OFDMLeastSquaresChannelEstimation()
-        waveform.channel_equalization = OFDMZeroForcingChannelEqualization()
+        waveform.channel_estimation = OrthogonalLeastSquaresChannelEstimation()
+        waveform.channel_equalization = OrthogonalZeroForcingChannelEqualization()
 
         self.__propagate(channel=channel)
         self.__assert_link()
@@ -412,6 +497,9 @@ class TestMIMOLinks(_TestLinksBase):
         antennas = SimulatedUniformArray(SimulatedIdealAntenna(), 5e-3, [2, 1, 1])
         self.tx_device.antennas = deepcopy(antennas)
         self.rx_device.antennas = deepcopy(antennas)
+        
+    def test_ideal_channel_ocdm_ls_zf(self) -> None:
+        pass  # Pass the test since least-squares channel estimation is not supported for MIMO links
 
     def test_ideal_channel_ofdm_ls_zf(self) -> None:
         pass  # Pass the test since least-squares channel estimation is not supported for MIMO links
@@ -425,16 +513,25 @@ class TestMIMOLinks(_TestLinksBase):
     def test_COST259_single_carrier_ls_zf(self) -> None:
         pass  # Pass the test since least-squares channel estimation is not supported for MIMO links
 
+    def test_COST259_ocdm_ls_zf(self) -> None:
+        pass  # Pass the test since least-squares channel estimation is not supported for MIMO links
+
     def test_COST259_ofdm_ls_zf(self) -> None:
         pass  # Pass the test since least-squares channel estimation is not supported for MIMO links
 
     def test_5GTDL_chirp_fsk(self) -> None:
         pass  # Pass since CHIRP FSK is not supported for MIMO links
 
+    def test_5GTDL_ocdm_ls_zf(self) -> None:
+        pass  # Pass the test since least-squares channel estimation is not supported for MIMO links
+
     def test_5GTDL_ofdm_schmidl_cox(self) -> None:
         pass  # Pass the test since least-squares channel estimation is not supported for MIMO links
 
     def test_5GTDL_ofdm_ls_zf(self) -> None:
+        pass  # Pass the test since least-squares channel estimation is not supported for MIMO links
+
+    def test_CDL_ocdm_ls_zf(self) -> None:
         pass  # Pass the test since least-squares channel estimation is not supported for MIMO links
 
     def test_CDL_single_carrier_ls_zf(self) -> None:

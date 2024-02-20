@@ -250,6 +250,21 @@ class TestDocumentationExamples(TestCase):
         """Test example snippet for RRC waveforms"""
 
         self.__run_example("modem_waveforms_rrc.py")
+        
+    def test_modem_waveforms_orthogonal(self) -> None:
+        """Test example snippet for orthogonal waveforms"""
+        
+        self.__run_example("modem_waveforms_orthogonal.py")
+        
+    def test_modem_waveforms_ofdm(self) -> None:
+        """Test example snippet for OFDM waveforms"""
+        
+        self.__run_example("modem_waveforms_ofdm.py")
+        
+    def test_modem_waveforms_ocdm(self) -> None:
+        """Test example snippet for OCDM waveforms"""
+        
+        self.__run_example("modem_waveforms_ocdm.py")
 
     def test_modem(self) -> None:
         """Test example snippet for modem"""

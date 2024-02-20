@@ -7,7 +7,7 @@ from os.path import join
 import numpy as np
 
 from hermespy.simulation import Simulation
-from hermespy.modem import BitErrorEvaluator, DuplexModem, RootRaisedCosineWaveform, ChirpFSKWaveform, OFDMWaveform, FrameResource, FrameSymbolSection, FrameElement
+from hermespy.modem import BitErrorEvaluator, DuplexModem, RootRaisedCosineWaveform, ChirpFSKWaveform, OFDMWaveform, GridResource, SymbolSection, GridElement
 from hermespy.tools import db2lin
 from hermespy.channel import Channel, MultipathFadingChannel
 from hermespy.core import ConsoleMode
@@ -24,7 +24,7 @@ __status__ = "Prototype"
 
 waveforms = [
     ('sc', RootRaisedCosineWaveform(oversampling_factor=1, num_data_symbols=100, num_preamble_symbols=0)),
-    ('ofdm', ChirpFSKWaveform(oversampling_factor=1, resources=[FrameResource(1200, 0., [FrameElement('DATA')])], structure=[FrameSymbolSection(1, [0])])),
+    ('ofdm', ChirpFSKWaveform(oversampling_factor=1, resources=[GridResource(1200, 0., [GridElement('DATA')])], structure=[SymbolSection(1, [0])])),
     ('fsk', OFDMWaveform(oversampling_factor=1, num_data_chirps=100, num_pilot_chirps=0)),
 ]
 

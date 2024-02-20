@@ -252,7 +252,7 @@ class EyePlot(HardwareLoopPlot[PlotVisualization]):
         return figure, axes
 
     def _initial_plot(self, sample: HardwareLoopSample, axes: VAT) -> PlotVisualization:
-        if self.__modem.reception.num_frames < 1:
+        if self.__modem.reception is None or self.__modem.reception.num_frames < 1:
             raise RuntimeError("No frames received yet")
 
         return self.__modem.reception.frames[0].signal.eye.visualize(

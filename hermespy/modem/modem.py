@@ -958,6 +958,16 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
         for frame_start in frame_start_indices:
             frame_stop = frame_start + frame_length
             frame_samples = received_signal.samples[:, frame_start:frame_stop]
+
+            # Pad the frame if it is too short
+            # This may happen if the last frame is incomplete, or synhronization is not perfect
+            if frame_samples.shape[1] < frame_length:
+                frame_samples = np.pad(
+                    frame_samples,
+                    ((0, 0), (0, frame_length - frame_samples.shape[1])),
+                    mode="constant",
+                )
+
             frame_signal = Signal(frame_samples, received_signal.sampling_rate)
 
             synchronized_signals.append(frame_signal)

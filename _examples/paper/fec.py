@@ -8,7 +8,7 @@ from hermespy.fec.aff3ct import TurboCoding
 from hermespy.tools import db2lin
 from hermespy.simulation import Simulation
 
-from hermespy.modem import TransmittingModem, ReceivingModem, OFDMWaveform, FrameResource, FrameElement, FrameSymbolSection, BitErrorEvaluator, BlockErrorEvaluator, FrameErrorEvaluator, ThroughputEvaluator
+from hermespy.modem import TransmittingModem, ReceivingModem, OFDMWaveform, GridResource, GridElement, SymbolSection, BitErrorEvaluator, BlockErrorEvaluator, FrameErrorEvaluator, ThroughputEvaluator
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -25,7 +25,7 @@ simulation = Simulation()
 tx_device = simulation.new_device()
 rx_device = simulation.new_device()
 
-waveform = OFDMWaveform(oversampling_factor=1, modulation_order=64, resources=[FrameResource(1200, 0., [FrameElement('DATA')])], structure=[FrameSymbolSection(1, [0])])
+waveform = OFDMWaveform(oversampling_factor=1, modulation_order=64, resources=[GridResource(1200, 0., [GridElement('DATA')])], structure=[SymbolSection(1, [0])])
 
 tx_modem = TransmittingModem()
 rx_modem = ReceivingModem()

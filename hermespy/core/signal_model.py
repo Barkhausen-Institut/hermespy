@@ -342,7 +342,7 @@ class _EyeVisualization(_SignalVisualization):
             values[values_per_symbol - 1 :: values_per_symbol] = float("nan") + 1j * float("nan")
 
             # Normalize values
-            abs_value = np.max(np.abs(values))
+            abs_value = np.max(np.abs(self.signal.samples))
             if abs_value > 0.0:
                 values /= np.max(np.abs(values))
 

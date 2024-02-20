@@ -5,7 +5,7 @@ import numpy as np
 
 from hermespy.core import Transformation
 from hermespy.channel import IndoorFactoryLineOfSight
-from hermespy.modem import TransmittingModem, ReceivingModem, OFDMWaveform,  FrameSymbolSection, FrameResource, FrameElement
+from hermespy.modem import TransmittingModem, ReceivingModem, OFDMWaveform,  SymbolSection, GridResource, GridElement
 from hermespy.simulation import Simulation
 
 simulation = Simulation()
@@ -15,9 +15,9 @@ device_beta = simulation.new_device(pose=Transformation.From_Translation(np.arra
 tx_modem = TransmittingModem(device=device_alpha)
 rx_modem = ReceivingModem(device=device_beta)
 
-ofdm_resources = [FrameResource(elements=[FrameElement('DATA', 1024)])]
-ofdm_structure = [FrameSymbolSection(10, [0])]
-waveform = OFDMWaveform(resources=ofdm_resources, structure=ofdm_structure)
+ofdm_resources = [GridResource(elements=[GridElement('DATA', 1024)])]
+ofdm_structure = [SymbolSection(10, [0])]
+waveform = OFDMWaveform(grid_resources=ofdm_resources, grid_structure=ofdm_structure)
 
 tx_modem.waveform = waveform
 rx_modem.waveform = waveform
