@@ -25,7 +25,7 @@ The following waveforms are currently supported:
    :hidden:
 
    modem.waveform.single_carrier
-   modem.waveform.ofdm
+   modem.waveforms.orthogonal
    modem.waveform.chirp_fsk
    modem.waveform.Synchronization
    modem.waveform.ChannelEstimation

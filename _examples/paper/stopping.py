@@ -10,7 +10,7 @@ import numpy as np
 from hermespy.modem.waveform_ofdm import OFDMIdealChannelEstimation, OFDMLeastSquaresChannelEstimation, OFDMZeroForcingChannelEqualization
 
 from hermespy.simulation import Simulation
-from hermespy.modem import BitErrorEvaluator, DuplexModem, OFDMWaveform, FrameResource, FrameSymbolSection, FrameElement
+from hermespy.modem import BitErrorEvaluator, DuplexModem, OFDMWaveform, GridResource, SymbolSection, GridElement
 from hermespy.tools import db2lin
 from hermespy.channel import Channel
 from hermespy.core import ConsoleMode
@@ -25,7 +25,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-ofdm = OFDMWaveform(oversampling_factor=1, resources=[FrameResource(1200, 0., [FrameElement('DATA')])], structure=[FrameSymbolSection(1, [0])], modulation_order=64)
+ofdm = OFDMWaveform(oversampling_factor=1, resources=[GridResource(1200, 0., [GridElement('DATA')])], structure=[SymbolSection(1, [0])], modulation_order=64)
 ofdm.channel_estimation = OFDMIdealChannelEstimation()
 ofdm.channel_equalization = OFDMZeroForcingChannelEqualization()
 

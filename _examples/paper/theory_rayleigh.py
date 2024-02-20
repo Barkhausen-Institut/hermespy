@@ -10,7 +10,7 @@ from hermespy.modem.waveform_ofdm import OFDMIdealChannelEstimation, OFDMLeastSq
 from hermespy.modem.waveform_single_carrier import SingleCarrierIdealChannelEstimation, SingleCarrierLeastSquaresChannelEstimation, SingleCarrierZeroForcingChannelEqualization
 
 from hermespy.simulation import Simulation
-from hermespy.modem import BitErrorEvaluator, DuplexModem, RootRaisedCosineWaveform, ChirpFSKWaveform, OFDMWaveform, FrameResource, FrameSymbolSection, FrameElement
+from hermespy.modem import BitErrorEvaluator, DuplexModem, RootRaisedCosineWaveform, ChirpFSKWaveform, OFDMWaveform, GridResource, SymbolSection, GridElement
 from hermespy.tools import db2lin
 from hermespy.channel import MultipathFadingChannel
 from hermespy.core import ConsoleMode
@@ -29,7 +29,7 @@ sc = RootRaisedCosineWaveform(oversampling_factor=1, symbol_rate=100e6, num_data
 sc.channel_estimation = SingleCarrierIdealChannelEstimation()
 sc.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
 
-ofdm = OFDMWaveform(oversampling_factor=1, resources=[FrameResource(1200, 0., [FrameElement('DATA')])], structure=[FrameSymbolSection(1, [0])])
+ofdm = OFDMWaveform(oversampling_factor=1, resources=[GridResource(1200, 0., [GridElement('DATA')])], structure=[SymbolSection(1, [0])])
 ofdm.channel_estimation = OFDMIdealChannelEstimation()
 ofdm.channel_equalization = OFDMZeroForcingChannelEqualization()
 

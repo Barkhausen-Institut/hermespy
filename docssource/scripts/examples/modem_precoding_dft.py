@@ -7,9 +7,9 @@ from hermespy.modem import (
     TransmittingModem as BaseModem,
     DFT,
     OFDMWaveform,
-    FrameResource,
-    FrameElement,
-    FrameSymbolSection,
+    GridResource,
+    GridElement,
+    SymbolSection,
     ElementType,
 )
 from hermespy.simulation import Simulation
@@ -27,15 +27,15 @@ modem = BaseModem(device=device)
 modem.waveform = OFDMWaveform(
     oversampling_factor=2,
     num_subcarriers=1024,
-    resources=[FrameResource(
+    grid_resources=[GridResource(
         repetitions=100,
         prefix_ratio=0.0684,
         elements=[
-            FrameElement(ElementType.DATA, 9),
-            FrameElement(ElementType.REFERENCE, 1),
+            GridElement(ElementType.DATA, 9),
+            GridElement(ElementType.REFERENCE, 1),
         ]
     )],
-    structure=[FrameSymbolSection(3, [0])]
+    grid_structure=[SymbolSection(3, [0])]
 )
 
 # Configure the precoding
