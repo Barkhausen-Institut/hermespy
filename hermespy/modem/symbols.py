@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-=====================
-Communication Symbols
-=====================
-"""
 
 from __future__ import annotations
 from enum import Enum
@@ -18,7 +13,7 @@ from sparse import SparseArray  # type: ignore
 from hermespy.core import HDFSerializable, VisualizableAttribute, ScatterVisualization, VAT
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
 __version__ = "1.2.0"

@@ -219,7 +219,7 @@ class ZeroForcingChannelEqualization(
 ):
     """Zero-Forcing channel equalization for arbitrary waveforms."""
 
-    yaml_tag = "ZeroForcing"
+    yaml_tag = "ZF"
     """YAML serialization tag"""
 
     def equalize_channel(self, symbols: StatedSymbols) -> Symbols:
@@ -261,8 +261,7 @@ class CommunicationWaveform(ABC, Serializable):
         channel_estimation: ChannelEstimation | None = None,
         channel_equalization: ChannelEqualization | None = None,
     ) -> None:
-        """Waveform Generator initialization.
-
+        """
         Args:
             modem (BaseModem, optional):
                 A modem this generator is attached to.
@@ -274,6 +273,12 @@ class CommunicationWaveform(ABC, Serializable):
             modulation_order (int, optional):
                 Order of modulation.
                 Must be a non-negative power of two.
+s
+            channel_estimation (ChannelEstimation, optional):
+                Channel estimation algorithm. If not specified, an ideal channel is assumed.
+
+            channel_equalization (ChannelEqualization, optional):
+                Channel equalization algorithm. If not specified, no symbol equalization is performed.
         """
 
         # Default parameters

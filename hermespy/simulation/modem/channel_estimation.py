@@ -11,6 +11,7 @@ from hermespy.core import ChannelStateInformation, Serializable
 from hermespy.modem import (
     ChannelEstimation,
     FilteredSingleCarrierWaveform,
+    GridSection,
     OFDMWaveform,
     ReferencePosition,
     StatedSymbols,
@@ -186,9 +187,41 @@ class OFDMIdealChannelEstimation(IdealChannelEstimation[OFDMWaveform], Serializa
         self.reference_position = reference_position
         IdealChannelEstimation.__init__(self, transmitter, receiver, *args, **kwargs)  # type: ignore
 
+    def __extract_channel(
+        self, section: GridSection, csi: np.ndarray, reference_position: ReferencePosition
+    ) -> np.ndarray:
+        # Remove the cyclic prefixes before transformation into the symbol's domain
+        _csi = section.pick_samples(csi.transpose((0, 1, 3, 2)))
+
+        """if reference_position == ReferencePosition.IDEAL:
+            selected_csi = np.mean(_csi, axis=3, keepdims=False)
+
+        else:
+            reference_index = 0
+
+            if reference_position == ReferencePosition.IDEAL_MIDAMBLE:
+                reference_index = _csi.shape[3] // 2
+
+            elif reference_position == ReferencePosition.IDEAL_POSTAMBLE:
+                reference_index = _csi.shape[3] - 1
+
+            selected_csi = _csi[:, :, :, reference_index, :]"""
+
+        # We assume the channel to be constant within a single symbol duration.
+        # Therefore, we average the channel state over the symbol duration.
+        average_symbol_csi = np.mean(_csi, axis=-1, keepdims=False)
+
+        # The CSI is the Fourier transform of the channel state
+        transformed_csi = self.waveform._backward_transformation(
+            average_symbol_csi.transpose((0, 1, 3, 2)), normalize=False
+        )
+
+        # Transform the channel state into the frequency domain
+        return transformed_csi
+
     def estimate_channel(self, symbols: Symbols, delay: float = 0.0) -> StatedSymbols:
         # Query and densify the channel state
-        ideal_csi = self._csi(delay=delay).dense_state()[: symbols.num_streams, ::]
+        ideal_csi = self._csi(delay=delay).dense_state()[: symbols.num_streams, ...]
 
         symbol_csi = np.zeros(
             (symbols.num_streams, ideal_csi.shape[1], symbols.num_blocks, symbols.num_symbols),
@@ -202,18 +235,22 @@ class OFDMIdealChannelEstimation(IdealChannelEstimation[OFDMWaveform], Serializa
         if self.waveform.pilot_section:
             sample_index += self.waveform.pilot_section.num_samples
 
-        for section in self.waveform.structure:
+        for section in self.waveform.grid_structure:
             num_samples = section.num_samples
-            csi = section.extract_channel(
-                ideal_csi[:, :, sample_index : sample_index + num_samples, :],
-                self.reference_position,
-            )
-            symbol_csi[:, :, word_index : word_index + section.num_words, :] = csi
+            num_words = section.num_words
+
+            if num_words > 0:
+                csi = self.__extract_channel(
+                    section,
+                    ideal_csi[:, :, sample_index : sample_index + num_samples, :],
+                    self.reference_position,
+                )
+                symbol_csi[:, :, word_index : word_index + section.num_words, :] = csi
 
             sample_index += num_samples
-            word_index += section.num_words
+            word_index += num_words
 
-        # Corret the FFT normalization
-        symbol_csi *= np.sqrt(self.waveform.num_subcarriers)
+        # Correct the FFT normalization
+        # symbol_csi *= np.sqrt(self.waveform.num_subcarriers)
 
         return StatedSymbols(symbols.raw, symbol_csi)

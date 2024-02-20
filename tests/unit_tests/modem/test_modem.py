@@ -499,6 +499,18 @@ class TestDuplexModem(TestBaseModem):
 
         reception = self.modem.receive()
         self.assertEqual(0, reception.num_frames)
+        
+    def test_receive_synchronization_padding(self) -> None:
+        """Received frames should be padded to the correct length"""
+
+        transmission = self.modem.transmit()
+        cutoff_samples = transmission.signal.samples[:, :transmission.signal.num_samples//2]
+        self.waveform.synchronization.synchronize = lambda s: [0]
+        self.device.process_input(Signal(cutoff_samples, transmission.signal.sampling_rate, self.device.carrier_frequency))
+        reception = self.modem.receive()
+        
+        self.assertEqual(transmission.signal.num_samples, reception.frames[0].signal.num_samples)
+        return
 
     def test_device_setget(self) -> None:
         """Device property getter should return setter argument"""

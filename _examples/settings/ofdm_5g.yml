@@ -71,43 +71,43 @@ Operators:
       channel_estimation: !<OFDM-Ideal> # Assume ideal channel state information at the receiver
         transmitter: *device_alpha
         receiver: *device_alpha
-      channel_equalization: !<OFDM-ZF>  # Least-squares channel equalization
+      channel_equalization: !<ZF>       # Least-squares channel equalization
 
       # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
-      resources:
+      grid_resources:
 
-        - !<OFDM-Resource>
+        - !<Resource>
           repetitions: 1
           prefix_type: !<PrefixType> CYCLIC
           prefix_ratio: 0.0703125
           elements:
-            - !<FrameElement>
+            - !<Element>
               type: !<ElementType> NULL
               repetitions: 998
-            - !<FrameElement>
+            - !<Element>
               type: !<ElementType> DATA
               repetitions: 2100
-            - !<FrameElement>
+            - !<Element>
               type: !<ElementType> NULL
               repetitions: 998
 
-        - !<OFDM-Resource>
+        - !<Resource>
           repetitions: 1
           prefix_type: !<PrefixType> CYCLIC
           prefix_ratio: 0.078125
           elements:
-            - !<FrameElement>
+            - !<Element>
               type: !<ElementType> NULL
               repetitions: 998
-            - !<FrameElement>
+            - !<Element>
               type: !<ElementType> DATA
               repetitions: 2100
-            - !<FrameElement>
+            - !<Element>
               type: !<ElementType> NULL
               repetitions: 998
 
       # Frame configuration in time domain, i.e. the x-axis in the OFDM time-frequency grid
-      structure:
+      grid_structure:
 
         # DDDDD
         - !<Symbol>

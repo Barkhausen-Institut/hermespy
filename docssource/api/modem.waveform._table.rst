@@ -22,10 +22,14 @@
      - Yes
      - Yes
      - Yes
-   * - :doc:`OFDM<modem.waveform.ofdm>`
+   * - :doc:`OFDM<modem.waveforms.orthogonal.ofdm>`
      - Yes
      - Yes
-     - Yes   
+     - Yes
+   * - :doc:`OCDM<modem.waveforms.orthogonal.ocdm>`
+     - Yes
+     - Yes
+     - Yes
    * - :doc:`Chirp FSK<modem.waveform.chirp_fsk>`
      - Yes
      - No
