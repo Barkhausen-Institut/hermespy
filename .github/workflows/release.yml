@@ -1,0 +1,69 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  GitHub-Release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      with:
+        lfs: true
+        submodules: recursive
+
+      - name: Changelog
+        uses: scottbrenner/generate-changelog-action@master
+        id: Changelog
+        env:
+          REPO: ${{ github.repository }}
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref }}
+          body: |
+            ${{ steps.Changelog.outputs.changelog }}
+          draft: false
+          prerelease: false
+
+  Documentation-Release:
+  
+    runs-on: ubuntu-latest
+    steps:
+    
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      with:
+        lfs: true
+        submodules: recursive
+
+    - name: Setup python 3.11
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.11'
+
+    - name: Install doc dependencies
+      run: |
+        sudo apt update
+        sudo apt-get install -y build-essential octave portaudio19-dev python-dev-is-python3 pandoc graphviz
+        export MAKEFLAGS="-j $(grep -c ^processor /proc/cpuinfo)"
+        pip install -e .[test,documentation,quadriga,uhd,audio]
+
+    - name: Build documentation
+      run: sphinx-build docssource/ documentation/
+
+    # ToDo: Execute this action only on the highest tag
+    - name: Create github pages
+      uses: JamesIves/github-pages-deploy-action@4.1.2
+      with:
+        branch: gh-pages
+        folder: documentation
