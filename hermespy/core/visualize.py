@@ -296,7 +296,7 @@ class Visualizable(Generic[VT], ABC):
 
         # Prepare the figure and axes for plotting
         with Executable.style_context():
-            if axes:
+            if axes is not None:
                 _axes = axes
                 figure = axes.flat[0].get_figure()
 
