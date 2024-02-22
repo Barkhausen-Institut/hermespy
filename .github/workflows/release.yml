@@ -12,9 +12,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-      with:
-        lfs: true
-        submodules: recursive
+        with:
+          lfs: true
+          submodules: recursive
 
       - name: Changelog
         uses: scottbrenner/generate-changelog-action@master
