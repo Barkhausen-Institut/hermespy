@@ -325,10 +325,6 @@ class OrthogonalWaveformMock(OrthogonalWaveform):
     def bandwidth(self) -> float:
         return 1.
     
-    @property
-    def symbol_duration(self) -> float:
-        return 1.
-    
     def _correct_sample_offset(self, symbol_subgrid: np.ndarray, sample_offset: int) -> np.ndarray:
         return symbol_subgrid
 
@@ -577,11 +573,6 @@ class TestOrthogonalWaveform(TestCase):
 
         with self.assertRaises(ValueError):
             self.waveform.num_subcarriers = -1
-            
-    def test_symbol_duration(self) -> None:
-        """Symbol duration property should return the correct value"""
-        
-        self.assertEqual(1/self.waveform.bandwidth, self.waveform.symbol_duration)
 
 
 class TestPilotSection(TestCase):
