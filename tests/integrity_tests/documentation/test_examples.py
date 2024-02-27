@@ -265,6 +265,11 @@ class TestDocumentationExamples(TestCase):
         """Test example snippet for OCDM waveforms"""
         
         self.__run_example("modem_waveforms_ocdm.py")
+        
+    def test_modem_waveforms_otfs(self) -> None:
+        """Test example snippet for OTFS waveforms"""
+        
+        self.__run_example("modem_waveforms_otfs.py")
 
     def test_modem(self) -> None:
         """Test example snippet for modem"""
