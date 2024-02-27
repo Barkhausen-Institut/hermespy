@@ -244,13 +244,11 @@ class CommunicationWaveform(ABC, Serializable):
     symbol_type: type = np.complex_
     """Symbol type."""
 
-    # Modem this waveform generator is attached to
     __modem: Optional[BaseModem]
     __synchronization: Synchronization  # Synchronization routine
     __channel_estimation: ChannelEstimation  # Channel estimation routine
     __channel_equalization: ChannelEqualization  # Channel equalization routine
     __oversampling_factor: int  # Oversampling factor
-    # Cardinality of the set of communication symbols
     __modulation_order: int
 
     def __init__(
@@ -273,7 +271,7 @@ class CommunicationWaveform(ABC, Serializable):
             modulation_order (int, optional):
                 Order of modulation.
                 Must be a non-negative power of two.
-s
+
             channel_estimation (ChannelEstimation, optional):
                 Channel estimation algorithm. If not specified, an ideal channel is assumed.
 

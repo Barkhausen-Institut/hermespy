@@ -12,6 +12,7 @@ from .ofdm import (
     SchmidlCoxPilotSection,
     SchmidlCoxSynchronization,
 )
+from .otfs import OTFSWaveform
 from .waveform import (
     ElementType,
     GuardSection,
@@ -45,6 +46,7 @@ __all__ = [
     "PilotSection",
     "SchmidlCoxPilotSection",
     "SchmidlCoxSynchronization",
+    "OTFSWaveform",
     "ElementType",
     "GuardSection",
     "GridElement",
