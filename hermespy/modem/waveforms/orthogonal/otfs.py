@@ -34,13 +34,11 @@ class OTFSWaveform(OFDMWaveform):
     ) -> np.ndarray:
         # Initial step: Inverse Heisenberg transform, i.e. the regular OFDM treatment
         delay_doppler_symbols = OFDMWaveform._backward_transformation(
-            self, sample_sections, normalize,
+            self, sample_sections, normalize
         )
 
         # Second step: SFFT
-        symbol_grid = ifft(
-            fft(delay_doppler_symbols, axis=-1, norm="ortho"), axis=-2, norm="ortho"
-        )
+        symbol_grid = ifft(fft(delay_doppler_symbols, axis=-1, norm="ortho"), axis=-2, norm="ortho")
 
         # Normalize the symbol grid
         if normalize:

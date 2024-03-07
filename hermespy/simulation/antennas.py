@@ -735,10 +735,12 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
     def plot_pattern(  # type: ignore[misc]
         self,
         carrier_frequency: float,
-        arg_0: Literal[AntennaMode.TX]
-        | Literal[AntennaMode.RX]
-        | TransmitBeamformer
-        | ReceiveBeamformer,
+        arg_0: (
+            Literal[AntennaMode.TX]
+            | Literal[AntennaMode.RX]
+            | TransmitBeamformer
+            | ReceiveBeamformer
+        ),
         arg_1: np.ndarray | None = None,
         *,
         title: str | None = None,

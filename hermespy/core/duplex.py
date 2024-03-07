@@ -83,31 +83,24 @@ class DuplexOperator(
         Transmitter.slot.fset(self, value)
 
     @abstractmethod
-    def _transmit(self, duration: float = 0.0) -> TransmissionType:
-        ...  # pragma: no cover
+    def _transmit(self, duration: float = 0.0) -> TransmissionType: ...  # pragma: no cover
 
     @abstractmethod
-    def _receive(self, signal: Signal) -> ReceptionType:
-        ...  # pragma: no cover
+    def _receive(self, signal: Signal) -> ReceptionType: ...  # pragma: no cover
 
     @property
     @abstractmethod
-    def sampling_rate(self) -> float:
-        ...  # pragma: no cover
+    def sampling_rate(self) -> float: ...  # pragma: no cover
 
     @property
     @abstractmethod
-    def frame_duration(self) -> float:
-        ...  # pragma: no cover
+    def frame_duration(self) -> float: ...  # pragma: no cover
 
     @abstractmethod
-    def _noise_power(self, strength: float, snr_type: SNRType) -> float:
-        ...  # pragma: no cover
+    def _noise_power(self, strength: float, snr_type: SNRType) -> float: ...  # pragma: no cover
 
     @abstractmethod
-    def _recall_transmission(self, group: Group) -> TransmissionType:
-        ...  # pragma: no cover
+    def _recall_transmission(self, group: Group) -> TransmissionType: ...  # pragma: no cover
 
     @abstractmethod
-    def _recall_reception(self, group: Group) -> ReceptionType:
-        ...  # pragma: no cover
+    def _recall_reception(self, group: Group) -> ReceptionType: ...  # pragma: no cover

@@ -315,8 +315,7 @@ class DelayChannelBase(Generic[DCRT], Channel[DCRT]):
         self.__model_propagation_loss = value
 
     @abstractmethod
-    def _init_realization(self, *args, **kwargs) -> DCRT:
-        ...  # pragma: no cover
+    def _init_realization(self, *args, **kwargs) -> DCRT: ...  # pragma: no cover
 
     def _realize(self) -> DCRT:
         delay = self._realize_delay()

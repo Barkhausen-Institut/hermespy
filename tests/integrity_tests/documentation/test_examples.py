@@ -166,6 +166,11 @@ class TestDocumentationExamples(TestCase):
 
         self.__run_example('modem_evaluators_bler.py')
 
+    def test_modem_evaluators_evm(self) -> None:
+        """Test example snippet for error vector magnitude evaluation"""
+
+        self.__run_example('modem_evaluators_evm.py')
+
     def test_modem_evaluators_fer(self) -> None:
         """Test example snippet for frame error rate evaluation"""
 
@@ -250,25 +255,25 @@ class TestDocumentationExamples(TestCase):
         """Test example snippet for RRC waveforms"""
 
         self.__run_example("modem_waveforms_rrc.py")
-        
+
     def test_modem_waveforms_orthogonal(self) -> None:
         """Test example snippet for orthogonal waveforms"""
-        
+
         self.__run_example("modem_waveforms_orthogonal.py")
-        
+
     def test_modem_waveforms_ofdm(self) -> None:
         """Test example snippet for OFDM waveforms"""
-        
+
         self.__run_example("modem_waveforms_ofdm.py")
-        
+
     def test_modem_waveforms_ocdm(self) -> None:
         """Test example snippet for OCDM waveforms"""
-        
+
         self.__run_example("modem_waveforms_ocdm.py")
-        
+
     def test_modem_waveforms_otfs(self) -> None:
         """Test example snippet for OTFS waveforms"""
-        
+
         self.__run_example("modem_waveforms_otfs.py")
 
     def test_modem(self) -> None:
