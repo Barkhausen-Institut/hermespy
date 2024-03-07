@@ -878,7 +878,9 @@ class SimulatedDevice(Device, Moveable, Serializable):
     __carrier_frequency: float  # Center frequency of the mixed signal in rf-band
     __velocity: np.ndarray  # Cartesian device velocity vector
     __operator_separation: bool  # Operator separation flag
-    __realization: SimulatedDeviceReceiveRealization | None  # Most recent device receive realization
+    __realization: (
+        SimulatedDeviceReceiveRealization | None
+    )  # Most recent device receive realization
 
     def __init__(
         self,
@@ -1484,12 +1486,14 @@ class SimulatedDevice(Device, Moveable, Serializable):
 
     def process_from_realization(
         self,
-        impinging_signals: DeviceInput
-        | Signal
-        | Sequence[Signal]
-        | ChannelPropagation
-        | Sequence[ChannelPropagation]
-        | SimulatedDeviceOutput,
+        impinging_signals: (
+            DeviceInput
+            | Signal
+            | Sequence[Signal]
+            | ChannelPropagation
+            | Sequence[ChannelPropagation]
+            | SimulatedDeviceOutput
+        ),
         realization: SimulatedDeviceReceiveRealization,
         trigger_realization: TriggerRealization | None = None,
         leaking_signal: Signal | None = None,
@@ -1566,9 +1570,9 @@ class SimulatedDevice(Device, Moveable, Serializable):
         elif isinstance(impinging_signals, ChannelPropagation):
             mixed_signal = impinging_signals.signal
             _impinging_signals = [impinging_signals.signal]
-            self.__received_channel_realizations[
-                impinging_signals.transmitter
-            ] = impinging_signals.realization
+            self.__received_channel_realizations[impinging_signals.transmitter] = (
+                impinging_signals.realization
+            )
 
         elif isinstance(impinging_signals, SimulatedDeviceOutput):
             mixed_signal = impinging_signals.mixed_signal
@@ -1613,12 +1617,14 @@ class SimulatedDevice(Device, Moveable, Serializable):
 
     def process_input(
         self,
-        impinging_signals: DeviceInput
-        | Signal
-        | Sequence[Signal]
-        | ChannelPropagation
-        | Sequence[ChannelPropagation]
-        | SimulatedDeviceOutput,
+        impinging_signals: (
+            DeviceInput
+            | Signal
+            | Sequence[Signal]
+            | ChannelPropagation
+            | Sequence[ChannelPropagation]
+            | SimulatedDeviceOutput
+        ),
         cache: bool = True,
         trigger_realization: TriggerRealization | None = None,
         snr: float = float("inf"),
@@ -1672,12 +1678,14 @@ class SimulatedDevice(Device, Moveable, Serializable):
 
     def receive(
         self,
-        impinging_signals: DeviceInput
-        | Signal
-        | Sequence[Signal]
-        | ChannelPropagation
-        | Sequence[ChannelPropagation]
-        | SimulatedDeviceOutput,
+        impinging_signals: (
+            DeviceInput
+            | Signal
+            | Sequence[Signal]
+            | ChannelPropagation
+            | Sequence[ChannelPropagation]
+            | SimulatedDeviceOutput
+        ),
         cache: bool = True,
         trigger_realization: TriggerRealization | None = None,
     ) -> SimulatedDeviceReception:

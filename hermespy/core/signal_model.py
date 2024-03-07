@@ -336,9 +336,9 @@ class _EyeVisualization(_SignalVisualization):
             values = np.empty(num_visualized_symbols * values_per_symbol, dtype=np.complex_)
             for n in range(num_symbols - 2 * num_cutoff_symbols):
                 sample_offset = (n + num_cutoff_symbols) * symbol_num_samples
-                values[
-                    n * values_per_symbol : (n + 1) * values_per_symbol - 1
-                ] = self.signal.samples[0, sample_offset : sample_offset + values_per_symbol - 1]
+                values[n * values_per_symbol : (n + 1) * values_per_symbol - 1] = (
+                    self.signal.samples[0, sample_offset : sample_offset + values_per_symbol - 1]
+                )
             values[values_per_symbol - 1 :: values_per_symbol] = float("nan") + 1j * float("nan")
 
             # Normalize values

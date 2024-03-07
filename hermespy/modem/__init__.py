@@ -81,6 +81,7 @@ from .evaluators import (
     BlockErrorEvaluator,
     FrameErrorEvaluator,
     ThroughputEvaluator,
+    ConstellationEVM,
 )
 from .tools import PskQamMapping
 
@@ -177,6 +178,7 @@ __all__ = [
     "BlockErrorEvaluator",
     "FrameErrorEvaluator",
     "ThroughputEvaluator",
+    "ConstellationEVM",
     "PskQamMapping",
     "SCLeastSquaresChannelEstimation",
     "SCZeroForcingChannelEqualization",
