@@ -93,10 +93,30 @@ communication links between modems.
       +str title
    }
 
+   class EVMArtifact {
+ 
+      +float artifact
+      +to_scalar() float
+   }
+
+   class EVMEvaluation {
+
+      +str title
+      +artifact() EVMArtifact
+   }
+
+   class ConstellationEVM {
+
+      +evaluate() EVMEvaluation
+      +str abbreviation
+      +str title
+   }
+
    BitErrorEvaluator --|> CommunicationEvaluator
    BlockErrorEvaluator --|> CommunicationEvaluator
    FrameErrorEvaluator --|> CommunicationEvaluator
    ThroughputEvaluator --|> CommunicationEvaluator
+   ConstellationEVM --|> CommunicationEvaluator
 
    BitErrorEvaluator --> BitErrorArtifact : create
    BitErrorEvaluator --> BitErrorEvaluation : create
@@ -106,6 +126,8 @@ communication links between modems.
    FrameErrorEvaluator --> FrameErrorEvaluation : create
    ThroughputEvaluator --> ThroughputArtifact : create
    ThroughputEvaluator --> ThroughputEvaluation : create
+   ConstellationEVM --> EVMEvaluation : create
+   EVMEvaluation --> EVMArtifact : create
 
    link CommunicationEvaluator "modem.evaluators.CommunicationEvaluator.html"
    link BitErrorArtifact "modem.evaluators.BitErrorArtifact.html"
@@ -120,7 +142,9 @@ communication links between modems.
    link ThroughputArtifact "modem.evaluators.ThroughputArtifact.html"
    link ThroughputEvaluation "modem.evaluators.ThroughputEvaluation.html"
    link ThroughputEvaluator "modem.evaluators.ThroughputEvaluator.html"
-
+   link EVMArtifact "modem.evaluators.evm.html#hermespy.modem.evaluators.evm.EVMArtifact"
+   link EVMEvaluation "modem.evaluators.evm.html#hermespy.modem.evaluators.evm.EVMEvaluation"
+   link ConstellationEVM "modem.evaluators.evm.html#hermespy.modem.evaluators.evm.ConstellationEVM"
 
 The implemented :doc:`Communication Evaluators<modem.evaluators.CommunicationEvaluator>` all inherit from the identically named common
 base which gets initialized by selecting the two :doc:`Modem<modem.modem.BaseModem>` instances whose communication
@@ -154,6 +178,7 @@ Configuring :doc:`Communication Evaluators<modem.evaluators.CommunicationEvaluat
    modem.evaluators.bler
    modem.evaluators.fer
    modem.evaluators.throughput
+   modem.evaluators.evm
    modem.evaluators.CommunicationEvaluator
 
 .. footbibliography::

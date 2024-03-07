@@ -95,13 +95,15 @@ class PhysicalDeviceDummy(SimulatedDevice, PhysicalDevice, Serializable):
 
     def process_input(
         self,
-        impinging_signals: DeviceInput
-        | Signal
-        | Sequence[Signal]
-        | ChannelPropagation
-        | Sequence[ChannelPropagation]
-        | SimulatedDeviceOutput
-        | None = None,
+        impinging_signals: (
+            DeviceInput
+            | Signal
+            | Sequence[Signal]
+            | ChannelPropagation
+            | Sequence[ChannelPropagation]
+            | SimulatedDeviceOutput
+            | None
+        ) = None,
         cache: bool = True,
         trigger_realization: TriggerRealization | None = None,
         snr: float = float("inf"),
@@ -117,13 +119,15 @@ class PhysicalDeviceDummy(SimulatedDevice, PhysicalDevice, Serializable):
 
     def receive(
         self,
-        impinging_signals: DeviceInput
-        | Signal
-        | Sequence[Signal]
-        | ChannelPropagation
-        | Sequence[ChannelPropagation]
-        | SimulatedDeviceOutput
-        | None = None,
+        impinging_signals: (
+            DeviceInput
+            | Signal
+            | Sequence[Signal]
+            | ChannelPropagation
+            | Sequence[ChannelPropagation]
+            | SimulatedDeviceOutput
+            | None
+        ) = None,
         *args,
         **kwargs,
     ) -> SimulatedDeviceReception:
@@ -200,11 +204,13 @@ class PhysicalScenarioDummy(
 
     def receive_devices(
         self,
-        impinging_signals: Sequence[DeviceInput]
-        | Sequence[Signal]
-        | Sequence[Sequence[Signal]]
-        | Sequence[Sequence[ChannelPropagation]]
-        | None = None,
+        impinging_signals: (
+            Sequence[DeviceInput]
+            | Sequence[Signal]
+            | Sequence[Sequence[Signal]]
+            | Sequence[Sequence[ChannelPropagation]]
+            | None
+        ) = None,
         cache: bool = True,
         trigger_realizations: Sequence[TriggerRealization] | None = None,
     ) -> Sequence[SimulatedDeviceReception]:

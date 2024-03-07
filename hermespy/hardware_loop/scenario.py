@@ -43,10 +43,9 @@ class PhysicalScenario(Generic[PDT], Scenario[PDT]):
 
     def receive_devices(
         self,
-        impinging_signals: Sequence[DeviceInput]
-        | Sequence[Signal]
-        | Sequence[Sequence[Signal]]
-        | None = None,
+        impinging_signals: (
+            Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]] | None
+        ) = None,
         cache: bool = True,
     ) -> Sequence[DeviceReception]:
         """Receive over all scenario devices.
@@ -116,11 +115,13 @@ class SimulatedPhysicalScenario(SimulationScenario, PhysicalScenario):
 
     def receive_devices(
         self,
-        impinging_signals: Sequence[DeviceInput]
-        | Sequence[Signal]
-        | Sequence[Sequence[Signal]]
-        | Sequence[Sequence[ChannelPropagation]]
-        | None = None,
+        impinging_signals: (
+            Sequence[DeviceInput]
+            | Sequence[Signal]
+            | Sequence[Sequence[Signal]]
+            | Sequence[Sequence[ChannelPropagation]]
+            | None
+        ) = None,
         cache: bool = True,
         trigger_realizations: Sequence[TriggerRealization] | None = None,
     ) -> Sequence[SimulatedDeviceReception]:
