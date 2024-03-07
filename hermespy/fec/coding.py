@@ -449,9 +449,9 @@ class EncoderManager(RandomNode, Serializable):
                 encoded_block = encoder.encode(
                     data_state[block_idx * data_block_size : (1 + block_idx) * data_block_size]
                 )
-                code_state[
-                    block_idx * code_block_size : (1 + block_idx) * code_block_size
-                ] = encoded_block
+                code_state[block_idx * code_block_size : (1 + block_idx) * code_block_size] = (
+                    encoded_block
+                )
 
         if num_code_bits and len(code_state) > num_code_bits:
             raise RuntimeError(
@@ -543,10 +543,10 @@ class EncoderManager(RandomNode, Serializable):
 
             # Decode all blocks sequentially
             for block_idx in range(num_blocks):
-                data_state[
-                    block_idx * data_block_size : (1 + block_idx) * data_block_size
-                ] = encoder.decode(
-                    code_state[block_idx * code_block_size : (1 + block_idx) * code_block_size]
+                data_state[block_idx * data_block_size : (1 + block_idx) * data_block_size] = (
+                    encoder.decode(
+                        code_state[block_idx * code_block_size : (1 + block_idx) * code_block_size]
+                    )
                 )
 
         # Return resulting data

@@ -17,6 +17,7 @@ This implementation has currently the following limitations:
     Tosato, Bisaglia, "Simplified Soft-Output Demapper for Binary Interleaved COFDM with
     Application to HIPERLAN/2", Proceedings of IEEE International Commun. Conf. (ICC) 2002
 """
+
 from typing import Union
 import numpy as np
 

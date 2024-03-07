@@ -912,9 +912,7 @@ class RadarTargetRealization(RadarPathRealization):
 
             wavelength = speed_of_light / carrier_frequency
             amplitude_factor = (
-                wavelength
-                * self.cross_section**0.5
-                / ((4 * pi) ** 1.5 * tx_distance * rx_distance)
+                wavelength * self.cross_section**0.5 / ((4 * pi) ** 1.5 * tx_distance * rx_distance)
             )
 
         else:

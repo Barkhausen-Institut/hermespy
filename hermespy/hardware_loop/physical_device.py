@@ -572,8 +572,9 @@ class Calibration(ABC, HDFSerializable, Serializable):
 
     @classmethod
     @abstractmethod
-    def _configure_slot(cls: Type[CT], device: PhysicalDevice, value: CT | None) -> None:
-        ...  # pragma: no cover
+    def _configure_slot(
+        cls: Type[CT], device: PhysicalDevice, value: CT | None
+    ) -> None: ...  # pragma: no cover
 
     @property
     def device(self) -> PhysicalDevice | None:
