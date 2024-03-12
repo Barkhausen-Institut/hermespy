@@ -7,13 +7,12 @@ from unittest.mock import patch, PropertyMock
 
 import numpy as np
 from h5py import File
-from numpy.testing import assert_array_equal
 
 from hermespy.core import Signal, SNRType
-from hermespy.modem import CommunicationReception, CommunicationTransmission, DuplexModem, Symbols, CommunicationWaveform
-from hermespy.radar import Radar, RadarCube, RadarReception
+from hermespy.modem import DuplexModem
+from hermespy.radar import Radar
 from hermespy.simulation import SimulatedDevice
-from hermespy.jcas import JCASTransmission, JCASReception, MatchedFilterJcas
+from hermespy.jcas import MatchedFilterJcas
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 from unit_tests.modem.test_waveform import MockCommunicationWaveform
 
@@ -25,59 +24,6 @@ __version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
-
-
-class TestJCASTransmission(TestCase):
-    """Test JCAS transmission"""
-
-    def setUp(self) -> None:
-        self.signal = Signal(np.empty((1, 0), dtype=np.complex_), 1.0)
-        self.transmission = JCASTransmission(CommunicationTransmission(self.signal, []))
-
-    def test_hdf_serialization(self) -> None:
-        """Test proper serialization to HDF"""
-
-        transmission: JCASTransmission
-
-        with TemporaryDirectory() as tempdir:
-            file_location = path.join(tempdir, "testfile.hdf5")
-
-            with File(file_location, "a") as file:
-                group = file.create_group("testgroup")
-                self.transmission.to_HDF(group)
-
-            with File(file_location, "r") as file:
-                group = file["testgroup"]
-                transmission = self.transmission.from_HDF(group)
-
-        assert_array_equal(self.signal.samples, transmission.signal.samples)
-
-
-class TestJCASReception(TestCase):
-    """Test JCAS reception"""
-
-    def setUp(self) -> None:
-        self.signal = Signal(np.zeros((1, 10), dtype=np.complex_), 1.0)
-        self.communication_reception = CommunicationReception(self.signal)
-        self.cube = RadarCube(np.zeros((1, 1, 10)))
-        self.radar_reception = RadarReception(self.signal, self.cube)
-        self.reception = JCASReception(self.communication_reception, self.radar_reception)
-
-    def test_hdf_serialization(self) -> None:
-        """Test proper serialization to HDF"""
-
-        with TemporaryDirectory() as tempdir:
-            file_location = path.join(tempdir, "testfile.hdf5")
-
-            with File(file_location, "a") as file:
-                group = file.create_group("testgroup")
-                self.reception.to_HDF(group)
-
-            with File(file_location, "r") as file:
-                group = file["testgroup"]
-                reception = JCASReception.from_HDF(group)
-
-        assert_array_equal(self.signal.samples, reception.signal.samples)
 
 
 class TestMatchedFilterJoint(TestCase):

@@ -25,11 +25,11 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-WaveformType = TypeVar("WaveformType", bound="CommunicationWaveform")
-"""Type hint for waveform generator classes."""
+CWT = TypeVar("CWT", bound="CommunicationWaveform")
+"""Communication waveform type."""
 
 
-class Synchronization(Generic[WaveformType], ABC, Serializable):
+class Synchronization(Generic[CWT], ABC, Serializable):
     """Abstract base class for synchronization routines of waveform generators.
 
     Refer to :footcite:t:`2016:nasir` for an overview of the current state of the art.
@@ -39,9 +39,9 @@ class Synchronization(Generic[WaveformType], ABC, Serializable):
     property_blacklist = {"waveform"}
 
     # Waveform generator this routine is attached to
-    __waveform: Optional[WaveformType]
+    __waveform: Optional[CWT]
 
-    def __init__(self, waveform: Optional[WaveformType] = None) -> None:
+    def __init__(self, waveform: Optional[CWT] = None) -> None:
         """
         Args:
             waveform (CommunicationWaveform, optional):
@@ -51,7 +51,7 @@ class Synchronization(Generic[WaveformType], ABC, Serializable):
         self.__waveform = waveform
 
     @property
-    def waveform(self) -> Optional[WaveformType]:
+    def waveform(self) -> Optional[CWT]:
         """Waveform generator this synchronization routine is attached to.
 
         Returns:
@@ -62,7 +62,7 @@ class Synchronization(Generic[WaveformType], ABC, Serializable):
         return self.__waveform
 
     @waveform.setter
-    def waveform(self, value: Optional[WaveformType]) -> None:
+    def waveform(self, value: Optional[CWT]) -> None:
         """Set waveform generator this synchronization routine is attached to."""
 
         # Un-register this synchronization routine from its previously assigned waveform
@@ -99,13 +99,13 @@ class Synchronization(Generic[WaveformType], ABC, Serializable):
         return [] if num_frames < 1 else [0]
 
 
-class ChannelEstimation(Generic[WaveformType], Serializable):
+class ChannelEstimation(Generic[CWT], Serializable):
     """Base class for channel estimation routines of waveform generators."""
 
     yaml_tag = "NoChannelEstimation"
     property_blacklist = {"waveform"}
 
-    def __init__(self, waveform: Optional[WaveformType] = None) -> None:
+    def __init__(self, waveform: Optional[CWT] = None) -> None:
         """
         Args:
             waveform (CommunicationWaveform, optional):
@@ -115,7 +115,7 @@ class ChannelEstimation(Generic[WaveformType], Serializable):
         self.__waveform = waveform
 
     @property
-    def waveform(self) -> Optional[WaveformType]:
+    def waveform(self) -> Optional[CWT]:
         """Waveform generator this synchronization routine is attached to.
 
         Returns:
@@ -126,7 +126,7 @@ class ChannelEstimation(Generic[WaveformType], Serializable):
         return self.__waveform
 
     @waveform.setter
-    def waveform(self, value: Optional[WaveformType]) -> None:
+    def waveform(self, value: Optional[CWT]) -> None:
         """Set waveform generator this synchronization routine is attached to."""
 
         if value is None:
@@ -165,13 +165,13 @@ class ChannelEstimation(Generic[WaveformType], Serializable):
         return StatedSymbols(symbols.raw, state)
 
 
-class ChannelEqualization(Generic[WaveformType], ABC, Serializable):
+class ChannelEqualization(Generic[CWT], ABC, Serializable):
     """Abstract base class for channel equalization routines of waveform generators."""
 
     yaml_tag = "NoEqualization"
     property_blacklist = {"waveform"}
 
-    def __init__(self, waveform: Optional[WaveformType] = None) -> None:
+    def __init__(self, waveform: Optional[CWT] = None) -> None:
         """
         Args:
             waveform (CommunicationWaveform, optional):
@@ -181,7 +181,7 @@ class ChannelEqualization(Generic[WaveformType], ABC, Serializable):
         self.__waveform = waveform
 
     @property
-    def waveform(self) -> Optional[WaveformType]:
+    def waveform(self) -> Optional[CWT]:
         """Waveform generator this equalization routine is attached to.
 
         Returns:
@@ -192,7 +192,7 @@ class ChannelEqualization(Generic[WaveformType], ABC, Serializable):
         return self.__waveform
 
     @waveform.setter
-    def waveform(self, value: Optional[WaveformType]) -> None:
+    def waveform(self, value: Optional[CWT]) -> None:
         """Set waveform generator this equalization routine is attached to."""
 
         if self.__waveform is not None:
@@ -214,9 +214,7 @@ class ChannelEqualization(Generic[WaveformType], ABC, Serializable):
         return stated_symbols
 
 
-class ZeroForcingChannelEqualization(
-    Generic[WaveformType], ChannelEqualization[WaveformType], Serializable
-):
+class ZeroForcingChannelEqualization(Generic[CWT], ChannelEqualization[CWT], Serializable):
     """Zero-Forcing channel equalization for arbitrary waveforms."""
 
     yaml_tag = "ZF"

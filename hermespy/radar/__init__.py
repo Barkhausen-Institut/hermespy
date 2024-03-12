@@ -7,7 +7,7 @@ from .detection import (
     MaxDetector,
     CFARDetector,
 )
-from .radar import Radar, RadarWaveform, RadarTransmission, RadarReception
+from .radar import Radar, RadarBase, RadarWaveform, RadarTransmission, RadarReception
 from .fmcw import FMCW
 from .evaluators import ReceiverOperatingCharacteristic, DetectionProbEvaluator, RootMeanSquareError
 
@@ -29,6 +29,7 @@ __all__ = [
     "MaxDetector",
     "CFARDetector",
     "Radar",
+    "RadarBase",
     "RadarWaveform",
     "RadarTransmission",
     "RadarReception",

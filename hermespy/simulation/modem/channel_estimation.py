@@ -16,7 +16,7 @@ from hermespy.modem import (
     ReferencePosition,
     StatedSymbols,
     Symbols,
-    WaveformType,
+    CWT,
 )
 from ..simulated_device import SimulatedDevice
 
@@ -30,7 +30,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class IdealChannelEstimation(Generic[WaveformType], ChannelEstimation[WaveformType]):
+class IdealChannelEstimation(Generic[CWT], ChannelEstimation[CWT]):
     """Channel estimation accessing the ideal channel state informaion.
 
     This type of channel estimation is only available during simulation runtime.
@@ -42,10 +42,7 @@ class IdealChannelEstimation(Generic[WaveformType], ChannelEstimation[WaveformTy
     __receiver: SimulatedDevice
 
     def __init__(
-        self,
-        transmitter: SimulatedDevice,
-        receiver: SimulatedDevice,
-        waveform: WaveformType | None = None,
+        self, transmitter: SimulatedDevice, receiver: SimulatedDevice, waveform: CWT | None = None
     ) -> None:
         # Initialize base class
         ChannelEstimation.__init__(self, waveform)

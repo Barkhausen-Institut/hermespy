@@ -432,8 +432,8 @@ class TestReceivingModem(TestBaseModem):
     def test_recall_reception(self) -> None:
         """Test modem reception recall from HDF"""
 
-        transmit_device = SimulatedDevice()
-        transmitting_modem = TransmittingModem(device=transmit_device)
+        transmitting_modem = TransmittingModem()
+        transmitting_modem.device = SimulatedDevice()
         transmitting_modem.waveform = MockCommunicationWaveform(oversampling_factor=4)
         transmission = transmitting_modem.transmit()
 

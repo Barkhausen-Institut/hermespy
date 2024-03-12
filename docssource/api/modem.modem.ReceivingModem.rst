@@ -91,6 +91,8 @@ The barebone configuration can be extend by additional components such as
    :lines: 36-56
 
 .. autoclass:: hermespy.modem.modem.ReceivingModem
+
+.. autoclass:: hermespy.modem.modem.ReceivingModemBase
       :private-members: _receive
 
 .. footbibliography::
