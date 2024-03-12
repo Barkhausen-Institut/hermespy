@@ -11,6 +11,7 @@ from numpy.random import default_rng
 from hermespy.core.monte_carlo import ScalarEvaluationResult, ArtifactTemplate
 from hermespy.modem import TransmittingModem, ReceivingModem, RootRaisedCosineWaveform
 from hermespy.modem.evaluators import BitErrorEvaluation, BitErrorEvaluator, BlockErrorEvaluation, BlockErrorEvaluator, CommunicationEvaluator, FrameErrorEvaluation, FrameErrorEvaluator, ThroughputEvaluation, ThroughputEvaluator, ConstellationEVM, EVMEvaluation
+from hermespy.simulation import SimulatedDevice
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -95,8 +96,10 @@ class TestBitErrorEvaluator(TestCase):
         self.waveform = RootRaisedCosineWaveform(symbol_rate=1e9, num_preamble_symbols=0, num_data_symbols=10)
         self.transmitter = TransmittingModem()
         self.transmitter.waveform = self.waveform
+        self.transmitter.device = SimulatedDevice()
         self.receiver = ReceivingModem()
         self.receiver.waveform = self.waveform
+        self.receiver.device = SimulatedDevice()
 
         self.evaluator = BitErrorEvaluator(self.transmitter, self.receiver)
 
@@ -159,8 +162,10 @@ class TestBlockErrorEvaluator(TestCase):
         self.waveform = RootRaisedCosineWaveform(symbol_rate=1e9, num_preamble_symbols=0, num_data_symbols=10)
         self.transmitter = TransmittingModem()
         self.transmitter.waveform = self.waveform
+        self.transmitter.device = SimulatedDevice()
         self.receiver = ReceivingModem()
         self.receiver.waveform = self.waveform
+        self.receiver.device = SimulatedDevice()
 
         self.evaluator = BlockErrorEvaluator(self.transmitter, self.receiver)
 
@@ -236,8 +241,10 @@ class TestFrameErrorEvaluator(TestCase):
         self.waveform = RootRaisedCosineWaveform(symbol_rate=1e9, num_preamble_symbols=0, num_data_symbols=10)
         self.transmitter = TransmittingModem()
         self.transmitter.waveform = self.waveform
+        self.transmitter.device = SimulatedDevice()
         self.receiver = ReceivingModem()
         self.receiver.waveform = self.waveform
+        self.receiver.device = SimulatedDevice()
 
         self.evaluator = FrameErrorEvaluator(self.transmitter, self.receiver)
 
@@ -415,8 +422,10 @@ class TestConstellationEVM(TestCase):
         self.waveform = RootRaisedCosineWaveform(symbol_rate=1e9, num_preamble_symbols=0, num_data_symbols=10, roll_off=.9)
         self.transmitter = TransmittingModem()
         self.transmitter.waveform = self.waveform
+        self.transmitter.device = SimulatedDevice()
         self.receiver = ReceivingModem()
         self.receiver.waveform = self.waveform
+        self.receiver.device = SimulatedDevice()
 
         self.evaluator = ConstellationEVM(self.transmitter, self.receiver)
 

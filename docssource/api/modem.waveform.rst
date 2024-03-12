@@ -18,7 +18,7 @@ The following waveforms are currently supported:
 
 .. autoclass:: hermespy.modem.waveform.ConfigurablePilotWaveform
 
-.. autoclass:: hermespy.modem.waveform.WaveformType
+.. autoclass:: hermespy.modem.waveform.CWT
 
 .. toctree::
    :maxdepth: 1

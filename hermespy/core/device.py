@@ -752,7 +752,7 @@ class DeviceReception(ProcessedDeviceInput):
         group.attrs["num_operator_receptions"] = self.num_operator_receptions
 
 
-class MixingOperator(Generic[SlotType], Operator[SlotType], ABC):
+class MixingOperator(ABC, Generic[SlotType], Operator[SlotType]):
     """Base class for operators performing mixing operations."""
 
     __carrier_frequency: Optional[float]  # Carrier frequency
@@ -806,7 +806,7 @@ class MixingOperator(Generic[SlotType], Operator[SlotType], ABC):
         self.__carrier_frequency = value
 
 
-class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType]):
+class Receiver(MixingOperator["ReceiverSlot"], Generic[ReceptionType], RandomNode):
     """Operator receiving from a device."""
 
     __reference: Device | None
@@ -1274,7 +1274,7 @@ TransmissionType = TypeVar("TransmissionType", bound="Transmission")
 """Type variable of a :class:`Transmission`."""
 
 
-class Transmitter(Generic[TransmissionType], RandomNode, MixingOperator["TransmitterSlot"]):
+class Transmitter(MixingOperator["TransmitterSlot"], Generic[TransmissionType], RandomNode):
     """Operator transmitting over a device."""
 
     __transmission: TransmissionType | None
@@ -1346,7 +1346,7 @@ class Transmitter(Generic[TransmissionType], RandomNode, MixingOperator["Transmi
         return transmission
 
     @abstractmethod
-    def _transmit(self, duration: float) -> TransmissionType:
+    def _transmit(self, duration: float = -1.0) -> TransmissionType:
         """Generate information to be transmitted.
 
         Subroutine of the public :meth:`transmit<Transmitter.transmit>` method that performs the pipeline-specific transmit-processing
