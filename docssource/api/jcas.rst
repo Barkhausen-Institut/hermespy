@@ -10,3 +10,5 @@ Currently, an exemplary matched filter approach is implemented:
 .. toctree::
 
    jcas.matched_filtering
+   jcas.ofdm_radar
+   jcas.jcas

@@ -28,8 +28,8 @@ class TestMaximumRatioCombinging(TestCase):
         self.rng = np.random.default_rng(42)
         self.precoder = MaximumRatioCombining()
         
-        self.device = SimulatedDevice(antennas=SimulatedUniformArray(SimulatedIdealAntenna, .1, [2, 1, 1]))
-        self.modem = ReceivingModem(device=self.device)
+        self.modem = ReceivingModem()
+        self.modem.device = SimulatedDevice(antennas=SimulatedUniformArray(SimulatedIdealAntenna, .1, [2, 1, 1]))
         self.modem.precoding[0] = self.precoder
 
     def test_properties(self) -> None:
