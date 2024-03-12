@@ -1,4 +1,7 @@
+# -*- coding: utf-8 -*-
+
 from .matched_filtering import JCASTransmission, JCASReception, MatchedFilterJcas
+from .ofdm_radar import OFDMRadar
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -9,4 +12,4 @@ __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
-__all__ = ["JCASTransmission", "JCASReception", "MatchedFilterJcas"]
+__all__ = ["JCASTransmission", "JCASReception", "MatchedFilterJcas", "OFDMRadar"]

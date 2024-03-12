@@ -32,7 +32,7 @@ __status__ = "Prototype"
 
 
 class DuplexOperator(
-    Transmitter[TransmissionType], Receiver[ReceptionType], Generic[TransmissionType, ReceptionType]
+    Generic[TransmissionType, ReceptionType], Transmitter[TransmissionType], Receiver[ReceptionType]
 ):
     """Operator binding to both transmit and receive slots of any device."""
 

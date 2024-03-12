@@ -11,6 +11,7 @@ from numpy.testing import assert_array_almost_equal
 from scipy.constants import pi
 
 from hermespy.modem import DuplexModem, ElementType, GridElement, GridResource, OTFSWaveform, SchmidlCoxPilotSection, SchmidlCoxSynchronization, SymbolSection, TransmittingModem
+from hermespy.simulation import SimulatedDevice
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
@@ -51,6 +52,7 @@ class TestOTFSMWaveform(TestCase):
         
         modem = TransmittingModem()
         modem.waveform = self.ofdm
+        modem.device = SimulatedDevice()
         
         transmission = modem.transmit()
         power = transmission.signal.power
@@ -61,7 +63,8 @@ class TestOTFSMWaveform(TestCase):
 
         modem = DuplexModem()
         modem.waveform = self.ofdm
-        
+        modem.device = SimulatedDevice()
+
         transmission = modem.transmit()
         reception = modem.receive(transmission.signal)
         
@@ -74,7 +77,8 @@ class TestOTFSMWaveform(TestCase):
         self.ofdm.dc_suppression = True
         modem = DuplexModem()
         modem.waveform = self.ofdm
-        
+        modem.device = SimulatedDevice()
+
         transmission = modem.transmit()
         reception = modem.receive(transmission.signal)
 

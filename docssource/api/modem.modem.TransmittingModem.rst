@@ -83,7 +83,8 @@ This barebone configuration can be extended by adding additional components such
    :lines: 28-39
 
 .. autoclass:: hermespy.modem.modem.TransmittingModem
+
+.. autoclass:: hermespy.modem.modem.TransmittingModemBase
    :private-members: _transmit
-   :show-inheritance:
 
 .. footbibliography::
