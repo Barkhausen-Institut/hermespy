@@ -83,10 +83,3 @@ jobs:
 
     - name: Build documentation
       run: sphinx-build docssource/ documentation/
-
-    - name: Create github pages
-      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-      uses: JamesIves/github-pages-deploy-action@4.1.2
-      with:
-        branch: gh-pages
-        folder: documentation
