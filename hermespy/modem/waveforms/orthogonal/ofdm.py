@@ -122,9 +122,9 @@ class OFDMWaveform(OrthogonalWaveform, Serializable):
         padding_start_idx = (
             self.oversampling_factor * self.num_subcarriers
         ) // 2 - self.num_subcarriers // 2
-        padded_symbol_grid[:, padding_start_idx : self.num_subcarriers + padding_start_idx] = (
-            normalized_symbols
-        )
+        padded_symbol_grid[
+            :, padding_start_idx : self.num_subcarriers + padding_start_idx
+        ] = normalized_symbols
 
         # Shift in order to suppress the dc component
         # Note that for configurations without any oversampling the DC component will not be suppressed

@@ -145,7 +145,7 @@ class GridResource(Serializable):
     @prefix_ratio.setter
     def prefix_ratio(self, ratio: float) -> None:
         if ratio < 0.0 or ratio > 1.0:
-            raise ValueError("Cyclic prefix ratio must be between zero and one")
+            raise ValueError(f"Cyclic prefix ratio must be between zero and one, not {ratio}")
 
         self.__prefix_ratio = ratio
 
@@ -1147,9 +1147,9 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
         word_idx = 0
         for section in self.grid_structure:
             num_words = section.num_words
-            resource_mask[:, word_idx : word_idx + num_words, : section.num_subcarriers] = (
-                section.resource_mask
-            )
+            resource_mask[
+                :, word_idx : word_idx + num_words, : section.num_subcarriers
+            ] = section.resource_mask
 
             word_idx += num_words
 
@@ -1189,9 +1189,9 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
             data = data_symbols[data_idx : data_idx + num_data_symbols]
             reference = reference_symbols[reference_idx : reference_idx + num_reference_symbols]
 
-            placed_symbols[0, word_idx : word_idx + num_words, : section.num_subcarriers] = (
-                section.place_symbols(data, reference)
-            )
+            placed_symbols[
+                0, word_idx : word_idx + num_words, : section.num_subcarriers
+            ] = section.place_symbols(data, reference)
 
             data_idx += num_data_symbols
             reference_idx += num_reference_symbols
@@ -1218,12 +1218,12 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
         block_idx = 0
         symbol_idx = 0
         for section in self.grid_structure:
-            raw_picked_symbols[:, symbol_idx : symbol_idx + section.num_symbols, 0] = (
-                section.pick_symbols(raw_symbols[:, block_idx : block_idx + section.num_words, :])
-            )
-            raw_picked_states[:, :, symbol_idx : symbol_idx + section.num_symbols, 0] = (
-                section.pick_symbols(raw_states[:, :, block_idx : block_idx + section.num_words, :])
-            )
+            raw_picked_symbols[
+                :, symbol_idx : symbol_idx + section.num_symbols, 0
+            ] = section.pick_symbols(raw_symbols[:, block_idx : block_idx + section.num_words, :])
+            raw_picked_states[
+                :, :, symbol_idx : symbol_idx + section.num_symbols, 0
+            ] = section.pick_symbols(raw_states[:, :, block_idx : block_idx + section.num_words, :])
 
             block_idx += section.num_words
             symbol_idx += section.num_symbols
@@ -1284,11 +1284,10 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
         block_idx = 0
         for section in self.grid_structure:
             if section.sample_offset != 0:
-                symbol_grid[block_idx : block_idx + section.num_words, :] = (
-                    self._correct_sample_offset(
-                        symbol_grid[block_idx : block_idx + section.num_words, :],
-                        section.sample_offset,
-                    )
+                symbol_grid[
+                    block_idx : block_idx + section.num_words, :
+                ] = self._correct_sample_offset(
+                    symbol_grid[block_idx : block_idx + section.num_words, :], section.sample_offset
                 )
 
         return Symbols(symbol_grid[np.newaxis, :, :])

@@ -16,7 +16,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -73,6 +73,7 @@ class TestUsrpDevice(TestCase):
         self.client_mock.getSupportedSamplingRates.return_value = [1.0, 2.0, 3.0, 4.0]
         self.client_mock.ip = self.ip
         self.client_mock.port = self.port
+        self.client_mock.getNumAntennas.return_value = 4
 
         self.client_create_patch = patch("hermespy.hardware_loop.uhd.usrp.UsrpClient.create")
         self.client_create_mock: MagicMock = self.client_create_patch.start()

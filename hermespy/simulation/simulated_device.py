@@ -1570,9 +1570,9 @@ class SimulatedDevice(Device, Moveable, Serializable):
         elif isinstance(impinging_signals, ChannelPropagation):
             mixed_signal = impinging_signals.signal
             _impinging_signals = [impinging_signals.signal]
-            self.__received_channel_realizations[impinging_signals.transmitter] = (
-                impinging_signals.realization
-            )
+            self.__received_channel_realizations[
+                impinging_signals.transmitter
+            ] = impinging_signals.realization
 
         elif isinstance(impinging_signals, SimulatedDeviceOutput):
             mixed_signal = impinging_signals.mixed_signal
