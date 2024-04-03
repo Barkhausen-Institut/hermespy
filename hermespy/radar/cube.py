@@ -21,7 +21,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -184,7 +184,7 @@ class RadarCube(HDFSerializable):
     def plot_range(
         self,
         title: str | None = None,
-        axes: VAT | plt.Axes | None = None,
+        axes: VAT | None = None,
         scale: Literal["lin", "log"] = "lin",
     ) -> PlotVisualization:
         """Visualize the cube's range data.
@@ -209,7 +209,7 @@ class RadarCube(HDFSerializable):
                 figure.suptitle(title)
 
         else:
-            _axes = axes if isinstance(axes, np.ndarray) else np.array([[axes]])
+            _axes = axes
             figure = _axes[0, 0].get_figure()
 
         _axes[0, 0].set_xlabel("Range [m]")
