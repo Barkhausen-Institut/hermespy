@@ -1,5 +1,4 @@
-======================
-YAML Examples
+Configuration Examples
 ======================
 
 This chapter provides several configuration examples to the HermsPy command line interface.
