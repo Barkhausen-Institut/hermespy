@@ -30,7 +30,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -368,7 +368,7 @@ class PhysicalDevice(Device, ABC):
         """
 
         silent_signal = Signal(
-            np.zeros((self.antennas.num_transmit_antennas, num_samples)),
+            np.zeros((self.antennas.num_transmit_ports, num_samples)),
             self.sampling_rate,
             self.carrier_frequency,
         )
@@ -381,13 +381,15 @@ class PhysicalDevice(Device, ABC):
 
         return noise_power
 
-    def _upload(self, signal: Signal) -> None:
+    def _upload(self, signal: Signal) -> Signal:
         """Upload samples to be transmitted to the represented hardware.
 
         Args:
 
             signal (Signal):
                 The samples to be uploaded.
+
+        Returns: The actually uploaded samples, including quantization scaling.
         """
 
         # The default routine is a stub
@@ -416,8 +418,8 @@ class PhysicalDevice(Device, ABC):
             device_transmission = DeviceTransmission(operator_transmissions, mixed_signal)
 
         # Upload the samples
-        self._upload(device_transmission.mixed_signal)
-        self.__recent_upload = device_transmission.mixed_signal
+        uploaded_samples = self._upload(device_transmission.mixed_signal)
+        self.__recent_upload = uploaded_samples
 
         # Return transmission
         return device_transmission
@@ -464,7 +466,7 @@ class PhysicalDevice(Device, ABC):
             )
 
         # Upload signal to the device's memory
-        self._upload(signal)
+        uploaded_samples = self._upload(signal)
 
         # Trigger transmission / reception
         self.trigger()
@@ -477,7 +479,7 @@ class PhysicalDevice(Device, ABC):
             received_signal
             if not calibrate or self.leakage_calibration is None
             else self.leakage_calibration.remove_leakage(
-                signal, received_signal, self.delay_calibration.delay
+                uploaded_samples, received_signal, self.delay_calibration.delay
             )
         )
 
