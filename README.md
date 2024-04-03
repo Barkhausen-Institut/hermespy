@@ -6,18 +6,10 @@ multiple transmit and receive modems, which may operate at different carrier fre
 In addition to simulating individual transmission links, HermesPy allows the analysis of both co-channel and
 adjacent-channel interference among different communication systems.
 
-## Features
-
-The current release version 1.1.0 serves as a platform for joint development.
-Its main focus is to provide a software architecture that can be easily extended.
-Detailed core features as well as a release plan can be found in the
-[features](https://hermespy.org/features.html) list.
-
 ## Documentation
 
 For detailed [installation instructions](https://hermespy.org/installation.html),
-tutorials and a full API documentation, please consult the official
-[documentation](https://hermespy.org/index.html) website.
+tutorials and a full [API documentation](https://hermespy.org/api/api.html), please consult the official [documentation](https://hermespy.org/index.html) website.
 
 ## Contributors
 
@@ -28,4 +20,4 @@ tutorials and a full API documentation, please consult the official
 * [Egor Achkasov](https://github.com/egor-achkasov)
 
 ## Copyright
-Copyright (C) 2022 Barkhausen Institut gGmbH
+Copyright (C) 2023 Barkhausen Institut gGmbH
