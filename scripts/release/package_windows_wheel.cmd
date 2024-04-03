@@ -7,7 +7,10 @@
 python -m pip install --upgrade build
 
 :: Remove possibly deprecated build artifacts
-IF EXIST %~dp0\..\..\MANIFEST DEL /F %~dp0\..\..\MANIFEST
+IF EXIST %~dp0..\..\MANIFEST DEL /F %~dp0..\..\MANIFEST
+
+:: COPY manifest file to the root directory of the package
+COPY %~dp0\WHEEL_MANIFEST.in %~dp0\..\..\MANIFEST.in
 
 :: Query the number of a vailable CPU cores for parallel build and update the MAKEFLAGS environment variable
 for /F "delims=" %%A in ('wmic cpu get NumberOfCores /format:value ^| find "NumberOfCores"') do set %%A
