@@ -173,12 +173,12 @@ class SimulatedDrop(Drop):
                 )
 
                 # Place the channel realization into the channel realization matrix
-                channel_realizations[device_beta_idx, device_alpha_idx] = (
-                    DirectiveChannelRealization(alpha_device, beta_device, realization)
-                )
-                channel_realizations[device_alpha_idx, device_beta_idx] = (
-                    DirectiveChannelRealization(beta_device, alpha_device, realization)
-                )
+                channel_realizations[
+                    device_beta_idx, device_alpha_idx
+                ] = DirectiveChannelRealization(alpha_device, beta_device, realization)
+                channel_realizations[
+                    device_alpha_idx, device_beta_idx
+                ] = DirectiveChannelRealization(beta_device, alpha_device, realization)
 
         return SimulatedDrop(timestamp, transmissions, channel_realizations.tolist(), receptions)
 
@@ -542,7 +542,8 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         impinging_signals: Sequence[DeviceInput],
         cache: bool = True,
         trigger_realizations: Sequence[TriggerRealization] | None = None,
-    ) -> List[ProcessedSimulatedDeviceInput]: ...  # pragma: no cover
+    ) -> List[ProcessedSimulatedDeviceInput]:
+        ...  # pragma: no cover
 
     @overload
     def process_inputs(
@@ -550,7 +551,8 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         impinging_signals: Sequence[Signal],
         cache: bool = True,
         trigger_realizations: Sequence[TriggerRealization] | None = None,
-    ) -> List[ProcessedSimulatedDeviceInput]: ...  # pragma: no cover
+    ) -> List[ProcessedSimulatedDeviceInput]:
+        ...  # pragma: no cover
 
     @overload
     def process_inputs(
@@ -558,7 +560,8 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         impinging_signals: Sequence[Sequence[Signal]],
         cache: bool = True,
         trigger_realizations: Sequence[TriggerRealization] | None = None,
-    ) -> List[ProcessedSimulatedDeviceInput]: ...  # pragma: no cover
+    ) -> List[ProcessedSimulatedDeviceInput]:
+        ...  # pragma: no cover
 
     @overload
     def process_inputs(
@@ -566,7 +569,8 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         impinging_signals: Sequence[Sequence[ChannelPropagation]],
         cache: bool = True,
         trigger_realizations: Sequence[TriggerRealization] | None = None,
-    ) -> List[ProcessedSimulatedDeviceInput]: ...  # pragma: no cover
+    ) -> List[ProcessedSimulatedDeviceInput]:
+        ...  # pragma: no cover
 
     def process_inputs(
         self,
@@ -628,7 +632,8 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         impinging_signals: Sequence[DeviceInput],
         cache: bool = True,
         trigger_realizations: Sequence[TriggerRealization] | None = None,
-    ) -> Sequence[SimulatedDeviceReception]: ...  # pragma: no cover
+    ) -> Sequence[SimulatedDeviceReception]:
+        ...  # pragma: no cover
 
     @overload
     def receive_devices(
@@ -636,7 +641,8 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         impinging_signals: Sequence[Signal],
         cache: bool = True,
         trigger_realizations: Sequence[TriggerRealization] | None = None,
-    ) -> Sequence[SimulatedDeviceReception]: ...  # pragma: no cover
+    ) -> Sequence[SimulatedDeviceReception]:
+        ...  # pragma: no cover
 
     @overload
     def receive_devices(
@@ -644,7 +650,8 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         impinging_signals: Sequence[Sequence[Signal]],
         cache: bool = True,
         trigger_realizations: Sequence[TriggerRealization] | None = None,
-    ) -> Sequence[SimulatedDeviceReception]: ...  # pragma: no cover
+    ) -> Sequence[SimulatedDeviceReception]:
+        ...  # pragma: no cover
 
     @overload
     def receive_devices(
@@ -652,7 +659,8 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         impinging_signals: Sequence[Sequence[ChannelPropagation]],
         cache: bool = True,
         trigger_realizations: Sequence[TriggerRealization] | None = None,
-    ) -> Sequence[SimulatedDeviceReception]: ...  # pragma: no cover
+    ) -> Sequence[SimulatedDeviceReception]:
+        ...  # pragma: no cover
 
     def receive_devices(
         self,

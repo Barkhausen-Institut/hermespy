@@ -184,7 +184,7 @@ class RadarCube(HDFSerializable):
     def plot_range(
         self,
         title: str | None = None,
-        axes: VAT | None = None,
+        axes: VAT | plt.Axes | None = None,
         scale: Literal["lin", "log"] = "lin",
     ) -> PlotVisualization:
         """Visualize the cube's range data.
@@ -209,7 +209,7 @@ class RadarCube(HDFSerializable):
                 figure.suptitle(title)
 
         else:
-            _axes = axes
+            _axes = axes if isinstance(axes, np.ndarray) else np.array([[axes]])
             figure = _axes[0, 0].get_figure()
 
         _axes[0, 0].set_xlabel("Range [m]")

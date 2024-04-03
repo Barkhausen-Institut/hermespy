@@ -571,19 +571,18 @@ class Transformable(Serializable, TransformableLink):
         return np.linalg.inv(self.forwards_transformation).view(Transformation)
 
     @overload
-    def to_local_coordinates(
-        self, global_object: Transformable
-    ) -> Transformation: ...  # pragma no cover
+    def to_local_coordinates(self, global_object: Transformable) -> Transformation:
+        ...  # pragma no cover
 
     @overload
-    def to_local_coordinates(
-        self, global_object: Transformation
-    ) -> Transformation: ...  # pragma no cover
+    def to_local_coordinates(self, global_object: Transformation) -> Transformation:
+        ...  # pragma no cover
 
     @overload
     def to_local_coordinates(
         self, position: np.ndarray, orientation: np.ndarray | None = None
-    ) -> Transformation: ...  # pragma no cover
+    ) -> Transformation:
+        ...  # pragma no cover
 
     def to_local_coordinates(self, arg_0: Transformable | Transformation | np.ndarray, arg_1: np.ndarray | None = None) -> Transformation:  # type: ignore
         if isinstance(arg_0, Transformable):

@@ -10,11 +10,21 @@ from abc import ABC
 from typing import Generic, Literal, Tuple
 
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import numpy as np
 
-from hermespy.core import Evaluator, Signal, VAT, VT, PlotVisualization, ScatterVisualization
+from hermespy.core import (
+    Evaluator,
+    Signal,
+    VAT,
+    VT,
+    PlotVisualization,
+    ScatterVisualization,
+    ValueType,
+)
 from hermespy.modem import ReceivingModem
 from hermespy.radar import Radar, RadarCube
+from hermespy.tools import lin2db
 from .hardware_loop import HardwareLoopPlot, HardwareLoopSample
 from .physical_device import PhysicalDevice
 
@@ -309,6 +319,7 @@ class RadarRangePlot(HardwareLoopPlot[PlotVisualization]):
     """Plot of a radar's range-power profile.""" ""
 
     __radar: Radar
+    __scale: Literal["log", "line"]
 
     def __init__(self, radar: Radar, title: str | None = None) -> None:
         """
@@ -407,16 +418,22 @@ class ArtifactPlot(HardwareLoopEvaluatorPlot[PlotVisualization]):
     """Plot of an evaluation's scalar artifact."""
 
     __artifact_queue: np.ndarray
+    __y_axis_limits: Tuple[float, float] | None
 
     def __init__(
-        self, evaluator: Evaluator, title: str | None = None, queue_length: int = 20
+        self,
+        evaluator: Evaluator,
+        title: str | None = None,
+        queue_length: int = 20,
+        y_axis_limits: Tuple[float, float] | None = None,
     ) -> None:
         # Initialize base class
         HardwareLoopEvaluatorPlot.__init__(self, evaluator, title)
 
         # Initialize class attributes
-        self.__artifact_queue = np.nan * np.ones((queue_length, 1), dtype=float)
+        self.__artifact_queue = np.nan * np.ones(queue_length, dtype=float)
         self.__artifact_indices = np.arange(queue_length)
+        self.__y_axis_limits = y_axis_limits
 
     def _prepare_plot(self) -> Tuple[plt.Figure, VAT]:
         figure, axes = HardwareLoopEvaluatorPlot._prepare_plot(self)
@@ -424,6 +441,13 @@ class ArtifactPlot(HardwareLoopEvaluatorPlot[PlotVisualization]):
         ax: plt.Axes = axes.flat[0]
         ax.set_xlabel("Drop Index")
         ax.set_ylabel(self.evaluator.abbreviation)
+        ax.set_xlim(0, self.__artifact_queue.size - 1)
+
+        if self.__y_axis_limits:
+            ax.set_ylim(self.__y_axis_limits)
+
+        if self.evaluator.tick_format is ValueType.DB:
+            ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"{lin2db(x):.2g}dB"))
 
         return figure, axes
 
@@ -447,9 +471,13 @@ class ArtifactPlot(HardwareLoopEvaluatorPlot[PlotVisualization]):
         self.__update_artifact_queue(sample)
 
         # Plot artifact queue
+        ax: plt.Axes = axes.flat[0]
         lines = np.empty_like(axes, dtype=np.object_)
-        lines[0, 0] = axes[0, 0].plot(self.__artifact_indices, self.__artifact_queue)
-
+        lines[0, 0] = ax.plot(self.__artifact_indices, self.__artifact_queue)
+        # try:
+        #    ax.set_yscale(self.evaluator.plot_scale)
+        # except Exception:
+        #    pass
         return PlotVisualization(axes[0, 0].get_figure(), axes, lines)
 
     def _update_plot(self, sample: HardwareLoopSample, visualization: PlotVisualization) -> None:

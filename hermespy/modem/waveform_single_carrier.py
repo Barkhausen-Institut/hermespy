@@ -272,9 +272,9 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
         placed_symbols[self.num_preamble_symbols + self._pilot_symbol_indices] = pilot_symbols[
             self.num_preamble_symbols : self.num_preamble_symbols + self._num_pilot_symbols
         ]
-        placed_symbols[self.num_preamble_symbols + self._data_symbol_indices] = (
-            data_symbols.raw.flatten()
-        )
+        placed_symbols[
+            self.num_preamble_symbols + self._data_symbol_indices
+        ] = data_symbols.raw.flatten()
 
         return Symbols(placed_symbols[np.newaxis, :, np.newaxis])
 
@@ -1022,7 +1022,9 @@ class FMCWWaveform(FilteredSingleCarrierWaveform, Serializable):
 
     def _transmit_filter(self) -> np.ndarray:
         time = np.linspace(0, 1 / self.symbol_rate, self.oversampling_factor)
-        impulse_response = np.exp(1j * np.pi * (self.bandwidth * time + self.chirp_slope * time**2))
+        impulse_response = np.exp(
+            1j * np.pi * (self.bandwidth * time + self.chirp_slope * time**2)
+        )
         # Cut off the chirp appropriately
         impulse_response[time > self.__true_chirp_duration] = 0.0
 

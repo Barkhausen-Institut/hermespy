@@ -393,13 +393,15 @@ class LogarithmicSequence(np.ndarray):
 @overload
 def dB(
     *values: Sequence[Union[int, float]], conversion: DbConversionType = DbConversionType.POWER
-) -> LogarithmicSequence: ...  # pragma no cover
+) -> LogarithmicSequence:
+    ...  # pragma no cover
 
 
 @overload
 def dB(
     *values: Union[int, float], conversion: DbConversionType = DbConversionType.POWER
-) -> Union[Logarithmic, LogarithmicSequence]: ...  # pragma no cover
+) -> Union[Logarithmic, LogarithmicSequence]:
+    ...  # pragma no cover
 
 
 def dB(
