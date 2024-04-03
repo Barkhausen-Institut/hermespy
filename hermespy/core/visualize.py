@@ -10,7 +10,6 @@ from abc import ABC, abstractmethod
 from typing import Any, Generic, Sequence, Tuple, TypeVar
 
 import matplotlib.pyplot as plt
-import numpy as np
 from matplotlib.container import StemContainer
 from matplotlib.collections import PathCollection
 from matplotlib.image import AxesImage
@@ -22,7 +21,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -226,10 +225,7 @@ class Visualizable(Generic[VT], ABC):
 
     @property
     def title(self) -> str:
-        """Title of the visualizable.
-
-        Returns: Title string.
-        """
+        """Title of the visualizable."""
 
         return self.__class__.__name__
 
@@ -282,12 +278,12 @@ class Visualizable(Generic[VT], ABC):
         """
         ...  # pragma: no cover
 
-    def visualize(self, axes: VAT | plt.Axes | None = None, *, title: str | None = None, **kwargs) -> VT:
+    def visualize(self, axes: VAT | None = None, *, title: str | None = None, **kwargs) -> VT:
         """Generate a visual representation of this object using Matplotlib.
 
         Args:
 
-            axes (VAT | plt.Axes, optional):
+            axes (VAT, optional):
                 The Matplotlib axes object into which the information should be plotted.
                 If not specified, the routine will generate and return a new figure.
 
@@ -301,8 +297,8 @@ class Visualizable(Generic[VT], ABC):
         # Prepare the figure and axes for plotting
         with Executable.style_context():
             if axes is not None:
-                _axes: VAT = axes if isinstance(axes, np.ndarray) else np.array([[axes]])
-                figure = _axes.flat[0].get_figure()
+                _axes = axes
+                figure = axes.flat[0].get_figure()
 
             else:
                 figure, _axes = self.create_figure(**kwargs) if axes is None else (None, axes)
