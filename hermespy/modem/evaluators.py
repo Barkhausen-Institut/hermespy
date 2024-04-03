@@ -516,7 +516,6 @@ class EVMArtifact(ArtifactTemplate[float]):
 
 
 class EVMEvaluation(EvaluationTemplate[float, PlotVisualization]):
-
     __transmitted_symbols: np.ndarray
     __received_symbols: np.ndarray
     __evm: float

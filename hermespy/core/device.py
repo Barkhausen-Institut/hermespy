@@ -1245,10 +1245,12 @@ class OperatorSlot(Generic[OperatorType], Sequence[OperatorType]):
         return ceil(frame_duration * sampling_rate)
 
     @overload
-    def __getitem__(self, item: int) -> OperatorType: ...  # pragma:  no cover
+    def __getitem__(self, item: int) -> OperatorType:
+        ...  # pragma:  no cover
 
     @overload
-    def __getitem__(self, item: slice) -> Sequence[OperatorType]: ...  # pragma: no cover
+    def __getitem__(self, item: slice) -> Sequence[OperatorType]:
+        ...  # pragma: no cover
 
     def __getitem__(self, item: int | slice) -> OperatorType | Sequence[OperatorType]:
         return self.__operators[item]

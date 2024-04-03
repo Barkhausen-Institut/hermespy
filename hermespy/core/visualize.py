@@ -10,6 +10,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Generic, Sequence, Tuple, TypeVar
 
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.container import StemContainer
 from matplotlib.collections import PathCollection
 from matplotlib.image import AxesImage
@@ -225,7 +226,10 @@ class Visualizable(Generic[VT], ABC):
 
     @property
     def title(self) -> str:
-        """Title of the visualizable."""
+        """Title of the visualizable.
+
+        Returns: Title string.
+        """
 
         return self.__class__.__name__
 
@@ -278,12 +282,14 @@ class Visualizable(Generic[VT], ABC):
         """
         ...  # pragma: no cover
 
-    def visualize(self, axes: VAT | None = None, *, title: str | None = None, **kwargs) -> VT:
+    def visualize(
+        self, axes: VAT | plt.Axes | None = None, *, title: str | None = None, **kwargs
+    ) -> VT:
         """Generate a visual representation of this object using Matplotlib.
 
         Args:
 
-            axes (VAT, optional):
+            axes (VAT | plt.Axes, optional):
                 The Matplotlib axes object into which the information should be plotted.
                 If not specified, the routine will generate and return a new figure.
 
@@ -297,8 +303,8 @@ class Visualizable(Generic[VT], ABC):
         # Prepare the figure and axes for plotting
         with Executable.style_context():
             if axes is not None:
-                _axes = axes
-                figure = axes.flat[0].get_figure()
+                _axes: VAT = axes if isinstance(axes, np.ndarray) else np.array([[axes]])
+                figure = _axes.flat[0].get_figure()
 
             else:
                 figure, _axes = self.create_figure(**kwargs) if axes is None else (None, axes)

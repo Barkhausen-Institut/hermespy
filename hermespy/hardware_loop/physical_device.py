@@ -368,7 +368,7 @@ class PhysicalDevice(Device, ABC):
         """
 
         silent_signal = Signal(
-            np.zeros((self.antennas.num_transmit_antennas, num_samples)),
+            np.zeros((self.antennas.num_transmit_ports, num_samples)),
             self.sampling_rate,
             self.carrier_frequency,
         )
@@ -381,17 +381,19 @@ class PhysicalDevice(Device, ABC):
 
         return noise_power
 
-    def _upload(self, signal: Signal) -> None:
+    def _upload(self, signal: Signal) -> Signal:
         """Upload samples to be transmitted to the represented hardware.
 
         Args:
 
             signal (Signal):
                 The samples to be uploaded.
+
+        Returns: The actually uploaded samples, including quantization scaling.
         """
 
         # The default routine is a stub
-        return  # pragma no cover
+        return signal
 
     def transmit(self, clear_cache: bool = True) -> DeviceTransmission:
         # If adaptive sampling is disabled, resort to the default transmission routine
@@ -416,8 +418,8 @@ class PhysicalDevice(Device, ABC):
             device_transmission = DeviceTransmission(operator_transmissions, mixed_signal)
 
         # Upload the samples
-        self._upload(device_transmission.mixed_signal)
-        self.__recent_upload = device_transmission.mixed_signal
+        uploaded_samples = self._upload(device_transmission.mixed_signal)
+        self.__recent_upload = uploaded_samples
 
         # Return transmission
         return device_transmission
@@ -464,7 +466,7 @@ class PhysicalDevice(Device, ABC):
             )
 
         # Upload signal to the device's memory
-        self._upload(signal)
+        uploaded_samples = self._upload(signal)
 
         # Trigger transmission / reception
         self.trigger()
@@ -477,7 +479,7 @@ class PhysicalDevice(Device, ABC):
             received_signal
             if not calibrate or self.leakage_calibration is None
             else self.leakage_calibration.remove_leakage(
-                signal, received_signal, self.delay_calibration.delay
+                uploaded_samples, received_signal, self.delay_calibration.delay
             )
         )
 
@@ -572,9 +574,8 @@ class Calibration(ABC, HDFSerializable, Serializable):
 
     @classmethod
     @abstractmethod
-    def _configure_slot(
-        cls: Type[CT], device: PhysicalDevice, value: CT | None
-    ) -> None: ...  # pragma: no cover
+    def _configure_slot(cls: Type[CT], device: PhysicalDevice, value: CT | None) -> None:
+        ...  # pragma: no cover
 
     @property
     def device(self) -> PhysicalDevice | None:

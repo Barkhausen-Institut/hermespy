@@ -309,7 +309,6 @@ class RadarBase(Generic[RTT, RRT], DuplexOperator[RTT, RRT]):
     __detector: RadarDetector | None
 
     def __init__(self, *args, **kwargs) -> None:
-
         # Initialize base class
         DuplexOperator.__init__(self, *args, **kwargs)
 

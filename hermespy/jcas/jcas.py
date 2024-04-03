@@ -15,7 +15,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "Jan Adler"
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -110,10 +110,12 @@ class DuplexJCASOperator(
         return self.waveform.frame_duration
 
     @abstractmethod
-    def _transmit(self, duration: float = -1.0) -> JCASTransmission: ...  # pragma: no cover
+    def _transmit(self, duration: float = -1.0) -> JCASTransmission:
+        ...  # pragma: no cover
 
     @abstractmethod
-    def _receive(self, signal: Signal) -> JCASReception: ...  # pragma: no cover
+    def _receive(self, signal: Signal) -> JCASReception:
+        ...  # pragma: no cover
 
     def _recall_transmission(self, group: Group) -> JCASTransmission:
         return JCASTransmission.from_HDF(group)
