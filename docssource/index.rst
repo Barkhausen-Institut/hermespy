@@ -49,6 +49,7 @@ or directly contact the current `maintainer`_.
 
 .. footbibliography::
 
+
 .. _GitHub: https://github.com/Barkhausen-Institut/hermespy
 .. _GitHub pull requests: https://github.com/Barkhausen-Institut/hermespy/pulls
 .. _GitHub issue: https://github.com/Barkhausen-Institut/hermespy/issues

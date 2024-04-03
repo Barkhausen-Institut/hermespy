@@ -862,7 +862,6 @@ class HardwareLoop(
                         elif self.console_mode != ConsoleMode.SILENT:
                             self.console.log(result_str)
 
-                    # Update plots
                     if self.plot_information:
                         for thread in plot_threads:
                             thread.update_plot(loop_sample)
