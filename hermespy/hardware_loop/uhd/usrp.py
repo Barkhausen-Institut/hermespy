@@ -105,8 +105,10 @@ class UsrpDevice(PhysicalDevice, Serializable):
     __sampling_rate: float | None
     __num_prepended_zeros: int
     __num_appended_zeros: int
-    __num_transmit_ports: int
-    __num_receive_ports: int
+    __selected_transmit_ports: Sequence[int]
+    __selected_receive_ports: Sequence[int]
+    __max_selected_receive_port: int
+    __max_selected_transmit_port: int
 
     def __init__(
         self,
@@ -119,8 +121,8 @@ class UsrpDevice(PhysicalDevice, Serializable):
         scale_transmission: bool = True,
         num_prepended_zeros: int = 200,
         num_appended_zeros: int = 200,
-        num_transmit_ports: int = 1,
-        num_receive_ports: int = 1,
+        selected_transmit_ports: Sequence[int] | None = None,
+        selected_receive_ports: Sequence[int] | None = None,
         **kwargs,
     ) -> None:
         """
@@ -160,13 +162,13 @@ class UsrpDevice(PhysicalDevice, Serializable):
                 The number of zeros appended to the transmission signal.
                 :math:`200` by default.
 
-            num_transmit_ports (int, optional):
-                Number of transmit antenna ports controlled at the USRP.
-                :math:`1` by default.
+            selected_transmit_ports (Sequence[int], optional):
+                Indices of the selected transmit antenna ports.
+                If not specified, i.e. :py:obj:`None`, only the first antenna port is selected.
 
-            num_receive_ports (int, optional):
-                Number of receive antenna ports controlled at the USRP.
-                :math:`1` by default.
+            selected_receive_ports (Sequence[int], optional):
+                Indices of the selected receive antenna ports.
+                If not specified, i.e. :py:obj:`None`, only the first antenna port is selected.
 
             \**kwargs:
                 Additional arguments passed to the :class:`.PhysicalDevice` parent class.
@@ -177,8 +179,24 @@ class UsrpDevice(PhysicalDevice, Serializable):
 
         # Initialize attributes and configure RF frontend
         self.__usrp_client = UsrpClient.create(ip, port)
-        self.__num_transmit_ports = num_transmit_ports
-        self.__num_receive_ports = num_receive_ports
+
+        # Query the available number of antennas ports
+        max_num_ports = self.__usrp_client.getNumAntennas()
+
+        self.__selected_transmit_ports = selected_transmit_ports or [0] if max_num_ports > 0 else []
+        self.__max_selected_transmit_port = max(self.__selected_transmit_ports)
+        if 1 + self.__max_selected_transmit_port > max_num_ports:
+            raise ValueError(
+                f"Selected transmit ports exceed the maximum number of ports ({1 + self.__max_selected_transmit_port} > {max_num_ports})"
+            )
+
+        self.__selected_receive_ports = selected_receive_ports or [0] if max_num_ports > 0 else []
+        self.__max_selected_receive_port = max(self.__selected_receive_ports)
+        if 1 + self.__max_selected_receive_port > max_num_ports:
+            raise ValueError(
+                f"Selected receive ports exceed the maximum number of ports ({1 + self.__max_selected_receive_port} > {max_num_ports})"
+            )
+
         self.__antennas = UsrpAntennas(self)
         self.carrier_frequency = carrier_frequency
         self.tx_gain = tx_gain
@@ -235,8 +253,8 @@ class UsrpDevice(PhysicalDevice, Serializable):
                     rx_carrier_frequency != self.__current_configuration.rxCarrierFrequency,
                     tx_gain != self.__current_configuration.txGain,
                     rx_gain != self.__current_configuration.rxGain,
-                    self.num_transmit_ports != self.__current_configuration.noTxAntennas,
-                    self.num_receive_ports != self.__current_configuration.noRxAntennas,
+                    1 + self.__max_selected_transmit_port != self.__current_configuration.noTxAntennas,
+                    1 + self.__max_selected_receive_port != self.__current_configuration.noRxAntennas,
                 ]
             )
             or force
@@ -250,14 +268,14 @@ class UsrpDevice(PhysicalDevice, Serializable):
                 rxCarrierFrequency=rx_carrier_frequency,
                 txGain=tx_gain,
                 rxGain=rx_gain,
-                noTxAntennas=self.num_transmit_ports,
-                noRxAntennas=self.num_receive_ports,
+                noTxAntennas=1 + self.__max_selected_transmit_port,
+                noRxAntennas=1 + self.__max_selected_receive_port,
             )
 
             self.__rpc_call_wrapper(self.__usrp_client.configureRfConfig, config)
             self.__current_configuration = config
 
-    def _upload(self, baseband_signal: Signal) -> None:
+    def _upload(self, baseband_signal: Signal) -> Signal:
         baseband_signal = baseband_signal.copy()
 
         # Configure device
@@ -271,6 +289,8 @@ class UsrpDevice(PhysicalDevice, Serializable):
             maxAmp = np.abs(baseband_signal.samples).max()
             if maxAmp != 0:
                 baseband_signal.samples /= maxAmp
+
+        uploaded_samples = baseband_signal.copy()
 
         # Hack: Prepend some zeros to account for the premature transmission stop
         baseband_signal.samples = np.concatenate(
@@ -294,8 +314,14 @@ class UsrpDevice(PhysicalDevice, Serializable):
                 axis=1,
             )
 
-        mimo_signal = MimoSignal(list(baseband_signal.samples))
-        tx_config = TxStreamingConfig(max(0.0, -self.delay_calibration.delay), mimo_signal)
+        # Append a zero vector for unselected transmit ports
+        # Workaround for the USRP wrapper missing dedicated port selections
+        signal_list: List[np.ndarray] = [s for s in baseband_signal.samples]
+        for i in range(self.__max_selected_transmit_port + 1):
+            if i not in self.__selected_transmit_ports:
+                signal_list.insert(i, np.zeros(baseband_signal.num_samples, dtype=np.complex_))
+
+        tx_config = TxStreamingConfig(max(0.0, -self.delay_calibration.delay), MimoSignal(signal_list))
         self.__rpc_call_wrapper(self.__usrp_client.configureTx, tx_config)
 
         # Configure reception
@@ -327,6 +353,8 @@ class UsrpDevice(PhysicalDevice, Serializable):
 
             self.__collection_enabled = True
 
+        return uploaded_samples
+
     def trigger(self) -> None:
         # Queue execution command
         self.__usrp_client.executeImmediately()
@@ -334,7 +362,7 @@ class UsrpDevice(PhysicalDevice, Serializable):
     def _download(self) -> Signal:
         # Abort if no samples are to be expcted during collection
         if not self.__collection_enabled:
-            return Signal.empty(self.sampling_rate, self.antennas.num_receive_ports)
+            return Signal.empty(self.sampling_rate, self.num_receive_ports)
 
         mimo_signals = self.__usrp_client.collect()
         signal_model = Signal.empty(
@@ -342,14 +370,13 @@ class UsrpDevice(PhysicalDevice, Serializable):
         )
 
         for mimo_signal in mimo_signals:
-            streams = np.array(mimo_signal.signals)
+            streams = np.array([mimo_signal.signals[i] for i in self.__selected_receive_ports])
             signal_model.samples = np.append(signal_model.samples, streams, axis=1)
 
         # Remove the zero padding hack
         signal_model.samples = signal_model.samples[
             :, self.num_prepeneded_zeros : signal_model.num_samples - self.num_appended_zeros
         ]
-
         return signal_model
 
     @property
@@ -407,13 +434,25 @@ class UsrpDevice(PhysicalDevice, Serializable):
     def num_transmit_ports(self) -> int:
         """Number of transmit ports controlled on the USRP device."""
 
-        return self.__num_transmit_ports
+        return len(self.__selected_transmit_ports)
 
     @property
     def num_receive_ports(self) -> int:
         """Number of receive ports controlled on the USRP device."""
 
-        return self.__num_receive_ports
+        return len(self.__selected_receive_ports)
+
+    @property
+    def selected_transmit_ports(self) -> Sequence[int]:
+        """Indices of the selected transmit ports."""
+
+        return self.__selected_transmit_ports
+
+    @property
+    def selected_receive_ports(self) -> Sequence[int]:
+        """Indices of the selected receive ports."""
+
+        return self.__selected_receive_ports
 
     @property
     def antennas(self) -> UsrpAntennas:

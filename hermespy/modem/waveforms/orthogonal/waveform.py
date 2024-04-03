@@ -145,7 +145,7 @@ class GridResource(Serializable):
     @prefix_ratio.setter
     def prefix_ratio(self, ratio: float) -> None:
         if ratio < 0.0 or ratio > 1.0:
-            raise ValueError("Cyclic prefix ratio must be between zero and one")
+            raise ValueError(f"Cyclic prefix ratio must be between zero and one, not {ratio}")
 
         self.__prefix_ratio = ratio
 
