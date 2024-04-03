@@ -5,7 +5,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.1.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -48,24 +48,24 @@ setup(
     include_package_data=True,
     extras_require={
         "test": [
-            'pytest>=7.4.3',
-            'coverage>=7.3.3',
+            'pytest>=7.4.2',
+            'coverage>=7.3.2',
             'mypy>=1.3.0,<1.7.0',
-            'nbformat>=5.9.2',
-            'nbconvert>=7.12.0'
+            'nbformat',
+            'nbconvert'
         ],
         "quadriga": ["oct2py>=5.6.0"],
         "documentation": [
-            'sphinx>=7.2.6',
+            'sphinx>=7.0.1',
             'furo>=2023.9.10',
-            'sphinx-autodoc-typehints>=1.25.2',
+            'sphinx-autodoc-typehints>=1.23.0',
             'sphinxcontrib-apidoc>=0.4.0',
             'sphinxcontrib-mermaid>=0.9.2',
-            'sphinxcontrib-bibtex',  # Unspecified version required to resolve docutils version conflict
-            'sphinx-tabs>=3.4.4',
+            'sphinxcontrib-bibtex>=2.5.0',
+            'sphinx-tabs>=3.4.1',
             'sphinx-copybutton>=0.5.2',
             'sphinx-carousel>=1.2.0',
-            'nbsphinx>=0.9.3',
+            'nbsphinx>=0.9.2',
             'ipywidgets>=8.1.1'
         ],
         "uhd": ['usrp-uhd-client>=1.5.0'],
@@ -78,7 +78,7 @@ setup(
             "black>=23.9.1",
             "flake8>=6.0.0",
             'coverage>=7.2.7',
-            'mypy>=1.3.0,<1.7.0',
+            'mypy>=1.3.0',
         ]
     },
     zip_safe=False,
@@ -87,16 +87,17 @@ setup(
         'console_scripts': ['hermes=hermespy.bin:hermes_simulation'],
     },
     install_requires=[
-        "numpy>=1.26.2",
-        "matplotlib>=3.8.2",
-        'h5py>=3.10.0',
-        'scipy>=1.11.4',
-        'pybind11>=2.11.1',
-        'ray>=2.8.1',
-        'ruamel.yaml>=0.18.5',
+        "numpy>=1.25.2",
+        "matplotlib>=3.8.0",
+        'h5py>=3.8.0',
+        'scipy>=1.1.3',
+        'pybind11>=2.10.4',
+        'ray>=2.7.0',
+        'ruamel.yaml>=0.17.32',
         'sparse>=0.14.0',
-        'numba>=0.58.1',
+        'numba>=0.58.0',
         'nptyping>=2.5.0',
-        'rich>=13.7.0'
+        'rich>=13.6.0',
+        'ZODB~=5.8.0',
     ],
 )
