@@ -1586,6 +1586,35 @@ class SamplePoint(object):
         return self.__value.__class__.__name__
 
 
+class ScalarDimension(ABC):
+    """Base class for objects that can be configured by scalar values.
+
+    When a property of type :class:`ScalarDimension` is defined as a simulation parameter :class:`GridDimension`,
+    the simulation will automatically configure the object with the scalar value of the sample point
+    during simulation runtime.
+
+    The configuration operation is represented by the lshift operator `<<`.
+    """
+
+    @abstractmethod
+    def __lshift__(self, scalar: float) -> None:
+        """Configure the object with a scalar value.
+
+        Args:
+            scalar (float): Scalar value to configure the object with.
+        """
+        ...  # pragma: no cover
+
+    @property
+    @abstractmethod
+    def title(self) -> str:
+        """Title of the scalar dimension.
+
+        Displayed in plots and tables during simulation runtime.
+        """
+        ...  # pragma: no cover
+
+
 class GridDimension(object):
     """Single axis within the simulation grid.
 
@@ -1687,11 +1716,13 @@ class GridDimension(object):
         for considered_object in _considered_objects:
             # Make sure the dimension exists
             try:
-                dimension_object = reduce(
+                dimension_mother_object = reduce(
                     lambda obj, attr: getattr(obj, attr), object_path, considered_object
                 )
-                dimension_class = type(dimension_object)
-                dimension_property: RegisteredDimension = getattr(dimension_class, property_name)
+                dimension_registration: RegisteredDimension = getattr(
+                    type(dimension_mother_object), property_name
+                )
+                dimension_value = getattr(dimension_mother_object, property_name)
 
             except AttributeError:
                 raise ValueError(
@@ -1702,9 +1733,9 @@ class GridDimension(object):
                 raise ValueError("A simulation grid dimension must have at least one sample point")
 
             # Update impacts if the dimension is registered as a PyMonte simulation dimension
-            if RegisteredDimension.is_registered(dimension_property):
-                first_impact = dimension_property.first_impact
-                last_impact = dimension_property.last_impact
+            if RegisteredDimension.is_registered(dimension_registration):
+                first_impact = dimension_registration.first_impact
+                last_impact = dimension_registration.last_impact
 
                 if self.__first_impact and first_impact != self.__first_impact:
                     raise ValueError(
@@ -1720,11 +1751,24 @@ class GridDimension(object):
                 self.__last_impact = last_impact
 
                 # Updated the depicted title if the dimension offers an option and it wasn't exactly specified
-                if title is None and dimension_property.title is not None:
-                    self.__title = dimension_property.title
+                if title is None and dimension_registration.title is not None:
+                    self.__title = dimension_registration.title
 
             self.__considered_objects += (considered_object,)
-            self.__setter_lambdas += (self.__create_setter_lambda(considered_object, dimension),)
+
+            # If the dimension value is a scalar dimension, we can directly use the lshift operator to configure
+            # the object with the sample point values, given that the sample points are scalars as well
+            if isinstance(dimension_value, ScalarDimension) and np.all(
+                np.vectorize(np.isscalar)(sample_points)
+            ):
+                self.__setter_lambdas += (dimension_value.__lshift__,)
+                self.__title = dimension_value.title
+
+            # Otherwise, the dimension value is a regular attribute and we need to create a setter lambda
+            else:
+                self.__setter_lambdas += (
+                    self.__create_setter_lambda(considered_object, dimension),
+                )
 
     @property
     def considered_objects(self) -> Tuple[Any, ...]:
@@ -2016,8 +2060,6 @@ class MonteCarlo(Generic[MO]):
     __console_mode: ConsoleMode
     # Number of samples per section block
     __section_block_size: int | None
-    # Cache simulation results in a database during runtime
-    __database_caching: bool
     # Number of CPUs reserved for a single actor
     __cpus_per_actor: int
     runtime_env: bool

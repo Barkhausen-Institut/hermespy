@@ -25,7 +25,7 @@ class TestOFDMRadar(TestCase):
     def setUp(self) -> None:
         self.device = SimulatedDevice()
         self.radar = OFDMRadar(self.device)
-        
+
         resources = [GridResource(64, prefix_ratio=.1, elements=[GridElement(ElementType.DATA, 15), GridElement(ElementType.REFERENCE, 1)])]
         structure = [SymbolSection(11, [0])]
         self.radar.waveform = OFDMWaveform(grid_resources=resources, grid_structure=structure)

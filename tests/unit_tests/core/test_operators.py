@@ -8,7 +8,7 @@ import numpy as np
 from h5py import File
 from numpy.testing import assert_array_equal
 
-from hermespy.core import Signal, SNRType, StaticOperator, SilentTransmitter, SignalTransmitter, SignalReceiver
+from hermespy.core import Signal, StaticOperator, SilentTransmitter, SignalTransmitter, SignalReceiver
 from hermespy.simulation import SimulatedDevice
 
 __author__ = "Jan Adler"
@@ -61,6 +61,11 @@ class TestSilentTransmitter(TestCase):
         self.transmitter = SilentTransmitter(self.num_samples, self.sampling_rate)
         self.device.transmitters.add(self.transmitter)
 
+    def test_power(self) -> None:
+        """Power should be zero"""
+
+        self.assertEqual(0.0, self.transmitter.power)
+
     def test_transmit(self) -> None:
         """Silent transmission should generate a silent signal"""
 
@@ -82,6 +87,11 @@ class TestSignalTransmitter(TestCase):
         self.signal = Signal(np.ones((1, 10)), sampling_rate=self.device.sampling_rate, carrier_frequency=self.device.carrier_frequency)
         self.transmitter = SignalTransmitter(self.signal)
         self.device.transmitters.add(self.transmitter)
+
+    def test_power(self) -> None:
+        """Power should be one"""
+
+        self.assertEqual(1.0, self.transmitter.power)
 
     def test_signal_setget(self) -> None:
         """Signal property getter should return setter argument"""
@@ -135,6 +145,11 @@ class TestSignalReceiver(TestCase):
 
         self.assertEqual(123.4, self.receiver.energy)
 
+    def test_power(self) -> None:
+        """Reported power should be the expected power"""
+
+        self.assertEqual(self.expected_power, self.receiver.power)
+
     def test_receive(self) -> None:
         """Receiver should receive a signal"""
 
@@ -144,18 +159,3 @@ class TestSignalReceiver(TestCase):
         received_signal = self.receiver.receive().signal
 
         assert_array_equal(received_signal.samples, power_signal.samples)
-
-    def test_noise_power_validation(self) -> None:
-        """Noise power routine should raise ValueError on invalid noise types"""
-
-        with self.assertRaises(ValueError):
-            self.receiver.noise_power(1, "invalid")
-
-    def test_noise_power(self) -> None:
-        """Noise power routine should compute the correct noise power"""
-
-        noise_power = self.receiver.noise_power(1, SNRType.PN0)
-        self.assertEqual(self.expected_power, noise_power)
-
-        noise_energy = self.receiver.noise_power(1, SNRType.EN0)
-        self.assertEqual(self.expected_power * self.num_samples, noise_energy)

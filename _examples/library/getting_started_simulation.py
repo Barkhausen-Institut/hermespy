@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 
 from hermespy.core import dB
 from hermespy.channel import MultipathFading5GTDL
-from hermespy.simulation import Simulation
+from hermespy.simulation import Simulation, SNR
 from hermespy.modem import BitErrorEvaluator, SimplexLink, RootRaisedCosineWaveform, SingleCarrierLeastSquaresChannelEstimation, SingleCarrierZeroForcingChannelEqualization
 
 # Create a new simulation
@@ -11,6 +11,10 @@ simulation = Simulation()
 # Add two dedicated devices to the simulation
 tx_device = simulation.new_device()
 rx_device = simulation.new_device()
+
+# Specify the hardware noise model
+tx_device.noise_level = SNR(dB(20), tx_device)
+rx_device.noise_level = SNR(dB(20), tx_device)
 
 # Specifiy the channel instance linking the two devices
 simulation.set_channel(tx_device, rx_device, MultipathFading5GTDL())
@@ -43,7 +47,7 @@ ber = BitErrorEvaluator(link, link)
 ber.evaluate().visualize()
 
 # Iterate over the receiving device's SNR and estimate the respective bit error rates
-simulation.new_dimension('snr', dB(20, 16, 12, 8, 4, 0), rx_device)
+simulation.new_dimension('noise_level', dB(20, 16, 12, 8, 4, 0), rx_device)
 simulation.add_evaluator(ber)
 
 result = simulation.run()

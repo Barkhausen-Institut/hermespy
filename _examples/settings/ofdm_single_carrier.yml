@@ -47,7 +47,7 @@ Operators:
       - !<SingleCarrier>       # Spatial Multiplexing
 
     # Configuration of the waveform emitted by this transmitter
-    waveform: !<OFDM>
+    waveform: &ofdm !<OFDM>
 
       # Modulation settings
       modulation_order: 16                  # Modulation order, in other words 4 bit per data resource element
@@ -108,11 +108,12 @@ Evaluators:
 # Simulation parameters
 num_samples: 1000                  # Number of samples per simulation grid section
 min_num_samples: 100               # Minimum number of samples per simulation grid section before premature stopping
-snr_type: EBN0                     # SNR is defined as the ratio between bit energy and noise power
+noise_level: !<EBN0>               # SNR is defined as the ratio between bit energy and noise power
+  reference: *ofdm                 # The SNR is calculated with respect to the processed waveform
 plot_results: True                 # Visualize the evaluations after the simulation has finished
 
 
 # Scenario parameters over which the Monte-Carlo simulation sweeps
 Dimensions:
 
-  snr: [20, 10, 2, 0] dB
+  noise_level: [20, 10, 2, 0] dB

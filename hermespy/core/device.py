@@ -126,7 +126,6 @@ from h5py import Group
 from scipy.constants import speed_of_light
 
 from .antennas import AntennaArray
-from .definitions import SNRType
 from .factory import HDFSerializable, Serializable
 from .random_node import RandomNode
 from .signal_model import Signal
@@ -1061,47 +1060,14 @@ class Receiver(MixingOperator["ReceiverSlot"], Generic[ReceptionType], RandomNod
         """
         ...  # pragma: no cover
 
-    def noise_power(self, strength: float, snr_type: SNRType) -> float:
-        """Compute noise power for a given signal strength.
-
-        Internally calls :meth:`_noise_power` for some :class:`SNRTypes<hermespy.core.definitions.SNRType>`.
-
-        Args:
-
-            strength (float):
-                Signal strength indicator.
-                The unit depends on the `snr_type`.
-
-            snr_type (SNRType):
-                The considered signal to noise ratio type.
-
-        Raises:
-
-            ValueError: If the receiver does not support the required snr type.
-        """
-
-        # For the N0 snr_type the receiver implementation must not be queried
-        if snr_type is SNRType.N0:
-            return strength
-
-        return self._noise_power(strength, snr_type)
-
+    @property
     @abstractmethod
-    def _noise_power(self, strength: float, snr_type: SNRType) -> float:
-        """Compute noise power for a given signal strength.
+    def power(self) -> float:
+        """Expected power of the received signal in Watts.
 
-        Args:
-
-            strength (float):
-                Signal strength indicator.
-                The unit depends on the `snr_type`.
-
-            snr_type (SNRType):
-                The considered signal to noise ratio type.
-
-        Raises:
-
-            ValueError: If the receiver does not support the required snr type.
+        .. note::
+           Applies only to the signal-carrying parts of the transmission,
+           silent parts shuch as guard intervals should not be considered.
         """
         ...  # pragma: no cover
 
@@ -1429,6 +1395,17 @@ class Transmitter(MixingOperator["TransmitterSlot"], Generic[TransmissionType], 
         ...  # pragma: no cover
 
     @property
+    @abstractmethod
+    def power(self) -> float:
+        """Expected power of the transmitted signal in Watts.
+
+        .. note::
+           Applies only to the signal-carrying parts of the transmission,
+           silent parts shuch as guard intervals should not be considered.
+        """
+        ...  # pragma: no cover
+
+    @property
     def selected_transmit_ports(self) -> Sequence[int] | None:
         """Indices of antenna ports selected for transmission from the operated :class:`Device's<Device>` antenna array.
 
@@ -1622,7 +1599,6 @@ class Device(ABC, Transformable, RandomNode, Serializable):
         # Initalize device attributes and properties
         self.transmitters = TransmitterSlot(self)
         self.receivers = ReceiverSlot(self)
-
         self.power = power
 
     @property

@@ -30,7 +30,7 @@ link.waveform.synchronization = SCCorrelationSynchronization()
 
 # Configure a simulation to evaluate the link's BER and sweep over the receive SNR
 simulation.add_evaluator(BitErrorEvaluator(link, link))
-simulation.new_dimension('snr', dB(20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40))
+simulation.new_dimension('noise_level', dB(20, 22, 24, 26, 28, 30, 32, 34, 36, 38, 40), beta_device)
 
 # Run simulation and plot resulting SNR curve
 simulation.num_samples = 1000

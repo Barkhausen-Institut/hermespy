@@ -3,7 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from hermespy.core import dB, Signal, SignalTransmitter, SignalReceiver, SNRType
+from hermespy.core import dB, Signal, SignalTransmitter, SignalReceiver
 from hermespy.simulation import (
     PerfectCoupling,
     RandomTrigger,
@@ -12,7 +12,7 @@ from hermespy.simulation import (
     SimulatedDevice,
     SimulatedIdealAntenna,
     SimulatedUniformArray,
-    SpecificIsolation,
+    SpecificIsolation, AWGN, N0
 )
 
 # Create a new stand-alone simulated device
@@ -46,8 +46,8 @@ device.trigger_model = RandomTrigger()
 device.sampling_rate = 100e6
 
 # Configure a hardware noise model
-device.snr = dB(-20.00)
-device.snr_type = SNRType.PN0
+device.noise_model = AWGN()
+device.noise_level = N0(dB(-20))
 
 # Specify the device's postion and orientation in space
 device.position = np.array([10., 10., 0.], dtype=np.float_)
