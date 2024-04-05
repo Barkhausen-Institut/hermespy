@@ -76,7 +76,7 @@ evaluator = BitErrorEvaluator(transmit_operator, receive_operator)
 evaluator.tolerance = .0
 evaluator.confidence = 1
 simulation.add_evaluator(evaluator)
-simulation.new_dimension('snr', [db2lin(x) for x in np.arange(-10, 20, .5)])
+simulation.new_dimension('noise_level', [db2lin(x) for x in np.arange(-10, 20, .5)])
 simulation.num_samples, simulation.min_num_samples = 10000, 10000
 simulation.plot_results = True
 simulation.scenario.set_seed(42)

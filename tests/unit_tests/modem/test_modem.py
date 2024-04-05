@@ -13,7 +13,7 @@ from h5py import File
 from numpy import random as rnd
 from numpy.testing import assert_array_almost_equal
 
-from hermespy.core import Signal, Device, SNRType
+from hermespy.core import Signal, Device
 from hermespy.fec import EncoderManager
 from hermespy.modem import Symbols, CommunicationReceptionFrame, CommunicationTransmission, CommunicationTransmissionFrame, CommunicationReception, BaseModem, TransmittingModem, ReceivingModem, DuplexModem, SimplexLink, RandomBitsSource, SymbolPrecoder, SymbolPrecoding
 from hermespy.simulation import SimulatedDevice
@@ -264,19 +264,6 @@ class TestBaseModem(TestCase):
 
         self.assertEqual(self.waveform.samples_per_frame, self.modem.samples_per_frame)
 
-    def test_noise_power(self) -> None:
-        """Noise power estiamtor should report the correct noise powers"""
-
-        self.assertEqual(1.0, self.modem._noise_power(1.0, SNRType.EBN0))
-        self.assertEqual(1.0, self.modem._noise_power(1.0, SNRType.ESN0))
-        self.assertEqual(1.0, self.modem._noise_power(1.0, SNRType.PN0))
-
-        with self.assertRaises(ValueError):
-            _ = self.modem._noise_power(1.0, SNRType.EN0)
-
-        self.modem.waveform = None
-        self.assertEqual(0, self.modem._noise_power(1.0, SNRType.EBN0))
-
 
 class TestTransmittingModem(TestBaseModem):
     """Test the exclusively transmitting simplex modem"""
@@ -499,7 +486,7 @@ class TestDuplexModem(TestBaseModem):
 
         reception = self.modem.receive()
         self.assertEqual(0, reception.num_frames)
-        
+
     def test_receive_synchronization_padding(self) -> None:
         """Received frames should be padded to the correct length"""
 
@@ -508,7 +495,7 @@ class TestDuplexModem(TestBaseModem):
         self.waveform.synchronization.synchronize = lambda s: [0]
         self.device.process_input(Signal(cutoff_samples, transmission.signal.sampling_rate, self.device.carrier_frequency))
         reception = self.modem.receive()
-        
+
         self.assertEqual(transmission.signal.num_samples, reception.frames[0].signal.num_samples)
         return
 

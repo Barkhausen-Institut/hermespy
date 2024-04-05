@@ -1,12 +1,12 @@
 import matplotlib.pyplot as plt
 
 from hermespy.radar import Radar, FMCW, ReceiverOperatingCharacteristic
-from hermespy.simulation import Simulation
+from hermespy.simulation import Simulation, N0
 from hermespy.channel import SingleTargetRadarChannel
 
 # Create a new simulated scenario featuring a single device
 simulation = Simulation()
-device = simulation.new_device(snr=1e-2, carrier_frequency=60e9)
+device = simulation.new_device(noise_level=N0(2.5e-6), carrier_frequency=60e9)
 
 # Configure the device to transmit and reveive radar waveforms
 radar = Radar(device=device)

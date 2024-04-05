@@ -22,7 +22,7 @@ simulation.scenario.set_channel(device, device, target)
 simulation.add_evaluator(RootMeanSquareError(radar, target))
 
 # Sweep over the target's SNR during the simulation
-simulation.new_dimension('snr', dB(0, -5, -10, -20, -30), device)
+simulation.new_dimension('noise_level', dB(0, -5, -10, -20, -30), device)
 
 # Run the simulation
 result = simulation.run()

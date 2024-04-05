@@ -32,6 +32,10 @@ class SineOperator(DuplexOperator[Transmission, Reception]):
         self.__frequency = frequency
 
         DuplexOperator.__init__(self)
+        
+    @property
+    def power(self) -> float:
+        return 1.0
 
     def _transmit(self, duration: float = 0.0) -> Transmission:
         sine = np.exp(2j * np.pi * np.arange(int(self.__duration * self.sampling_rate)) / self.sampling_rate * self.__frequency)

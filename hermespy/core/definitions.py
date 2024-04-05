@@ -28,25 +28,3 @@ class ConsoleMode(SerializableEnum):
 
     SILENT = 2
     """No prints exept errors"""
-
-
-class SNRType(SerializableEnum):
-    """Supported types of signal-to-noise ratios."""
-
-    EBN0 = 0
-    """Bit energy to noise power ratio."""
-
-    ESN0 = 1
-    """Symbol energy to noise power ratio."""
-
-    PN0 = 2
-    """Signal power to noise power ratio."""
-
-    EN0 = 3
-    """Signal energy to noise power ratio."""
-
-    N0 = 4
-    """Noise power."""
-
-    CUSTOM = 3
-    """Custom snr definition."""

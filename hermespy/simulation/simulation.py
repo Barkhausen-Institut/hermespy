@@ -9,7 +9,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from sys import maxsize
 from time import time
-from typing import Any, Callable, Dict, List, Mapping, Optional, overload, Type, Union
+from typing import Any, Callable, Dict, List, Mapping, overload, Type
 
 import numpy as np
 from h5py import Group
@@ -34,7 +34,6 @@ from hermespy.core import (
     Scenario,
     Signal,
     DeviceOutput,
-    SNRType,
     Visualization,
 )
 from hermespy.channel import (
@@ -45,6 +44,7 @@ from hermespy.channel import (
     IdealChannel,
     QuadrigaInterface,
 )
+from .noise import NoiseLevel, NoiseModel
 from .simulated_device import (
     TriggerModel,
     TriggerRealization,
@@ -189,27 +189,34 @@ class SimulationScenario(Scenario[SimulatedDevice]):
     yaml_tag = "SimulationScenario"
 
     __channels: np.ndarray  # Channel matrix linking devices
-    __snr: Optional[float]  # Signal to noise ratio at the receiver-side
-    __snr_type: SNRType  # Global global type of signal to noise ratio.
+    __noise_level: NoiseLevel | None  # Global noise level of the scenario
+    __noise_model: NoiseModel | None  # Global noise model of the scenario
 
     def __init__(
-        self, snr: float = float("inf"), snr_type: str | SNRType = SNRType.PN0, *args, **kwargs
+        self,
+        noise_level: NoiseLevel | None = None,
+        noise_model: NoiseModel | None = None,
+        *args,
+        **kwargs,
     ) -> None:
         """
         Args:
 
-            snr (float, optional):
-                The assumed linear signal to noise ratio.
-                Infinite by default, i.e. no added noise during reception.
+            noise_level (NoiseLevel, optional):
+                Global noise level of the scenario assumed for all devices.
+                If not specified, the noise configuration is device-specific.
 
-            snr_type (Union[str, SNRType], optional):
-                The signal to noise ratio metric to be used.
-                By default, signal power to noise power is assumed.
+            noise_model (NoiseModel, optional):
+                Global noise model of the scenario assumed for all devices.
+                If not specified, the noise configuration is device-specific.
         """
 
+        # Initialize base class
         Scenario.__init__(self, *args, **kwargs)
-        self.snr = snr
-        self.snr_type = snr_type
+
+        # Initialize class attributes
+        self.noise_level = noise_level
+        self.noise_model = noise_model
         self.__channels = np.ndarray((0, 0), dtype=object)
 
     def new_device(self, *args, **kwargs) -> SimulatedDevice:
@@ -397,60 +404,36 @@ class SimulationScenario(Scenario[SimulatedDevice]):
             channel.beta_device = self.devices[beta_device]
             channel.scenario = self
 
-    @register(first_impact="receive_devices", title="SNR")  # type: ignore[misc]
+    @register(first_impact="receive_devices", title="Scenario Noise Level")  # type: ignore[misc]
     @property
-    def snr(self) -> Optional[float]:
-        """Ratio of signal energy to noise power at the receiver-side.
+    def noise_level(self) -> NoiseLevel | None:
+        """Global noise level of the scenario.
 
-        Returns:
-            Optional[float]:
-                Linear signal energy to noise power ratio.
-                `None` if not specified.
-
-        Raises:
-            ValueError: On ratios smaller or equal to zero.
+        If not set, i.e. `None`, the noise level is device-specific.
         """
 
-        return self.__snr
+        return self.__noise_level
 
-    @snr.setter
-    def snr(self, value: Optional[float]) -> None:
-        if value is None:
-            self.__snr = None
+    @noise_level.setter
+    def noise_level(self, value: NoiseLevel | None) -> None:
+        self.__noise_level = value
 
-        else:
-            if value <= 0.0:
-                raise ValueError("Signal to noise ratio must be greater than zero")
-
-            self.__snr = value
-
-    @register(first_impact="receive_devices", title="SNR Type")  # type: ignore
+    @register(first_impact="receive_devices", title="Noise Model")  # type: ignore[misc]
     @property
-    def snr_type(self) -> SNRType:
-        """Type of signal-to-noise ratio.
+    def noise_model(self) -> NoiseModel | None:
+        """Global noise model of the scenario.
 
-        Returns:
-            SNRType: The SNR type.
+        If not set, i.e. `None`, the noise model is device-specific.
         """
 
-        return self.__snr_type
+        return self.__noise_model
 
-    @snr_type.setter
-    def snr_type(self, snr_type: Union[str, int, SNRType]) -> None:
-        """Modify the type of signal-to-noise ratio.
+    @noise_model.setter
+    def noise_model(self, value: NoiseModel | None) -> None:
+        self.__noise_model = value
 
-        Args:
-            snr_type (Union[str, int, SNRType]):
-                The new type of signal to noise ratio, string or enum representation.
-        """
-
-        if isinstance(snr_type, str):
-            snr_type = SNRType[snr_type]
-
-        elif isinstance(snr_type, int):
-            snr_type = SNRType(snr_type)
-
-        self.__snr_type = snr_type
+        if value is not None:
+            self.__noise_model.random_mother = self
 
     def transmit_devices(self, cache: bool = True) -> Sequence[SimulatedDeviceTransmission]:
         """Generate simulated device transmissions of all registered devices.
@@ -622,7 +605,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
             )
 
         # Call the process input method for each device
-        processed_inputs = [d.process_input(i, cache=cache, trigger_realization=t) for d, i, t in zip(self.devices, impinging_signals, trigger_realizations)]  # type: ignore
+        processed_inputs = [d.process_input(i, cache, t, self.noise_level, self.noise_model) for d, i, t in zip(self.devices, impinging_signals, trigger_realizations)]  # type: ignore
 
         return processed_inputs
 
@@ -822,8 +805,8 @@ class SimulationRunner(object):
             self.__processed_inputs.append(
                 device.process_input(
                     impinging_signals=impinging_signals,
-                    snr=self.__scenario.snr,
-                    snr_type=self.__scenario.snr_type,
+                    noise_level=self.__scenario.noise_level,
+                    noise_model=self.__scenario.noise_model,
                 )
             )
 
@@ -1083,7 +1066,8 @@ class Simulation(
             dimension_fields.append(dimension_map)
 
         additional_fields = {
-            "snr_type": node.scenario.snr_type,
+            "noise_model": node.scenario.noise_model,
+            "noise_level": node.scenario.noise_level,
             "verbosity": node.verbosity.name,
             "Devices": node.scenario.devices,
             "Operators": node.scenario.operators,
@@ -1113,9 +1097,7 @@ class Simulation(
         state: dict = constructor.construct_mapping(node, deep=True)
 
         # Launch a global quadriga instance
-        quadriga_interface: Optional[QuadrigaInterface] = state.pop(
-            QuadrigaInterface.yaml_tag, None
-        )
+        quadriga_interface: QuadrigaInterface | None = state.pop(QuadrigaInterface.yaml_tag, None)
         if quadriga_interface is not None:  # pragma: no cover
             QuadrigaInterface.SetGlobalInstance(quadriga_interface)
 
@@ -1128,7 +1110,7 @@ class Simulation(
 
         # Initialize simulation
         state["scenario"] = SimulationScenario(
-            snr=state.pop("snr", float("inf")), snr_type=state.pop("snr_type", SNRType.EBN0)
+            noise_level=state.pop("noise_level", None), noise_model=state.pop("noise_model", None)
         )
         simulation: Simulation = cls.InitializationWrapper(state)
 

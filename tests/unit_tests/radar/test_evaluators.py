@@ -15,7 +15,7 @@ from hermespy.core.monte_carlo import Evaluation, GridDimension, ScalarEvaluatio
 from hermespy.core.scenario import ScenarioMode, Scenario
 from hermespy.radar import DetectionProbEvaluator, FMCW, PointDetection, Radar, RadarPointCloud, ReceiverOperatingCharacteristic, ThresholdDetector
 from hermespy.radar.evaluators import RadarEvaluator, RocArtifact, RocEvaluation, RocEvaluationResult, RootMeanSquareArtifact, RootMeanSquareError, RootMeanSquareErrorResult, RootMeanSquareEvaluation
-from hermespy.simulation import SimulatedDevice, SimulationScenario
+from hermespy.simulation import SimulatedDevice, SimulationScenario, N0
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -191,7 +191,7 @@ class TestRocEvaluationResult(TestCase):
 
     def setUp(self) -> None:
         scenario = SimulationScenario()
-        grid = [GridDimension(scenario, "snr", [1, 2, 3], "Custom Title")]
+        grid = [GridDimension(scenario, 'noise_level', [N0(p) for p in [1, 2, 3]], "Custom Title")]
         evaluator = Mock(spec=ReceiverOperatingCharacteristic)
 
         self.detection_probabilities = np.empty(3, dtype=np.object_)

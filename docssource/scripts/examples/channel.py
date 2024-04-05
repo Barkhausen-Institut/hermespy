@@ -55,7 +55,7 @@ simulation.set_channel(alpha_device, beta_device, channel)
 simulation.add_evaluator(BitErrorEvaluator(link, link))
 
 # Run the simulation
-simulation.new_dimension('snr', dB(0, 2, 4, 8, 12, 16, 20))
+simulation.new_dimension('noise_level', dB(0, 2, 4, 8, 12, 16, 20), beta_device)
 result = simulation.run()
 
 # Plot the results

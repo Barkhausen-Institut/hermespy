@@ -50,7 +50,7 @@ for (c, confidence), (t, tolerance) in product(enumerate(confidences), enumerate
     evaluator.confidence = confidence
     evaluator.tolerance = tolerance
 
-    simulation.new_dimension('snr', [db2lin(x) for x in np.arange(-10, 20, .5)])
+    simulation.new_dimension('noise_level', [db2lin(x) for x in np.arange(-10, 20, .5)])
     simulation.add_evaluator(evaluator)
     simulation.num_samples = 100000
     simulation.min_num_samples = 100

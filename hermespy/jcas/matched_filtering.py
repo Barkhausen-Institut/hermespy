@@ -51,6 +51,10 @@ class MatchedFilterJcas(DuplexJCASOperator[CommunicationWaveform], Serializable)
         self.max_range = max_range
         self.device = device
 
+    @property
+    def power(self) -> float:
+        return 0.0 if self.waveform is None else self.waveform.power
+
     def _transmit(self, duration: float = -1.0) -> JCASTransmission:
         communication_transmission = TransmittingModemBase._transmit(self, duration)
         jcas_transmission = JCASTransmission(communication_transmission)

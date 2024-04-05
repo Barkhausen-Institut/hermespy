@@ -22,7 +22,7 @@ radar.waveform = FMCW(10, 5e9, 90 / 5e9, 100 / 5e9)
 
 # Configure a simulation evluating the radar's operating characteristics
 simulation.add_evaluator(ReceiverOperatingCharacteristic(radar, channel))
-simulation.new_dimension('snr', dB(np.arange(0, -22, -2).tolist()))
+simulation.new_dimension('noise_level', dB(np.arange(0, -22, -2).tolist()), device)
 simulation.num_samples = 1000
 
 # Run simulation and plot resulting ROC curve

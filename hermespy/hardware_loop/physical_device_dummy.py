@@ -12,9 +12,11 @@ from collections.abc import Sequence
 
 import numpy as np
 
-from hermespy.core import DeviceInput, Serializable, Signal, SNRType
+from hermespy.core import DeviceInput, Serializable, Signal
 from hermespy.channel import ChannelPropagation
 from hermespy.simulation import (
+    NoiseLevel,
+    NoiseModel,
     ProcessedSimulatedDeviceInput,
     SimulatedAntennaArray,
     SimulatedDevice,
@@ -106,15 +108,21 @@ class PhysicalDeviceDummy(SimulatedDevice, PhysicalDevice, Serializable):
         ) = None,
         cache: bool = True,
         trigger_realization: TriggerRealization | None = None,
-        snr: float = float("inf"),
-        snr_type: SNRType = SNRType.PN0,
+        noise_level: NoiseLevel | None = None,
+        noise_model: NoiseModel | None = None,
         leaking_signal: Signal | None = None,
     ) -> ProcessedSimulatedDeviceInput:
         _impinging_signals = (
             self.__uploaded_signal if impinging_signals is None else impinging_signals
         )
         return SimulatedDevice.process_input(
-            self, _impinging_signals, cache, trigger_realization, snr, snr_type, leaking_signal
+            self,
+            _impinging_signals,
+            cache,
+            trigger_realization,
+            noise_level,
+            noise_model,
+            leaking_signal,
         )
 
     def receive(
