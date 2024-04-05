@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from .channel_estimation import SingleCarrierIdealChannelEstimation, OFDMIdealChannelEstimation
+from .noise import EBN0, ESN0
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -19,4 +20,6 @@ __all__ = [
     "OFDMIdealChannelEstimation",
     "SCIdealChannelEstimation",
     "SingleCarrierIdealChannelEstimation",
+    "EBN0",
+    "ESN0",
 ]

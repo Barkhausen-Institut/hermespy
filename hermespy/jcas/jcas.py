@@ -6,9 +6,9 @@ from typing import Generic, Type
 
 from h5py import Group
 
-from hermespy.core import Device, SNRType, Signal
+from hermespy.core import Device, Signal
 from hermespy.modem.modem import TransmittingModemBase, ReceivingModemBase
-from hermespy.modem import BaseModem, CommunicationTransmission, CommunicationReception, CWT
+from hermespy.modem import CommunicationTransmission, CommunicationReception, CWT
 from hermespy.radar import RadarBase, RadarTransmission, RadarReception
 
 __author__ = "Jan Adler"
@@ -122,6 +122,3 @@ class DuplexJCASOperator(
 
     def _recall_reception(self, group: Group) -> JCASReception:
         return JCASReception.from_HDF(group)
-
-    def _noise_power(self, strength: float, snr_type: SNRType) -> float:
-        return BaseModem._noise_power(self, strength, snr_type)

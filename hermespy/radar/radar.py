@@ -15,7 +15,6 @@ from hermespy.core import (
     FloatingError,
     Signal,
     Serializable,
-    SNRType,
     Transmission,
     Reception,
 )
@@ -547,18 +546,12 @@ class Radar(RadarBase[RadarTransmission, RadarReception], Serializable):
 
         return self.waveform.frame_duration
 
-    def _noise_power(self, strength: float, snr_type: SNRType) -> float:
-        # No waveform configured equals no noise required
+    @property
+    def power(self) -> float:
         if self.waveform is None:
             return 0.0
 
-        if snr_type == SNRType.EN0:
-            return self.waveform.energy / strength
-
-        if snr_type == SNRType.PN0:
-            return self.waveform.power / strength
-
-        raise ValueError(f"SNR of type '{snr_type}' is not supported by radar operators")
+        return self.waveform.power
 
     @property
     def waveform(self) -> RadarWaveform | None:

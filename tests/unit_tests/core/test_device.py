@@ -11,7 +11,7 @@ from h5py import File
 from scipy.constants import speed_of_light
 from numpy.testing import assert_array_equal
 
-from hermespy.core import AntennaArray, IdealAntenna, Signal, SNRType, Transformation, UniformArray
+from hermespy.core import AntennaArray, IdealAntenna, Signal, Transformation, UniformArray
 from hermespy.core.device import Device, DeviceInput, ProcessedDeviceInput, DeviceReception, DeviceOutput, DeviceTransmission, MixingOperator, OperationResult, Operator, OperatorSlot, Receiver, ReceiverSlot, Reception, Transmission, Transmitter, TransmitterSlot, UnsupportedSlot
 
 __author__ = "Jan Adler"
@@ -411,6 +411,10 @@ class ReceiverMock(Receiver):
     @property
     def energy(self) -> float:
         return 1.0
+    
+    @property
+    def power(self) -> float:
+        return 1.0
 
     def _noise_power(self, strength, snr_type=...) -> float:
         return strength
@@ -508,11 +512,6 @@ class TestReceiver(TestCase):
         reception = self.receiver.receive(cache=True)
 
         self.assertIs(reception, self.receiver.reception)
-
-    def test_noise_power_n0(self) -> None:
-        """Noise power should be computed correctly for N0 SNR type"""
-
-        self.assertEqual(1.0, self.receiver.noise_power(1.0, SNRType.N0))
 
 
 class TestOperatorSlot(TestCase):
@@ -650,6 +649,10 @@ class TransmitterMock(Transmitter):
     def mock_transmission(self) -> Transmission:
         rng = np.random.default_rng(42)
         return Transmission(Signal(rng.standard_normal((self.device.antennas.num_transmit_antennas, 10)), self.sampling_rate, self.device.carrier_frequency))
+
+    @property
+    def power(self) -> float:
+        return 1.0
 
     def _transmit(self, _: float) -> Transmission:
         return self.mock_transmission

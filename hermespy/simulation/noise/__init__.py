@@ -1,4 +1,7 @@
-from .noise import Noise, NoiseRealization, AWGN
+# -*- coding: utf-8 -*-
+
+from .level import NoiseLevel, N0, SNR
+from .model import NoiseModel, NoiseRealization, AWGN, AWGNRealization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -9,4 +12,4 @@ __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
-__all__ = ["Noise", "NoiseRealization", "AWGN"]
+__all__ = ["NoiseLevel", "N0", "SNR", "NoiseModel", "NoiseRealization", "AWGN", "AWGNRealization"]

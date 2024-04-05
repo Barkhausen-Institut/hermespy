@@ -26,7 +26,7 @@ modem_alpha.waveform = RootRaisedCosineWaveform(**waveform_configuration)
 modem_beta.waveform = RootRaisedCosineWaveform(**waveform_configuration)
 
 simulation.add_evaluator(BlockErrorEvaluator(modem_alpha, modem_beta))
-simulation.new_dimension('snr', dB(0, 2, 4, 8, 10, 12, 14, 16, 18, 20), device_beta)
+simulation.new_dimension('noise_level', dB(0, 2, 4, 8, 10, 12, 14, 16, 18, 20), device_beta)
 simulation.num_samples = 1000
 result = simulation.run()
 

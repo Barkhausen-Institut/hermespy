@@ -12,7 +12,7 @@ from .antennas import (
     CustomAntennaArray,
     UniformArray,
 )
-from .definitions import ConsoleMode, SNRType
+from .definitions import ConsoleMode
 from .evaluators import (
     ReceivedPowerEvaluator,
     ReceivedPowerResult,
@@ -56,6 +56,7 @@ from .monte_carlo import (
     EvaluationTemplate,
     GridDimension,
     SamplePoint,
+    ScalarDimension,
     ScalarEvaluationResult,
     MonteCarlo,
     MonteCarloActor,
@@ -152,6 +153,7 @@ __all__ = [
     "EvaluationTemplate",
     "GridDimension",
     "SamplePoint",
+    "ScalarDimension",
     "ScalarEvaluationResult",
     "MonteCarlo",
     "MonteCarloActor",

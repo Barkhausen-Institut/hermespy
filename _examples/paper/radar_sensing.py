@@ -32,7 +32,7 @@ simulation.num_samples = 10000
 simulation.results_dir = simulation.default_results_dir()
 simulation.plot_results = True
 simulation.scenario.snr_type = SNRType.PN0
-simulation.new_dimension('snr', [db2lin(snr) for snr in [-20, -10, 0]])
+simulation.new_dimension('noise_level', [db2lin(snr) for snr in [-20, -10, 0]])
 
 # Consider a device without interference in between operators
 device_h1 = simulation.new_device(carrier_frequency=70e9)
