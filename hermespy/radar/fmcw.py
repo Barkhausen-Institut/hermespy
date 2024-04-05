@@ -40,6 +40,9 @@ class FMCW(RadarWaveform, Serializable):
 
     yaml_tag = "Radar-FMCW"
 
+    __DERIVE_SAMPLING_RATE: float = 0.0
+    """Magic number at which FMCW waveforms will automatically derive the sampling rates."""
+
     __num_chirps: int  # Number of chirps per radar frame
     __bandwidth: float  # Sweep bandwidth of the chirp in Hz
     __sampling_rate: float  # simulation sampling rate of the baseband signal in Hz
@@ -53,8 +56,8 @@ class FMCW(RadarWaveform, Serializable):
         bandwidth: float = 0.1e9,
         chirp_duration: float = 1.5e-6,
         pulse_rep_interval: float = 1.5e-6,
-        sampling_rate: float = None,
-        adc_sampling_rate: float = None,
+        sampling_rate: float | None = None,
+        adc_sampling_rate: float | None = None,
     ) -> None:
         """
         Args:
@@ -77,9 +80,11 @@ class FMCW(RadarWaveform, Serializable):
 
             sampling_rate (float, optional):
                 Sampling rate of the baseband signal in Hz.
+                If not specified, the sampling rate will be equal to the bandwidth.
 
             adc_sampling_rate (float, optional):
                 Sampling rate of the analog-digital conversion in Hz.
+                If not specified, the adc sampling rate will be equal to the bandwidth.
         """
 
         # Initialize base class
@@ -90,9 +95,9 @@ class FMCW(RadarWaveform, Serializable):
         self.bandwidth = bandwidth
         self.chirp_duration = chirp_duration
         self.pulse_rep_interval = pulse_rep_interval
-        self.sampling_rate = bandwidth if sampling_rate is None else sampling_rate
+        self.sampling_rate = FMCW.__DERIVE_SAMPLING_RATE if sampling_rate is None else sampling_rate
         self.adc_sampling_rate = (
-            self.sampling_rate if adc_sampling_rate is None else adc_sampling_rate
+            FMCW.__DERIVE_SAMPLING_RATE if adc_sampling_rate is None else adc_sampling_rate
         )
 
     def ping(self) -> Signal:
@@ -235,31 +240,37 @@ class FMCW(RadarWaveform, Serializable):
 
     @property
     def adc_sampling_rate(self) -> float:
-        """Sampling rate at ADC
-
-        Returns:
-            float: sampling rate in Hz.
+        """Sampling rate at the ADC in Hz.
 
         Raises:
             ValueError: If sampling rate is smaller or equal to zero.
         """
+
+        # If the sampling rate is not specified, it will be derived from the bandwidth
+        if self.__adc_sampling_rate == FMCW.__DERIVE_SAMPLING_RATE:
+            return self.bandwidth
+
         return self.__adc_sampling_rate
 
     @adc_sampling_rate.setter
     def adc_sampling_rate(self, value: float) -> None:
-        if value <= 0.0:
-            raise ValueError("ADC Sampling rate must be greater than zero")
+        if value < 0.0:
+            raise ValueError("ADC Sampling rate must be non-negative")
 
         self.__adc_sampling_rate = value
 
     @property
     def sampling_rate(self) -> float:
+        # If the sampling rate is not specified, it will be derived from the bandwidth
+        if self.__sampling_rate == FMCW.__DERIVE_SAMPLING_RATE:
+            return self.__bandwidth
+
         return self.__sampling_rate
 
     @sampling_rate.setter
     def sampling_rate(self, value: float) -> None:
-        if value <= 0.0:
-            raise ValueError("Sampling rate must be greater than zero")
+        if value < 0.0:
+            raise ValueError("Sampling rate must be non-negative")
 
         self.__sampling_rate = value
 
@@ -312,10 +323,20 @@ class FMCW(RadarWaveform, Serializable):
         return 1.0
 
     def __chirp_prototype(self) -> np.ndarray:
-        """Prototype function to generate a single chirp."""
+        """Prototype function to generate a single chirp.
+
+        Raises:
+
+            RuntimeError: If the sampling rate is smaller than the chirp bandwidth.
+        """
+
+        # Validate that there's no aliasing during chirp generation
+        if self.sampling_rate < self.bandwidth:
+            raise RuntimeError(
+                f"Sampling rate may not be smaller than chirp bandwidth ({self.sampling_rate} < {self.bandwidth})"
+            )
 
         num_samples = int(self.chirp_duration * self.sampling_rate)
-
         timestamps = np.arange(num_samples) / self.sampling_rate
 
         # baseband chirp between -B/2 and B/2
@@ -323,7 +344,12 @@ class FMCW(RadarWaveform, Serializable):
         return chirp
 
     def __pulse_prototype(self) -> np.ndarray:
-        """Prototype function to generate a single pulse including chirp and guard interval."""
+        """Prototype function to generate a single pulse including chirp and guard interval.
+
+        Raises:
+
+            RuntimeError: If the pulse repetition interval is smaller than the chirp duration.
+        """
 
         num_zero_samples = int((self.pulse_rep_interval - self.chirp_duration) * self.sampling_rate)
 
