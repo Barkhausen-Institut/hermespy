@@ -145,7 +145,8 @@ Evaluators:
 # Simulation parameters
 num_samples: 10                    # Number of samples per simulation grid section
 min_num_samples: 5                 # Minimum number of samples per simulation grid section before premature stopping
-snr_type: EBN0                     # SNR is defined as the ratio between bit energy and noise power
+noise_level: !<EBN0>               # SNR is defined as the ratio between bit energy and noise power
+  reference: *modem_beta           # The SNR is calculated with respect to the referenced modem's waveform power
 plot_results: True                 # Visualize the evaluations after the simulation has finished
 
 

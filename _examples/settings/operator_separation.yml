@@ -94,11 +94,12 @@ Evaluators:
 # Simulation parameters
 num_samples: 1000                  # Number of samples per simulation grid section
 min_num_samples: 50                # Minimum number of samples per simulation grid section before premature stopping
-snr_type: EBN0                     # SNR is defined as the ratio between bit energy and noise power
+noise_level: !<EBN0>               # SNR is defined as the ratio between bit energy and noise power
+  reference: *device_alpha         # The SNR is calculated with respect to the device's output power
 plot_results: True                 # Visualize the evaluations after the simulation has finished
 
 
 # Scenario parameters over which the Monte-Carlo simulation sweeps
 Dimensions:
 
-  snr: [10, 9, ..., -2] dB
+  noise_level: [10, 9, ..., -2] dB

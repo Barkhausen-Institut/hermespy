@@ -30,7 +30,7 @@ link.waveform.channel_equalization = SCZeroForcingChannelEqualization()
 
 # Configure a simulation to evaluate the link's BER and sweep over the receive SNR
 simulation.add_evaluator(BitErrorEvaluator(link, link))
-simulation.new_dimension('snr', dB(0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20))
+simulation.new_dimension('noise_level', dB(0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20), beta_device)
 
 # Run simulation and plot resulting SNR curve
 result = simulation.run()

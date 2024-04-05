@@ -10,15 +10,7 @@ from abc import abstractmethod
 from h5py import Group
 from typing import Generic
 
-from .device import (
-    Device,
-    OperatorSlot,
-    ReceptionType,
-    Receiver,
-    SNRType,
-    TransmissionType,
-    Transmitter,
-)
+from .device import Device, OperatorSlot, ReceptionType, Receiver, TransmissionType, Transmitter
 from .signal_model import Signal
 
 __author__ = "Jan Adler"
@@ -100,8 +92,9 @@ class DuplexOperator(
     def frame_duration(self) -> float:
         ...  # pragma: no cover
 
+    @property
     @abstractmethod
-    def _noise_power(self, strength: float, snr_type: SNRType) -> float:
+    def power(self) -> float:
         ...  # pragma: no cover
 
     @abstractmethod

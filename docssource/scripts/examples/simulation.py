@@ -29,7 +29,7 @@ simulation.set_channel(device_beta, device_beta, beta_beta_channel)
 simulation.set_channel(device_alpha, device_beta, alpha_beta_channel)
 
 # Sweep over the SNR from 0 to 20 dB in steps of 10 dB
-simulation.new_dimension("snr", dB(0, 10, 20))
+simulation.new_dimension("noise_level", dB(0, 10, 20), device_beta)
 
 # Sweep over the carrier frequency from 1 GHz to 100 GHz in steps of 10 GHz
 simulation.new_dimension("carrier_frequency", (1e9, 1e10, 1e11), device_alpha, device_beta)

@@ -19,7 +19,6 @@ from hermespy.core import (
     Device,
     Transmitter,
     Receiver,
-    SNRType,
 )
 from hermespy.precoding import ReceiveStreamCoding, TransmitStreamCoding
 from .precoding import SymbolPrecoding
@@ -628,22 +627,6 @@ class BaseModem(ABC, Generic[CWT], RandomNode):
 
         return 0  # pragma: no cover
 
-    def _noise_power(self, strength: float, snr_type: SNRType) -> float:
-        # No waveform configured equals no noise required
-        if self.waveform is None:
-            return 0.0
-
-        if snr_type == SNRType.EBN0:
-            return self.waveform.bit_energy / strength
-
-        if snr_type == SNRType.ESN0:
-            return self.waveform.symbol_energy / strength
-
-        if snr_type == SNRType.PN0:
-            return self.waveform.power / strength
-
-        raise ValueError(f"SNR of type '{snr_type}' is not supported by modem operators")
-
 
 class TransmittingModemBase(Generic[CWT], BaseModem[CWT]):
     """Base class of signal processing algorithms transmitting information."""
@@ -911,6 +894,10 @@ class TransmittingModem(
         if value is not None and self not in value.transmitters:
             value.transmitters.add(self)
 
+    @property
+    def power(self) -> float:
+        return self.waveform.power if self.waveform is not None else 0.0
+
     def _recall_transmission(self, group: Group) -> CommunicationTransmission:
         return CommunicationTransmission.from_HDF(group)
 
@@ -1137,6 +1124,10 @@ class ReceivingModem(
             return 0
         else:
             return self.receiving_device.num_receive_ports
+
+    @property
+    def power(self) -> float:
+        return self.waveform.power if self.waveform is not None else 0.0
 
     def _recall_reception(self, group: Group) -> CommunicationReception:
         return CommunicationReception.from_HDF(group)

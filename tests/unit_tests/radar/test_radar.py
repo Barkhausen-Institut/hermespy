@@ -10,7 +10,7 @@ from h5py import File
 from numpy.testing import assert_array_equal
 from scipy.constants import speed_of_light
 
-from hermespy.core import Signal, SNRType
+from hermespy.core import Signal
 from hermespy.radar import Radar, RadarCube, RadarWaveform, RadarReception, RadarPointCloud
 from hermespy.simulation import SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
@@ -160,18 +160,6 @@ class TestRadar(TestCase):
         """Frame duration property should return the frame duration"""
 
         self.assertEqual(12.345, self.radar.frame_duration)
-
-    def test_noise_power(self) -> None:
-        """Noise power estimator should compute the correct powers"""
-
-        self.assertEqual(1.0, self.radar.noise_power(1.0, SNRType.EN0))
-        self.assertEqual(1.0, self.radar.noise_power(1.0, SNRType.PN0))
-
-        with self.assertRaises(ValueError):
-            _ = self.radar.noise_power(1.0, SNRType.EBN0)
-
-        self.radar.waveform = None
-        self.assertEqual(0.0, self.radar.noise_power(1.0, SNRType.PN0))
 
     def test_waveform_setget(self) -> None:
         """Waveform property getter should return setter argument"""

@@ -80,6 +80,10 @@ class OFDMRadar(DuplexJCASOperator[OFDMWaveform], Serializable):
         resolution = 1 / (2 * self.frame_duration)
         return resolution
 
+    @property
+    def power(self) -> float:
+        return 0.0 if self.waveform is None else self.waveform.power
+
     def _transmit(self, duration: float = -1) -> JCASTransmission:
         communication_transmission = TransmittingModemBase._transmit(self, duration=duration)
         jcas_transmission = JCASTransmission(communication_transmission)

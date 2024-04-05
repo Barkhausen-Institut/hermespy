@@ -43,16 +43,18 @@ from .rf_chain import (
     OscillatorPhaseNoise,
 )
 from .isolation import Isolation, SpecificIsolation, PerfectIsolation, SelectiveLeakage
-from .noise import Noise, AWGN
+from .noise import NoiseLevel, N0, SNR, NoiseModel, AWGN
 from .coupling import Coupling, ImpedanceCoupling, PerfectCoupling
 from .modem import (
     SCIdealChannelEstimation,
     SingleCarrierIdealChannelEstimation,
     OFDMIdealChannelEstimation,
+    EBN0,
+    ESN0,
 )
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.2.0"
@@ -109,7 +111,10 @@ __all__ = [
     "SpecificIsolation",
     "PerfectIsolation",
     "SelectiveLeakage",
-    "Noise",
+    "NoiseLevel",
+    "N0",
+    "SNR",
+    "NoiseModel",
     "AWGN",
     "Coupling",
     "ImpedanceCoupling",
@@ -117,4 +122,6 @@ __all__ = [
     "SCIdealChannelEstimation",
     "SingleCarrierIdealChannelEstimation",
     "OFDMIdealChannelEstimation",
+    "EBN0",
+    "ESN0",
 ]
