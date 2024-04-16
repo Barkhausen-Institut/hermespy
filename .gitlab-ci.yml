@@ -8,11 +8,14 @@ variables:
   HERMES_WHEEL_11: "hermespy-$HERMES_VERSION-cp311-cp311-linux_x86_64.whl"
   HERMES_WHEEL_10: "hermespy-$HERMES_VERSION-cp310-cp310-linux_x86_64.whl"
   HERMES_WHEEL_09: "hermespy-$HERMES_VERSION-cp39-cp39-linux_x86_64.whl"
+  PYDEVD_DISABLE_FILE_VALIDATION: 1
+
 
 stages:
   - build
   - test
-  - lint 
+  - lint
+  - perf 
   - deploy
 
 cache:
@@ -69,9 +72,9 @@ Unit Testing:
     - apt update && apt-get install -y octave portaudio19-dev python-dev-is-python3 unzip  # remove for docker
     - pip install -e .\[develop,test,quadriga,audio\]
     - unzip dist/$HERMES_WHEEL_11 "hermespy/fec/aff3ct/*.so"
-    - pip install pyzmq>=25.1.1 usrp-uhd-client
+    - pip install pyzmq>=25.1.1 usrp-uhd-client memray>=1.11.0
   script:
-    - coverage run --include=hermespy/* ./tests/test_install.py ./tests/unit_tests/ 
+    - coverage run --include=hermespy/* ./scripts/performance/test_install_memray.py ./tests/unit_tests/ 
   after_script:
     - coverage xml
     - coverage report -m --include=hermespy/* --skip-covered
@@ -81,6 +84,8 @@ Unit Testing:
       coverage_report:
         coverage_format: cobertura
         path: coverage.xml
+    paths:
+      - ./scripts/performance/results/unit_tests/results.json
   
 Integration Testing:
   stage: test
@@ -89,8 +94,12 @@ Integration Testing:
   before_script:
     - apt update && apt-get install -y octave portaudio19-dev python-dev-is-python3  # remove for docker
     - pip install dist/$HERMES_WHEEL_11\[test,quadriga,audio\]
+    - pip install memray
   script:
-    - python ./tests/test_install.py ./tests/integration_tests/ 
+    - python ./scripts/performance/test_install_memray.py ./tests/integration_tests/ 
+  artifacts:
+    paths:
+      - ./scripts/performance/results/integration_tests/results.json
 
 Integrity Python 3.11:
   stage: test
@@ -100,8 +109,12 @@ Integrity Python 3.11:
   before_script:
     - apt update && apt-get install -y octave portaudio19-dev python-dev-is-python3  # remove for docker
     - pip install dist/$HERMES_WHEEL_11\[test,quadriga,audio\]
+    - pip install memray
   script:
-    - python ./tests/test_install.py ./tests/integrity_tests/
+    - python ./scripts/performance/test_install_memray.py ./tests/integrity_tests/ 
+  artifacts:
+    paths:
+      - ./scripts/performance/results/integration_tests/results.json
 
 Integrity Python 3.10:
   stage: test
@@ -111,8 +124,12 @@ Integrity Python 3.10:
   before_script:
     - apt update && apt-get install -y octave portaudio19-dev python-dev-is-python3  # remove for docker
     - pip install dist/$HERMES_WHEEL_10\[test,quadriga,audio\]
+    - pip install memray
   script:
-    - python ./tests/test_install.py ./tests/integrity_tests/
+    - python ./scripts/performance/test_install_memray.py ./tests/integrity_tests/ 
+  artifacts:
+    paths:
+      - ./scripts/performance/results/integration_tests/results.json
 
 Integrity Python 3.9:
   stage: test
@@ -121,8 +138,12 @@ Integrity Python 3.9:
     - Build Python 3.9
   before_script:
     - pip install dist/$HERMES_WHEEL_09\[test,quadriga,audio\]
+    - pip install memray
   script:
-    - python ./tests/test_install.py ./tests/integrity_tests/ 
+    - python ./scripts/performance/test_install_memray.py ./tests/integrity_tests/ 
+  artifacts:
+    paths:
+      - ./scripts/performance/results/integration_tests/results.json
 
 PEP8 Testing:
   stage: lint
