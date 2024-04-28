@@ -21,6 +21,7 @@ from rich.console import Console
 from hermespy.core import (
     DeviceInput,
     Drop,
+    Transmission,
     Serializable,
     Pipeline,
     Verbosity,
@@ -50,6 +51,7 @@ from .simulated_device import (
     TriggerRealization,
     ProcessedSimulatedDeviceInput,
     SimulatedDevice,
+    SimulatedDeviceOutput,
     SimulatedDeviceTransmission,
     SimulatedDeviceReception,
 )
@@ -435,6 +437,65 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         if value is not None:
             self.__noise_model.random_mother = self
 
+    def realize_triggers(self) -> Sequence[TriggerRealization]:
+        """Realize the trigger models of all registered devices.
+
+        Devices sharing trigger models will be triggered simulatenously.
+
+        Returns: A sequence of trigger model realizations.
+        """
+
+        # Collect unique triggers
+        triggers: List[TriggerModel] = []
+        unique_realizations: List[TriggerRealization] = []
+        device_realizations: List[TriggerRealization] = []
+
+        for device in self.devices:
+            device_realization: TriggerRealization
+
+            if device.trigger_model not in triggers:
+                device_realization = device.trigger_model.realize(self._rng)
+
+                triggers.append(device.trigger_model)
+                unique_realizations.append(device_realization)
+
+            else:
+                device_realization = unique_realizations[triggers.index(device.trigger_model)]
+
+            device_realizations.append(device_realization)
+
+        return device_realizations
+
+    def generate_outputs(
+        self,
+        transmissions: List[List[Transmission]] | None = None,
+        trigger_realizations: Sequence[TriggerRealization] | None = None,
+    ) -> Sequence[SimulatedDeviceOutput]:
+        # Assume cached operator transmissions if none were provided
+        _transmissions: List[None] | List[List[Transmission]] = (
+            [None] * self.num_devices if not transmissions else transmissions
+        )
+
+        if len(_transmissions) != self.num_devices:
+            raise ValueError(
+                f"Number of device transmissions ({len(_transmissions)}) does not match number of registered devices ({self.num_devices}"
+            )
+
+        _trigger_realizations = (
+            self.realize_triggers() if trigger_realizations is None else trigger_realizations
+        )
+
+        if len(_trigger_realizations) != self.num_devices:
+            raise ValueError(
+                f"Number of trigger realizations ({len(_trigger_realizations)}) does not match number of registered devices ({self.num_devices}"
+            )
+
+        outputs = [
+            d.generate_output(t, True, tr)
+            for d, t, tr in zip(self.devices, _transmissions, _trigger_realizations)
+        ]
+        return outputs
+
     def transmit_devices(self, cache: bool = True) -> Sequence[SimulatedDeviceTransmission]:
         """Generate simulated device transmissions of all registered devices.
 
@@ -450,26 +511,14 @@ class SimulationScenario(Scenario[SimulatedDevice]):
             Sequence of simulated simulated device transmissions.
         """
 
-        # Collect unique triggers
-        triggers: List[TriggerModel] = []
-        trigger_realizations: List[TriggerRealization] = []
-        transmissions: List[SimulatedDeviceTransmission] = []
+        # Realize triggers
+        trigger_realizations = self.realize_triggers()
 
-        for device in self.devices:
-            trigger_realization: TriggerRealization
-
-            if device.trigger_model not in triggers:
-                trigger_realization = device.trigger_model.realize()
-
-                triggers.append(device.trigger_model)
-                trigger_realizations.append(trigger_realization)
-
-            else:
-                trigger_realization = trigger_realizations[triggers.index(device.trigger_model)]
-
-            transmission = device.transmit(cache=cache, trigger_realization=trigger_realization)
-            transmissions.append(transmission)
-
+        # Transmit devices
+        transmissions: List[SimulatedDeviceTransmission] = [
+            d.transmit(cache=cache, trigger_realization=t)
+            for d, t in zip(self.devices, trigger_realizations)
+        ]
         return transmissions
 
     def propagate(self, transmissions: Sequence[DeviceOutput]) -> List[List[ChannelPropagation]]:
@@ -721,6 +770,7 @@ class SimulationRunner(object):
     """Runner remote thread deployed by Monte Carlo routines"""
 
     __scenario: SimulationScenario  # Scenario to be run
+    __trigger_realizations: Sequence[TriggerRealization]
     __propagation: Sequence[Sequence[ChannelPropagation]] | None
     __processed_inputs: Sequence[ProcessedSimulatedDeviceInput]
 
@@ -733,6 +783,7 @@ class SimulationRunner(object):
         """
 
         self.__scenario = scenario
+        self.__trigger_realizations = None
         self.__propagation = None
         self.__processed_inputs = []
 
@@ -751,8 +802,8 @@ class SimulationRunner(object):
         Internally resolves to the scenario's generate outputs routine :meth:`SimulationScenario.generate_outputs`.
         """
 
-        # Resolve to the scenario output generation routine
-        _ = self.__scenario.generate_outputs()
+        self.__trigger_realizations = self.__scenario.realize_triggers()
+        _ = self.__scenario.generate_outputs(None, self.__trigger_realizations)
 
     def propagate(self) -> None:
         """Propagate the signals generated by registered transmitters over the channel model.
@@ -789,9 +840,19 @@ class SimulationRunner(object):
 
         propagation_matrix = self.__propagation
 
+        if self.__trigger_realizations is None:
+            raise RuntimeError(
+                "Process inputs simulation stage without prior call to generate outputs"
+            )
+
+        if len(self.__trigger_realizations) != self.__scenario.num_devices:
+            raise RuntimeError(
+                "Number of trigger realizations does not match the number of registered devices"
+            )
+
         if propagation_matrix is None:
             raise RuntimeError(
-                "Receive device simulation stage called without prior channel propagation"
+                "Process inputs simulation stage called without prior channel propagation"
             )
 
         if len(propagation_matrix) != self.__scenario.num_devices:
@@ -801,12 +862,15 @@ class SimulationRunner(object):
             )
 
         self.__processed_inputs: Sequence[ProcessedSimulatedDeviceInput] = []
-        for device, impinging_signals in zip(self.__scenario.devices, propagation_matrix):
+        for device, impinging_signals, trigger_realization in zip(
+            self.__scenario.devices, propagation_matrix, self.__trigger_realizations
+        ):
             self.__processed_inputs.append(
                 device.process_input(
                     impinging_signals=impinging_signals,
                     noise_level=self.__scenario.noise_level,
                     noise_model=self.__scenario.noise_model,
+                    trigger_realization=trigger_realization,
                 )
             )
 

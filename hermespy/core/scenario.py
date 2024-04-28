@@ -680,7 +680,6 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
         Returns: List of generated information transmitted by each device.
         """
 
-        # Note that devices are required to cache so that the leaking signal is available during reception
         transmissions = [device.transmit() for device in self.devices]
         return transmissions
 

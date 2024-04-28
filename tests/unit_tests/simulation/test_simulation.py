@@ -211,7 +211,18 @@ class TestSimulationScenario(TestCase):
 
         self.scenario.noise_model = None
         self.assertIsNone(self.scenario.noise_model)
-
+        
+    def test_generate_outputs_validation(self) -> None:
+        """Generate outputs should raise ValueErrors for invalid arguments"""
+        
+        # Invalid number of operator transmissions
+        with self.assertRaises(ValueError):
+            self.scenario.generate_outputs([Mock() for _ in range(1 + self.scenario.num_devices)],)
+            
+        # Empty list of trigger realizations
+        with self.assertRaises(ValueError):
+            self.scenario.generate_outputs([Mock() for _ in range(self.scenario.num_devices)], [])
+        
     def test_transmit_devices(self) -> None:
         """Transmit devices should return the correct device transmissions"""
 
@@ -313,17 +324,29 @@ class TestSimulationRunner(TestCase):
     def test_process_inputs_validation(self) -> None:
         """Process inputs should raise RuntimeErrors for invalid internal states"""
 
+        # No trigger realizations cached
         with self.assertRaises(RuntimeError):
             self.runner.process_inputs()
-
+            
         self.runner.transmit_operators()
         self.runner.generate_outputs()
-        self.runner.propagate()
-        _ = self.scenario.new_device()
-
+        
+        # No propagation matrix cached
         with self.assertRaises(RuntimeError):
             self.runner.process_inputs()
+            
+        self.runner.propagate()
 
+        # Invalid number of trigger realizations
+        _ = self.scenario.new_device()        
+        with self.assertRaises(RuntimeError):
+            self.runner.process_inputs()
+            
+        # Invalid number of impinging signals+
+        self.runner.transmit_operators()
+        self.runner.generate_outputs()
+        with self.assertRaises(RuntimeError):
+            self.runner.process_inputs()
 
 class TestSimulationActor(TestCase):
     """Test the Simulation Actor"""
@@ -484,24 +507,24 @@ class TestSimulation(TestCase):
         self.assertIs(simulation.scenario.devices[0], simulation.scenario.channels[0, 0].alpha_device)
         self.assertIs(simulation.scenario.devices[0], simulation.scenario.channels[0, 0].beta_device)
 
-#    def test_serialization_dimension_shorthand(self) -> None:
-#        """Test YAML serialization with dimension shorthand"""
-#
-#        serialization = """
-#        !<Simulation>
-#            Devices:
-#                - !<SimulatedDevice>
-#
-#            Dimensions:
-#                noise_level: [1, 2, 3]
-#        """
-#
-#        factory = Factory()
-#        simulation = factory.from_str(serialization)
-#
-#        self.assertEqual(1, len(simulation.dimensions))
-#        self.assertEqual("snr", simulation.dimensions[0].dimension)
-#        self.assertSequenceEqual([1, 2, 3], [p.value for p in simulation.dimensions[0].sample_points])
+    def test_serialization_dimension_shorthand(self) -> None:
+        """Test YAML serialization with dimension shorthand"""
+
+        serialization = """
+        !<Simulation>
+            Devices:
+                - !<SimulatedDevice>
+
+            Dimensions:
+                noise_level: [1, 2, 3]
+        """
+
+        factory = Factory()
+        simulation = factory.from_str(serialization)
+
+        self.assertEqual(1, len(simulation.dimensions))
+        self.assertEqual("noise_level", simulation.dimensions[0].dimension)
+        self.assertSequenceEqual([1, 2, 3], [p.value for p in simulation.dimensions[0].sample_points])
 
     def test_pip_pacakges(self) -> None:
         """Test the pip packages property"""

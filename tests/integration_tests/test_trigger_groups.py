@@ -4,9 +4,10 @@ from unittest import TestCase
 import numpy as np
 
 from hermespy.core import Transformation
-from hermespy.simulation import RandomTrigger, SimulationScenario, SingleCarrierIdealChannelEstimation
+from hermespy.simulation import RandomTrigger, Simulation, SimulationScenario, SingleCarrierIdealChannelEstimation
 from hermespy.channel import StreetCanyonLineOfSight
 from hermespy.modem import BitErrorEvaluator, SimplexLink, RootRaisedCosineWaveform, SingleCarrierZeroForcingChannelEqualization
+from unit_tests.utils import SimulationTestContext
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -64,3 +65,38 @@ class TestTriggerGroups(TestCase):
             beta_ber = self.beta_error.evaluate().artifact().to_scalar()
             self.assertGreaterEqual(0.01, alpha_ber)
             self.assertGreaterEqual(0.01, beta_ber)
+
+    def test_pseudo_randomness(self) -> None:
+        """Setting the scenario's random seed should yield reproducable trigger realizations"""
+        
+        num_drops = 5
+        
+        self.scenario.seed = 42
+        initial_realizations = []
+        for _ in range(num_drops):
+            drop = self.scenario.drop()
+            initial_realizations.append(drop.device_transmissions[0].trigger_realization)
+            
+        self.scenario.seed = 42
+        replayed_realizations = []
+        for _ in range(num_drops):
+            drop = self.scenario.drop()
+            replayed_realizations.append(drop.device_transmissions[0].trigger_realization)   
+        
+        for initial_realization, replayed_realization in zip(initial_realizations, replayed_realizations):
+            self.assertEqual(initial_realization.num_offset_samples, replayed_realization.num_offset_samples)
+
+    def test_simulation(self) -> None:
+        """Trigger groups should be correctly applied during simulation runtime"""
+        
+        with SimulationTestContext():
+            
+            simulation = Simulation(self.scenario)
+            simulation.num_drops = 10
+            simulation.add_evaluator(self.alpha_error)
+            simulation.add_evaluator(self.beta_error)
+            
+            result = simulation.run()
+            
+            self.assertGreaterEqual(0.01, result.evaluation_results[0].to_array().flat[0])
+            self.assertGreaterEqual(0.01, result.evaluation_results[1].to_array().flat[0])
