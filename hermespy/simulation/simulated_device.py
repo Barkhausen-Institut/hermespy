@@ -190,8 +190,14 @@ class TriggerModel(ABC, RandomNode):
         return self.__devices
 
     @abstractmethod
-    def realize(self) -> TriggerRealization:
+    def realize(self, rng: np.random.Generator | None = None) -> TriggerRealization:
         """Realize a triggering of all controlled devices.
+
+        Args:
+
+            rng (np.random.Generator, optional):
+                Random number generator used to realize this trigger model.
+                If not specified, the object's internal generator will be queried.
 
         Returns: Realization of the trigger model.
         """
@@ -203,7 +209,7 @@ class StaticTrigger(TriggerModel, Serializable):
 
     yaml_tag = "StaticTrigger"
 
-    def realize(self) -> TriggerRealization:
+    def realize(self, rng: np.random.Generator | None = None) -> TriggerRealization:
         if self.num_devices < 1:
             sampling_rate = 1.0
 
@@ -251,7 +257,7 @@ class SampleOffsetTrigger(TriggerModel, Serializable):
 
         self.__num_offset_samples = value
 
-    def realize(self) -> TriggerRealization:
+    def realize(self, rng: np.random.Generator | None = None) -> TriggerRealization:
         if self.num_devices < 1:
             raise RuntimeError(
                 "Realizing a static trigger requires the trigger to control at least one device"
@@ -299,7 +305,7 @@ class TimeOffsetTrigger(TriggerModel, Serializable):
 
         self.__offset = value
 
-    def realize(self) -> TriggerRealization:
+    def realize(self, rng: np.random.Generator | None = None) -> TriggerRealization:
         if self.num_devices < 1:
             raise RuntimeError(
                 "Realizing a static trigger requires the trigger to control at least one device"
@@ -316,7 +322,7 @@ class RandomTrigger(TriggerModel, Serializable):
 
     yaml_tag = "RandomTrigger"
 
-    def realize(self) -> TriggerRealization:
+    def realize(self, rng: np.random.Generator | None = None) -> TriggerRealization:
         if self.num_devices < 1:
             raise RuntimeError(
                 "Realizing a random trigger requires the trigger to control at least one device"
@@ -341,7 +347,10 @@ class RandomTrigger(TriggerModel, Serializable):
         if max_trigger_delay == 0:
             return TriggerRealization(0, sampling_rate)
 
-        trigger_delay = self._rng.integers(0, max_trigger_delay)
+        # Select the proper random number generator
+        _rng = self._rng if rng is None else rng
+
+        trigger_delay = _rng.integers(0, max_trigger_delay)
         return TriggerRealization(trigger_delay, sampling_rate)
 
 
