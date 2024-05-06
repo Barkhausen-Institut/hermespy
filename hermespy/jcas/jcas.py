@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from abc import abstractmethod
-from typing import Generic, Sequence, Type
+from typing import Generic, Type
 
 from h5py import Group
 
@@ -68,14 +68,7 @@ class DuplexJCASOperator(
     cube from the received backscattered power.
     """
 
-    def __init__(
-        self,
-        device: Device | None = None,
-        waveform: CWT | None = None,
-        selected_transmit_ports: Sequence[int] | None = None,
-        selected_receive_ports: Sequence[int] | None = None,
-        **kwargs,
-    ) -> None:
+    def __init__(self, device: Device | None = None, waveform: CWT | None = None, **kwargs) -> None:
         """
         Args:
 
@@ -85,23 +78,12 @@ class DuplexJCASOperator(
 
             waveform (CWT, optional):
                 Communication waveform emitted by this operator.
-
-            selected_transmit_ports (Sequence[int], optional):
-                Selected transmit ports of the device.
-
-            selected_receive_ports (Sequence[int], optional):
-                Selected receive ports of the device.
         """
 
         # Initialize base classes
         TransmittingModemBase.__init__(self)
         ReceivingModemBase.__init__(self, **kwargs)
-        RadarBase.__init__(
-            self,
-            device=device,
-            selected_transmit_ports=selected_transmit_ports,
-            selected_receive_ports=selected_receive_ports,
-        )
+        RadarBase.__init__(self, device=device)
 
         # Initialize class attributes
         self.device = device
