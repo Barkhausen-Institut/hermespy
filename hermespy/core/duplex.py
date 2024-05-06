@@ -8,7 +8,7 @@ Duplex Operation
 from __future__ import annotations
 from abc import abstractmethod
 from h5py import Group
-from typing import Generic, Sequence
+from typing import Generic
 
 from .device import Device, OperatorSlot, ReceptionType, Receiver, TransmissionType, Transmitter
 from .signal_model import Signal
@@ -31,12 +31,7 @@ class DuplexOperator(
     __device: Device | None
 
     def __init__(
-        self,
-        device: Device | None = None,
-        reference: Device | None = None,
-        selected_transmit_ports: Sequence[int] | None = None,
-        selected_receive_ports: Sequence[int] | None = None,
-        seed: int | None = None,
+        self, device: Device | None = None, reference: Device | None = None, seed: int | None = None
     ):
         """
         Args:
@@ -45,11 +40,10 @@ class DuplexOperator(
                 Device the duplex operator operates.
         """
 
+        Transmitter.__init__(self, seed=seed)
+        Receiver.__init__(self, seed=seed, reference=reference)
+
         self.__device = None
-
-        Transmitter.__init__(self, seed, selected_transmit_ports)
-        Receiver.__init__(self, seed, reference, selected_receive_ports)
-
         self.device = device
 
     @property
@@ -63,11 +57,7 @@ class DuplexOperator(
 
     @device.setter
     def device(self, value: Device | None) -> None:
-        # Abort if the device is already assigned
-        if self.__device is value:
-            return
-
-        if value is None and self.__device is not None:
+        if self.__device is not None:
             self.__device.transmitters.remove(self)
             self.__device.receivers.remove(self)
 
@@ -76,8 +66,6 @@ class DuplexOperator(
         if value is not None:
             value.transmitters.add(self)
             value.receivers.add(self)
-
-        return
 
     @Transmitter.slot.setter
     def slot(self, value: OperatorSlot[Transmitter]) -> None:
