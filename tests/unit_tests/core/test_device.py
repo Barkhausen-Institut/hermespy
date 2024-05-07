@@ -411,7 +411,7 @@ class ReceiverMock(Receiver):
     @property
     def energy(self) -> float:
         return 1.0
-    
+
     @property
     def power(self) -> float:
         return 1.0
@@ -430,7 +430,13 @@ class TestReceiver(TestCase):
         self.device = Mock()
         self.device.antennas = UniformArray(IdealAntenna, 1., [2, 1, 1])
         self.slot = ReceiverSlot(device=self.device)
-        self.receiver = ReceiverMock(slot=self.slot)
+        self.seed = 42
+        self.receiver = ReceiverMock(seed=42, slot=self.slot)
+
+    def test_init(self) -> None:
+        """Initialization parameters should be properly stored as class attributes"""
+
+        self.assertEqual(self.seed, self.receiver.seed)
 
     def test_slot_setget(self) -> None:
         """Operator slot getter should return setter argument"""
@@ -670,7 +676,13 @@ class TestTransmitter(TestCase):
 
     def setUp(self) -> None:
         self.device = DeviceMock()
-        self.transmitter = TransmitterMock(slot=self.device.transmitters)
+        self.seed = 42
+        self.transmitter = TransmitterMock(seed=42, slot=self.device.transmitters)
+
+    def test_init(self) -> None:
+        """Initialization parameters should properly be stored as class attributes"""
+
+        self.assertEqual(self.seed, self.transmitter.seed)
 
     def test_slot_setget(self) -> None:
         """Slot property getter should return setter argument"""
