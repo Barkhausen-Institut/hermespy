@@ -110,7 +110,7 @@ class TestOFDMWaveform(TestCase):
         assert_array_almost_equal(transmission.symbols.raw, reception.equalized_symbols.raw)
 
         # Make sure DC is actually suppressed
-        dc = np.mean(transmission.signal.samples[0, :])
+        dc = np.mean(transmission.signal[0, :])
         self.assertAlmostEqual(0, dc, delta=1e-2)
         
     def test_transmit_receive(self) -> None:

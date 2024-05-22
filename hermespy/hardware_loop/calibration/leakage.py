@@ -133,12 +133,12 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Serializable):
         for m, n in np.ndindex(received_signal.num_streams, transmitted_signal.num_streams):
             # The leaked signal is the convolution of the transmitted signal with the leakage response
             predicted_siso_signal = convolve(
-                self.__leakage_response[m, n, :], transmitted_signal.samples[n, :]
+                self.__leakage_response[m, n, :], transmitted_signal[n, :].flatten()
             )
 
             # The correction is achieved by subtracting the leaked signal from the received signal
             if delay_sample_shift >= 0:
-                corrected_signal.samples[
+                corrected_signal[
                     m,
                     delay_sample_shift : min(
                         delay_sample_shift + len(predicted_siso_signal),
@@ -152,7 +152,7 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Serializable):
                 ]
 
             else:
-                corrected_signal.samples[
+                corrected_signal[
                     m,
                     0 : min(
                         delay_sample_shift + len(predicted_siso_signal),
@@ -267,7 +267,7 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Serializable):
                 (device.antennas.num_transmit_ports, num_samples), dtype=np.complex_
             )
             tx_samples[n, :] = probing_waveforms[p, :]
-            tx_signal = Signal(
+            tx_signal = Signal.Create(
                 tx_samples,
                 sampling_rate=device.sampling_rate,
                 carrier_frequency=device.carrier_frequency,
@@ -280,7 +280,7 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Serializable):
             # TODO: look at the estimated delay and its reliability. If the delay cannot be estimated
             # reliably, most probably, the TX signal was not received in the window decided here
             start = num_wavelet_samples
-            received_waveforms[p, :, n, :] = rx_signal.samples[
+            received_waveforms[p, :, n, :] = rx_signal[
                 :, start : start + num_wavelet_samples
             ]
 

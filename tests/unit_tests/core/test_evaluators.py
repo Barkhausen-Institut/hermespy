@@ -103,7 +103,7 @@ class TestReceivedPowerEvaluator(TestCase):
         self.sampling_rate = 1e6
         self.num_antennas = 2
 
-        self.transmitted_signal = Signal(self.rng.standard_normal((self.num_antennas, self.num_samples)) + 1j * self.rng.standard_normal((self.num_antennas, self.num_samples)), self.sampling_rate, 0, 0, 0)
+        self.transmitted_signal = Signal.Create(self.rng.standard_normal((self.num_antennas, self.num_samples)) + 1j * self.rng.standard_normal((self.num_antennas, self.num_samples)), self.sampling_rate, 0, 0, 0)
 
         self.device = SimulatedDevice(antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1.0, [self.num_antennas, 1, 1]))
         self.transmitter = SignalTransmitter(self.transmitted_signal)
@@ -145,7 +145,8 @@ class TestReceivedPowerEvaluator(TestCase):
 
         for signal_scale in signal_scales:
             signal = self.transmitted_signal.copy()
-            signal.samples *= signal_scale
+            for block in signal:
+                block *= signal_scale
 
             _ = self.device.receive(signal)
             artifacts[0].append(self.evaluator.evaluate().artifact())

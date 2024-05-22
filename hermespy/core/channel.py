@@ -550,18 +550,13 @@ class ChannelStateInformation(HDFSerializable):
             for tx_idx, rx_idx in product(range(state.shape[1]), range(state.shape[0])):
                 delayed_signal = (
                     state[rx_idx, tx_idx, : signal.num_samples, delay_index]
-                    * signal.samples[tx_idx, :]
+                    * signal[tx_idx, :].flatten()
                 )
                 propagated_samples[
                     rx_idx, delay_index : delay_index + signal.num_samples
                 ] += delayed_signal
 
-        return Signal(
-            propagated_samples,
-            sampling_rate=signal.sampling_rate,
-            carrier_frequency=signal.carrier_frequency,
-            delay=signal.delay,
-        )
+        return signal.from_ndarray(propagated_samples)
 
     def reciprocal(self) -> ChannelStateInformation:
         """Compute the reciprocal channel state.

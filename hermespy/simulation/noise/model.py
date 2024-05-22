@@ -116,12 +116,13 @@ class AWGNRealization(NoiseRealization):
         rng = self.generator()
 
         noise_samples = (
-            rng.normal(0, self.power**0.5, signal.samples.shape)
-            + 1j * rng.normal(0, self.power**0.5, signal.samples.shape)
+            rng.normal(0, self.power**0.5, signal.shape)
+            + 1j * rng.normal(0, self.power**0.5, signal.shape)
         ) / 2**0.5
 
         noisy_signal = signal.copy()
-        noisy_signal.samples += noise_samples
+        for block in noisy_signal:
+            block += noise_samples
         noisy_signal.noise_power = self.power
 
         return noisy_signal

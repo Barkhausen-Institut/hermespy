@@ -235,14 +235,14 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
     @property
     def pilot_signal(self) -> Signal:
         if self.num_preamble_symbols < 1:
-            return Signal.empty(self.sampling_rate)
+            return Signal.Empty(self.sampling_rate)
 
         pilot_symbols = np.zeros(
             1 + (self.num_preamble_symbols - 1) * self.oversampling_factor, dtype=complex
         )
         pilot_symbols[:: self.oversampling_factor] = self.pilot_symbols(self.num_preamble_symbols)
 
-        return Signal(
+        return Signal.Create(
             np.convolve(pilot_symbols, self._transmit_filter()), sampling_rate=self.sampling_rate
         )
 

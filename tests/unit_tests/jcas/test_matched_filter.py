@@ -46,13 +46,13 @@ class TestMatchedFilterJoint(TestCase):
         """Receiving should raise a RuntimeError if there's no cached transmission"""
 
         with self.assertRaises(RuntimeError):
-            self.joint.receive(Signal(np.zeros((1, 10)), 1.0))
+            self.joint.receive(Signal.Create(np.zeros((1, 10)), 1.0))
 
     def test_transmit_receive(self) -> None:
         num_delay_samples = 10
         transmission = self.joint.transmit()
 
-        delay_offset = Signal(np.zeros((1, num_delay_samples), dtype=complex), transmission.signal.sampling_rate, carrier_frequency=self.carrier_frequency)
+        delay_offset = Signal.Create(np.zeros((1, num_delay_samples), dtype=complex), transmission.signal.sampling_rate, carrier_frequency=self.carrier_frequency)
         delay_offset.append_samples(transmission.signal)
 
         self.joint.cache_reception(delay_offset)

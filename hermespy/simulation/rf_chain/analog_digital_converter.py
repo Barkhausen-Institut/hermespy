@@ -87,7 +87,8 @@ class GainControlBase(ABC):
         """
 
         adjusted_signal = input_signal.copy()
-        adjusted_signal.samples = adjusted_signal.samples * gain
+        for block in adjusted_signal:
+            block *= gain
 
         return adjusted_signal
 
@@ -111,7 +112,8 @@ class GainControlBase(ABC):
             return quantized_signal
 
         scaled_signal = quantized_signal.copy()
-        scaled_signal.samples = scaled_signal.samples / gain
+        for block in scaled_signal:
+            block /= gain
 
         return scaled_signal
 
@@ -247,15 +249,22 @@ class AutomaticGainControl(Serializable, GainControlBase):
 
     def estimate_gain(self, input_signal: Signal) -> float:
         if self.agc_type == GainControlType.MAX_AMPLITUDE:
-            max_amplitude = max(
-                np.abs(np.real(input_signal.samples)).max(),
-                np.abs(np.imag(input_signal.samples)).max(),
-            )
+            max_amplitude = 0
+            for b in input_signal:
+                max_amplitude = max(
+                    np.abs(np.real(b)).max(),
+                    np.abs(np.imag(b)).max(),
+                    max_amplitude
+                )
 
         elif self.agc_type == GainControlType.RMS_AMPLITUDE:
-            max_amplitude = max(
-                rms_value(np.real(input_signal.samples)), rms_value(np.imag(input_signal.samples))
-            )
+            max_amplitude = 0
+            for b in input_signal:
+                max_amplitude = max(
+                    rms_value(np.real(b)),
+                    rms_value(np.imag(b)),
+                    max_amplitude
+                )
 
         else:
             raise RuntimeError("Unsupported gain control type")
@@ -389,7 +398,7 @@ class AnalogDigitalConverter(Serializable):
         adjusted_signal = self.gain.adjust_signal(frame_signal, gain)
 
         # Quantize adjusted signal
-        adjusted_signal.samples = self._quantize(adjusted_signal.samples)
+        adjusted_signal.set_samples(self._quantize(adjusted_signal[:, :]))
 
         # Rescale adjusted signal to the original amplitude range
         output_signal = self.gain.scale_quantized_signal(adjusted_signal, gain)
@@ -422,21 +431,18 @@ class AnalogDigitalConverter(Serializable):
             if num_frame_samples > 0
             else 0
         )
-        converted_signal = Signal.empty(
-            input_signal.sampling_rate,
-            input_signal.num_streams,
-            0,
-            carrier_frequency=input_signal.carrier_frequency,
+        converted_signal = input_signal.Empty(
+            num_streams=input_signal.num_streams,
+            num_samples=0,
+            **input_signal.kwargs
         )
 
         # Iterate over each frame independtenly
         for f in range(num_frames):
-            frame_samples = input_signal.samples[
+            frame_samples = input_signal[
                 :, f * num_frame_samples : (f + 1) * num_frame_samples
             ]
-            frame_signal = Signal(
-                frame_samples, input_signal.sampling_rate, input_signal.carrier_frequency
-            )
+            frame_signal = input_signal.from_ndarray(frame_samples)
 
             converted_frame_signal = self.__convert_frame(frame_signal)
             converted_signal.append_samples(converted_frame_signal)
@@ -520,7 +526,7 @@ class AnalogDigitalConverter(Serializable):
         else:
             quant_axes = fig_axes
 
-        output_samples = self.convert(Signal(_input_samples, 1.0)).samples.flatten()
+        output_samples = self.convert(Signal.Create(_input_samples, 1.0))[:, :].flatten()
         quant_axes.plot(np.real(_input_samples), np.real(output_samples))
 
         quant_axes.axhline(0)

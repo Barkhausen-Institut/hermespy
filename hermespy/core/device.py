@@ -1797,7 +1797,7 @@ class Device(ABC, Transformable, RandomNode, Serializable):
         operator_streams = [o.selected_transmit_ports for o in self.transmitters]
 
         # Superimpose the operator transmissions to the device's RF configuration
-        superimposed_signal = Signal.empty(
+        superimposed_signal = Signal.Empty(
             self.sampling_rate, self.num_transmit_ports, carrier_frequency=self.carrier_frequency
         )
 
@@ -1865,7 +1865,7 @@ class Device(ABC, Transformable, RandomNode, Serializable):
 
         # Superimpose the impinging signal models
         if len(impinging_signals) != 1:
-            superimposed_signal = Signal.empty(
+            superimposed_signal = Signal.Empty(
                 self.sampling_rate,
                 self.antennas.num_receive_antennas,
                 carrier_frequency=self.carrier_frequency,
@@ -1884,12 +1884,8 @@ class Device(ABC, Transformable, RandomNode, Serializable):
                 slice(None) if selected_receive_antennas is None else selected_receive_antennas
             )
 
-            stream_samples = superimposed_signal.samples[stream_selector, :]  # type: ignore
-            operator_input = Signal(
-                stream_samples,
-                superimposed_signal.sampling_rate,
-                superimposed_signal.carrier_frequency,
-            )
+            stream_samples = superimposed_signal[stream_selector, :]
+            operator_input = superimposed_signal.from_ndarray(stream_samples)
             operator_inputs.append(operator_input)
 
         # Cache the operator inputs if the respective flag is enabled

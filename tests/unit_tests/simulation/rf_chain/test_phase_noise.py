@@ -30,10 +30,10 @@ class TestNoPhaseNoise(TestCase):
     def test_add_noise(self) -> None:
         """Adding noise should actually do nothing"""
 
-        signal = Signal(np.random.standard_normal((3, 10)), 1)
+        signal = Signal.Create(np.random.standard_normal((3, 10)), 1)
         noisy_signal = self.pn.add_noise(signal)
 
-        assert_array_equal(signal.samples, noisy_signal.samples)
+        assert_array_equal(signal[:, :], noisy_signal[:, :])
 
     def test_yaml_serialization(self) -> None:
         """Test serialization to and from yaml"""
@@ -107,14 +107,14 @@ class TestOscillatorPhaseNoise(TestCase):
         pn_samples = self.pn._get_noise_samples(num_samples, 1, sampling_rate)
 
         # check if noised signal magnitude is the same as in the original signal
-        clear_signal_avg_amp = np.average(np.abs(signal.samples), axis=1)
-        noisy_signal_avg_amp = np.average(np.abs(noisy_signal.samples), axis=1)
+        clear_signal_avg_amp = np.average(np.abs(signal[:, :]), axis=1)
+        noisy_signal_avg_amp = np.average(np.abs(noisy_signal[:, :]), axis=1)
         for i in range(signal.num_streams):
             np.testing.assert_approx_equal(clear_signal_avg_amp[i], noisy_signal_avg_amp[i])
 
         # check if arg(x′[n])−arg(pn[n])≈arg(x[n])
-        arg_diffs = np.angle(noisy_signal.samples) - np.angle(pn_samples)
-        arg_signal = np.angle(signal.samples)
+        arg_diffs = np.angle(noisy_signal[:, :]) - np.angle(pn_samples)
+        arg_signal = np.angle(signal[:, :])
         np.testing.assert_allclose(arg_diffs, arg_signal, atol=10e7)
 
         # check if the pn time domain starts close to zero

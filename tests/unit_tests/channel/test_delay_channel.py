@@ -52,7 +52,7 @@ class _TestDelayChannelRealization(TestCase):
     def test_propagate_validation(self) -> None:
         """Propagation routine should raise RuntimeError for base band transmissions"""
 
-        test_signal = Signal(np.ones((1, 1), dtype=np.complex_), sampling_rate=1.0, carrier_frequency=0.0)
+        test_signal = Signal.Create(np.ones((1, 1), dtype=np.complex_), sampling_rate=1.0, carrier_frequency=0.0)
 
         with self.assertRaises(RuntimeError):
             _ = self.realization.propagate(test_signal)
@@ -64,11 +64,11 @@ class _TestDelayChannelRealization(TestCase):
         expected_delay_in_samples = 3
         sampling_rate = expected_delay_in_samples / self.delay
         expected_signal_scale = self.gain * amplitude_path_loss(self.carrier_frequency, self.delay * speed_of_light)
-        test_signal = Signal(np.ones((1, num_samples), dtype=np.complex_), sampling_rate=sampling_rate, carrier_frequency=self.carrier_frequency)
+        test_signal = Signal.Create(np.ones((1, num_samples), dtype=np.complex_), sampling_rate=sampling_rate, carrier_frequency=self.carrier_frequency)
 
         propagation = self.realization.propagate(test_signal)
 
-        self.assertAlmostEqual(num_samples * expected_signal_scale, np.sum(propagation.signal.samples))
+        self.assertAlmostEqual(num_samples * expected_signal_scale, np.sum(propagation.signal[:, :]))
         self.assertEqual(expected_delay_in_samples + num_samples, propagation.signal.num_samples)
 
     def test_propagate_state(self) -> None:
@@ -76,12 +76,12 @@ class _TestDelayChannelRealization(TestCase):
 
         sampling_rate = 1e6
         samples = self.rng.standard_normal((self.alpha_device.antennas.num_transmit_antennas, 100)) + 1j * self.rng.standard_normal((self.alpha_device.antennas.num_transmit_antennas, 100))
-        signal = Signal(samples, sampling_rate, self.carrier_frequency)
+        signal = Signal.Create(samples, sampling_rate, self.carrier_frequency)
 
         signal_propagation = self.realization.propagate(signal)
         state_propagation = self.realization.state(self.alpha_device, self.beta_device, 0.0, sampling_rate, signal.num_samples, 1 + signal_propagation.signal.num_samples - signal.num_samples).propagate(signal)
 
-        assert_array_almost_equal(signal_propagation.signal.samples, state_propagation.samples)
+        assert_array_almost_equal(signal_propagation.signal[:, :], state_propagation[:, :])
 
 
 class TestSpatialDelayChannelRealization(_TestDelayChannelRealization):
@@ -196,8 +196,8 @@ class TestSpatialDelayChannel(_TestDelayChannelBase):
         """Propagated signals should loose power according to the free space propagation loss"""
 
         # Assert free space propagation power loss
-        power_signal = Signal(np.zeros((self.alpha_device.num_antennas, 10)), self.alpha_device.sampling_rate, self.alpha_device.carrier_frequency)
-        power_signal.samples[0, :] = np.ones(10)
+        power_signal = Signal.Create(np.zeros((self.alpha_device.num_antennas, 10)), self.alpha_device.sampling_rate, self.alpha_device.carrier_frequency)
+        power_signal[0, :] = np.ones(10)
 
         initial_energy = np.sum(power_signal.energy)
         expected_received_energy = initial_energy * amplitude_path_loss(self.alpha_device.carrier_frequency, self.expected_delay * speed_of_light) ** 2

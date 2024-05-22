@@ -253,7 +253,7 @@ class TestSimulationScenario(TestCase):
     def test_process_inputs(self) -> None:
         """Process inputs should return the correct device inputs"""
 
-        impinging_signals = [Signal.empty(d.sampling_rate, d.antennas.num_transmit_antennas) for d in self.scenario.devices]
+        impinging_signals = [Signal.Empty(d.sampling_rate, d.antennas.num_transmit_antennas) for d in self.scenario.devices]
         processed_inputs = self.scenario.process_inputs(impinging_signals=impinging_signals)
 
         self.assertEqual(2, len(processed_inputs))
@@ -280,7 +280,7 @@ class TestSimulationRunner(TestCase):
         self.device_alpha = self.scenario.new_device(sampling_rate=self.sampling_rate)
         self.device_beta = self.scenario.new_device(sampling_rate=self.sampling_rate)
 
-        transmitted_signal = Signal(self.scenario._rng.standard_normal((1, self.num_samples)), self.sampling_rate)
+        transmitted_signal = Signal.Create(self.scenario._rng.standard_normal((1, self.num_samples)), self.sampling_rate)
         self.transmitter_alpha = SignalTransmitter(transmitted_signal)
         self.transmitter_beta = SignalTransmitter(transmitted_signal)
         self.receiver_alpha = SignalReceiver(self.num_samples, self.sampling_rate)

@@ -367,7 +367,7 @@ class PhysicalDevice(Device, ABC):
                 i.e. the variance of the unbiased received samples.
         """
 
-        silent_signal = Signal(
+        silent_signal = Signal.Create(
             np.zeros((self.antennas.num_transmit_ports, num_samples)),
             self.sampling_rate,
             self.carrier_frequency,
@@ -504,7 +504,7 @@ class PhysicalDevice(Device, ABC):
                     filter_cutoff = 0.5 * self.lowpass_bandwidth
 
                 filter = butter(5, filter_cutoff, output="sos", fs=self.sampling_rate)
-                filtered_signal.samples = sosfilt(filter, filtered_signal.samples, axis=1)
+                filtered_signal.set_samples(sosfilt(filter, filtered_signal[:, :], axis=1))
 
             _impinging_signals = filtered_signal
 
@@ -531,7 +531,7 @@ class PhysicalDevice(Device, ABC):
         transmitted_signal = (
             self.__recent_upload
             if self.__recent_upload is not None
-            else Signal.empty(
+            else Signal.Empty(
                 _impinging_signals.sampling_rate,
                 _impinging_signals.num_streams,
                 carrier_frequency=_impinging_signals.carrier_frequency,
@@ -675,13 +675,13 @@ class DelayCalibrationBase(Calibration, ABC):
 
         # Prepend zeros to the signal to account for negative delays
         delay_in_samples = round(-self.delay * signal.sampling_rate)
-        signal.samples = np.concatenate(
+        signal.set_samples(np.concatenate(
             (
-                np.zeros((signal.num_streams, delay_in_samples), dtype=signal.samples.dtype),
-                signal.samples,
+                np.zeros((signal.num_streams, delay_in_samples), dtype=np.complex_),
+                signal[:, :],
             ),
             axis=1,
-        )
+        ))
 
         return signal
 
@@ -703,7 +703,7 @@ class DelayCalibrationBase(Calibration, ABC):
 
         # Remove samples from the signal to account for positive delays
         delay_in_samples = round(self.delay * signal.sampling_rate)
-        signal.samples = signal.samples[:, delay_in_samples:]
+        signal.set_samples(signal[:, delay_in_samples:])
 
         return signal
 

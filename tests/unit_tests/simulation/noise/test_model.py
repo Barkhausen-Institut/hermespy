@@ -37,10 +37,10 @@ class _TestNoiseRealization(unittest.TestCase):
         """Noise of proper power should be added to signal"""
 
         realization = self.realization
-        signal = Signal(np.zeros((1, 1000000), dtype=np.complex_), sampling_rate=1.0)
+        signal = Signal.Create(np.zeros((1, 1000000), dtype=np.complex_), sampling_rate=1.0)
         noisy_signal = realization.add_to(signal)
 
-        self.assertEqual(len(signal.samples), len(noisy_signal.samples))
+        self.assertEqual(len(signal[:, :]), len(noisy_signal[:, :]))
 
         expected_power = np.ones((1), dtype=np.float_) * realization.power
         assert_array_almost_equal(expected_power, noisy_signal.power, decimal=2)
@@ -62,11 +62,11 @@ class _TestNoiseModel(unittest.TestCase):
 
         powers = np.array([0, 1, 100, 1000])
         for expected_noise_power in powers:
-            signal = Signal(np.zeros(1000000, dtype=complex), sampling_rate=1.0)
+            signal = Signal.Create(np.zeros(1000000, dtype=complex), sampling_rate=1.0)
             noisy_signal = self.model.add_noise(signal, expected_noise_power)
 
             assert_array_almost_equal(np.ones((1), dtype=np.float_) * expected_noise_power, noisy_signal.power, decimal=0)
-            self.assertEqual(len(signal.samples), len(noisy_signal.samples))
+            self.assertEqual(len(signal[:, :]), len(noisy_signal[:, :]))
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""

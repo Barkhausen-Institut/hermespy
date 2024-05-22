@@ -57,7 +57,7 @@ device.orientation = np.array([0, .125 * np.pi, 0], dtype=np.float_)
 device.velocity = np.array([1., 1., 0.], dtype=np.float_)
 
 # Transmit random white noise from the device
-transmitter = SignalTransmitter(Signal(
+transmitter = SignalTransmitter(Signal.Create(
     np.random.normal(size=(device.num_transmit_ports, 100)) +
     1j * np.random.normal(size=(device.num_transmit_ports, 100)),
     device.sampling_rate,
@@ -75,7 +75,7 @@ receiver.device = device  # Equivalent to the previous line
 transmission = device.transmit()
 
 # Receive a signal at the device
-impinging_signal = Signal(
+impinging_signal = Signal.Create(
     np.random.normal(size=(device.num_transmit_ports, 100)) +
     1j * np.random.normal(size=(device.num_transmit_ports, 100)),
     device.sampling_rate,

@@ -730,7 +730,7 @@ class TransmittingModemBase(Generic[CWT], BaseModem[CWT]):
             frame_samples[s, :] = self.waveform.modulate(placed_symbols)
 
         # Apply the stream transmit coding configuration
-        frame_signal = Signal(frame_samples, self.waveform.sampling_rate, carrier_frequency)
+        frame_signal = Signal.Create(frame_samples, self.waveform.sampling_rate, carrier_frequency)
         return frame_signal
 
     def _transmit(self, duration: float = -1.0) -> CommunicationTransmission:
@@ -778,7 +778,7 @@ class TransmittingModemBase(Generic[CWT], BaseModem[CWT]):
                 f"Modem MIMO configuration generates invalid number of antenna streams ({num_output_streams} instead of {self.num_transmit_ports})"
             )
 
-        signal = Signal.empty(
+        signal = Signal.Empty(
             self.waveform.sampling_rate, num_output_streams, carrier_frequency=carrier_frequency
         )
 
@@ -941,13 +941,13 @@ class ReceivingModemBase(Generic[CWT], BaseModem[CWT]):
         """
 
         # Synchronize raw MIMO data into frames
-        frame_start_indices = self.waveform.synchronization.synchronize(received_signal.samples)
+        frame_start_indices = self.waveform.synchronization.synchronize(received_signal[:, :])
         frame_length = self.waveform.samples_per_frame
 
         synchronized_signals = []
         for frame_start in frame_start_indices:
             frame_stop = frame_start + frame_length
-            frame_samples = received_signal.samples[:, frame_start:frame_stop]
+            frame_samples = received_signal[:, frame_start:frame_stop]
 
             # Pad the frame if it is too short
             # This may happen if the last frame is incomplete, or synhronization is not perfect
@@ -958,7 +958,7 @@ class ReceivingModemBase(Generic[CWT], BaseModem[CWT]):
                     mode="constant",
                 )
 
-            frame_signal = Signal(frame_samples, received_signal.sampling_rate)
+            frame_signal = Signal.Create(frame_samples, received_signal.sampling_rate)
 
             synchronized_signals.append(frame_signal)
 
@@ -978,7 +978,7 @@ class ReceivingModemBase(Generic[CWT], BaseModem[CWT]):
         """
 
         symbols = Symbols()
-        for stream in frame.samples:
+        for stream in frame[:]:
             stream_symbols = self.waveform.demodulate(stream)
             symbols.append_stream(stream_symbols)
 

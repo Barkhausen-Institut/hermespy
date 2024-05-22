@@ -94,7 +94,7 @@ class MockPilotCommunicationWaveform(MockCommunicationWaveform, ConfigurablePilo
     """Mock communication waveform for modem testing"""
 
     def pilot_signal(self) -> Signal:
-        return Signal(np.zeros(self.samples_per_frame), self.sampling_rate)
+        return Signal.Create(np.zeros(self.samples_per_frame), self.sampling_rate)
 
 
 class TestSynchronization(unittest.TestCase):
