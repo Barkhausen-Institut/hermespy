@@ -122,13 +122,7 @@ class SelectiveLeakage(Serializable, Isolation):
         for m, n in np.ndindex(self.leakage_response.shape[0], signal.num_streams):
             # The leaked signal is the convolution of the transmitted signal with the leakage response
             leaking_samples[m, :] += convolve(
-                self.leakage_response[m, n, :], signal.samples[n, :], "full"
+                self.leakage_response[m, n, :], signal[n, :].flatten(), "full"
             )[:num_leaked_samples]
 
-        return Signal(
-            leaking_samples,
-            signal.sampling_rate,
-            signal.carrier_frequency,
-            signal.delay,
-            signal.noise_power,
-        )
+        return signal.from_ndarray(leaking_samples)

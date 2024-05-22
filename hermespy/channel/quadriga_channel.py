@@ -100,7 +100,7 @@ class QuadrigaChannelRealization(ChannelRealization):
             )
 
         max_delay_in_samples = ceil(np.max(self.path_delays) * signal.sampling_rate)
-        propagated_signal = np.zeros(
+        propagated_samples = np.zeros(
             (receiver.antennas.num_receive_antennas, signal.num_samples + max_delay_in_samples),
             dtype=np.complex_,
         )
@@ -117,13 +117,13 @@ class QuadrigaChannelRealization(ChannelRealization):
                 )
 
                 for delay_idx, delay_in_samples in enumerate(time_delay_in_samples_vec):
-                    propagated_signal[
+                    propagated_samples[
                         rx_antenna, delay_in_samples : delay_in_samples + signal.num_samples
                     ] += (
-                        cir_txa_rxa[delay_idx, : signal.num_samples] * signal.samples[tx_antenna, :]
+                        cir_txa_rxa[delay_idx, : signal.num_samples] * signal[tx_antenna, :].flatten()
                     )
 
-        return Signal(propagated_signal, signal.sampling_rate, signal.carrier_frequency)
+        return signal.from_ndarray(propagated_samples)
 
     def state(
         self,

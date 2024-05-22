@@ -41,7 +41,7 @@ class TestSingleAntennaPolarization(TestCase):
 
         self.orientation_candidates = np.pi * np.array([[0.0, 0.0, 0.0], [0.5, 0.0, 0.0], [-0.5, 0.0, 0.0], [1, 0.0, 0.0], [-1, 0.0, 0.0], [0.0, 0.5, 0.0], [0.0, -0.5, 0.0], [0.0, 1.0, 0.0], [0.0, -1.0, 0.0], [0.0, 0.0, 0.5], [0.0, 0.0, -0.5], [0.0, 0.0, 1.0], [0.0, 0.0, -1.0]], dtype=float)
 
-        self.test_signal = Signal(np.ones(100), 1, carrier_frequency=1e9)
+        self.test_signal = Signal.Create(np.ones(100), 1, carrier_frequency=1e9)
 
     def test_translation(self) -> None:
         """Test translational polarization behavior"""

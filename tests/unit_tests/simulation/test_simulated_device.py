@@ -253,7 +253,7 @@ class TestSimulatedDeviceOutput(TestCase):
         self.sampling_rate = 1.23
         self.num_antennas = 1
         self.carrier_frequency = 4.56
-        self.emerging_signals = [Signal(np.zeros((1, 10)), self.sampling_rate, self.carrier_frequency) for _ in range(3)]
+        self.emerging_signals = [Signal.Create(np.zeros((1, 10)), self.sampling_rate, self.carrier_frequency) for _ in range(3)]
         self.trigger_realization = TriggerRealization(3, 1.0)
 
         self.output = SimulatedDeviceOutput(self.emerging_signals, self.trigger_realization, self.sampling_rate, self.num_antennas, self.carrier_frequency)
@@ -292,9 +292,9 @@ class TestProcessedSimulatedDeviceInput(TestCase):
         self.sampling_rate = 1.23
         self.num_antennas = 1
         self.carrier_frequency = 4.56
-        self.impinging_signals = [Signal(np.zeros((1, 10)), self.sampling_rate, self.carrier_frequency) for _ in range(3)]
-        self.leaking_signal = Signal(np.zeros((1, 10)), self.sampling_rate, self.carrier_frequency)
-        self.baseband_signal = Signal(np.zeros((1, 10)), self.sampling_rate, self.carrier_frequency)
+        self.impinging_signals = [Signal.Create(np.zeros((1, 10)), self.sampling_rate, self.carrier_frequency) for _ in range(3)]
+        self.leaking_signal = Signal.Create(np.zeros((1, 10)), self.sampling_rate, self.carrier_frequency)
+        self.baseband_signal = Signal.Create(np.zeros((1, 10)), self.sampling_rate, self.carrier_frequency)
         self.operator_separation = False
         self.operator_inputs = [s for s in self.impinging_signals]
         self.noise_realization = Mock()
@@ -327,7 +327,7 @@ class TestProcessedSimulatedDeviceInput(TestCase):
         recalled_input = ProcessedSimulatedDeviceInput.from_HDF(group)
         file.close()
 
-        assert_array_equal(self.baseband_signal.samples, recalled_input.baseband_signal.samples)
+        assert_array_equal(self.baseband_signal[:, :], recalled_input.baseband_signal[:, :])
 
 
 class TestSimulatedDevice(TestCase):
@@ -344,8 +344,8 @@ class TestSimulatedDevice(TestCase):
         self.device = SimulatedDevice(scenario=self.scenario, antennas=self.antennas, pose=Transformation.From_RPY(self.orientation, self.position))
         self.device.random_mother = self.random_node
 
-        self.transmitter_alpha = SignalTransmitter(Signal(np.zeros((1, 10)), 1.0, 0.0))
-        self.transmitter_beta = SignalTransmitter(Signal(np.zeros((1, 10)), 1.0, 0.0))
+        self.transmitter_alpha = SignalTransmitter(Signal.Create(np.zeros((1, 10)), 1.0, 0.0))
+        self.transmitter_beta = SignalTransmitter(Signal.Create(np.zeros((1, 10)), 1.0, 0.0))
         self.device.transmitters.add(self.transmitter_alpha)
         self.device.transmitters.add(self.transmitter_beta)
 
@@ -493,7 +493,7 @@ class TestSimulatedDevice(TestCase):
     def test_process_device_input_from_realization(self) -> None:
         """The process from realization routine should properly process a device input"""
 
-        impinging_signals = [Signal(np.zeros((1, 10)), 1.0, 0.0)]
+        impinging_signals = [Signal.Create(np.zeros((1, 10)), 1.0, 0.0)]
         input = DeviceInput(impinging_signals=impinging_signals)
         device_realization = self.device.realize_reception()
 
@@ -504,7 +504,7 @@ class TestSimulatedDevice(TestCase):
     def test_process_signal_from_realization(self) -> None:
         """The process from realization routine should properly process a signal"""
 
-        signal = Signal(np.zeros((1, 10)), 1.0, 0.0)
+        signal = Signal.Create(np.zeros((1, 10)), 1.0, 0.0)
         device_realization = self.device.realize_reception()
 
         processed_input = self.device.process_from_realization(signal, device_realization)
@@ -514,7 +514,7 @@ class TestSimulatedDevice(TestCase):
     def test_process_impinging_signals_from_realization(self) -> None:
         """The process from realization routine should properly process impinging signals"""
 
-        impinging_signals = [Signal(np.zeros((1, 10)), 1.0, 0.0)]
+        impinging_signals = [Signal.Create(np.zeros((1, 10)), 1.0, 0.0)]
         device_realization = self.device.realize_reception()
 
         processed_input = self.device.process_from_realization(impinging_signals, device_realization)
@@ -524,7 +524,7 @@ class TestSimulatedDevice(TestCase):
     def test_process_input(self) -> None:
         """The process input routine should properly process a device input"""
 
-        impinging_signals = [Signal(np.zeros((1, 10)), 1.0, 0.0)]
+        impinging_signals = [Signal.Create(np.zeros((1, 10)), 1.0, 0.0)]
         input = DeviceInput(impinging_signals=impinging_signals)
         processed_input = self.device.process_input(input)
 
@@ -533,7 +533,7 @@ class TestSimulatedDevice(TestCase):
     def test_receive(self) -> None:
         """Test the device reception routine"""
 
-        impinging_signals = [Signal(np.zeros((1, 10)), 1.0, 0.0)]
+        impinging_signals = [Signal.Create(np.zeros((1, 10)), 1.0, 0.0)]
         reception = self.device.receive(impinging_signals)
 
         self.assertEqual(1, reception.num_operator_receptions)
@@ -545,7 +545,7 @@ class TestSimulatedDevice(TestCase):
         self.device.receivers.add(receiver)
         self.device.noise_level = N0(0.0)
 
-        impinging_signals = Signal(
+        impinging_signals = Signal.Create(
             np.zeros((self.device.num_receive_antennas, 10000)),
             1.0, self.device.carrier_frequency,
         )
@@ -565,7 +565,7 @@ class TestSimulatedDevice(TestCase):
         self.device.receivers.add(receiver)
         self.device.noise_level = SNR(1, self.device)
 
-        impinging_signals = Signal(
+        impinging_signals = Signal.Create(
             np.zeros((self.device.num_receive_antennas, 10000)),
             1.0, self.device.carrier_frequency,
         )

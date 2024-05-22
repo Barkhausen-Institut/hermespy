@@ -278,7 +278,7 @@ class TestFilteredSingleCarrierWaveform(TestCase):
         data_symbols = self.waveform.map(data_bits)
         signal_samples = self.waveform.modulate(self.waveform.place(data_symbols))
 
-        self.assertAlmostEqual(Signal(signal_samples, self.waveform.sampling_rate).power[0], self.waveform.power, places=2)
+        self.assertAlmostEqual(Signal.Create(signal_samples, self.waveform.sampling_rate).power[0], self.waveform.power, places=2)
 
     def test_sampling_rate(self) -> None:
         """Sampling rate property should compute correct sampling rate"""

@@ -53,7 +53,7 @@ class TestMIMOLink(TestCase):
         device_transmission = self.tx_device.transmit()
 
         propagation = self.channel.propagate(device_transmission)
-        propagation.signal.samples = propagation.signal.samples[:, : self.rx_modem.samples_per_frame]
+        propagation.signal.set_samples(propagation.signal[:, : self.rx_modem.samples_per_frame])
 
         device_reception = self.rx_device.receive(propagation)
 

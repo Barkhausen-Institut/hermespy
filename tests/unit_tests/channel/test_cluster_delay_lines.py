@@ -77,12 +77,12 @@ class TestClusterDelayLineRealization(TestCase):
 
         sampling_rate = 1e6
         samples = self.rng.standard_normal((self.alpha_device.antennas.num_transmit_antennas, 100)) + 1j * self.rng.standard_normal((self.alpha_device.antennas.num_transmit_antennas, 100))
-        signal = Signal(samples, sampling_rate, self.carrier_frequency)
+        signal = Signal.Create(samples, sampling_rate, self.carrier_frequency)
 
         signal_propagation = self.realization.propagate(signal)
         state_propagation = self.realization.state(self.alpha_device, self.beta_device, 0.0, sampling_rate, signal.num_samples, 1 + signal_propagation.signal.num_samples - signal.num_samples).propagate(signal)
 
-        assert_array_almost_equal(signal_propagation.signal.samples, state_propagation.samples)
+        assert_array_almost_equal(signal_propagation.signal[:, :], state_propagation[:, :])
 
     def test_state_skip_tap(self) -> None:
         """State function should skip taps higher than the max tap index"""
@@ -328,10 +328,10 @@ class TestClusterDelayLine(TestCase):
         expected_doppler_shift = radial_velocity * self.alpha_device.carrier_frequency / speed_of_light
         frequency_resolution = sampling_rate / num_samples
 
-        shifted_propagation = self.channel.propagate(Signal(signal, sampling_rate, self.carrier_frequency))
+        shifted_propagation = self.channel.propagate(Signal.Create(signal, sampling_rate, self.carrier_frequency))
 
         input_freq = np.abs(np.fft.fft(signal[0, :]))
-        output_freq = np.abs(np.fft.fft(shifted_propagation.signal.samples[0, :].flatten()))
+        output_freq = np.abs(np.fft.fft(shifted_propagation.signal[0, :].flatten()))
 
         self.assertAlmostEqual(expected_doppler_shift, (np.argmax(output_freq) - np.argmax(input_freq)) * frequency_resolution, delta=1 * frequency_resolution)
 
@@ -348,7 +348,7 @@ class TestClusterDelayLine(TestCase):
         self.channel.seed = 1
         tof_delay_realization = self.channel.realize()
 
-        signal = Signal(np.ones((self.alpha_device.antennas.num_transmit_antennas, 1), dtype=np.complex_), sampling_rate, self.carrier_frequency)
+        signal = Signal.Create(np.ones((self.alpha_device.antennas.num_transmit_antennas, 1), dtype=np.complex_), sampling_rate, self.carrier_frequency)
         zero_propagation = zero_delay_realization.propagate(signal)
         tof_propagation = tof_delay_realization.propagate(signal)
 
@@ -401,7 +401,7 @@ class TestClusterDelayLine(TestCase):
         for a, (zenith, azimuth) in enumerate(angle_candidates):
             steering_codebook[:, a] = self.beta_device.antennas.spherical_phase_response(self.carrier_frequency, azimuth, zenith).conj()
 
-        probing_signal = Signal(np.exp(2j * pi * 0.25 * np.arange(100)), sampling_rate=1e3, carrier_frequency=self.carrier_frequency)
+        probing_signal = Signal.Create(np.exp(2j * pi * 0.25 * np.arange(100)), sampling_rate=1e3, carrier_frequency=self.carrier_frequency)
 
         for a, (zenith, azimuth) in enumerate(angle_candidates):
             self.channel.seed = 1
@@ -409,7 +409,7 @@ class TestClusterDelayLine(TestCase):
 
             received_propagation = self.channel.propagate(probing_signal)
 
-            beamformer = np.linalg.norm(steering_codebook.T.conj() @ received_propagation.signal.samples, 2, axis=1, keepdims=False)
+            beamformer = np.linalg.norm(steering_codebook.T.conj() @ received_propagation.signal[:, :], 2, axis=1, keepdims=False)
             self.assertEqual(a, np.argmax(beamformer))
 
     def test_delay_spread_std_validation(self) -> None:

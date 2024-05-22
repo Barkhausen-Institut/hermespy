@@ -389,7 +389,7 @@ class RadarChannelRealization(ChannelRealization):
         # Apply the channel gain
         propagated_samples *= self.gain**0.5
 
-        return Signal(propagated_samples, signal.sampling_rate, signal.carrier_frequency)
+        return signal.from_ndarray(propagated_samples)
 
     def state(
         self,
@@ -717,7 +717,7 @@ class RadarPathRealization(HDFSerializable):
 
         propagated_samples[
             :, delay_sample_offset : delay_sample_offset + signal.num_samples
-        ] += np.einsum("ij,jk,k->ik", propagation_response, signal.samples, echo_weights)
+        ] += np.einsum("ij,jk,k->ik", propagation_response, signal[:, :], echo_weights)
 
     def add_state(
         self,

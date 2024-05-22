@@ -76,7 +76,7 @@ class TestChannelRealization(TestCase):
     def test_propagate_deviceoutput(self) -> None:
         """Test propgation of device outputs"""
 
-        signal = Signal(self.rng.random((2, 10)), 1.0)
+        signal = Signal.Create(self.rng.random((2, 10)), 1.0)
         device_output = Mock(spec=DeviceOutput)
         device_output.mixed_signal = signal
 
@@ -87,7 +87,7 @@ class TestChannelRealization(TestCase):
     def test_propagate_signal(self) -> None:
         """Test propagation of signals"""
 
-        signal = Signal(self.rng.random((2, 10)), 1.0)
+        signal = Signal.Create(self.rng.random((2, 10)), 1.0)
         propagation = self.realization.propagate(signal)
 
         self.assertIsInstance(propagation, ChannelPropagation)
@@ -132,12 +132,12 @@ class TestDirectiveChannelRealization(TestCase):
     def test_propagate(self) -> None:
         """Propagation routine should properly call the wrapped realization's propagation routine"""
 
-        signal = Signal(self.rng.random((2, 10)), 1.0)
+        signal = Signal.Create(self.rng.random((2, 10)), 1.0)
 
         directive_propagation = self.directive_realization.propagate(signal)
         specific_propagation = self.realization.propagate(signal, self.transmitter, self.receiver)
 
-        assert_array_equal(directive_propagation.signal.samples, specific_propagation.signal.samples)
+        assert_array_equal(directive_propagation.signal[:, :], specific_propagation.signal[:, :])
 
     def test_state(self) -> None:
         """State routine should properly call the wrapped realization's state routine"""
@@ -158,7 +158,7 @@ class TestChannelPropagation(TestCase):
         self.receiver = SimulatedDevice()
         self.gain = 0.9
         self.realization = ChannelRealizationMock(self.transmitter, self.receiver, self.gain)
-        self.signal = Signal(self.rng.random((2, 10)), 1.0)
+        self.signal = Signal.Create(self.rng.random((2, 10)), 1.0)
         self.interpolation_mode = InterpolationMode.NEAREST
 
         self.propagation = ChannelPropagation[ChannelRealizationMock](self.realization, self.signal, self.transmitter, self.receiver, self.interpolation_mode)
@@ -274,7 +274,7 @@ class TestChannel(TestCase):
     def test_propagate_validation(self) -> None:
         """Propagate routine should raise ValueError on invalid signal stream counts"""
 
-        signal = Signal(self.rng.random((3, 10)), 1.0)
+        signal = Signal.Create(self.rng.random((3, 10)), 1.0)
 
         with self.assertRaises(ValueError):
             self.channel.propagate(signal)
@@ -282,7 +282,7 @@ class TestChannel(TestCase):
     def test_propagate(self) -> None:
         """Propagation routine should properly realize the channel and propagate the signal"""
 
-        signal = Signal(self.rng.random((2, 10)), 1.0)
+        signal = Signal.Create(self.rng.random((2, 10)), 1.0)
         propagation = self.channel.propagate(signal)
 
         self.assertIsInstance(propagation, ChannelPropagation)

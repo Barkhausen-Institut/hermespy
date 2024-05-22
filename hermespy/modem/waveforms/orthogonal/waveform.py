@@ -1022,10 +1022,10 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
     @property
     def pilot_signal(self) -> Signal:
         if self.pilot_section:
-            return Signal(self.pilot_section.generate(), sampling_rate=self.sampling_rate)
+            return Signal.Create(self.pilot_section.generate(), sampling_rate=self.sampling_rate)
 
         else:
-            return Signal.empty(self.sampling_rate)
+            return Signal.Empty(self.sampling_rate)
 
     @CommunicationWaveform.modulation_order.setter  # type: ignore
     def modulation_order(self, value: int) -> None:

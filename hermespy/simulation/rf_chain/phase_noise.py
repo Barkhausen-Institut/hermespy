@@ -186,6 +186,7 @@ class OscillatorPhaseNoise(PhaseNoise, Serializable):
 
     def add_noise(self, signal: Signal) -> Signal:
         pn = self._get_noise_samples(signal.num_samples, signal.num_streams, signal.sampling_rate)
-        signal.samples *= np.exp(1j * pn)
+        for b in signal:
+            b *= np.exp(1j * pn[:, b.offset:b.end])
 
         return signal

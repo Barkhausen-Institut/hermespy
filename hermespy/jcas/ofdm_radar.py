@@ -101,7 +101,7 @@ class OFDMRadar(DuplexJCASOperator[OFDMWaveform], Serializable):
         """
 
         # Demodulate the signal received from an angle of interest
-        received_symbols = self.waveform.demodulate(received_signal.samples[0, :])
+        received_symbols = self.waveform.demodulate(received_signal[0, :])
 
         # Normalize received demodulated symbols equation (8)
         normalized_symbols = np.divide(
@@ -142,9 +142,7 @@ class OFDMRadar(DuplexJCASOperator[OFDMWaveform], Serializable):
 
         for angle_idx, line in enumerate(beamformed_samples):
             # Process the single angular line by the waveform generator
-            line_signal = Signal(
-                line, signal.sampling_rate, carrier_frequency=signal.carrier_frequency
-            )
+            line_signal = signal.from_ndarray(line)
             line_estimate = self.__estimate_range(transmitted_symbols, line_signal)
 
             cube_data[angle_idx, ::] = line_estimate

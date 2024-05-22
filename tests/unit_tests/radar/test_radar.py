@@ -33,7 +33,7 @@ class RadarWaveformMock(RadarWaveform):
         self.rng = np.random.default_rng(42)
 
     def ping(self) -> Signal:
-        return Signal(np.exp(2j * np.pi * self.rng.uniform(0, 1, size=(1, self.num_samples))), self.sampling_rate)
+        return Signal.Create(np.exp(2j * np.pi * self.rng.uniform(0, 1, size=(1, self.num_samples))), self.sampling_rate)
 
     def estimate(self, signal: Signal) -> np.ndarray:
         num_velocity_bins = len(self.relative_doppler_bins)
@@ -83,7 +83,7 @@ class TestRadarReception(TestCase):
     def setUp(self) -> None:
         self.rng = np.random.default_rng(42)
 
-        self.signal = Signal(self.rng.normal(size=(2, 1)), 1.0, 0.0)
+        self.signal = Signal.Create(self.rng.normal(size=(2, 1)), 1.0, 0.0)
         self.cube = RadarCube(self.rng.normal(size=(5, 4, 4)), self.rng.normal(size=(5, 2)), self.rng.normal(size=4), self.rng.normal(size=4))
         self.cloud = RadarPointCloud(max_range=1.0)
 
@@ -104,7 +104,7 @@ class TestRadarReception(TestCase):
             recalled_reception = RadarReception.from_HDF(file["g1"])
             file.close()
 
-        assert_array_equal(self.reception.signal.samples, recalled_reception.signal.samples)
+        assert_array_equal(self.reception.signal[:, :], recalled_reception.signal[:, :])
 
 
 class TestRadar(TestCase):
@@ -237,7 +237,7 @@ class TestRadar(TestCase):
         beamformer.num_transmit_output_streams = 2
 
         ping = self.waveform.ping()
-        ping.samples = np.repeat(ping.samples, 2, 0)
+        ping.set_samples(np.repeat(ping[:, :], 2, 0))
         beamformer.transmit.return_value = ping
         self.radar.transmit_beamformer = beamformer
 
@@ -257,7 +257,7 @@ class TestRadar(TestCase):
         self.radar.waveform = None
 
         with self.assertRaises(RuntimeError):
-            _ = self.radar.receive(Signal(np.zeros((self.device.num_receive_antennas, 5), dtype=complex), 1.0))
+            _ = self.radar.receive(Signal.Create(np.zeros((self.device.num_receive_antennas, 5), dtype=complex), 1.0))
 
     def test_receive_device_validation(self) -> None:
         """Receiving should raise a RuntimeError if no device was configured"""
@@ -265,7 +265,7 @@ class TestRadar(TestCase):
         self.radar.device = None
 
         with self.assertRaises(RuntimeError):
-            _ = self.radar.receive(Signal(np.zeros((self.device.num_transmit_antennas, 5), dtype=complex), 1.0))
+            _ = self.radar.receive(Signal.Create(np.zeros((self.device.num_transmit_antennas, 5), dtype=complex), 1.0))
 
     def test_receive_no_beamformer_validation(self) -> None:
         """Receiving without a configured beamformer should raise a RuntimeError"""
@@ -308,7 +308,7 @@ class TestRadar(TestCase):
         """Receiving without a beamformer should result in a valid radar cube"""
 
         self.device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 1.0, (1,))
-        self.radar.cache_reception(Signal(np.zeros((1, 5)), self.waveform.sampling_rate))
+        self.radar.cache_reception(Signal.Create(np.zeros((1, 5)), self.waveform.sampling_rate))
         self.radar.receive_beamformer = None
 
         reception = self.radar.receive()

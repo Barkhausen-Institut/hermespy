@@ -39,12 +39,12 @@ class TestIdealChannelRealization(unittest.TestCase):
     def __test_propagate_state(self) -> None:
         """Subroutine for testing the propagation of the channel state information"""
 
-        test_signal = Signal(self.rng.random((self.alpha_device.antennas.num_transmit_antennas, 100)) + 1j * self.rng.random((self.alpha_device.antennas.num_transmit_antennas, 100)), 1e3)
+        test_signal = Signal.Create(self.rng.random((self.alpha_device.antennas.num_transmit_antennas, 100)) + 1j * self.rng.random((self.alpha_device.antennas.num_transmit_antennas, 100)), 1e3)
 
         signal_propagation = self.realization.propagate(test_signal)
         state_propagation = self.realization.state(self.alpha_device, self.beta_device, 0.0, self.sampling_rate, test_signal.num_samples, 1 + signal_propagation.signal.num_samples - test_signal.num_samples).propagate(test_signal)
 
-        assert_array_almost_equal(signal_propagation.signal.samples, state_propagation.samples)
+        assert_array_almost_equal(signal_propagation.signal[:, :], state_propagation[:, :])
 
     def test_propagate_state_miso(self) -> None:
         """Propagation should result in a signal with the correct number of samples in the MISO case"""
@@ -126,7 +126,7 @@ class TestIdealChannel(unittest.TestCase):
         for num_samples in self.propagate_signal_lengths:
             for gain in self.propagate_signal_gains:
                 samples = np.random.rand(1, num_samples) + 1j * np.random.rand(1, num_samples)
-                signal = Signal(samples, self.sampling_rate)
+                signal = Signal.Create(samples, self.sampling_rate)
 
                 self.channel.gain = gain
 
@@ -136,8 +136,8 @@ class TestIdealChannel(unittest.TestCase):
                 forwards_signal = realization.propagate(signal, self.alpha_device, self.beta_device).signal
                 backwards_signal = realization.propagate(signal, self.beta_device, self.alpha_device).signal
 
-                assert_array_almost_equal(expected_propagated_samples, forwards_signal.samples)
-                assert_array_almost_equal(expected_propagated_samples, backwards_signal.samples)
+                assert_array_almost_equal(expected_propagated_samples, forwards_signal[:, :])
+                assert_array_almost_equal(expected_propagated_samples, backwards_signal[:, :])
 
     def test_propagate_SIMO(self) -> None:
         """Test valid propagation for the Single-Input-Multiple-Output channel"""
@@ -148,8 +148,8 @@ class TestIdealChannel(unittest.TestCase):
             for gain in self.propagate_signal_gains:
                 forwards_samples = np.random.rand(1, num_samples) + 1j * np.random.rand(1, num_samples)
                 backwards_samples = np.random.rand(3, num_samples) + 1j * np.random.rand(3, num_samples)
-                forwards_input = Signal(forwards_samples, self.sampling_rate)
-                backwards_input = Signal(backwards_samples, self.sampling_rate)
+                forwards_input = Signal.Create(forwards_samples, self.sampling_rate)
+                backwards_input = Signal.Create(backwards_samples, self.sampling_rate)
 
                 self.channel.gain = gain
 
@@ -160,8 +160,8 @@ class TestIdealChannel(unittest.TestCase):
                 forwards_signal = realization.propagate(forwards_input, self.alpha_device, self.beta_device).signal
                 backwards_signal = realization.propagate(backwards_input, self.beta_device, self.alpha_device).signal
 
-                assert_array_almost_equal(expected_forwards_samples, forwards_signal.samples)
-                assert_array_almost_equal(expected_backwards_samples, backwards_signal.samples)
+                assert_array_almost_equal(expected_forwards_samples, forwards_signal[:, :])
+                assert_array_almost_equal(expected_backwards_samples, backwards_signal[:, :])
 
     def test_propagate_MISO(self) -> None:
         """Test valid propagation for the Multiple-Input-Single-Output channel"""
@@ -172,8 +172,8 @@ class TestIdealChannel(unittest.TestCase):
             for gain in self.propagate_signal_gains:
                 forwards_samples = np.random.rand(self.alpha_device.antennas.num_transmit_antennas, num_samples) + 1j * np.random.rand(self.alpha_device.antennas.num_transmit_antennas, num_samples)
                 backwards_samples = np.random.rand(1, num_samples) + 1j * np.random.rand(1, num_samples)
-                forwards_input = Signal(forwards_samples, self.sampling_rate)
-                backwards_input = Signal(backwards_samples, self.sampling_rate)
+                forwards_input = Signal.Create(forwards_samples, self.sampling_rate)
+                backwards_input = Signal.Create(backwards_samples, self.sampling_rate)
 
                 self.channel.gain = gain
 
@@ -184,8 +184,8 @@ class TestIdealChannel(unittest.TestCase):
                 forwards_signal = realization.propagate(forwards_input, self.alpha_device, self.beta_device).signal
                 backwards_signal = realization.propagate(backwards_input, self.beta_device, self.alpha_device).signal
 
-                assert_array_almost_equal(expected_forwards_samples, forwards_signal.samples)
-                assert_array_almost_equal(expected_backwards_samples, backwards_signal.samples)
+                assert_array_almost_equal(expected_forwards_samples, forwards_signal[:, :])
+                assert_array_almost_equal(expected_backwards_samples, backwards_signal[:, :])
 
     def test_propagate_MIMO(self) -> None:
         """Test valid propagation for the Multiple-Input-Multiple-Output channel"""
@@ -196,8 +196,8 @@ class TestIdealChannel(unittest.TestCase):
         for num_samples in self.propagate_signal_lengths:
             for gain in self.propagate_signal_gains:
                 samples = np.random.rand(3, num_samples) + 1j * np.random.rand(3, num_samples)
-                forwards_transmission = Signal(samples, self.sampling_rate)
-                backwards_transmission = Signal(samples[:2, :], self.sampling_rate)
+                forwards_transmission = Signal.Create(samples, self.sampling_rate)
+                backwards_transmission = Signal.Create(samples[:2, :], self.sampling_rate)
 
                 self.channel.gain = gain
 
@@ -208,8 +208,8 @@ class TestIdealChannel(unittest.TestCase):
                 forwards_signal = realization.propagate(forwards_transmission, self.alpha_device, self.beta_device).signal
                 backwards_signal = realization.propagate(backwards_transmission, self.beta_device, self.alpha_device).signal
 
-                assert_array_almost_equal(expected_forwards_propagated_samples, forwards_signal.samples)
-                assert_array_almost_equal(expected_backwards_propagated_samples, backwards_signal.samples)
+                assert_array_almost_equal(expected_forwards_propagated_samples, forwards_signal[:, :])
+                assert_array_almost_equal(expected_backwards_propagated_samples, backwards_signal[:, :])
 
     def test_channel_state_information(self) -> None:
         """Propagating over the linear channel state model should return identical results"""
@@ -217,7 +217,7 @@ class TestIdealChannel(unittest.TestCase):
         for num_samples in self.propagate_signal_lengths:
             for gain in self.propagate_signal_gains:
                 samples = np.random.rand(1, num_samples) + 1j * np.random.rand(1, num_samples)
-                signal = Signal(samples, self.sampling_rate)
+                signal = Signal.Create(samples, self.sampling_rate)
                 self.channel.gain = gain
 
                 realization = self.channel.realize()
@@ -226,8 +226,8 @@ class TestIdealChannel(unittest.TestCase):
 
                 expected_csi_signal = forwards_propagation.state(delay=0, sampling_rate=self.sampling_rate, num_samples=num_samples, max_num_taps=1).propagate(signal)
 
-                assert_array_equal(forwards_propagation.signal.samples, expected_csi_signal.samples)
-                assert_array_equal(backwards_propagation.signal.samples, expected_csi_signal.samples)
+                assert_array_equal(forwards_propagation.signal[:, :], expected_csi_signal[:, :])
+                assert_array_equal(backwards_propagation.signal[:, :], expected_csi_signal[:, :])
 
     def test_recall_realization(self) -> None:
         """Test realization recall"""

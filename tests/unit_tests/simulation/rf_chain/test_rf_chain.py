@@ -72,7 +72,7 @@ class TestRfChain(TestCase):
     def test_transmit_power_amplifier_integration(self) -> None:
         """Power amplifier should be called during transmit"""
 
-        signal = Signal.empty(1.0, 1, 0, carrier_frequency=0.0)
+        signal = Signal.Empty(1.0, 1, 0, carrier_frequency=0.0)
 
         pa = Mock()
         pa.send.side_effect = lambda x: x

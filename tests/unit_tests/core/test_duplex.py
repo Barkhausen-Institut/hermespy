@@ -30,7 +30,7 @@ class DuplexOperatorMock(DuplexOperator[Transmission, Reception]):
 
     def _transmit(self, duration: float = 0) -> Transmission:
         samples = self._rng.normal(size=(self.device.antennas.num_transmit_antennas, self.__num_frame_samples))
-        return Transmission(Signal(samples, self.__sampling_rate, self.device.carrier_frequency))
+        return Transmission(Signal.Create(samples, self.__sampling_rate, self.device.carrier_frequency))
 
     def _receive(self, signal: Signal, csi: ChannelStateInformation) -> Reception:
         return Reception(signal)

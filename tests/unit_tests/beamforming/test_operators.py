@@ -26,7 +26,7 @@ class TestBeamformingTransmitter(TestCase):
     def setUp(self) -> None:
 
         rng = np.random.default_rng(42)
-        self.signal = Signal(rng.normal(size=(1, 100)) + 1j * rng.normal(size=(1, 100)), 1e6, 1e9)
+        self.signal = Signal.Create(rng.normal(size=(1, 100)) + 1j * rng.normal(size=(1, 100)), 1e6, 1e9)
         self.beamformer = ConventionalBeamformer()
         self.transmitter = BeamformingTransmitter(self.signal, self.beamformer)
         self.device = SimulatedDevice(carrier_frequency=1e9)
@@ -80,7 +80,7 @@ class TestBeamformingReceiver(TestCase):
     def test_receive(self) -> None:
         """Receiving should generate a valid reception"""
 
-        signal = Signal(self.rng.normal(size=(1, 100)) + 1j * self.rng.normal(size=(1, 100)), 1e6, 1e9)
+        signal = Signal.Create(self.rng.normal(size=(1, 100)) + 1j * self.rng.normal(size=(1, 100)), 1e6, 1e9)
         reception = self.receiver.receive(signal)
         self.assertEqual(100, reception.signal.num_samples)
 

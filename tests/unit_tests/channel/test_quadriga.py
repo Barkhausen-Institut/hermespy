@@ -48,7 +48,7 @@ class TestQuadrigaChannelRealization(TestCase):
         """Propagation should raise a ValueError for invalid signal arguments"""
 
         num_samples = 15
-        signal = Signal(self.rng.normal(0, 1, size=(1, num_samples)) + 1j * self.rng.normal(0, 1, size=(1, num_samples)), self.sampling_rate)
+        signal = Signal.Create(self.rng.normal(0, 1, size=(1, num_samples)) + 1j * self.rng.normal(0, 1, size=(1, num_samples)), self.sampling_rate)
 
         with self.assertRaises(ValueError):
             _ = self.realization.propagate(signal)
@@ -57,12 +57,12 @@ class TestQuadrigaChannelRealization(TestCase):
         """Propagation should result in a signal with the correct number of samples"""
 
         num_samples = 10
-        signal = Signal(self.rng.normal(0, 1, size=(1, num_samples)) + 1j * self.rng.normal(0, 1, size=(1, num_samples)), self.sampling_rate)
+        signal = Signal.Create(self.rng.normal(0, 1, size=(1, num_samples)) + 1j * self.rng.normal(0, 1, size=(1, num_samples)), self.sampling_rate)
 
         signal_propagation = self.realization.propagate(signal)
         state_propagation = self.realization.state(self.alpha_device, self.beta_device, 0.0, self.sampling_rate, signal.num_samples, 1 + signal_propagation.signal.num_samples - signal.num_samples).propagate(signal)
 
-        assert_array_almost_equal(signal_propagation.signal.samples, state_propagation.samples)
+        assert_array_almost_equal(signal_propagation.signal[:, :], state_propagation[:, :])
 
     def test_hdf_serialization(self) -> None:
         """Test serialization from and to HDF"""
