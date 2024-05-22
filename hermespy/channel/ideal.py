@@ -67,12 +67,12 @@ class IdealChannelRealization(ChannelRealization):
         # Single antenna transmitter case
         if transmitter.num_transmit_antennas == 1:
             propagated_samples = np.repeat(
-                signal.samples[[0], :], receiver.num_receive_antennas, axis=0
+                signal[[0], :], receiver.num_receive_antennas, axis=0
             )
 
         # Single antenna receiver case
         elif receiver.num_receive_antennas == 1:
-            propagated_samples = np.sum(signal.samples, axis=0, keepdims=True)
+            propagated_samples = np.sum(signal[:, :], axis=0, keepdims=True)
 
         # No receiving antenna case
         elif receiver.num_receive_antennas == 0:
@@ -80,7 +80,7 @@ class IdealChannelRealization(ChannelRealization):
 
         # MIMO case
         else:
-            propagated_samples = signal.samples
+            propagated_samples = signal[:, :]
             if transmitter.num_transmit_antennas < receiver.num_receive_antennas:
                 propagated_samples = np.append(
                     propagated_samples,
@@ -94,13 +94,7 @@ class IdealChannelRealization(ChannelRealization):
                     axis=0,
                 )
 
-        return Signal(
-            propagated_samples,
-            signal.sampling_rate,
-            signal.carrier_frequency,
-            signal.delay,
-            signal.noise_power,
-        )
+        return signal.from_ndarray(propagated_samples)
 
 
 class IdealChannel(Channel[IdealChannelRealization]):

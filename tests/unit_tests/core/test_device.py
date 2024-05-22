@@ -80,7 +80,7 @@ class TestOperationResult(TestCase):
     """Test operation result class"""
 
     def setUp(self) -> None:
-        self.signal = Signal(np.random.standard_normal((2, 10)), 1.0)
+        self.signal = Signal.Create(np.random.standard_normal((2, 10)), 1.0)
         self.result = OperationResult(self.signal)
 
     def test_hdf_serialization(self) -> None:
@@ -98,7 +98,7 @@ class TestOperationResult(TestCase):
             recalled_result = OperationResult.from_HDF(file["g1"])
             file.close()
 
-            assert_array_equal(self.result.signal.samples, recalled_result.signal.samples)
+            assert_array_equal(self.result.signal, recalled_result.signal)
 
 
 class TestOperator(TestCase):
@@ -165,7 +165,7 @@ class TestDeviceOutput(TestCase):
     """Test device output base class"""
 
     def setUp(self) -> None:
-        self.signal = Signal(np.random.standard_normal((2, 10)), 1.0)
+        self.signal = Signal.Create(np.random.standard_normal((2, 10)), 1.0)
         self.output = DeviceOutput(self.signal)
 
     def test_properties(self) -> None:
@@ -193,14 +193,14 @@ class TestDeviceOutput(TestCase):
             recalled_output = DeviceOutput.from_HDF(file["g1"])
             file.close()
 
-            assert_array_equal(self.signal.samples, recalled_output.mixed_signal.samples)
+            assert_array_equal(self.signal, recalled_output.mixed_signal)
 
 
 class TestDeviceTransmission(TestCase):
     """Test device transmission base class"""
 
     def setUp(self) -> None:
-        self.mixed_signal = Signal(np.random.standard_normal((2, 10)), 1.0)
+        self.mixed_signal = Signal.Create(np.random.standard_normal((2, 10)), 1.0)
         self.operator_transmissions = [Transmission(self.mixed_signal)]
 
         self.transmission = DeviceTransmission(self.operator_transmissions, self.mixed_signal)
@@ -231,15 +231,15 @@ class TestDeviceTransmission(TestCase):
             recalled_transmission = DeviceTransmission.Recall(file["g1"], self.device)
             file.close()
 
-            assert_array_equal(self.mixed_signal.samples, deserialized_transmission.mixed_signal.samples)
-            assert_array_equal(self.mixed_signal.samples, recalled_transmission.mixed_signal.samples)
+            assert_array_equal(self.mixed_signal, deserialized_transmission.mixed_signal)
+            assert_array_equal(self.mixed_signal, recalled_transmission.mixed_signal)
 
 
 class TestDeviceInput(TestCase):
     """Test device input base class"""
 
     def setUp(self) -> None:
-        self.impinging_signals = [Signal(np.random.standard_normal((2, 10)), 1.0)]
+        self.impinging_signals = [Signal.Create(np.random.standard_normal((2, 10)), 1.0)]
         self.input = DeviceInput(self.impinging_signals)
 
     def test_properties(self) -> None:
@@ -263,14 +263,14 @@ class TestDeviceInput(TestCase):
             recalled_input = DeviceInput.from_HDF(file["g1"])
             file.close()
 
-            assert_array_equal(self.impinging_signals[0].samples, recalled_input.impinging_signals[0].samples)
+            assert_array_equal(self.impinging_signals[0][:, :], recalled_input.impinging_signals[0][:, :])
 
 
 class TestProcessedDeviceInput(TestCase):
     """Test processed device input base class"""
 
     def setUp(self) -> None:
-        self.impinging_signals = [Signal(np.random.standard_normal((2, 10)), 1.0)]
+        self.impinging_signals = [Signal.Create(np.random.standard_normal((2, 10)), 1.0)]
         self.operator_inputs = [self.impinging_signals[0]]
 
         self.input = ProcessedDeviceInput(self.impinging_signals, self.operator_inputs)
@@ -298,16 +298,16 @@ class TestProcessedDeviceInput(TestCase):
             recalled_input = ProcessedDeviceInput.from_HDF(file["g1"])
             file.close()
 
-            assert_array_equal(self.impinging_signals[0].samples, recalled_input.impinging_signals[0].samples)
+            assert_array_equal(self.impinging_signals[0][:, :], recalled_input.impinging_signals[0][:, :])
 
 
 class TestDeviceReception(TestCase):
     """Test device reception base class"""
 
     def setUp(self) -> None:
-        self.impinging_signals = [Signal(np.random.standard_normal((2, 10)), 1.0)]
+        self.impinging_signals = [Signal.Create(np.random.standard_normal((2, 10)), 1.0)]
         self.operator_inputs = [self.impinging_signals[0]]
-        self.operator_receptions = [Reception(Signal(np.random.standard_normal((2, 10)), 1.0))]
+        self.operator_receptions = [Reception(Signal.Create(np.random.standard_normal((2, 10)), 1.0))]
         self.reception = DeviceReception(self.impinging_signals, self.operator_inputs, self.operator_receptions)
 
         self.receiver = ReceiverMock()
@@ -332,8 +332,8 @@ class TestDeviceReception(TestCase):
 
         file.close()
 
-        assert_array_equal(self.operator_receptions[0].signal.samples, deserialized_reception.operator_receptions[0].signal.samples)
-        assert_array_equal(self.operator_receptions[0].signal.samples, recalled_reception.operator_receptions[0].signal.samples)
+        assert_array_equal(self.operator_receptions[0].signal[:, :], deserialized_reception.operator_receptions[0].signal[:, :])
+        assert_array_equal(self.operator_receptions[0].signal[:, :], recalled_reception.operator_receptions[0].signal[:, :])
 
 
 class MixingOperatorMock(MixingOperator):
@@ -509,7 +509,7 @@ class TestReceiver(TestCase):
             _ = self.receiver.receive()
 
         with self.assertRaises(ValueError):
-            _ = self.receiver.receive(Signal.empty(1.0, 3), cache=True)
+            _ = self.receiver.receive(Signal.Empty(1.0, 3), cache=True)
 
     def test_receive(self) -> None:
         signal = Mock()
@@ -654,7 +654,7 @@ class TransmitterMock(Transmitter):
     @property
     def mock_transmission(self) -> Transmission:
         rng = np.random.default_rng(42)
-        return Transmission(Signal(rng.standard_normal((self.device.antennas.num_transmit_antennas, 10)), self.sampling_rate, self.device.carrier_frequency))
+        return Transmission(Signal.Create(rng.standard_normal((self.device.antennas.num_transmit_antennas, 10)), self.sampling_rate, self.device.carrier_frequency))
 
     @property
     def power(self) -> float:
@@ -738,7 +738,7 @@ class TestTransmitter(TestCase):
         transmission = self.transmitter.transmit(0.0)
         self.assertIs(transmission, self.transmitter.transmission)
 
-        expected_transmission = Transmission(Signal(np.random.standard_normal((self.transmitter.device.antennas.num_transmit_antennas, 10)), 1.0))
+        expected_transmission = Transmission(Signal.Create(np.random.standard_normal((self.transmitter.device.antennas.num_transmit_antennas, 10)), 1.0))
         self.transmitter.cache_transmission(expected_transmission)
         self.assertIs(expected_transmission, self.transmitter.transmission)
 
@@ -763,12 +763,12 @@ class TestTransmitterSlot(TestCase):
             self.slot.add_transmission(Mock(), Mock())
 
         with self.assertRaises(ValueError):
-            self.slot.add_transmission(self.transmitter, Transmission(Signal(np.random.standard_normal((3, 10)), 1.0)))
+            self.slot.add_transmission(self.transmitter, Transmission(Signal.Create(np.random.standard_normal((3, 10)), 1.0)))
 
     def test_get_transmissions(self) -> None:
         """Getting transmissions should return the proper transmissions"""
 
-        expected_transmissions = Transmission(Signal(np.random.standard_normal((self.device.num_transmit_antennas, 10)), 1.0))
+        expected_transmissions = Transmission(Signal.Create(np.random.standard_normal((self.device.num_transmit_antennas, 10)), 1.0))
         self.slot.add_transmission(self.transmitter, expected_transmissions)
 
         self.assertSequenceEqual([expected_transmissions], self.slot.get_transmissions(clear_cache=True))
@@ -866,7 +866,7 @@ class TestDevice(TestCase):
     def test_transmit_operators(self) -> None:
         """Transmit operators property should return the proper operators"""
 
-        expected_transmission = Transmission(Signal(np.random.standard_normal((1, 10)), self.device.sampling_rate, self.device.carrier_frequency))
+        expected_transmission = Transmission(Signal.Create(np.random.standard_normal((1, 10)), self.device.sampling_rate, self.device.carrier_frequency))
         transmitter = Mock()
         transmitter.transmit.return_value = expected_transmission
         self.device.transmitters.add(transmitter)
@@ -882,7 +882,7 @@ class TestDevice(TestCase):
         transmitter.transmit()
 
         output = self.device.generate_output()
-        assert_array_equal(transmitter.mock_transmission.signal.samples, output.mixed_signal.samples)
+        assert_array_equal(transmitter.mock_transmission.signal[:, :], output.mixed_signal[:, :])
 
     def test_transmit(self) -> None:
         """Transmit should return the proper transmission"""
@@ -891,12 +891,12 @@ class TestDevice(TestCase):
         self.device.transmitters.add(transmitter)
 
         transmission = self.device.transmit()
-        assert_array_equal(transmitter.mock_transmission.signal.samples, transmission.mixed_signal.samples)
+        assert_array_equal(transmitter.mock_transmission.signal[:, :], transmission.mixed_signal[:, :])
 
     def test_cache_transmission(self) -> None:
         """Cache device transmission should properly cache operator transmissions"""
 
-        expected_operator_transmission = Transmission(Signal(np.random.standard_normal((1, 10)), self.device.sampling_rate, self.device.carrier_frequency))
+        expected_operator_transmission = Transmission(Signal.Create(np.random.standard_normal((1, 10)), self.device.sampling_rate, self.device.carrier_frequency))
         expected_device_transmission = DeviceTransmission([expected_operator_transmission], expected_operator_transmission.signal)
 
         transmitter = Mock()
@@ -908,7 +908,7 @@ class TestDevice(TestCase):
     def test_process_input(self) -> None:
         """Process input should return the proper processed input"""
 
-        impinging_signal = Signal(np.random.standard_normal((1, 10)), self.device.sampling_rate, self.device.carrier_frequency)
+        impinging_signal = Signal.Create(np.random.standard_normal((1, 10)), self.device.sampling_rate, self.device.carrier_frequency)
 
         receiver = Mock()
         receiver.selected_receive_ports = [0]
@@ -916,11 +916,11 @@ class TestDevice(TestCase):
 
         processed_input = self.device.process_input(impinging_signal)
         receiver.cache_reception.assert_called()
-        assert_array_equal(impinging_signal.samples, processed_input.impinging_signals[0].samples)
+        assert_array_equal(impinging_signal[:, :], processed_input.impinging_signals[0][:, :])
 
         processed_input = self.device.process_input([impinging_signal, impinging_signal])
-        assert_array_equal(impinging_signal.samples, processed_input.impinging_signals[0].samples)
-        assert_array_equal(impinging_signal.samples, processed_input.impinging_signals[1].samples)
+        assert_array_equal(impinging_signal[:, :], processed_input.impinging_signals[0][:, :])
+        assert_array_equal(impinging_signal[:, :], processed_input.impinging_signals[1][:, :])
 
     def test_receive_operators_validation(self) -> None:
         """Receive operators should raise a ValueError if number of signals doesn't match number of receivers"""
@@ -943,18 +943,18 @@ class TestDevice(TestCase):
         operator_receptions = self.device.receive_operators([signal])
         self.assertSequenceEqual([self.receiver.reception], operator_receptions)
 
-        impinging_signals = [Signal(np.random.standard_normal((2, 10)), self.device.sampling_rate, self.device.carrier_frequency)]
+        impinging_signals = [Signal.Create(np.random.standard_normal((2, 10)), self.device.sampling_rate, self.device.carrier_frequency)]
         operator_receptions = self.device.receive_operators(self.device.process_input(impinging_signals))
         self.assertSequenceEqual([self.receiver.reception], operator_receptions)
 
     def test_receive(self) -> None:
         """Receive should return the proper reception"""
 
-        impinging_signal = Signal(np.random.standard_normal((1, 10)), self.device.sampling_rate, self.device.carrier_frequency)
+        impinging_signal = Signal.Create(np.random.standard_normal((1, 10)), self.device.sampling_rate, self.device.carrier_frequency)
 
         receiver = Mock()
         receiver.selected_receive_ports = [0]
         self.device.receivers.add(receiver)
 
         reception = self.device.receive(impinging_signal)
-        assert_array_equal(impinging_signal.samples, reception.impinging_signals[0].samples)
+        assert_array_equal(impinging_signal[:, :], reception.impinging_signals[0][:, :])

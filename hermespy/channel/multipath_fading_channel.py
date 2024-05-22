@@ -435,7 +435,7 @@ class PathRealization(HDFSerializable):
         impulse_response = self._impulse_response(signal.timestamps)
 
         # Propagate the transmitted samples
-        propagated_samples = signal.samples * impulse_response[np.newaxis, :]
+        propagated_samples = signal[:, :] * impulse_response[np.newaxis, :]
         return propagated_samples
 
     def to_HDF(self, group: Group) -> None:
@@ -703,14 +703,7 @@ class MultipathFadingRealization(ChannelRealization):
         propagated_samples = spatial_response @ propagated_samples
 
         # Return the result
-        propagated_signal = Signal(
-            propagated_samples,
-            sampling_rate,
-            carrier_frequency=signal.carrier_frequency,
-            delay=signal.delay,
-            noise_power=signal.noise_power,
-        )
-        return propagated_signal
+        return signal.from_ndarray(propagated_samples)
 
     def plot_power_delay(self, axes: VAT | None = None) -> Tuple[plt.Figure, VAT]:
         if axes:

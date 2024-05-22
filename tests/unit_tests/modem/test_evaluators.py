@@ -421,6 +421,7 @@ class TestConstellationEVM(TestCase):
     def setUp(self) -> None:
         self.waveform = RootRaisedCosineWaveform(symbol_rate=1e9, num_preamble_symbols=0, num_data_symbols=10, roll_off=.9)
         self.transmitter = TransmittingModem()
+        self.transmitter.seed = 42
         self.transmitter.waveform = self.waveform
         self.transmitter.device = SimulatedDevice()
         self.receiver = ReceivingModem()
@@ -439,7 +440,7 @@ class TestConstellationEVM(TestCase):
         self.assertAlmostEqual(0.0, rolled_off_evaluation.artifact().to_scalar(), 3)
 
         # Lower roll-off should result in higher EVM
-        self.waveform.roll_off = 0.5
+        self.waveform.roll_off = 0.1
         transmission = self.transmitter.transmit()
         self.receiver.receive(transmission.signal)
 

@@ -36,7 +36,7 @@ simulation.new_dimension("carrier_frequency", (1e9, 1e10, 1e11), device_alpha, d
 
 # Make both devices transmit 100 samples at 100 MHz
 ns, fs = 100, 1e8
-transmitted_signal = Signal(np.exp(2j * np.random.uniform(0, np.pi, (1, ns))), fs)
+transmitted_signal = Signal.Create(np.exp(2j * np.random.uniform(0, np.pi, (1, ns))), fs)
 alpha_transmitter = SignalTransmitter(transmitted_signal)
 beta_transmitter = SignalTransmitter(transmitted_signal)
 alpha_receiver = SignalReceiver(ns, fs, 1.0)

@@ -36,11 +36,11 @@ class TestCommunicationReception(TestCase):
     def setUp(self) -> None:
         self.rng = np.random.default_rng(42)
 
-        self.base_signal = Signal(self.rng.uniform(size=(2, 10)) + 1j * self.rng.uniform(size=(2, 10)), 1)
+        self.base_signal = Signal.Create(self.rng.uniform(size=(2, 10)) + 1j * self.rng.uniform(size=(2, 10)), 1)
         self.frames = [
             CommunicationReceptionFrame(
-                Signal(self.rng.uniform(size=(2, 10)) + 1j * self.rng.uniform(size=(2, 10)), 1),
-                Signal(self.rng.uniform(size=(2, 10)) + 1j * self.rng.uniform(size=(2, 10)), 1),
+                Signal.Create(self.rng.uniform(size=(2, 10)) + 1j * self.rng.uniform(size=(2, 10)), 1),
+                Signal.Create(self.rng.uniform(size=(2, 10)) + 1j * self.rng.uniform(size=(2, 10)), 1),
                 Symbols(self.rng.uniform(size=(2, 1, 5)) + 1j * self.rng.uniform(size=(2, 1, 5))),
                 Symbols(self.rng.uniform(size=(2, 1, 5)) + 1j * self.rng.uniform(size=(2, 1, 5))),
                 1.2345,
@@ -100,12 +100,12 @@ class TestCommunicationReception(TestCase):
                 group = file["testgroup"]
                 reception = self.reception.from_HDF(group)
 
-        np.testing.assert_array_equal(self.base_signal.samples, reception.signal.samples)
+        np.testing.assert_array_equal(self.base_signal[:, :], reception.signal[:, :])
         self.assertEqual(2, reception.num_frames)
 
         for initial_frame, serialized_frame in zip(self.frames, reception.frames):
-            np.testing.assert_array_equal(initial_frame.signal.samples, serialized_frame.signal.samples)
-            np.testing.assert_array_equal(initial_frame.decoded_signal.samples, serialized_frame.decoded_signal.samples)
+            np.testing.assert_array_equal(initial_frame.signal[:, :], serialized_frame.signal[:, :])
+            np.testing.assert_array_equal(initial_frame.decoded_signal[:, :], serialized_frame.decoded_signal[:, :])
             np.testing.assert_array_equal(initial_frame.symbols.raw, serialized_frame.symbols.raw)
             np.testing.assert_array_equal(initial_frame.decoded_symbols.raw, serialized_frame.decoded_symbols.raw)
             self.assertEqual(initial_frame.timestamp, serialized_frame.timestamp)
@@ -118,8 +118,8 @@ class TestCommunicationTransmission(TestCase):
     def setUp(self) -> None:
         self.rng = np.random.default_rng(42)
 
-        self.base_signal = Signal(self.rng.uniform(size=(2, 10)) + 1j * self.rng.uniform(size=(2, 10)), 1)
-        self.frames = [CommunicationTransmissionFrame(Signal(self.rng.uniform(size=(2, 10)) + 1j * self.rng.uniform(size=(2, 10)), 1), self.rng.integers(0, 2, 10), self.rng.integers(0, 2, 20), Symbols(self.rng.uniform(size=(2, 1, 5)) + 1j * self.rng.uniform(size=(2, 1, 5))), Symbols(self.rng.uniform(size=(2, 1, 5)) + 1j * self.rng.uniform(size=(2, 1, 5))), 1.2345) for _ in range(2)]
+        self.base_signal = Signal.Create(self.rng.uniform(size=(2, 10)) + 1j * self.rng.uniform(size=(2, 10)), 1)
+        self.frames = [CommunicationTransmissionFrame(Signal.Create(self.rng.uniform(size=(2, 10)) + 1j * self.rng.uniform(size=(2, 10)), 1), self.rng.integers(0, 2, 10), self.rng.integers(0, 2, 20), Symbols(self.rng.uniform(size=(2, 1, 5)) + 1j * self.rng.uniform(size=(2, 1, 5))), Symbols(self.rng.uniform(size=(2, 1, 5)) + 1j * self.rng.uniform(size=(2, 1, 5))), 1.2345) for _ in range(2)]
 
         self.transmission = CommunicationTransmission(self.base_signal, self.frames)
 
@@ -147,7 +147,7 @@ class TestCommunicationTransmission(TestCase):
                 group = file["testgroup"]
                 transmission = self.transmission.from_HDF(group)
 
-        np.testing.assert_array_equal(self.base_signal.samples, transmission.signal.samples)
+        np.testing.assert_array_equal(self.base_signal[:, :], transmission.signal[:, :])
         self.assertEqual(2, transmission.num_frames)
 
         for initial_frame, serialized_frame in zip(self.frames, transmission.frames):
@@ -155,7 +155,7 @@ class TestCommunicationTransmission(TestCase):
             np.testing.assert_array_equal(initial_frame.encoded_bits, serialized_frame.encoded_bits)
             np.testing.assert_array_equal(initial_frame.symbols.raw, serialized_frame.symbols.raw)
             np.testing.assert_array_equal(initial_frame.encoded_symbols.raw, serialized_frame.encoded_symbols.raw)
-            np.testing.assert_array_equal(initial_frame.signal.samples, serialized_frame.signal.samples)
+            np.testing.assert_array_equal(initial_frame.signal[:, :], serialized_frame.signal[:, :])
 
 
 class BaseModemMock(BaseModem):
@@ -491,9 +491,9 @@ class TestDuplexModem(TestBaseModem):
         """Received frames should be padded to the correct length"""
 
         transmission = self.modem.transmit()
-        cutoff_samples = transmission.signal.samples[:, :transmission.signal.num_samples//2]
+        cutoff_samples = transmission.signal[:, :transmission.signal.num_samples//2]
         self.waveform.synchronization.synchronize = lambda s: [0]
-        self.device.process_input(Signal(cutoff_samples, transmission.signal.sampling_rate, self.device.carrier_frequency))
+        self.device.process_input(Signal.Create(cutoff_samples, transmission.signal.sampling_rate, self.device.carrier_frequency))
         reception = self.modem.receive()
 
         self.assertEqual(transmission.signal.num_samples, reception.frames[0].signal.num_samples)

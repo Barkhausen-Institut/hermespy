@@ -57,7 +57,7 @@ simulation.set_channel(
     StreetCanyonLineOfSight(),
 )
 
-test_signal = Signal(np.outer(np.ones(1), np.exp(2j * pi * .25 * np.arange(100))), sampling_rate, carrier_frequency)
+test_signal = Signal.Create(np.outer(np.ones(1), np.exp(2j * pi * .25 * np.arange(100))), sampling_rate, carrier_frequency)
 beamformer = ConventionalBeamformer()
 base_station_transmitter = BeamformingTransmitter(test_signal, beamformer)
 base_station_transmitter.device = base_station_device

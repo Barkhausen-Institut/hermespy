@@ -73,7 +73,7 @@ class TestSilentTransmitter(TestCase):
         custom_transmission = self.transmitter.transmit(10 / self.device.sampling_rate)
 
         self.assertEqual(self.num_samples, default_transmission.signal.num_samples)
-        self.assertCountEqual([0] * 10, custom_transmission.signal.samples[0, :].tolist())
+        self.assertCountEqual([0] * 10, custom_transmission.signal[0, :].flatten().tolist())
 
 
 class TestSignalTransmitter(TestCase):
@@ -84,7 +84,7 @@ class TestSignalTransmitter(TestCase):
 
         self.num_samples = 100
         self.sampling_rate = self.device.sampling_rate
-        self.signal = Signal(np.ones((1, 10)), sampling_rate=self.device.sampling_rate, carrier_frequency=self.device.carrier_frequency)
+        self.signal = Signal.Create(np.ones((1, 10)), sampling_rate=self.device.sampling_rate, carrier_frequency=self.device.carrier_frequency)
         self.transmitter = SignalTransmitter(self.signal)
         self.device.transmitters.add(self.transmitter)
 
@@ -96,7 +96,7 @@ class TestSignalTransmitter(TestCase):
     def test_signal_setget(self) -> None:
         """Signal property getter should return setter argument"""
 
-        expected_seignal = Signal(np.zeros((1, 10)), sampling_rate=self.device.sampling_rate, carrier_frequency=self.device.carrier_frequency)
+        expected_seignal = Signal.Create(np.zeros((1, 10)), sampling_rate=self.device.sampling_rate, carrier_frequency=self.device.carrier_frequency)
         self.transmitter.signal = expected_seignal
 
         self.assertIs(expected_seignal, self.transmitter.signal)
@@ -106,7 +106,7 @@ class TestSignalTransmitter(TestCase):
 
         transmission = self.transmitter.transmit()
 
-        assert_array_equal(self.signal.samples, transmission.signal.samples)
+        assert_array_equal(self.signal[:, :], transmission.signal[:, :])
 
     def test_recall_transmission(self) -> None:
         """Recall transmission should recall the last transmission"""
@@ -121,7 +121,7 @@ class TestSignalTransmitter(TestCase):
             with File(file_location, "r") as file:
                 recalled_transmission = self.transmitter.recall_transmission(file["transmission"])
 
-        assert_array_equal(transmission.signal.samples, recalled_transmission.signal.samples)
+        assert_array_equal(transmission.signal[:, :], recalled_transmission.signal[:, :])
 
 
 class TestSignalReceiver(TestCase):
@@ -153,9 +153,9 @@ class TestSignalReceiver(TestCase):
     def test_receive(self) -> None:
         """Receiver should receive a signal"""
 
-        power_signal = Signal(np.ones((1, 10)), sampling_rate=self.device.sampling_rate, carrier_frequency=self.device.carrier_frequency)
+        power_signal = Signal.Create(np.ones((1, 10)), sampling_rate=self.device.sampling_rate, carrier_frequency=self.device.carrier_frequency)
         self.device.process_input(power_signal)
 
         received_signal = self.receiver.receive().signal
 
-        assert_array_equal(received_signal.samples, power_signal.samples)
+        assert_array_equal(received_signal[:, :], power_signal[:, :])

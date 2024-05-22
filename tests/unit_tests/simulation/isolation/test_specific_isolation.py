@@ -59,7 +59,7 @@ class TestSpecificIsolation(TestCase):
         expected_isolation = 20
         self.isolation.isolation = db2lin(expected_isolation)
 
-        signal = Signal(self.rng.normal(size=(self.device.num_antennas, num_samples)) + 1j * self.rng.normal(size=(self.device.num_antennas, num_samples)), 1.0)
+        signal = Signal.Create(self.rng.normal(size=(self.device.num_antennas, num_samples)) + 1j * self.rng.normal(size=(self.device.num_antennas, num_samples)), 1.0)
         leaking_signal = self.isolation.leak(signal)
 
         realised_isolation = lin2db(signal.power) - lin2db(leaking_signal.power)
@@ -68,7 +68,7 @@ class TestSpecificIsolation(TestCase):
     def test_leak_validation(self) -> None:
         """Leak subroutine should raise RuntimeErrors on invalid internal states"""
 
-        signal = Signal.empty(1, 1, 0)
+        signal = Signal.Empty(1, 1, 0)
 
         self.isolation._SpecificIsolation__leakage_factors = None
         with self.assertRaises(RuntimeError):

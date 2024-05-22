@@ -99,7 +99,7 @@ class SilentTransmitter(StaticOperator, Transmitter[Transmission]):
         # Compute the number of samples to be transmitted
         num_samples = self.num_samples if duration <= 0.0 else int(duration * self.sampling_rate)
 
-        silence = Signal(
+        silence = Signal.Create(
             np.zeros((self.device.num_antennas, num_samples), dtype=complex),
             sampling_rate=self.sampling_rate,
             carrier_frequency=self.device.carrier_frequency,

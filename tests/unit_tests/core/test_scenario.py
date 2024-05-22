@@ -347,7 +347,7 @@ class TestScenario(TestCase):
             _ = self.scenario.process_inputs([])
 
     def test_process_inputs(self) -> None:
-        impinging_signals = [Signal(self.rng.random((1, 10)), 1.0, 0.0) for _ in range(self.scenario.num_devices)]
+        impinging_signals = [Signal.Create(self.rng.random((1, 10)), 1.0, 0.0) for _ in range(self.scenario.num_devices)]
         processed_inputs = self.scenario.process_inputs(impinging_signals)
 
         self.assertEqual(2, len(processed_inputs))
@@ -359,7 +359,7 @@ class TestScenario(TestCase):
             _ = self.scenario.receive_operators([])
 
     def test_receive_operators(self) -> None:
-        impinging_signals = [Signal(self.rng.random((1, 10)), 1.0, 0.0) for _ in range(self.scenario.num_devices)]
+        impinging_signals = [Signal.Create(self.rng.random((1, 10)), 1.0, 0.0) for _ in range(self.scenario.num_devices)]
         processed_inputs = self.scenario.process_inputs(impinging_signals)
         receptions = self.scenario.receive_operators(processed_inputs)
 

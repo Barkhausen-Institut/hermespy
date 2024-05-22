@@ -67,7 +67,7 @@ from .monte_carlo import (
 from .random_node import RandomRealization, RandomNode
 from .drop import Drop, RecalledDrop
 from .scenario import Scenario, ScenarioMode, ScenarioType, ReplayScenario
-from .signal_model import Signal
+from .signal_model import Signal, DenseSignal, SparseSignal
 from .visualize import (
     ScatterVisualization,
     PlotVisualization,
@@ -173,6 +173,8 @@ __all__ = [
     "ScenarioType",
     "ReplayScenario",
     "Signal",
+    "DenseSignal",
+    "SparseSignal",
     "ProcessedDeviceInput",
     "DeviceInput",
     "ScatterVisualization",

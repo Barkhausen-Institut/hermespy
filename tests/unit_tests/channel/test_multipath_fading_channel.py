@@ -129,29 +129,29 @@ class TestMultipathFadingRealization(unittest.TestCase):
         """Propagation should result in a signal with the correct number of samples"""
 
         num_samples = 100
-        signal = Signal(self.rng.normal(0, 1, size=(2, num_samples)) + 1j * self.rng.normal(0, 1, size=(2, num_samples)), self.sampling_rate)
+        signal = Signal.Create(self.rng.normal(0, 1, size=(2, num_samples)) + 1j * self.rng.normal(0, 1, size=(2, num_samples)), self.sampling_rate)
 
         signal_propagation = self.realization.propagate(signal)
         state_propagation = self.realization.state(self.tx_device, self.rx_device, 0.0, self.sampling_rate, signal.num_samples, 1 + signal_propagation.signal.num_samples - signal.num_samples).propagate(signal)
 
-        assert_array_almost_equal(signal_propagation.signal.samples, state_propagation.samples)
+        assert_array_almost_equal(signal_propagation.signal[:, :], state_propagation[:, :])
 
     def test_propagate_state_conjugate(self) -> None:
         """Propagation should result in a signal with the correct number of samples in the conjugate case"""
 
         num_samples = 100
-        signal = Signal(self.rng.normal(0, 1, size=(2, num_samples)) + 1j * self.rng.normal(0, 1, size=(2, num_samples)), self.sampling_rate)
+        signal = Signal.Create(self.rng.normal(0, 1, size=(2, num_samples)) + 1j * self.rng.normal(0, 1, size=(2, num_samples)), self.sampling_rate)
 
         signal_propagation = self.realization.propagate(signal, self.rx_device, self.tx_device)
         state_propagation = self.realization.state(self.rx_device, self.tx_device, 0.0, self.sampling_rate, signal.num_samples, 1 + signal_propagation.signal.num_samples - signal.num_samples).propagate(signal)
 
-        assert_array_almost_equal(signal_propagation.signal.samples, state_propagation.samples)
+        assert_array_almost_equal(signal_propagation.signal[:, :], state_propagation[:, :])
 
     def test_propagate_conjugate_validation(self) -> None:
         """Propagation should fail for unknown devices"""
 
         with self.assertRaises(ValueError):
-            _ = self.realization.propagate(Signal(np.zeros((2, 100)), self.sampling_rate), self.tx_device, Mock())
+            _ = self.realization.propagate(Signal.Create(np.zeros((2, 100)), self.sampling_rate), self.tx_device, Mock())
 
     def test_plot_power_delay(self) -> None:
         """Plotting power delay profile should not raise any errors"""
@@ -378,7 +378,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
 
         timestamps = np.arange(self.num_samples) / self.sampling_rate
         transmission = exp(1j * timestamps * self.transmit_frequency).reshape(1, self.num_samples)
-        propagation = channel.propagate(Signal(transmission, self.sampling_rate))
+        propagation = channel.propagate(Signal.Create(transmission, self.sampling_rate))
 
         self.assertEqual(10, propagation.signal.num_samples - self.num_samples, "Propagation impulse response has unexpected length")
 
@@ -395,7 +395,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
 
         timestamps = np.arange(self.num_samples) / self.sampling_rate
         transmit_samples = np.exp(2j * pi * timestamps * self.transmit_frequency).reshape((1, self.num_samples))
-        transmit_signal = Signal(transmit_samples, self.sampling_rate)
+        transmit_signal = Signal.Create(transmit_samples, self.sampling_rate)
 
         for d, delay in enumerate(test_delays):
             delayed_params["delays"] = reference_params["delays"] + delay
@@ -408,7 +408,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
             delayed_propagation = delayed_channel.propagate(transmit_signal)
 
             zero_pads = int(self.sampling_rate * float(delay))
-            npt.assert_array_almost_equal(reference_propagation.signal.samples, delayed_propagation.signal.samples[:, zero_pads:])
+            npt.assert_array_almost_equal(reference_propagation.signal[:, :], delayed_propagation.signal[:, :][:, zero_pads:])
 
     def test_rayleigh(self) -> None:
         """
@@ -547,7 +547,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
 
         frame_size = (1, signal_length)
         tx_samples = rand.normal(0, 1, frame_size) + 1j * rand.normal(0, 1, frame_size)
-        tx_signal = Signal(tx_samples, self.sampling_rate)
+        tx_signal = Signal.Create(tx_samples, self.sampling_rate)
 
         channel_no_gain.random_generator = np.random.default_rng(42)  # Reset random number rng
         propagation_no_gain = channel_no_gain.propagate(tx_signal)
@@ -555,7 +555,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
         channel_gain.random_generator = np.random.default_rng(42)  # Reset random number rng
         propagation_gain = channel_gain.propagate(tx_signal)
 
-        assert_array_almost_equal(propagation_no_gain.signal.samples * gain**0.5, propagation_gain.signal.samples)
+        assert_array_almost_equal(propagation_no_gain.signal[:, :] * gain**0.5, propagation_gain.signal[:, :])
 
     def test_antenna_correlation(self) -> None:
         """Test channel simulation with antenna correlation modeling"""

@@ -255,7 +255,9 @@ class ChannelRealization(object):
         propagated_signal = self._propagate(_signal, _transmitter, _receiver, _interpolation_mode)
 
         # Apply channel gain
-        propagated_signal.samples *= self.gain**0.5
+        gain_sqrt = self.gain**0.5
+        for block in propagated_signal:
+            block *= gain_sqrt
 
         # Return resulting channel propagation
         propagation = ChannelPropagation[CRT](

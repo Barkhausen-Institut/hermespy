@@ -333,7 +333,7 @@ class ClusterDelayLineRealization(ChannelRealization):
         impulse = np.zeros(signal.num_samples, dtype=np.complex_)
         einsum_subscripts = "ij,jk,k->ik"
         einsum_path = np.einsum_path(
-            einsum_subscripts, channel, signal.samples, impulse, optimize="optimal"
+            einsum_subscripts, channel, signal[:, :], impulse, optimize="optimal"
         )[0]
 
         for channel, impulse, delay in self.__ray_impulse_generator(
@@ -348,16 +348,10 @@ class ClusterDelayLineRealization(ChannelRealization):
                 propagated_samples[
                     :, delay_in_samples : delay_in_samples + signal.num_samples
                 ] += np.einsum(
-                    einsum_subscripts, channel, signal.samples, impulse, optimize=einsum_path
+                    einsum_subscripts, channel, signal[:, :], impulse, optimize=einsum_path
                 )
 
-        return Signal(
-            propagated_samples,
-            signal.sampling_rate,
-            signal.carrier_frequency,
-            signal.delay,
-            signal.noise_power,
-        )
+        return signal.from_ndarray(propagated_samples)
 
     def state(
         self,

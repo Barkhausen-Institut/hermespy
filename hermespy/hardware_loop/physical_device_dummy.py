@@ -65,8 +65,8 @@ class PhysicalDeviceDummy(SimulatedDevice, PhysicalDevice, Serializable):
 
         # Initialize internal state
         self.receive_transmission = receive_transmission
-        self.__uploaded_signal = Signal.empty(1.0, self.num_antennas)
-        self.__downloaded_signal = Signal.empty(1.0, self.num_antennas)
+        self.__uploaded_signal = Signal.Empty(1.0, self.num_antennas)
+        self.__downloaded_signal = Signal.Empty(1.0, self.num_antennas)
 
     @property
     def receive_transmission(self) -> bool:
@@ -149,15 +149,15 @@ class PhysicalDeviceDummy(SimulatedDevice, PhysicalDevice, Serializable):
             self.__downloaded_signal = self.__uploaded_signal
 
         else:
-            samples = np.zeros(self.__uploaded_signal.samples.shape)
-            self.__downloaded_signal = Signal(samples, self.sampling_rate, self.carrier_frequency)
+            samples = np.zeros(self.__uploaded_signal.shape)
+            self.__downloaded_signal = Signal.Create(samples, self.sampling_rate, self.carrier_frequency)
 
     def trigger_direct(self, signal: Signal, calibrate: bool = True) -> Signal:
         if self.receive_transmission:
             input = signal
 
         else:
-            input = Signal(
+            input = Signal.Create(
                 np.zeros(
                     (self.antennas.num_receive_antennas, signal.num_samples), dtype=np.complex_
                 ),
