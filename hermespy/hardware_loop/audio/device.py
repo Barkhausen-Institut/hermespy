@@ -329,7 +329,7 @@ class AudioDevice(PhysicalDevice, Serializable):
         delay_samples = int(self.max_receive_delay * self.sampling_rate)
 
         # Mix to to positive frequencies for audio transmission
-        resampled_samples = signal.resample(self.sampling_rate).samples
+        resampled_samples = signal.resample(self.sampling_rate)[:, :]
         pressure_signal = np.roll(
             fft(resampled_samples), int(0.25 * resampled_samples.shape[1]), axis=1
         )
@@ -377,7 +377,7 @@ class AudioDevice(PhysicalDevice, Serializable):
         transform = np.roll(transform, -int(0.25 * transform.shape[1]), axis=1)
         complex_samples = ifft(2 * transform, axis=1)
 
-        signal_model = Signal(complex_samples, self.sampling_rate, 0)
+        signal_model = Signal.Create(complex_samples, self.sampling_rate, 0)
         return signal_model
 
     @staticmethod

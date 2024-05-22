@@ -411,7 +411,7 @@ class RadarBase(Generic[RTT, RRT], DuplexOperator[RTT, RRT]):
             beamformed_samples = self.receive_beamformer.probe(signal)[:, 0, :]
 
         else:
-            beamformed_samples = signal.samples
+            beamformed_samples = signal[:, :]
 
         # Build the radar cube by generating a beam-forming line over all angles of interest
         angles_of_interest = (
@@ -624,15 +624,14 @@ class Radar(RadarBase[RadarTransmission, RadarReception], Serializable):
         if self.device.antennas.num_antennas > 1:
             # If no beamformer is configured, only the first antenna will transmit the ping
             if self.transmit_beamformer is None:
-                additional_streams = Signal(
+                additional_streams = signal.from_ndarray(
                     np.zeros(
                         (
                             self.device.antennas.num_antennas - signal.num_streams,
                             signal.num_samples,
                         ),
                         dtype=complex,
-                    ),
-                    signal.sampling_rate,
+                    )
                 )
                 signal.append_streams(additional_streams)
 
@@ -679,9 +678,7 @@ class Radar(RadarBase[RadarTransmission, RadarReception], Serializable):
 
         for angle_idx, line in enumerate(beamformed_samples):
             # Process the single angular line by the waveform generator
-            line_signal = Signal(
-                line, signal.sampling_rate, carrier_frequency=signal.carrier_frequency
-            )
+            line_signal = signal.from_ndarray(line)
             line_estimate = self.waveform.estimate(line_signal)
 
             cube_data[angle_idx, ::] = line_estimate

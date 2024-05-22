@@ -36,14 +36,14 @@ class PerfectIsolation(Serializable, Isolation):
 
     def _leak(self, signal: Signal | None) -> Signal:
         if signal is None:
-            return Signal.empty(
+            return Signal.Empty(
                 self.device.sampling_rate,
                 self.device.antennas.num_receive_antennas,
                 carrier_frequency=self.device.carrier_frequency,
             )
 
         else:
-            return Signal.empty(
+            return Signal.Empty(
                 signal.sampling_rate,
                 self.device.antennas.num_receive_antennas,
                 carrier_frequency=signal.carrier_frequency,

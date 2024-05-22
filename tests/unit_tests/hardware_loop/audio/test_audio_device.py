@@ -39,7 +39,7 @@ class SineOperator(DuplexOperator[Transmission, Reception]):
 
     def _transmit(self, duration: float = 0.0) -> Transmission:
         sine = np.exp(2j * np.pi * np.arange(int(self.__duration * self.sampling_rate)) / self.sampling_rate * self.__frequency)
-        signal = Signal(sine[np.newaxis, :], self.sampling_rate, self.device.carrier_frequency)
+        signal = Signal.Create(sine[np.newaxis, :], self.sampling_rate, self.device.carrier_frequency)
 
         transmission = Transmission(signal=signal)
         return transmission
@@ -254,7 +254,7 @@ class TestAudioDevice(TestCase):
 
         reception = operator.receive()
 
-        assert_array_almost_equal(transmission.signal.samples, reception.signal.samples)
+        assert_array_almost_equal(transmission.signal[:, :], reception.signal[:, :])
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""

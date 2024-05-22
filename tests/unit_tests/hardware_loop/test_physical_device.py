@@ -157,7 +157,7 @@ class TestPhysicalDevice(TestCase):
         num_samples = 10000
         expected_noise_power = 0.1
         samples = 2**-0.5 * (self.rng.normal(size=num_samples, scale=expected_noise_power**0.5) + 1j * self.rng.normal(size=num_samples, scale=expected_noise_power**0.5))
-        signal = Signal(samples, sampling_rate=self.sampling_rate)
+        signal = Signal.Create(samples, sampling_rate=self.sampling_rate)
         patch_download.side_effect = lambda: signal
 
         noise_power = self.device.estimate_noise_power(num_samples)
@@ -186,7 +186,7 @@ class TestPhysicalDevice(TestCase):
     def test_transmit_no_adpative_sampling(self, _upload: MagicMock) -> None:
         """Test physical device extended transmit routine without adptive sampling"""
 
-        transmitted_signal = Signal(np.zeros((self.device.num_antennas, 10)), self.device.sampling_rate, self.device.carrier_frequency)
+        transmitted_signal = Signal.Create(np.zeros((self.device.num_antennas, 10)), self.device.sampling_rate, self.device.carrier_frequency)
         transmitter = SignalTransmitter(transmitted_signal)
         self.device.transmitters.add(transmitter)
 
@@ -194,13 +194,13 @@ class TestPhysicalDevice(TestCase):
         transmission = self.device.transmit()
 
         _upload.assert_called_once()
-        assert_array_equal(transmitted_signal.samples, transmission.mixed_signal.samples)
+        assert_array_equal(transmitted_signal[:, :], transmission.mixed_signal[:, :])
 
     @patch("hermespy.hardware_loop.physical_device.PhysicalDevice._upload")
     def test_transmit_adpative_sampling(self, _upload: MagicMock) -> None:
         """Test physical device extended transmit routine with adptive sampling"""
 
-        transmitted_signal = Signal(np.zeros((self.device.num_antennas, 10), dtype=complex), self.device.sampling_rate, self.device.carrier_frequency)
+        transmitted_signal = Signal.Create(np.zeros((self.device.num_antennas, 10), dtype=complex), self.device.sampling_rate, self.device.carrier_frequency)
 
         transmitter_alpha = SignalTransmitter(transmitted_signal)
         transmitter_beta = SignalTransmitter(transmitted_signal)
@@ -211,18 +211,18 @@ class TestPhysicalDevice(TestCase):
         transmission = self.device.transmit()
 
         _upload.assert_called_once()
-        assert_array_equal(transmitted_signal.samples, transmission.mixed_signal.samples)
+        assert_array_equal(transmitted_signal[:, :], transmission.mixed_signal[:, :])
 
     def test_transmit_validation(self) -> None:
         """Phyiscal device extended transmit routine should raise RuntimeErrors on invalid configurations"""
 
         self.device.adaptive_sampling = True
 
-        signal_alpha = Signal(np.zeros((self.device.num_antennas, 10)), self.device.sampling_rate, self.device.carrier_frequency)
+        signal_alpha = Signal.Create(np.zeros((self.device.num_antennas, 10)), self.device.sampling_rate, self.device.carrier_frequency)
         transmitter_alpha = SignalTransmitter(signal_alpha)
         self.device.transmitters.add(transmitter_alpha)
 
-        signal_beta = Signal(np.zeros((self.device.num_antennas, 10)), 1 + self.device.sampling_rate, self.device.carrier_frequency)
+        signal_beta = Signal.Create(np.zeros((self.device.num_antennas, 10)), 1 + self.device.sampling_rate, self.device.carrier_frequency)
         transmitter_beta = SignalTransmitter(signal_beta)
         self.device.transmitters.add(transmitter_beta)
 
@@ -237,7 +237,7 @@ class TestPhysicalDevice(TestCase):
         receiver.sampling_rate = self.device.sampling_rate
         receiver.selected_receive_ports = [i for i in range(self.device.num_receive_ports)]
 
-        _download.return_value = Signal(np.zeros((self.device.num_receive_ports, 10)), self.device.sampling_rate, self.device.carrier_frequency)
+        _download.return_value = Signal.Create(np.zeros((self.device.num_receive_ports, 10)), self.device.sampling_rate, self.device.carrier_frequency)
         self.device.lowpass_filter = True
         self.device.receivers.add(receiver)
 
@@ -255,11 +255,11 @@ class TestPhysicalDevice(TestCase):
         """Receive routine should raise ValueErrors on invalid arguments"""
 
         with self.assertRaises(ValueError):
-            _download.return_value = Signal(np.zeros((3, 10)), self.device.sampling_rate, self.device.carrier_frequency)
+            _download.return_value = Signal.Create(np.zeros((3, 10)), self.device.sampling_rate, self.device.carrier_frequency)
             _ = self.device.process_input()
 
         with self.assertRaises(ValueError):
-            _download.return_value = Signal(np.zeros((self.device.num_receive_ports, 10)), self.device.sampling_rate + 1, self.device.carrier_frequency)
+            _download.return_value = Signal.Create(np.zeros((self.device.num_receive_ports, 10)), self.device.sampling_rate + 1, self.device.carrier_frequency)
             _ = self.device.process_input()
 
     def test_download(self) -> None:
@@ -272,15 +272,15 @@ class TestPhysicalDevice(TestCase):
         """Trigger routine should raise a ValueError on invalid arguments"""
 
         with self.assertRaises(ValueError):
-            self.device.trigger_direct(Signal.empty(self.device.sampling_rate, self.device.num_antennas, carrier_frequency=1.0))
+            self.device.trigger_direct(Signal.Empty(self.device.sampling_rate, self.device.num_antennas, carrier_frequency=1.0))
 
         with self.assertRaises(ValueError):
-            self.device.trigger_direct(Signal.empty(566662, self.device.num_antennas, carrier_frequency=self.device.carrier_frequency))
+            self.device.trigger_direct(Signal.Empty(566662, self.device.num_antennas, carrier_frequency=self.device.carrier_frequency))
 
     def test_process_device_input(self) -> None:
         """Test processing of device inputs"""
 
-        input = DeviceInput(Signal.empty(self.device.sampling_rate, self.device.num_antennas, carrier_frequency=self.device.carrier_frequency))
+        input = DeviceInput(Signal.Empty(self.device.sampling_rate, self.device.num_antennas, carrier_frequency=self.device.carrier_frequency))
         processed_input = self.device.process_input(input)
 
         self.assertIsInstance(processed_input, ProcessedDeviceInput)
@@ -288,7 +288,7 @@ class TestPhysicalDevice(TestCase):
     def test_process_signal_sequence(self) -> None:
         """Test processing of a sequence of signals"""
 
-        input = [Signal.empty(self.device.sampling_rate, self.device.num_antennas, carrier_frequency=self.device.carrier_frequency)]
+        input = [Signal.Empty(self.device.sampling_rate, self.device.num_antennas, carrier_frequency=self.device.carrier_frequency)]
         processed_input = self.device.process_input(input)
 
         self.assertIsInstance(processed_input, ProcessedDeviceInput)
@@ -296,7 +296,7 @@ class TestPhysicalDevice(TestCase):
     def test_process_signal(self) -> None:
         """Test processing of a single signal"""
 
-        input = Signal.empty(self.device.sampling_rate, self.device.num_antennas, carrier_frequency=self.device.carrier_frequency)
+        input = Signal.Empty(self.device.sampling_rate, self.device.num_antennas, carrier_frequency=self.device.carrier_frequency)
         processed_input = self.device.process_input(input)
 
         self.assertIsInstance(processed_input, ProcessedDeviceInput)
@@ -306,18 +306,18 @@ class TestPhysicalDevice(TestCase):
         """Test lowpass filtering during input processing"""
 
         input_samples = self.device._rng.standard_normal((self.device.num_antennas, 512)) + 1j * self.device._rng.standard_normal((self.device.num_antennas, 512))
-        _download.return_value = Signal(input_samples, self.device.sampling_rate, self.device.carrier_frequency)
+        _download.return_value = Signal.Create(input_samples, self.device.sampling_rate, self.device.carrier_frequency)
 
         # Enable lowpass filter
         self.device.lowpass_filter = True
 
         # Check with default cutoff frequency
         self.device.lowpass_bandwidth = 0.0
-        default_filtered_samples = self.device.process_input().impinging_signals[0].samples
+        default_filtered_samples = self.device.process_input().impinging_signals[0][:, :]
 
         # Check with specific cutoff frequency
         self.device.lowpass_bandwidth = 0.5 * self.device.sampling_rate
-        filtered_samples = self.device.process_input().impinging_signals[0].samples
+        filtered_samples = self.device.process_input().impinging_signals[0][:, :]
 
         assert_array_equal(default_filtered_samples, filtered_samples)
 
@@ -440,17 +440,17 @@ class TestNoDelayCalibration(TestCase):
         """Delays should be correctly corrected during transmission"""
 
         test_samples = np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 0]], dtype=np.complex_)
-        test_signal = Signal(test_samples, 1.0)
+        test_signal = Signal.Create(test_samples, 1.0)
 
-        assert_array_equal(test_signal.samples, self.calibration.correct_transmit_delay(test_signal).samples)
+        assert_array_equal(test_signal[:, :], self.calibration.correct_transmit_delay(test_signal)[:, :])
 
     def test_correct_receive_delay(self) -> None:
         """Delays should be correctly corrected during reception"""
 
         test_samples = np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 0]], dtype=np.complex_)
-        test_signal = Signal(test_samples, 1.0)
+        test_signal = Signal.Create(test_samples, 1.0)
 
-        assert_array_equal(test_signal.samples, self.calibration.correct_receive_delay(test_signal).samples)
+        assert_array_equal(test_signal[:, :], self.calibration.correct_receive_delay(test_signal)[:, :])
 
     def test_yaml_serialization(self) -> None:
         """Test YAML serialization and deserialization"""
@@ -467,10 +467,10 @@ class TestNoLeakageCalibration(TestCase):
     def test_remove_leakage(self) -> None:
         """Nothing should be done to the signal during leakage removal"""
 
-        transmitted_signal = Signal(np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 0]], dtype=np.complex_), 1.0)
-        received_signal = Signal(np.array([[1, 2, 3, 4, 2], [6, 7, 8, 1, 0]], dtype=np.complex_), 1.0)
+        transmitted_signal = Signal.Create(np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 0]], dtype=np.complex_), 1.0)
+        received_signal = Signal.Create(np.array([[1, 2, 3, 4, 2], [6, 7, 8, 1, 0]], dtype=np.complex_), 1.0)
 
-        assert_array_equal(received_signal.samples, self.leakage_calibration.remove_leakage(transmitted_signal, received_signal).samples)
+        assert_array_equal(received_signal[:, :], self.leakage_calibration.remove_leakage(transmitted_signal, received_signal)[:, :])
 
     def test_yaml_serialization(self) -> None:
         """Test YAML serialization and deserialization"""

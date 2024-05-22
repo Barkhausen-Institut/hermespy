@@ -132,9 +132,9 @@ class TestImpedanceCoupling(TestCase):
     def test_transmit_receive(self) -> None:
         """Transmit and receive routine should be properly called"""
 
-        signal = Signal(self.rng.normal(size=(1, 10)) + 1j * self.rng.normal(size=(1, 10)), 1, carrier_frequency=0.0)
+        signal = Signal.Create(self.rng.normal(size=(1, 10)) + 1j * self.rng.normal(size=(1, 10)), 1, carrier_frequency=0.0)
 
         tx = self.coupling.transmit(signal)
         rx = self.coupling.receive(tx)
 
-        assert_array_almost_equal(signal.samples, rx.samples)
+        assert_array_almost_equal(signal[:, :], rx[:, :])

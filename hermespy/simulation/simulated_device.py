@@ -395,7 +395,7 @@ class SimulatedDeviceOutput(DeviceOutput):
         _emerging_signals = (
             [emerging_signals] if isinstance(emerging_signals, Signal) else emerging_signals
         )
-        superimposed_signal = Signal.empty(
+        superimposed_signal = Signal.Empty(
             sampling_rate, num_antennas, carrier_frequency=carrier_frequency
         )
 
@@ -667,11 +667,11 @@ class ProcessedSimulatedDeviceInput(SimulatedDeviceReceiveRealization, Processed
         if len(impinging_signals) > 0:  # pragma: no cover
             if operator_separation and isinstance(impinging_signals[0], Sequence):  # type: ignore
                 for signal_sequence in impinging_signals:
-                    superposition = signal_sequence[0] if len(signal_sequence) > 0 else Signal.empty(1.0, 1)  # type: ignore
+                    superposition = signal_sequence[0] if len(signal_sequence) > 0 else Signal.Empty(1.0, 1)  # type: ignore
                     for subsignal in signal_sequence[1:]:  # type: ignore
-                        superposition.superimpose(subsignal)
+                        superposition.superimpose(subsignal)  # type: ignore
 
-                    _impinging_signals.append(superposition)
+                    _impinging_signals.append(superposition)  # type: ignore
 
             elif not operator_separation and isinstance(impinging_signals[0], Signal):
                 _impinging_signals = impinging_signals  # type: ignore
@@ -1270,7 +1270,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
 
         # If operator separation is disable, the transmissions are superimposed to a single signal model
         else:
-            superimposed_signal = Signal.empty(
+            superimposed_signal = Signal.Empty(
                 self.sampling_rate,
                 self.num_transmit_ports,
                 carrier_frequency=self.carrier_frequency,
@@ -1297,7 +1297,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
             dtype=complex,
         )
         for signal in emerging_signals:
-            signal.samples = np.append(trigger_padding, signal.samples, axis=1)
+            signal.set_samples(np.append(trigger_padding, signal[:, :], axis=1))
 
         # Genreate the output data object
         output = SimulatedDeviceOutput(
@@ -1456,10 +1456,8 @@ class SimulatedDevice(Device, Moveable, Serializable):
             if receiver.selected_receive_ports is None
             else receiver.selected_receive_ports
         )
-        received_samples = baseband_signal.samples[receive_port_selection, :]  # type: ignore
-        received_signal = Signal(
-            received_samples, baseband_signal.sampling_rate, baseband_signal.carrier_frequency
-        )
+        received_samples = baseband_signal[receive_port_selection, :]  # type: ignore
+        received_signal = baseband_signal.from_ndarray(received_samples)
 
         # Add noise to the received signal
         noisy_signal = noise_realization.add_to(received_signal)
@@ -1470,8 +1468,8 @@ class SimulatedDevice(Device, Moveable, Serializable):
         )
 
         # Select only the desired signal streams, as specified by the receiver
-        receiver_input = Signal(
-            quantized_signal.samples[receive_port_selection, :],  # type: ignore
+        receiver_input = Signal.Create(
+            quantized_signal[receive_port_selection, :],  # type: ignore
             quantized_signal.sampling_rate,
             quantized_signal.carrier_frequency,
             quantized_signal.delay,
@@ -1533,7 +1531,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
         """
 
         _impinging_signals: Sequence[Signal] = []
-        mixed_signal = Signal.empty(
+        mixed_signal = Signal.Empty(
             sampling_rate=self.sampling_rate,
             num_streams=self.num_receive_antennas,
             num_samples=0,
@@ -1588,7 +1586,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
             if trigger_realization is None
             else trigger_realization.compute_num_offset_samples(self.sampling_rate)
         )
-        mixed_signal.samples = mixed_signal.samples[:, num_trigger_offset_samples:]
+        mixed_signal.set_samples(mixed_signal[:, num_trigger_offset_samples:])
 
         # Model the configured antenna array's input behaviour
         antenna_outputs = self.antennas.receive(

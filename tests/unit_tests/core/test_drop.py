@@ -25,8 +25,8 @@ class TestDrop(TestCase):
     "Test drop class"
 
     def setUp(self) -> None:
-        self.transmission = DeviceTransmission([], Signal(np.random.standard_normal((1, 10)), 1.0))
-        self.reception = DeviceReception(Signal(np.random.standard_normal((1, 10)), 1.0), [], [])
+        self.transmission = DeviceTransmission([], Signal.Create(np.random.standard_normal((1, 10)), 1.0))
+        self.reception = DeviceReception(Signal.Create(np.random.standard_normal((1, 10)), 1.0), [], [])
         self.timestamp = 1.2345
 
         self.drop = Drop(self.timestamp, [self.transmission], [self.reception])
@@ -76,8 +76,8 @@ class TestEvaluatedDrop(TestCase):
     """Test evaluated drop class"""
 
     def setUp(self) -> None:
-        self.transmission = DeviceTransmission([], Signal(np.random.standard_normal((1, 10)), 1.0))
-        self.reception = DeviceReception(Signal(np.random.standard_normal((1, 10)), 1.0), [], [])
+        self.transmission = DeviceTransmission([], Signal.Create(np.random.standard_normal((1, 10)), 1.0))
+        self.reception = DeviceReception(Signal.Create(np.random.standard_normal((1, 10)), 1.0), [], [])
         self.timestamp = 1.2345
         self.artifacts = [Mock()]
 

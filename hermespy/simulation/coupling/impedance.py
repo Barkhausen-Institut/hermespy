@@ -179,9 +179,9 @@ class ImpedanceCoupling(Serializable, Coupling):
         )
 
         transmit_coupling = transmit_impedance.real**-0.5 @ transmit_correlation**0.5
-        transmitted_samples = transmit_coupling @ signal.samples
+        transmitted_samples = transmit_coupling @ signal[:, :]
 
-        return Signal(transmitted_samples, signal.sampling_rate, signal.carrier_frequency)
+        return signal.from_ndarray(transmitted_samples)
 
     def _receive(self, signal: Signal) -> Signal:
         receive_impedance = (
@@ -207,6 +207,6 @@ class ImpedanceCoupling(Serializable, Coupling):
             @ np.linalg.inv(matching_impedance + receive_correlation)
             @ receive_correlation**0.5
         )
-        received_samples = receive_coupling @ signal.samples
+        received_samples = receive_coupling @ signal[:, :]
 
-        return Signal(received_samples, signal.sampling_rate, signal.carrier_frequency)
+        return signal.from_ndarray(received_samples)

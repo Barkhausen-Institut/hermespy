@@ -140,13 +140,10 @@ class DelayChannelRealization(ChannelRealization):
 
         propagated_samples = np.append(
             np.zeros((receiver.antennas.num_receive_antennas, delay_samples), np.complex_),
-            gain_factor * spatial_response @ signal.samples,
+            gain_factor * spatial_response @ signal[:, :],
         )
 
-        propagated_signal = Signal(
-            propagated_samples, signal.sampling_rate, signal.carrier_frequency
-        )
-        return propagated_signal
+        return signal.from_ndarray(propagated_samples)
 
     def state(
         self,

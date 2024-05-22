@@ -288,37 +288,38 @@ class UsrpDevice(PhysicalDevice, Serializable):
 
         # Scale signal to a maximum absolute vlaue of zero to full exploit the DAC range
         if baseband_signal.num_samples > 0 and self.scale_transmission:
-            maxAmp = np.abs(baseband_signal.samples).max()
+            maxAmp = np.abs(baseband_signal[:, :]).max()
             if maxAmp != 0:
-                baseband_signal.samples /= maxAmp
+                for block in baseband_signal:
+                    block /= maxAmp
 
         uploaded_samples = baseband_signal.copy()
 
         # Hack: Prepend some zeros to account for the premature transmission stop
-        baseband_signal.samples = np.concatenate(
+        baseband_signal.set_samples(np.concatenate(
             (
                 np.zeros(
                     (baseband_signal.num_streams, self.num_prepeneded_zeros), dtype=np.complex_
                 ),
-                baseband_signal.samples,
+                baseband_signal[:, :],
                 np.zeros((baseband_signal.num_streams, self.num_appended_zeros), dtype=np.complex_),
             ),
             axis=1,
-        )
+        ))
 
         if baseband_signal.num_samples % 4 != 0:
-            baseband_signal.samples = np.append(
-                baseband_signal.samples,
+            baseband_signal.set_samples(np.append(
+                baseband_signal[:, :],
                 np.zeros(
                     (baseband_signal.num_streams, 4 - baseband_signal.num_samples % 4),
                     dtype=complex,
                 ),
                 axis=1,
-            )
+            ))
 
         # Append a zero vector for unselected transmit ports
         # Workaround for the USRP wrapper missing dedicated port selections
-        signal_list: List[np.ndarray] = [s for s in baseband_signal.samples]
+        signal_list: List[np.ndarray] = [s for s in baseband_signal[:, :]]
         for i in range(self.__max_selected_transmit_port + 1):
             if i not in self.__selected_transmit_ports:
                 signal_list.insert(i, np.zeros(baseband_signal.num_samples, dtype=np.complex_))
@@ -366,21 +367,21 @@ class UsrpDevice(PhysicalDevice, Serializable):
     def _download(self) -> Signal:
         # Abort if no samples are to be expcted during collection
         if not self.__collection_enabled:
-            return Signal.empty(self.sampling_rate, self.num_receive_ports)
+            return Signal.Empty(self.sampling_rate, self.num_receive_ports)
 
         mimo_signals = self.__usrp_client.collect()
-        signal_model = Signal.empty(
+        signal_model = Signal.Empty(
             self.sampling_rate, self.num_receive_ports, carrier_frequency=self.carrier_frequency
         )
 
         for mimo_signal in mimo_signals:
             streams = np.array([mimo_signal.signals[i] for i in self.__selected_receive_ports])
-            signal_model.samples = np.append(signal_model.samples, streams, axis=1)
+            signal_model.set_samples(np.append(signal_model[:, :], streams, axis=1))
 
         # Remove the zero padding hack
-        signal_model.samples = signal_model.samples[
+        signal_model.set_samples(signal_model[
             :, self.num_prepeneded_zeros : signal_model.num_samples - self.num_appended_zeros
-        ]
+        ])
         return signal_model
 
     @property

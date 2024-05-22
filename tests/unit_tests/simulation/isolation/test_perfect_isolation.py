@@ -28,11 +28,11 @@ class TestPerfectIsolation(TestCase):
         """Leak routine should raise ValueErrors on invalid configurations"""
 
         with self.assertRaises(ValueError):
-            _ = self.isolation.leak(Signal.empty(1.0, self.device.antennas.num_receive_antennas + 1, carrier_frequency=0.0))
+            _ = self.isolation.leak(Signal.Empty(1.0, self.device.antennas.num_receive_antennas + 1, carrier_frequency=0.0))
 
         with self.assertRaises(FloatingError):
             isolation = PerfectIsolation()
-            _ = isolation.leak(Signal.empty(1.0, self.device.antennas.num_receive_antennas, carrier_frequency=0.0))
+            _ = isolation.leak(Signal.Empty(1.0, self.device.antennas.num_receive_antennas, carrier_frequency=0.0))
 
         try:
             _ = self.isolation.leak(None)
@@ -43,7 +43,7 @@ class TestPerfectIsolation(TestCase):
     def test_leak(self) -> None:
         """Leak routine should be properly called"""
 
-        some_signal = Signal(self.rng.normal(size=10) + 1j * self.rng.normal(size=10), self.device.antennas.num_receive_antennas, carrier_frequency=0.0)
+        some_signal = Signal.Create(self.rng.normal(size=10) + 1j * self.rng.normal(size=10), self.device.antennas.num_receive_antennas, carrier_frequency=0.0)
         leaked_signal = self.isolation.leak(some_signal)
 
         self.assertEqual(0, leaked_signal.num_samples)

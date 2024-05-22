@@ -71,14 +71,14 @@ class TestCorellationSynchronization(TestCase):
     def test_synchronize(self) -> None:
         """Synchronization should properly order pilot sections into frames"""
 
-        pilot_sequence = Signal(np.ones(20, dtype=complex), 1.0)
+        pilot_sequence = Signal.Create(np.ones(20, dtype=complex), 1.0)
 
         waveform = Mock()
         waveform.pilot_signal = pilot_sequence
         waveform.samples_per_frame = 20
         self.synchronization.waveform = waveform
 
-        shifted_sequence = np.append(np.zeros((1, 10), dtype=complex), pilot_sequence.samples, axis=1)
+        shifted_sequence = np.append(np.zeros((1, 10), dtype=complex), pilot_sequence[:, :], axis=1)
 
         pilot_indices = self.synchronization.synchronize(shifted_sequence)
         self.assertSequenceEqual([10], pilot_indices)
@@ -86,7 +86,7 @@ class TestCorellationSynchronization(TestCase):
     def test_default_synchronize(self) -> None:
         """Synchronization should properly order pilot sections into frames"""
 
-        pilot_sequence = Signal(np.ones(20, dtype=complex), 1.0)
+        pilot_sequence = Signal.Create(np.ones(20, dtype=complex), 1.0)
 
         waveform = Mock()
         waveform.pilot_signal = pilot_sequence

@@ -38,8 +38,8 @@ class TestAudioDevice(TestCase):
         _ = self.device.receive()
 
         # Assert the transmit and receive spectra
-        transmit_spectrum = fftshift(fft(self.modem.transmission.signal.samples[0, :]))
-        receive_spectrum = fftshift(fft(self.modem.reception.signal.samples[0, :]))
+        transmit_spectrum = fftshift(fft(self.modem.transmission.signal[0, :]))
+        receive_spectrum = fftshift(fft(self.modem.reception.signal[0, :]))
         left_bin = int(0.375 * transmit_spectrum.shape[0])
         right_bin = int(0.625 * transmit_spectrum.shape[0])
         assert_array_almost_equal(transmit_spectrum[left_bin:right_bin], receive_spectrum[left_bin:right_bin])

@@ -82,23 +82,25 @@ class MatchedFilterJcas(DuplexJCASOperator[CommunicationWaveform], Serializable)
         )
         if signal.num_samples < required_num_received_samples:
             signal.append_samples(
-                Signal(
+                Signal.Create(
                     np.zeros(
                         (1, required_num_received_samples - signal.num_samples), dtype=complex
                     ),
                     self.sampling_rate,
                     signal.carrier_frequency,
+                    signal.noise_power,
+                    signal.delay
                 )
             )
 
         # Remove possible overhead samples if signal is too long
-        # resampled_signal.samples = re
-        # sampled_signal.samples[:, :num_samples]
+        # resampled_signal.set_samples(re)
+        # sampled_signal[:, :num_samples]
 
         correlation = (
             abs(
                 correlate(
-                    signal.samples, self.transmission.signal.samples, mode="valid", method="fft"
+                    signal[:, :], self.transmission.signal[:, :], mode="valid", method="fft"
                 ).flatten()
             )
             / self.transmission.signal.num_samples

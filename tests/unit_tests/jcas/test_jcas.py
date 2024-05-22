@@ -27,7 +27,7 @@ class TestJCASTransmission(TestCase):
     """Test JCAS transmission"""
 
     def setUp(self) -> None:
-        self.signal = Signal(np.empty((1, 0), dtype=np.complex_), 1.0)
+        self.signal = Signal.Empty(1.0, 1, 0)
         self.transmission = JCASTransmission(CommunicationTransmission(self.signal, []))
 
     def test_hdf_serialization(self) -> None:
@@ -46,14 +46,14 @@ class TestJCASTransmission(TestCase):
                 group = file["testgroup"]
                 transmission = self.transmission.from_HDF(group)
 
-        assert_array_equal(self.signal.samples, transmission.signal.samples)
+        assert_array_equal(self.signal[:, :], transmission.signal[:, :])
 
 
 class TestJCASReception(TestCase):
     """Test JCAS reception"""
 
     def setUp(self) -> None:
-        self.signal = Signal(np.zeros((1, 10), dtype=np.complex_), 1.0)
+        self.signal = Signal.Create(np.zeros((1, 10), dtype=np.complex_), 1.0)
         self.communication_reception = CommunicationReception(self.signal)
         self.cube = RadarCube(np.zeros((1, 1, 10)))
         self.radar_reception = RadarReception(self.signal, self.cube)
@@ -73,5 +73,4 @@ class TestJCASReception(TestCase):
                 group = file["testgroup"]
                 reception = JCASReception.from_HDF(group)
 
-        assert_array_equal(self.signal.samples, reception.signal.samples)
-
+        assert_array_equal(self.signal[:, :], reception.signal[:, :])
