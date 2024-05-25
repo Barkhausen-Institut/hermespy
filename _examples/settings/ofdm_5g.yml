@@ -33,7 +33,7 @@ Devices:
 Channels:
 
   # 5G TDL model at the self-interference channel of device_alpha
-  - !<5GTDL>
+  - &channel !<5GTDL>
     devices: [*device_alpha, *device_alpha] # Devices linked by the channel
     model_type: !<TDLType> E                # Type of the TDL model. A-E are available
     rms_delay: 100e-9                       # Root mean square delay in seconds    
@@ -69,6 +69,7 @@ Operators:
       dc_suppression: False             # Do not ignore the DC component during the DFT
       num_subcarriers: 4096             # Number of subcarriers per communiction frame
       channel_estimation: !<OFDM-Ideal> # Assume ideal channel state information at the receiver
+        channel: *channel
         transmitter: *device_alpha
         receiver: *device_alpha
       channel_equalization: !<ZF>       # Least-squares channel equalization

@@ -14,17 +14,151 @@ import matplotlib.pyplot as plt
 import numpy as np
 from h5py import Group
 from scipy.constants import speed_of_light
+from scipy.interpolate import bisplrep, bisplev
 
-from hermespy.core import Executable, HDFSerializable, PlotVisualization, VAT
+from hermespy.core import (
+    HDFSerializable,
+    PlotVisualization,
+    QuadMeshVisualization,
+    VisualizableAttribute,
+    VAT,
+)
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.2.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
+
+
+class _RangePlot(VisualizableAttribute[PlotVisualization]):
+    """Visualizable attribute for plotting a range-power profiles."""
+
+    __cube: RadarCube
+
+    def __init__(self, cube: RadarCube) -> None:
+        self.__cube = cube
+
+    @property
+    def title(self) -> str:
+        return "Radar Range-Power Profile"
+
+    def _prepare_visualization(
+        self, figure: plt.Figure | None, axes: VAT, scale: Literal["lin", "log"] = "lin", **kwargs
+    ) -> PlotVisualization:
+
+        _ax: plt.Axes = axes[0, 0]
+        _ax.set_xlabel("Range [m]")
+        _ax.set_ylabel("Power")
+
+        range_profile = np.sum(self.__cube.data, axis=(0, 1), keepdims=False)
+        lines = np.empty((1, 1), dtype=np.object_)
+        if scale == "lin":
+            lines[0, 0] = _ax.plot(self.__cube.range_bins, range_profile)
+
+        elif scale == "log":
+            lines[0, 0] = _ax.semilogy(self.__cube.range_bins, range_profile)
+
+        return PlotVisualization(figure, axes, lines)
+
+    def _update_visualization(self, visualization: PlotVisualization, **kwargs) -> None:
+        range_profile = np.sum(self.__cube.data, axis=(0, 1), keepdims=False)
+        visualization.lines[0, 0][0].set_ydata(range_profile)
+
+
+class _RangeVelocityPlot(VisualizableAttribute[QuadMeshVisualization]):
+    """Visualizable attribute for plotting range-velocity profiles."""
+
+    __cube: RadarCube
+
+    def __init__(self, cube: RadarCube) -> None:
+        self.__cube = cube
+
+    @property
+    def title(self) -> str:
+        return "Radar Range-Doppler Profile"
+
+    def _prepare_visualization(
+        self,
+        figure: plt.Figure | None,
+        axes: VAT,
+        scale: Literal["frequency", "velocity"] | None = None,
+        **kwargs,
+    ) -> QuadMeshVisualization:
+
+        _ax: plt.Axes = axes[0, 0]
+
+        if scale is None:
+            _scale = "velocity" if self.__cube.carrier_frequency > 0 else "frequency"
+        else:
+            _scale = scale
+
+        # Compute velocity axis bins depending on the scale
+        velocity_axis = (
+            self.__cube.velocity_bins if _scale == "velocity" else self.__cube.doppler_bins
+        )
+
+        _ax.set_xlabel("Range [m]")
+        _ax.set_ylabel("Doppler [Hz]" if _scale == "frequency" else "Velocity [m/s]")
+
+        range_velocity_profile = np.abs(np.sum(self.__cube.data, axis=0, keepdims=False))
+        range_velocity_profile -= np.min(range_velocity_profile)
+        range_velocity_profile /= np.max(range_velocity_profile)
+
+        mesh = _ax.pcolormesh(
+            self.__cube.range_bins, velocity_axis, range_velocity_profile, shading="auto"
+        )
+        return QuadMeshVisualization(figure, axes, mesh)
+
+    def _update_visualization(self, visualization: QuadMeshVisualization, **kwargs) -> None:
+        range_velocity_profile = np.abs(np.sum(self.__cube.data, axis=0, keepdims=False))
+        range_velocity_profile -= np.min(range_velocity_profile)
+        range_velocity_profile /= np.max(range_velocity_profile)
+        visualization.mesh.set_array(range_velocity_profile)
+
+
+class _AnglePlot(VisualizableAttribute[QuadMeshVisualization]):
+
+    __cube: RadarCube
+
+    def __init__(self, cube: RadarCube) -> None:
+        self.__cube = cube
+
+    @property
+    def title(self) -> str:
+        return "Angle Power Profile"
+
+    def _prepare_visualization(
+        self, figure: plt.Figure | None, axes: VAT, **kwargs
+    ) -> QuadMeshVisualization:
+        _ax: plt.Axes = axes[0, 0]
+        _ax.grid(True)
+        _ax.set_xlabel("Azimuth")
+        _ax.set_ylabel("Zenith")
+
+        default_data = np.zeros((91, 360))
+        default_data[0, 0] = 1
+        mesh = _ax.pcolormesh(
+            np.arange(360), np.arange(91), default_data, shading="auto", norm="linear", linewidth=0
+        )
+        return QuadMeshVisualization(figure, axes, mesh)
+
+    def _update_visualization(self, visualization: QuadMeshVisualization, **kwargs) -> None:
+
+        angles = 180 * self.__cube.angle_bins / np.pi
+        angle_profile = np.sum(self.__cube.data, axis=(1, 2), keepdims=False)
+
+        splines = bisplrep(angles[:, 0], angles[:, 1], angle_profile, kx=1, ky=1, quiet=True)
+        interpolated_image = bisplev(np.arange(360), np.arange(91), splines)
+
+        interpolated_image -= interpolated_image.min()
+        if interpolated_image.max() > 0:
+            interpolated_image /= interpolated_image.max()
+
+        visualization.mesh.set_array(interpolated_image.T)
 
 
 class RadarCube(HDFSerializable):
@@ -35,6 +169,10 @@ class RadarCube(HDFSerializable):
     __doppler_bins: np.ndarray
     __range_bins: np.ndarray
     __carrier_frequency: float
+
+    __range_plot: _RangePlot
+    __range_velocity_plot: _RangeVelocityPlot
+    __angle_plot: _AnglePlot
 
     def __init__(
         self,
@@ -119,6 +257,10 @@ class RadarCube(HDFSerializable):
         self.__range_bins = range_bins
         self.__carrier_frequency = carrier_frequency
 
+        self.__range_plot = _RangePlot(self)
+        self.__range_velocity_plot = _RangeVelocityPlot(self)
+        self.__angle_plot = _AnglePlot(self)
+
     @property
     def data(self) -> np.ndarray:
         """Raw radar cube data.
@@ -181,63 +323,32 @@ class RadarCube(HDFSerializable):
 
         return self.__range_bins
 
-    def plot_range(
-        self,
-        title: str | None = None,
-        axes: VAT | plt.Axes | None = None,
-        scale: Literal["lin", "log"] = "lin",
-    ) -> PlotVisualization:
-        """Visualize the cube's range data.
+    @property
+    def carrier_frequency(self) -> float:
+        """Central carrier frequency of the radar in Hz."""
+
+        return self.__carrier_frequency
+
+    @property
+    def plot_range(self) -> _RangePlot:
+        """Visualize the cube's range-power profile.
 
         Args:
 
             title (str, optional):
                 Plot title.
 
-        Returns: Newly generated visualization.
+            scale (Literal['lin', 'log'], optional):
+                Plot the power axis in linear or logarithmic scale.
+                If not specified, linear scaling is preferred.
+
+        Returns: The generated line plot.
         """
 
-        title = "Radar Range Profile" if title is None else title
+        return self.__range_plot
 
-        # Collapse the cube into the range-dimension
-        range_profile = np.sum(self.data, axis=(0, 1), keepdims=False)
-
-        figure: plt.Figure
-        if axes is None:
-            with Executable.style_context():
-                figure, _axes = plt.subplots(1, 1, squeeze=False)
-                figure.suptitle(title)
-
-        else:
-            _axes = axes if isinstance(axes, np.ndarray) else np.array([[axes]])
-            figure = _axes[0, 0].get_figure()
-
-        _axes[0, 0].set_xlabel("Range [m]")
-        _axes[0, 0].set_ylabel("Power")
-
-        lines = np.empty((1, 1), dtype=np.object_)
-        if scale == "lin":
-            lines[0, 0] = _axes[0, 0].plot(self.range_bins, range_profile)
-
-        elif scale == "log":
-            lines[0, 0] = _axes[0, 0].semilogy(self.range_bins, range_profile)
-
-        else:
-            raise ValueError(f"Unsupported plotting scale option '{scale}'")
-
-        return PlotVisualization(figure, _axes, lines)
-
-    def update_range_plot(self, visualization: PlotVisualization) -> None:
-        # Collapse the cube into the range-dimension
-        range_profile = np.sum(self.data, axis=(0, 1), keepdims=False)
-        visualization.lines[0, 0][0].set_ydata(range_profile)
-
-    def plot_range_velocity(
-        self,
-        title: str | None = None,
-        interpolate: bool = True,
-        scale: Literal["frequency", "velocity"] | None = None,
-    ) -> plt.Figure:
+    @property
+    def plot_range_velocity(self) -> _RangeVelocityPlot:
         """Visualize the cube's range-velocity profile.
 
         Args:
@@ -245,41 +356,28 @@ class RadarCube(HDFSerializable):
             title (str, optional):
                 Plot title.
 
-            interpolate (bool, optional):
-                Interpolate the axis for a square profile plot.
-                Enabled by default.
-
             scale (Literal['frequency', 'velocity'], optional):
                 Plot the velocity axis in frequency (Hz) or velocity units (m/s).
                 If not specified, plotting in velocity is preferred, if the carrier frequency is known.
 
-        Returns:
-            plt.Figure:
+        Returns: The generated image plot.
         """
 
-        title = "Radar Range-Doppler Profile" if title is None else title
+        return self.__range_velocity_plot
 
-        if scale is None:
-            _scale = "velocity" if self.__carrier_frequency > 0 else "frequency"
-        else:
-            _scale = scale
+    @property
+    def plot_angles(self) -> _AnglePlot:
+        """Visualize the cube's angle-power profile.
 
-        # Compute velocity axis bins depending on the scale
-        velocity_axis = self.velocity_bins if _scale == "velocity" else self.doppler_bins
+        Args:
 
-        # Collapse the cube into the range-dimension
-        range_velocity_profile = np.sum(self.data, axis=0, keepdims=False)
+            title (str, optional):
+                Plot title.
 
-        with Executable.style_context():
-            figure, axes = plt.subplots()
-            figure.suptitle(title)
+        Returns: The generated image plot.
+        """
 
-            axes.set_xlabel("Range [m]")
-            axes.set_ylabel("Doppler [Hz]" if _scale == "frequency" else "Velocity [m/s]")
-
-            axes.pcolormesh(self.range_bins, velocity_axis, range_velocity_profile, shading="auto")
-
-            return figure
+        return self.__angle_plot
 
     def normalize_power(self) -> None:
         """Normalize the represented power indicators to unit maximum."""

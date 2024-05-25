@@ -24,7 +24,7 @@ from hermespy.core import AntennaMode, Serializable, Signal, Antenna, AntennaArr
 from ..physical_device import PhysicalDevice
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.2.0"
@@ -35,6 +35,9 @@ __status__ = "Prototype"
 
 class AudioAntenna(Antenna):
     """Antenna model for audio devices."""
+
+    def copy(self) -> AudioAntenna:
+        return AudioAntenna(self.mode, self.pose)
 
     def local_characteristics(self, azimuth: float, elevation) -> np.ndarray:
         return np.array([2**0.5, 2**0.5], dtype=float)

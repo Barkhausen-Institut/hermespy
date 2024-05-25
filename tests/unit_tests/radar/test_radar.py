@@ -160,6 +160,17 @@ class TestRadar(TestCase):
         """Frame duration property should return the frame duration"""
 
         self.assertEqual(12.345, self.radar.frame_duration)
+        
+    def test_default_power(self) -> None:
+        """Power property should return zero if no waveform is configured"""
+
+        self.radar.waveform = None
+        self.assertEqual(0.0, self.radar.power)
+        
+    def test_power(self) -> None:
+        """Power property should return the waveform power"""
+
+        self.assertEqual(1.0, self.radar.power)
 
     def test_waveform_setget(self) -> None:
         """Waveform property getter should return setter argument"""

@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 from hermespy.core import dB
-from hermespy.channel import MultipathFading5GTDL
+from hermespy.channel import TDL
 from hermespy.simulation import Simulation, SNR
 from hermespy.modem import BitErrorEvaluator, SimplexLink, RootRaisedCosineWaveform, SingleCarrierLeastSquaresChannelEstimation, SingleCarrierZeroForcingChannelEqualization
 
@@ -17,7 +17,7 @@ tx_device.noise_level = SNR(dB(20), tx_device)
 rx_device.noise_level = SNR(dB(20), tx_device)
 
 # Specifiy the channel instance linking the two devices
-simulation.set_channel(tx_device, rx_device, MultipathFading5GTDL())
+simulation.set_channel(tx_device, rx_device, TDL())
 
 # Define a simplex communication link between the two devices
 link = SimplexLink(tx_device, rx_device)

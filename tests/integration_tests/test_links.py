@@ -5,7 +5,7 @@ from unittest import TestCase
 
 import numpy as np
 
-from hermespy.channel import Channel, IdealChannel, MultipathFading5GTDL, MultipathFadingCost259, RandomDelayChannel, TDLType, StreetCanyonOutsideToInside
+from hermespy.channel import Channel, IdealChannel, TDL, Cost259, RandomDelayChannel, TDLType, UrbanMicrocells
 from hermespy.core import Transformation
 from hermespy.simulation import SimulatedDevice, SimulationScenario, SingleCarrierIdealChannelEstimation, OFDMIdealChannelEstimation, SimulatedUniformArray, SimulatedIdealAntenna
 from hermespy.modem import (
@@ -33,11 +33,12 @@ from hermespy.modem import (
     SchmidlCoxSynchronization,
     ReferencePosition,
     OTFSWaveform,
+    Synchronization,
 )
 from hermespy.fec import RepetitionEncoder, BlockInterleaver
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.2.0"
@@ -91,24 +92,24 @@ class _TestLinksBase(TestCase):
 
         device_transmission = self.tx_device.transmit()
         channel_realization = channel.realize()
-        channel_propagation = channel_realization.propagate(device_transmission)
+        channel_sample = channel_realization.sample(self.tx_device, self.rx_device)
+        channel_propagation = channel_sample.propagate(device_transmission)
         self.rx_device.process_input(channel_propagation)
         link_reception = self.link.receive()
 
         # Debug:
         #
-        # link_transmission = device_transmission.operator_transmissions[0]
-        # link_reception = self.link.receive()
-        # tx = link_transmission.signal
-        # state = channel_realization.state(0, tx.sampling_rate, tx.num_samples, tx.num_samples)
-        # rx_prediction = state.propagate(tx)
+        link_transmission = device_transmission.operator_transmissions[0]
+        tx = link_transmission.signal
+        state = channel_sample.state(tx.num_samples, tx.num_samples)
+        rx_prediction = state.propagate(tx)
         return
 
     # =======================
     # Waveform configurations
     # =======================
 
-    def __configure_single_carrier_waveform(self) -> RootRaisedCosineWaveform:
+    def __configure_single_carrier_waveform(self, channel: Channel) -> RootRaisedCosineWaveform:
         """Configure a single carrier wafeform with default parameters.
 
         Returns: The configured waveform.
@@ -116,7 +117,7 @@ class _TestLinksBase(TestCase):
 
         waveform = RootRaisedCosineWaveform(symbol_rate=1 / 10e-6, num_preamble_symbols=10, num_data_symbols=40, pilot_rate=10, oversampling_factor=8, roll_off=0.9)
         waveform.synchronization = SingleCarrierCorrelationSynchronization()
-        waveform.channel_estimation = SingleCarrierIdealChannelEstimation(self.tx_device, self.rx_device)
+        waveform.channel_estimation = SingleCarrierIdealChannelEstimation(channel, self.tx_device, self.rx_device)
         waveform.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
         self.link.waveform = waveform
 
@@ -134,7 +135,7 @@ class _TestLinksBase(TestCase):
 
         return waveform
 
-    def __configure_ocdm_waveform(self) -> OCDMWaveform:
+    def __configure_ocdm_waveform(self, channel: Channel) -> OCDMWaveform:
         """Configure an OCDM waveform with default parameters.
 
         Returns: The configured waveform.
@@ -168,7 +169,7 @@ class _TestLinksBase(TestCase):
 
         return waveform
 
-    def __configure_ofdm_waveform(self) -> OFDMWaveform:
+    def __configure_ofdm_waveform(self, channel: Channel) -> OFDMWaveform:
         """Configure an OFDM wafeform with default parameters.
 
         Returns: The configured waveform.
@@ -202,7 +203,7 @@ class _TestLinksBase(TestCase):
         waveform.oversampling_factor = 2
         waveform.pilot_section = PilotSection()
         waveform.synchronization = OFDMCorrelationSynchronization()
-        waveform.channel_estimation = OFDMIdealChannelEstimation(self.tx_device, self.rx_device, reference_position=ReferencePosition.IDEAL)
+        waveform.channel_estimation = OFDMIdealChannelEstimation(channel, self.tx_device, self.rx_device, reference_position=ReferencePosition.IDEAL)
         waveform.channel_equalization = OrthogonalZeroForcingChannelEqualization()
         #waveform.pilot_symbol_sequence = CustomPilotSymbolSequence(np.arange(1, num_subcarriers * 60))
         self.link.waveform = waveform
@@ -219,12 +220,12 @@ class _TestLinksBase(TestCase):
 
         return waveform
 
-    def __configure_otfs_waveform(self) -> OTFSWaveform:
+    def __configure_otfs_waveform(self, channel: Channel) -> OTFSWaveform:
         """Configure an OTFS waveform with default parameters.
 
         Returns: The configured waveform.
         """
-        
+
         prefix_ratio = 2 * 0.0684
         num_subcarriers = 128
         grid_resources = [
@@ -275,31 +276,31 @@ class _TestLinksBase(TestCase):
     # Channel configurations
     # =======================
 
-    def __configure_COST259_channel(self) -> MultipathFadingCost259:
+    def __configure_COST259_channel(self) -> Cost259:
         """Configure a COST259 channel with default parameters.
 
         Returns: The configured channel.
         """
 
-        channel = MultipathFadingCost259(alpha_device=self.tx_device, beta_device=self.rx_device, gain=0.9, doppler_frequency=self._doppler_frequency)
+        channel = Cost259(alpha_device=self.tx_device, beta_device=self.rx_device, gain=0.9, doppler_frequency=self._doppler_frequency)
         return channel
 
-    def __configure_5GTDL_channel(self) -> MultipathFading5GTDL:
+    def __configure_5GTDL_channel(self) -> TDL:
         """Configure a 5GTDL channel with default parameters.
 
         Returns: The configured channel.
         """
 
-        channel = MultipathFading5GTDL(alpha_device=self.tx_device, beta_device=self.rx_device, gain=0.9, model_type=TDLType.B, doppler_frequency=self._doppler_frequency, rms_delay=1e-8)
+        channel = TDL(alpha_device=self.tx_device, beta_device=self.rx_device, gain=0.9, model_type=TDLType.B, doppler_frequency=self._doppler_frequency, rms_delay=1e-8)
         return channel
 
-    def __configure_CDL_channel(self) -> StreetCanyonOutsideToInside:
+    def __configure_CDL_channel(self) -> UrbanMicrocells:
         """Configure a clustered delay line channel with default parameters.
 
         Returns: The configured channel.
         """
 
-        channel = StreetCanyonOutsideToInside(self.tx_device, self.rx_device, 0.9)
+        channel = UrbanMicrocells(self.tx_device, self.rx_device, 0.9)
         return channel
 
     def __configure_delay_channel(self) -> RandomDelayChannel:
@@ -331,54 +332,60 @@ class _TestLinksBase(TestCase):
     def test_ideal_channel_single_carrier(self) -> None:
         """Verify a valid SISO link over an ideal channel with single carrier modulation"""
 
-        self.__configure_single_carrier_waveform()
-        self.__propagate(IdealChannel(self.tx_device, self.rx_device))
+        channel = IdealChannel(self.tx_device, self.rx_device)
+        self.__configure_single_carrier_waveform(channel)
+        self.__propagate(channel)
         self.__assert_link()
 
     def test_ideal_channel_ocdm_ls_zf(self) -> None:
         """Verify a valid SISO link over an ideal channel with OCDM modulation,
         least-squares channel estimation and zero-forcing equalization"""
 
-        self.__configure_ocdm_waveform()
-        self.__propagate(IdealChannel(self.tx_device, self.rx_device))
+        channel = IdealChannel(self.tx_device, self.rx_device)
+        self.__configure_ocdm_waveform(channel)
+        self.__propagate(channel)
         self.__assert_link()
 
     def test_ideal_channel_ofdm(self) -> None:
         """Verify a valid SISO link over an ideal channel OFDM modulation"""
 
-        self.__configure_ofdm_waveform()
-        self.__propagate(IdealChannel(self.tx_device, self.rx_device))
+        channel = IdealChannel(self.tx_device, self.rx_device)
+        self.__configure_ofdm_waveform(channel)
+        self.__propagate(channel)
         self.__assert_link()
 
     def test_ideal_channel_ofdm_ls_zf(self) -> None:
         """Verify a valid SISO link over an ideal channel with OFDM modulation,
         least-squares channel estimation and zero-forcing equalization"""
 
-        waveform = self.__configure_ofdm_waveform()
+        channel = IdealChannel(self.tx_device, self.rx_device)
+        waveform = self.__configure_ofdm_waveform(channel)
         waveform.channel_estimation = OrthogonalLeastSquaresChannelEstimation()
         waveform.channel_equalization = OrthogonalZeroForcingChannelEqualization()
 
-        self.__propagate(IdealChannel(self.tx_device, self.rx_device))
+        self.__propagate(channel)
         self.__assert_link()
 
     def test_ideal_channel_ofdm_schmidl_cox(self) -> None:
         """Verify a valid link over an AWGN channel with OFDM modluation,
         Schmidl-Cox synchronization, least-squares channel estimation and zero-forcing equalization"""
 
-        waveform = self.__configure_ofdm_waveform()
+        channel = IdealChannel(self.tx_device, self.rx_device)
+        waveform = self.__configure_ofdm_waveform(channel)
         waveform.pilot_section = SchmidlCoxPilotSection()
         waveform.synchronization = SchmidlCoxSynchronization()
         waveform.channel_estimation = OrthogonalLeastSquaresChannelEstimation()
         waveform.channel_equalization = OrthogonalZeroForcingChannelEqualization()
 
-        self.__propagate(IdealChannel(self.tx_device, self.rx_device))
+        self.__propagate(channel)
         self.__assert_link()
 
     def test_ideal_channel_otfs_ls_zf(self) -> None:
         """Verify a valid SISO link over an ideal channel with OTFS modulation"""
 
-        self.__configure_otfs_waveform()
-        self.__propagate(IdealChannel(self.tx_device, self.rx_device))
+        channel = IdealChannel(self.tx_device, self.rx_device)
+        self.__configure_otfs_waveform(channel)
+        self.__propagate(channel)
         self.__assert_link()
 
     def test_COST259_chirp_fsk(self) -> None:
@@ -391,53 +398,59 @@ class _TestLinksBase(TestCase):
     def test_COST259_single_carrier_ideal_csi(self) -> None:
         """Verify a valid SISO link over a COST259 channel with single carrier modulation"""
 
-        waveform = self.__configure_single_carrier_waveform()
+        channel = self.__configure_COST259_channel()
+        waveform = self.__configure_single_carrier_waveform(channel)
         waveform.guard_interval = 2e-6
 
-        self.__propagate(self.__configure_COST259_channel())
+        self.__propagate(channel)
         self.__assert_link()
 
     def test_COST259_single_carrier_ls_zf(self) -> None:
         """Verify a valid SISO link over a COST259 channel with single carrier modulation"""
 
         channel = self.__configure_COST259_channel()
-        waveform = self.__configure_single_carrier_waveform()
+        waveform = self.__configure_single_carrier_waveform(channel)
         waveform.guard_interval = 2e-6
         waveform.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
 
-        self.__propagate(channel=channel)
+        self.__propagate(channel)
         self.__assert_link()
 
     def test_COST259_ocdm_ls_zf(self) -> None:
         """Verify a valid SISO link over an ideal channel with OCDM modulation,
         least-squares channel estimation and zero-forcing equalization"""
 
-        self.__configure_ocdm_waveform()
-        self.__propagate(self.__configure_COST259_channel())
+        channel = self.__configure_COST259_channel()
+        self.__configure_ocdm_waveform(channel)
+        self.__propagate(channel)
         self.__assert_link()
 
     def test_COST259_ofdm_ideal_csi(self) -> None:
         """Verify a valid SISO link over a COST259 channel with OFDM modulation"""
 
-        self.__configure_ofdm_waveform()
-        self.__propagate(self.__configure_COST259_channel())
+        channel = self.__configure_COST259_channel()
+        waveform = self.__configure_ofdm_waveform(channel)
+        waveform.synchronization = Synchronization()  # Disable synchronization
+        self.__propagate(channel)
         self.__assert_link()
 
     def test_COST259_ofdm_ls_zf(self) -> None:
         """Verify a valid SISO link over a COST259 channel with OFDM modulation and least-squares channel estimation"""
 
-        waveform = self.__configure_ofdm_waveform()
+        channel = self.__configure_COST259_channel()
+        waveform = self.__configure_ofdm_waveform(channel)
         waveform.channel_estimation = OrthogonalLeastSquaresChannelEstimation()
 
-        self.__propagate(self.__configure_COST259_channel())
+        self.__propagate(channel)
         self.__assert_link()
         
     def test_COST259_otfs_ls_zf(self) -> None:
         """Verify a valid SISO link over an ideal channel with OTFS modulation,
         least-squares channel estimation and zero-forcing equalization"""
 
-        self.__configure_otfs_waveform()
-        self.__propagate(self.__configure_COST259_channel())
+        channel = self.__configure_COST259_channel()
+        self.__configure_otfs_waveform(channel)
+        self.__propagate(channel)
         self.__assert_link()
 
     def test_5GTDL_chirp_fsk(self) -> None:
@@ -451,102 +464,107 @@ class _TestLinksBase(TestCase):
         """Verify a valid SISO link over a tapped delay line channel with single carrier modulation"""
 
         channel = self.__configure_5GTDL_channel()
-        waveform = self.__configure_single_carrier_waveform()
+        waveform = self.__configure_single_carrier_waveform(channel)
         waveform.guard_interval = 3 * channel.rms_delay
 
-        self.__propagate(channel=channel)
+        self.__propagate(channel)
         self.__assert_link()
 
     def test_5GTDL_ocdm_ls_zf(self) -> None:
         """Verify a valid SISO link over a TDL channel with OFDM modulation,
         least-squares channel estimation and zero-forcing equalization"""
 
-        self.__configure_ofdm_waveform()
-        self.__propagate(self.__configure_5GTDL_channel())
+        channel = self.__configure_5GTDL_channel()
+        self.__configure_ofdm_waveform(channel)
+        self.__propagate(channel)
         self.__assert_link()
 
     def test_5GTDL_ofdm_ls_zf(self) -> None:
         """Verify a valid SISO link over a TDL channel with OFDM modulation,
         least-squares channel estimation and zero-forcing equalization"""
 
-        waveform = self.__configure_ofdm_waveform()
+        channel = self.__configure_5GTDL_channel()
+        waveform = self.__configure_ofdm_waveform(channel)
         waveform.channel_estimation = OrthogonalLeastSquaresChannelEstimation()
         waveform.channel_equalization = OrthogonalZeroForcingChannelEqualization()
 
-        self.__propagate(self.__configure_5GTDL_channel())
+        self.__propagate(channel)
         self.__assert_link()
 
     def test_5GTDL_ofdm_schmidl_cox(self) -> None:
         """Verify a valid link over a TDL channel with OFDM modluation,
         Schmidl-Cox synchronization, least-squares channel estimation and zero-forcing equalization"""
-
-        waveform = self.__configure_ofdm_waveform()
+        
+        channel = self.__configure_5GTDL_channel()
+        waveform = self.__configure_ofdm_waveform(channel)
         waveform.pilot_section = SchmidlCoxPilotSection()
         waveform.synchronization = SchmidlCoxSynchronization()
         waveform.channel_estimation = OrthogonalLeastSquaresChannelEstimation()
         waveform.channel_equalization = OrthogonalZeroForcingChannelEqualization()
-        self.__propagate(self.__configure_5GTDL_channel())
+        self.__propagate(channel)
         self.__assert_link()
         
     def test_5GTDL_otfs_ls_zf(self) -> None:
         """Verify a valid SISO link over a TDL channel with OTFS modulation,
         least-squares channel estimation and zero-forcing equalization"""
 
-        self.__configure_otfs_waveform()
-        self.__propagate(self.__configure_5GTDL_channel())
+        channel = self.__configure_5GTDL_channel()
+        self.__configure_otfs_waveform(channel)
+        self.__propagate(channel)
         self.__assert_link()
 
     def test_CDL_single_carrier_ideal_csi(self) -> None:
         """Verify a valid link over a clustered delay line channel with single carrier modulation and ideal CSI"""
 
         channel = self.__configure_CDL_channel()
-        waveform = self.__configure_single_carrier_waveform()
+        waveform = self.__configure_single_carrier_waveform(channel)
 
-        self.__propagate(channel=channel)
+        self.__propagate(channel)
         self.__assert_link()
 
     def test_CDL_single_carrier_ls_zf(self) -> None:
         """Verify a valid link over a clustered delay line channel with single carrier modulation"""
 
         channel = self.__configure_CDL_channel()
-        waveform = self.__configure_single_carrier_waveform()
+        waveform = self.__configure_single_carrier_waveform(channel)
         waveform.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
 
-        self.__propagate(channel=channel)
+        self.__propagate(channel)
         self.__assert_link()
         
     def test_CDL_ocdm_ls_zf(self) -> None:
         """Verify a valid link over a clustered delay line channel with OCDM modulation"""
 
         channel = self.__configure_CDL_channel()
-        waveform = self.__configure_ocdm_waveform()
-        self.__propagate(channel=channel)
+        waveform = self.__configure_ocdm_waveform(channel)
+        self.__propagate(channel)
         self.__assert_link()
 
     def test_CDL_ofdm_ideal_csi(self) -> None:
         """Verify a valid link over a clustered delay line channel with OFDM modulation and ideal CSI"""
 
         channel = self.__configure_CDL_channel()
-        waveform = self.__configure_ofdm_waveform()
+        waveform = self.__configure_ofdm_waveform(channel)
 
-        self.__propagate(channel=channel)
+        self.__propagate(channel)
         self.__assert_link()
 
     def test_CDL_ofdm_ls_zf(self) -> None:
         """Verify a valid link over a clustered delay line channel with OFDM modulation"""
 
         channel = self.__configure_CDL_channel()
-        waveform = self.__configure_ofdm_waveform()
+        waveform = self.__configure_ofdm_waveform(channel)
         waveform.channel_estimation = OrthogonalLeastSquaresChannelEstimation()
-        self.__propagate(channel=channel)
+        self.__propagate(channel)
         self.__assert_link()
         
     def test_CDL_otfs_ls_zf(self) -> None:
         """Verify a valid SISO link over a CDL channel with OTFS modulation,
         least-squares channel estimation and zero-forcing equalization"""
 
-        self.__configure_otfs_waveform()
-        self.__propagate(self.__configure_CDL_channel())
+        channel = self.__configure_CDL_channel()    
+        self.__configure_otfs_waveform(channel)
+        self.__propagate(channel)
         self.__assert_link()
 
     def test_delay_channel_ofdm_ls_zf_schmidlcox(self) -> None:
@@ -554,7 +572,7 @@ class _TestLinksBase(TestCase):
 
         channel = self.__configure_delay_channel()
 
-        waveform = self.__configure_ofdm_waveform()
+        waveform = self.__configure_ofdm_waveform(channel)
         waveform.pilot_section = SchmidlCoxPilotSection()
         waveform.synchronization = SchmidlCoxSynchronization()
         waveform.channel_estimation = OrthogonalLeastSquaresChannelEstimation()

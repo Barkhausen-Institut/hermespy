@@ -43,13 +43,13 @@ setup(
     packages=find_namespace_packages(include=['hermespy.*']),
     package_data={
         'hermespy.core': ['styles/*.mplstyle'],
-        'hermespy.channel': ['res/*'],
+        'hermespy.channel': ['quadriga/launch_quadriga.m'],
     },
     include_package_data=True,
     extras_require={
         "test": [
             'pytest>=7.4.2',
-            'coverage>=7.3.2',
+            'coverage>=7.5.1',
             'mypy>=1.3.0,<1.7.0',
             'nbformat',
             'nbconvert'
@@ -75,7 +75,7 @@ setup(
             "scikit-build>=0.17.6",
             "cmake>=3.27.2",
             "wheel>=0.41.2",
-            "black>=23.9.1",
+            "black>=24.4.2",
             "flake8>=6.0.0",
             'coverage>=7.2.7',
             'mypy>=1.3.0',

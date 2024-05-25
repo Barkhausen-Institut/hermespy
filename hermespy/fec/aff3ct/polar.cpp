@@ -117,15 +117,6 @@ public:
 
 PYBIND11_MODULE(polar, m)
 {
-    m.doc() = R"pbdoc(
-        ============
-        Polar Coding
-        ============
-
-        A Python wrapper around the AFF3CT\ :footcite:`2019:cassagne` project,
-        transferring the Polar\ :footcite:`2009:arikan` implementations to the Hermes forward error correction pipeline structure.
-    )pbdoc";
-
     py::class_<PolarSCCoding>(m, "PolarSCCoding")
 
         .def(py::init<const int, const int, const float>(), R"pbdoc(

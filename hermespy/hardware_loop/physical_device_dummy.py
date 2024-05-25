@@ -13,7 +13,6 @@ from collections.abc import Sequence
 import numpy as np
 
 from hermespy.core import DeviceInput, Serializable, Signal
-from hermespy.channel import ChannelPropagation
 from hermespy.simulation import (
     NoiseLevel,
     NoiseModel,
@@ -98,13 +97,7 @@ class PhysicalDeviceDummy(SimulatedDevice, PhysicalDevice, Serializable):
     def process_input(
         self,
         impinging_signals: (
-            DeviceInput
-            | Signal
-            | Sequence[Signal]
-            | ChannelPropagation
-            | Sequence[ChannelPropagation]
-            | SimulatedDeviceOutput
-            | None
+            DeviceInput | Signal | Sequence[Signal] | SimulatedDeviceOutput | None
         ) = None,
         cache: bool = True,
         trigger_realization: TriggerRealization | None = None,
@@ -128,13 +121,7 @@ class PhysicalDeviceDummy(SimulatedDevice, PhysicalDevice, Serializable):
     def receive(
         self,
         impinging_signals: (
-            DeviceInput
-            | Signal
-            | Sequence[Signal]
-            | ChannelPropagation
-            | Sequence[ChannelPropagation]
-            | SimulatedDeviceOutput
-            | None
+            DeviceInput | Signal | Sequence[Signal] | SimulatedDeviceOutput | None
         ) = None,
         *args,
         **kwargs,
@@ -150,7 +137,9 @@ class PhysicalDeviceDummy(SimulatedDevice, PhysicalDevice, Serializable):
 
         else:
             samples = np.zeros(self.__uploaded_signal.shape)
-            self.__downloaded_signal = Signal.Create(samples, self.sampling_rate, self.carrier_frequency)
+            self.__downloaded_signal = Signal.Create(
+                samples, self.sampling_rate, self.carrier_frequency
+            )
 
     def trigger_direct(self, signal: Signal, calibrate: bool = True) -> Signal:
         if self.receive_transmission:
@@ -213,11 +202,7 @@ class PhysicalScenarioDummy(
     def receive_devices(
         self,
         impinging_signals: (
-            Sequence[DeviceInput]
-            | Sequence[Signal]
-            | Sequence[Sequence[Signal]]
-            | Sequence[Sequence[ChannelPropagation]]
-            | None
+            Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]] | None
         ) = None,
         cache: bool = True,
         trigger_realizations: Sequence[TriggerRealization] | None = None,

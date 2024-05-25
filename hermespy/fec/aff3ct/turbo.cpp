@@ -139,15 +139,6 @@ protected:
 
 PYBIND11_MODULE(turbo, m)
 {
-    m.doc() = R"pbdoc(
-        ============
-        Turbo Coding
-        ============
-
-        A Python wrapper around the AFF3CT\ :footcite:`2019:cassagne` project,
-        transferring the Turbo\ :footcite:`1993:berrou` implementations to the Hermes forward error correction pipeline structure.
-    )pbdoc";
-
     py::class_<Turbo>(m, "TurboCoding")
 
         .def(py::init<const int, const int, const int, const int>(), R"pbdoc(

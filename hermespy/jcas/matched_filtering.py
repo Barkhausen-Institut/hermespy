@@ -89,7 +89,7 @@ class MatchedFilterJcas(DuplexJCASOperator[CommunicationWaveform], Serializable)
                     self.sampling_rate,
                     signal.carrier_frequency,
                     signal.noise_power,
-                    signal.delay
+                    signal.delay,
                 )
             )
 

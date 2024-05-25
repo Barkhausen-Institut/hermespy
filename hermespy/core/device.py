@@ -121,7 +121,6 @@ from itertools import chain
 from math import ceil
 from typing import Generic, Iterator, List, Optional, overload, Type, TypeVar
 
-import numpy as np
 from h5py import Group
 from scipy.constants import speed_of_light
 
@@ -1211,12 +1210,10 @@ class OperatorSlot(Generic[OperatorType], Sequence[OperatorType]):
         return ceil(frame_duration * sampling_rate)
 
     @overload
-    def __getitem__(self, item: int) -> OperatorType:
-        ...  # pragma:  no cover
+    def __getitem__(self, item: int) -> OperatorType: ...  # pragma:  no cover
 
     @overload
-    def __getitem__(self, item: slice) -> Sequence[OperatorType]:
-        ...  # pragma: no cover
+    def __getitem__(self, item: slice) -> Sequence[OperatorType]: ...  # pragma: no cover
 
     def __getitem__(self, item: int | slice) -> OperatorType | Sequence[OperatorType]:
         return self.__operators[item]
@@ -1741,20 +1738,6 @@ class Device(ABC, Transformable, RandomNode, Serializable):
 
         Raises:
             ValueError: If the sampling rate is not greater than zero.
-        """
-        ...  # pragma: no cover
-
-    @property
-    @abstractmethod
-    def velocity(self) -> np.ndarray:
-        """Cartesian device velocity vector.
-
-        Returns:
-            np.ndarray: Velocity vector.
-
-        Raises:
-            ValueError: If `velocity` is not three-dimensional.
-            NotImplementedError: If `velocity` is unknown.
         """
         ...  # pragma: no cover
 

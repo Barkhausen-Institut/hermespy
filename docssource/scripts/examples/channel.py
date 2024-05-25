@@ -7,7 +7,7 @@ from hermespy.simulation import SimulatedDevice
 import matplotlib.pyplot as plt
 
 from hermespy.core import dB
-from hermespy.channel import MultipathFading5GTDL as Channel
+from hermespy.channel import TDL as Channel
 from hermespy.modem import BitErrorEvaluator, SimplexLink, RootRaisedCosineWaveform, SingleCarrierLeastSquaresChannelEstimation, SingleCarrierZeroForcingChannelEqualization
 
 # Initialize two devices to be linked by a channel
@@ -22,7 +22,7 @@ link = SimplexLink(alpha_device, beta_device)
 
 # Specify the waveform and postprocessing to be used by the link
 link.waveform = RootRaisedCosineWaveform(symbol_rate=1e8, oversampling_factor=2,
-                                                   num_data_symbols=1000, num_preamble_symbols=10, pilot_rate=10)
+                                         num_data_symbols=1000, num_preamble_symbols=10, pilot_rate=10)
 link.waveform.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
 link.waveform.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
 

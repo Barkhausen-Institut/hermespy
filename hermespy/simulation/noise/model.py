@@ -60,11 +60,11 @@ class NoiseRealization(RandomRealization):
         ...  # pragma: no cover
 
 
-NoiseRealizationType = TypeVar("NoiseRealizationType", bound=NoiseRealization)
+NRT = TypeVar("NRT", bound=NoiseRealization)
 """Type of noise realization"""
 
 
-class NoiseModel(RandomNode, Generic[NoiseRealizationType]):
+class NoiseModel(RandomNode, Generic[NRT]):
     """Noise modeling base class."""
 
     def __init__(self, seed: int | None = None) -> None:
@@ -78,7 +78,7 @@ class NoiseModel(RandomNode, Generic[NoiseRealizationType]):
         RandomNode.__init__(self, seed=seed)
 
     @abstractmethod
-    def realize(self, power: float) -> NoiseRealizationType:
+    def realize(self, power: float) -> NRT:
         """Realize the noise model.
 
         Args:

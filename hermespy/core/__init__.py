@@ -9,6 +9,7 @@ from .antennas import (
     LinearAntenna,
     PatchAntenna,
     AntennaArray,
+    AntennaArrayState,
     CustomAntennaArray,
     UniformArray,
 )
@@ -23,7 +24,6 @@ from .logarithmic import dB, Logarithmic, LogarithmicSequence, ValueType
 from .operators import StaticOperator, SilentTransmitter, SignalTransmitter, SignalReceiver
 from .channel import ChannelStateFormat, ChannelStateInformation, ChannelStateDimension
 from .transformation import Direction, Transformable, TransformableBase, Transformation
-from .animation import Moveable
 from .device import (
     Operator,
     OperatorSlot,
@@ -67,12 +67,13 @@ from .monte_carlo import (
 from .random_node import RandomRealization, RandomNode
 from .drop import Drop, RecalledDrop
 from .scenario import Scenario, ScenarioMode, ScenarioType, ReplayScenario
-from .signal_model import Signal, DenseSignal, SparseSignal
+from .signal_model import Signal, SignalBlock, DenseSignal, SparseSignal
 from .visualize import (
     ScatterVisualization,
     PlotVisualization,
     StemVisualization,
     ImageVisualization,
+    QuadMeshVisualization,
     VAT,
     Visualization,
     VLT,
@@ -100,6 +101,7 @@ __all__ = [
     "LinearAntenna",
     "PatchAntenna",
     "AntennaArray",
+    "AntennaArrayState",
     "CustomAntennaArray",
     "UniformArray",
     "SNRType",
@@ -122,7 +124,6 @@ __all__ = [
     "Transformable",
     "TransformableBase",
     "Transformation",
-    "Moveable",
     "Operator",
     "OperatorSlot",
     "MixingOperator",
@@ -173,6 +174,7 @@ __all__ = [
     "ScenarioType",
     "ReplayScenario",
     "Signal",
+    "SignalBlock",
     "DenseSignal",
     "SparseSignal",
     "ProcessedDeviceInput",
@@ -181,6 +183,7 @@ __all__ = [
     "PlotVisualization",
     "StemVisualization",
     "ImageVisualization",
+    "QuadMeshVisualization",
     "VAT",
     "Visualization",
     "VLT",

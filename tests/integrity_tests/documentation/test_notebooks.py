@@ -129,7 +129,13 @@ class TestNotebooks(TestCase):
         """Test the channel implementation example notebook"""
 
         notebook = self.__load_notebook("channel.ipynb")
-        self.__patch_notebook(notebook, 4, patches={9: "simulation = Simulation(console_mode=ConsoleMode.SILENT, num_samples=1, num_actors=1)"}, inserts={1: "import ray as ray", 8: "ray.init(local_mode=True)"})
+        self.__patch_notebook(notebook, 4, 
+            patches= {
+                8: "simulation = Simulation(console_mode=ConsoleMode.SILENT, num_actors=1)",
+                34: "simulation.num_samples = 1",
+            },
+            inserts={1: "import ray as ray", 8: "ray.init(local_mode=True)"},
+        )
         self.__test_notebook(notebook)
 
     def test_datasets(self) -> None:
