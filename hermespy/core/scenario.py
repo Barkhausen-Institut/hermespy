@@ -686,20 +686,17 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
     @overload
     def process_inputs(
         self, impinging_signals: Sequence[DeviceInput], cache: bool = True
-    ) -> Sequence[ProcessedDeviceInput]:
-        ...  # pragma: no cover
+    ) -> Sequence[ProcessedDeviceInput]: ...  # pragma: no cover
 
     @overload
     def process_inputs(
         self, impinging_signals: Sequence[Signal], cache: bool = True
-    ) -> Sequence[ProcessedDeviceInput]:
-        ...  # pragma: no cover
+    ) -> Sequence[ProcessedDeviceInput]: ...  # pragma: no cover
 
     @overload
     def process_inputs(
         self, impinging_signals: Sequence[Sequence[Signal]], cache: bool = True
-    ) -> Sequence[ProcessedDeviceInput]:
-        ...  # pragma: no cover
+    ) -> Sequence[ProcessedDeviceInput]: ...  # pragma: no cover
 
     def process_inputs(
         self,
@@ -737,18 +734,15 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
     @overload
     def receive_operators(
         self, operator_inputs: Sequence[ProcessedDeviceInput], cache: bool = True
-    ) -> Sequence[Sequence[Reception]]:
-        ...  # pragma: no cover
+    ) -> Sequence[Sequence[Reception]]: ...  # pragma: no cover
 
     @overload
     def receive_operators(
         self, operator_inputs: Sequence[Sequence[Signal]], cache: bool = True
-    ) -> Sequence[Sequence[Reception]]:
-        ...  # pragma: no cover
+    ) -> Sequence[Sequence[Reception]]: ...  # pragma: no cover
 
     @overload
-    def receive_operators(self) -> Sequence[Sequence[Reception]]:
-        ...  # pragma: no cover
+    def receive_operators(self) -> Sequence[Sequence[Reception]]: ...  # pragma: no cover
 
     def receive_operators(
         self,
@@ -791,20 +785,17 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
     @overload
     def receive_devices(
         self, impinging_signals: Sequence[DeviceInput], cache: bool = True
-    ) -> Sequence[DeviceReception]:
-        ...  # pragma: no cover
+    ) -> Sequence[DeviceReception]: ...  # pragma: no cover
 
     @overload
     def receive_devices(
         self, impinging_signals: Sequence[Signal], cache: bool = True
-    ) -> Sequence[DeviceReception]:
-        ...  # pragma: no cover
+    ) -> Sequence[DeviceReception]: ...  # pragma: no cover
 
     @overload
     def receive_devices(
         self, impinging_signals: Sequence[Sequence[Signal]], cache: bool = True
-    ) -> Sequence[DeviceReception]:
-        ...  # pragma: no cover
+    ) -> Sequence[DeviceReception]: ...  # pragma: no cover
 
     def receive_devices(
         self,

@@ -296,26 +296,32 @@ class UsrpDevice(PhysicalDevice, Serializable):
         uploaded_samples = baseband_signal.copy()
 
         # Hack: Prepend some zeros to account for the premature transmission stop
-        baseband_signal.set_samples(np.concatenate(
-            (
-                np.zeros(
-                    (baseband_signal.num_streams, self.num_prepeneded_zeros), dtype=np.complex_
-                ),
-                baseband_signal[:, :],
-                np.zeros((baseband_signal.num_streams, self.num_appended_zeros), dtype=np.complex_),
-            ),
-            axis=1,
-        ))
-
-        if baseband_signal.num_samples % 4 != 0:
-            baseband_signal.set_samples(np.append(
-                baseband_signal[:, :],
-                np.zeros(
-                    (baseband_signal.num_streams, 4 - baseband_signal.num_samples % 4),
-                    dtype=complex,
+        baseband_signal.set_samples(
+            np.concatenate(
+                (
+                    np.zeros(
+                        (baseband_signal.num_streams, self.num_prepeneded_zeros), dtype=np.complex_
+                    ),
+                    baseband_signal[:, :],
+                    np.zeros(
+                        (baseband_signal.num_streams, self.num_appended_zeros), dtype=np.complex_
+                    ),
                 ),
                 axis=1,
-            ))
+            )
+        )
+
+        if baseband_signal.num_samples % 4 != 0:
+            baseband_signal.set_samples(
+                np.append(
+                    baseband_signal[:, :],
+                    np.zeros(
+                        (baseband_signal.num_streams, 4 - baseband_signal.num_samples % 4),
+                        dtype=complex,
+                    ),
+                    axis=1,
+                )
+            )
 
         # Append a zero vector for unselected transmit ports
         # Workaround for the USRP wrapper missing dedicated port selections
@@ -379,9 +385,11 @@ class UsrpDevice(PhysicalDevice, Serializable):
             signal_model.set_samples(np.append(signal_model[:, :], streams, axis=1))
 
         # Remove the zero padding hack
-        signal_model.set_samples(signal_model[
-            :, self.num_prepeneded_zeros : signal_model.num_samples - self.num_appended_zeros
-        ])
+        signal_model.set_samples(
+            signal_model[
+                :, self.num_prepeneded_zeros : signal_model.num_samples - self.num_appended_zeros
+            ]
+        )
         return signal_model
 
     @property

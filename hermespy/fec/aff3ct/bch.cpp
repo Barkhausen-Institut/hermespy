@@ -110,15 +110,6 @@ protected:
 
 PYBIND11_MODULE(bch, m)
 {
-    m.doc() = R"pbdoc(
-        ============
-        BCH Coding
-        ============
-
-        A Python wrapper around the AFF3CT\ :footcite:`2019:cassagne` project,
-        transferring the Bose–Chaudhuri–Hocquenghem\ :footcite:`1960:bose` code implementations to the Hermes forward error correction pipeline structure.
-    )pbdoc";
-
     py::class_<BCH>(m, "BCHCoding")
 
         .def(py::init<const int, const int, const int>(), R"pbdoc(

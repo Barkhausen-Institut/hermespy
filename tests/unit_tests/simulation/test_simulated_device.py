@@ -417,20 +417,6 @@ class TestSimulatedDevice(TestCase):
         except RuntimeError:
             self.fail()
 
-    def test_velocity_validation(self) -> None:
-        """Velocity property setter should raise ValueError on non-cartesian vectors"""
-
-        with self.assertRaises(ValueError):
-            self.device.velocity = np.zeros(2)
-
-    def test_velocity_setget(self) -> None:
-        """Velocity property getter should return setter argument"""
-
-        velocity = np.array([1, 2, 3])
-        self.device.velocity = velocity
-
-        assert_array_equal(velocity, self.device.velocity)
-
     def test_noise_level_setget(self) -> None:
         """Noise level property getter should return setter argument"""
 
@@ -476,9 +462,6 @@ class TestSimulatedDevice(TestCase):
 
         with self.assertRaises(ValueError):
             _ = self.device.process_from_realization(Mock(), Mock())
-
-        with self.assertRaises(ValueError):
-            _ = self.device.process_from_realization([Mock()], Mock())
 
     def test_process_output_from_realization(self) -> None:
         """The process from realization routine should properly process a device output"""

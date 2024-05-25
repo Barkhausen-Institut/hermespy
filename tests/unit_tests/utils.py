@@ -5,13 +5,16 @@ from os import getenv
 from types import TracebackType
 from typing import Any, List, Tuple
 from unittest.mock import MagicMock, patch
+from unittest import TestCase
 import re
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.container import StemContainer
+from mpl_toolkits.mplot3d.art3d import Line3D
+from numpy.testing import assert_array_almost_equal
 
-from hermespy.core import ConsoleMode, MonteCarlo, GridDimension, Verbosity
+from hermespy.core import ConsoleMode, MonteCarlo, GridDimension, Signal, Verbosity
 from hermespy.simulation import Simulation, SimulationScenario
 
 __author__ = "Jan Adler"
@@ -76,6 +79,14 @@ def subplots_mock(x=1, y=1, *args, squeeze=True, **kwargs) -> Tuple[MagicMock, M
     figure_mock = MagicMock(spec=plt.Figure)
     figure_mock.canvas = MagicMock(spec=plt.FigureCanvasBase)
 
+    # Detect 3D mode
+    mode_3d = False
+    if "subplot_kw" in kwargs:
+        if "projection" in kwargs["subplot_kw"]:
+            mode_3d = True
+
+    line_spec = Line3D if mode_3d else plt.Line2D
+
     if x == 1 and y == 1 and squeeze:
         axes_mock = MagicMock()
         axes_mock.stem.return_value = MagicMock(spec=StemContainer)
@@ -85,10 +96,13 @@ def subplots_mock(x=1, y=1, *args, squeeze=True, **kwargs) -> Tuple[MagicMock, M
         for x, y in np.ndindex(axes_mock.shape):
             mock_element = MagicMock()
             container_mock = MagicMock(spec=StemContainer)
-            container_mock.markerline = MagicMock(spec=plt.Line2D)
+            container_mock.markerline = MagicMock(spec=line_spec)
             container_mock.stemlines = MagicMock(spec=list)
-            mock_element.stem.return_value = container_mock
-            mock_element.plot.return_value = [MagicMock(spec=plt.Line2D)]
+            mock_element.stem.return_value = container_mock  
+            plot_lines_mock = MagicMock(spec=line_spec)
+            plot_lines_mock.set_3d_properties = MagicMock()
+            mock_element.plot.return_value = [plot_lines_mock]
+            mock_element.semilogy.return_value = [MagicMock(spec=line_spec)]
             axes_mock[x, y] = mock_element
 
     return figure_mock, axes_mock
@@ -156,3 +170,13 @@ class SimulationTestContext(object):
         """Whether the plot functions are patched."""
 
         return self.__patch_plot
+
+def assert_signals_equal(test: TestCase, expected_signal: Signal, actual_signal: Signal) -> None:
+    
+    test.assertEqual(expected_signal.sampling_rate, actual_signal.sampling_rate, msg="Sampling rate mismatch")
+    test.assertEqual(expected_signal.num_samples, actual_signal.num_samples, msg="Number of samples mismatch")
+    test.assertEqual(expected_signal.num_streams, actual_signal.num_streams, msg="Number of streams mismatch")
+    test.assertEqual(len(expected_signal), len(actual_signal), msg="Number of blovks mismatch")
+    
+    for expected_block, actual_block in zip(expected_signal, actual_signal):
+        assert_array_almost_equal(expected_block, actual_block)

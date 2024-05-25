@@ -12,7 +12,7 @@ from hermespy.hardware_loop.audio.device import AudioAntenna, AudioDeviceAntenna
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.2.0"
@@ -75,6 +75,13 @@ class TestAudioAntenna(TestCase):
 
     def setUp(self) -> None:
         self.antenna = AudioAntenna()
+        
+    def test_copy(self) -> None:
+        """Test copying the antenna stub"""
+        
+        copy = self.antenna.copy()
+        self.assertEqual(self.antenna.mode, copy.mode)
+        assert_array_almost_equal(self.antenna.pose, copy.pose)
 
     def test_characteristics(self) -> None:
         """Audio device antenna should always return ideal characteristics"""

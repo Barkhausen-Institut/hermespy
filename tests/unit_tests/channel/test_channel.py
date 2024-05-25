@@ -1,20 +1,18 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from typing import Type
 from unittest import TestCase
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import numpy as np
-from h5py import File, Group
-from numpy.testing import assert_array_equal
+from h5py import Group
 
-from hermespy.channel.channel import Channel, ChannelPropagation, ChannelRealization, DirectiveChannelRealization, InterpolationMode
+from hermespy.channel.channel import Channel, ChannelRealization, ChannelSample, ChannelSampleHook, InterpolationMode, LinkState
 from hermespy.core import ChannelStateInformation, Device, DeviceOutput, Signal
 from hermespy.simulation import SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.2.0"
@@ -23,8 +21,51 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class ChannelRealizationMock(ChannelRealization):
+class TestLinkState(TestCase):
+    """Test the link state dataclass"""
+    
+    def setUp(self) -> None:
+        
+        self.alpha_state = Mock()
+        self.beta_state = Mock()
+        self.carrier_frequency = 1.234
+        self.bandwith = 5.678
+        self.timestamp = 10.234
+        
+        self.state = LinkState(self.alpha_state, self.beta_state, self.carrier_frequency, self.bandwith, self.timestamp)
+
+    def test_properties(self) -> None:
+        """Properties should return the correct values"""
+        
+        self.assertIs(self.alpha_state, self.state.transmitter)
+        self.assertIs(self.beta_state, self.state.receiver)
+        self.assertEqual(self.carrier_frequency, self.state.carrier_frequency)
+        self.assertEqual(self.bandwith, self.state.bandwidth)
+        self.assertEqual(self.timestamp, self.state.time)
+
+class ChannelSampleMock(ChannelSample):
+    
+    def _propagate(self, signal: Signal, interpolation: InterpolationMode) -> Signal:
+        return signal
+    
+    def state(self, delay: float, sampling_rate: float, num_samples: int, max_num_taps: int) -> ChannelStateInformation:
+        return ChannelStateInformation.Ideal(num_samples, self.receiver_state.antennas.num_receive_antennas, self.transmitter_state.antennas.num_transmit_antennas)
+
+
+class ChannelRealizationMock(ChannelRealization[ChannelSampleMock]):
     """Implementation of the abstract channel realization base calss for testing purposes"""
+
+    def _sample(
+        self,
+        state: LinkState,
+    ) -> ChannelSampleMock:
+        return ChannelSampleMock(state)
+
+    def _reciprocal_sample(self, sample: ChannelSampleMock, state: LinkState) -> ChannelSampleMock:
+        return ChannelSampleMock(state)
+
+    def to_HDF(self, group: Group) -> None:
+        group.attrs['gain'] = self.gain
 
     def _propagate(self, signal: Signal, transmitter: Device, receiver: Device, interpolation: InterpolationMode) -> Signal:
         return signal
@@ -32,46 +73,81 @@ class ChannelRealizationMock(ChannelRealization):
     def state(self, transmitter: Device, receiver: Device, delay: float, sampling_rate: float, num_samples: int, max_num_taps: int) -> ChannelStateInformation:
         return ChannelStateInformation.Ideal(num_samples=num_samples, num_receive_streams=1, num_transmit_streams=1)
 
-    @classmethod
-    def From_HDF(cls: Type[ChannelRealizationMock], group: Group, alpha_device: Device, beta_device: Device) -> ChannelRealizationMock:
-        return ChannelRealizationMock(alpha_device, beta_device, **cls._parameters_from_HDF(group))
 
-
-class ChannelMock(Channel[ChannelRealizationMock]):
+class ChannelMock(Channel[ChannelRealizationMock, ChannelSampleMock]):
     """Implementation of the abstract channel base class for testing purposes only"""
 
     def _realize(self) -> ChannelRealizationMock:
-        return ChannelRealizationMock(self.alpha_device, self.beta_device, self.gain)
+        return ChannelRealizationMock(self.sample_hooks, self.gain)
 
     def recall_realization(self, group: Group):
-        return ChannelRealizationMock.From_HDF(group, self.alpha_device, self.beta_device)
+        return ChannelRealizationMock(self.sample_hooks, group.attrs['gain'])
 
 
-class TestChannelRealization(TestCase):
-    """Test base class for channel realizations"""
-
+class TestChannelSampleHook(TestCase):
+    """Test the channel sample hook class"""
+    
     def setUp(self) -> None:
+        self.callback = Mock()
+        self.transmitter = Mock()
+        self.receiver = Mock()
+        
+        self.hook = ChannelSampleHook(self.callback, self.transmitter, self.receiver)
+        
+    def test_call(self) -> None:
+        """Calling the hook should call the callback with the correct arguments"""
+        
+        sample = Mock()
+        
+        self.hook(sample, self.transmitter, Mock())
+        self.callback.assert_not_called()
+        
+        self.hook(sample, Mock(), self.receiver)
+        self.callback.assert_not_called()
+        
+        self.hook(sample, self.transmitter, self.receiver)
+        self.callback.assert_called_once_with(sample)
+        
+        
+class TestChannelSample(TestCase):
+    """Test the base class for wireless channel samples."""
+    
+    def setUp(self) -> None:
+        
         self.rng = np.random.default_rng(42)
-
-        self.alpha_device = SimulatedDevice(antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1e-3, (2, 1, 1)))
-        self.beta_device = SimulatedDevice()
-        self.gain = 0.9
-
-        self.channel = ChannelMock(self.alpha_device, self.beta_device, self.gain)
-        self.realization = ChannelRealizationMock(self.alpha_device, self.beta_device, self.gain)
-
-    def test_initialization(self) -> None:
-        """Initialization arguments should be properly stored as properties"""
-
-        self.assertIs(self.alpha_device, self.realization.alpha_device)
-        self.assertIs(self.beta_device, self.realization.beta_device)
-        self.assertEqual(self.gain, self.realization.gain)
-
+        self.transmitter = SimulatedDevice(antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1e-3, (2, 1, 1)))
+        self.receiver = SimulatedDevice()
+        self.carrier_frequency = 1.234e9
+        self.bandwidth = 5.678e6
+        
+        self.sample = ChannelMock().realize().sample(
+            self.transmitter,
+            self.receiver,
+            0.0,
+            self.carrier_frequency,
+            self.bandwidth
+        )
+        
+    def test_init(self) -> None:
+        """Initialization should properly store arguments as properties"""
+        
+        self.assertEqual(self.carrier_frequency, self.sample.carrier_frequency)
+        self.assertEqual(self.bandwidth, self.sample.bandwidth)
+        self.assertEqual(0.0, self.sample.time)
+        
+    def test_properties(self) -> None:
+        """Properties should return the correct values"""
+        
+        self.assertEqual(2, self.sample.num_transmit_antennas)
+        self.assertEqual(1, self.sample.num_receive_antennas)
+        self.assertEqual(self.carrier_frequency, self.sample.carrier_frequency)
+        self.assertEqual(self.bandwidth, self.sample.bandwidth)
+    
     def test_propagate_validation(self) -> None:
         """Propagate routine should raise ValueError on invalid arguments"""
 
         with self.assertRaises(ValueError):
-            _ = self.realization.propagate(Mock())
+            _ = self.sample.propagate(Mock())
 
     def test_propagate_deviceoutput(self) -> None:
         """Test propgation of device outputs"""
@@ -80,106 +156,58 @@ class TestChannelRealization(TestCase):
         device_output = Mock(spec=DeviceOutput)
         device_output.mixed_signal = signal
 
-        propagation = self.realization.propagate(device_output)
+        propagation = self.sample.propagate(device_output)
 
-        self.assertIsInstance(propagation, ChannelPropagation)
+        self.assertIsInstance(propagation, Signal)
 
     def test_propagate_signal(self) -> None:
         """Test propagation of signals"""
 
         signal = Signal.Create(self.rng.random((2, 10)), 1.0)
-        propagation = self.realization.propagate(signal)
+        propagation = self.sample.propagate(signal)
 
-        self.assertIsInstance(propagation, ChannelPropagation)
-
-    def test_hdf_serialization(self) -> None:
-        """Test HDF roundtrip serialization"""
-
-        file = File("test.h5", "w", driver="core", backing_store=False)
-        group = file.create_group("group")
-
-        self.realization.to_HDF(group)
-        recalled_realization = self.realization.From_HDF(file["group"], self.alpha_device, self.beta_device)
-
-        file.close()
-
-        self.assertIsInstance(recalled_realization, ChannelRealizationMock)
-        self.assertIs(self.alpha_device, recalled_realization.alpha_device)
-        self.assertIs(self.beta_device, recalled_realization.beta_device)
-        self.assertEqual(self.gain, recalled_realization.gain)
+        self.assertIsInstance(propagation, Signal)
 
 
-class TestDirectiveChannelRealization(TestCase):
-    """Test the directive channel realization wrapper"""
+class TestChannelRealization(TestCase):
+    """Test base class for channel realizations"""
 
     def setUp(self) -> None:
         self.rng = np.random.default_rng(42)
 
+        self.sample_callback = Mock()
+        self.sample_hooks = {ChannelSampleHook(self.sample_callback, None, None),}
+        self.gain = 0.9
+        
         self.transmitter = SimulatedDevice(antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1e-3, (2, 1, 1)))
         self.receiver = SimulatedDevice()
-        self.gain = 0.9
+        self.carrier_frequency = 1.234e9
+        self.bandwidth = 5.678e6
 
-        self.channel = ChannelMock(self.transmitter, self.receiver, self.gain)
-        self.realization = ChannelRealizationMock(self.transmitter, self.receiver, self.gain)
-        self.directive_realization = DirectiveChannelRealization(self.transmitter, self.receiver, self.realization)
+        self.realization = ChannelRealizationMock(self.sample_hooks, self.gain)
 
-    def test_init(self) -> None:
-        """Initialization should properly store arguments as properties"""
+    def test_initialization(self) -> None:
+        """Initialization arguments should be properly stored as properties"""
 
-        self.assertIs(self.transmitter, self.directive_realization.transmitter)
-        self.assertIs(self.receiver, self.directive_realization.receiver)
+        self.assertSetEqual(self.sample_hooks, self.realization.sample_hooks)
+        self.assertEqual(self.gain, self.realization.gain)
+        
+    def test_sample(self) -> None:
+        """Sampling should call the sample hooks and return the samples"""
 
-    def test_propagate(self) -> None:
-        """Propagation routine should properly call the wrapped realization's propagation routine"""
+        sample = self.realization.sample(self.transmitter, self.receiver, self.carrier_frequency, self.bandwidth)
+        self.sample_callback.assert_called_once_with(sample)
+        self.assertIsInstance(sample, ChannelSampleMock)
 
-        signal = Signal.Create(self.rng.random((2, 10)), 1.0)
+    def test_reciprocal_sample(self) -> None:
+        """Reciprocal sampling should call the sample hooks and return the samples"""
 
-        directive_propagation = self.directive_realization.propagate(signal)
-        specific_propagation = self.realization.propagate(signal, self.transmitter, self.receiver)
+        original_sample = self.realization.sample(self.transmitter, self.receiver, self.carrier_frequency, self.bandwidth)
+        self.sample_callback.reset_mock()
 
-        assert_array_equal(directive_propagation.signal[:, :], specific_propagation.signal[:, :])
-
-    def test_state(self) -> None:
-        """State routine should properly call the wrapped realization's state routine"""
-
-        directive_state = self.directive_realization.state(0, 1.0, 10, 1)
-        specific_state = self.realization.state(self.transmitter, self.receiver, 0, 1.0, 10, 1)
-
-        assert_array_equal(directive_state.dense_state(), specific_state.dense_state())
-
-
-class TestChannelPropagation(TestCase):
-    """Test channel propagation dataclass"""
-
-    def setUp(self) -> None:
-        self.rng = np.random.default_rng(42)
-
-        self.transmitter = SimulatedDevice(antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1e-3, (2, 1, 1)))
-        self.receiver = SimulatedDevice()
-        self.gain = 0.9
-        self.realization = ChannelRealizationMock(self.transmitter, self.receiver, self.gain)
-        self.signal = Signal.Create(self.rng.random((2, 10)), 1.0)
-        self.interpolation_mode = InterpolationMode.NEAREST
-
-        self.propagation = ChannelPropagation[ChannelRealizationMock](self.realization, self.signal, self.transmitter, self.receiver, self.interpolation_mode)
-
-    def test_properties(self) -> None:
-        """Initialization should properly initialize object properties"""
-
-        self.assertIs(self.signal, self.propagation.signal)
-        self.assertIs(self.transmitter, self.propagation.transmitter)
-        self.assertIs(self.receiver, self.propagation.receiver)
-        self.assertEqual(self.interpolation_mode, self.propagation.interpolation_mode)
-
-    def test_state(self) -> None:
-        """State method should correctly call the realization's state computation routine"""
-
-        with patch.object(self.realization, "state") as state_method_mock:
-            expected_state = Mock()
-            state_method_mock.return_value = expected_state
-
-            _ = self.propagation.state(0, 1.0, 1, 1)
-            state_method_mock.assert_called_once_with(self.transmitter, self.receiver, 0, 1.0, 1, 1)
+        reciprocal_sample = self.realization.reciprocal_sample(original_sample, self.transmitter, self.receiver, self.carrier_frequency, self.bandwidth)
+        self.sample_callback.assert_called_once_with(reciprocal_sample)
+        self.assertIsInstance(reciprocal_sample, ChannelSampleMock)
 
 
 class TestChannel(TestCase):
@@ -279,10 +307,12 @@ class TestChannel(TestCase):
         with self.assertRaises(ValueError):
             self.channel.propagate(signal)
 
-    def test_propagate(self) -> None:
-        """Propagation routine should properly realize the channel and propagate the signal"""
+    def test_add_sample_hook(self) -> None:
+        """Adding a sample hook should properly store it"""
 
-        signal = Signal.Create(self.rng.random((2, 10)), 1.0)
-        propagation = self.channel.propagate(signal)
-
-        self.assertIsInstance(propagation, ChannelPropagation)
+        callback = Mock()
+        hook = self.channel.add_sample_hook(callback)
+        self.assertIn(hook, self.channel.sample_hooks)
+        
+        self.channel.remove_sample_hook(hook)
+        self.assertNotIn(hook, self.channel.sample_hooks)

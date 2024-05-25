@@ -252,19 +252,13 @@ class AutomaticGainControl(Serializable, GainControlBase):
             max_amplitude = 0
             for b in input_signal:
                 max_amplitude = max(
-                    np.abs(np.real(b)).max(),
-                    np.abs(np.imag(b)).max(),
-                    max_amplitude
+                    np.abs(np.real(b)).max(), np.abs(np.imag(b)).max(), max_amplitude
                 )
 
         elif self.agc_type == GainControlType.RMS_AMPLITUDE:
             max_amplitude = 0
             for b in input_signal:
-                max_amplitude = max(
-                    rms_value(np.real(b)),
-                    rms_value(np.imag(b)),
-                    max_amplitude
-                )
+                max_amplitude = max(rms_value(np.real(b)), rms_value(np.imag(b)), max_amplitude)
 
         else:
             raise RuntimeError("Unsupported gain control type")
@@ -432,16 +426,12 @@ class AnalogDigitalConverter(Serializable):
             else 0
         )
         converted_signal = input_signal.Empty(
-            num_streams=input_signal.num_streams,
-            num_samples=0,
-            **input_signal.kwargs
+            num_streams=input_signal.num_streams, num_samples=0, **input_signal.kwargs
         )
 
         # Iterate over each frame independtenly
         for f in range(num_frames):
-            frame_samples = input_signal[
-                :, f * num_frame_samples : (f + 1) * num_frame_samples
-            ]
+            frame_samples = input_signal[:, f * num_frame_samples : (f + 1) * num_frame_samples]
             frame_signal = input_signal.from_ndarray(frame_samples)
 
             converted_frame_signal = self.__convert_frame(frame_signal)

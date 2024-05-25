@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from .animation import LinearTrajectory, StaticTrajectory
 from .antennas import (
     SimulatedAntenna,
     SimulatedAntennaPort,
@@ -11,8 +11,11 @@ from .antennas import (
     SimulatedPatchAntenna,
     SimulatedUniformArray,
 )
-from .simulation import Simulation, SimulationScenario
+from .drop import SimulatedDrop
+from .scenario import SimulationScenario
+from .simulation import Simulation
 from .simulated_device import (
+    DeviceState,
     ProcessedSimulatedDeviceInput,
     SimulatedDevice,
     SimulatedDeviceOutput,
@@ -64,6 +67,8 @@ __status__ = "Prototype"
 
 
 __all__ = [
+    "LinearTrajectory",
+    "StaticTrajectory",
     "SimulatedAntenna",
     "SimulatedAntennaPort",
     "SimulatedCustomArray",
@@ -74,7 +79,9 @@ __all__ = [
     "SimulatedPatchAntenna",
     "SimulatedUniformArray",
     "Simulation",
+    "SimulatedDrop",
     "SimulationScenario",
+    "DeviceState",
     "ProcessedSimulatedDeviceInput",
     "SimulatedDevice",
     "SimulatedDeviceOutput",

@@ -280,9 +280,7 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Serializable):
             # TODO: look at the estimated delay and its reliability. If the delay cannot be estimated
             # reliably, most probably, the TX signal was not received in the window decided here
             start = num_wavelet_samples
-            received_waveforms[p, :, n, :] = rx_signal[
-                :, start : start + num_wavelet_samples
-            ]
+            received_waveforms[p, :, n, :] = rx_signal[:, start : start + num_wavelet_samples]
 
         # Compute received frequency spectra
         received_frequencies = fft(received_waveforms, axis=3, norm="ortho")

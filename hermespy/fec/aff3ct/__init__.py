@@ -1,9 +1,11 @@
-from .polar import PolarSCCoding, PolarSCLCoding
-from .rsc import RSCCoding
-from .turbo import TurboCoding
-from .rs import ReedSolomonCoding
-from .bch import BCHCoding
-from .ldpc import LDPCCoding
+# -*- coding: utf-8 -*-
+
+from .polar import PolarSCCoding, PolarSCLCoding  # pragma: no cover
+from .rsc import RSCCoding  # pragma: no cover
+from .turbo import TurboCoding  # pragma: no cover
+from .rs import ReedSolomonCoding  # pragma: no cover
+from .bch import BCHCoding  # pragma: no cover
+from .ldpc import LDPCCoding  # pragma: no cover
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"

@@ -574,8 +574,9 @@ class Calibration(ABC, HDFSerializable, Serializable):
 
     @classmethod
     @abstractmethod
-    def _configure_slot(cls: Type[CT], device: PhysicalDevice, value: CT | None) -> None:
-        ...  # pragma: no cover
+    def _configure_slot(
+        cls: Type[CT], device: PhysicalDevice, value: CT | None
+    ) -> None: ...  # pragma: no cover
 
     @property
     def device(self) -> PhysicalDevice | None:
@@ -675,13 +676,12 @@ class DelayCalibrationBase(Calibration, ABC):
 
         # Prepend zeros to the signal to account for negative delays
         delay_in_samples = round(-self.delay * signal.sampling_rate)
-        signal.set_samples(np.concatenate(
-            (
-                np.zeros((signal.num_streams, delay_in_samples), dtype=np.complex_),
-                signal[:, :],
-            ),
-            axis=1,
-        ))
+        signal.set_samples(
+            np.concatenate(
+                (np.zeros((signal.num_streams, delay_in_samples), dtype=np.complex_), signal[:, :]),
+                axis=1,
+            )
+        )
 
         return signal
 
