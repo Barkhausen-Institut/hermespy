@@ -13,7 +13,7 @@ The subpackages may have interdependencies, but in general, the root of dependen
 
    modem
    radar
-   channel
+   channel/channel
    simulation
    hardware_loop
    core

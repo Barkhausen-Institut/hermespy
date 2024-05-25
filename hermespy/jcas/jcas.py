@@ -128,12 +128,10 @@ class DuplexJCASOperator(
         return self.waveform.frame_duration
 
     @abstractmethod
-    def _transmit(self, duration: float = -1.0) -> JCASTransmission:
-        ...  # pragma: no cover
+    def _transmit(self, duration: float = -1.0) -> JCASTransmission: ...  # pragma: no cover
 
     @abstractmethod
-    def _receive(self, signal: Signal) -> JCASReception:
-        ...  # pragma: no cover
+    def _receive(self, signal: Signal) -> JCASReception: ...  # pragma: no cover
 
     def _recall_transmission(self, group: Group) -> JCASTransmission:
         return JCASTransmission.from_HDF(group)

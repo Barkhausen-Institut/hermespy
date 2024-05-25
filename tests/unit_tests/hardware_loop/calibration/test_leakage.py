@@ -150,6 +150,16 @@ class TestSelectiveLeakageCalibration(TestCase):
         calibration = SelectiveLeakageCalibration.MMSEEstimate(device)
         assert_array_almost_equal(leakage_model.leakage_response, calibration.leakage_response[:, :, :num_samples])
 
+    def test_least_squares_estimate(self) -> None:
+        num_samples = 32
+        sampling_rate = 1e8
+
+        device = PhysicalDeviceDummy(carrier_frequency=1e9, sampling_rate=sampling_rate, max_receive_delay=num_samples / sampling_rate, seed=42, antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1e-3, (2, 1, 1)), receive_transmission=False, noise_power=np.zeros(2))
+        leakage_model = SelectiveLeakage.Normal(device, num_samples=num_samples)
+        device.isolation = leakage_model
+
+        calibration = SelectiveLeakageCalibration.LeastSquaresEstimate(device)
+
     def test_yaml_serialization(self) -> None:
         """Test YAML serialization and deserialization"""
 

@@ -175,7 +175,7 @@ class TestTransformation(TestCase):
 
         assert_array_almost_equal(expected_directions, rotated_directions)
 
-    def test_rotat_direction_validation(self) -> None:
+    def test_rotate_direction_validation(self) -> None:
         """Rotating a directional unit vector should raise a ValuError on invalid arguments"""
 
         with self.assertRaises(ValueError):
@@ -195,6 +195,15 @@ class TestTransformation(TestCase):
             rotated_directions[d, :] = transformation.transform_direction(direction)
 
         assert_array_almost_equal(expected_directions, rotated_directions)
+
+    def test_quaternions(self) -> None:
+        """Test orientations from and to quaternions"""
+        
+        transformation = Transformation.No()
+        quaternion = transformation.rotation_quaternion
+        transformation.rotation_quaternion = quaternion
+        
+        assert_array_almost_equal(quaternion, transformation.rotation_quaternion)
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""

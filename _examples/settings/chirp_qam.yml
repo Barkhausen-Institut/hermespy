@@ -61,9 +61,7 @@ Operators:
       guard_interval: 1e-6
 
       # Post-Processing
-      channel_estimation: !<SC-Ideal>
-        transmitter: *device_alpha
-        receiver: *device_alpha
+      channel_estimation: !<SC-LS>
       channel_equalization: !<SC-MMSE>
 
 # Performance indication evaluation configuration

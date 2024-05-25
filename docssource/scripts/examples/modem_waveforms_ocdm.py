@@ -2,7 +2,7 @@
 
 import matplotlib.pyplot as plt
 
-from hermespy.channel import MultipathFading5GTDL, TDLType
+from hermespy.channel import TDL, TDLType
 from hermespy.modem import OCDMWaveform, OrthogonalLeastSquaresChannelEstimation, PilotSection, CorrelationSynchronization, ZeroForcingChannelEqualization, PrefixType, SimplexLink, GridResource, GridElement, GuardSection, ElementType, SymbolSection
 from hermespy.simulation import Simulation
 
@@ -14,7 +14,7 @@ tx_device = simulation.new_device(carrier_frequency=carrier_frequency)
 rx_device = simulation.new_device(carrier_frequency=carrier_frequency)
 
 # Assume a 5G TDL channel model
-channel = MultipathFading5GTDL(TDLType.A, 1e-7, doppler_frequency=10)
+channel = TDL(TDLType.A, 1e-7, doppler_frequency=10)
 simulation.set_channel(tx_device, rx_device, channel)
 
 # Link the devices

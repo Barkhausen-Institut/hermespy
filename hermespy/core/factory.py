@@ -52,6 +52,7 @@ from typing import (
     KeysView,
     List,
     Optional,
+    Tuple,
     Type,
     TypeVar,
     ValuesView,
@@ -916,3 +917,48 @@ class HDFSerializable(metaclass=ABCMeta):
             del group[dataset]
 
         group.create_dataset(dataset, data=data)
+
+    @staticmethod
+    def _range_to_HDF(group: Group, id: str, value: float | Tuple[float, float]) -> None:
+        """Serialize a range variable to HDF5.
+
+        Args:
+
+            group (h5py.Group):
+                The HDF5 group to which the range value is serialized.
+
+            id (str):
+                Identifier string of the range value.
+
+            value (float | Tuple[float, float]):
+                The range value to be serialized.
+                Can either be a scalar or a tuple of two values indicating maximum and minimum.
+        """
+
+        if isinstance(value, tuple):
+            group.attrs[id + "_min"] = value[0]
+            group.attrs[id + "_max"] = value[1]
+        else:
+            group.attrs[id] = value
+
+    @staticmethod
+    def _range_from_HDF(group: Group, id: str) -> float | Tuple[float, float]:
+        """Deserialize a range variable from HDF5.
+
+        Args:
+
+            group (h5py.Group):
+                The HDF5 group from which the range value is deserialized.
+
+            id (str):
+                Identifier string of the range value.
+
+        Returns:
+            The deserialized range value.
+            Can either be a scalar or a tuple of two values indicating maximum and minimum.
+        """
+
+        if id in group.attrs:
+            return float(group.attrs[id])
+        else:
+            return (float(group.attrs[id + "_min"]), float(group.attrs[id + "_max"]))

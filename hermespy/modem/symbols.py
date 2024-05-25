@@ -92,13 +92,15 @@ class _ConstellationPlot(VisualizableAttribute[ScatterVisualization]):
             self.__symbols.num_symbols * self.__symbols.num_blocks * self.__symbols.num_streams
         )
         zeros = np.zeros(num_symbols, dtype=np.float_)
-        path_collection = ax.scatter(zeros, zeros)
+        path_collection = np.empty((1, 1), dtype=np.object_)
+        path_collection[0, 0] = ax.scatter(zeros, zeros)
 
         return ScatterVisualization(figure, axes, path_collection)
 
     def _update_visualization(self, visualization: ScatterVisualization, **kwargs) -> None:
         symbols = self.__symbols.raw.flatten()
-        visualization.paths.set_offsets(np.array([symbols.real, symbols.imag]).T)
+        path: plt.PathCollection = visualization.paths[0, 0]
+        path.set_offsets(np.array([symbols.real, symbols.imag]).T)
 
 
 class Symbol(object):

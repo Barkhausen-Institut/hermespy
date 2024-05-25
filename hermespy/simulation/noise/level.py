@@ -31,8 +31,7 @@ class NoiseLevel(ScalarDimension, Serializable):
 
     @level.setter
     @abstractmethod
-    def level(self, value: float) -> None:
-        ...  # pragma: no cover
+    def level(self, value: float) -> None: ...  # pragma: no cover
 
     @abstractmethod
     def get_power(self) -> float:

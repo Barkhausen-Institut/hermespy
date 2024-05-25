@@ -10,13 +10,14 @@ from unittest import TestCase
 from unittest.mock import Mock, patch
 
 import numpy as np
+from h5py import File
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 from ruamel.yaml import ScalarNode, SafeConstructor, SafeRepresenter
 from ruamel.yaml.constructor import ConstructorError
 
 from hermespy.core import Logarithmic, LogarithmicSequence
 from hermespy.channel import MultipathFadingChannel, IdealChannel
-from hermespy.core.factory import Factory, Serializable, SerializableEnum
+from hermespy.core.factory import Factory, Serializable, SerializableEnum, HDFSerializable
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -436,3 +437,24 @@ class TestFactory(TestCase):
 
         recalled_range = self.factory.from_str("[1, 2, ..., 10]")
         self.assertSequenceEqual([i for i in range(1, 11)], recalled_range)
+
+
+class TestHDFSerializable(TestCase):
+    """Test the HDF serialization routines"""
+    
+    def test_range_serialization(self) -> None:
+        """Test the range serialization to HDF"""
+
+        file = File("test.hdf", "w", "core")
+        group = file.create_group("test")
+        
+        expected_range = (5, 6)
+        HDFSerializable._range_to_HDF(group, 'range_serialization', expected_range)
+        recalled_range = HDFSerializable._range_from_HDF(group, 'range_serialization')
+        
+        expected_float = 5.0
+        HDFSerializable._range_to_HDF(group, 'float_serialization', expected_float)
+        recalled_float = HDFSerializable._range_from_HDF(group, 'float_serialization')
+        
+        self.assertEqual(expected_range, recalled_range)
+        self.assertEqual(expected_float, recalled_float)
