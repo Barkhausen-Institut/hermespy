@@ -16,6 +16,7 @@ from hermespy.core.scenario import ScenarioMode, Scenario
 from hermespy.radar import DetectionProbEvaluator, FMCW, PointDetection, Radar, RadarPointCloud, ReceiverOperatingCharacteristic, ThresholdDetector
 from hermespy.radar.evaluators import RadarEvaluator, RocArtifact, RocEvaluation, RocEvaluationResult, RootMeanSquareArtifact, RootMeanSquareError, RootMeanSquareErrorResult, RootMeanSquareEvaluation
 from hermespy.simulation import SimulatedDevice, SimulationScenario, N0
+from unit_tests.utils import SimulationTestContext
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
@@ -104,7 +105,7 @@ class TestRadarEvaluator(TestCase):
         result = self.evaluator.generate_result(grid, artifacts)
 
         self.assertIsInstance(result, ScalarEvaluationResult)
-
+        
 
 class TestDetectionProbEvaluator(TestCase):
     """Test detection probability evaluation"""
@@ -270,11 +271,6 @@ class TestReciverOperatingCharacteristics(TestCase):
         propagation = self.channel.propagate(self.device.transmit())
         self.device.receive(propagation)
 
-        with patch("hermespy.channel.radar_channel.SingleTargetRadarChannel.realization", new_callable=PropertyMock) as realization_mock:
-            realization_mock.return_value = None
-            with self.assertRaises(RuntimeError):
-                self.evaluator.evaluate()
-
         with patch("hermespy.simulation.simulated_device.SimulatedDevice.output", new_callable=PropertyMock) as output_mock:
             output_mock.return_value = None
             with self.assertRaises(RuntimeError):
@@ -422,6 +418,14 @@ class TestReciverOperatingCharacteristics(TestCase):
             result = ReceiverOperatingCharacteristic.From_HDF(file_path, "h0_measurements", "h1_measurements")
 
         self.assertIsInstance(result, RocEvaluationResult)
+        
+    def test_evaluation_plotting(self) -> None:
+        """Test plotting of an ROC evaluation"""
+        
+        evaluation = self._generate_evaluation()
+        
+        with SimulationTestContext():
+            evaluation.visualize()
 
 
 class TestRootMeanSquareArtifact(TestCase):
@@ -466,6 +470,12 @@ class TestRootMeanSquareEvaluation(TestCase):
 
         artifact = self.evaluation.artifact()
         self.assertEqual(0, artifact.to_scalar())
+        
+    def test_visualize(self) -> None:
+        """Visualize should not raise any exceptions"""
+
+        with SimulationTestContext():
+            self.evaluation.visualize()
 
 
 class TestRootMeanSquareError(TestCase):

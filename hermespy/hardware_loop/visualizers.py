@@ -368,7 +368,7 @@ class RadarRangePlot(HardwareLoopPlot[PlotVisualization]):
         return plot
 
     def _update_plot(self, sample: HardwareLoopSample, visualization: PlotVisualization) -> None:
-        self.__get_cube().update_range_plot(visualization)
+        self.__get_cube().plot_range.update_visualization(visualization)
 
 
 class HardwareLoopEvaluatorPlot(Generic[VT], HardwareLoopPlot[VT], ABC):

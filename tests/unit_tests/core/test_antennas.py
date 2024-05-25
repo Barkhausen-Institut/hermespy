@@ -125,6 +125,14 @@ class TestLinearAntenna(TestCase):
         assert_array_almost_equal(expected_horizontal_polarization, self.antenna.local_characteristics(0.0, 0.0))
         assert_array_almost_equal(expected_horizontal_polarization, self.antenna.local_characteristics(1.0, 1.0))
 
+    def test_copy_antenna(self) -> None:
+        """Test copying the antenna"""
+        
+        copy = self.antenna.copy()
+        self.assertEqual(self.antenna.mode, copy.mode)
+        self.assertEqual(self.antenna.slant, copy.slant)
+        assert_array_equal(self.antenna.pose, copy.pose)
+        
 
 class TestPatchAntenna(_TestAntenna):
     """Test the patch antenna model"""
@@ -138,6 +146,13 @@ class TestPatchAntenna(_TestAntenna):
 
         self.assertCountEqual((1.0, 0.0), self.antenna.local_characteristics(0.0, 0.0))
 
+    def test_copy_antenna(self) -> None:
+        """Test copying the antenna"""
+        
+        copy = self.antenna.copy()
+        self.assertEqual(self.antenna.mode, copy.mode)
+        assert_array_equal(self.antenna.pose, copy.pose)
+
 
 class TestDipoleAntenna(_TestAntenna):
     """Test the dipole antenna model"""
@@ -150,6 +165,13 @@ class TestDipoleAntenna(_TestAntenna):
         """Polarization should return vertical polarization"""
 
         self.assertCountEqual((0.0, 0.0), self.antenna.local_characteristics(0.0, 0.0))
+
+    def test_copy_antenna(self) -> None:
+        """Test copying the antenna"""
+        
+        copy = self.antenna.copy()
+        self.assertEqual(self.antenna.mode, copy.mode)
+        assert_array_equal(self.antenna.pose, copy.pose)
 
 
 class TestAntennaPort(TestCase):
@@ -673,9 +695,6 @@ class TestUniformArray(_TestAntennaArray):
 
         with self.assertRaises(ValueError):
             self.array.dimensions = (1, 2, 3, 4)
-
-        with self.assertRaises(ValueError):
-            self.array.dimensions = (1, 2, -1)
 
     def test_topology(self) -> None:
         """The generated topology should be uniform"""

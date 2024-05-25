@@ -329,12 +329,10 @@ class Precoding(Sequence, Serializable, Generic[PrecoderType]):
         return self.__precoders[-1].num_output_streams
 
     @overload
-    def __getitem__(self, index: int) -> PrecoderType:
-        ...  # pragma: no cover
+    def __getitem__(self, index: int) -> PrecoderType: ...  # pragma: no cover
 
     @overload
-    def __getitem__(self, index: slice) -> List[PrecoderType]:
-        ...  # pragma: no cover
+    def __getitem__(self, index: slice) -> List[PrecoderType]: ...  # pragma: no cover
 
     def __getitem__(self, index: int | slice) -> PrecoderType | List[PrecoderType]:
         """Access a precoder at a given index.

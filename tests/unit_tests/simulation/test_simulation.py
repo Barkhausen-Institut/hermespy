@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-"""Test HermesPy simulation executable"""
 
 from __future__ import annotations
 import logging
@@ -10,17 +9,16 @@ from unittest import TestCase
 from unittest.mock import Mock, patch
 
 import ray
-from h5py import File
 from rich.console import Console
 
 from hermespy.core import ConsoleMode, Factory, MonteCarloResult, SignalTransmitter, SignalReceiver, Signal
 from hermespy.modem import DuplexModem, BitErrorEvaluator, RRCWaveform
 from hermespy.simulation import StaticTrigger, NoiseLevel, NoiseModel, N0
-from hermespy.simulation.simulation import SimulatedDevice, SimulatedDrop, Simulation, SimulationActor, SimulationRunner, SimulationScenario
+from hermespy.simulation.simulation import SimulatedDevice, Simulation, SimulationActor, SimulationRunner, SimulationScenario
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
 __version__ = "1.2.0"
@@ -30,241 +28,6 @@ __status__ = "Prototype"
 
 
 GENERATE_OUTPUT = getenv("HERMES_TEST_PLOT", "False").lower() == "true"
-
-
-class TestSimulatedDrop(TestCase):
-    """Test the simulated drop data structure"""
-
-    def setUp(self) -> None:
-        self.scenario = SimulationScenario()
-        self.device_alpha = self.scenario.new_device()
-        self.device_beta = self.scenario.new_device()
-
-        self.drop: SimulatedDrop = self.scenario.drop()
-
-    def test_channel_realizations(self) -> None:
-        """Channel realizations property should return the correct realizations"""
-
-        self.assertEqual(2, len(self.drop.channel_realizations))
-
-    def test_hdf_serialization_validation(self) -> None:
-        """HDF serialization should raise ValueError on invalid scenario arguments"""
-
-        file = File("test.h5", "w", driver="core", backing_store=False)
-        group = file.create_group("group")
-
-        self.drop.to_HDF(group)
-
-        with self.assertRaises(ValueError):
-            _ = self.drop.from_HDF(group)
-
-        self.scenario.new_device()
-
-        with self.assertRaises(ValueError):
-            _ = SimulatedDrop.from_HDF(group, scenario=self.scenario)
-
-        file.close()
-
-    def test_hdf_serialization(self) -> None:
-        """Test HDF roundtrip serialization"""
-
-        file = File("test.h5", "w", driver="core", backing_store=False)
-        group = file.create_group("group")
-
-        self.drop.to_HDF(group)
-        deserialization = SimulatedDrop.from_HDF(group, scenario=self.scenario)
-
-        file.close()
-
-        self.assertIsInstance(deserialization, SimulatedDrop)
-        self.assertEqual(self.drop.timestamp, deserialization.timestamp)
-        self.assertEqual(self.drop.num_device_transmissions, deserialization.num_device_transmissions)
-        self.assertEqual(self.drop.num_device_receptions, deserialization.num_device_receptions)
-
-
-class TestSimulationScenario(TestCase):
-    """Test the Simulation Scenario"""
-
-    def setUp(self) -> None:
-        self.seed = 0
-        self.device_alpha = SimulatedDevice()
-        self.device_beta = SimulatedDevice()
-
-        self.scenario = SimulationScenario(seed=self.seed)
-        self.device_alpha = self.scenario.new_device()
-        self.device_beta = self.scenario.new_device()
-
-    def test_new_device(self) -> None:
-        """Calling new_device should result in a simulated new device being added"""
-
-        new_device = self.scenario.new_device()
-        self.assertTrue(self.scenario.device_registered(new_device))
-
-    def test_add_device(self) -> None:
-        """Calling add_device should result in the device being added and the channel matrix being expanded"""
-
-        device = Mock()
-        self.scenario.add_device(device)
-
-        self.assertTrue(self.scenario.device_registered(device))
-        self.assertIs(self.scenario, device.scenario)
-
-    def test_channels_symmetry(self) -> None:
-        """Channel matrix should be symmetric"""
-
-        num_added_devices = 3
-        for _ in range(num_added_devices):
-            self.scenario.add_device(Mock())
-
-        for m in range(self.scenario.num_devices):
-            for n in range(self.scenario.num_devices - m):
-                self.assertIs(self.scenario.channels[m, n], self.scenario.channels[n, m])
-
-    def test_channel_validation(self) -> None:
-        """Querying a channel instance should raise ValueErrors for invalid devices"""
-
-        with self.assertRaises(ValueError):
-            _ = self.scenario.channel(self.device_alpha, Mock())
-
-        with self.assertRaises(ValueError):
-            _ = self.scenario.channel(Mock(), self.device_beta)
-
-    def test_channel(self) -> None:
-        """Querying a channel instance should return the correct channel"""
-
-        channel = self.scenario.channel(self.device_alpha, self.device_beta)
-        self.assertIs(self.scenario.channels[0, 1], channel)
-
-    def test_departing_channels_validation(self) -> None:
-        """Departing channels should raise a ValueError for invalid devices"""
-
-        with self.assertRaises(ValueError):
-            _ = self.scenario.departing_channels(Mock())
-
-    def test_departing_channels(self) -> None:
-        """Departing channels should contain the correct channel slice"""
-
-        device = Mock()
-        self.scenario.add_device(device)
-        self.scenario.channels[0, 2].gain = 0.0
-
-        departing_channels = self.scenario.departing_channels(device, active_only=True)
-        expected_departing_channels = self.scenario.channels[1:, 2]
-        self.assertCountEqual(expected_departing_channels, departing_channels)
-
-    def test_arriving_channels_validation(self) -> None:
-        """Arriving channels should raise a ValueError for invalid devices"""
-
-        with self.assertRaises(ValueError):
-            _ = self.scenario.arriving_channels(Mock())
-
-    def test_arriving_channels(self) -> None:
-        """Arriving channels should contain the correct channel slice"""
-
-        device = Mock()
-        self.scenario.add_device(device)
-        self.scenario.channels[2, 0].gain = 0.0
-
-        arriving_channels = self.scenario.arriving_channels(device, active_only=True)
-        expected_arriving_channels = self.scenario.channels[2, 1:]
-        self.assertCountEqual(expected_arriving_channels, arriving_channels)
-
-    def test_set_channel_validation(self) -> None:
-        """Setting a channel should raise a ValueError for invalid device indices"""
-
-        with self.assertRaises(ValueError):
-            self.scenario.set_channel(10, 0, Mock())
-
-        with self.assertRaises(ValueError):
-            self.scenario.set_channel(0, 10, Mock())
-
-    def test_set_channel(self):
-        """Setting a channel should properly integrate the channel into the matrix"""
-
-        device_alpha = self.scenario.new_device()
-        device_beta = self.scenario.new_device()
-
-        channel = Mock()
-        self.scenario.set_channel(device_alpha, device_beta, channel)
-
-        self.assertIs(channel, self.scenario.channels[2, 3])
-        self.assertIs(channel, self.scenario.channels[3, 2])
-        self.assertIs(self.scenario, channel.scenario)
-
-    def test_noise_level_setget(self) -> None:
-        """Noise level property getter should return setter argument"""
-
-        noise_level = Mock(spec=NoiseLevel)
-        self.scenario.noise_level = noise_level
-        self.assertIs(noise_level, self.scenario.noise_level)
-
-        self.scenario.noise_level = None
-        self.assertIsNone(self.scenario.noise_level)
-
-    def test_noise_model_setget(self) -> None:
-        """Noise model property getter should return setter argument"""
-
-        noise_model = Mock(spec=NoiseModel)
-        self.scenario.noise_model = noise_model
-        self.assertIs(noise_model, self.scenario.noise_model)
-        self.assertIs(self.scenario, noise_model.random_mother)
-
-        self.scenario.noise_model = None
-        self.assertIsNone(self.scenario.noise_model)
-        
-    def test_generate_outputs_validation(self) -> None:
-        """Generate outputs should raise ValueErrors for invalid arguments"""
-        
-        # Invalid number of operator transmissions
-        with self.assertRaises(ValueError):
-            self.scenario.generate_outputs([Mock() for _ in range(1 + self.scenario.num_devices)],)
-            
-        # Empty list of trigger realizations
-        with self.assertRaises(ValueError):
-            self.scenario.generate_outputs([Mock() for _ in range(self.scenario.num_devices)], [])
-        
-    def test_transmit_devices(self) -> None:
-        """Transmit devices should return the correct device transmissions"""
-
-        shared_trigger = StaticTrigger()
-        self.device_alpha.trigger_model = shared_trigger
-        self.device_beta.trigger_model = shared_trigger
-
-        transmissions = self.scenario.transmit_devices()
-
-        self.assertEqual(2, len(transmissions))
-        self.assertIs(transmissions[0].trigger_realization, transmissions[1].trigger_realization)
-
-    def test_propagate_validation(self) -> None:
-        """Propagate should raise a ValueError for invalid devices"""
-
-        with self.assertRaises(ValueError):
-            self.scenario.propagate([Mock() for _ in range(5)])
-
-    def test_process_inputs_validation(self) -> None:
-        """Process inputs should raise ValueErrors for invalid arguments"""
-
-        with self.assertRaises(ValueError):
-            self.scenario.process_inputs(impinging_signals=[Mock() for _ in range(5)])
-
-        with self.assertRaises(ValueError):
-            self.scenario.process_inputs(impinging_signals=[Mock() for _ in range(self.scenario.num_devices)], trigger_realizations=[Mock() for _ in range(5)])
-
-    def test_process_inputs(self) -> None:
-        """Process inputs should return the correct device inputs"""
-
-        impinging_signals = [Signal.Empty(d.sampling_rate, d.antennas.num_transmit_antennas) for d in self.scenario.devices]
-        processed_inputs = self.scenario.process_inputs(impinging_signals=impinging_signals)
-
-        self.assertEqual(2, len(processed_inputs))
-
-    def test_drop(self) -> None:
-        """Test the generation of a single drop"""
-
-        drop = self.scenario.drop()
-
-        self.assertEqual(self.scenario.num_devices, drop.num_device_transmissions)
-        self.assertEqual(self.scenario.num_devices, drop.num_device_receptions)
 
 
 class TestSimulationRunner(TestCase):

@@ -12,7 +12,6 @@ from time import time
 from typing import Generic, Optional, TypeVar
 
 from hermespy.core import DeviceInput, DeviceReception, Scenario, Drop, Signal
-from hermespy.channel import ChannelPropagation
 from hermespy.simulation import SimulatedDeviceReception, SimulationScenario, TriggerRealization
 from .physical_device import PDT
 
@@ -116,11 +115,7 @@ class SimulatedPhysicalScenario(SimulationScenario, PhysicalScenario):
     def receive_devices(
         self,
         impinging_signals: (
-            Sequence[DeviceInput]
-            | Sequence[Signal]
-            | Sequence[Sequence[Signal]]
-            | Sequence[Sequence[ChannelPropagation]]
-            | None
+            Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]] | None
         ) = None,
         cache: bool = True,
         trigger_realizations: Sequence[TriggerRealization] | None = None,

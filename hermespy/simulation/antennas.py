@@ -13,6 +13,7 @@ from hermespy.beamforming import TransmitBeamformer, ReceiveBeamformer
 from hermespy.core import (
     Antenna,
     AntennaArray,
+    AntennaArrayState,
     AntennaMode,
     AntennaPort,
     CustomAntennaArray,
@@ -574,7 +575,7 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
         antenna_outputs = impinging_signal.Empty(
             num_streams=self.num_receive_antennas,
             num_samples=impinging_signal.num_samples,
-            **impinging_signal.kwargs
+            **impinging_signal.kwargs,
         )
         for antenna_idx, (antenna_input, antenna) in enumerate(
             zip(impinging_signal[:, :], self.receive_antennas)
@@ -637,8 +638,7 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
         quantized_signals: List[Signal] = []
         for rf_chain, stream_indices in rf_chains.items():
             quantized_signal = rf_chain.adc.convert(
-                rf_signal.from_ndarray(rf_signal[stream_indices, :]),
-                frame_duration,
+                rf_signal.from_ndarray(rf_signal[stream_indices, :]), frame_duration
             )
             quantized_signals.append(quantized_signal)
 
@@ -814,7 +814,7 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
             for p, port_response in enumerate(port_responses):
                 s = Signal.Create(port_response[:, None], 1.0, carrier_frequency)
                 s = arg_0.receive(s, array=self)
-                power[p] = (np.abs(s[:, :])**2)
+                power[p] = np.abs(s[:, :]) ** 2
 
         power /= power.max()  # Normalize for visualization purposes
 
@@ -850,6 +850,17 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
         axes.set_zlabel("Z")
 
         return figure
+
+    def antenna_state(self, base_pose: Transformation) -> AntennaArrayState:
+        """Return the antenna array's state with respect to a base pose.
+
+        Args:
+
+            base_pose (Transformation):
+                The base pose to be used as reference.
+
+        Returns: The antenna array's state with respect to the base pose.
+        """
 
 
 class SimulatedUniformArray(

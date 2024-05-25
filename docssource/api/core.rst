@@ -24,7 +24,6 @@ It is split into several interdependent sub-modules:
    core.device.Reception
    core.device.OperationResult
    core.drop.Drop
-   core.monte_carlo.Evaluator
    core.operators
    core.duplex
    core.logarithmic
@@ -35,5 +34,4 @@ It is split into several interdependent sub-modules:
    core.channel_state_information
    core.antennas
    core.transformation
-   core.animation
    core.visualize

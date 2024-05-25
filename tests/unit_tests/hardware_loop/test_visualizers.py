@@ -56,7 +56,7 @@ class _HardwareLoopPlotTest(TestCase):
 
         # Only test for a call to the axes if the plot routines are patched
         if self._test_context.patch_plot:
-            
+
             # Initial plot
             call_count = len(self.axes[0, 0].mock_calls)
             self.plot.update_plot(sample)

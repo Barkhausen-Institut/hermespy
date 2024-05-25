@@ -42,9 +42,9 @@ class OrthogonalLeastSquaresChannelEstimation(ChannelEstimation[OrthogonalWavefo
         channel_estimation = np.zeros(
             ((1, 1, symbols.num_blocks, symbols.num_symbols)), dtype=complex
         )
-        channel_estimation[
-            0, 0, resource_mask[ElementType.REFERENCE.value, ::]
-        ] = reference_channel_estimation
+        channel_estimation[0, 0, resource_mask[ElementType.REFERENCE.value, ::]] = (
+            reference_channel_estimation
+        )
 
         # Interpolate over the holes, if there are any
         holes = np.where(np.invert(resource_mask[ElementType.REFERENCE.value, ::]))
