@@ -13,7 +13,7 @@ from hermespy.core import Direction, Transformation
 from hermespy.channel import MultiTargetRadarChannel, VirtualRadarTarget, FixedCrossSection
 from hermespy.radar.radar import Radar
 from hermespy.radar.fmcw import FMCW
-from hermespy.simulation import SimulationScenario, SimulatedIdealAntenna, SimulatedUniformArray, StaticTrajectory
+from hermespy.simulation import SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray, StaticTrajectory
 from scipy.constants import speed_of_light
 
 __author__ = "Jan Adler"
@@ -28,8 +28,7 @@ __status__ = "Prototype"
 
 class FMCWRadarSimulation(TestCase):
     def setUp(self) -> None:
-        self.scenario = SimulationScenario()
-        self.device = self.scenario.new_device()
+        self.device = SimulatedDevice()
         self.device.carrier_frequency = 1e8
         self.device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 0.5 * speed_of_light / self.device.carrier_frequency, (5, 5))
 
@@ -50,8 +49,6 @@ class FMCWRadarSimulation(TestCase):
         self.virtual_target = VirtualRadarTarget(FixedCrossSection(1.0), trajectory=StaticTrajectory(Transformation.From_Translation(np.array([0, 0, self.target_range]))))
         self.channel.add_target(self.virtual_target)
 
-        self.scenario.set_channel(self.device, self.device, self.channel)
-
     def test_beamforming(self) -> None:
         """The radar channel target located should be estimated correctly by the beamformer"""
 
@@ -62,7 +59,7 @@ class FMCWRadarSimulation(TestCase):
             self.virtual_target.trajectory = StaticTrajectory(Transformation.From_Translation(Direction.From_Spherical(azimuth, zenith) * self.target_range))
 
             # Generate the radar cube
-            propagation = self.channel.propagate(self.device.transmit())
+            propagation = self.channel.propagate(self.device.transmit(), self.device, self.device)
             self.device.process_input(propagation)
             reception = self.radar.receive()
 
@@ -72,7 +69,7 @@ class FMCWRadarSimulation(TestCase):
     def test_detection(self) -> None:
         """Test FMCW detection"""
 
-        propagation = self.channel.propagate(self.device.transmit())
+        propagation = self.channel.propagate(self.device.transmit(), self.device, self.device)
         self.device.process_input(propagation)
         reception = self.radar.receive()
 
@@ -93,7 +90,7 @@ class FMCWRadarSimulation(TestCase):
         for expected_bin_index, target_velocity in zip(expected_bin_indices, velocity_candidates):
             self.virtual_target.trajectory = StaticTrajectory(self.virtual_target.trajectory.pose, np.array([0, 0, target_velocity], dtype=np.float_))
 
-            propagation = self.channel.propagate(self.device.transmit())
+            propagation = self.channel.propagate(self.device.transmit(), self.device, self.device)
             self.device.process_input(propagation)
             reception = self.radar.receive()
 

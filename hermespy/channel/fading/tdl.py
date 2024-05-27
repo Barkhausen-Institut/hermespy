@@ -1,15 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from typing import Any, TYPE_CHECKING
 
 import numpy as np
 
 from hermespy.core import SerializableEnum
 from .fading import MultipathFadingChannel
-
-if TYPE_CHECKING:
-    from hermespy.simulation import SimulatedDevice  # pragma: no cover
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -41,12 +37,10 @@ class TDL(MultipathFadingChannel):
         self,
         model_type: TDLType = TDLType.A,
         rms_delay: float = 0.0,
-        alpha_device: SimulatedDevice | None = None,
-        beta_device: SimulatedDevice | None = None,
         gain: float = 1.0,
         doppler_frequency: float | None = None,
         los_doppler_frequency: float | None = None,
-        **kwargs: Any,
+        **kwargs,
     ) -> None:
         """
         Args:
@@ -71,17 +65,13 @@ class TDL(MultipathFadingChannel):
                 If not specified the channel is considered floating,
                 meaning a call to :meth:`realize` will raise an exception.
 
-            gain (float, otional):
-                Linear power gain factor a signal experiences when being propagated over this realization.
-                :math:`1.0` by default.
-
             num_sinusoids (int, optional):
                 Number of sinusoids used to sample the statistical distribution.
 
             doppler_frequency (float, optional)
                 Doppler frequency shift of the statistical distribution.
 
-            kwargs (Any):
+            \***kwargs (Any):
                 Additional `MultipathFadingChannel` initialization parameters.
 
         Raises:
@@ -380,8 +370,6 @@ class TDL(MultipathFadingChannel):
         # Init base class with pre-defined model parameters
         MultipathFadingChannel.__init__(
             self,
-            alpha_device=alpha_device,
-            beta_device=beta_device,
             gain=gain,
             delays=delays,
             power_profile=power_profile,

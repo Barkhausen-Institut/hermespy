@@ -78,8 +78,6 @@ class TestMIMOLink(TestCase):
             antennas=SimulatedUniformArray(SimulatedIdealAntenna(), 0.5 * self.wavelength, [3, 3]),
         )
         self.channel = UrbanMacrocells(
-            alpha_device=self.tx_device,
-            beta_device=self.rx_device,
             delay_normalization=DelayNormalization.ZERO,
             expected_state=O2IState.LOS,
             seed=42,

@@ -425,7 +425,7 @@ class MultiTargetRadarChannel(RadarChannelBase[MultiTargetRadarChannelRealizatio
         self,
         attenuate: bool = True,
         interference: bool = True,
-        decorrelation_distance: float = 30.0,
+        decorrelation_distance: float = float("inf"),
         *args,
         **kwargs,
     ) -> None:
@@ -439,6 +439,10 @@ class MultiTargetRadarChannel(RadarChannelBase[MultiTargetRadarChannelRealizatio
             interference (bool, optional):
                 Should the channel model consider interference between the linked devices?
                 Enabled by default.
+
+            decorrelation_distance (float, optional):
+                Distance at which the channel's random variable realizations are considered uncorrelated.
+                :math:`\\infty` by default, meaning the channel is static in space.
         """
 
         # Initialize base classes

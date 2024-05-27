@@ -284,12 +284,6 @@ class _TestRadarChannelBase(Generic[RCT], unittest.TestCase):
         self.channel = self._init_channel()
         self.channel.random_mother = self.random_root
 
-    def test_properties(self) -> None:
-        """Class properties should return initialization arguments"""
-
-        self.assertIs(self.alpha_device, self.channel.alpha_device)
-        self.assertIs(self.beta_device, self.channel.beta_device)
-
     def test_attenuate_setget(self) -> None:
         """Attenuate property getter should return setter argument"""
 
@@ -299,9 +293,7 @@ class _TestRadarChannelBase(Generic[RCT], unittest.TestCase):
     def test_yaml_serialization(self) -> None:
         """Test YAML serialization"""
 
-        with patch("hermespy.channel.Channel.alpha_device", new_callable=PropertyMock) as alpha_mock, patch("hermespy.channel.Channel.beta_device", new_callable=PropertyMock) as beta_mock, patch("hermespy.channel.Channel.random_mother", new_callable=PropertyMock) as random_mock:
-            alpha_mock.return_value = None
-            beta_mock.return_value = None
+        with patch("hermespy.channel.Channel.random_mother", new_callable=PropertyMock) as random_mock:
             random_mock.return_value = None
 
             test_yaml_roundtrip_serialization(self, self.channel)
@@ -337,7 +329,7 @@ class _TestRadarChannelBase(Generic[RCT], unittest.TestCase):
     
 class TestSingleTargetRadarChannel(_TestRadarChannelBase[SingleTargetRadarChannel]):
     def _init_channel(self) -> SingleTargetRadarChannel:
-        return SingleTargetRadarChannel(self.range, self.radar_cross_section, alpha_device=self.alpha_device, beta_device=self.beta_device)
+        return SingleTargetRadarChannel(self.range, self.radar_cross_section)
 
     def setUp(self) -> None:
         self.range = 100.0
@@ -503,7 +495,7 @@ class TestSingleTargetRadarChannel(_TestRadarChannelBase[SingleTargetRadarChanne
 
         self.channel.target_range = expected_range
 
-        propagation = self.channel.propagate(Signal.Create(input_signal, self.sampling_rate, self.carrier_frequency))
+        propagation = self.channel.propagate(Signal.Create(input_signal, self.sampling_rate, self.carrier_frequency), self.alpha_device, self.beta_device)
 
         expected_output = np.hstack((np.zeros((1, delay_in_samples)), input_signal)) * expected_amplitude
         assert_array_almost_equal(abs(expected_output), np.abs(propagation[:, :expected_output.size]))
@@ -524,7 +516,7 @@ class TestSingleTargetRadarChannel(_TestRadarChannelBase[SingleTargetRadarChanne
 
         self.channel.target_range = expected_range
 
-        propagation = self.channel.propagate(Signal.Create(input_signal, self.sampling_rate, self.carrier_frequency))
+        propagation = self.channel.propagate(Signal.Create(input_signal, self.sampling_rate, self.carrier_frequency), self.alpha_device, self.beta_device)
 
         straddle_loss = np.sinc(0.5)
         peaks = np.abs(propagation[:, delay_in_samples : input_signal.size : samples_per_symbol])
@@ -560,7 +552,7 @@ class TestSingleTargetRadarChannel(_TestRadarChannelBase[SingleTargetRadarChanne
         self.channel.target_range = expected_range
         self.channel.target_velocity = velocity
 
-        propagation = self.channel.propagate(Signal.Create(input_signal, self.sampling_rate, self.carrier_frequency))
+        propagation = self.channel.propagate(Signal.Create(input_signal, self.sampling_rate, self.carrier_frequency), self.alpha_device, self.beta_device)
 
         assert_array_almost_equal(np.abs(propagation[:, :][0, peaks_in_samples].flatten()), expected_straddle_amplitude)
 
@@ -593,7 +585,7 @@ class TestSingleTargetRadarChannel(_TestRadarChannelBase[SingleTargetRadarChanne
         time = np.arange(num_samples) / self.sampling_rate
 
         input_signal = np.sin(2 * np.pi * sinewave_frequency * time)
-        propagation = self.channel.propagate(Signal.Create(input_signal[np.newaxis, :], self.sampling_rate, self.carrier_frequency))
+        propagation = self.channel.propagate(Signal.Create(input_signal[np.newaxis, :], self.sampling_rate, self.carrier_frequency), self.alpha_device, self.beta_device)
 
         input_freq = np.fft.fft(input_signal)
         output_freq = np.fft.fft(propagation[0, :].flatten()[-num_samples:])
@@ -614,7 +606,7 @@ class TestSingleTargetRadarChannel(_TestRadarChannelBase[SingleTargetRadarChanne
         input_signal = self._create_impulse_train(samples_per_symbol, num_pulses)
 
         self.channel.target_exists = False
-        propagation = self.channel.propagate(Signal.Create(input_signal, self.sampling_rate))
+        propagation = self.channel.propagate(Signal.Create(input_signal, self.sampling_rate), self.alpha_device, self.beta_device)
 
         assert_array_almost_equal(propagation[:, :], np.zeros_like(input_signal))
 
@@ -625,7 +617,7 @@ class TestSingleTargetRadarChannel(_TestRadarChannelBase[SingleTargetRadarChanne
         self.channel.target_range = 10.0
 
         input_signal = Signal.Create(self._create_impulse_train(500, 15), self.sampling_rate)
-        propagation = self.channel.propagate(input_signal)
+        propagation = self.channel.propagate(input_signal, self.alpha_device, self.beta_device)
 
         assert_array_almost_equal(input_signal.energy, propagation.energy, 1)
 
@@ -634,7 +626,7 @@ class TestMultiTargetRadarChannel(_TestRadarChannelBase[MultiTargetRadarChannel]
     """Test the multi target radar channel class"""
 
     def _init_channel(self) -> MultiTargetRadarChannel:
-        return MultiTargetRadarChannel(alpha_device=self.alpha_device, beta_device=self.beta_device)
+        return MultiTargetRadarChannel()
 
     def setUp(self) -> None:
         super().setUp()

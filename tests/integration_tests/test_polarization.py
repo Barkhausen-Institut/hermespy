@@ -45,7 +45,7 @@ class TestSingleAntennaPolarization(TestCase):
         self.device_alpha = scenario.new_device(carrier_frequency=1e9, antennas=SimulatedUniformArray(HorizontallyPolarizedAntenna, 1.0, [1, 1, 1]))
         self.device_beta = scenario.new_device(carrier_frequency=1e9, antennas=SimulatedUniformArray(HorizontallyPolarizedAntenna, 1.0, [1, 1, 1]))
 
-        self.channel = SpatialDelayChannel(model_propagation_loss=False, alpha_device=self.device_alpha, beta_device=self.device_beta, seed=42)
+        self.channel = SpatialDelayChannel(model_propagation_loss=False, seed=42)
         scenario.set_channel(self.device_beta, self.device_alpha, self.channel)
 
         self.orientation_candidates = np.pi * np.array([[0.0, 0.0, 0.0], [0.5, 0.0, 0.0], [-0.5, 0.0, 0.0], [1, 0.0, 0.0], [-1, 0.0, 0.0], [0.0, 0.5, 0.0], [0.0, -0.5, 0.0], [0.0, 1.0, 0.0], [0.0, -1.0, 0.0], [0.0, 0.0, 0.5], [0.0, 0.0, -0.5], [0.0, 0.0, 1.0], [0.0, 0.0, -1.0]], dtype=float)
@@ -63,7 +63,7 @@ class TestSingleAntennaPolarization(TestCase):
         powers = np.empty(position_candidates.shape[0], dtype=float)
         for p, position in enumerate(position_candidates):
             self.device_beta.trajectory = StaticTrajectory(Transformation.From_Translation(position))
-            propagation = self.channel.propagate(self.test_signal)
+            propagation = self.channel.propagate(self.test_signal, self.device_alpha, self.device_beta)
 
             powers[p] = propagation.power
 
@@ -73,7 +73,7 @@ class TestSingleAntennaPolarization(TestCase):
         powers = np.empty(self.orientation_candidates.shape[0], dtype=float)
         for o, orientation in enumerate(self.orientation_candidates):
             self.device_beta.trajectory = StaticTrajectory(Transformation.From_RPY(orientation, beta_translation))
-            propagation = self.channel.propagate(self.test_signal)
+            propagation = self.channel.propagate(self.test_signal, self.device_alpha, self.device_beta)
 
             powers[o] = propagation.power
 

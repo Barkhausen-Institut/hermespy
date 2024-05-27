@@ -118,7 +118,9 @@ class RadarEvaluator(Evaluator, ABC):
     __transmitting_device: SimulatedDevice
     _channel_sample: RadarChannelSample | None
 
-    def __init__(self, receiving_radar: Radar, radar_channel: RadarChannelBase) -> None:
+    def __init__(
+        self, transmitting_radar: Radar, receiving_radar: Radar, radar_channel: RadarChannelBase
+    ) -> None:
         """
         Args:
 
@@ -130,27 +132,20 @@ class RadarEvaluator(Evaluator, ABC):
             ValueError: If the receiving radar is not an operator of the radar_channel receiver.
         """
 
-        if radar_channel.alpha_device is None or radar_channel.beta_device is None:
-            raise ValueError("Radar channel must be configured within a simulation scenario")
+        if transmitting_radar.device is None:
+            raise ValueError(
+                "Transmitting radar must be assigned a device within a simulation scenario"
+            )
 
         if receiving_radar.device is None:
-            raise ValueError("Radar must be assigned a device within a simulation scenario")
+            raise ValueError(
+                "Transmitting radar must be assigned a device within a simulation scenario"
+            )
 
+        self.__transmitting_device = transmitting_radar.device  # type: ignore
+        self.__receiving_device = receiving_radar.device  # type: ignore
         self.__receiving_radar = receiving_radar
         self.__radar_channel = radar_channel
-
-        if receiving_radar.device is radar_channel.alpha_device:
-            self.__receiving_device = radar_channel.alpha_device
-            self.__transmitting_device = radar_channel.beta_device
-
-        elif receiving_radar.device is radar_channel.beta_device:
-            self.__receiving_device = radar_channel.beta_device
-            self.__transmitting_device = radar_channel.alpha_device
-
-        else:
-            raise ValueError(
-                "Recieving radar to be evaluated must be assigned to the radar channel"
-            )
 
         # Initialize base class
         Evaluator.__init__(self)
@@ -517,7 +512,7 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
         """
 
         # Initialize base class
-        RadarEvaluator.__init__(self, receiving_radar=radar, radar_channel=radar_channel)
+        RadarEvaluator.__init__(self, radar, radar, radar_channel)
 
         # Initialize class attributes
         self.__num_thresholds = num_thresholds

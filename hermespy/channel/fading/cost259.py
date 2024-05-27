@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from typing import Any, Optional, Type, TYPE_CHECKING
+from typing import Any, Optional, Type
 
 import numpy as np
 from ruamel.yaml import SafeRepresenter, MappingNode
 
 from hermespy.core import SerializableEnum
 from .fading import MultipathFadingChannel
-
-if TYPE_CHECKING:
-    from hermespy.simulation import SimulatedDevice  # pragma: no cover
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -44,8 +41,6 @@ class Cost259(MultipathFadingChannel):
     def __init__(
         self,
         model_type: Cost259Type = Cost259Type.URBAN,
-        alpha_device: SimulatedDevice | None = None,
-        beta_device: SimulatedDevice | None = None,
         gain: float = 1.0,
         los_angle: Optional[float] = None,
         doppler_frequency: Optional[float] = None,
@@ -57,12 +52,6 @@ class Cost259(MultipathFadingChannel):
 
             model_type (Cost259Type):
                 The model type.
-
-            alpha_device (SimulatedDevice, optional):
-                First device linked by the :class:`.MultipathFadingCost259` instance that generated this realization.
-
-            beta_device (SimulatedDevice, optional):
-                Second device linked by the :class:`.MultipathFadingCost259` instance that generated this realization.
 
             gain (float, optional):
                 Linear power gain factor a signal experiences when being propagated over this realization.
@@ -210,8 +199,6 @@ class Cost259(MultipathFadingChannel):
         # Init base class with pre-defined model parameters
         MultipathFadingChannel.__init__(
             self,
-            alpha_device=alpha_device,
-            beta_device=beta_device,
             gain=gain,
             delays=delays,
             power_profile=power_profile,

@@ -931,7 +931,11 @@ class DeviceState(object):
 
 
 class SimulatedDevice(Device, Moveable, Serializable):
-    """Representation of an entity capable of emitting and receiving electromagnetic waves."""
+    """Representation of an entity capable of emitting and receiving electromagnetic waves.
+
+    A simulation scenario consists of a collection of devices,
+    interconnected by a network of channel models.
+    """
 
     yaml_tag = "SimulatedDevice"
     property_blacklist = {

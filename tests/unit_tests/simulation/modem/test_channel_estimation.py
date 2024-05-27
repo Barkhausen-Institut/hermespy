@@ -84,7 +84,7 @@ class _TestIdealChannelEstimation(TestCase):
         self.alpha_device = SimulatedDevice(carrier_frequency=self.carrier_frequency)
         self.beta_device = SimulatedDevice(carrier_frequency=self.carrier_frequency)
 
-        self.channel = Cost259(Cost259Type.URBAN, self.alpha_device, self.beta_device)
+        self.channel = Cost259(Cost259Type.URBAN)
         self.channel.seed = 42
 
         self.link = SimplexLink(self.alpha_device, self.beta_device)
