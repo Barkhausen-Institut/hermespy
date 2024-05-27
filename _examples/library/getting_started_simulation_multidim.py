@@ -13,15 +13,9 @@ simulation = Simulation()
 base_station = simulation.scenario.new_device()
 terminal = simulation.scenario.new_device()
 
-
 # Specify the hardware noise model
 base_station.noise_level = SNR(dB(20), base_station)
 terminal.noise_level = SNR(dB(20), base_station)
-
-# Disable device self-interference by setting the gain
-# of the respective self-inteference channels to zero
-simulation.scenario.channel(base_station, base_station).gain = 0.
-simulation.scenario.channel(terminal, terminal).gain = 0.
 
 # Configure a transmitting modem at the base station
 transmitter = TransmittingModem()

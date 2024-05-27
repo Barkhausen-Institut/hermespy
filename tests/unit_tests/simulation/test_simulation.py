@@ -11,9 +11,10 @@ from unittest.mock import Mock, patch
 import ray
 from rich.console import Console
 
+from hermespy.channel import IdealChannel
 from hermespy.core import ConsoleMode, Factory, MonteCarloResult, SignalTransmitter, SignalReceiver, Signal
 from hermespy.modem import DuplexModem, BitErrorEvaluator, RRCWaveform
-from hermespy.simulation import StaticTrigger, NoiseLevel, NoiseModel, N0
+from hermespy.simulation import N0
 from hermespy.simulation.simulation import SimulatedDevice, Simulation, SimulationActor, SimulationRunner, SimulationScenario
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
@@ -226,31 +227,12 @@ class TestSimulation(TestCase):
         expected_channel = Mock()
         self.simulation.set_channel(self.device, self.device, expected_channel)
 
-        self.assertIs(expected_channel, self.simulation.scenario.channels[0, 0])
+        self.assertIs(expected_channel, self.simulation.scenario.channel(self.device, self.device))
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""
 
         test_yaml_roundtrip_serialization(self, self.simulation)
-
-    def test_serialization_validation(self) -> None:
-        """Test YAML serialization validation"""
-
-        serialization = """
-        !<Simulation>
-            Devices:
-                - !<SimulatedDevice>
-                - !<SimulatedDevice>
-
-            Channels:
-                - !<Channel>
-                - !<Channel>
-        """
-
-        factory = Factory()
-
-        with self.assertRaises(RuntimeError):
-            _ = factory.from_str(serialization)
 
     def test_serialization_channel_device_inference(self) -> None:
         """Test YAML serialization with channel device inference"""
@@ -258,17 +240,19 @@ class TestSimulation(TestCase):
         serialization = """
         !<Simulation>
             Devices:
-                - !<SimulatedDevice>
+                - &device !<SimulatedDevice>
 
             Channels:
-                - !<Channel>
+                - [ *device, *device, !<Channel> ]
         """
 
         factory = Factory()
-        simulation = factory.from_str(serialization)
+        simulation: Simulation = factory.from_str(serialization)
 
-        self.assertIs(simulation.scenario.devices[0], simulation.scenario.channels[0, 0].alpha_device)
-        self.assertIs(simulation.scenario.devices[0], simulation.scenario.channels[0, 0].beta_device)
+        self.assertEqual(1, len(simulation.scenario.devices))
+        device = simulation.scenario.devices[0]
+        channel = simulation.scenario.channel(device, device)
+        self.assertIsInstance(channel, IdealChannel)
 
     def test_serialization_dimension_shorthand(self) -> None:
         """Test YAML serialization with dimension shorthand"""

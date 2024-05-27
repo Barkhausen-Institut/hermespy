@@ -235,7 +235,7 @@ class TestQuadrigaMatlabInterface(TestCase):
 
         transmitter = SimulatedDevice(pose=Transformation.From_Translation(np.array([1, 2, 3])))
         receiver = SimulatedDevice(pose=Transformation.From_Translation(np.array([4, 5, 6])))
-        channel = QuadrigaChannel(interface=self.interface, alpha_device=transmitter, beta_device=receiver)
+        channel = QuadrigaChannel(interface=self.interface)
 
         realization = channel.realize()
         self.assertIsInstance(realization, QuadrigaChannelRealization)
@@ -279,7 +279,7 @@ class TestQuadrigaOctaveInterface(TestCase):
 
         transmitter = SimulatedDevice(pose=Transformation.From_Translation(np.array([1, 2, 3])))
         receiver = SimulatedDevice(pose=Transformation.From_Translation(np.array([4, 5, 6])))
-        channel = QuadrigaChannel(interface=self.interface, alpha_device=transmitter, beta_device=receiver)
+        channel = QuadrigaChannel(interface=self.interface)
 
         realization = channel.realize()
         self.assertIsInstance(realization, QuadrigaChannelRealization)

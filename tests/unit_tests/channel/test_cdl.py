@@ -238,8 +238,6 @@ class TestClusterDelayLine(TestCase):
     def test_init(self) -> None:
         """Initialization parameters should be properly stored as class attributes"""
         
-        self.assertIs(self.alpha_device, self.model.alpha_device)
-        self.assertIs(self.beta_device, self.model.beta_device)
         self.assertEqual(self.gain, self.model.gain)
         self.assertEqual(self.delay_normalization, self.model.delay_normalization)
         self.assertEqual(self.oxygen_absorption, self.model.oxygen_absorption)
@@ -360,7 +358,7 @@ class TestClusterDelayLine(TestCase):
 class TestIndoorFactory(TestClusterDelayLine):
     
     def _init_model(self) -> IndoorFactory:
-        return IndoorFactory(2000, 3000, FactoryType.HH, 1.0, self.alpha_device, self.beta_device, self.gain, delay_normalization=self.delay_normalization, oxygen_absorption=self.oxygen_absorption)
+        return IndoorFactory(2000, 3000, FactoryType.HH, 1.0, self.gain, delay_normalization=self.delay_normalization, oxygen_absorption=self.oxygen_absorption)
     
     def _large_scale_states(self) -> list:
         return list(LOSState)
@@ -442,7 +440,7 @@ class TestIndoorFactory(TestClusterDelayLine):
 class TestIndoorOffice(TestClusterDelayLine):
     
     def _init_model(self) -> IndoorOffice:
-        return IndoorOffice(self.alpha_device, self.beta_device, self.gain, self.delay_normalization, self.oxygen_absorption)
+        return IndoorOffice(gain=self.gain, delay_normalization=self.delay_normalization, oxygen_absorption=self.oxygen_absorption)
     
     def _large_scale_states(self) -> list:
         return list(LOSState)
@@ -484,7 +482,7 @@ class TestIndoorOffice(TestClusterDelayLine):
 class TestRuralMacrocells(TestClusterDelayLine):
 
     def _init_model(self) -> RuralMacrocells:
-        return RuralMacrocells(self.alpha_device, self.beta_device, self.gain, self.delay_normalization, self.oxygen_absorption)
+        return RuralMacrocells(self.gain, self.delay_normalization, self.oxygen_absorption)
     
     def _large_scale_states(self) -> list:
         return list(O2IState)
@@ -511,7 +509,7 @@ class TestRuralMacrocells(TestClusterDelayLine):
 class TestUrbanMacrocells(TestClusterDelayLine):
 
     def _init_model(self) -> UrbanMacrocells:
-        return UrbanMacrocells(self.alpha_device, self.beta_device, self.gain, self.delay_normalization, self.oxygen_absorption)
+        return UrbanMacrocells(self.gain, self.delay_normalization, self.oxygen_absorption)
     
     def _large_scale_states(self) -> list:
         return list(O2IState)
@@ -538,7 +536,7 @@ class TestUrbanMacrocells(TestClusterDelayLine):
 class TestUrbanMicrocells(TestClusterDelayLine):
 
     def _init_model(self) -> UrbanMicrocells:
-        return UrbanMicrocells(self.alpha_device, self.beta_device, self.gain, self.delay_normalization, self.oxygen_absorption)
+        return UrbanMicrocells(self.gain, self.delay_normalization, self.oxygen_absorption)
     
     def _large_scale_states(self) -> list:
         return list(O2IState)
@@ -574,7 +572,7 @@ class TestCDL(TestCase):
         self.bandwidth = 1e8
         self.gain = 0.98
         
-        self.model = CDL(CDLType.E, 1e-8, 0.123, 29, alpha_device=self.alpha_device, beta_device=self.beta_device, gain=self.gain)
+        self.model = CDL(CDLType.E, 1e-8, 0.123, 29, gain=self.gain)
         
         
     def test_init(self) -> None:
@@ -584,8 +582,6 @@ class TestCDL(TestCase):
         self.assertEqual(1e-8, self.model.rms_delay)
         self.assertEqual(0.123, self.model.rayleigh_factor)
         self.assertEqual(29, self.model.decorrelation_distance)
-        self.assertIs(self.alpha_device, self.model.alpha_device)
-        self.assertIs(self.beta_device, self.model.beta_device)
         
     def test_rms_delay_setget(self) -> None:
         """RMS delay getter should return setter argument"""
@@ -627,7 +623,7 @@ class TestCDL(TestCase):
         """Test a random realization"""
         
         for type in CDLType:
-            model = CDL(type, 1e-8, 0.123, 29, alpha_device=self.alpha_device, beta_device=self.beta_device, gain=self.gain)
+            model = CDL(type, 1e-8, 0.123, 29, gain=self.gain)
             
             realization = model.realize()
             sample = realization.sample(self.alpha_device, self.beta_device, self.carrier_frequency, self.bandwidth)

@@ -5,7 +5,7 @@ from typing import List, Sequence, Type, TYPE_CHECKING
 
 from h5py import Group
 
-from hermespy.channel import Channel, ChannelRealization
+from hermespy.channel import ChannelRealization
 from hermespy.core import Drop
 from .simulated_device import SimulatedDeviceReception, SimulatedDeviceTransmission
 
@@ -61,8 +61,6 @@ class SimulatedDrop(Drop):
         return self.__channel_realizations
 
     def to_HDF(self, group: Group) -> None:
-        num_devices = self.num_device_transmissions
-
         # Serialize attributes
         group.attrs["timestamp"] = self.timestamp
         group.attrs["num_transmissions"] = self.num_device_transmissions
@@ -76,12 +74,9 @@ class SimulatedDrop(Drop):
         for r, reception in enumerate(self.device_receptions):
             reception.to_HDF(self._create_group(group, f"reception_{r:02d}"))
 
-        i = 0
-        for d_out in range(num_devices):
-            for d_in in range(d_out + 1):
-                realization_group = self._create_group(group, f"channel_realization_{i:02d}")
-                self.channel_realizations[i].to_HDF(realization_group)
-                i += 1
+        for cr, channel_realization in enumerate(self.channel_realizations):
+            realization_group = self._create_group(group, f"channel_realization_{cr:02d}")
+            channel_realization.to_HDF(realization_group)
 
     @classmethod
     def from_HDF(
@@ -115,14 +110,8 @@ class SimulatedDrop(Drop):
         ]
 
         channel_realizations: List[ChannelRealization] = []
-        i = 0
-        for device_beta_idx in range(num_devices):
-            for device_alpha_idx in range(device_beta_idx + 1):
-
-                # Recall the channel realization
-                channel: Channel = scenario.channels[device_beta_idx, device_alpha_idx]
-                realization = channel.recall_realization(group[f"channel_realization_{i:02d}"])
-                channel_realizations.append(realization)
-                i += 1
+        for c, channel in enumerate(scenario.channels):
+            realization = channel.recall_realization(group[f"channel_realization_{c:02d}"])
+            channel_realizations.append(realization)
 
         return SimulatedDrop(timestamp, transmissions, channel_realizations, receptions)

@@ -44,11 +44,11 @@ link.waveform = OFDMWaveform(subcarrier_spacing=subcarrier_spacing, modulation_o
 link.waveform.plot_grid()
 
 # Simulate a channel between the two devices
-channel = IdealChannel(tx_device, rx_device)
+channel = IdealChannel()
 
 # Simulate the signal transmission over the channel
 transmission = tx_device.transmit()
-propagation = channel.propagate(transmission)
+propagation = channel.propagate(transmission, tx_device, rx_device)
 reception = rx_device.receive(propagation)
 
 # Evaluate bit errors during transmission and visualize the received symbol constellation

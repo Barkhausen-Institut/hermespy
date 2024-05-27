@@ -52,49 +52,34 @@ class TestRadarEvaluator(TestCase):
         radar.device = device
 
         channel = SingleTargetRadarChannel(1.0, 1.0)
-        channel.alpha_device = device
-        channel.beta_device = device
 
-        self.evaluator = RadarEvaluatorMock(radar, channel)
+        self.evaluator = RadarEvaluatorMock(radar, radar, channel)
 
     def test_init_validation(self) -> None:
         """Initialization parameters should be properly validated"""
 
         channel = SingleTargetRadarChannel(1.0, 1.0)
-        radar = Radar()
+        transmitting_radar = Radar()
+        receiving_radar = Radar()
 
         with self.assertRaises(ValueError):
-            RadarEvaluatorMock(radar, channel)
+            RadarEvaluatorMock(transmitting_radar, receiving_radar, channel)
 
-        channel.alpha_device = SimulatedDevice()
-        channel.beta_device = SimulatedDevice()
+        transmitting_radar.device = Mock()
 
         with self.assertRaises(ValueError):
-            RadarEvaluatorMock(radar, channel)
+            RadarEvaluatorMock(transmitting_radar, receiving_radar, channel)
 
     def test_device_inference(self) -> None:
-        alpha_device = SimulatedDevice()
-        beta_device = SimulatedDevice()
-
-        channel = SingleTargetRadarChannel(1.0, 1.0, alpha_device=alpha_device, beta_device=beta_device)
-
-        radar = Radar()
-        radar.device = beta_device
-        evaluator = RadarEvaluatorMock(radar, channel)
-        self.assertIs(beta_device, evaluator.receiving_device)
-        self.assertIs(alpha_device, evaluator.transmitting_device)
-
-    def test_device_inference_validation(self) -> None:
-        alpha_device = SimulatedDevice()
-        beta_device = SimulatedDevice()
-
-        channel = SingleTargetRadarChannel(1.0, 1.0, alpha_device=alpha_device, beta_device=beta_device)
+        
+        expected_device = SimulatedDevice()
+        channel = SingleTargetRadarChannel(1.0, 1.0)
 
         radar = Radar()
-        radar.device = SimulatedDevice()
-
-        with self.assertRaises(ValueError):
-            RadarEvaluatorMock(radar, channel)
+        radar.device = expected_device
+        evaluator = RadarEvaluatorMock(radar, radar, channel)
+        self.assertIs(expected_device, evaluator.receiving_device)
+        self.assertIs(expected_device, evaluator.transmitting_device)
 
     def test_generate_result(self) -> None:
         """Result generation should be properly handled"""
@@ -240,21 +225,13 @@ class TestReciverOperatingCharacteristics(TestCase):
 
         self.evaluator = ReceiverOperatingCharacteristic(self.radar, self.channel)
 
-    def test_init_validation(self) -> None:
-        """Initialization parameters should be properly validated"""
-
-        channel = SingleTargetRadarChannel(1.0, 1.0)
-
-        with self.assertRaises(ValueError):
-            ReceiverOperatingCharacteristic(self.radar, channel)
-
     def _generate_evaluation(self) -> RocEvaluation:
         """Helper class to generate an evaluation.
 
         Returns: The evaluation.
         """
 
-        propagation = self.channel.propagate(self.device.transmit())
+        propagation = self.channel.propagate(self.device.transmit(), self.device, self.device)
         self.device.receive(propagation)
 
         return self.evaluator.evaluate()
@@ -268,7 +245,7 @@ class TestReciverOperatingCharacteristics(TestCase):
             evaluator.evaluate()
 
         # Prepare channel states
-        propagation = self.channel.propagate(self.device.transmit())
+        propagation = self.channel.propagate(self.device.transmit(), self.device, self.device)
         self.device.receive(propagation)
 
         with patch("hermespy.simulation.simulated_device.SimulatedDevice.output", new_callable=PropertyMock) as output_mock:
@@ -391,7 +368,7 @@ class TestReciverOperatingCharacteristics(TestCase):
         mock_h0_scenario.num_drops = 1
         mock_h1_scenario.num_drops = 1
 
-        forwards_propagation = self.channel.propagate(self.device.transmit())
+        forwards_propagation = self.channel.propagate(self.device.transmit(), self.device, self.device)
         self.device.process_input(forwards_propagation)
         reception = self.radar.receive()
 
@@ -492,7 +469,7 @@ class TestRootMeanSquareError(TestCase):
         self.radar.device = self.device
         self.radar.detector = ThresholdDetector(0.1)
 
-        self.evaluator = RootMeanSquareError(self.radar, self.channel)
+        self.evaluator = RootMeanSquareError(self.radar, self.radar, self.channel)
 
     def test_properties(self) -> None:
         """Properties should be properly handled"""
@@ -524,7 +501,7 @@ class TestRootMeanSquareError(TestCase):
         """Evaluate routine should generate the corret evaluation"""
 
         # Prepare the scenario state for evaluation
-        propagation = self.channel.propagate(self.device.transmit())
+        propagation = self.channel.propagate(self.device.transmit(), self.device, self.device)
         self.device.receive(propagation)
 
         evaluation = self.evaluator.evaluate()
@@ -533,7 +510,7 @@ class TestRootMeanSquareError(TestCase):
     def test_generate_result(self) -> None:
         """Result generation should be properly handled"""
 
-        propagation = self.channel.propagate(self.device.transmit())
+        propagation = self.channel.propagate(self.device.transmit(), self.device, self.device)
         self.device.receive(propagation)
 
         artifact = self.evaluator.evaluate().artifact()

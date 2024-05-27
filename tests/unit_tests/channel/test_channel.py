@@ -220,21 +220,7 @@ class TestChannel(TestCase):
         self.beta_device = SimulatedDevice()
         self.gain = 0.8
 
-        self.channel = ChannelMock(self.alpha_device, self.beta_device, 0.8)
-
-    def test_devices_init_validation(self) -> None:
-        """Specifying transmitter / receiver and devices is forbidden"""
-
-        with self.assertRaises(ValueError):
-            ChannelMock(self.alpha_device, self.beta_device, devices=(Mock(), Mock()))
-
-    def test_devices_init(self) -> None:
-        """Specifiying devices insteand of transmitter / receiver should properly initialize channel"""
-
-        self.channel = ChannelMock(devices=(self.alpha_device, self.beta_device))
-
-        self.assertIs(self.alpha_device, self.channel.alpha_device)
-        self.assertIs(self.beta_device, self.channel.beta_device)
+        self.channel = ChannelMock(0.8)
 
     def test_alpha_device_setget(self) -> None:
         """Alpha device property getter should return setter argument"""
@@ -305,7 +291,7 @@ class TestChannel(TestCase):
         signal = Signal.Create(self.rng.random((3, 10)), 1.0)
 
         with self.assertRaises(ValueError):
-            self.channel.propagate(signal)
+            self.channel.propagate(signal, self.alpha_device, self.beta_device)
 
     def test_add_sample_hook(self) -> None:
         """Adding a sample hook should properly store it"""

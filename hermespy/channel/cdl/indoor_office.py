@@ -396,7 +396,7 @@ class IndoorOffice(ClusterDelayLineBase[IndoorOfficeRealization, LOSState], Seri
 
     __office_type: OfficeType
 
-    def __init__(self, *args, office_type: OfficeType = OfficeType.MIXED, **kwargs) -> None:
+    def __init__(self, office_type: OfficeType = OfficeType.MIXED, **kwargs) -> None:
         """
 
         Args:
@@ -404,10 +404,13 @@ class IndoorOffice(ClusterDelayLineBase[IndoorOfficeRealization, LOSState], Seri
             office_type (OfficeType, optional):
                 Type of the modeled office.
                 If not specified, a mixed office is assumed.
+
+            \**kwargs:
+                Additional arguments passed to the base class.
         """
 
         # Initialize base class
-        ClusterDelayLineBase.__init__(self, *args, **kwargs)
+        ClusterDelayLineBase.__init__(self, **kwargs)
 
         # Initialize class attributes
         self.__office_type = office_type

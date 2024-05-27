@@ -37,7 +37,7 @@ class TestIdealChannel(unittest.TestCase):
         self.sampling_rate = 1e3
         self.alpha_device = SimulatedDevice(sampling_rate=self.sampling_rate)
         self.beta_device = SimulatedDevice(sampling_rate=self.sampling_rate)
-        self.channel = IdealChannel(self.alpha_device, self.beta_device, self.gain)
+        self.channel = IdealChannel(self.gain)
         self.channel.random_mother = self.random_node
 
         # Number of discrete-time samples generated for baseband_signal propagation testing
@@ -52,25 +52,7 @@ class TestIdealChannel(unittest.TestCase):
     def test_init(self) -> None:
         """Test that the init properly stores all parameters"""
 
-        self.assertIs(self.alpha_device, self.channel.alpha_device, "Unexpected transmitter parameter initialization")
-        self.assertIs(self.beta_device, self.channel.beta_device, "Unexpected receiver parameter initialization")
         self.assertEqual(self.gain, self.channel.gain, "Unexpected gain parameter initialization")
-
-    def test_transmitter_setget(self) -> None:
-        """Transmitter property getter must return setter parameter"""
-
-        channel = IdealChannel()
-        channel.alpha_device = self.alpha_device
-
-        self.assertIs(self.alpha_device, channel.alpha_device, "Transmitter property set/get produced unexpected result")
-
-    def test_receiver_setget(self) -> None:
-        """Receiver property getter must return setter parameter"""
-
-        channel = IdealChannel()
-        channel.beta_device = self.beta_device
-
-        self.assertIs(self.beta_device, channel.beta_device, "Receiver property set/get produced unexpected result")
 
     def test_propagate_SISO(self) -> None:
         """Test valid propagation for the Single-Input-Single-Output channel"""
@@ -248,9 +230,7 @@ class TestIdealChannel(unittest.TestCase):
     def test_serialization(self) -> None:
         """Test YAML serialization"""
 
-        with patch("hermespy.channel.Channel.alpha_device", new_callable=PropertyMock) as transmitter_mock, patch("hermespy.channel.Channel.beta_device", new_callable=PropertyMock) as receiver_mock, patch("hermespy.channel.Channel.random_mother", new_callable=PropertyMock) as random_mock:
-            transmitter_mock.return_value = None
-            receiver_mock.return_value = None
+        with patch("hermespy.channel.Channel.random_mother", new_callable=PropertyMock) as random_mock:
             random_mock.return_value = None
 
             test_yaml_roundtrip_serialization(self, self.channel)

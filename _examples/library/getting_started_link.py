@@ -20,11 +20,11 @@ rx_operator.waveform = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_sy
 rx_device.receivers.add(rx_operator)
 
 # Simulate a channel between the two devices
-channel = IdealChannel(tx_device, rx_device)
+channel = IdealChannel()
 
 # Simulate the signal transmission over the channel
 transmission = tx_operator.transmit()
-propagation = channel.propagate(tx_device.transmit())
+propagation = channel.propagate(tx_device.transmit(), tx_device, rx_device)
 rx_device.process_input(propagation)
 reception = rx_operator.receive()
 
