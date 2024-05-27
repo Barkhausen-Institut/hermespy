@@ -979,7 +979,7 @@ class Signal(ABC, HDFSerializable):
         b = self._blocks[b_stop]
         w_start = res.shape[1] - s11 + b.offset
         w_stop = min(w_start + b.shape[1], res.shape[1])
-        res[:, w_start:w_stop] = b[:, :w_stop-w_start]
+        res[:, w_start:w_stop] = b[:, : w_stop - w_start]
 
         # Apply stream slicing and the samples step.
 

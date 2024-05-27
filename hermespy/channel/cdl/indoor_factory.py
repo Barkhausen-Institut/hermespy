@@ -448,8 +448,6 @@ class IndoorFactory(ClusterDelayLineBase[IndoorFactoryRealization, LOSState], Se
         surface: float,
         factory_type: FactoryType,
         clutter_height: float = 0.0,
-        alpha_device=None,
-        beta_device=None,
         gain: float = 1.0,
         **kwargs: Any,
     ) -> None:
@@ -469,19 +467,16 @@ class IndoorFactory(ClusterDelayLineBase[IndoorFactoryRealization, LOSState], Se
                 Height of the clutter in the factory hall in meters above the floor.
                 Zero by default, meaning virtually no clutter.
 
-            alpha_device (SimulatedDevice, optional):
-                First device linked by the :class:`.ClusterDelayLine` instance.
-
-            beta_device (SimulatedDevice, optional):
-                Second device linked by the :class:`.ClusterDelayLine` instance.
-
             gain (float, optional):
                 Linear power gain factor a signal experiences when being propagated over this realization.
                 :math:`1.0` by default.
+
+            \**kwargs:
+                Additional arguments passed to the base class.
         """
 
         # Initialize base class
-        ClusterDelayLineBase.__init__(self, alpha_device, beta_device, gain, **kwargs)
+        ClusterDelayLineBase.__init__(self, gain, **kwargs)
 
         # Initialize class attributes
         self.volume = volume

@@ -64,13 +64,7 @@ class _TestDelayChannelBase(TestCase):
         self.alpha_device = SimulatedDevice(sampling_rate=self.sampling_rate, carrier_frequency=self.carrier_frequency, pose=Transformation.From_Translation(np.array([0, 0, 0])))
         self.beta_device = SimulatedDevice(sampling_rate=self.sampling_rate, carrier_frequency=self.carrier_frequency, pose=Transformation.From_Translation(np.array([0, 0, 10])))
 
-        self.channel = self._init_channel(alpha_device=self.alpha_device, beta_device=self.beta_device)
-
-    def test_properties(self) -> None:
-        """Properties should be properly initialized"""
-
-        self.assertIs(self.alpha_device, self.channel.alpha_device)
-        self.assertIs(self.beta_device, self.channel.beta_device)
+        self.channel = self._init_channel()
 
     def test_realize(self) -> None:
         """Test channel realization"""
@@ -86,7 +80,7 @@ class _TestDelayChannelBase(TestCase):
         self.channel.model_propagation_loss = True
         
         with self.assertRaises(RuntimeError):
-            self.channel.propagate(DenseSignal(np.zeros((self.alpha_device.num_antennas, 10)), self.alpha_device.sampling_rate))
+            self.channel.propagate(DenseSignal(np.zeros((self.alpha_device.num_antennas, 10)), self.alpha_device.sampling_rate), self.alpha_device, self.beta_device)
 
     def test_propagate_state(self) -> None:
         """Propagation and channel state should match"""
@@ -117,9 +111,7 @@ class _TestDelayChannelBase(TestCase):
     def test_serialization(self) -> None:
         """Test YAML serialization"""
 
-        with patch("hermespy.channel.Channel.alpha_device", new_callable=PropertyMock) as transmitter_mock, patch("hermespy.channel.Channel.beta_device", new_callable=PropertyMock) as receiver_mock, patch("hermespy.channel.Channel.random_mother", new_callable=PropertyMock) as random_mock:
-            transmitter_mock.return_value = None
-            receiver_mock.return_value = None
+        with patch("hermespy.channel.Channel.random_mother", new_callable=PropertyMock) as random_mock:
             random_mock.return_value = None
 
             test_yaml_roundtrip_serialization(self, self.channel)
@@ -165,7 +157,7 @@ class TestSpatialDelayChannel(_TestDelayChannelBase):
 
         # Assert no power loss (flag disabled)
         self.channel.model_propagation_loss = False
-        propagation = self.channel.propagate(power_signal)
+        propagation = self.channel.propagate(power_signal, self.alpha_device, self.beta_device)
 
         self.assertAlmostEqual(initial_energy, np.mean(propagation.energy))
         

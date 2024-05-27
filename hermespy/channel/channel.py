@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Callable, Generic, Optional, Set, Tuple, TypeVar, TYPE_CHECKING
+from typing import Callable, Generic, Optional, Set, TypeVar, TYPE_CHECKING
 
 import numpy as np
 from h5py import Group
@@ -623,11 +623,11 @@ class ChannelRealization(ABC, Generic[CST]):
 class Channel(ABC, RandomNode, Serializable, Generic[CRT, CST]):
     """Abstract base class of all channel models.
 
-    The channel model represents the basic configuration of two linked :doc:`SimulatedDevices<simulation.simulated_device.SimulatedDevice>`
-    :meth:`alpha_device<.alpha_device>` and :meth:`beta_device<.beta_device>` exchanging electromagnetic :doc:`Signals<core.signal_model.Signal>`.
+    The channel model represents the basic configuration of two linked :doc:`SimulatedDevices<hermespy.simulation.simulated_device.SimulatedDevice>`
+    :meth:`alpha_device<.alpha_device>` and :meth:`beta_device<.beta_device>` exchanging electromagnetic :doc:`Signals<hermespy.core.signal_model.Signal>`.
 
     Each invokation of :meth:`.propagate` and :meth:`.realize` will generate a new :doc:`channel.channel.ChannelRealization` instance by internally calling :meth:`._realize`.
-    In the case of a :meth:`propagate` call the generated :doc:`channel.channel.ChannelRealization` will additionally be wrapped in a :doc:`channel.channel.ChannelPropagation`.
+    In the case of a :meth:`propagate` call the generated :doc:`hermespy.channel.channel.ChannelRealization` will additionally be wrapped in a :doc:`hermespy.channel.channel.ChannelPropagation`.
     The channel model represents the matrix function of time :math:`t` and delay :math:`\\tau`
 
     .. math::
@@ -637,7 +637,7 @@ class Channel(ABC, RandomNode, Serializable, Generic[CRT, CST]):
     the dimensionality of which depends on the number of transmitting antennas :math:`N_{\\mathrm{Tx}}` and number of receiving antennas :math:`N_{\\mathrm{Rx}}`.
     The vector :math:`\\mathbf{\\zeta}` represents the channel model's paramteres as random variables.
     Realizing the channel model is synonymous with realizing and "fixing" these random parameters by drawing a sample from their respective
-    distributions, so that a :doc:`channel.channel.ChannelRealization` represents the deterministic function
+    distributions, so that a :doc:`hermespy.channel.channel.ChannelRealization` represents the deterministic function
 
     .. math::
 
@@ -645,48 +645,19 @@ class Channel(ABC, RandomNode, Serializable, Generic[CRT, CST]):
 
     """
 
-    __alpha_device: SimulatedDevice | None
-    __beta_device: SimulatedDevice | None
     __scenario: SimulationScenario
     __gain: float
     __interpolation_mode: InterpolationMode
     __sample_hooks: Set[ChannelSampleHook[CST]]
 
-    def __init__(
-        self,
-        alpha_device: SimulatedDevice | None = None,
-        beta_device: SimulatedDevice | None = None,
-        gain: float = 1.0,
-        interpolation_mode: InterpolationMode = InterpolationMode.NEAREST,
-        devices: Tuple[SimulatedDevice, SimulatedDevice] | None = None,
-        seed: Optional[int] = None,
-    ) -> None:
+    def __init__(self, gain: float = 1.0, seed: Optional[int] = None) -> None:
         """
         Args:
-
-            alpha_device (SimulatedDevice, optional):
-                First device linked by this channel.
-                Initializes the :meth:`alpha_device<alpha_device>` property.
-                If not specified the channel is considered floating,
-                meaning a call to :meth:`realize` will raise an exception.
-
-            beta_device (SimulatedDevice, optional):
-                Second device linked by this channel.
-                Initializes the :meth:`beta_device<beta_device>` property.
-                If not specified the channel is considered floating,
-                meaning a call to :meth:`realize` will raise an exception.
 
             gain (float, optional):
                 Linear channel power gain factor.
                 Initializes the :meth:`gain<gain>` property.
                 :math:`1.0` by default.
-
-            interpolation_mode (InterpolationMode, optional):
-                Interpolation behaviour of the channel realization's delay components with respect to the proagated signal's sampling rate.
-                :attr:`NEAREST<InterpolationMode.NEAREST>` by default, meaning no resampling is required.
-
-            devices (Tuple[SimulatedDevice, SimulatedDevice], optional):
-                Tuple of devices connected by this channel model.
 
             seed (int, optional):
                 Seed used to initialize the pseudo-random number generator.
@@ -701,55 +672,8 @@ class Channel(ABC, RandomNode, Serializable, Generic[CRT, CST]):
         self.__alpha_device = None
         self.__beta_device = None
         self.gain = gain
-        self.interpolation_mode = interpolation_mode
         self.__scenario = None
         self.__sample_hooks = set()
-
-        if alpha_device is not None:
-            self.alpha_device = alpha_device
-
-        if beta_device is not None:
-            self.beta_device = beta_device
-
-        if devices is not None:
-            if self.alpha_device is not None or self.beta_device is not None:
-                raise ValueError(
-                    "Can't use 'devices' initialization argument in combination with specifying a alpha / beta devices"
-                )
-
-            self.alpha_device = devices[0]
-            self.beta_device = devices[1]
-
-    @property
-    def alpha_device(self) -> SimulatedDevice | None:
-        """First device linked by this channel.
-
-        Referred to as :math:`\\alpha` in the respective equations.
-
-        If not specified, i.e. :py:obj:`None`, the channel is considered floating,
-        meaning a call to :meth:`realize` will raise an exception.
-        """
-
-        return self.__alpha_device
-
-    @alpha_device.setter
-    def alpha_device(self, value: SimulatedDevice) -> None:
-        self.__alpha_device = value
-
-    @property
-    def beta_device(self) -> SimulatedDevice | None:
-        """Second device linked by this channel.
-
-        Referred to as :math:`\\beta` in the respective equations.
-
-        If not specified, i.e. :py:obj:`None`, the channel is considered floating,
-        meaning a call to :meth:`realize` will raise an exception.
-        """
-        return self.__beta_device
-
-    @beta_device.setter
-    def beta_device(self, value: SimulatedDevice) -> None:
-        self.__beta_device = value
 
     @property
     def scenario(self) -> SimulationScenario | None:
@@ -808,16 +732,6 @@ class Channel(ABC, RandomNode, Serializable, Generic[CRT, CST]):
             raise ValueError("Channel gain must be greater or equal to zero")
 
         self.__gain = value
-
-    @property
-    def interpolation_mode(self) -> InterpolationMode:
-        """Interpolation behaviour of the channel realization's delay components with respect to the proagated signal's sampling rate."""
-
-        return self.__interpolation_mode
-
-    @interpolation_mode.setter
-    def interpolation_mode(self, value: InterpolationMode) -> None:
-        self.__interpolation_mode = value
 
     @property
     def sample_hooks(self) -> Set[ChannelSampleHook[CST]]:
@@ -910,8 +824,8 @@ class Channel(ABC, RandomNode, Serializable, Generic[CRT, CST]):
     def propagate(
         self,
         signal: DeviceOutput | Signal,
-        transmitter: SimulatedDevice | None = None,
-        receiver: SimulatedDevice | None = None,
+        transmitter: SimulatedDevice,
+        receiver: SimulatedDevice,
         timestamp: float = 0.0,
         interpolation_mode: InterpolationMode = InterpolationMode.NEAREST,
     ) -> Signal:
@@ -942,13 +856,11 @@ class Channel(ABC, RandomNode, Serializable, Generic[CRT, CST]):
             signal (DeviceOutput | Signal):
                 Signal models emitted by `transmitter` associated with this wireless channel model.
 
-            transmitter (Device, optional):
+            transmitter (SimulatedDevice):
                 Device transmitting the `signal` to be propagated over this realization.
-                If not specified :meth:`alpha_device<.alpha_device>` will be assumed.
 
-            receiver (Device, optional):
+            receiver (SimulatedDevice):
                 Device receiving the propagated `signal` after propagation.
-                If not specified :meth:`beta_device<.beta_device>` will be assumed.
 
             timestamp (float, optional):
                 Time at which the signal is propagated in seconds.
@@ -960,16 +872,12 @@ class Channel(ABC, RandomNode, Serializable, Generic[CRT, CST]):
         Returns: The channel propagation resulting from the signal propagation.
         """
 
-        # Infer parameters
-        _transmitter = self.alpha_device if transmitter is None else transmitter
-        _receiver = self.beta_device if receiver is None else receiver
-
         # Generate a new realization
         realization = self.realize()
 
         # Sample the channel realization
         sample: ChannelSample = realization.sample(
-            _transmitter, _receiver, timestamp, signal.carrier_frequency, signal.sampling_rate
+            transmitter, receiver, timestamp, signal.carrier_frequency, signal.sampling_rate
         )
 
         # Propagate the provided signal

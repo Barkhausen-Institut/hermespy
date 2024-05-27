@@ -30,7 +30,7 @@ class TestSimulatedDrop(TestCase):
     def test_channel_realizations(self) -> None:
         """Channel realizations property should return the correct realizations"""
 
-        self.assertEqual(3, len(self.drop.channel_realizations))
+        self.assertEqual(1, len(self.drop.channel_realizations))
 
     def test_hdf_serialization_validation(self) -> None:
         """HDF serialization should raise ValueError on invalid scenario arguments"""

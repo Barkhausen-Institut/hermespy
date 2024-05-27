@@ -18,11 +18,12 @@ Devices:
 # Specify channel models interconnecting devices 
 Channels:
 
-  # 5G TDL model at the self-interference channel of device_alpha
-  - &channel !<5GTDL>
-    devices: [*device_alpha, *device_alpha]
-    model_type: !<TDLType> A       # Type of the TDL model. A-E are available
-    rms_delay: 1e-9                # Root mean square delay in seconds    
+  - # 5G TDL model at the self-interference channel of device_alpha
+    - *device_alpha
+    - *device_alpha
+    - &channel !<5GTDL>
+      model_type: !<TDLType> A          # Type of the TDL model. A-E are available
+      rms_delay: 1e-9                   # Root mean square delay in seconds    
 
 
 # Operators transmitting or receiving signals over the devices

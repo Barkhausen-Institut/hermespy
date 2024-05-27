@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from typing import Any, TYPE_CHECKING
+from typing import Any
 
 import numpy as np
 
 from .fading import MultipathFadingChannel
-
-if TYPE_CHECKING:
-    from hermespy.simulation import SimulatedDevice  # pragma: no cover
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -30,13 +27,7 @@ class Exponential(MultipathFadingChannel):
     __rms_delay: float
 
     def __init__(
-        self,
-        tap_interval: float,
-        rms_delay: float,
-        alpha_device: SimulatedDevice | None = None,
-        beta_device: SimulatedDevice | None = None,
-        gain: float = 1.0,
-        **kwargs: Any,
+        self, tap_interval: float, rms_delay: float, gain: float = 1.0, **kwargs: Any
     ) -> None:
         """
         Args:
@@ -47,17 +38,11 @@ class Exponential(MultipathFadingChannel):
             rms_delay (float):
                 Root-Mean-Squared delay in seconds.
 
-            alpha_device (SimulatedDevice, optional):
-                First device linked by the :class:`.Exponential` instance that generated this realization.
-
-            beta_device (SimulatedDevice, optional):
-                Second device linked by the :class:`.Exponential` instance that generated this realization.
-
             gain (float, optional):
                 Linear power gain factor a signal experiences when being propagated over this realization.
                 :math:`1.0` by default.
 
-            kwargs (Any):
+            \**kwargs (Any):
                 `MultipathFadingChannel` initialization parameters.
 
         Raises:
@@ -89,8 +74,6 @@ class Exponential(MultipathFadingChannel):
         # Init base class with pre-defined model parameters
         MultipathFadingChannel.__init__(
             self,
-            alpha_device=alpha_device,
-            beta_device=beta_device,
             gain=gain,
             delays=delays,
             power_profile=power_profile,

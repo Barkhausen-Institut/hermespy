@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from enum import Enum, IntEnum
 from functools import cache, cached_property
 from math import ceil, sin, cos, sqrt
-from typing import Generator, Generic, Literal, List, Set, Tuple, TypeVar, TYPE_CHECKING
+from typing import Generator, Generic, Literal, List, Set, Tuple, TypeVar
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -43,9 +43,6 @@ from ..consistent import (
     ConsistentGenerator,
     ConsistentSample,
 )
-
-if TYPE_CHECKING:
-    from hermespy.simulation import SimulatedDevice  # pragma: no cover
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -2016,8 +2013,6 @@ class ClusterDelayLineBase(Channel[CDLRT, ClusterDelayLineSample], Generic[CDLRT
 
     def __init__(
         self,
-        alpha_device: SimulatedDevice | None = None,
-        beta_device: SimulatedDevice | None = None,
         gain: float = 1.0,
         delay_normalization: DelayNormalization = DelayNormalization.ZERO,
         oxygen_absorption: bool = True,
@@ -2026,12 +2021,6 @@ class ClusterDelayLineBase(Channel[CDLRT, ClusterDelayLineSample], Generic[CDLRT
     ) -> None:
         """
         Args:
-
-            alpha_device (SimulatedDevice, optional):
-                First device linked by the :class:`.ClusterDelayLineBase` instance that generated this realization.
-
-            beta_device (SimulatedDevice, optional):
-                Second device linked by the :class:`.ClusterDelayLineBase` instance that generated this realization.
 
             gain (float, optional):
                 Linear gain factor a signal amplitude experiences when being propagated over this realization.
@@ -2047,10 +2036,13 @@ class ClusterDelayLineBase(Channel[CDLRT, ClusterDelayLineSample], Generic[CDLRT
             expected_state (LSST, optional):
                 Expected large-scale state of the channel.
                 If `None`, the state is randomly generated during each sample of the channel's realization.
+
+            \**kwargs:
+                Additional keyword arguments passed to the base class.
         """
 
         # Initialize base class
-        Channel.__init__(self, alpha_device, beta_device, gain, **kwargs)
+        Channel.__init__(self, gain, **kwargs)
 
         # Initialize class attributes
         self.delay_normalization = delay_normalization

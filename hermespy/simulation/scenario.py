@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from time import time
-from typing import List, Sequence, Tuple, overload
+from typing import Sequence, Tuple, overload
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -55,7 +55,7 @@ class ScenarioVisualization(Visualization):
         self,
         figure: plt.Figure | None,
         axes: VAT,
-        device_frames: List[Line3DCollection],
+        device_frames: list[Line3DCollection],
         device_frame_scale: float,
     ) -> None:
 
@@ -129,7 +129,7 @@ class _ScenarioVisualizer(VisualizableAttribute[ScenarioVisualization]):
         _ax.set_zlim3d(minimal_limit, maximal_limit)
         device_frame_scale = 0.1 * (maximal_limit - minimal_limit)
 
-        device_frames: List[Line3DCollection] = []
+        device_frames: list[Line3DCollection] = []
         for _ in self.__scenario.devices:
 
             # Draw wire coordinate frames
@@ -184,12 +184,15 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
     yaml_tag = "SimulationScenario"
 
-    __channels: np.ndarray  # Channel matrix linking devices
+    __default_channel: Channel  # Initial channel to be assumed for device links
+    __channels: set[Channel]  # Set of unique channel model instances
+    __links: dict[frozenset[SimulatedDevice], Channel]
     __noise_level: NoiseLevel | None  # Global noise level of the scenario
     __noise_model: NoiseModel | None  # Global noise model of the scenario
 
     def __init__(
         self,
+        default_channel: Channel | None = None,
         noise_level: NoiseLevel | None = None,
         noise_model: NoiseModel | None = None,
         *args,
@@ -197,6 +200,10 @@ class SimulationScenario(Scenario[SimulatedDevice]):
     ) -> None:
         """
         Args:
+
+            default_channel (Channel, optional):
+                Default channel model to be assumed for all device links.
+                If not specified, the `default_channel` is set to an ideal distortionless channel model.
 
             noise_level (NoiseLevel, optional):
                 Global noise level of the scenario assumed for all devices.
@@ -207,13 +214,17 @@ class SimulationScenario(Scenario[SimulatedDevice]):
                 If not specified, the noise configuration is device-specific.
         """
 
+        # Prepare channel matrices for device links
+        self.__default_channel = default_channel if default_channel is not None else IdealChannel()
+        self.__channels = {self.__default_channel}
+        self.__links = dict()
+
         # Initialize base class
         Scenario.__init__(self, *args, **kwargs)
 
         # Initialize class attributes
         self.noise_level = noise_level
         self.noise_model = noise_model
-        self.__channels = np.ndarray((0, 0), dtype=object)
         self.__visualizer = _ScenarioVisualizer(self)
 
     def new_device(self, *args, **kwargs) -> SimulatedDevice:
@@ -233,38 +244,22 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         Scenario.add_device(self, device)
         device.scenario = self
 
-        if self.num_devices == 1:
-            self.__channels = np.array([[IdealChannel(device, device)]], dtype=object)
-
-        else:
-            # Create new channels from each existing device to the newly added device
-            new_channels = np.array([[IdealChannel(device, rx)] for rx in self.devices])
-
-            # Complete channel matrix by the newly created channels
-            self.__channels = np.append(self.__channels, new_channels[:-1], axis=1)
-            self.__channels = np.append(self.__channels, new_channels.T, axis=0)
-
     @property
-    def channels(self) -> np.ndarray:
-        """Channel matrix between devices.
-
-        Returns:
-            np.ndarray:
-                An `MxM` matrix of channels between devices.
-        """
+    def channels(self) -> set[Channel]:
+        """Unique channel model instances interconnecting devices within this scenario."""
 
         return self.__channels
 
-    def channel(self, transmitter: SimulatedDevice, receiver: SimulatedDevice) -> Channel:
+    def channel(self, alpha_device: SimulatedDevice, beta_device: SimulatedDevice) -> Channel:
         """Access a specific channel between two devices.
 
         Args:
 
-            transmitter (SimulatedDevice):
-                The device transmitting into the channel.
+            alpha_device (SimulatedDevice):
+                First device linked by the requested channel.
 
-            receiver (SimulatedDevice):
-                the device receiving from the channel
+            beta_device (SimulatedDevice):
+                Second device linked by the requested channel.
 
         Returns:
             Channel:
@@ -272,134 +267,94 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
         Raises:
             ValueError:
-                Should `transmitter` or `receiver` not be registered with this scenario.
+                Should `alpha_device` or `beta_device` not be registered with this scenario.
         """
 
-        devices = self.devices
+        if alpha_device not in self.devices:
+            raise ValueError("Provided alpha device is not registered with this scenario")
 
-        if transmitter not in devices:
-            raise ValueError("Provided transmitter is not registered with this scenario")
+        if beta_device not in self.devices:
+            raise ValueError("Provided beta device is not registered with this scenario")
 
-        if receiver not in devices:
-            raise ValueError("Provided receiver is not registered with this scenario")
+        return self.__links.get(frozenset((alpha_device, beta_device)), self.__default_channel)
 
-        index_transmitter = devices.index(transmitter)
-        index_receiver = devices.index(receiver)
-
-        return self.__channels[index_transmitter, index_receiver]
-
-    def departing_channels(
-        self, transmitter: SimulatedDevice, active_only: bool = False
-    ) -> List[Channel]:
-        """Collect all channels departing from a transmitting device.
+    def device_channels(self, device: SimulatedDevice, active_only: bool = False) -> set[Channel]:
+        """Collect all channels to which a specific device is linked.
 
         Args:
 
-            transmitter (SimulatedDevice):
-                The transmitting device.
+            device (SimulatedDevice):
+                The device in question.
 
             active_only (bool, optional):
                 Consider only active channels.
                 A channel is considered active if its gain is greater than zero.
+                Disabled by default, so all channels are considered.
 
-        Returns: A list of departing channels.
-
-        Raises:
-
-            ValueError: Should `transmitter` not be registered with this scenario.
-        """
-
-        devices = self.devices
-
-        if transmitter not in devices:
-            raise ValueError("The provided transmitter is not registered with this scenario.")
-
-        transmitter_index = devices.index(transmitter)
-        channels: List[Channel] = self.__channels[:, transmitter_index].tolist()
-
-        if active_only:
-            channels = [channel for channel in channels if channel.gain > 0.0]
-
-        return channels
-
-    def arriving_channels(
-        self, receiver: SimulatedDevice, active_only: bool = False
-    ) -> List[Channel]:
-        """Collect all channels arriving at a device.
-
-        Args:
-            receiver (Receiver):
-                The receiving modem.
-
-            active_only (bool, optional):
-                Consider only active channels.
-                A channel is considered active if its gain is greater than zero.
-
-        Returns: A list of arriving channels.
+        Returns: A set of unique channel instances.
 
         Raises:
 
-            ValueError: Should `receiver` not be registered with this scenario.
+            ValueError: Should `device` is not registered within this scenario.
         """
 
-        devices = self.devices
+        if device not in self.devices:
+            raise ValueError("Provided device is not registered with this scenario")
 
-        if receiver not in devices:
-            raise ValueError("The provided transmitter is not registered with this scenario.")
+        device_channels: set[Channel] = set()
+        link_entries = 0
+        for linked_devices, channel in self.__links.items():
+            if device in linked_devices:
+                if not active_only or channel.gain > 0:
+                    device_channels.add(channel)
+                    link_entries += 1
 
-        receiver_index = devices.index(receiver)
-        channels: List[Channel] = self.__channels[receiver_index,].tolist()
+        # Append the default channel if required
+        if link_entries < self.num_devices:
+            device_channels.add(self.__default_channel)
 
-        if active_only:
-            channels = [channel for channel in channels if channel.gain > 0.0]
-
-        return channels
+        return device_channels
 
     def set_channel(
-        self,
-        beta_device: int | SimulatedDevice,
-        alpha_device: int | SimulatedDevice,
-        channel: Channel | None,
+        self, alpha_device: SimulatedDevice, beta_device: SimulatedDevice, channel: Channel
     ) -> None:
         """Specify a channel within the channel matrix.
 
         Args:
 
-            beta_device (int | SimulatedDevice):
-                Index of the receiver within the channel matrix.
+            alpha_device (SimulatedDevice):
+                First device to be linked by `channel`.
 
-            alpha_device (int | SimulatedDevice):
-                Index of the transmitter within the channel matrix.
+            beta_device (SimulatedDevice):
+                Second device to be linked by `channel`.
 
-            channel (Channel | None):
-                The channel instance to be set at position (`transmitter_index`, `receiver_index`).
+            channel (Channel):
+                The channel instance to link `alpha_device` and `beta_device`.
 
         Raises:
-            ValueError:
-                If `transmitter_index` or `receiver_index` are greater than the channel matrix dimensions.
+            ValueError: If `alpha_device` or `beta_device` are not registered with this scenario.
         """
 
-        if isinstance(beta_device, SimulatedDevice):
-            beta_device = self.devices.index(beta_device)
+        if alpha_device not in self.devices:
+            raise ValueError("Alpha device is not registered with this scenario")
 
-        if isinstance(alpha_device, SimulatedDevice):
-            alpha_device = self.devices.index(alpha_device)
+        if beta_device not in self.devices:
+            raise ValueError("Beta device is not registered with this scenario")
 
-        if self.__channels.shape[0] <= alpha_device or 0 > alpha_device:
-            raise ValueError("Alpha device index greater than channel matrix dimension")
+        # Update the link
+        link_key = frozenset((alpha_device, beta_device))
+        old_channel = self.__links.get(link_key, None)
+        self.__links[frozenset((alpha_device, beta_device))] = channel
 
-        if self.__channels.shape[1] <= beta_device or 0 > beta_device:
-            raise ValueError("Beta Device index greater than channel matrix dimension")
+        # Remove the old channel from the set of device channels and unique channel instances
+        # if it is not linked to any other device
+        if old_channel is not None:
+            if old_channel not in self.__links.values():
+                self.__channels.remove(old_channel)
 
-        # Update channel field within the matrix
-        self.__channels[alpha_device, beta_device] = channel
-        self.__channels[beta_device, alpha_device] = channel
-
-        if channel is not None:
-            # Set proper receiver and transmitter fields
-            channel.alpha_device = self.devices[alpha_device]
-            channel.beta_device = self.devices[beta_device]
-            channel.scenario = self
+        # Update the set of unique channel instances
+        self.__channels.add(channel)
+        channel.scenario = self
 
     @register(first_impact="receive_devices", title="Scenario Noise Level")  # type: ignore[misc]
     @property
@@ -441,9 +396,9 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         """
 
         # Collect unique triggers
-        triggers: List[TriggerModel] = []
-        unique_realizations: List[TriggerRealization] = []
-        device_realizations: List[TriggerRealization] = []
+        triggers: list[TriggerModel] = []
+        unique_realizations: list[TriggerRealization] = []
+        device_realizations: list[TriggerRealization] = []
 
         for device in self.devices:
             device_realization: TriggerRealization
@@ -463,11 +418,11 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
     def generate_outputs(
         self,
-        transmissions: List[List[Transmission]] | None = None,
+        transmissions: list[list[Transmission]] | None = None,
         trigger_realizations: Sequence[TriggerRealization] | None = None,
     ) -> Sequence[SimulatedDeviceOutput]:
         # Assume cached operator transmissions if none were provided
-        _transmissions: List[None] | List[List[Transmission]] = (
+        _transmissions: list[None] | list[list[Transmission]] = (
             [None] * self.num_devices if not transmissions else transmissions
         )
 
@@ -510,15 +465,17 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         trigger_realizations = self.realize_triggers()
 
         # Transmit devices
-        transmissions: List[SimulatedDeviceTransmission] = [
+        transmissions: list[SimulatedDeviceTransmission] = [
             d.transmit(cache=cache, trigger_realization=t)
             for d, t in zip(self.devices, trigger_realizations)
         ]
         return transmissions
 
     def propagate(
-        self, transmissions: Sequence[DeviceOutput]
-    ) -> Tuple[List[List[Signal]], List[ChannelRealization]]:
+        self,
+        transmissions: Sequence[DeviceOutput],
+        interpolation_mode: InterpolationMode = InterpolationMode.NEAREST,
+    ) -> Tuple[list[list[Signal]], list[ChannelRealization]]:
         """Propagate device transmissions over the scenario's channel instances.
 
         Args:
@@ -526,9 +483,13 @@ class SimulationScenario(Scenario[SimulatedDevice]):
             transmissions (Sequence[DeviceOutput])
                 Sequence of device transmissisons.
 
+            interpolation_mode (InterpolationMode, optional):
+                Interpolation mode for the channel samples.
+                Defaults to `InterpolationMode.NEAREST`.
+
         Returns:
             - Matrix of signal propagations between devices.
-            - List of lists of unique channel realizations linking the devices.
+            - list of lists of unique channel realizations linking the devices.
 
         Raises:
 
@@ -544,41 +505,44 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         # Initialize the propagated signals
         propagation_matrix = np.empty((self.num_devices, self.num_devices), dtype=np.object_)
 
-        # Loop over each channel within the channel matrix and propagate the signals over the respective channel model
-        channel_realizations: List[ChannelRealization] = []
+        # Realize all channel instances
+        channel_realizations: dict[Channel, ChannelRealization] = {
+            c: c.realize() for c in self.channels
+        }
+
+        # Propagate signals over all linking channels
         for device_alpha_idx, alpha_device in enumerate(self.devices):
             for device_beta_idx, beta_device in enumerate(self.devices[: 1 + device_alpha_idx]):
 
-                # Select and realize the channel linking device alpha and device beta
-                channel: Channel[ChannelRealization, ChannelSample] = self.channels[
-                    device_alpha_idx, device_beta_idx
-                ]
-                channel_realization: ChannelRealization[ChannelSample] = channel.realize()
-                channel_realizations.append(channel_realization)
+                # Find the correct channel realization for the propagation between device alpha and device beta
+                linking_channel = self.channel(alpha_device, beta_device)
+                channel_realization = channel_realizations[linking_channel]
 
                 # Sample the channel realization for a propagation from device alpha to device beta
-                alpha_beta_sample = channel_realization.sample(alpha_device, beta_device)
-
-                # Sample the reciprocal channel realization for a propagation from device beta to device alpha
-                beta_alpha_sample = channel_realization.reciprocal_sample(
-                    alpha_beta_sample, beta_device, alpha_device
+                alpha_beta_sample: ChannelSample = channel_realization.sample(
+                    alpha_device, beta_device
                 )
 
                 # Propagate signal emitted from device alpha to device beta over the linking channel
-                alpha_propagation = alpha_beta_sample.propagate(
-                    transmissions[device_alpha_idx], InterpolationMode.NEAREST
+                propagation_matrix[device_beta_idx, device_alpha_idx] = alpha_beta_sample.propagate(
+                    transmissions[device_alpha_idx], interpolation_mode
+                )
+
+                # Abort if we're on the self-interference diagonal to avoid redundant calculations
+                if device_alpha_idx == device_beta_idx:
+                    continue
+
+                # Sample the reciprocal channel realization for a propagation from device beta to device alpha
+                beta_alpha_sample: ChannelSample = channel_realization.reciprocal_sample(
+                    alpha_beta_sample, beta_device, alpha_device
                 )
 
                 # Propagate signal emitted from device beta to device alpha over the linking channel
-                beta_propagation = beta_alpha_sample.propagate(
-                    transmissions[device_beta_idx], InterpolationMode.NEAREST
+                propagation_matrix[device_alpha_idx, device_beta_idx] = beta_alpha_sample.propagate(
+                    transmissions[device_beta_idx], interpolation_mode
                 )
 
-                # Store propagtions in their respective coordinates within the propagation matrix
-                propagation_matrix[device_alpha_idx, device_beta_idx] = beta_propagation
-                propagation_matrix[device_beta_idx, device_alpha_idx] = alpha_propagation
-
-        return propagation_matrix.tolist(), channel_realizations
+        return propagation_matrix.tolist(), list(channel_realizations.values())
 
     @overload
     def process_inputs(
@@ -586,7 +550,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         impinging_signals: Sequence[DeviceInput],
         cache: bool = True,
         trigger_realizations: Sequence[TriggerRealization] | None = None,
-    ) -> List[ProcessedSimulatedDeviceInput]: ...  # pragma: no cover
+    ) -> list[ProcessedSimulatedDeviceInput]: ...  # pragma: no cover
 
     @overload
     def process_inputs(
@@ -594,7 +558,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         impinging_signals: Sequence[Signal],
         cache: bool = True,
         trigger_realizations: Sequence[TriggerRealization] | None = None,
-    ) -> List[ProcessedSimulatedDeviceInput]: ...  # pragma: no cover
+    ) -> list[ProcessedSimulatedDeviceInput]: ...  # pragma: no cover
 
     @overload
     def process_inputs(
@@ -602,20 +566,20 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         impinging_signals: Sequence[Sequence[Signal]],
         cache: bool = True,
         trigger_realizations: Sequence[TriggerRealization] | None = None,
-    ) -> List[ProcessedSimulatedDeviceInput]: ...  # pragma: no cover
+    ) -> list[ProcessedSimulatedDeviceInput]: ...  # pragma: no cover
 
     def process_inputs(
         self,
         impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]],
         cache: bool = True,
         trigger_realizations: Sequence[TriggerRealization] | None = None,
-    ) -> List[ProcessedSimulatedDeviceInput]:
+    ) -> list[ProcessedSimulatedDeviceInput]:
         """Process input signals impinging onto the scenario's devices.
 
         Args:
 
             impinging_signals (Sequence[DeviceInput | Signal | Sequence[Signal]] | Sequence[Sequence[Signal]]):
-                List of signals impinging onto the devices.
+                list of signals impinging onto the devices.
 
             cache (bool, optional):
                 Cache the operator inputs at the registered receive operators for further processing.
@@ -625,7 +589,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
                 Sequence of trigger realizations.
                 If not specified, ideal triggerings are assumed for all devices.
 
-        Returns: List of the processed device input information.
+        Returns: list of the processed device input information.
 
         Raises:
 
@@ -689,8 +653,8 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
         Args:
 
-            impinging_signals (List[Union[DeviceInput, Signal, Iterable[Signal]]]):
-                List of signals impinging onto the devices.
+            impinging_signals (list[Union[DeviceInput, Signal, Iterable[Signal]]]):
+                list of signals impinging onto the devices.
 
             cache (bool, optional):
                 Cache the operator inputs at the registered receive operators for further processing.
@@ -700,7 +664,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
                 Sequence of trigger realizations.
                 If not specified, ideal triggerings are assumed for all devices.
 
-        Returns: List of the processed device input information.
+        Returns: list of the processed device input information.
 
         Raises:
 

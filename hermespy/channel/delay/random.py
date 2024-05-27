@@ -123,7 +123,6 @@ class RandomDelayChannel(DelayChannelBase[RandomDelayChannelRealization]):
         self,
         delay: float | Tuple[float, float],
         decorrelation_distance: float = float("inf"),
-        *args,
         **kwargs,
     ) -> None:
         """
@@ -138,15 +137,12 @@ class RandomDelayChannel(DelayChannelBase[RandomDelayChannelRealization]):
                 Distance in meters at which the channel decorrelates.
                 By default, the channel is assumed to be static in space.
 
-            *args:
-                :class:`.Channel` base class initialization parameters.
-
             **kwargs:
                 :class:`.Channel` base class initialization parameters.
         """
 
         # Initialize base class
-        DelayChannelBase.__init__(self, *args, **kwargs)
+        DelayChannelBase.__init__(self, **kwargs)
 
         # Store attributes
         self.delay = delay
