@@ -47,17 +47,6 @@ class TestSimulationScenario(TestCase):
         self.assertTrue(self.scenario.device_registered(device))
         self.assertIs(self.scenario, device.scenario)
 
-    def test_channels_symmetry(self) -> None:
-        """Channel matrix should be symmetric"""
-
-        num_added_devices = 3
-        for _ in range(num_added_devices):
-            self.scenario.add_device(Mock())
-
-        for m in range(self.scenario.num_devices):
-            for n in range(self.scenario.num_devices - m):
-                self.assertIs(self.scenario.channels[m, n], self.scenario.channels[n, m])
-
     def test_channel_validation(self) -> None:
         """Querying a channel instance should raise ValueErrors for invalid devices"""
 
@@ -66,46 +55,6 @@ class TestSimulationScenario(TestCase):
 
         with self.assertRaises(ValueError):
             _ = self.scenario.channel(Mock(), self.device_beta)
-
-    def test_channel(self) -> None:
-        """Querying a channel instance should return the correct channel"""
-
-        channel = self.scenario.channel(self.device_alpha, self.device_beta)
-        self.assertIs(self.scenario.channels[0, 1], channel)
-
-    def test_departing_channels_validation(self) -> None:
-        """Departing channels should raise a ValueError for invalid devices"""
-
-        with self.assertRaises(ValueError):
-            _ = self.scenario.departing_channels(Mock())
-
-    def test_departing_channels(self) -> None:
-        """Departing channels should contain the correct channel slice"""
-
-        device = Mock()
-        self.scenario.add_device(device)
-        self.scenario.channels[0, 2].gain = 0.0
-
-        departing_channels = self.scenario.departing_channels(device, active_only=True)
-        expected_departing_channels = self.scenario.channels[1:, 2]
-        self.assertCountEqual(expected_departing_channels, departing_channels)
-
-    def test_arriving_channels_validation(self) -> None:
-        """Arriving channels should raise a ValueError for invalid devices"""
-
-        with self.assertRaises(ValueError):
-            _ = self.scenario.arriving_channels(Mock())
-
-    def test_arriving_channels(self) -> None:
-        """Arriving channels should contain the correct channel slice"""
-
-        device = Mock()
-        self.scenario.add_device(device)
-        self.scenario.channels[2, 0].gain = 0.0
-
-        arriving_channels = self.scenario.arriving_channels(device, active_only=True)
-        expected_arriving_channels = self.scenario.channels[2, 1:]
-        self.assertCountEqual(expected_arriving_channels, arriving_channels)
 
     def test_set_channel_validation(self) -> None:
         """Setting a channel should raise a ValueError for invalid device indices"""
@@ -122,12 +71,12 @@ class TestSimulationScenario(TestCase):
         device_alpha = self.scenario.new_device()
         device_beta = self.scenario.new_device()
 
-        channel = Mock()
-        self.scenario.set_channel(device_alpha, device_beta, channel)
-
-        self.assertIs(channel, self.scenario.channels[2, 3])
-        self.assertIs(channel, self.scenario.channels[3, 2])
-        self.assertIs(self.scenario, channel.scenario)
+        expected_channel = Mock()
+        self.scenario.set_channel(device_alpha, device_beta, expected_channel)
+        
+        self.assertIn(expected_channel, self.scenario.channels)
+        self.assertIs(expected_channel, self.scenario.channel(device_alpha, device_beta))
+        self.assertIs(self.scenario, expected_channel.scenario)
 
     def test_noise_level_setget(self) -> None:
         """Noise level property getter should return setter argument"""

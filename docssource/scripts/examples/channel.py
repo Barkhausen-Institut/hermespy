@@ -15,7 +15,7 @@ alpha_device = SimulatedDevice()
 beta_device = SimulatedDevice()
 
 # Create a channel between the two devices
-channel = Channel(alpha_device=alpha_device, beta_device=beta_device)
+channel = Channel()
 
 # Configure communication link between the two devices
 link = SimplexLink(alpha_device, beta_device)
@@ -32,8 +32,8 @@ beta_transmission = beta_device.transmit()
 
 # Propagate the transmissions over the channel
 channel_realization = channel.realize()
-alpha_propagation = channel.propagate(alpha_transmission, alpha_device, beta_device)
-beta_propagation = channel.propagate(beta_transmission, beta_device, alpha_device)
+alpha_propagation = channel_realization.sample(alpha_device, beta_device).propagate(alpha_transmission)
+beta_propagation = channel_realization.sample(beta_device, alpha_device).propagate(beta_transmission)
 
 # Receive the transmissions at both devices
 alpha_reception = alpha_device.receive(beta_propagation)

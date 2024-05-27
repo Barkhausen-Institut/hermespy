@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from abc import abstractmethod, ABC
-from typing import Any, Generator, Set, Tuple, TYPE_CHECKING, List
+from abc import ABC
+from typing import Any, Generator, Set, Tuple, List
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -12,6 +12,8 @@ from scipy.constants import pi
 from sparse import GCXS  # type: ignore
 
 from hermespy.core import (
+    AntennaArrayState,
+    AntennaMode,
     ChannelStateInformation,
     ChannelStateFormat,
     HDFSerializable,
@@ -29,9 +31,6 @@ from ..channel import (
 )
 from ..consistent import ConsistentUniform, ConsistentGenerator, ConsistentRealization
 
-if TYPE_CHECKING:
-    from hermespy.simulation import SimulatedDevice  # pragma: no cover
-
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
@@ -46,18 +45,29 @@ class AntennaCorrelation(ABC):
     """Base class for statistical modeling of antenna array correlations."""
 
     __channel: Channel | None
-    __device: SimulatedDevice | None
 
-    def __init__(
-        self, channel: Channel | None = None, device: SimulatedDevice | None = None
-    ) -> None:
+    def __init__(self, channel: Channel | None = None) -> None:
+        """
+
+        Args:
+
+            channel (Channel, optional):
+                Channel this correlation model configures.
+                `None` if the model is currently considered floating.
+        """
+
         self.channel = channel
-        self.device = device
 
-    @property
-    @abstractmethod
-    def covariance(self) -> np.ndarray:
-        """Antenna covariance matrix.
+    def sample_covariance(self, antennas: AntennaArrayState, mode: AntennaMode) -> np.ndarray:
+        """Sample the covariance matrix of a given antenna array.
+
+        Args:
+
+            antennas (AntennaArrayState):
+                State of the antenna array.
+
+            mode (AntennaMode):
+                Mode of the antenna array, i.e. transmit or receive.
 
         Returns: Two-dimensional numpy array representing the covariance matrix.
         """
@@ -78,21 +88,6 @@ class AntennaCorrelation(ABC):
     def channel(self, value: Channel | None) -> None:
         self.__channel = value
 
-    @property
-    def device(self) -> SimulatedDevice | None:
-        """The device this correlation model is based upon.
-
-        Returns:
-            Handle to the device.
-            `None` if the device is currently unknown.
-        """
-
-        return self.__device
-
-    @device.setter
-    def device(self, value: SimulatedDevice | None) -> None:
-        self.__device = value
-
 
 class CustomAntennaCorrelation(Serializable, AntennaCorrelation):
     """Customizable antenna correlations."""
@@ -112,15 +107,21 @@ class CustomAntennaCorrelation(Serializable, AntennaCorrelation):
 
         self.covariance = covariance
 
+    def sample_covariance(self, antennas: AntennaArrayState, mode: AntennaMode) -> np.ndarray:
+        num_antennas = (
+            antennas.num_transmit_antennas
+            if mode == AntennaMode.TX
+            else antennas.num_receive_antennas
+        )
+
+        if self.__covariance_matrix.shape[0] < num_antennas:
+            raise ValueError("Antenna correlation matrix does not match the number of antennas")
+
+        return self.__covariance_matrix[:num_antennas, :num_antennas]
+
     @property
     def covariance(self) -> np.ndarray:
-        if (
-            self.device is not None
-            and self.device.num_antennas != self.__covariance_matrix.shape[0]
-        ):
-            raise RuntimeError(
-                f"Device with {self.device.num_antennas} antennas does not match covariance matrix of magnitude {self.__covariance_matrix.shape[0]}"
-            )
+        """Postive definte square antenna covariance matrix."""
 
         return self.__covariance_matrix
 
@@ -419,8 +420,7 @@ class MultipathFadingRealization(ChannelRealization[MultipathFadingSample]):
         nlos_gains: np.ndarray,
         los_doppler: float,
         nlos_doppler: float,
-        alpha_correlation: AntennaCorrelation | None,
-        beta_correlation: AntennaCorrelation | None,
+        antenna_correlation: AntennaCorrelation | None,
         sample_hooks: Set[ChannelSampleHook[MultipathFadingSample]],
         gain: float,
     ) -> None:
@@ -441,8 +441,7 @@ class MultipathFadingRealization(ChannelRealization[MultipathFadingSample]):
         self.__nlos_gains = nlos_gains
         self.__los_doppler = los_doppler
         self.__nlos_doppler = nlos_doppler
-        self.__alpha_correlation = alpha_correlation
-        self.__beta_correlation = beta_correlation
+        self.__antenna_correlation = antenna_correlation
 
     def _sample(self, state: LinkState) -> MultipathFadingSample:
 
@@ -459,11 +458,16 @@ class MultipathFadingRealization(ChannelRealization[MultipathFadingSample]):
             : state.transmitter.antennas.num_transmit_antennas,
         ]
 
-        # Apply antenna array correlation models
-        if self.__alpha_correlation is not None:
-            spatial_response = spatial_response @ self.__alpha_correlation.covariance
-        if self.__beta_correlation is not None:
-            spatial_response = self.__beta_correlation.covariance @ spatial_response
+        if self.__antenna_correlation is not None:
+            spatial_response = (
+                self.__antenna_correlation.sample_covariance(
+                    state.receiver.antennas, AntennaMode.RX
+                )
+                @ spatial_response
+                @ self.__antenna_correlation.sample_covariance(
+                    state.transmitter.antennas, AntennaMode.TX
+                )
+            )
 
         # Sample multipath components
         los_angles = (
@@ -511,8 +515,7 @@ class MultipathFadingRealization(ChannelRealization[MultipathFadingSample]):
         nlos_angles_variable: ConsistentUniform,
         los_phases_variable: ConsistentUniform,
         nlos_phases_variable: ConsistentUniform,
-        alpha_correlation: AntennaCorrelation | None,
-        beta_correlation: AntennaCorrelation | None,
+        antenna_correlation: AntennaCorrelation | None,
         sample_hooks: Set[ChannelSampleHook[MultipathFadingSample]],
     ) -> MultipathFadingRealization:
 
@@ -539,8 +542,7 @@ class MultipathFadingRealization(ChannelRealization[MultipathFadingSample]):
             nlos_gains,
             los_doppler,
             nlos_doppler,
-            alpha_correlation,
-            beta_correlation,
+            antenna_correlation,
             sample_hooks,
             gain,
         )
@@ -582,22 +584,20 @@ class MultipathFadingChannel(
     __los_gains: np.ndarray
     __doppler_frequency: float
     __los_doppler_frequency: float | None
-    __alpha_correlation: AntennaCorrelation | None
-    __beta_correlation: AntennaCorrelation | None
+    __antenna_correlation: AntennaCorrelation | None
 
     def __init__(
         self,
         delays: np.ndarray | List[float],
         power_profile: np.ndarray | List[float],
         rice_factors: np.ndarray | List[float],
-        gain: float = 1.0,
         correlation_distance: float = float("inf"),
         num_sinusoids: int | None = None,
         los_angle: float | None = None,
         doppler_frequency: float | None = None,
         los_doppler_frequency: float | None = None,
-        alpha_correlation: AntennaCorrelation | None = None,
-        beta_correlation: AntennaCorrelation | None = None,
+        antenna_correlation: AntennaCorrelation | None = None,
+        gain: float = 1.0,
         **kwargs: Any,
     ) -> None:
         """
@@ -615,15 +615,9 @@ class MultipathFadingChannel(
                 Rice factor balancing line of sight and multipath in each individual channel tap.
                 Denoted by :math:`K_{\\ell}` within the respective equations.
 
-            alpha_device (Device, optional):
-                First device linked by the :class:`.MultipathFadingChannel` instance that generated this realization.
-
-            beta_device (Device, otional):
-                Second device linked by the :class:`.MultipathFadingChannel` instance that generated this realization.
-
-            gain (float, optional):
-                Linear power gain factor a signal experiences when being propagated over this realization.
-                :math:`1.0` by default.
+            correlation_distance (float, optional):
+                Distance at which channel samples are considered to be uncorrelated.
+                :math:`\\infty` by default, i.e. the channel is considered to be fully correlated in space.
 
             num_sinusoids (int, optional):
                 Number of sinusoids used to sample the statistical distribution.
@@ -636,15 +630,15 @@ class MultipathFadingChannel(
                 Doppler frequency shift of the statistical distribution.
                 Denoted by :math:`\\omega_{\\ell}` within the respective equations.
 
-            alpha_correlation(AntennaCorrelation, optional):
-                Antenna correlation model at the first device.
+            antenna_correlation (AntennaCorrelation, optional):
+                Antenna correlation model.
                 By default, the channel assumes ideal correlation, i.e. no cross correlations.
 
-            beta_correlation(AntennaCorrelation, optional):
-                Antenna correlation model at the second device.
-                By default, the channel assumes ideal correlation, i.e. no cross correlations.
+            gain (float, optional):
+                Linear power gain factor a signal experiences when being propagated over this realization.
+                :math:`1.0` by default.
 
-            **kwargs (Any, optional):
+            \**kwargs (Any, optional):
                 Channel base class initialization parameters.
 
         Raises:
@@ -689,8 +683,7 @@ class MultipathFadingChannel(
             raise ValueError("Rice factors must be greater or equal to zero")
 
         # Initialize base class
-        self.__alpha_correlation = None
-        self.__beta_correlation = None
+        self.__antenna_correlation = None
         Channel.__init__(self, gain=gain, **kwargs)
 
         # Sort delays
@@ -726,8 +719,7 @@ class MultipathFadingChannel(
         self.__non_los_gains[rice_inf_pos] = 0.0
 
         # Update correlations (required here to break dependency cycle during init)
-        self.alpha_correlation = alpha_correlation
-        self.beta_correlation = beta_correlation
+        self.antenna_correlation = antenna_correlation
         self.correlation_distance = correlation_distance
 
         self.__rng = ConsistentGenerator(self)
@@ -897,65 +889,28 @@ class MultipathFadingChannel(
             self.__non_los_gains,
             self.los_doppler_frequency,
             self.doppler_frequency,
-            self.alpha_correlation,
-            self.beta_correlation,
+            self.antenna_correlation,
             self.sample_hooks,
             self.gain,
         )
 
     @property
-    def alpha_correlation(self) -> AntennaCorrelation | None:
-        """Antenna correlation at the first device.
+    def antenna_correlation(self) -> AntennaCorrelation | None:
+        """Antenna correlations.
 
         Returns:
             Handle to the correlation model.
             :py:obj:`None`, if no model was configured and ideal correlation is assumed.
         """
 
-        return self.__alpha_correlation
+        return self.__antenna_correlation
 
-    @alpha_correlation.setter
-    def alpha_correlation(self, value: AntennaCorrelation | None) -> None:
+    @antenna_correlation.setter
+    def antenna_correlation(self, value: AntennaCorrelation | None) -> None:
         if value is not None:
             value.channel = self
-            value.device = self.alpha_device
 
         self.__alpha_correlation = value
-
-    @property
-    def beta_correlation(self) -> AntennaCorrelation | None:
-        """Antenna correlation at the second device.
-
-        Returns:
-            Handle to the correlation model.
-            :py:obj:`None`, if no model was configured and ideal correlation is assumed.
-        """
-
-        return self.__beta_correlation
-
-    @beta_correlation.setter
-    def beta_correlation(self, value: AntennaCorrelation | None) -> None:
-        if value is not None:
-            value.channel = self
-            value.device = self.beta_device
-
-        self.__beta_correlation = value
-
-    @Channel.alpha_device.setter  # type: ignore
-    def alpha_device(self, value: SimulatedDevice) -> None:
-        Channel.alpha_device.fset(self, value)  # type: ignore
-
-        # Register new device at correlation model
-        if self.alpha_correlation is not None:
-            self.alpha_correlation.device = value
-
-    @Channel.beta_device.setter  # type: ignore
-    def beta_device(self, value: SimulatedDevice) -> None:
-        Channel.beta_device.fset(self, value)  # type: ignore
-
-        # Register new device at correlation model
-        if self.beta_correlation is not None:
-            self.beta_correlation.device = value
 
     def recall_realization(self, group: Group) -> MultipathFadingRealization:
         return MultipathFadingRealization.From_HDF(
@@ -966,7 +921,6 @@ class MultipathFadingChannel(
             self.__nlos_angles_variable,
             self.__los_phases_variable,
             self.__nlos_phases_variable,
-            self.__alpha_correlation,
-            self.__beta_correlation,
+            self.antenna_correlation,
             self.sample_hooks,
         )

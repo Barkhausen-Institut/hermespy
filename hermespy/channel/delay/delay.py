@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from typing import Generic, Set, TypeVar, TYPE_CHECKING
+from typing import Generic, Set, TypeVar
 
 import numpy as np
 from h5py import Group
@@ -17,9 +17,6 @@ from ..channel import (
     ChannelRealization,
     InterpolationMode,
 )
-
-if TYPE_CHECKING:
-    from hermespy.simulation import SimulatedDevice  # pragma: no cover
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -203,37 +200,24 @@ class DelayChannelBase(Generic[DCRT], Channel[DCRT, DelayChannelSample]):
 
     __model_propagation_loss: bool
 
-    def __init__(
-        self,
-        alpha_device: SimulatedDevice | None = None,
-        beta_device: SimulatedDevice | None = None,
-        gain: float = 1.0,
-        model_propagation_loss: bool = True,
-        **kwargs,
-    ) -> None:
+    def __init__(self, model_propagation_loss: bool = True, gain: float = 1.0, **kwargs) -> None:
         """
         Args:
-
-            alpha_device (SimulatedDevice, optional):
-                First device linked by the :class:`.DelayChannelBase` instance that generated this realization.
-
-            beta_device (SimulatedDevice, optional):
-                Second device linked by the :class:`.DelayChannelBase` instance that generated this realization.
-
-            gain (float, optional):
-                Linear power gain factor a signal experiences when being propagated over this realization.
-                :math:`1.0` by default.
 
             model_propagation_loss (bool, optional):
                 Should free space propagation loss be modeled?
                 Enabled by default.
 
-            **kawrgs:
+            gain (float, optional):
+                Linear power gain factor a signal experiences when being propagated over this realization.
+                :math:`1.0` by default.
+
+            \**kawrgs:
                 :class:`Channel` base class initialization arguments.
         """
 
         # Initialize base class
-        Channel.__init__(self, alpha_device, beta_device, gain, **kwargs)
+        Channel.__init__(self, gain, **kwargs)
 
         # Initialize class attributes
         self.__model_propagation_loss = model_propagation_loss

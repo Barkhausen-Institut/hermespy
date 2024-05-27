@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 from collections.abc import Sequence
+from itertools import product
 from sys import maxsize
 from typing import Any, Callable, Dict, List, Mapping, Type
 
@@ -344,7 +345,7 @@ class Simulation(
         return result
 
     def set_channel(
-        self, alpha: int | SimulatedDevice, beta: int | SimulatedDevice, channel: Channel | None
+        self, alpha: SimulatedDevice, beta: SimulatedDevice, channel: Channel | None
     ) -> None:
         """Specify a channel within the channel matrix.
 
@@ -354,10 +355,10 @@ class Simulation(
 
         Args:
 
-            receiver (int | SimulatedDevice):
+            receiver (SimulatedDevice):
                 Index of the receiver within the channel matrix.
 
-            transmitter (int | SimulatedDevice):
+            transmitter (SimulatedDevice):
                 Index of the transmitter within the channel matrix.
 
             channel (Channel | None):
@@ -400,6 +401,13 @@ class Simulation(
 
             dimension_fields.append(dimension_map)
 
+        # Collection channel models
+        channels = []
+        for device_alpha, device_beta in product(node.scenario.devices, node.scenario.devices):
+            channel = node.scenario.channel(device_alpha, device_beta)
+            if channel is not None:
+                channels.append((device_alpha, device_beta, channel))
+
         additional_fields = {
             "noise_model": node.scenario.noise_model,
             "noise_level": node.scenario.noise_level,
@@ -408,7 +416,7 @@ class Simulation(
             "Operators": node.scenario.operators,
             "Evaluators": node.evaluators,
             "Dimensions": dimension_fields,
-            "Channels": node.scenario.channels.flatten().tolist(),
+            "Channels": channels,
         }
 
         return node._mapping_serialization_wrapper(representer, additional_fields=additional_fields)
@@ -433,7 +441,7 @@ class Simulation(
 
         # Pop configuration sections for "special" treatment
         devices: List[SimulatedDevice] = state.pop("Devices", [])
-        channels: List[Channel] = state.pop("Channels", [])
+        channels: list[tuple[SimulatedDevice, SimulatedDevice, Channel]] = state.pop("Channels", [])
         _: List[Operator] = state.pop("Operators", [])
         evaluators: List[Evaluator] = state.pop("Evaluators", [])
         dimensions: Dict[str, Any] | List[Mapping[str, Any]] = state.pop("Dimensions", {})
@@ -449,18 +457,8 @@ class Simulation(
             simulation.scenario.add_device(device)
 
         # Assign channel models
-        for channel in channels:
-            # If the scenario features just a single device, we can infer the transmitter and receiver easily
-            if channel.alpha_device is None or channel.beta_device is None:
-                if simulation.scenario.num_devices > 1:
-                    raise RuntimeError(
-                        "Please specifiy the transmitting and receiving device of each channel in a multi-device scenario"
-                    )
-
-                channel.alpha_device = simulation.scenario.devices[0]
-                channel.beta_device = simulation.scenario.devices[0]
-
-            simulation.scenario.set_channel(channel.alpha_device, channel.beta_device, channel)
+        for device_alpha, device_beta, channel in channels:
+            simulation.scenario.set_channel(device_alpha, device_beta, channel)
 
         # Register evaluators
         for evaluator in evaluators:

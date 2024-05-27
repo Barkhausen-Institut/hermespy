@@ -4,21 +4,20 @@
 import unittest
 from copy import deepcopy
 from itertools import product
-from unittest.mock import Mock, patch, PropertyMock
+from unittest.mock import Mock
 
 import numpy as np
 import numpy.random as rand
-import numpy.testing as npt
 from h5py import File
 from numpy import exp
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 from scipy import stats
 from scipy.constants import pi
 
-from hermespy.channel import DeviceType, MultipathFadingChannel, AntennaCorrelation, CustomAntennaCorrelation, TDL, Exponential, Cost259, StandardAntennaCorrelation, CorrelationType, Cost259Type, TDLType
+from hermespy.channel import MultipathFadingChannel, AntennaCorrelation, CustomAntennaCorrelation, TDL, Exponential, Cost259, StandardAntennaCorrelation, CorrelationType, Cost259Type, TDLType
 from hermespy.channel.channel import LinkState
 from hermespy.channel.fading.fading import MultipathFadingSample
-from hermespy.core import Signal, FloatingError
+from hermespy.core import AntennaMode, Signal, FloatingError
 from hermespy.simulation import SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 from unit_tests.utils import SimulationTestContext
@@ -69,12 +68,11 @@ class TestCustomAntennaCorrelation(unittest.TestCase):
     """Test custom antenna correlation model"""
 
     def setUp(self) -> None:
-        self.device = Mock()
-        self.device.num_antennas = 2
+        self.device = SimulatedDevice()
+        self.device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 1e-2, (2, 1, 1))
         self.covariance = np.identity(2, dtype=complex)
 
         self.correlation = CustomAntennaCorrelation(covariance=self.covariance)
-        self.correlation.device = self.device
 
     def test_init(self) -> None:
         """Initialization parameters should be properly stored as class attributes"""
@@ -101,10 +99,10 @@ class TestCustomAntennaCorrelation(unittest.TestCase):
     def test_covariance_get_validation(self) -> None:
         """Covariance property should raise a RuntimeError if the number of device antennas does not match"""
 
-        self.device.num_antennas = 4
+        self.device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 1e-2, (4, 1, 1))
 
-        with self.assertRaises(RuntimeError):
-            _ = self.correlation.covariance
+        with self.assertRaises(ValueError):
+            _ = self.correlation.sample_covariance(self.device.state(0).antennas, AntennaMode.TX)
 
 
 class TestMultipathFadingSample(unittest.TestCase):
@@ -198,7 +196,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
         self.alpha_device = SimulatedDevice(sampling_rate=self.sampling_rate)
         self.beta_device = SimulatedDevice(sampling_rate=self.sampling_rate)
 
-        self.channel_params = {"gain": self.gain, "delays": self.delays, "power_profile": self.power_profile, "rice_factors": self.rice_factors, "alpha_device": self.alpha_device, "beta_device": self.beta_device, "num_sinusoids": self.num_sinusoids, "los_angle": None, "doppler_frequency": self.doppler_frequency, "los_doppler_frequency": self.los_doppler_frequency, "seed": 42}
+        self.channel_params = {"gain": self.gain, "delays": self.delays, "power_profile": self.power_profile, "rice_factors": self.rice_factors, "num_sinusoids": self.num_sinusoids, "los_angle": None, "doppler_frequency": self.doppler_frequency, "los_doppler_frequency": self.los_doppler_frequency, "seed": 42}
 
         self.num_samples = 100
 
@@ -213,8 +211,6 @@ class TestMultipathFadingChannel(unittest.TestCase):
 
         channel = MultipathFadingChannel(**self.channel_params)
 
-        self.assertIs(self.alpha_device, channel.alpha_device, "Unexpected transmitter parameter initialization")
-        self.assertIs(self.beta_device, channel.beta_device, "Unexpected receiver parameter initialization")
         self.assertEqual(self.gain, channel.gain, "Unexpected gain parameter initialization")
         self.assertEqual(self.num_sinusoids, channel.num_sinusoids)
         self.assertEqual(self.doppler_frequency, channel.doppler_frequency)
@@ -399,7 +395,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
 
         timestamps = np.arange(self.num_samples) / self.sampling_rate
         transmission = exp(1j * timestamps * self.transmit_frequency).reshape(1, self.num_samples)
-        propagation = channel.propagate(Signal.Create(transmission, self.sampling_rate))
+        propagation = channel.propagate(Signal.Create(transmission, self.sampling_rate), self.alpha_device, self.beta_device)
 
         self.assertEqual(10, propagation.num_samples - self.num_samples, "Propagation impulse response has unexpected length")
 
@@ -423,10 +419,10 @@ class TestMultipathFadingChannel(unittest.TestCase):
             delayed_channel = MultipathFadingChannel(**delayed_params)
 
             reference_channel.seed = d
-            reference_propagation = reference_channel.propagate(transmit_signal)
+            reference_propagation = reference_channel.propagate(transmit_signal, self.alpha_device, self.beta_device)
 
             delayed_channel.seed = d
-            delayed_propagation = delayed_channel.propagate(transmit_signal)
+            delayed_propagation = delayed_channel.propagate(transmit_signal, self.alpha_device, self.beta_device)
 
             zero_pads = int(self.sampling_rate * float(delay))
             assert_array_almost_equal(reference_propagation[:, :], delayed_propagation[:, zero_pads:])
@@ -572,10 +568,10 @@ class TestMultipathFadingChannel(unittest.TestCase):
         tx_signal = Signal.Create(tx_samples, self.sampling_rate)
 
         channel_no_gain._rng = np.random.default_rng(42)  # Reset random number rng
-        propagation_no_gain = channel_no_gain.propagate(tx_signal)
+        propagation_no_gain = channel_no_gain.propagate(tx_signal, self.alpha_device, self.beta_device)
 
         channel_gain._rng = np.random.default_rng(42)  # Reset random number rng
-        propagation_gain = channel_gain.propagate(tx_signal)
+        propagation_gain = channel_gain.propagate(tx_signal, self.alpha_device, self.beta_device)
 
         assert_array_almost_equal(propagation_no_gain[:, :] * gain**0.5, propagation_gain[:, :])
 
@@ -587,9 +583,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
 
         uncorrelated_channel = MultipathFadingChannel(**self.channel_params)
 
-        self.channel_params["alpha_correlation"] = MockAntennaCorrelation()
-        self.channel_params["beta_correlation"] = MockAntennaCorrelation()
-
+        self.channel_params["antenna_correlation"] = MockAntennaCorrelation()
         correlated_channel = MultipathFadingChannel(**self.channel_params)
 
         uncorrelated_realization = uncorrelated_channel.realize()
@@ -613,7 +607,6 @@ class TestMultipathFadingChannel(unittest.TestCase):
         channel.alpha_correlation = expected_correlation
 
         self.assertIs(expected_correlation, channel.alpha_correlation)
-        self.assertIs(self.alpha_device, channel.alpha_correlation.device)
 
     def test_beta_correlation_setget(self) -> None:
         """Beta correlation property getter should return setter argument"""
@@ -624,31 +617,6 @@ class TestMultipathFadingChannel(unittest.TestCase):
         channel.beta_correlation = expected_correlation
 
         self.assertIs(expected_correlation, channel.beta_correlation)
-        self.assertIs(self.beta_device, channel.beta_correlation.device)
-
-    def test_alpha_device_setget(self) -> None:
-        """Setting the alpha_device property should update the correlation configuration"""
-
-        channel = MultipathFadingChannel(**self.channel_params)
-        channel.alpha_correlation = Mock()
-        expected_device = Mock()
-
-        channel.alpha_device = expected_device
-
-        self.assertIs(expected_device, channel.alpha_device)
-        self.assertIs(expected_device, channel.alpha_correlation.device)
-
-    def test_beta_device_setget(self) -> None:
-        """Setting the beta device property should update the correlation configuration"""
-
-        channel = MultipathFadingChannel(**self.channel_params)
-        channel.beta_correlation = Mock()
-        expected_device = Mock()
-
-        channel.beta_device = expected_device
-
-        self.assertIs(expected_device, channel.beta_device)
-        self.assertIs(expected_device, channel.beta_correlation.device)
         
     def test_realization_reciprocal_sample(self) -> None:
         """Test reciprocal channel realization"""
@@ -680,27 +648,18 @@ class TestMultipathFadingChannel(unittest.TestCase):
     def test_serialization(self) -> None:
         """Test YAML serialization"""
 
-        with patch("hermespy.channel.fading.fading.MultipathFadingChannel.alpha_device", new=PropertyMock) as transmitter, patch("hermespy.channel.fading.fading.MultipathFadingChannel.beta_device", new=PropertyMock) as receiver:
-            transmitter.return_value = None
-            receiver.return_value = None
-
-            test_yaml_roundtrip_serialization(self, MultipathFadingChannel(**self.channel_params), {"num_outputs", "num_inputs"})
+        test_yaml_roundtrip_serialization(self, MultipathFadingChannel(**self.channel_params), {"num_outputs", "num_inputs"})
 
 
 class TestStandardAntennaCorrelation(unittest.TestCase):
     """Test standard antenna correlation models"""
 
     def setUp(self) -> None:
-        self.device = Mock()
+        self.device = SimulatedDevice()
         self.num_antennas = [1, 2, 4]
 
-        self.correlation = StandardAntennaCorrelation(0, CorrelationType.LOW, device=self.device)
+        self.correlation = StandardAntennaCorrelation(CorrelationType.LOW)
 
-    def test_device_type_setget(self) -> None:
-        """Device type property getter should return setter argument"""
-
-        self.correlation.device_type = DeviceType.BASE_STATION
-        self.assertIs(DeviceType.BASE_STATION, self.correlation.device_type)
 
     def test_correlation_setget(self) -> None:
         """Correlation type property getter should return setter argument"""
@@ -711,15 +670,14 @@ class TestStandardAntennaCorrelation(unittest.TestCase):
         self.correlation.correlation = CorrelationType.MEDIUM
         self.assertIs(CorrelationType.MEDIUM, self.correlation.correlation)
 
-    def test_covariance(self) -> None:
+    def test_sample_covariance(self) -> None:
         """Test covariance matrix generation"""
 
-        for device_type, correlation_type, num_antennas in product(DeviceType, CorrelationType, self.num_antennas):
-            self.device.num_antennas = num_antennas
-            self.correlation.device_type = device_type
+        for correlation_type, num_antennas in product(CorrelationType, self.num_antennas):
+            self.device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 1e-2, (num_antennas, 1, 1))
             self.correlation.correlation = correlation_type
 
-            covariance = self.correlation.covariance
+            covariance = self.correlation.sample_covariance(self.device, AntennaMode.TX)
 
             self.assertCountEqual([num_antennas, num_antennas], covariance.shape)
             self.assertTrue(np.allclose(covariance, covariance.T.conj()))  # Hermitian check
@@ -728,12 +686,8 @@ class TestStandardAntennaCorrelation(unittest.TestCase):
         """Covariance matrix generation should exceptions on invalid parameters"""
 
         with self.assertRaises(RuntimeError):
-            self.device.num_antennas = 5
-            _ = self.correlation.covariance
-
-        with self.assertRaises(FloatingError):
-            self.correlation.device = None
-            _ = self.correlation.covariance
+            self.device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 1e-2, (5, 1, 1))
+            _ = self.correlation.sample_covariance(self.device, AntennaMode.TX)
 
 
 class TestCost259(unittest.TestCase):
@@ -753,10 +707,8 @@ class TestCost259(unittest.TestCase):
         """Test the template initializations."""
 
         for model_type in Cost259Type:
-            channel = Cost259(model_type=model_type, alpha_device=self.alpha_device, beta_device=self.beta_device)
-
-            self.assertIs(self.alpha_device, channel.alpha_device)
-            self.assertIs(self.beta_device, channel.beta_device)
+            channel = Cost259(model_type=model_type)
+            self.assertIs(model_type, channel.model_type)
 
     def test_init_validation(self) -> None:
         """Template initialization should raise ValueError on invalid model type."""
@@ -777,11 +729,7 @@ class TestCost259(unittest.TestCase):
     def test_serialization(self) -> None:
         """Test YAML serialization"""
 
-        with patch("hermespy.channel.fading.cost259.Cost259.alpha_device", new=PropertyMock) as alpha_device, patch("hermespy.channel.fading.cost259.Cost259.beta_device", new=PropertyMock) as beta_device:
-            alpha_device.return_value = self.alpha_device
-            beta_device.return_value = self.beta_device
-
-            test_yaml_roundtrip_serialization(self, Cost259(Cost259Type.HILLY), {"num_outputs", "num_inputs"})
+        test_yaml_roundtrip_serialization(self, Cost259(Cost259Type.HILLY), {"num_outputs", "num_inputs"})
 
 
 class Test5GTDL(unittest.TestCase):
@@ -802,10 +750,8 @@ class Test5GTDL(unittest.TestCase):
         """Test the template initializations."""
 
         for model_type in TDLType:
-            channel = TDL(model_type=model_type, alpha_device=self.alpha_device, beta_device=self.beta_device)
-
-            self.assertIs(self.alpha_device, channel.alpha_device)
-            self.assertIs(self.beta_device, channel.beta_device)
+            channel = TDL(model_type=model_type)
+            self.assertIs(model_type, channel.model_type)
 
     def test_init_validation(self) -> None:
         """Template initialization should raise ValueError on invalid model type."""
@@ -832,13 +778,8 @@ class Test5GTDL(unittest.TestCase):
     def test_serialization(self) -> None:
         """Test YAML serialization"""
 
-        channel = TDL(model_type=TDLType.B, alpha_device=self.alpha_device, beta_device=self.beta_device)
-
-        with patch("hermespy.channel.fading.tdl.TDL.alpha_device", new=PropertyMock) as alpha_device, patch("hermespy.channel.fading.tdl.TDL.beta_device", new=PropertyMock) as beta_device:
-            alpha_device.return_value = self.alpha_device
-            beta_device.return_value = self.beta_device
-
-            test_yaml_roundtrip_serialization(self, channel, {"num_outputs", "num_inputs"})
+        channel = TDL(model_type=TDLType.B)
+        test_yaml_roundtrip_serialization(self, channel, {"num_outputs", "num_inputs"})
 
 
 class TestExponential(unittest.TestCase):

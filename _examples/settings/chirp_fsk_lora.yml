@@ -28,24 +28,17 @@ Devices:
 
 # Channel models between devices
 Channels:
+  - # Rayleigh fading between on the device self-interfernce channel
+    - *transmitting_device
+    - *receiving_device
+    - !<MultipathFading>
+      delays: [ 0 ]           # Delay of the channel in seconds
+      power_profile: [ 0 ] dB # Tap gains
+      rice_factors: [ .inf ]
 
-  # Rayleigh fading between on the device self-interfernce channel
-  - !<MultipathFading>
-    devices: [*transmitting_device, *receiving_device]
-    delays: [ 0 ]           # Delay of the channel in seconds
-    power_profile: [ 0 ] dB # Tap gains
-    rice_factors: [ .inf ]
-
-    # Configure 3GPP standard antenna correlation models at both linked devices
-    alpha_correlation: !<StandardCorrelation>
-
-        device_type: BASE_STATION
-        correlation: LOW
-
-    beta_correlation: !<StandardCorrelation>
-      
-        device_type: TERMINAL
-        correlation: MEDIUM
+      # Configure 3GPP standard antenna correlation models at both linked devices
+      antenna_correlation: !<StandardCorrelation>
+          correlation: MEDIUM
 
 
 # Operators transmitting or receiving signals over the devices

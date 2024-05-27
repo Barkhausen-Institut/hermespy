@@ -32,7 +32,7 @@ class TestSCMatchedFilterJcas(TestCase):
 
         self.target_range = 5
         self.max_range = 10
-        self.channel = SingleTargetRadarChannel(target_range=self.target_range, alpha_device=self.device, beta_device=self.device, radar_cross_section=1.0)
+        self.channel = SingleTargetRadarChannel(target_range=self.target_range, radar_cross_section=1.0)
 
         self.oversampling_factor = 16
 
@@ -52,7 +52,7 @@ class TestSCMatchedFilterJcas(TestCase):
             transmission = self.device.transmit()
 
             # Propagate signal over the radar channel
-            propagation = self.channel.propagate(transmission)
+            propagation = self.channel.propagate(transmission, self.device, self.device)
 
             # Receive signal
             self.device.receive(propagation)
