@@ -81,6 +81,10 @@ class QuadrigaChannelSample(ChannelSample):
 
         return self.__path_delays
 
+    @property
+    def expected_energy_scale(self) -> float:
+        return self.__gain * float(np.sum(self.__path_gains))
+
     def _propagate(self, signal: SignalBlock, interpolation: InterpolationMode) -> SignalBlock:
         max_delay_in_samples = int(np.round(np.max(self.path_delays) * self.bandwidth))
         propagated_signal = np.zeros(

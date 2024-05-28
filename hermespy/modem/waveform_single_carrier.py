@@ -832,7 +832,6 @@ class RootRaisedCosineWaveform(RolledOffSingleCarrierWaveform, Serializable):
                 )
             )
         impulse_response[idx_0_by_0] = 1 + self.roll_off * (4 / np.pi - 1)
-
         return impulse_response / np.linalg.norm(impulse_response)
 
 

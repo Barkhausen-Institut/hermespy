@@ -310,6 +310,16 @@ class ChannelSample(object):
 
         return self.__state.time
 
+    @property
+    @abstractmethod
+    def expected_energy_scale(self) -> float:
+        """Expected linear scaling of a propagated signal's energy at each receiving antenna.
+
+        Required to compute the expected energy of a signal after propagation,
+        and therfore signal-to-noise ratios (SNRs) and signal-to-interference-plus-noise ratios (SINRs).
+        """
+        ...  # pragma: no cover
+
     @abstractmethod
     def _propagate(self, signal: SignalBlock, interpolation: InterpolationMode) -> SignalBlock:
         """Propagate radio-frequency band signals over a channel instance.
@@ -647,7 +657,6 @@ class Channel(ABC, RandomNode, Serializable, Generic[CRT, CST]):
 
     __scenario: SimulationScenario
     __gain: float
-    __interpolation_mode: InterpolationMode
     __sample_hooks: Set[ChannelSampleHook[CST]]
 
     def __init__(self, gain: float = 1.0, seed: Optional[int] = None) -> None:
@@ -655,7 +664,7 @@ class Channel(ABC, RandomNode, Serializable, Generic[CRT, CST]):
         Args:
 
             gain (float, optional):
-                Linear channel power gain factor.
+                Linear channel energy gain factor.
                 Initializes the :meth:`gain<gain>` property.
                 :math:`1.0` by default.
 

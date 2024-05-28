@@ -274,9 +274,13 @@ class MultipathFadingSample(ChannelSample):
 
     @property
     def gain(self) -> float:
-        """Linear power gain factor a signal experiences when being propagated over this realization."""
+        """Linear energy gain factor a signal experiences when being propagated over this realization."""
 
         return self.__gain
+
+    @property
+    def expected_energy_scale(self) -> float:
+        return self.gain * np.sum(self.power_profile)
 
     def __path_impulse_generator(
         self, num_samples: int
@@ -311,27 +315,22 @@ class MultipathFadingSample(ChannelSample):
             self.nlos_phases,
         ):
 
-            impulse = (
-                nlos_gain
-                * (num_sinusoids**-0.5)
-                * np.sum(
-                    exp(
-                        1j
-                        * np.outer(
-                            nlos_time,
-                            np.cos((2 * pi * n + nlos_angles + nlos_phases) / num_sinusoids),
-                        )
-                    ),
-                    axis=1,
-                    keepdims=False,
-                )
+            impulse = nlos_gain * np.sum(
+                np.exp(
+                    1j
+                    * (
+                        np.outer(nlos_time, np.cos((2 * pi * n + nlos_angles) / num_sinusoids))
+                        + nlos_phases[None, :]
+                    )
+                ),
+                axis=1,
+                keepdims=False,
             )
 
             # Add the specular component
             impulse += los_gain * exp(1j * (los_time * cos(los_angle) + los_phase))
 
             # Scale by the overall path power
-            # ToDo: Check if the normalization by the number of paths is correct
             impulse *= (self.gain * power) ** 0.5
             yield impulse, delay
 
@@ -475,9 +474,9 @@ class MultipathFadingRealization(ChannelRealization[MultipathFadingSample]):
             if isinstance(self.__los_angles_variable, float)
             else 2 * np.pi * self.__los_angles_variable.sample(consistent_sample)
         )
-        nlos_angles = 2 * np.pi * self.__path_angles_variable.sample(consistent_sample)
-        los_phases = 2 * np.pi * self.__los_phases_variable.sample(consistent_sample)
-        nlos_phases = 2 * np.pi * self.__path_phases_variable.sample(consistent_sample)
+        nlos_angles = -np.pi + 2 * np.pi * self.__path_angles_variable.sample(consistent_sample)
+        los_phases = -np.pi + 2 * np.pi * self.__los_phases_variable.sample(consistent_sample)
+        nlos_phases = -np.pi + 2 * np.pi * self.__path_phases_variable.sample(consistent_sample)
 
         return MultipathFadingSample(
             self.__power_profile,
@@ -693,7 +692,7 @@ class MultipathFadingChannel(
         self.__power_profile = self.__power_profile[sorting]
         self.__rice_factors = self.__rice_factors[sorting]
         self.__num_sinusoids = 20 if num_sinusoids is None else num_sinusoids
-        self.los_angle = self._rng.uniform(0, 2 * pi) if los_angle is None else los_angle
+        self.los_angle = self._rng.uniform(-pi, pi) if los_angle is None else los_angle
         self.doppler_frequency = 0.0 if doppler_frequency is None else doppler_frequency
         self.__los_doppler_frequency = None
 
