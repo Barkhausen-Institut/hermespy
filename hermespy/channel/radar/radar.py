@@ -85,6 +85,10 @@ class RadarChannelSample(ChannelSample):
 
         return self.__gain
 
+    @property
+    def expected_energy_scale(self) -> float:
+        return self.__gain  # ToDo: Consider the energy scale of the paths
+
     def _propagate(self, signal: SignalBlock, interpolation: InterpolationMode) -> SignalBlock:
         delays = np.array(
             [

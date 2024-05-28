@@ -4,6 +4,7 @@ from copy import deepcopy
 from unittest import TestCase
 
 import numpy as np
+from numpy.testing import assert_array_almost_equal
 
 from hermespy.channel import Channel, IdealChannel, TDL, Cost259, RandomDelayChannel, TDLType, UrbanMicrocells
 from hermespy.core import Transformation
@@ -90,20 +91,20 @@ class _TestLinksBase(TestCase):
         channel.seed = 42
         self.link.seed = 42
 
-        device_transmission = self.tx_device.transmit()
+
+        self.device_transmission = self.tx_device.transmit()
         channel_realization = channel.realize()
-        channel_sample = channel_realization.sample(self.tx_device, self.rx_device)
-        channel_propagation = channel_sample.propagate(device_transmission)
+        self.channel_sample = channel_realization.sample(self.tx_device, self.rx_device)
+        channel_propagation = self.channel_sample.propagate(self.device_transmission)
         self.rx_device.process_input(channel_propagation)
-        link_reception = self.link.receive()
+        self.link_reception = self.link.receive()
 
         # Debug:
         #
-        link_transmission = device_transmission.operator_transmissions[0]
-        tx = link_transmission.signal
-        state = channel_sample.state(tx.num_samples, tx.num_samples)
-        rx_prediction = state.propagate(tx)
-        return
+        # link_transmission = device_transmission.operator_transmissions[0]
+        # tx = link_transmission.signal
+        # state = self.channel_sample.state(tx.num_samples, tx.num_samples)
+        # rx_prediction = state.propagate(tx)
 
     # =======================
     # Waveform configurations
@@ -115,7 +116,7 @@ class _TestLinksBase(TestCase):
         Returns: The configured waveform.
         """
 
-        waveform = RootRaisedCosineWaveform(symbol_rate=1 / 10e-6, num_preamble_symbols=10, num_data_symbols=40, pilot_rate=10, oversampling_factor=8, roll_off=0.9)
+        waveform = RootRaisedCosineWaveform(symbol_rate=1 / 10e-6, num_preamble_symbols=10, num_data_symbols=160, pilot_rate=10, oversampling_factor=8, roll_off=0.9)
         waveform.synchronization = SingleCarrierCorrelationSynchronization()
         waveform.channel_estimation = SingleCarrierIdealChannelEstimation(channel, self.tx_device, self.rx_device)
         waveform.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
@@ -282,7 +283,7 @@ class _TestLinksBase(TestCase):
         Returns: The configured channel.
         """
 
-        channel = Cost259(gain=0.9, doppler_frequency=self._doppler_frequency)
+        channel = Cost259(gain=1.0, doppler_frequency=self._doppler_frequency, num_sinusoids=100)
         return channel
 
     def __configure_5GTDL_channel(self) -> TDL:
@@ -319,20 +320,28 @@ class _TestLinksBase(TestCase):
     # =======================
 
     def __assert_link(self) -> None:
+        
+        # Test bit error rates
         ber_treshold = 1e-2
+        
+        # Test signal powers
+        # transmitted_power = self.device_transmission.emerging_signals[0].power
+        # expected_transmit_power = self.link.power
+
         self.assertGreaterEqual(ber_treshold, self.ber.evaluate().artifact().to_scalar())
+        # assert_array_almost_equal(expected_transmit_power * np.ones_like(transmitted_power), transmitted_power, 1, "Transmitted waveform's power does not match expectations")
 
     def test_ideal_channel_chirp_fsk(self) -> None:
         """Verify a valid SISO link over an ideal channel with chirp frequency shift keying modulation"""
 
         self.__configure_chirp_fsk_waveform()
-        self.__propagate(IdealChannel())
+        self.__propagate(IdealChannel(.9))
         self.__assert_link()
 
     def test_ideal_channel_single_carrier(self) -> None:
         """Verify a valid SISO link over an ideal channel with single carrier modulation"""
 
-        channel = IdealChannel()
+        channel = IdealChannel(.9)
         self.__configure_single_carrier_waveform(channel)
         self.__propagate(channel)
         self.__assert_link()
@@ -341,7 +350,7 @@ class _TestLinksBase(TestCase):
         """Verify a valid SISO link over an ideal channel with OCDM modulation,
         least-squares channel estimation and zero-forcing equalization"""
 
-        channel = IdealChannel()
+        channel = IdealChannel(.9)
         self.__configure_ocdm_waveform(channel)
         self.__propagate(channel)
         self.__assert_link()
@@ -349,7 +358,7 @@ class _TestLinksBase(TestCase):
     def test_ideal_channel_ofdm(self) -> None:
         """Verify a valid SISO link over an ideal channel OFDM modulation"""
 
-        channel = IdealChannel()
+        channel = IdealChannel(.9)
         self.__configure_ofdm_waveform(channel)
         self.__propagate(channel)
         self.__assert_link()
@@ -358,7 +367,7 @@ class _TestLinksBase(TestCase):
         """Verify a valid SISO link over an ideal channel with OFDM modulation,
         least-squares channel estimation and zero-forcing equalization"""
 
-        channel = IdealChannel()
+        channel = IdealChannel(.9)
         waveform = self.__configure_ofdm_waveform(channel)
         waveform.channel_estimation = OrthogonalLeastSquaresChannelEstimation()
         waveform.channel_equalization = OrthogonalZeroForcingChannelEqualization()
@@ -370,7 +379,7 @@ class _TestLinksBase(TestCase):
         """Verify a valid link over an AWGN channel with OFDM modluation,
         Schmidl-Cox synchronization, least-squares channel estimation and zero-forcing equalization"""
 
-        channel = IdealChannel()
+        channel = IdealChannel(.9)
         waveform = self.__configure_ofdm_waveform(channel)
         waveform.pilot_section = SchmidlCoxPilotSection()
         waveform.synchronization = SchmidlCoxSynchronization()
@@ -383,7 +392,7 @@ class _TestLinksBase(TestCase):
     def test_ideal_channel_otfs_ls_zf(self) -> None:
         """Verify a valid SISO link over an ideal channel with OTFS modulation"""
 
-        channel = IdealChannel()
+        channel = IdealChannel(.9)
         self.__configure_otfs_waveform(channel)
         self.__propagate(channel)
         self.__assert_link()

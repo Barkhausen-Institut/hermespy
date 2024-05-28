@@ -4,6 +4,7 @@ from __future__ import annotations
 from abc import abstractmethod
 
 from hermespy.core import Device, ScalarDimension, Transmitter, Receiver, Serializable
+from hermespy.channel import Channel, ChannelSample
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -132,12 +133,22 @@ class SNR(NoiseLevel):
     yaml_tag = "SNR"
     __snr: float
     __reference: Device | Transmitter | Receiver
+    __expected_channel_scale: float
 
-    def __init__(self, snr: float, reference: Device | Transmitter | Receiver) -> None:
+    def __init__(
+        self, snr: float, reference: Device | Transmitter | Receiver, channel: Channel | None = None
+    ) -> None:
         """
         Args:
-            snr (float): Signal-to-noise ratio.
-            reference (Device |Transmitter | Receiver): Reference of the noise level.
+            snr (float):
+                Expected signal-to-noise ratio.
+
+            reference (Device |Transmitter | Receiver):
+                Reference of the noise level, i.e. with which power / energy was the signal generated.
+
+            channel (Channel, optional):
+                Channel instance over which the signal was propagated.
+                For channel models that consider propagation losses the noise power is scaled accordingly.
         """
 
         # Initialize base class
@@ -146,6 +157,19 @@ class SNR(NoiseLevel):
         # Initialize class attributes
         self.snr = snr
         self.reference = reference
+        self.__expected_channel_scale = 1.0
+
+        if channel is not None:
+            channel.add_sample_hook(self.__update_expected_channel_scale)
+
+    def __update_expected_channel_scale(self, sample: ChannelSample) -> None:
+        """Update the expected channel scale.
+
+        Args:
+            sample (ChannelSample): Channel sample.
+        """
+
+        self.__expected_channel_scale = sample.expected_energy_scale
 
     @property
     def level(self) -> float:
@@ -162,7 +186,7 @@ class SNR(NoiseLevel):
         self.snr = value
 
     def get_power(self) -> float:
-        return self.reference.power / self.snr
+        return self.reference.power / self.snr * self.__expected_channel_scale
 
     @property
     def title(self) -> str:
