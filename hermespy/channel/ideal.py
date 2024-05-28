@@ -49,6 +49,10 @@ class IdealChannelSample(ChannelSample):
         # Initialize class attributes
         self.__gain = gain
 
+    @property
+    def expected_energy_scale(self) -> float:
+        return self.__gain
+
     def state(
         self,
         num_samples: int,

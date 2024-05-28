@@ -17,8 +17,8 @@ from scipy.constants import pi
 from hermespy.channel import MultipathFadingChannel, AntennaCorrelation, CustomAntennaCorrelation, TDL, Exponential, Cost259, StandardAntennaCorrelation, CorrelationType, Cost259Type, TDLType
 from hermespy.channel.channel import LinkState
 from hermespy.channel.fading.fading import MultipathFadingSample
-from hermespy.core import AntennaMode, Signal, FloatingError
-from hermespy.simulation import SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
+from hermespy.core import AntennaMode, Signal, DenseSignal, Transformation
+from hermespy.simulation import StaticTrajectory, SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 from unit_tests.utils import SimulationTestContext
 from unit_tests.utils import assert_signals_equal
@@ -573,7 +573,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
         channel_gain._rng = np.random.default_rng(42)  # Reset random number rng
         propagation_gain = channel_gain.propagate(tx_signal, self.alpha_device, self.beta_device)
 
-        assert_array_almost_equal(propagation_no_gain[:, :] * gain**0.5, propagation_gain[:, :])
+        assert_array_almost_equal(propagation_no_gain[:, :] * gain ** .5, propagation_gain[:, :])
 
     def test_antenna_correlation(self) -> None:
         """Test channel simulation with antenna correlation modeling"""
@@ -694,15 +694,11 @@ class TestCost259(unittest.TestCase):
     """Test the Cost256 template for the multipath fading channel model."""
 
     def setUp(self) -> None:
-        self.alpha_device = Mock()
-        self.beta_device = Mock()
-        self.alpha_device.antennas.num_antennas = 1
-        self.beta_device.antennas.num_antennas = 1
-        self.alpha_device.position = np.array([100, 0, 0])
-        self.beta_device.position = np.array([0, 100, 0])
-        self.alpha_device.orientation = np.array([0, 0, 0])
-        self.beta_device.orientation = np.array([0, 0, pi])
-
+        self.sampling_rate = 10e6
+        self.carrier_frequency = 2.4e8
+        self.alpha_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, sampling_rate=self.sampling_rate, pose=StaticTrajectory(Transformation.From_Translation(np.array([100, 0, 0]))))
+        self.beta_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, sampling_rate=self.sampling_rate, pose=StaticTrajectory(Transformation.From_Translation(np.array([100, 0, 0]))))
+    
     def test_init(self) -> None:
         """Test the template initializations."""
 
@@ -725,6 +721,27 @@ class TestCost259(unittest.TestCase):
         for model_type in Cost259Type:
             channel = Cost259(model_type)
             self.assertEqual(model_type, channel.model_type)
+            
+    def test_expected_scale(self) -> None:
+        """Test the expected amplitude scaling"""
+        
+        model = Cost259(Cost259Type.HILLY, doppler_frequency=10.0, seed=42)
+        unit_energy_signal = DenseSignal(np.ones((self.alpha_device.num_transmit_antennas, 100)) / 10, self.sampling_rate, self.carrier_frequency)
+        num_attempts = 1000
+        
+        cumulated_propagated_energy = np.zeros((self.beta_device.num_receive_antennas), dtype=np.float_)
+        cumulated_expected_scale = 0.0
+        for _ in range(num_attempts):
+            realization = model.realize()
+            sample = realization.sample(self.alpha_device, self.beta_device)
+            propagated_signal = sample.propagate(unit_energy_signal)
+            cumulated_propagated_energy += propagated_signal.energy
+            cumulated_expected_scale += sample.expected_energy_scale
+            
+        mean_propagated_energy = cumulated_propagated_energy / num_attempts
+        mean_expected_energy = (cumulated_expected_scale / num_attempts) ** 2
+        
+        self.assertAlmostEqual(mean_propagated_energy, mean_expected_energy, delta=1e-1)
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""
@@ -737,14 +754,11 @@ class Test5GTDL(unittest.TestCase):
 
     def setUp(self) -> None:
         self.rms_delay = 1e-6
-        self.alpha_device = Mock()
-        self.beta_device = Mock()
-        self.alpha_device.antennas.num_antennas = 1
-        self.beta_device.antennas.num_antennas = 1
-        self.alpha_device.position = np.array([100, 0, 0])
-        self.beta_device.position = np.array([0, 100, 0])
-        self.alpha_device.orientation = np.array([0, 0, 0])
-        self.beta_device.orientation = np.array([0, 0, pi])
+        self.sampling_rate = 10e6
+        self.carrier_frequency = 2.4e8
+        self.alpha_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, sampling_rate=self.sampling_rate, pose=StaticTrajectory(Transformation.From_Translation(np.array([100, 0, 0]))))
+        self.beta_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, sampling_rate=self.sampling_rate, pose=StaticTrajectory(Transformation.From_Translation(np.array([100, 0, 0]))))
+    
 
     def test_init(self) -> None:
         """Test the template initializations."""
@@ -774,6 +788,27 @@ class Test5GTDL(unittest.TestCase):
         for model_type in TDLType:
             channel = TDL(model_type=model_type)
             self.assertEqual(model_type, channel.model_type)
+            
+    def test_expected_scale(self) -> None:
+        """Test the expected amplitude scaling"""
+        
+        model = TDL(model_type=TDLType.E, doppler_frequency=10.0, seed=42)
+        unit_energy_signal = DenseSignal(np.ones((self.alpha_device.num_transmit_antennas, 100)) / 10, self.sampling_rate, self.carrier_frequency)
+        num_attempts = 1000
+        
+        cumulated_propagated_energy = np.zeros((self.beta_device.num_receive_antennas), dtype=np.float_)
+        cumulated_expected_scale = 0.0
+        for _ in range(num_attempts):
+            realization = model.realize()
+            sample = realization.sample(self.alpha_device, self.beta_device)
+            propagated_signal = sample.propagate(unit_energy_signal)
+            cumulated_propagated_energy += propagated_signal.energy
+            cumulated_expected_scale += sample.expected_energy_scale
+            
+        mean_propagated_energy = cumulated_propagated_energy / num_attempts
+        mean_expected_energy = (cumulated_expected_scale / num_attempts) ** 2
+        
+        self.assertAlmostEqual(mean_propagated_energy, mean_expected_energy, delta=1e-1)
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""
@@ -788,8 +823,12 @@ class TestExponential(unittest.TestCase):
     def setUp(self) -> None:
         self.tap_interval = 1e-5
         self.rms_delay = 1e-8
-
         self.channel = Exponential(tap_interval=self.tap_interval, rms_delay=self.rms_delay)
+
+        self.sampling_rate = 10e6
+        self.carrier_frequency = 2.4e8
+        self.alpha_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, sampling_rate=self.sampling_rate, pose=StaticTrajectory(Transformation.From_Translation(np.array([100, 0, 0]))))
+        self.beta_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, sampling_rate=self.sampling_rate, pose=StaticTrajectory(Transformation.From_Translation(np.array([100, 0, 0]))))
 
     def test_init(self) -> None:
         """Initialization arguments should be properly parsed."""
@@ -803,6 +842,27 @@ class TestExponential(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             _ = Exponential(1.0, 0.0)
+            
+    def test_expected_scale(self) -> None:
+        """Test the expected amplitude scaling"""
+        
+        unit_energy_signal = DenseSignal(np.ones((self.alpha_device.num_transmit_antennas, 100)) / 10, self.sampling_rate, self.carrier_frequency)
+        num_attempts = 1000
+        
+        cumulated_propagated_energy = np.zeros((self.beta_device.num_receive_antennas), dtype=np.float_)
+        cumulated_expected_scale = 0.0
+        for _ in range(num_attempts):
+            realization = self.channel.realize()
+            sample = realization.sample(self.alpha_device, self.beta_device)
+            propagated_signal = sample.propagate(unit_energy_signal)
+            cumulated_propagated_energy += propagated_signal.energy
+            cumulated_expected_scale += sample.expected_energy_scale
+            
+        mean_propagated_energy = cumulated_propagated_energy / num_attempts
+        mean_expected_energy = (cumulated_expected_scale / num_attempts) ** 2
+        
+        self.assertAlmostEqual(mean_propagated_energy, mean_expected_energy, delta=1e-1)
+
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""
