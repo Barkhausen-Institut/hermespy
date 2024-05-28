@@ -392,6 +392,10 @@ class ClusterDelayLineSample(ChannelSample):
 
         return self.__delay_offset
 
+    @property
+    def expected_energy_scale(self) -> float:
+        return float(np.sum(self.cluster_powers))
+
     def __ray_impulse_generator(
         self, sampling_rate: float, num_samples: int, center_frequency: float
     ) -> Generator[Tuple[np.ndarray, np.ndarray, float], None, None]:

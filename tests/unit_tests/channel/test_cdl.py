@@ -284,6 +284,26 @@ class TestClusterDelayLine(TestCase):
             sample: ClusterDelayLineSample = realization.sample(self.alpha_device, self.beta_device)
             self._test_propagation(sample)
             
+    def test_expected_scale(self) -> None:
+        """Test the expected amplitude scaling"""
+        
+        unit_energy_signal = DenseSignal(np.ones((self.alpha_device.num_transmit_antennas, 100)) / 10, self.bandwidth, self.carrier_frequency)
+        num_attempts = 100
+        
+        cumulated_propagated_energy = np.zeros((self.beta_device.num_receive_antennas), dtype=np.float_)
+        cumulated_expected_scale = 0.0
+        for _ in range(num_attempts):
+            realization = self.model.realize()
+            sample = realization.sample(self.alpha_device, self.beta_device)
+            propagated_signal = sample.propagate(unit_energy_signal)
+            cumulated_propagated_energy += propagated_signal.energy
+            cumulated_expected_scale += sample.expected_energy_scale
+            
+        mean_propagated_energy = cumulated_propagated_energy / num_attempts
+        mean_expected_energy = (cumulated_expected_scale / num_attempts) ** 2
+        
+        self.assertAlmostEqual(mean_propagated_energy, mean_expected_energy, delta=1e-1)
+    
     def test_propagation_time_of_flight(self) -> None:
         """Test time of flight delay simulation"""
         

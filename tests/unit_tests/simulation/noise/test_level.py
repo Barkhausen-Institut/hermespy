@@ -4,7 +4,11 @@ from abc import ABC, abstractmethod
 from unittest import TestCase
 from unittest.mock import patch, PropertyMock
 
-from hermespy.simulation import NoiseLevel, N0, SimulatedDevice, SNR
+import numpy as np
+
+from hermespy.core import DenseSignal, SignalReceiver
+from hermespy.simulation import NoiseLevel, N0, SimulatedDevice, SNR, AWGN
+from hermespy.channel import IdealChannel
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
@@ -124,5 +128,32 @@ class TestSNR(_TestNoiseLevel):
             mock_power.return_value = reference_power
             self.assertEqual(reference_power / self.level.snr, self.level.get_power())
 
+    def test_power_scaling(self) -> None:
+        """Power should be scaled by the expected channel scale"""
+
+        num_samples = 10000
+        sampling_rate = 1e8
+        expected_energy_scale = 0.5
+        channel = IdealChannel(expected_energy_scale)
+        tx_device = self.reference
+        tx_device.sampling_rate = sampling_rate
+        rx_device = SimulatedDevice(sampling_rate=sampling_rate)
+        rx_device.noise_model = AWGN(seed=42)
+        
+        rx_dsp = SignalReceiver(num_samples, sampling_rate)
+        rx_dsp.device = rx_device
+        
+        noise_level = SNR(1.5, tx_device, channel)
+        rx_device.noise_level = noise_level
+        
+        unit_power_signal = DenseSignal(np.ones(num_samples), sampling_rate, 0)
+        
+        propagated_signal = channel.propagate(unit_power_signal, tx_device, rx_device)
+        rx_device.receive(propagated_signal)
+        
+        expected_received_power = (unit_power_signal.power * (1 + 1/noise_level.snr)) * expected_energy_scale
+        received_power = rx_dsp.signal.power[0]
+        self.assertAlmostEqual(expected_received_power, received_power, delta=.1)
+        
 
 del _TestNoiseLevel

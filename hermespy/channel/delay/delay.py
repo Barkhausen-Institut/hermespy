@@ -65,6 +65,10 @@ class DelayChannelSample(ChannelSample):
 
         return self.__gain
 
+    @property
+    def expected_energy_scale(self) -> float:
+        return self.__path_gain(self.carrier_frequency)
+
     def __spatial_response(self) -> np.ndarray:
 
         receiver_position = self.receiver_state.position
