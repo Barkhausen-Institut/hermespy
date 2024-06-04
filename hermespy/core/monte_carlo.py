@@ -15,6 +15,7 @@ from typing import (
     Callable,
     Generic,
     List,
+    Mapping,
     Optional,
     Type,
     TypeVar,
@@ -46,10 +47,10 @@ from .logarithmic import LogarithmicSequence, ValueType
 from .visualize import PlotVisualization, VAT, Visualizable, VT
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -1144,6 +1145,12 @@ class SampleGrid(object):
         return iter(self.__sections.flat)
 
 
+class UnmatchableException(Exception):
+    """An exception that can never get caught."""
+
+    ...
+
+
 class MonteCarloActor(Generic[MO]):
     """Monte Carlo Simulation Actor.
 
@@ -1157,11 +1164,13 @@ class MonteCarloActor(Generic[MO]):
     __evaluators: Sequence[
         Evaluator
     ]  # Evaluators used to process the investigated object sample state
+    __stage_arguments: Mapping[str, Sequence[tuple]]
 
     def __init__(
         self,
         argument_tuple: Tuple[MO, Sequence[GridDimension], Sequence[Evaluator]],
         index: int,
+        stage_arguments: Mapping[str, Sequence[tuple]] | None = None,
         catch_exceptions: bool = True,
     ) -> None:
         """
@@ -1175,10 +1184,19 @@ class MonteCarloActor(Generic[MO]):
             index (int):
                 Global index of the actor.
 
+            stage_arguments (Mapping[str, Sequence[Tuple]], optional):
+                Arguments for the simulation stages.
+
             catch_exceptions (bool, optional):
                 Catch exceptions during run.
                 Enabled by default.
         """
+
+        # Assert that stage arguments are valid
+        _stage_arguments = dict() if stage_arguments is None else stage_arguments
+        for stage_key in _stage_arguments:
+            if stage_key not in self.stage_identifiers():
+                raise ValueError(f"Invalid stage identifier in stage arguments {stage_key}")
 
         investigated_object = argument_tuple[0]
         grid = argument_tuple[1]
@@ -1192,6 +1210,7 @@ class MonteCarloActor(Generic[MO]):
         self.__stage_identifiers = self.stage_identifiers()
         self.__stage_executors = self.stage_executors()
         self.__num_stages = len(self.__stage_executors)
+        self.__stage_arguments = _stage_arguments
 
     @property
     def _investigated_object(self) -> MO:
@@ -1202,6 +1221,31 @@ class MonteCarloActor(Generic[MO]):
         """
 
         return self.__investigated_object  # pragma: no cover
+
+    def __execute_stages(self, start: int, stop: int, artifacts: list[list[Artifact]]) -> None:
+        """Recursive subroutine of run, collecting artifacts from the simulation stage parametrizations.
+
+        Args:
+
+            start (int): Index of the first stage to be executed
+            stop (int): Index of the last stage to be executed
+        """
+
+        # Abort and collect artifacts if the end of the stage list is reached
+        if start > stop:
+            artifacts.append([evaluator.evaluate().artifact() for evaluator in self.__evaluators])
+            return
+
+        # Execute the next stage
+        stage_identifier = self.__stage_identifiers[start]
+        stage_executor = self.__stage_executors[start]
+        stage_arguments = self.__stage_arguments.get(stage_identifier, [tuple()])
+        for arguments in stage_arguments:
+            # Execute the stage with the provided arguments
+            stage_executor(*arguments)
+
+            # Proceed to the next stage
+            self.__execute_stages(start + 1, stop, artifacts)
 
     def run(self, program: List[Tuple[int, ...]]) -> ActorRunResult:
         """Run the simulation actor.
@@ -1267,26 +1311,18 @@ class MonteCarloActor(Generic[MO]):
                 if last_impact <= 0:
                     last_impact = self.__num_stages - 1
 
-                # Execute impacted simulation stages
-                # Note that for the first grid_section all stages are executed
-                for stage in self.__stage_executors[first_impact : 1 + last_impact]:
-                    stage()
-
-                # Collect evaluation artifacts
-                artifacts = [evaluator.evaluate().artifact() for evaluator in self.__evaluators]
-
-                # Save the samples
-                result.samples.append(MonteCarloSample(section_indices, 0, artifacts))
+                artifacts: list[list[Artifact]] = []
+                self.__execute_stages(first_impact, last_impact, artifacts)
+                result.samples.extend(
+                    MonteCarloSample(section_indices, a, artifact)
+                    for a, artifact in enumerate(artifacts)
+                )
 
                 # Update the recent section for the next iteration
                 recent_section_indices = section_index_array
 
-        except Exception as e:
-            if self.catch_exceptions:
-                result.message = str(e)
-
-            else:
-                raise e  # pragma: no cover
+        except Exception if self.catch_exceptions else UnmatchableException as e:
+            result.message = str(e)
 
         return result
 
@@ -2065,7 +2101,12 @@ class MonteCarlo(Generic[MO]):
         self.catch_exceptions = catch_exceptions
         self.__progress_log_interval = progress_log_interval
 
-    def simulate(self, actor: Type[MonteCarloActor]) -> MonteCarloResult:
+    def simulate(
+        self,
+        actor: Type[MonteCarloActor],
+        additional_dimensions: set[GridDimension] | None = None,
+        stage_arguments: Mapping[str, Any] | None = None,
+    ) -> MonteCarloResult:
         """Launch the Monte Carlo simulation.
 
         Args:
@@ -2073,8 +2114,14 @@ class MonteCarlo(Generic[MO]):
             actor (Type[MonteCarloActor]):
                 The actor from which to generate the simulation samples.
 
-        Returns:
-            np.ndarray: Generated samples.
+            additional_dimensions (Set[GridDimension], optional):
+                Additional dimensions to be added to the simulation grid.
+
+            stage_arguments (Mapping[str, Any], optional):
+                Arguments to be passed to the simulation stages.
+                If the argument is a sequence, the respective stage will iterate over the sequence.
+
+        Returns: A `MonteCarloResult` dataclass containing the simulation results.
         """
 
         # Generate start timestamp
@@ -2085,6 +2132,11 @@ class MonteCarlo(Generic[MO]):
             self.console.log(
                 f"Launched simulation campaign with {self.num_actors} dedicated actors"
             )
+
+        # Add additional dimensions to configured simulation grid
+        _dimensions = self.__dimensions.copy()
+        if additional_dimensions is not None:
+            _dimensions.extend(additional_dimensions)
 
         # Sort dimensions after impact in descending order
         def sort(dimension: GridDimension) -> int:
@@ -2130,7 +2182,8 @@ class MonteCarlo(Generic[MO]):
         # Launch actors and queue the first tasks
         with self.console.status("Launching Actor Pool...", spinner="dots") if self.__console_mode == ConsoleMode.INTERACTIVE else nullcontext():  # type: ignore
             # Generate the actor pool
-            actor_pool = ActorPool([actor.options(num_cpus=self.cpus_per_actor).remote((self.__investigated_object, self.__dimensions, self.__evaluators), a, self.catch_exceptions) for a in range(self.num_actors)])  # type: ignore
+            actors = [actor.options(num_cpus=self.cpus_per_actor).remote((self.__investigated_object, self.__dimensions, self.__evaluators), a, stage_arguments, self.catch_exceptions) for a in range(self.num_actors)]  # type: ignore[attr-defined]
+            actor_pool = ActorPool(actors)  # type: ignore
 
             # Generate section sample containers and meta-information
             grid_task_count = np.zeros(
