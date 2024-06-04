@@ -18,10 +18,10 @@ from hermespy.core import ConsoleMode, MonteCarlo, GridDimension, Signal, Verbos
 from hermespy.simulation import Simulation, SimulationScenario
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -59,9 +59,10 @@ def monte_carlo_init_mock(cls: MonteCarlo, *args, **kwargs) -> None:
     monte_carlo_init(cls, *args, **kwargs)
 
 
-def simulation_init_mock(self: Simulation, scenario: None | SimulationScenario = None, num_samples: int = 100, drop_duration: float = 0.0, plot_results: bool = False, dump_results: bool = True, console_mode: ConsoleMode = ConsoleMode.INTERACTIVE, ray_address=None, results_dir=None, verbosity=Verbosity.INFO, seed=None, num_actors=None) -> None:
+def simulation_init_mock(self: Simulation, scenario: None | SimulationScenario = None, num_samples: int = 100, drop_duration: float = 0.0, drop_interval: float = float('inf'), plot_results: bool = False, dump_results: bool = True, console_mode: ConsoleMode = ConsoleMode.INTERACTIVE, ray_address=None, results_dir=None, verbosity=Verbosity.INFO, seed=None, num_actors=None) -> None:
     num_samples = 1
-    simulation_init(self, scenario, num_samples, drop_duration, plot_results, dump_results, console_mode, ray_address, results_dir, verbosity, seed, num_actors)
+    drop_duration = float('inf')
+    simulation_init(self, scenario, num_samples, drop_duration, drop_interval, plot_results, dump_results, console_mode, ray_address, results_dir, verbosity, seed, num_actors)
 
 
 def new_dimension_mock(cls: MonteCarlo, dimension: str, sample_points: List[Any], *args) -> GridDimension:

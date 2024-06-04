@@ -4,7 +4,7 @@ image: python:3.11
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   GIT_SUBMODULE_STRATEGY: recursive
-  HERMES_VERSION: "1.2.0"
+  HERMES_VERSION: "1.3.0"
   HERMES_WHEEL_11: "hermespy-$HERMES_VERSION-cp311-cp311-linux_x86_64.whl"
   HERMES_WHEEL_10: "hermespy-$HERMES_VERSION-cp310-cp310-linux_x86_64.whl"
   HERMES_WHEEL_09: "hermespy-$HERMES_VERSION-cp39-cp39-linux_x86_64.whl"

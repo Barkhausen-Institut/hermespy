@@ -30,6 +30,7 @@ from hermespy.core import (
 from .drop import SimulatedDrop
 from .noise import NoiseLevel, NoiseModel
 from .simulated_device import (
+    DeviceState,
     ProcessedSimulatedDeviceInput,
     SimulatedDevice,
     SimulatedDeviceOutput,
@@ -43,7 +44,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -185,7 +186,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
     yaml_tag = "SimulationScenario"
 
     __default_channel: Channel  # Initial channel to be assumed for device links
-    __channels: set[Channel]  # Set of unique channel model instances
+    __channels: list[Channel]  # Set of unique channel model instances
     __links: dict[frozenset[SimulatedDevice], Channel]
     __noise_level: NoiseLevel | None  # Global noise level of the scenario
     __noise_model: NoiseModel | None  # Global noise model of the scenario
@@ -216,15 +217,15 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
         # Prepare channel matrices for device links
         self.__default_channel = default_channel if default_channel is not None else IdealChannel()
-        self.__channels = {self.__default_channel}
+        self.__channels = [self.__default_channel]
         self.__links = dict()
 
         # Initialize base class
         Scenario.__init__(self, *args, **kwargs)
 
         # Initialize class attributes
-        self.noise_level = noise_level
-        self.noise_model = noise_model
+        self.noise_level = noise_level  # type: ignore[operator]
+        self.noise_model = noise_model  # type: ignore[operator]
         self.__visualizer = _ScenarioVisualizer(self)
 
     def new_device(self, *args, **kwargs) -> SimulatedDevice:
@@ -245,7 +246,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         device.scenario = self
 
     @property
-    def channels(self) -> set[Channel]:
+    def channels(self) -> list[Channel]:
         """Unique channel model instances interconnecting devices within this scenario."""
 
         return self.__channels
@@ -353,8 +354,17 @@ class SimulationScenario(Scenario[SimulatedDevice]):
                 self.__channels.remove(old_channel)
 
         # Update the set of unique channel instances
-        self.__channels.add(channel)
-        channel.scenario = self
+        if channel not in self.__channels:
+            self.__channels.append(channel)
+            channel.scenario = self
+
+    def realize_channels(self) -> Sequence[ChannelRealization]:
+        """Realize all channel instances within the scenario.
+
+        Returns: A sequence of channel realizations.
+        """
+
+        return [channel.realize() for channel in self.channels]
 
     @register(first_impact="receive_devices", title="Scenario Noise Level")  # type: ignore[misc]
     @property
@@ -474,8 +484,10 @@ class SimulationScenario(Scenario[SimulatedDevice]):
     def propagate(
         self,
         transmissions: Sequence[DeviceOutput],
+        device_states: Sequence[DeviceState] | None = None,
+        channel_realizations: Sequence[ChannelRealization] | None = None,
         interpolation_mode: InterpolationMode = InterpolationMode.NEAREST,
-    ) -> Tuple[list[list[Signal]], list[ChannelRealization]]:
+    ) -> Tuple[list[list[Signal]], Sequence[ChannelRealization]]:
         """Propagate device transmissions over the scenario's channel instances.
 
         Args:
@@ -506,21 +518,28 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         propagation_matrix = np.empty((self.num_devices, self.num_devices), dtype=np.object_)
 
         # Realize all channel instances
-        channel_realizations: dict[Channel, ChannelRealization] = {
-            c: c.realize() for c in self.channels
-        }
+        _device_states = (
+            device_states if device_states is not None else [d.state(0.0) for d in self.devices]
+        )
+        _channel_realizations = (
+            channel_realizations if channel_realizations is not None else self.realize_channels()
+        )
 
         # Propagate signals over all linking channels
-        for device_alpha_idx, alpha_device in enumerate(self.devices):
-            for device_beta_idx, beta_device in enumerate(self.devices[: 1 + device_alpha_idx]):
+        for device_alpha_idx, (alpha_device, alpha_state) in enumerate(
+            zip(self.devices, _device_states)
+        ):
+            for device_beta_idx, (beta_device, beta_state) in enumerate(
+                zip(self.devices[: 1 + device_alpha_idx], _device_states[: 1 + device_alpha_idx])
+            ):
 
                 # Find the correct channel realization for the propagation between device alpha and device beta
                 linking_channel = self.channel(alpha_device, beta_device)
-                channel_realization = channel_realizations[linking_channel]
+                channel_realization = _channel_realizations[self.__channels.index(linking_channel)]
 
                 # Sample the channel realization for a propagation from device alpha to device beta
                 alpha_beta_sample: ChannelSample = channel_realization.sample(
-                    alpha_device, beta_device
+                    alpha_state, beta_state
                 )
 
                 # Propagate signal emitted from device alpha to device beta over the linking channel
@@ -534,7 +553,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
                 # Sample the reciprocal channel realization for a propagation from device beta to device alpha
                 beta_alpha_sample: ChannelSample = channel_realization.reciprocal_sample(
-                    alpha_beta_sample, beta_device, alpha_device
+                    alpha_beta_sample, beta_state, alpha_state
                 )
 
                 # Propagate signal emitted from device beta to device alpha over the linking channel
@@ -542,7 +561,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
                     transmissions[device_beta_idx], interpolation_mode
                 )
 
-        return propagation_matrix.tolist(), list(channel_realizations.values())
+        return propagation_matrix.tolist(), _channel_realizations
 
     @overload
     def process_inputs(
