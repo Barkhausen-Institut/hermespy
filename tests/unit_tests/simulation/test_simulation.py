@@ -22,7 +22,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -61,6 +61,13 @@ class TestSimulationRunner(TestCase):
         """Make sure the stages all execute without exceptions"""
 
         try:
+            
+            # Realize channels
+            self.runner.realize_channels()
+            
+            # Sample trajectories
+            self.runner.sample_trajectories()
+            
             # Transmit operators
             self.runner.transmit_operators()
 
@@ -87,6 +94,9 @@ class TestSimulationRunner(TestCase):
 
     def test_process_inputs_validation(self) -> None:
         """Process inputs should raise RuntimeErrors for invalid internal states"""
+
+        self.runner.realize_channels()
+        self.runner.sample_trajectories()
 
         # No trigger realizations cached
         with self.assertRaises(RuntimeError):

@@ -39,7 +39,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -868,6 +868,7 @@ class DeviceState(object):
         carrier_frequency: float,
         sampling_rate: float,
         antennas: AntennaArrayState,
+        device: SimulatedDevice,
     ) -> None:
         """
         Args:
@@ -883,12 +884,16 @@ class DeviceState(object):
 
             antennas (AntennaArrayState):
                 State of the device's antenna array.
+
+            device (SimulatedDevice):
+                The device this state is associated with.
         """
 
         self.__trajectory_sample = trajectory_sample
         self.__carrier_frequency = carrier_frequency
         self.__sampling_rate = sampling_rate
         self.__antennas = antennas
+        self.__device = device
 
     @property
     def position(self) -> np.ndarray:
@@ -928,6 +933,12 @@ class DeviceState(object):
         """State of the device's antenna array."""
 
         return self.__antennas
+
+    @property
+    def device(self) -> SimulatedDevice:
+        """The device this state is associated with."""
+
+        return self.__device
 
 
 class SimulatedDevice(Device, Moveable, Serializable):
@@ -1075,8 +1086,8 @@ class SimulatedDevice(Device, Moveable, Serializable):
         if trigger_model is not None:
             self.trigger_model = trigger_model
 
-        self.noise_level = SNR(float("inf"), self) if noise_level is None else noise_level
-        self.noise_model = AWGN() if noise_model is None else noise_model
+        self.noise_level = SNR(float("inf"), self) if noise_level is None else noise_level  # type: ignore[operator]
+        self.noise_model = AWGN() if noise_model is None else noise_model  # type: ignore[operator]
         self.operator_separation = False
         self.sampling_rate = sampling_rate
         self.carrier_frequency = carrier_frequency
@@ -1160,11 +1171,11 @@ class SimulatedDevice(Device, Moveable, Serializable):
 
             ValueError: For negative noise levels.
         """
-        return self.noise_level.level
+        return self.noise_level.level  # type: ignore[operator]
 
     @noise.setter
     def noise(self, value: float) -> None:
-        self.noise_level.level = value
+        self.noise_level.level = value  # type: ignore[operator]
 
     @property
     def isolation(self) -> Isolation:
@@ -1272,6 +1283,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
             self.carrier_frequency,
             self.sampling_rate,
             self.antennas.state(trajectory_sample.pose),
+            self,
         )
 
     @property
@@ -1502,8 +1514,8 @@ class SimulatedDevice(Device, Moveable, Serializable):
         """
 
         # Generate a realization of the noise model
-        _noise_level = self.noise_level if noise_level is None else noise_level
-        _noise_model = self.noise_model if noise_model is None else noise_model
+        _noise_level = self.noise_level if noise_level is None else noise_level  # type: ignore[operator]
+        _noise_model = self.noise_model if noise_model is None else noise_model  # type: ignore[operator]
         noise_realization = _noise_model.realize(_noise_level.get_power())
 
         # Return device receive realization

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Callable, Generic, Optional, Set, TypeVar, TYPE_CHECKING
+from typing import Callable, Generic, Optional, overload, Set, TypeVar, TYPE_CHECKING
 
 import numpy as np
 from h5py import Group
@@ -28,10 +28,10 @@ if TYPE_CHECKING:
     )  # pragma: no cover
 
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -476,6 +476,39 @@ class ChannelRealization(ABC, Generic[CST]):
 
         return self.__gain
 
+    @overload
+    def sample(
+        self,
+        transmitter: DeviceState,
+        receiver: DeviceState,
+        carrier_frequency: float | None = None,
+        bandwidth: float | None = None,
+    ) -> CST:
+        """Sample the channel realization at a given point in time and space.
+
+        Wrapper around :meth:`._sample` that converts the input arguments to the correct type.
+
+        Args:
+
+            transmitter (DeviceState):
+                State of the transmitting device at the time of sampling.
+
+            receiver (DeviceState):
+                State of the receiving device at the time of sampling.
+
+            carrier_frequency (float, optional):
+                Carrier frequency of the channel in Hz.
+                If not specified, the transmitting device's carrier frequency will be assumed.
+
+            bandwidth (float, optional):
+                Bandwidth of the propagated signal in Hz.
+                If not specified, the transmitting device's sampling rate will be assumed.
+
+        Returns: The channel sample for the given configuration.
+        """
+        ...  # pragma: no cover
+
+    @overload
     def sample(
         self,
         transmitter: SimulatedDevice,
@@ -490,11 +523,14 @@ class ChannelRealization(ABC, Generic[CST]):
 
         Args:
 
-            transmitter_state (SimulatedDevice):
-                State of the transmitting device at the time of sampling.
+            transmitter (SimulatedDevice):
+                Transmitting device feeding into the channel model to be sampled.
 
-            receiver_state (SimulatedDevice):
-                State of the receiving device at the time of sampling.
+            receiver (SimulatedDevice):
+                Receiving device observing the channel model to be sampled.
+
+            timestamp (float, optional):
+                Time at which the channel is sampled in seconds.
 
             carrier_frequency (float, optional):
                 Carrier frequency of the channel in Hz.
@@ -506,10 +542,40 @@ class ChannelRealization(ABC, Generic[CST]):
 
         Returns: The channel sample at the given point in time.
         """
+        ...  # pragma: no cover
 
-        # Consolidate the channel realization's state
-        transmitter_state = transmitter.state(timestamp)
-        receiver_state = receiver.state(timestamp)
+    def sample(
+        self,
+        transmitter: SimulatedDevice | DeviceState,
+        receiver: SimulatedDevice | DeviceState,
+        *args,
+        **kwargs,
+    ) -> CST:
+        from hermespy.simulation import SimulatedDevice, DeviceState
+
+        if isinstance(transmitter, SimulatedDevice) and isinstance(receiver, SimulatedDevice):
+            timestamp = float(args[0]) if len(args) > 0 else 0.0
+            carrier_frequency = float(args[1]) if len(args) > 1 else None
+            bandwidth = float(args[2]) if len(args) > 2 else None
+
+            transmitter_device = transmitter
+            receiver_device = receiver
+            transmitter_state = transmitter.state(timestamp)
+            receiver_state = receiver.state(timestamp)
+
+        elif isinstance(transmitter, DeviceState) and isinstance(receiver, DeviceState):
+            timestamp = 0.0
+            carrier_frequency = float(args[0]) if len(args) > 0 else None
+            bandwidth = float(args[1]) if len(args) > 1 else None
+
+            transmitter_device = transmitter.device
+            receiver_device = receiver.device
+            transmitter_state = transmitter
+            receiver_state = receiver
+
+        else:
+            raise ValueError("Invalid input argument types for channel sampling.")
+
         _carrier_frequency = (
             carrier_frequency
             if carrier_frequency is not None
@@ -525,7 +591,7 @@ class ChannelRealization(ABC, Generic[CST]):
 
         # Notify the registered hooks
         for hook in self.sample_hooks:
-            hook(sample, transmitter, receiver)
+            hook(sample, transmitter_device, receiver_device)
 
         return sample
 
@@ -544,6 +610,17 @@ class ChannelRealization(ABC, Generic[CST]):
         """
         ...  # pragma: no cover
 
+    @overload
+    def reciprocal_sample(
+        self,
+        sample: CST,
+        transmitter: DeviceState,
+        receiver: DeviceState,
+        carrier_frequency: float | None = None,
+        bandwidth: float | None = None,
+    ) -> CST: ...  # pragma: no cover
+
+    @overload
     def reciprocal_sample(
         self,
         sample: CST,
@@ -563,10 +640,14 @@ class ChannelRealization(ABC, Generic[CST]):
                 Channel sample to be reciprocally sampled.
 
             transmitter (SimulatedDevice):
-                State of the transmitting device in the reciprocal channel at the time of sampling.
+                Transmitting device in the reciprocal channel at the time of sampling.
 
             receiver (SimulatedDevice):
-                State of the receiving device in the reciprocal channel  at the time of sampling.
+                Receiving device in the reciprocal channel  at the time of sampling.
+
+            timestamp (float, optional):
+                Time at which the channel is sampled in seconds.
+                Zero by default.
 
             carrier_frequency (float, optional):
                 Carrier frequency of the channel in Hz.
@@ -578,17 +659,50 @@ class ChannelRealization(ABC, Generic[CST]):
 
         Returns: The channel sample at the given point in time.
         """
+        ...  # pragma: no cover
 
-        # Consolidate the channel realization's state
-        transmitter_state = transmitter.state(timestamp)
+    def reciprocal_sample(
+        self,
+        sample: CST,
+        transmitter: SimulatedDevice | DeviceState,
+        receiver: SimulatedDevice | DeviceState,
+        *args,
+        **kwargs,
+    ) -> CST:
+        from hermespy.simulation import SimulatedDevice, DeviceState
+
+        if isinstance(transmitter, SimulatedDevice) and isinstance(receiver, SimulatedDevice):
+            timestamp = float(args[0]) if len(args) > 0 else 0.0
+            carrier_frequency = float(args[1]) if len(args) > 1 else None
+            bandwidth = float(args[2]) if len(args) > 2 else None
+
+            transmitter_device = transmitter
+            receiver_device = receiver
+            transmitter_state = transmitter.state(timestamp)
+            receiver_state = receiver.state(timestamp)
+
+        elif isinstance(transmitter, DeviceState) and isinstance(receiver, DeviceState):
+            timestamp = 0.0
+            carrier_frequency = float(args[0]) if len(args) > 0 else None
+            bandwidth = float(args[1]) if len(args) > 1 else None
+
+            transmitter_device = transmitter.device
+            receiver_device = receiver.device
+            transmitter_state = transmitter
+            receiver_state = receiver
+
+        else:
+            raise ValueError("Invalid input argument types for channel sampling.")
+
         _carrier_frequency = (
             carrier_frequency
             if carrier_frequency is not None
             else transmitter_state.carrier_frequency
         )
         _bandwidth = bandwidth if bandwidth is not None else transmitter_state.sampling_rate
+
         state = LinkState(
-            transmitter_state, receiver.state(timestamp), _carrier_frequency, _bandwidth, timestamp
+            transmitter_state, receiver_state, _carrier_frequency, _bandwidth, timestamp
         )
 
         # Generate a new sample
@@ -596,7 +710,7 @@ class ChannelRealization(ABC, Generic[CST]):
 
         # Notify the registered hooks
         for hook in self.sample_hooks:
-            hook(reciprocal_sample, transmitter, receiver)
+            hook(reciprocal_sample, transmitter_device, receiver_device)
 
         return reciprocal_sample
 
@@ -678,8 +792,6 @@ class Channel(ABC, RandomNode, Serializable, Generic[CRT, CST]):
         RandomNode.__init__(self, seed=seed)
 
         # Default parameters
-        self.__alpha_device = None
-        self.__beta_device = None
         self.gain = gain
         self.__scenario = None
         self.__sample_hooks = set()

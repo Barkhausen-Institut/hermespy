@@ -6,6 +6,7 @@ from itertools import product
 from sys import maxsize
 from typing import Any, Callable, Dict, List, Mapping, Type
 
+import numpy as np
 from os import path
 from ray import remote
 from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, Node
@@ -24,15 +25,20 @@ from hermespy.core import (
     Signal,
     Visualization,
 )
-from hermespy.channel import Channel
+from hermespy.channel import Channel, ChannelRealization
 from .scenario import SimulationScenario
-from .simulated_device import TriggerRealization, ProcessedSimulatedDeviceInput, SimulatedDevice
+from .simulated_device import (
+    DeviceState,
+    TriggerRealization,
+    ProcessedSimulatedDeviceInput,
+    SimulatedDevice,
+)
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -45,6 +51,8 @@ class SimulationRunner(object):
     __trigger_realizations: Sequence[TriggerRealization]
     __propagation: Sequence[Sequence[Signal]] | None
     __processed_inputs: Sequence[ProcessedSimulatedDeviceInput]
+    __device_states: Sequence[DeviceState] | None
+    __channel_realizations: Sequence[ChannelRealization] | None
 
     def __init__(self, scenario: SimulationScenario) -> None:
         """
@@ -55,9 +63,18 @@ class SimulationRunner(object):
         """
 
         self.__scenario = scenario
+        self.__channel_realizations = None
+        self.__device_states = None
+        self.__device_states = None
         self.__trigger_realizations = None
         self.__propagation = None
         self.__processed_inputs = []
+
+    def realize_channels(self) -> None:
+        self.__channel_realizations = self.__scenario.realize_channels()
+
+    def sample_trajectories(self, timestamp: float = 0.0) -> None:
+        self.__device_states = [d.state(timestamp) for d in self.__scenario.devices]
 
     def transmit_operators(self) -> None:
         """Generate base-band signal models emitted by all registered transmitting operators.
@@ -92,6 +109,11 @@ class SimulationRunner(object):
             RuntimeError: If the number of transmit signals does not match the number of registered devices.
         """
 
+        if self.__device_states is None or self.__channel_realizations is None:
+            raise RuntimeError(
+                "Propagation simulation stage called without prior channel or device realization"
+            )
+
         device_outputs = [device.output for device in self.__scenario.devices]
         if any([t is None for t in device_outputs]):
             raise RuntimeError(
@@ -99,7 +121,9 @@ class SimulationRunner(object):
             )
 
         # Propagate device outputs
-        self.__propagation, _ = self.__scenario.propagate(device_outputs)
+        self.__propagation, _ = self.__scenario.propagate(
+            device_outputs, self.__device_states, self.__channel_realizations
+        )
 
     def process_inputs(self) -> None:
         """Process device inputs after channel propgation.
@@ -140,8 +164,8 @@ class SimulationRunner(object):
             self.__processed_inputs.append(
                 device.process_input(
                     impinging_signals=impinging_signals,
-                    noise_level=self.__scenario.noise_level,
-                    noise_model=self.__scenario.noise_model,
+                    noise_level=self.__scenario.noise_level,  # type: ignore[operator]
+                    noise_model=self.__scenario.noise_model,  # type: ignore[operator]
                     trigger_realization=trigger_realization,
                 )
             )
@@ -160,15 +184,34 @@ class SimulationRunner(object):
 class SimulationActor(MonteCarloActor[SimulationScenario], SimulationRunner):
     """Remote ray actor generated from the simulation runner class."""
 
-    def __init__(self, argument_tuple: Any, index: int, catch_exceptions: bool = True) -> None:
+    def __init__(
+        self,
+        argument_tuple: Any,
+        index: int,
+        stage_arguments: Mapping[str, Sequence[tuple]] | None = None,
+        catch_exceptions: bool = True,
+    ) -> None:
         """
         Args:
 
-            argument_tuple (Any):
-                MonteCarloActor initialization arguments.
+            argument_tuple:
+                Object to be investigated during the simulation runtime.
+                Dimensions over which the simulation will iterate.
+                Evaluators used to process the investigated object sample state.
+
+            index (int):
+                Global index of the actor.
+
+            stage_arguments (Mapping[str, Sequence[Tuple]], optional):
+                Arguments for the simulation stages.
+
+            catch_exceptions (bool, optional):
+                Catch exceptions during run.
+                Enabled by default.
         """
 
-        MonteCarloActor.__init__(self, argument_tuple, index, catch_exceptions)
+        # Initialize base classes
+        MonteCarloActor.__init__(self, argument_tuple, index, stage_arguments, catch_exceptions)
         SimulationRunner.__init__(self, self._investigated_object)
 
         # Update the internal random seed pseudo-deterministically for each actor instance
@@ -179,6 +222,8 @@ class SimulationActor(MonteCarloActor[SimulationScenario], SimulationRunner):
     @staticmethod
     def stage_identifiers() -> List[str]:
         return [
+            "realize_channels",
+            "sample_trajectories",
             "transmit_operators",
             "generate_outputs",
             "propagate",
@@ -188,6 +233,8 @@ class SimulationActor(MonteCarloActor[SimulationScenario], SimulationRunner):
 
     def stage_executors(self) -> List[Callable]:
         return [
+            self.realize_channels,
+            self.sample_trajectories,
             self.transmit_operators,
             self.generate_outputs,
             self.propagate,
@@ -215,6 +262,7 @@ class Simulation(
         scenario: SimulationScenario | None = None,
         num_samples: int = 100,
         drop_duration: float = 0.0,
+        drop_interval: float = float("inf"),
         plot_results: bool = False,
         dump_results: bool = True,
         console_mode: ConsoleMode = ConsoleMode.INTERACTIVE,
@@ -237,6 +285,10 @@ class Simulation(
 
             drop_duration(float, optional):
                 Duration of simulation drops in seconds.
+
+            drop_interval(float, optional):
+                Interval at which drops are being generated in seconds.
+                If not specified, only a single drop is generated at the beginning of the simulation.
 
             plot_results (bool, optional):
                 Plot results after simulation runs.
@@ -286,10 +338,12 @@ class Simulation(
             num_actors=num_actors,
         )
 
+        # Initialize class attributes
         self.plot_results = plot_results
         self.dump_results = dump_results
         self.drop_duration = drop_duration
         self.num_drops = num_samples
+        self.drop_interval = drop_interval
 
     @property
     def num_samples(self) -> int:
@@ -298,6 +352,23 @@ class Simulation(
     @num_samples.setter
     def num_samples(self, value: int) -> None:
         self.num_drops = value
+
+    @property
+    def drop_interval(self) -> float:
+        """Interval at which drops are being generated in seconds.
+
+        Raises:
+            ValueError for values smaller or equal to zero.
+        """
+
+        return self.__drop_interval
+
+    @drop_interval.setter
+    def drop_interval(self, value: float) -> None:
+        if value <= 0:
+            raise ValueError("Drop interval must be greater than zero.")
+
+        self.__drop_interval = value
 
     @Pipeline.console_mode.setter  # type: ignore
     def console_mode(self, value: ConsoleMode) -> None:  # type: ignore
@@ -315,6 +386,22 @@ class Simulation(
             self.console.print()  # Just an empty line
             self.console.rule("Simulation Campaign")
             self.console.print()  # Just an empty line
+
+        # Generate timestamps at which drops are generated
+        max_timestamp = max(d.trajectory.max_timestamp for d in self.scenario.devices)
+        timestamps = (
+            np.arange(0, max_timestamp, self.drop_interval, np.float_)
+            if max_timestamp > 0.0
+            else np.zeros(1, np.float_)
+        )
+        stage_arguments = dict()
+        if timestamps[-1] > 0.0:
+            stage_arguments["sample_trajectories"] = [(t,) for t in timestamps]
+
+        if self.console_mode != ConsoleMode.SILENT:
+            self.console.log(
+                f"Generating {len(timestamps)} drops at an interval of {self.drop_interval} seconds along the trajectories of moveable objects"
+            )
 
         # Generate simulation result
         result = self.simulate(SimulationActor)
@@ -409,8 +496,8 @@ class Simulation(
                 channels.append((device_alpha, device_beta, channel))
 
         additional_fields = {
-            "noise_model": node.scenario.noise_model,
-            "noise_level": node.scenario.noise_level,
+            "noise_model": node.scenario.noise_model,  # type: ignore[operator]
+            "noise_level": node.scenario.noise_level,  # type: ignore[operator]
             "verbosity": node.verbosity.name,
             "Devices": node.scenario.devices,
             "Operators": node.scenario.operators,

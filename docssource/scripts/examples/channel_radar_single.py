@@ -9,7 +9,7 @@ from hermespy.radar import Radar, FMCW, ReceiverOperatingCharacteristic
 from hermespy.simulation import Simulation
 
 # Initialize a single device operating at 78.5 GHz
-simulation = Simulation()
+simulation = Simulation(seed=42)
 device = simulation.new_device(carrier_frequency=78.5e9)
 
 # Create a radar channel modeling a single target at 10m distance
