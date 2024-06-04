@@ -11,10 +11,10 @@ from hermespy.core.signal_model import Signal
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "André Noll-Barreto"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["André Noll-Barreto"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"

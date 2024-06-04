@@ -2,7 +2,7 @@
 
 from abc import abstractmethod
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import numpy as np
 from numpy.testing import assert_array_equal
@@ -21,7 +21,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -57,6 +57,7 @@ class TestClusterDelayLineSample(TestCase):
             self.carrier_frequency,
             self.bandwidth,
             SimulatedUniformArray(SimulatedIdealAntenna, 1e-3, (2, 1, 1)).state(Transformation.From_Translation(np.array([2, 3, 4]))),
+            Mock(),
         )
         self.receiver_state = DeviceState(
             TrajectorySample(
@@ -67,6 +68,7 @@ class TestClusterDelayLineSample(TestCase):
             self.carrier_frequency,
             self.bandwidth,
             SimulatedUniformArray(SimulatedIdealAntenna, 1e-3, (2, 1, 1)).state(Transformation.From_Translation(np.array([2, 3, 4]))),
+            Mock(),
         )
         
         self.sample = ClusterDelayLineSample(
