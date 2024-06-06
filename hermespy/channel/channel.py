@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Callable, Generic, Optional, overload, Set, TypeVar, TYPE_CHECKING
+from typing import Callable, Generic, overload, Set, TypeVar, TYPE_CHECKING
 
 import numpy as np
 from h5py import Group
@@ -747,33 +747,14 @@ class ChannelRealization(ABC, Generic[CST]):
 class Channel(ABC, RandomNode, Serializable, Generic[CRT, CST]):
     """Abstract base class of all channel models.
 
-    The channel model represents the basic configuration of two linked :doc:`SimulatedDevices<hermespy.simulation.simulated_device.SimulatedDevice>`
-    :meth:`alpha_device<.alpha_device>` and :meth:`beta_device<.beta_device>` exchanging electromagnetic :doc:`Signals<hermespy.core.signal_model.Signal>`.
-
-    Each invokation of :meth:`.propagate` and :meth:`.realize` will generate a new :doc:`channel.channel.ChannelRealization` instance by internally calling :meth:`._realize`.
-    In the case of a :meth:`propagate` call the generated :doc:`hermespy.channel.channel.ChannelRealization` will additionally be wrapped in a :doc:`hermespy.channel.channel.ChannelPropagation`.
-    The channel model represents the matrix function of time :math:`t` and delay :math:`\\tau`
-
-    .. math::
-
-       \\mathbf{H}(t, \\tau; \\mathbf{\\zeta}) \\in \\mathbb{C}^{N_{\\mathrm{Rx}} \\times N_{\\mathrm{Tx}}} \\ \\text{,}
-
-    the dimensionality of which depends on the number of transmitting antennas :math:`N_{\\mathrm{Tx}}` and number of receiving antennas :math:`N_{\\mathrm{Rx}}`.
-    The vector :math:`\\mathbf{\\zeta}` represents the channel model's paramteres as random variables.
-    Realizing the channel model is synonymous with realizing and "fixing" these random parameters by drawing a sample from their respective
-    distributions, so that a :doc:`hermespy.channel.channel.ChannelRealization` represents the deterministic function
-
-    .. math::
-
-       \\mathbf{H}(t, \\tau) \\in \\mathbb{C}^{N_{\\mathrm{Rx}} \\times N_{\\mathrm{Tx}}} \\ \\text{.}
-
+    Channel models represent the basic physical properties of a elemtromagnetic waves propagating through space in between devices.
     """
 
     __scenario: SimulationScenario
     __gain: float
     __sample_hooks: Set[ChannelSampleHook[CST]]
 
-    def __init__(self, gain: float = 1.0, seed: Optional[int] = None) -> None:
+    def __init__(self, gain: float = 1.0, seed: int | None = None) -> None:
         """
         Args:
 
