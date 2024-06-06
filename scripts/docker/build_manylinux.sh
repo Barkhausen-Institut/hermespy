@@ -4,11 +4,8 @@ set -e -u -x
 # Configure environment to use all available cores while building
 export MAKEFLAGS="-j $(grep -c ^processor /proc/cpuinfo)"
 
-# Declare Pythion versions to build for
-declare -a versions=("cp310-cp310" "cp39-cp39")
-
-# Remove manifest file
-rm -f /hermespy/MANIFEST.in
+# Declare Python versions to build for
+declare -a versions=("cp311-cp311" "cp310-cp310" "cp39-cp39")
 
 # Build for every available python version
 for PYBIN in ${versions[@]}; do

@@ -1,10 +1,11 @@
-FROM python:3.9
+FROM python:3.11
 
 ENV VIRTUAL_ENV=/venv/
 
 # Setup the environment initially
-COPY setup.py install/
+COPY pyproject.toml install/
 COPY README.md install/
+COPY LICENSE install/
 
 # Install dependencies
 RUN apt update && \
