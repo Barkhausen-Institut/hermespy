@@ -109,6 +109,7 @@ class UsrpDevice(PhysicalDevice, Serializable):
     __selected_receive_ports: Sequence[int]
     __max_selected_receive_port: int
     __max_selected_transmit_port: int
+    __current_configuration: RfConfig
 
     def __init__(
         self,
@@ -253,10 +254,8 @@ class UsrpDevice(PhysicalDevice, Serializable):
                     rx_carrier_frequency != self.__current_configuration.rxCarrierFrequency,
                     tx_gain != self.__current_configuration.txGain,
                     rx_gain != self.__current_configuration.rxGain,
-                    1 + self.__max_selected_transmit_port
-                    != self.__current_configuration.noTxAntennas,
-                    1 + self.__max_selected_receive_port
-                    != self.__current_configuration.noRxAntennas,
+                    self.selected_transmit_ports != self.__current_configuration.txAntennaMapping,
+                    self.selected_receive_ports != self.__current_configuration.rxAntennaMapping,
                 ]
             )
             or force
@@ -270,8 +269,10 @@ class UsrpDevice(PhysicalDevice, Serializable):
                 rxCarrierFrequency=rx_carrier_frequency,
                 txGain=tx_gain,
                 rxGain=rx_gain,
-                noTxAntennas=1 + self.__max_selected_transmit_port,
-                noRxAntennas=1 + self.__max_selected_receive_port,
+                noTxStreams=self.num_transmit_ports,
+                noRxStreams=self.num_receive_ports,
+                txAntennaMapping=self.selected_transmit_ports,
+                rxAntennaMapping=self.selected_receive_ports,
             )
 
             self.__rpc_call_wrapper(self.__usrp_client.configureRfConfig, config)
@@ -325,13 +326,8 @@ class UsrpDevice(PhysicalDevice, Serializable):
 
         # Append a zero vector for unselected transmit ports
         # Workaround for the USRP wrapper missing dedicated port selections
-        signal_list: List[np.ndarray] = [s for s in baseband_signal[:, :]]
-        for i in range(self.__max_selected_transmit_port + 1):
-            if i not in self.__selected_transmit_ports:
-                signal_list.insert(i, np.zeros(baseband_signal.num_samples, dtype=np.complex_))
-
         tx_config = TxStreamingConfig(
-            max(0.0, -self.delay_calibration.delay), MimoSignal(signal_list)
+            max(0.0, -self.delay_calibration.delay), MimoSignal(baseband_signal[:, :])
         )
         self.__rpc_call_wrapper(self.__usrp_client.configureTx, tx_config)
 

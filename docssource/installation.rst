@@ -150,21 +150,18 @@ As a result, all combined binaries and source files will remain within the repos
       conda activate <envname>
       conda install pip
       pip install -e ".[develop]"
-      python -m setup develop
 
    .. code-tab:: batch Windows vEnv
 
       python -m venv <envname>
-      <envname>\\Scripts\\activate
+      <envname>\Scripts\activate
       pip install -e ".[develop]"
-      python -m setup develop
 
    .. code-tab:: bash Linux vEnv
 
       python -m venv env
       source env/bin/activate
       pip install -e ".[develop]"
-      python -m setup develop
 
 
 Install Quadriga
