@@ -15,10 +15,10 @@ if TYPE_CHECKING:
 
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -122,13 +122,7 @@ class SelectiveLeakage(Serializable, Isolation):
         for m, n in np.ndindex(self.leakage_response.shape[0], signal.num_streams):
             # The leaked signal is the convolution of the transmitted signal with the leakage response
             leaking_samples[m, :] += convolve(
-                self.leakage_response[m, n, :], signal.samples[n, :], "full"
+                self.leakage_response[m, n, :], signal[n, :].flatten(), "full"
             )[:num_leaked_samples]
 
-        return Signal(
-            leaking_samples,
-            signal.sampling_rate,
-            signal.carrier_frequency,
-            signal.delay,
-            signal.noise_power,
-        )
+        return signal.from_ndarray(leaking_samples)

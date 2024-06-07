@@ -5,15 +5,17 @@ from tempfile import TemporaryDirectory
 from typing import List
 from unittest import TestCase
 
+from numpy.testing import assert_array_almost_equal
+
 from hermespy.core import Drop
 from hermespy.simulation import SimulationScenario
 from hermespy.modem import TransmittingModem, ReceivingModem, RaisedCosineWaveform
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -71,14 +73,18 @@ class TestRecordReplay(TestCase):
         # Record drops
         expected_drops = self._record()
 
-        self.scenario.replay(self.file)
-        replayed_drops = [self.scenario.drop() for _ in range(self.num_drops)]
-        self.scenario.stop()
-
         # Compare the expected and replayed drops to make sure the generated information is identical
-        for expected_drop, replayed_drop in zip(expected_drops, replayed_drops):
+        self.scenario.replay(self.file)
+        for expected_drop in expected_drops:
+
+            replayed_drop = self.scenario.drop()
+
             self.assertEqual(expected_drop.timestamp, replayed_drop.timestamp)
             self.assertEqual(expected_drop.num_device_receptions, replayed_drop.num_device_transmissions)
+            assert_array_almost_equal(expected_drop.device_receptions[1].operator_receptions[0].equalized_symbols.raw, replayed_drop.device_receptions[1].operator_receptions[0].equalized_symbols.raw)
+            assert_array_almost_equal(expected_drop.device_receptions[1].operator_receptions[0].equalized_symbols.raw, self.scenario.devices[1].receivers[0].reception.equalized_symbols.raw)
+
+        self.scenario.stop()
 
     def test_record_replay_reinitialize(self) -> None:
         """Test recording and reinitializing a scenario from a savefile"""
@@ -88,9 +94,27 @@ class TestRecordReplay(TestCase):
 
         # Initialize scenario from recording and replay drops
         replay_scenario = SimulationScenario.Replay(self.file)
-        replayed_drops = [replay_scenario.drop() for _ in range(self.num_drops)]
-        replay_scenario.stop()
+        for expected_drop in expected_drops:
 
-        for expected_drop, replayed_drop in zip(expected_drops, replayed_drops):
-            self.assertEqual(expected_drop.timestamp, replayed_drop.timestamp)
-            self.assertEqual(expected_drop.num_device_receptions, replayed_drop.num_device_transmissions)
+            replayed_drop = replay_scenario.drop()
+
+            try:
+                self.assertEqual(expected_drop.timestamp, replayed_drop.timestamp)
+                self.assertEqual(expected_drop.num_device_receptions, replayed_drop.num_device_transmissions)
+
+                # Make sure the operator inputs are identical
+                assert_array_almost_equal(expected_drop.operator_inputs[1][0][:, :], replayed_drop.operator_inputs[1][0][:, :])
+
+                # Assert that operators have identical input signals
+                assert_array_almost_equal(expected_drop.device_receptions[1].operator_receptions[0].signal[:, :], replayed_drop.device_receptions[1].operator_receptions[0].signal[:, :])
+                assert_array_almost_equal(expected_drop.device_receptions[1].operator_receptions[0].signal[:, :], replay_scenario.devices[1].receivers[0].reception.signal[:, :])
+
+                # Assert that operators have identical equalized symbols
+                assert_array_almost_equal(expected_drop.device_receptions[1].operator_receptions[0].equalized_symbols.raw, replayed_drop.device_receptions[1].operator_receptions[0].equalized_symbols.raw)
+                assert_array_almost_equal(expected_drop.device_receptions[1].operator_receptions[0].equalized_symbols.raw, replay_scenario.devices[1].receivers[0].reception.equalized_symbols.raw)
+
+            except AssertionError:
+                replay_scenario.stop()
+                raise
+
+        replay_scenario.stop()

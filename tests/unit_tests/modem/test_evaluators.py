@@ -10,13 +10,14 @@ from numpy.random import default_rng
 
 from hermespy.core.monte_carlo import ScalarEvaluationResult, ArtifactTemplate
 from hermespy.modem import TransmittingModem, ReceivingModem, RootRaisedCosineWaveform
-from hermespy.modem.evaluators import BitErrorEvaluation, BitErrorEvaluator, BlockErrorEvaluation, BlockErrorEvaluator, CommunicationEvaluator, FrameErrorEvaluation, FrameErrorEvaluator, ThroughputEvaluation, ThroughputEvaluator
+from hermespy.modem.evaluators import BitErrorEvaluation, BitErrorEvaluator, BlockErrorEvaluation, BlockErrorEvaluator, CommunicationEvaluator, FrameErrorEvaluation, FrameErrorEvaluator, ThroughputEvaluation, ThroughputEvaluator, ConstellationEVM, EVMEvaluation
+from hermespy.simulation import SimulatedDevice
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -95,8 +96,10 @@ class TestBitErrorEvaluator(TestCase):
         self.waveform = RootRaisedCosineWaveform(symbol_rate=1e9, num_preamble_symbols=0, num_data_symbols=10)
         self.transmitter = TransmittingModem()
         self.transmitter.waveform = self.waveform
+        self.transmitter.device = SimulatedDevice()
         self.receiver = ReceivingModem()
         self.receiver.waveform = self.waveform
+        self.receiver.device = SimulatedDevice()
 
         self.evaluator = BitErrorEvaluator(self.transmitter, self.receiver)
 
@@ -159,8 +162,10 @@ class TestBlockErrorEvaluator(TestCase):
         self.waveform = RootRaisedCosineWaveform(symbol_rate=1e9, num_preamble_symbols=0, num_data_symbols=10)
         self.transmitter = TransmittingModem()
         self.transmitter.waveform = self.waveform
+        self.transmitter.device = SimulatedDevice()
         self.receiver = ReceivingModem()
         self.receiver.waveform = self.waveform
+        self.receiver.device = SimulatedDevice()
 
         self.evaluator = BlockErrorEvaluator(self.transmitter, self.receiver)
 
@@ -236,8 +241,10 @@ class TestFrameErrorEvaluator(TestCase):
         self.waveform = RootRaisedCosineWaveform(symbol_rate=1e9, num_preamble_symbols=0, num_data_symbols=10)
         self.transmitter = TransmittingModem()
         self.transmitter.waveform = self.waveform
+        self.transmitter.device = SimulatedDevice()
         self.receiver = ReceivingModem()
         self.receiver.waveform = self.waveform
+        self.receiver.device = SimulatedDevice()
 
         self.evaluator = FrameErrorEvaluator(self.transmitter, self.receiver)
 
@@ -371,3 +378,87 @@ class TestThroughputEvaluator(TestCase):
         """Abbreviation should be properly generated"""
 
         self.assertEqual("DRX", self.evaluator.abbreviation)
+
+
+class TestEVMEvaluation(TestCase):
+    """Test EVM evaluation"""
+
+    def setUp(self) -> None:
+
+        transmitted_symbols = np.array([1 + 1j, 1 - 1j, -1 + 1j, -1 - 1j])
+        received_symbols = transmitted_symbols
+
+        self.evaluation = EVMEvaluation(transmitted_symbols, received_symbols)
+
+    def test_title(self) -> None:
+        """Title should be properly generated"""
+
+        self.assertEqual("Error Vector Magnitude", self.evaluation.title)
+
+    def test_plot(self) -> None:
+        """Plotting should generate a valid plot"""
+
+        figure_mock = Mock(spec=plt.Figure)
+        axes_mock = Mock(spec=plt.Axes)
+        axes_collection = np.array([[axes_mock]], dtype=np.object_)
+
+        with patch("matplotlib.pyplot.subplots") as subplots_mock:
+            subplots_mock.return_value = (figure_mock, axes_collection)
+
+            self.evaluation.visualize()
+            subplots_mock.assert_called_once()
+
+    def test_artifact(self) -> None:
+        """Artifacts should be properly generated"""
+
+        artifact = self.evaluation.artifact()
+        self.assertEqual(0.0, artifact.to_scalar())
+
+
+class TestConstellationEVM(TestCase):
+    """Test the constellation diagram EVM evaluator"""
+
+    def setUp(self) -> None:
+        self.waveform = RootRaisedCosineWaveform(symbol_rate=1e9, num_preamble_symbols=0, num_data_symbols=10, roll_off=.9)
+        self.transmitter = TransmittingModem()
+        self.transmitter.seed = 42
+        self.transmitter.waveform = self.waveform
+        self.transmitter.device = SimulatedDevice()
+        self.receiver = ReceivingModem()
+        self.receiver.waveform = self.waveform
+        self.receiver.device = SimulatedDevice()
+
+        self.evaluator = ConstellationEVM(self.transmitter, self.receiver)
+
+    def test_evaluate(self) -> None:
+        """Evaluator should compute the proper frame error rate"""
+
+        transmission = self.transmitter.transmit()
+        self.receiver.receive(transmission.signal)
+
+        rolled_off_evaluation = self.evaluator.evaluate()
+        self.assertAlmostEqual(0.0, rolled_off_evaluation.artifact().to_scalar(), 3)
+
+        # Lower roll-off should result in higher EVM
+        self.waveform.roll_off = 0.1
+        transmission = self.transmitter.transmit()
+        self.receiver.receive(transmission.signal)
+
+        evaluation = self.evaluator.evaluate()
+        self.assertGreater(evaluation.artifact().to_scalar(), rolled_off_evaluation.artifact().to_scalar())
+
+    def test_init(self) -> None:
+        """Initialization parameters should be properly stored as class attributes"""
+
+        self.assertIs(self.transmitter, self.evaluator.transmitting_modem)
+        self.assertIs(self.receiver, self.evaluator.receiving_modem)
+
+    def test_title(self) -> None:
+        """Title should be properly generated"""
+
+        self.assertEqual("Error Vector Magnitude", self.evaluator.title)
+
+    def test_abbreviation(self) -> None:
+        """Abbreviation should be properly generated"""
+
+        self.assertEqual("EVM", self.evaluator.abbreviation)

@@ -15,10 +15,10 @@ from hermespy.modem.waveform_single_carrier import SingleCarrierLeastSquaresChan
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -278,7 +278,7 @@ class TestFilteredSingleCarrierWaveform(TestCase):
         data_symbols = self.waveform.map(data_bits)
         signal_samples = self.waveform.modulate(self.waveform.place(data_symbols))
 
-        self.assertAlmostEqual(Signal(signal_samples, self.waveform.sampling_rate).power[0], self.waveform.power, places=2)
+        self.assertAlmostEqual(Signal.Create(signal_samples, self.waveform.sampling_rate).power[0], self.waveform.power, places=2)
 
     def test_sampling_rate(self) -> None:
         """Sampling rate property should compute correct sampling rate"""

@@ -67,7 +67,7 @@ rx_signal = propagate{1};
 channel_state = propagate{3};
 
 % define SNR
-snr = pyargs('snr',py.float(5));
+snr = pyargs('noise_level',py.float(5));
 rx_device.receive(rx_signal,snr);
 
 % function "receive()" returns a "tuple" type variable, where

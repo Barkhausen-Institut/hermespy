@@ -9,13 +9,15 @@ from .modem import (
     CommunicationTransmissionFrame,
     BaseModem,
     TransmittingModem,
+    TransmittingModemBase,
     ReceivingModem,
+    ReceivingModemBase,
     DuplexModem,
     SimplexLink,
 )
 from .waveform import (
     CommunicationWaveform,
-    WaveformType,
+    CWT,
     Synchronization,
     PilotCommunicationWaveform,
     PilotSymbolSequence,
@@ -51,6 +53,7 @@ from .waveforms.orthogonal import (
     OCDMWaveform,
     OFDMCorrelationSynchronization,
     OFDMWaveform,
+    OTFSWaveform,
     PilotSection,
     SchmidlCoxPilotSection,
     SchmidlCoxSynchronization,
@@ -80,14 +83,15 @@ from .evaluators import (
     BlockErrorEvaluator,
     FrameErrorEvaluator,
     ThroughputEvaluator,
+    ConstellationEVM,
 )
 from .tools import PskQamMapping
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -115,11 +119,13 @@ __all__ = [
     "CommunicationTransmissionFrame",
     "BaseModem",
     "TransmittingModem",
+    "TransmittingModemBase",
     "ReceivingModem",
+    "ReceivingModemBase",
     "DuplexModem",
     "SimplexLink",
     "CommunicationWaveform",
-    "WaveformType",
+    "CWT",
     "Synchronization",
     "PilotCommunicationWaveform",
     "PilotSymbolSequence",
@@ -158,10 +164,12 @@ __all__ = [
     "OrthogonalZeroForcingChannelEqualization",
     "OrthogonalWaveform",
     "OCDMWaveform",
+    "OTFSWaveform",
     "OFDMCorrelationSynchronization",
     "SchmidlCoxSynchronization",
     "ReferencePosition",
     "Synchronization",
+    "OTFSWaveform",
     "Alamouti",
     "Ganesan",
     "SymbolPrecoding",
@@ -174,6 +182,7 @@ __all__ = [
     "BlockErrorEvaluator",
     "FrameErrorEvaluator",
     "ThroughputEvaluator",
+    "ConstellationEVM",
     "PskQamMapping",
     "SCLeastSquaresChannelEstimation",
     "SCZeroForcingChannelEqualization",

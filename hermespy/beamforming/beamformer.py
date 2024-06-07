@@ -32,10 +32,10 @@ from hermespy.core import (
 from hermespy.precoding import Precoding, ReceiveStreamDecoder, TransmitStreamEncoder
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -512,15 +512,11 @@ class TransmitBeamformer(BeamformerBase[Transmitter], TransmitStreamEncoder, ABC
             )
 
         carrier_frequency = signal.carrier_frequency
-        samples = signal.samples.copy()
+        samples = signal[:, :]
         focus_angles = np.array([focus.spherical_angles for focus in _focus], dtype=np.float_)
 
         steered_samples = self._encode(samples, carrier_frequency, focus_angles, _array)
-        return Signal(
-            steered_samples,
-            sampling_rate=signal.sampling_rate,
-            carrier_frequency=signal.carrier_frequency,
-        )
+        return signal.from_ndarray(steered_samples)
 
 
 class ReceiveBeamformer(BeamformerBase[Receiver], ReceiveStreamDecoder, ABC):
@@ -734,11 +730,11 @@ class ReceiveBeamformer(BeamformerBase[Receiver], ReceiveStreamDecoder, ABC):
             )
 
         carrier_frequency = signal.carrier_frequency
-        samples = signal.samples.copy()
+        samples = signal[:, :]
         focus_angles = np.array([[focus.spherical_angles for focus in _focus]], dtype=np.float_)
 
         beamformed_samples = self._decode(samples, carrier_frequency, focus_angles, _array)
-        return Signal(beamformed_samples[0, ::], signal.sampling_rate)
+        return signal.from_ndarray(beamformed_samples[0, ::])
 
     @property
     def probe_focus_points(self) -> np.ndarray:
@@ -807,6 +803,6 @@ class ReceiveBeamformer(BeamformerBase[Receiver], ReceiveStreamDecoder, ABC):
             )
 
         carrier_frequency = signal.carrier_frequency
-        samples = signal.samples.copy()
+        samples = signal[:, :]
 
         return self._decode(samples, carrier_frequency, focus_points, self.operator.device.antennas)

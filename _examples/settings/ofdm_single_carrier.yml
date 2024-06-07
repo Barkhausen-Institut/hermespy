@@ -18,11 +18,12 @@ Devices:
 # Specify channel models interconnecting devices 
 Channels:
 
-  # 5G TDL model at the self-interference channel of device_alpha
-  - !<5GTDL>
-    devices: [*device_alpha, *device_alpha]
-    model_type: !<TDLType> A       # Type of the TDL model. A-E are available
-    rms_delay: 1e-9                # Root mean square delay in seconds    
+  - # 5G TDL model at the self-interference channel of device_alpha
+    - *device_alpha
+    - *device_alpha
+    - &channel !<5GTDL>
+      model_type: !<TDLType> A          # Type of the TDL model. A-E are available
+      rms_delay: 1e-9                   # Root mean square delay in seconds    
 
 
 # Operators transmitting or receiving signals over the devices
@@ -47,7 +48,7 @@ Operators:
       - !<SingleCarrier>       # Spatial Multiplexing
 
     # Configuration of the waveform emitted by this transmitter
-    waveform: !<OFDM>
+    waveform: &ofdm !<OFDM>
 
       # Modulation settings
       modulation_order: 16                  # Modulation order, in other words 4 bit per data resource element
@@ -55,6 +56,7 @@ Operators:
       dc_suppression: False                 # Consider the DC component during the DFT
       num_subcarriers: 128                  # Number of subcarriers per communication frame
       channel_estimation: !<OFDM-Ideal>     # Ideal channel estimation routine
+        channel: *channel
         transmitter: *device_alpha
         receiver: *device_alpha
       channel_equalization: !<ZF>      # Zero-forcing channel equalization
@@ -108,11 +110,12 @@ Evaluators:
 # Simulation parameters
 num_samples: 1000                  # Number of samples per simulation grid section
 min_num_samples: 100               # Minimum number of samples per simulation grid section before premature stopping
-snr_type: EBN0                     # SNR is defined as the ratio between bit energy and noise power
+noise_level: !<EBN0>               # SNR is defined as the ratio between bit energy and noise power
+  reference: *ofdm                 # The SNR is calculated with respect to the processed waveform
 plot_results: True                 # Visualize the evaluations after the simulation has finished
 
 
 # Scenario parameters over which the Monte-Carlo simulation sweeps
 Dimensions:
 
-  snr: [20, 10, 2, 0] dB
+  noise_level: [20, 10, 2, 0] dB

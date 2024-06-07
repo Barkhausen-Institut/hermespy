@@ -48,9 +48,9 @@ signal_tuple = operator.transmit();
 % however this method is not guarateed to be sufficient always.
 signal = signal_tuple{1};
 
-% we are interested in the variable "signal.samples" which is a ndarray.
+% we are interested in the samples of a signal "signal[:, :]" which is a ndarray.
 % the function "python2matlab" converts ndarray to double
-signal_samples = python2matlab(signal.samples);
+signal_samples = python2matlab(signal[:, :]);
 
 % PLOTS
 figure

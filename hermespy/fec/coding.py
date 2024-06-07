@@ -73,10 +73,10 @@ if TYPE_CHECKING:
 
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -449,9 +449,9 @@ class EncoderManager(RandomNode, Serializable):
                 encoded_block = encoder.encode(
                     data_state[block_idx * data_block_size : (1 + block_idx) * data_block_size]
                 )
-                code_state[
-                    block_idx * code_block_size : (1 + block_idx) * code_block_size
-                ] = encoded_block
+                code_state[block_idx * code_block_size : (1 + block_idx) * code_block_size] = (
+                    encoded_block
+                )
 
         if num_code_bits and len(code_state) > num_code_bits:
             raise RuntimeError(
@@ -543,10 +543,10 @@ class EncoderManager(RandomNode, Serializable):
 
             # Decode all blocks sequentially
             for block_idx in range(num_blocks):
-                data_state[
-                    block_idx * data_block_size : (1 + block_idx) * data_block_size
-                ] = encoder.decode(
-                    code_state[block_idx * code_block_size : (1 + block_idx) * code_block_size]
+                data_state[block_idx * data_block_size : (1 + block_idx) * data_block_size] = (
+                    encoder.decode(
+                        code_state[block_idx * code_block_size : (1 + block_idx) * code_block_size]
+                    )
                 )
 
         # Return resulting data

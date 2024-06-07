@@ -11,10 +11,10 @@ from .phase_noise import PhaseNoise, NoPhaseNoise
 from .power_amplifier import PowerAmplifier
 
 __author__ = "André Noll Barreto"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["André Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -119,14 +119,14 @@ class RfChain(Serializable):
         transmitted_signal = input_signal.copy()
 
         # Simulate IQ imbalance
-        transmitted_signal.samples = self.add_iq_imbalance(transmitted_signal.samples)
+        transmitted_signal.set_samples(self.add_iq_imbalance(transmitted_signal[:, :]))
 
         # Simulate phase noise
         transmitted_signal = self.phase_noise.add_noise(transmitted_signal)
 
         # Simulate power amplifier
         if self.power_amplifier is not None:
-            transmitted_signal.samples = self.power_amplifier.send(transmitted_signal.samples)
+            transmitted_signal.set_samples(self.power_amplifier.send(transmitted_signal[:, :]))
 
         return transmitted_signal
 
@@ -162,7 +162,7 @@ class RfChain(Serializable):
         input_signal = input_signal.copy()
 
         # Simulate IQ imbalance
-        input_signal.samples = self.add_iq_imbalance(input_signal.samples)
+        input_signal.set_samples(self.add_iq_imbalance(input_signal[:, :]))
 
         # Simulate phase noise
         input_signal = self.phase_noise.add_noise(input_signal)

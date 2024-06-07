@@ -22,10 +22,10 @@ from .symbols import StatedSymbols, Symbols
 from .waveform_correlation_synchronization import CorrelationSynchronization
 
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -235,14 +235,14 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
     @property
     def pilot_signal(self) -> Signal:
         if self.num_preamble_symbols < 1:
-            return Signal.empty(self.sampling_rate)
+            return Signal.Empty(self.sampling_rate)
 
         pilot_symbols = np.zeros(
             1 + (self.num_preamble_symbols - 1) * self.oversampling_factor, dtype=complex
         )
         pilot_symbols[:: self.oversampling_factor] = self.pilot_symbols(self.num_preamble_symbols)
 
-        return Signal(
+        return Signal.Create(
             np.convolve(pilot_symbols, self._transmit_filter()), sampling_rate=self.sampling_rate
         )
 
@@ -272,9 +272,9 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
         placed_symbols[self.num_preamble_symbols + self._pilot_symbol_indices] = pilot_symbols[
             self.num_preamble_symbols : self.num_preamble_symbols + self._num_pilot_symbols
         ]
-        placed_symbols[
-            self.num_preamble_symbols + self._data_symbol_indices
-        ] = data_symbols.raw.flatten()
+        placed_symbols[self.num_preamble_symbols + self._data_symbol_indices] = (
+            data_symbols.raw.flatten()
+        )
 
         return Symbols(placed_symbols[np.newaxis, :, np.newaxis])
 
@@ -832,7 +832,6 @@ class RootRaisedCosineWaveform(RolledOffSingleCarrierWaveform, Serializable):
                 )
             )
         impulse_response[idx_0_by_0] = 1 + self.roll_off * (4 / np.pi - 1)
-
         return impulse_response / np.linalg.norm(impulse_response)
 
 
@@ -1022,9 +1021,7 @@ class FMCWWaveform(FilteredSingleCarrierWaveform, Serializable):
 
     def _transmit_filter(self) -> np.ndarray:
         time = np.linspace(0, 1 / self.symbol_rate, self.oversampling_factor)
-        impulse_response = np.exp(
-            1j * np.pi * (self.bandwidth * time + self.chirp_slope * time**2)
-        )
+        impulse_response = np.exp(1j * np.pi * (self.bandwidth * time + self.chirp_slope * time**2))
         # Cut off the chirp appropriately
         impulse_response[time > self.__true_chirp_duration] = 0.0
 

@@ -10,10 +10,10 @@ from hermespy.core import Signal
 from hermespy.simulation import SelectiveLeakage, SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -46,8 +46,8 @@ class TestSelectiveLeakage(TestCase):
     def test_leak(self) -> None:
         """Leaking a signal should result in the expected leak"""
 
-        test_signal = Signal(np.zeros((self.device.antennas.num_transmit_antennas, 100), dtype=np.complex_), self.device.sampling_rate, self.device.carrier_frequency)
-        test_signal.samples[:, 0] = 1.0
+        test_signal = Signal.Create(np.zeros((self.device.antennas.num_transmit_antennas, 100), dtype=np.complex_), self.device.sampling_rate, self.device.carrier_frequency)
+        test_signal[:, 0] = 1.0
 
         leaked_signal = self.leakage.leak(test_signal)
-        assert_array_almost_equal(np.abs(6 * test_signal.samples), np.abs(leaked_signal.samples[:, :100]))
+        assert_array_almost_equal(np.abs(6 * test_signal[:, :]), np.abs(leaked_signal[:, :100]))

@@ -42,6 +42,7 @@ and has to be replaced by one of the available implementations such as OFDM and 
 
    modem.waveforms.orthogonal.ofdm
    modem.waveforms.orthogonal.ocdm
+   modem.waveforms.orthogonal.otfs
    modem.waveforms.orthogonal.OrthogonalWaveform
    modem.waveforms.orthogonal.GridElement
    modem.waveforms.orthogonal.GridResource

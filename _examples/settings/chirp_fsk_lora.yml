@@ -28,24 +28,17 @@ Devices:
 
 # Channel models between devices
 Channels:
+  - # Rayleigh fading between on the device self-interfernce channel
+    - *transmitting_device
+    - *receiving_device
+    - !<MultipathFading>
+      delays: [ 0 ]           # Delay of the channel in seconds
+      power_profile: [ 0 ] dB # Tap gains
+      rice_factors: [ .inf ]
 
-  # Rayleigh fading between on the device self-interfernce channel
-  - !<MultipathFading>
-    devices: [*transmitting_device, *receiving_device]
-    delays: [ 0 ]           # Delay of the channel in seconds
-    power_profile: [ 0 ] dB # Tap gains
-    rice_factors: [ .inf ]
-
-    # Configure 3GPP standard antenna correlation models at both linked devices
-    alpha_correlation: !<StandardCorrelation>
-
-        device_type: BASE_STATION
-        correlation: LOW
-
-    beta_correlation: !<StandardCorrelation>
-      
-        device_type: TERMINAL
-        correlation: MEDIUM
+      # Configure 3GPP standard antenna correlation models at both linked devices
+      antenna_correlation: !<StandardCorrelation>
+          correlation: MEDIUM
 
 
 # Operators transmitting or receiving signals over the devices
@@ -101,11 +94,13 @@ Evaluators:
 # Simulation parameters
 num_samples: 1000                  # Number of samples per simulation grid section
 min_num_samples: 50                # Minimum number of samples per simulation grid section before premature stopping
-snr_type: EBN0                     # SNR is defined as the ratio between bit energy and noise power
+noise_level: !<EBN0>               # Noise is defined as the ratio between bit energy and noise power
+  reference: *link                 # The SNR is calculated with respect to the link waveform
+
 plot_results: True                 # Visualize the evaluations after the simulation has finished
 
 
 # Scenario parameters over which the Monte-Carlo simulation sweeps
 Dimensions:
 
-  snr: [10, 9, ..., -2] dB
+  noise_level: [10, 9, ..., -2] dB

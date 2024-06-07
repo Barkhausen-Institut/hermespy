@@ -13,10 +13,10 @@ from hermespy.modem.waveform_single_carrier import SingleCarrierCorrelationSynch
 from hermespy.simulation import SimulatedDevice
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "Jan Adler"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -32,7 +32,7 @@ class TestSCMatchedFilterJcas(TestCase):
 
         self.target_range = 5
         self.max_range = 10
-        self.channel = SingleTargetRadarChannel(target_range=self.target_range, alpha_device=self.device, beta_device=self.device, radar_cross_section=1.0)
+        self.channel = SingleTargetRadarChannel(target_range=self.target_range, radar_cross_section=1.0)
 
         self.oversampling_factor = 16
 
@@ -52,7 +52,7 @@ class TestSCMatchedFilterJcas(TestCase):
             transmission = self.device.transmit()
 
             # Propagate signal over the radar channel
-            propagation = self.channel.propagate(transmission)
+            propagation = self.channel.propagate(transmission, self.device, self.device)
 
             # Receive signal
             self.device.receive(propagation)

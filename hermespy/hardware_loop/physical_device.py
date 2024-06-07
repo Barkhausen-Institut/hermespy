@@ -27,10 +27,10 @@ from hermespy.core import (
 )
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -367,8 +367,8 @@ class PhysicalDevice(Device, ABC):
                 i.e. the variance of the unbiased received samples.
         """
 
-        silent_signal = Signal(
-            np.zeros((self.antennas.num_transmit_antennas, num_samples)),
+        silent_signal = Signal.Create(
+            np.zeros((self.antennas.num_transmit_ports, num_samples)),
             self.sampling_rate,
             self.carrier_frequency,
         )
@@ -381,17 +381,19 @@ class PhysicalDevice(Device, ABC):
 
         return noise_power
 
-    def _upload(self, signal: Signal) -> None:
+    def _upload(self, signal: Signal) -> Signal:
         """Upload samples to be transmitted to the represented hardware.
 
         Args:
 
             signal (Signal):
                 The samples to be uploaded.
+
+        Returns: The actually uploaded samples, including quantization scaling.
         """
 
         # The default routine is a stub
-        return  # pragma no cover
+        return signal
 
     def transmit(self, clear_cache: bool = True) -> DeviceTransmission:
         # If adaptive sampling is disabled, resort to the default transmission routine
@@ -416,8 +418,8 @@ class PhysicalDevice(Device, ABC):
             device_transmission = DeviceTransmission(operator_transmissions, mixed_signal)
 
         # Upload the samples
-        self._upload(device_transmission.mixed_signal)
-        self.__recent_upload = device_transmission.mixed_signal
+        uploaded_samples = self._upload(device_transmission.mixed_signal)
+        self.__recent_upload = uploaded_samples
 
         # Return transmission
         return device_transmission
@@ -464,7 +466,7 @@ class PhysicalDevice(Device, ABC):
             )
 
         # Upload signal to the device's memory
-        self._upload(signal)
+        uploaded_samples = self._upload(signal)
 
         # Trigger transmission / reception
         self.trigger()
@@ -477,7 +479,7 @@ class PhysicalDevice(Device, ABC):
             received_signal
             if not calibrate or self.leakage_calibration is None
             else self.leakage_calibration.remove_leakage(
-                signal, received_signal, self.delay_calibration.delay
+                uploaded_samples, received_signal, self.delay_calibration.delay
             )
         )
 
@@ -502,7 +504,7 @@ class PhysicalDevice(Device, ABC):
                     filter_cutoff = 0.5 * self.lowpass_bandwidth
 
                 filter = butter(5, filter_cutoff, output="sos", fs=self.sampling_rate)
-                filtered_signal.samples = sosfilt(filter, filtered_signal.samples, axis=1)
+                filtered_signal.set_samples(sosfilt(filter, filtered_signal[:, :], axis=1))
 
             _impinging_signals = filtered_signal
 
@@ -529,7 +531,7 @@ class PhysicalDevice(Device, ABC):
         transmitted_signal = (
             self.__recent_upload
             if self.__recent_upload is not None
-            else Signal.empty(
+            else Signal.Empty(
                 _impinging_signals.sampling_rate,
                 _impinging_signals.num_streams,
                 carrier_frequency=_impinging_signals.carrier_frequency,
@@ -572,8 +574,9 @@ class Calibration(ABC, HDFSerializable, Serializable):
 
     @classmethod
     @abstractmethod
-    def _configure_slot(cls: Type[CT], device: PhysicalDevice, value: CT | None) -> None:
-        ...  # pragma: no cover
+    def _configure_slot(
+        cls: Type[CT], device: PhysicalDevice, value: CT | None
+    ) -> None: ...  # pragma: no cover
 
     @property
     def device(self) -> PhysicalDevice | None:
@@ -673,12 +676,11 @@ class DelayCalibrationBase(Calibration, ABC):
 
         # Prepend zeros to the signal to account for negative delays
         delay_in_samples = round(-self.delay * signal.sampling_rate)
-        signal.samples = np.concatenate(
-            (
-                np.zeros((signal.num_streams, delay_in_samples), dtype=signal.samples.dtype),
-                signal.samples,
-            ),
-            axis=1,
+        signal.set_samples(
+            np.concatenate(
+                (np.zeros((signal.num_streams, delay_in_samples), dtype=np.complex_), signal[:, :]),
+                axis=1,
+            )
         )
 
         return signal
@@ -701,7 +703,7 @@ class DelayCalibrationBase(Calibration, ABC):
 
         # Remove samples from the signal to account for positive delays
         delay_in_samples = round(self.delay * signal.sampling_rate)
-        signal.samples = signal.samples[:, delay_in_samples:]
+        signal.set_samples(signal[:, delay_in_samples:])
 
         return signal
 

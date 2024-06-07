@@ -12,10 +12,10 @@ from hermespy.modem.waveform_chirp_fsk import ChirpFSKWaveform, ChirpFSKSynchron
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -285,7 +285,8 @@ class TestChirpFSKWaveform(unittest.TestCase):
         # define test parameters
         num_samples = self.generator.samples_per_frame
 
-        data_bits = np.random.randint(0, 2, self.generator.bits_per_frame(self.generator.num_data_symbols))
+        bit_generator = np.random.default_rng(42)
+        data_bits = bit_generator.integers(0, 2, self.generator.bits_per_frame(self.generator.num_data_symbols))
         data_symbols = self.generator.map(data_bits)
         transmitted_signal = self.generator.modulate(data_symbols)
 

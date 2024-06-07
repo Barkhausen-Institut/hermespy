@@ -11,7 +11,7 @@ from collections.abc import Sequence
 from enum import IntEnum
 from itertools import chain
 from os import path, remove
-from typing import Generic, List, Optional, overload, Set, Type, TypeVar, Union
+from typing import Generic, overload, Type, TypeVar, Union
 
 from h5py import File, Group
 
@@ -35,10 +35,10 @@ from .signal_model import Signal
 from .transformation import TransformableBase
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -77,18 +77,18 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
     serialized_attributes = {"devices"}
 
     @classmethod
-    def _arg_signature(cls: Type[Scenario]) -> Set[str]:
+    def _arg_signature(cls: Type[Scenario]) -> set[str]:
         return {"seed", "devices"}
 
     __mode: ScenarioMode  # Current scenario operating mode
-    __devices: List[DeviceType]  # Registered devices within this scenario.
+    __devices: list[DeviceType]  # Registered devices within this scenario.
     __drop_duration: float  # Drop duration in seconds.
-    __file: Optional[File]  # HDF5 file handle
+    __file: File | None  # HDF5 file handle
     __drop_counter: int  # Internal drop counter
     __campaign: str  # Measurement campaign name
 
     def __init__(
-        self, seed: Optional[int] = None, devices: Optional[Sequence[DeviceType]] = None
+        self, seed: int | None = None, devices: Sequence[DeviceType] | None = None
     ) -> None:
         """
         Args:
@@ -96,7 +96,7 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
             seed (int, optional):
                 Random seed used to initialize the pseudo-random number generator.
 
-            devices (List[Device], optional):
+            devices (Sequence[Device], optional):
                 Devices to be added to the scenario during initialization.
 
         """
@@ -107,7 +107,7 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
 
         # Initialize attributes
         self.__mode = ScenarioMode.DEFAULT
-        self.__devices = []
+        self.__devices = list()
         self.drop_duration = 0.0
         self.__file = None
         self.__drop_counter = 0
@@ -206,10 +206,10 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
         return self.devices.index(device)
 
     @property
-    def devices(self) -> List[DeviceType]:
+    def devices(self) -> list[DeviceType]:
         """Devices registered in this scenario.
 
-        Returns: List of devices.
+        Returns: list of devices.
         """
 
         return self.__devices.copy()
@@ -225,14 +225,14 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
         return len(self.__devices)
 
     @property
-    def transmitters(self) -> List[Transmitter]:
+    def transmitters(self) -> list[Transmitter]:
         """All transmitting operators within this scenario.
 
         Returns:
-            List[Transmitter]: List of all transmitting operators.
+            list[Transmitter]: list of all transmitting operators.
         """
 
-        transmitters: List[Transmitter] = []
+        transmitters: list[Transmitter] = []
 
         for device in self.__devices:
             transmitters.extend(device.transmitters)
@@ -240,14 +240,14 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
         return transmitters
 
     @property
-    def receivers(self) -> List[Receiver]:
+    def receivers(self) -> list[Receiver]:
         """All receiving operators within this scenario.
 
         Returns:
-            List[Receiver]: List of all transmitting operators.
+            list[Receiver]: list of all transmitting operators.
         """
 
-        receivers: List[Receiver] = []
+        receivers: list[Receiver] = []
 
         for device in self.__devices:
             receivers.extend(device.receivers)
@@ -283,13 +283,13 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
         return num
 
     @property
-    def operators(self) -> Set[Operator]:
+    def operators(self) -> set[Operator]:
         """All operators within this scenario.
 
         Returns: A set containing all unique operators within this scenario
         """
 
-        operators: Set[Operator] = set()
+        operators: set[Operator] = set()
 
         # Iterate over all devices and collect operators
         for device in self.devices:
@@ -648,21 +648,21 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
         return transmissions
 
     def generate_outputs(
-        self, transmissions: Optional[List[List[Transmission]]] = None
+        self, transmissions: list[list[Transmission]] | None = None
     ) -> Sequence[DeviceOutput]:
         """Generate signals emitted by devices.
 
         Args:
 
-            transmissions ([List[List[Transmission]], optional):
+            transmissions (list[list[Transmission]], optional):
                 Transmissions by operators.
                 If none were provided, cached operator transmissions are assumed.
 
-        Returns: List of device outputs.
+        Returns: list of device outputs.
         """
 
         # Assume cached operator transmissions if none were provided
-        _transmissions: List[None] | List[List[Transmission]] = (
+        _transmissions: list[None] | list[list[Transmission]] = (
             [None] * self.num_devices if not transmissions else transmissions
         )
 
@@ -677,30 +677,26 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
     def transmit_devices(self) -> Sequence[DeviceTransmission]:
         """Generated information transmitted by all registered devices.
 
-        Returns: List of generated information transmitted by each device.
+        Returns: list of generated information transmitted by each device.
         """
 
-        # Note that devices are required to cache so that the leaking signal is available during reception
         transmissions = [device.transmit() for device in self.devices]
         return transmissions
 
     @overload
     def process_inputs(
         self, impinging_signals: Sequence[DeviceInput], cache: bool = True
-    ) -> Sequence[ProcessedDeviceInput]:
-        ...  # pragma: no cover
+    ) -> Sequence[ProcessedDeviceInput]: ...  # pragma: no cover
 
     @overload
     def process_inputs(
         self, impinging_signals: Sequence[Signal], cache: bool = True
-    ) -> Sequence[ProcessedDeviceInput]:
-        ...  # pragma: no cover
+    ) -> Sequence[ProcessedDeviceInput]: ...  # pragma: no cover
 
     @overload
     def process_inputs(
         self, impinging_signals: Sequence[Sequence[Signal]], cache: bool = True
-    ) -> Sequence[ProcessedDeviceInput]:
-        ...  # pragma: no cover
+    ) -> Sequence[ProcessedDeviceInput]: ...  # pragma: no cover
 
     def process_inputs(
         self,
@@ -712,13 +708,13 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
         Args:
 
             impinging_signals (Sequence[DeviceInput | Signal | Sequence[Signal]]):
-                List of signals impinging onto the devices.
+                list of signals impinging onto the devices.
 
             cache (bool, optional):
                 Cache the operator inputs at the registered receive operators for further processing.
                 Enabled by default.
 
-        Returns: List of the processed device input information.
+        Returns: list of the processed device input information.
 
         Raises:
 
@@ -738,18 +734,15 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
     @overload
     def receive_operators(
         self, operator_inputs: Sequence[ProcessedDeviceInput], cache: bool = True
-    ) -> Sequence[Sequence[Reception]]:
-        ...  # pragma: no cover
+    ) -> Sequence[Sequence[Reception]]: ...  # pragma: no cover
 
     @overload
     def receive_operators(
         self, operator_inputs: Sequence[Sequence[Signal]], cache: bool = True
-    ) -> Sequence[Sequence[Reception]]:
-        ...  # pragma: no cover
+    ) -> Sequence[Sequence[Reception]]: ...  # pragma: no cover
 
     @overload
-    def receive_operators(self) -> Sequence[Sequence[Reception]]:
-        ...  # pragma: no cover
+    def receive_operators(self) -> Sequence[Sequence[Reception]]: ...  # pragma: no cover
 
     def receive_operators(
         self,
@@ -768,7 +761,7 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
                 Cache the generated received information at the device's receive operators.
                 Enabled by default.
 
-        Returns: List of information generated by receiving over the device's operators.
+        Returns: list of information generated by receiving over the device's operators.
 
         Raises:
 
@@ -792,20 +785,17 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
     @overload
     def receive_devices(
         self, impinging_signals: Sequence[DeviceInput], cache: bool = True
-    ) -> Sequence[DeviceReception]:
-        ...  # pragma: no cover
+    ) -> Sequence[DeviceReception]: ...  # pragma: no cover
 
     @overload
     def receive_devices(
         self, impinging_signals: Sequence[Signal], cache: bool = True
-    ) -> Sequence[DeviceReception]:
-        ...  # pragma: no cover
+    ) -> Sequence[DeviceReception]: ...  # pragma: no cover
 
     @overload
     def receive_devices(
         self, impinging_signals: Sequence[Sequence[Signal]], cache: bool = True
-    ) -> Sequence[DeviceReception]:
-        ...  # pragma: no cover
+    ) -> Sequence[DeviceReception]: ...  # pragma: no cover
 
     def receive_devices(
         self,
@@ -818,14 +808,14 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
 
         Args:
 
-            impinging_signals (List[Union[DeviceInput, Signal, Iterable[Signal]]]):
-                List of signals impinging onto the devices.
+            impinging_signals (list[Union[DeviceInput, Signal, Iterable[Signal]]]):
+                list of signals impinging onto the devices.
 
             cache (bool, optional):
                 Cache the operator inputs at the registered receive operators for further processing.
                 Enabled by default.
 
-        Returns: List of the processed device input information.
+        Returns: list of the processed device input information.
 
         Raises:
 

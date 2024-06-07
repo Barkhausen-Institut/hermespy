@@ -3,7 +3,8 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from math import ceil
-from typing import BinaryIO, Optional
+from typing import Optional
+from io import BufferedReader
 
 import numpy as np
 
@@ -11,10 +12,10 @@ from hermespy.core.factory import Serializable
 from hermespy.core.random_node import RandomNode
 
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -72,7 +73,7 @@ class RandomBitsSource(BitsSource, Serializable):
 class StreamBitsSource(BitsSource, Serializable):
     """Bit-stream generator mapping representing file system streams as bit sources."""
 
-    __stream: BinaryIO
+    __stream: BufferedReader
 
     def __init__(self, path: str) -> None:
         """

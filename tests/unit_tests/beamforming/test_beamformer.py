@@ -12,10 +12,10 @@ from hermespy.simulation import SimulatedDevice, SimulatedIdealAntenna, Simulate
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -223,17 +223,17 @@ class TestTransmitBeamformer(TestCase):
     def test_encode_streams_validation(self) -> None:
         """Encode streams routine should raise exceptions on invalid arguments"""
 
-        signal = Signal(np.zeros((3, 10), dtype=complex), 1.0)
+        signal = Signal.Create(np.zeros((3, 10), dtype=complex), 1.0)
         with self.assertRaises(ValueError):
             self.beamformer.encode_streams(signal)
 
     def test_encode_streams(self) -> None:
         """Stream encoding should properly encode the argument signal"""
 
-        signal = Signal(np.ones((2, 10), dtype=complex), 1.0)
+        signal = Signal.Create(np.ones((2, 10), dtype=complex), 1.0)
         encoded_signal = self.beamformer.encode_streams(signal)
 
-        assert_array_equal(signal.samples, encoded_signal.samples)
+        assert_array_equal(signal[:, :], encoded_signal[:, :])
 
     def test_precoding_setget(self) -> None:
         """Precoding property getter should return setter argument"""
@@ -273,38 +273,38 @@ class TestTransmitBeamformer(TestCase):
         """Transmit routine should raise exceptions on invalid configurations"""
 
         with self.assertRaises(ValueError):
-            self.beamformer.transmit(Signal(np.zeros((2, 10), dtype=complex), 1.0), [SphericalFocus(0, 0), SphericalFocus(1, 2)])
+            self.beamformer.transmit(Signal.Create(np.zeros((2, 10), dtype=complex), 1.0), [SphericalFocus(0, 0), SphericalFocus(1, 2)])
 
         with self.assertRaises(RuntimeError):
-            self.beamformer.transmit(Signal(np.zeros((1, 10), dtype=complex), 1.0))
+            self.beamformer.transmit(Signal.Create(np.zeros((1, 10), dtype=complex), 1.0))
 
         self.operator.device = None
 
         with self.assertRaises(FloatingError):
-            self.beamformer.transmit(Signal(np.zeros((2, 10), dtype=complex), 1.0))
+            self.beamformer.transmit(Signal.Create(np.zeros((2, 10), dtype=complex), 1.0))
 
         self.beamformer.operator = None
 
         with self.assertRaises(FloatingError):
-            self.beamformer.transmit(Signal(np.zeros((2, 10), dtype=complex), 1.0))
+            self.beamformer.transmit(Signal.Create(np.zeros((2, 10), dtype=complex), 1.0))
 
     def test_transmit_focus_argument(self) -> None:
         """Transmit routine should correctly envoke the envode subroutine for scalar focus arguments"""
 
-        expected_signal = Signal(np.ones((2, 10), dtype=complex), 1.0)
+        expected_signal = Signal.Create(np.ones((2, 10), dtype=complex), 1.0)
         focus = SphericalFocus(0, 0)
 
         steered_signal = self.beamformer.transmit(expected_signal, focus)
-        assert_array_equal(expected_signal.samples, steered_signal.samples)
+        assert_array_equal(expected_signal[:, :], steered_signal[:, :])
 
     def test_transmit_sequence_argument(self) -> None:
         """Transmit routine should correctly envoke the encode subroutine"""
 
-        expected_signal = Signal(np.ones((2, 10), dtype=complex), 1.0)
+        expected_signal = Signal.Create(np.ones((2, 10), dtype=complex), 1.0)
         focus = [SphericalFocus(0, f) for f in range(self.beamformer.num_transmit_focus_points)]
 
         steered_signal = self.beamformer.transmit(expected_signal, focus)
-        assert_array_equal(expected_signal.samples, steered_signal.samples)
+        assert_array_equal(expected_signal[:, :], steered_signal[:, :])
 
 
 class ReceiveBeamformerMock(ReceiveBeamformer):
@@ -343,17 +343,17 @@ class TestReceiveBeamformer(TestCase):
     def test_decode_streams_validation(self) -> None:
         """Decode streams routine should raise exceptions on invalid arguments"""
 
-        signal = Signal(np.zeros((3, 10), dtype=complex), 1.0)
+        signal = Signal.Create(np.zeros((3, 10), dtype=complex), 1.0)
         with self.assertRaises(ValueError):
             self.beamformer.decode_streams(signal)
 
     def test_decode_streams(self) -> None:
         """Stream decoding should properly encode the argument signal"""
 
-        signal = Signal(np.ones((2, 10), dtype=complex), 1.0)
+        signal = Signal.Create(np.ones((2, 10), dtype=complex), 1.0)
         decoded_signal = self.beamformer.decode_streams(signal)
 
-        assert_array_equal(signal.samples, decoded_signal.samples)
+        assert_array_equal(signal[:, :], decoded_signal[:, :])
 
     def test_precoding_setget(self) -> None:
         """Precoding property getter should return setter argument"""
@@ -413,60 +413,60 @@ class TestReceiveBeamformer(TestCase):
         """Receive routine should raise exceptions on invalid configurations"""
 
         with self.assertRaises(ValueError):
-            self.beamformer.receive(Signal(np.zeros((2, 10), dtype=complex), 1.0), [SphericalFocus(0, 0), SphericalFocus(1, 2)])
+            self.beamformer.receive(Signal.Create(np.zeros((2, 10), dtype=complex), 1.0), [SphericalFocus(0, 0), SphericalFocus(1, 2)])
 
         with self.assertRaises(RuntimeError):
-            self.beamformer.receive(Signal(np.zeros((1, 10), dtype=complex), 1.0))
+            self.beamformer.receive(Signal.Create(np.zeros((1, 10), dtype=complex), 1.0))
 
         self.operator.device = None
 
         with self.assertRaises(FloatingError):
-            self.beamformer.receive(Signal(np.zeros((2, 10), dtype=complex), 1.0))
+            self.beamformer.receive(Signal.Create(np.zeros((2, 10), dtype=complex), 1.0))
 
         self.beamformer.operator = None
 
         with self.assertRaises(FloatingError):
-            self.beamformer.receive(Signal(np.zeros((2, 10), dtype=complex), 1.0))
+            self.beamformer.receive(Signal.Create(np.zeros((2, 10), dtype=complex), 1.0))
 
     def test_receive_scalar_argument(self) -> None:
         """Receive routine should correctly envoke the envode subroutine for scalar focus arguments"""
 
-        expected_signal = Signal(np.ones((2, 10), dtype=complex), 1.0)
+        expected_signal = Signal.Create(np.ones((2, 10), dtype=complex), 1.0)
         focus = SphericalFocus(0, 0)
 
         steered_signal = self.beamformer.receive(expected_signal, focus)
-        assert_array_equal(expected_signal.samples, steered_signal.samples)
+        assert_array_equal(expected_signal[:, :], steered_signal[:, :])
 
     def test_receive_sequence_argument(self) -> None:
         """Receive routine should correctly envoke the encode subroutine"""
 
-        expected_signal = Signal(np.ones((2, 10), dtype=complex), 1.0)
+        expected_signal = Signal.Create(np.ones((2, 10), dtype=complex), 1.0)
         focus = [SphericalFocus(0, f) for f in range(self.beamformer.num_receive_focus_points)]
 
         steered_signal = self.beamformer.receive(expected_signal, focus)
-        assert_array_equal(expected_signal.samples, steered_signal.samples)
+        assert_array_equal(expected_signal[:, :], steered_signal[:, :])
 
     def test_probe_validation(self) -> None:
         """Probe routine should raise exceptions on invalid configurations"""
 
         with self.assertRaises(RuntimeError):
-            self.beamformer.probe(Signal(np.zeros((1, 10), dtype=complex), 1.0))
+            self.beamformer.probe(Signal.Create(np.zeros((1, 10), dtype=complex), 1.0))
 
         self.operator.device = None
 
         with self.assertRaises(FloatingError):
-            self.beamformer.probe(Signal(np.zeros((2, 10), dtype=complex), 1.0))
+            self.beamformer.probe(Signal.Create(np.zeros((2, 10), dtype=complex), 1.0))
 
         self.beamformer.operator = None
 
         with self.assertRaises(FloatingError):
-            self.beamformer.probe(Signal(np.zeros((2, 10), dtype=complex), 1.0))
+            self.beamformer.probe(Signal.Create(np.zeros((2, 10), dtype=complex), 1.0))
 
     def test_probe(self) -> None:
         """Probe routine should correctly envoke the encode subroutine"""
 
         expected_samples = np.ones((2, 10), dtype=complex)
-        expected_signal = Signal(expected_samples, 1.0)
+        expected_signal = Signal.Create(expected_samples, 1.0)
         focus = np.ones((1, 2, self.beamformer.num_receive_focus_points), dtype=float)
 
         steered_signal = self.beamformer.probe(expected_signal, focus)

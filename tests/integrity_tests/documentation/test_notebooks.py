@@ -10,10 +10,10 @@ import nbformat as nbform
 from nbconvert.preprocessors import CellExecutionError, ExecutePreprocessor
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -120,8 +120,8 @@ class TestNotebooks(TestCase):
         """Test beamforming usage notebook"""
 
         notebook = self.__load_notebook("beamforming_usage.ipynb")
-        self.__patch_notebook(notebook, 8, inserts={0: "import ray as ray", 7: "ray.init(local_mode=True)"}, patches={7: "simulation = Simulation(console_mode=ConsoleMode.SILENT, num_actors=1, num_samples=1)"})
-        self.__patch_notebook(notebook, 25, patches={20: "simulation.num_samples = 1"})
+        self.__patch_notebook(notebook, 8, inserts={0: "import ray as ray\n", 7: "ray.init(local_mode=True)"}, patches={8: "simulation = Simulation(console_mode=ConsoleMode.SILENT, num_actors=1, num_samples=1)"})
+        self.__patch_notebook(notebook, 25, patches={21: "simulation.num_drops = 1"})
         self.__patch_notebook(notebook, 31, patches={14: "simulation.num_drops = 1"})
         self.__test_notebook(notebook)
 
@@ -129,7 +129,13 @@ class TestNotebooks(TestCase):
         """Test the channel implementation example notebook"""
 
         notebook = self.__load_notebook("channel.ipynb")
-        self.__patch_notebook(notebook, 4, patches={9: "simulation = Simulation(console_mode=ConsoleMode.SILENT, num_samples=1, num_actors=1)"}, inserts={1: "import ray as ray", 8: "ray.init(local_mode=True)"})
+        self.__patch_notebook(notebook, 4, 
+            patches= {
+                8: "simulation = Simulation(console_mode=ConsoleMode.SILENT, num_actors=1)",
+                34: "simulation.num_samples = 1",
+            },
+            inserts={1: "import ray as ray", 8: "ray.init(local_mode=True)"},
+        )
         self.__test_notebook(notebook)
 
     def test_datasets(self) -> None:
@@ -142,7 +148,13 @@ class TestNotebooks(TestCase):
         """Test the evaluator implementation example notebook"""
 
         notebook = self.__load_notebook("evaluator.ipynb")
-        self.__patch_notebook(notebook, 4, inserts={0: "import ray as ray\n", 6: "ray.init(local_mode=True)"}, patches={6: "simulation = Simulation(console_mode=ConsoleMode.SILENT, num_actors=1, num_samples=1)"})
+        self.__patch_notebook(
+            notebook, 4,
+            inserts={0: "import ray as ray\n", 6: "ray.init(local_mode=True)"},
+            patches={
+                6: "simulation = Simulation(console_mode=ConsoleMode.SILENT, num_actors=1)",
+            },
+        )
         self.__test_notebook(notebook)
 
     def test_fec(self) -> None:
@@ -163,7 +175,7 @@ class TestNotebooks(TestCase):
         """Test the receiver operation characteristics example notebook"""
 
         notebook = self.__load_notebook("roc.ipynb")
-        self.__patch_notebook(notebook, 2, inserts={0: "import ray as ray", 16: "ray.init(local_mode=True)"})
+        self.__patch_notebook(notebook, 2, inserts={0: "import ray as ray\n", 16: "ray.init(local_mode=True)"})
         self.__patch_notebook(notebook, 6, patches={22: "simulation.num_samples = 1"})
         self.__patch_notebook(notebook, 8, patches={10: "hardware_loop.num_samples = 1"})
         self.__test_notebook(notebook)

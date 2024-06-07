@@ -13,7 +13,7 @@ from hermespy.tools import db2lin
 from hermespy.core import ConsoleMode
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.3.0"
@@ -64,7 +64,7 @@ evaluator = BitErrorEvaluator(transmit_operator, receive_operator)
 evaluator.tolerance = .0
 evaluator.confidence = 1
 simulation.add_evaluator(evaluator)
-simulation.new_dimension('snr', [db2lin(x) for x in np.arange(-10, 20, .5)])
+simulation.new_dimension('noise_level', [db2lin(x) for x in np.arange(-10, 20, .5)])
 simulation.num_samples, simulation.min_num_samples = 100000, 100000
 simulation.plot_results = True
 simulation.scenario.set_seed(42)

@@ -12,10 +12,10 @@ from hermespy.simulation.rf_chain import Gain, AutomaticGainControl, GainControl
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -45,11 +45,11 @@ class TestGainControlBase(TestCase):
         """Adjust signal should return correct signal"""
 
         gain = 0.456
-        signal = Signal(np.ones((2, 1)) / gain, 1.0, 0.0)
-        expected_signal = Signal(np.ones((2, 1)), 1.0, 0.0)
+        signal = Signal.Create(np.ones((2, 1)) / gain, 1.0, 0.0)
+        expected_signal = Signal.Create(np.ones((2, 1)), 1.0, 0.0)
 
         adjusted_signal = self.gain.adjust_signal(signal, gain)
-        assert_array_almost_equal(expected_signal.samples, adjusted_signal.samples)
+        assert_array_almost_equal(expected_signal[:, :], adjusted_signal[:, :])
 
     def test_scale_quantized_signal_disabled(self) -> None:
         """Scale quantized signal should return correct signal when the flag is disabled"""
@@ -57,11 +57,11 @@ class TestGainControlBase(TestCase):
         self.gain.rescale_quantization = False
 
         gain = 0.456
-        signal = Signal(np.ones((2, 1)), 1.0, 0.0)
-        expected_signal = Signal(np.ones((2, 1)), 1.0, 0.0)
+        signal = Signal.Create(np.ones((2, 1)), 1.0, 0.0)
+        expected_signal = Signal.Create(np.ones((2, 1)), 1.0, 0.0)
 
         rescaled_signal = self.gain.scale_quantized_signal(signal, gain)
-        assert_array_almost_equal(expected_signal.samples, rescaled_signal.samples)
+        assert_array_almost_equal(expected_signal[:, :], rescaled_signal[:, :])
 
     def test_scale_quantized_signal_enabled(self) -> None:
         """Scale quantized signal should return correct signal when the flag is enabled"""
@@ -69,11 +69,11 @@ class TestGainControlBase(TestCase):
         self.gain.rescale_quantization = True
 
         gain = 0.456
-        signal = Signal(np.ones((2, 1)), 1.0, 0.0)
-        expected_signal = Signal(np.ones((2, 1)) / gain, 1.0, 0.0)
+        signal = Signal.Create(np.ones((2, 1)), 1.0, 0.0)
+        expected_signal = Signal.Create(np.ones((2, 1)) / gain, 1.0, 0.0)
 
         rescaled_signal = self.gain.scale_quantized_signal(signal, gain)
-        assert_array_almost_equal(expected_signal.samples, rescaled_signal.samples)
+        assert_array_almost_equal(expected_signal[:, :], rescaled_signal[:, :])
 
 
 class TestGain(TestCase):
@@ -145,7 +145,7 @@ class TestAutomaticGainControl(TestCase):
     def test_estimate_gain_validation(self) -> None:
         """Gain estimation should raise RuntimeError on invalid internal states"""
 
-        signal = Signal(np.ones((2, 1)), 1.0, 0.0)
+        signal = Signal.Create(np.ones((2, 1)), 1.0, 0.0)
         self.gain.agc_type = Mock(spec=GainControlType)
 
         with self.assertRaises(RuntimeError):
@@ -155,11 +155,11 @@ class TestAutomaticGainControl(TestCase):
         """Gain estimation should return correct gain"""
 
         self.gain.agc_type = GainControlType.MAX_AMPLITUDE
-        signal = Signal(2 * np.ones((2, 1)), 1.0, 0.0)
+        signal = Signal.Create(2 * np.ones((2, 1)), 1.0, 0.0)
         max_amplitude_gain_estimate = self.gain.estimate_gain(signal)
 
         self.gain.agc_type = GainControlType.RMS_AMPLITUDE
-        signal = Signal(2 * np.ones((2, 1)), 1.0, 0.0)
+        signal = Signal.Create(2 * np.ones((2, 1)), 1.0, 0.0)
         rms_amplitude_gain_estimate = self.gain.estimate_gain(signal)
 
         self.assertEqual(0.5, max_amplitude_gain_estimate)
@@ -218,11 +218,11 @@ class TestAnalogDigitalConverter(TestCase):
         """Convert method should return signal"""
 
         self.adc.num_quantization_bits = None
-        input_signal = Signal(np.ones((2, 2)), 1.0, 0.0)
-        expected_signal = Signal(np.ones((2, 2)) * 0.456, 1.0, 0.0)
+        input_signal = Signal.Create(np.ones((2, 2)), 1.0, 0.0)
+        expected_signal = Signal.Create(np.ones((2, 2)) * 0.456, 1.0, 0.0)
 
         converted_signal = self.adc.convert(input_signal)
-        assert_array_almost_equal(expected_signal.samples, converted_signal.samples)
+        assert_array_almost_equal(expected_signal[:, :], converted_signal[:, :])
 
     def test_mid_riser_convert(self) -> None:
         """Convert method should return correctly quantized signal for mid_riser setting"""
@@ -230,11 +230,11 @@ class TestAnalogDigitalConverter(TestCase):
         self.adc.num_quantization_bits = 2
         self.adc.quantizer_type = QuantizerType.MID_RISER
 
-        signal = Signal(np.ones((2, 2)), 1.0, 0.0)
-        expected_signal = Signal(0.25 * np.ones((2, 2)) + 0.25j * np.ones((2, 2)), 1.0, 0.0)
+        signal = Signal.Create(np.ones((2, 2)), 1.0, 0.0)
+        expected_signal = Signal.Create(0.25 * np.ones((2, 2)) + 0.25j * np.ones((2, 2)), 1.0, 0.0)
         converted_signal = self.adc.convert(signal)
 
-        assert_array_almost_equal(converted_signal.samples, expected_signal.samples)
+        assert_array_almost_equal(converted_signal[:, :], expected_signal[:, :])
 
     def test_mid_tread_convert(self) -> None:
         """Convert method should return correctly quantized signal for mid_tread setting"""
@@ -242,11 +242,11 @@ class TestAnalogDigitalConverter(TestCase):
         self.adc.num_quantization_bits = 2
         self.adc.quantizer_type = QuantizerType.MID_TREAD
 
-        signal = Signal(np.ones((2, 2)), 1.0, 0.0)
-        expected_signal = Signal(0.5 * np.ones((2, 2)), 1.0, 0.0)
+        signal = Signal.Create(np.ones((2, 2)), 1.0, 0.0)
+        expected_signal = Signal.Create(0.5 * np.ones((2, 2)), 1.0, 0.0)
         converted_signal = self.adc.convert(signal)
 
-        assert_array_almost_equal(converted_signal.samples, expected_signal.samples)
+        assert_array_almost_equal(converted_signal[:, :], expected_signal[:, :])
 
     def test_convert_multiple_frames(self) -> None:
         """Convert method should return correctly quantized signal for multiple frames"""
@@ -254,21 +254,21 @@ class TestAnalogDigitalConverter(TestCase):
         self.adc.num_quantization_bits = 2
         self.adc.quantizer_type = QuantizerType.MID_TREAD
 
-        signal = Signal(0.5 * np.array([[1, 2, 2, 3]]), 1.0, 0.0)
-        expected_signal = Signal(0.5 * np.array([[0, 1, 1, 1]]), 1.0, 0.0)
+        signal = Signal.Create(0.5 * np.array([[1, 2, 2, 3]]), 1.0, 0.0)
+        expected_signal = Signal.Create(0.5 * np.array([[0, 1, 1, 1]]), 1.0, 0.0)
         converted_signal = self.adc.convert(signal, 2.0)
 
-        assert_array_almost_equal(converted_signal.samples, expected_signal.samples)
+        assert_array_almost_equal(converted_signal[:, :], expected_signal[:, :])
 
     def test_plot_quantizers(self) -> None:
         """Plot quantizers method should return matplotlib figure"""
 
-        signal = Signal(np.ones((2, 2)), 1.0, 0.0)
+        signal = Signal.Create(np.ones((2, 2)), 1.0, 0.0)
         axes = Mock()
 
-        self.adc.plot_quantizer(signal.samples, fig_axes=axes)
+        self.adc.plot_quantizer(signal[:, :], fig_axes=axes)
         axes.plot.assert_called_once()
 
         with patch("matplotlib.pyplot.figure") as figure_mock:
-            self.adc.plot_quantizer(signal.samples)
+            self.adc.plot_quantizer(signal[:, :])
             figure_mock.assert_called_once()

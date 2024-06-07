@@ -20,10 +20,10 @@ from hermespy.core import ScatterVisualization, Serializable, VAT, Visualizable
 from .cube import RadarCube
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Egor Achkasov"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -241,17 +241,17 @@ class RadarPointCloud(Visualizable[ScatterVisualization]):
         ax.set_ylabel("Z [m]")
         ax.set_zlabel("Y [m]")
 
-        paths = ax.scatter([], [], [], marker="o", c=0, cmap="Greens")
+        paths = ax.plot([], [], [], marker="o", linestyle="None")
         return ScatterVisualization(figure, axes, paths)
 
     def _update_visualization(self, visualization: ScatterVisualization, **kwargs) -> None:
-        ax: Axes3D = visualization.axes.flat[0]  # type: ignore
-        ax.clear()
-        for point in self.points:
-            position = point.position
-            ax.scatter(
-                position[0], position[2], position[1], marker="o", c=point.power, cmap="Greens"
-            )
+        # Collect point data
+        point_positions = np.array([point.position for point in self.points])
+
+        # Update visualization
+        path = visualization.paths[0]
+        path.set_data(point_positions[:, 0], point_positions[:, 1])
+        path.set_3d_properties(point_positions[:, 2])
 
 
 class RadarDetector(object):

@@ -10,10 +10,10 @@ from scipy.constants import pi
 from hermespy.core import RandomNode, Serializable, Signal
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -186,6 +186,7 @@ class OscillatorPhaseNoise(PhaseNoise, Serializable):
 
     def add_noise(self, signal: Signal) -> Signal:
         pn = self._get_noise_samples(signal.num_samples, signal.num_streams, signal.sampling_rate)
-        signal.samples *= np.exp(1j * pn)
+        for b in signal:
+            b *= np.exp(1j * pn[:, b.offset : b.end])
 
         return signal

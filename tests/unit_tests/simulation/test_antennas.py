@@ -11,10 +11,10 @@ from hermespy.core import AntennaMode, Signal
 from hermespy.simulation import RfChain, SimulatedAntenna, SimulatedAntennaPort, SimulatedAntennaArray, SimulatedCustomArray, SimulatedDevice, SimulatedDipole, SimulatedIdealAntenna, SimulatedLinearAntenna, SimulatedPatchAntenna, SimulatedUniformArray
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -68,7 +68,7 @@ class _TestSimulatedAntenna(TestCase):
     def test_transmit_validation(self) -> None:
         """Transmit routine should raise ValueError if signal model has more than one stream"""
 
-        signal = Signal(np.random.normal(size=(2, 10)) + 1j * np.random.normal(size=(2, 10)), 1, 1)
+        signal = Signal.Create(np.random.normal(size=(2, 10)) + 1j * np.random.normal(size=(2, 10)), 1, 1)
 
         with self.assertRaises(ValueError):
             self.antenna.transmit(signal)
@@ -76,19 +76,19 @@ class _TestSimulatedAntenna(TestCase):
     def test_transmit(self) -> None:
         """Transmit routine should properly apply the antenna weight"""
 
-        signal = Signal(np.random.normal(size=(1, 10)) + 1j * np.random.normal(size=(1, 10)), 1, 1)
+        signal = Signal.Create(np.random.normal(size=(1, 10)) + 1j * np.random.normal(size=(1, 10)), 1, 1)
         weight = 2+3j
-        expected_samples = weight * signal.samples
+        expected_samples = weight * signal[:, :]
 
         self.antenna.weight = weight
         transmitted_signal = self.antenna.transmit(signal)
 
-        assert_array_almost_equal(expected_samples, transmitted_signal.samples)
+        assert_array_almost_equal(expected_samples, transmitted_signal[:, :])
 
     def test_receive_validation(self) -> None:
         """Receive routine should raise ValueError if signal model has more than one stream"""
 
-        signal = Signal(np.random.normal(size=(2, 10)) + 1j * np.random.normal(size=(2, 10)), 1, 1)
+        signal = Signal.Create(np.random.normal(size=(2, 10)) + 1j * np.random.normal(size=(2, 10)), 1, 1)
 
         with self.assertRaises(ValueError):
             self.antenna.receive(signal)
@@ -96,14 +96,14 @@ class _TestSimulatedAntenna(TestCase):
     def test_receive(self) -> None:
         """Receive rotine should properly apply the antenna weight"""
 
-        signal = Signal(np.random.normal(size=(1, 10)) + 1j * np.random.normal(size=(1, 10)), 1, 1)
+        signal = Signal.Create(np.random.normal(size=(1, 10)) + 1j * np.random.normal(size=(1, 10)), 1, 1)
         weight = 2+3j
-        expected_samples = weight * signal.samples
+        expected_samples = weight * signal[:, :]
 
         self.antenna.weight = weight
         received_signal = self.antenna.receive(signal)
 
-        assert_array_almost_equal(expected_samples, received_signal.samples)
+        assert_array_almost_equal(expected_samples, received_signal[:, :])
 
 
 class TestSimulatedDipole(_TestSimulatedAntenna):
@@ -159,7 +159,7 @@ class _TestSimulatedAntennas(TestCase):
     def test_transmit_validation(self) -> None:
         """Transmit routine should raise ValueError if the signal argument as an invalid number of streams"""
 
-        signal = Signal(np.random.normal(size=(10, 10)) + 1j * np.random.normal(size=(10, 10)), 1, 1)
+        signal = Signal.Create(np.random.normal(size=(10, 10)) + 1j * np.random.normal(size=(10, 10)), 1, 1)
 
         with self.assertRaises(ValueError):
             self.array.transmit(signal, Mock())
@@ -167,7 +167,7 @@ class _TestSimulatedAntennas(TestCase):
     def test_receive_validation(self) -> None:
         """Receive routine should raise a ValueError if the signal argument has an invalid number of streams"""
 
-        signal = Signal(np.random.normal(size=(10, 10)) + 1j * np.random.normal(size=(10, 10)), 1, 1)
+        signal = Signal.Create(np.random.normal(size=(10, 10)) + 1j * np.random.normal(size=(10, 10)), 1, 1)
 
         with self.assertRaises(ValueError):
             self.array.receive(signal, Mock())
@@ -176,35 +176,35 @@ class _TestSimulatedAntennas(TestCase):
         """Test receive routine without imperfections"""
 
         rng = np.random.default_rng(0)
-        signal = Signal(rng.normal(size=(self.array.num_receive_ports, 10)) + 1j * rng.normal(size=(self.array.num_receive_ports, 10)), 1, 1)
+        signal = Signal.Create(rng.normal(size=(self.array.num_receive_ports, 10)) + 1j * rng.normal(size=(self.array.num_receive_ports, 10)), 1, 1)
         rf_chain = RfChain()
 
-        expected_samples = signal.samples
+        expected_samples = signal[:, :]
         received_signal = self.array.receive(signal, rf_chain)
 
-        assert_array_almost_equal(expected_samples, received_signal.samples)
+        assert_array_almost_equal(expected_samples, received_signal[:, :])
 
     def test_receive_weights(self) -> None:
         """Receive routine should properly apply the antenna weights"""
 
         rng = np.random.default_rng(0)
-        signal = Signal(rng.normal(size=(self.array.num_receive_antennas, 10)) + 1j * rng.normal(size=(self.array.num_receive_antennas, 10)), 1, 1)
+        signal = Signal.Create(rng.normal(size=(self.array.num_receive_antennas, 10)) + 1j * rng.normal(size=(self.array.num_receive_antennas, 10)), 1, 1)
         rf_chain = RfChain()
 
         weights = rng.normal(size=self.array.num_receive_antennas) + 1j * rng.normal(size=self.array.num_receive_antennas)
         for antenna, weight in zip(self.array.receive_antennas, weights):
             antenna.weight = weight
 
-        expected_samples = weights[:, None] * signal.samples
+        expected_samples = weights[:, None] * signal[:, :]
         received_signal = self.array.receive(signal, rf_chain)
 
-        assert_array_almost_equal(expected_samples, received_signal.samples)
+        assert_array_almost_equal(expected_samples, received_signal[:, :])
 
     def test_receive_coupling(self) -> None:
         """Mutual coupling should be properly applied to the received signal"""
 
         rng = np.random.default_rng(0)
-        signal = Signal(rng.normal(size=(self.array.num_receive_ports, 10)) + 1j * rng.normal(size=(self.array.num_receive_ports, 10)), 1, 1)
+        signal = Signal.Create(rng.normal(size=(self.array.num_receive_ports, 10)) + 1j * rng.normal(size=(self.array.num_receive_ports, 10)), 1, 1)
         rf_chain = RfChain()
 
         coupling = Mock()
@@ -217,7 +217,7 @@ class _TestSimulatedAntennas(TestCase):
         """Receive should raise a ValueError if leakge argument has invalid number of streams"""
 
         rng = np.random.default_rng(0)
-        signal = Signal(rng.normal(size=(self.array.num_receive_ports, 10)) + 1j * rng.normal(size=(self.array.num_receive_ports, 10)), 1, 1)
+        signal = Signal.Create(rng.normal(size=(self.array.num_receive_ports, 10)) + 1j * rng.normal(size=(self.array.num_receive_ports, 10)), 1, 1)
         rf_chain = RfChain()
 
         leakage = Mock(spec=Signal)
@@ -230,15 +230,15 @@ class _TestSimulatedAntennas(TestCase):
         """Leakge should be properly applied to the received signal"""
 
         rng = np.random.default_rng(0)
-        signal = Signal(rng.normal(size=(self.array.num_receive_ports, 10)) + 1j * rng.normal(size=(self.array.num_receive_ports, 10)), 1, 1)
+        signal = Signal.Create(rng.normal(size=(self.array.num_receive_ports, 10)) + 1j * rng.normal(size=(self.array.num_receive_ports, 10)), 1, 1)
         rf_chain = RfChain()
 
-        leakage = Signal(rng.normal(size=(self.array.num_receive_ports, 10)) + 1j * rng.normal(size=(self.array.num_receive_ports, 10)), 1, 1)
+        leakage = Signal.Create(rng.normal(size=(self.array.num_receive_ports, 10)) + 1j * rng.normal(size=(self.array.num_receive_ports, 10)), 1, 1)
 
-        expected_samples = signal.samples + leakage.samples
+        expected_samples = signal[:, :] + leakage[:, :]
         received_signal = self.array.receive(signal, rf_chain, leakage)
 
-        assert_array_almost_equal(expected_samples, received_signal.samples)
+        assert_array_almost_equal(expected_samples, received_signal[:, :])
 
     def test_receive_rf_chains(self) -> None:
         """RF chains should only be called once per receive call"""
@@ -249,7 +249,7 @@ class _TestSimulatedAntennas(TestCase):
             mock.receive.side_effect = lambda x: x
 
         rng = np.random.default_rng(0)
-        signal = Signal(rng.normal(size=(self.array.num_receive_ports, 10)) + 1j * rng.normal(size=(self.array.num_receive_ports, 10)), 1, 1)
+        signal = Signal.Create(rng.normal(size=(self.array.num_receive_ports, 10)) + 1j * rng.normal(size=(self.array.num_receive_ports, 10)), 1, 1)
         default_rf_chain = Mock(spec=RfChain)
 
         _ = self.array.receive(signal, default_rf_chain)
@@ -264,7 +264,7 @@ class _TestSimulatedAntennas(TestCase):
 
         default_rf_chain = RfChain()
         rng = np.random.default_rng(0)
-        test_signal = Signal(rng.normal(size=(self.array.num_receive_ports, 10)) + 1j * rng.normal(size=(self.array.num_receive_ports, 10)), 1., 1.)
+        test_signal = Signal.Create(rng.normal(size=(self.array.num_receive_ports, 10)) + 1j * rng.normal(size=(self.array.num_receive_ports, 10)), 1., 1.)
 
         quantized_signal = self.array.analog_digital_conversion(test_signal, default_rf_chain, 10)
         self.assertEqual(quantized_signal.num_samples, test_signal.num_samples)
@@ -294,7 +294,7 @@ class _TestSimulatedAntennas(TestCase):
     def test_plot_pattern_transmit_beamformer(self) -> None:
         """Pattern plotting routine should generate a new figure given a transmit beamformer"""
 
-        signal = Signal(np.random.normal(size=(1, 10)) + 1j * np.random.normal(size=(1, 10)), 1, 1)
+        signal = Signal.Create(np.random.normal(size=(1, 10)) + 1j * np.random.normal(size=(1, 10)), 1, 1)
         beamformer = ConventionalBeamformer()
         operator = BeamformingTransmitter(signal, beamformer)
         operator.device = SimulatedDevice(antennas=self.array)

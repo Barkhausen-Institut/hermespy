@@ -61,9 +61,7 @@ Operators:
       guard_interval: 1e-6
 
       # Post-Processing
-      channel_estimation: !<SC-Ideal>
-        transmitter: *device_alpha
-        receiver: *device_alpha
+      channel_estimation: !<SC-LS>
       channel_equalization: !<SC-MMSE>
 
 # Performance indication evaluation configuration
@@ -82,14 +80,15 @@ Evaluators:
 # Simulation parameters
 num_samples: 10000                 # Maximum number of samples per simulation grid section
 min_num_samples: 1000              # Minimum number of samples per simulation grid section before premature stopping
-snr_type: EBN0                     # SNR is defined as the ratio between bit energy and noise power
+noise_level: !<EBN0>               # SNR is defined as the ratio between bit energy and noise power
+  reference: *waveform             # The SNR is calculated with respect to the processed waveform
 plot_results: True                 # Visualize the evaluations after the simulation has finished
 
 # Scenario parameters over which the Monte-Carlo simulation sweeps
 Dimensions:
   
   # Sweep over the global receiver signal-to-noise ratio
-  - property: 'snr'
+  - property: 'noise_level'
     points: [0, 1, ..., 20] dB
 
   # Sweep over the wavform's modulation order to check QPSK, 16-QAM and 64-QAM

@@ -16,16 +16,16 @@ from numpy.testing import assert_array_equal
 from rich.console import Console
 
 from hermespy.core import ConsoleMode, LogarithmicSequence, Visualization
-from hermespy.core.monte_carlo import ActorRunResult, Evaluation, EvaluationTemplate, EvaluationResult, GridSection, MonteCarlo, MonteCarloActor, MonteCarloSample, SampleGrid, SamplePoint, Evaluator, ArtifactTemplate, GridDimension, register, RegisteredDimension, ScalarEvaluationResult, ValueType, MonteCarloResult
+from hermespy.core.monte_carlo import ActorRunResult, Evaluation, EvaluationTemplate, EvaluationResult, GridSection, MonteCarlo, MonteCarloActor, MonteCarloSample, SampleGrid, SamplePoint, ScalarDimension, Evaluator, ArtifactTemplate, GridDimension, register, RegisteredDimension, ScalarEvaluationResult, ValueType, MonteCarloResult
 from hermespy.core.visualize import PlotVisualization, VAT, Visualization
 
 from unit_tests.utils import SimulationTestContext
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -772,6 +772,24 @@ class TestSamplePoint(TestCase):
         self.assertEqual(object_value.__class__.__name__, object_point.title)
 
 
+class ScalarDimensionMock(ScalarDimension):
+    """Mock class for testing scalar dimension base class"""
+
+    value: float
+
+    def __init__(self) -> None:
+
+        self.value = 0.0
+        ScalarDimension.__init__(self)
+
+    def __lshift__(self, scalar: float) -> None:
+        self.value = scalar
+
+    @property
+    def title(self) -> str:
+        return "Mock"
+
+
 class TestGridDimension(TestCase):
     """Test the simulation grid dimension class"""
 
@@ -779,6 +797,7 @@ class TestGridDimension(TestCase):
         class MockObject(object):
             def __init__(self) -> None:
                 self.__dimension = 1234
+                self.__scalar_dimension = ScalarDimensionMock()
 
             @register(first_impact="a", last_impact="b", title="testtitle")
             @property
@@ -791,6 +810,10 @@ class TestGridDimension(TestCase):
 
                 self.__dimension = value
 
+            @property
+            def scalar_dimension(self) -> ScalarDimensionMock:
+                return self.__scalar_dimension
+
             def set_dimension(self, value: float) -> None:
                 self.dimension = value
 
@@ -798,6 +821,7 @@ class TestGridDimension(TestCase):
         self.sample_points = [1, 2, 3, 4]
 
         self.dimension = GridDimension(self.considered_object, "dimension", self.sample_points)
+        self.scalar_dimension = GridDimension(self.considered_object, "scalar_dimension", self.sample_points)
 
     def test_logarithmic_init(self) -> None:
         """Initialization with logarithmic sample points should configure the plot scale to logarithmic"""

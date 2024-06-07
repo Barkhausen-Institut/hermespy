@@ -7,77 +7,23 @@ from unittest.mock import patch, PropertyMock
 
 import numpy as np
 from h5py import File
-from numpy.testing import assert_array_equal
 
-from hermespy.core import Signal, SNRType
-from hermespy.modem import CommunicationReception, CommunicationTransmission, DuplexModem, Symbols, CommunicationWaveform
-from hermespy.radar import Radar, RadarCube, RadarReception
+from hermespy.core import Signal
+from hermespy.modem import DuplexModem
+from hermespy.radar import Radar
 from hermespy.simulation import SimulatedDevice
-from hermespy.jcas import JCASTransmission, JCASReception, MatchedFilterJcas
+from hermespy.jcas import MatchedFilterJcas
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 from unit_tests.modem.test_waveform import MockCommunicationWaveform
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "Jan Adler"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
-
-
-class TestJCASTransmission(TestCase):
-    """Test JCAS transmission"""
-
-    def setUp(self) -> None:
-        self.signal = Signal(np.empty((1, 0), dtype=np.complex_), 1.0)
-        self.transmission = JCASTransmission(CommunicationTransmission(self.signal, []))
-
-    def test_hdf_serialization(self) -> None:
-        """Test proper serialization to HDF"""
-
-        transmission: JCASTransmission
-
-        with TemporaryDirectory() as tempdir:
-            file_location = path.join(tempdir, "testfile.hdf5")
-
-            with File(file_location, "a") as file:
-                group = file.create_group("testgroup")
-                self.transmission.to_HDF(group)
-
-            with File(file_location, "r") as file:
-                group = file["testgroup"]
-                transmission = self.transmission.from_HDF(group)
-
-        assert_array_equal(self.signal.samples, transmission.signal.samples)
-
-
-class TestJCASReception(TestCase):
-    """Test JCAS reception"""
-
-    def setUp(self) -> None:
-        self.signal = Signal(np.zeros((1, 10), dtype=np.complex_), 1.0)
-        self.communication_reception = CommunicationReception(self.signal)
-        self.cube = RadarCube(np.zeros((1, 1, 10)))
-        self.radar_reception = RadarReception(self.signal, self.cube)
-        self.reception = JCASReception(self.communication_reception, self.radar_reception)
-
-    def test_hdf_serialization(self) -> None:
-        """Test proper serialization to HDF"""
-
-        with TemporaryDirectory() as tempdir:
-            file_location = path.join(tempdir, "testfile.hdf5")
-
-            with File(file_location, "a") as file:
-                group = file.create_group("testgroup")
-                self.reception.to_HDF(group)
-
-            with File(file_location, "r") as file:
-                group = file["testgroup"]
-                reception = JCASReception.from_HDF(group)
-
-        assert_array_equal(self.signal.samples, reception.signal.samples)
 
 
 class TestMatchedFilterJoint(TestCase):
@@ -100,13 +46,13 @@ class TestMatchedFilterJoint(TestCase):
         """Receiving should raise a RuntimeError if there's no cached transmission"""
 
         with self.assertRaises(RuntimeError):
-            self.joint.receive(Signal(np.zeros((1, 10)), 1.0))
+            self.joint.receive(Signal.Create(np.zeros((1, 10)), 1.0))
 
     def test_transmit_receive(self) -> None:
         num_delay_samples = 10
         transmission = self.joint.transmit()
 
-        delay_offset = Signal(np.zeros((1, num_delay_samples), dtype=complex), transmission.signal.sampling_rate, carrier_frequency=self.carrier_frequency)
+        delay_offset = Signal.Create(np.zeros((1, num_delay_samples), dtype=complex), transmission.signal.sampling_rate, carrier_frequency=self.carrier_frequency)
         delay_offset.append_samples(transmission.signal)
 
         self.joint.cache_reception(delay_offset)
@@ -199,12 +145,6 @@ class TestMatchedFilterJoint(TestCase):
                 recalled_reception = self.joint._recall_reception(file["testgroup"])
 
         self.assertEqual(reception.signal.num_samples, recalled_reception.signal.num_samples)
-
-    def test_noise_power(self) -> None:
-        """Test the noise power calculation"""
-
-        noise_power = self.joint._noise_power(1, SNRType.PN0)
-        self.assertAlmostEqual(1.0, noise_power)
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""

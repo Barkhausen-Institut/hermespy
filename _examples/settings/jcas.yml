@@ -27,21 +27,24 @@ Devices:
 # Channel models between device models
 Channels:
 
-  # Single target radar channel
-  - &radar_channel !<RadarChannel>
-    devices: [*base_station, *base_station]
-    target_range: [1, 2]    # The target is located within a distance between 1m and 2m to the base station
-    radar_cross_section: 5  # The target has a cross section of 5m2
+  - # Single target radar channel
+    - *base_station
+    - *base_station
+    - &radar_channel !<RadarChannel>
+      target_range: [1, 2]    # The target is located within a distance between 1m and 2m to the base station
+      radar_cross_section: 5  # The target has a cross section of 5m2
 
-  # 5G TDL communication channel model
-  - !<5GTDL>
-    devices: [*base_station, *terminal]
-    model_type: !<TDLType> A  # Type of the TDL model. A-E are available
+  - # 5G TDL communication channel model
+    - *base_station
+    - *terminal
+    - !<5GTDL>
+      model_type: !<TDLType> A  # Type of the TDL model. A-E are available
 
-  # No self-interference at the terminal
-  - !<Channel>
-    devices: [*terminal, *terminal]
-    gain: 0.
+  - # No self-interference at the terminal
+    - *terminal
+    - *terminal
+    - !<Channel>
+      gain: 0.
 
 
 # Operators transmitting or receiving signals over the devices
@@ -115,13 +118,14 @@ Evaluators:
 
 
 # Simulation parameters
-num_samples: 1000                  # Number of samples per simulation grid section
-min_num_samples: 10                # Minimum number of samples per simulation grid section before premature stopping
-snr_type: EBN0                     # SNR is defined as the ratio between bit energy and noise power
-plot_results: True                 # Visualize the evaluations after the simulation has finished
+num_samples: 1000                   # Number of samples per simulation grid section
+min_num_samples: 10                 # Minimum number of samples per simulation grid section before premature stopping
+noise_level: !<EBN0>                # SNR is defined as the ratio between bit energy and noise power
+  reference: *base_station_operator # The SNR is calculated with respect to the referenced oeprators's waveform power
+plot_results: True                  # Visualize the evaluations after the simulation has finished
 
 
 # Scenario parameters over which the Monte-Carlo simulation sweeps
 Dimensions:
 
-  snr: [10, 8, ..., -10] dB
+  noise_level: [10, 8, ..., -10] dB

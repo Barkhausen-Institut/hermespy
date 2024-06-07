@@ -16,10 +16,10 @@ from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 from unit_tests.utils import SimulationTestContext
 
 __author__ = "André Noll Barreto"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["André Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -325,10 +325,6 @@ class OrthogonalWaveformMock(OrthogonalWaveform):
     def bandwidth(self) -> float:
         return 1.
     
-    @property
-    def symbol_duration(self) -> float:
-        return 1.
-    
     def _correct_sample_offset(self, symbol_subgrid: np.ndarray, sample_offset: int) -> np.ndarray:
         return symbol_subgrid
 
@@ -416,7 +412,7 @@ class TestOrthogonalWaveform(TestCase):
         self.waveform.pilot_section = pilot_mock
         pilot_signal = self.waveform.pilot_signal
 
-        assert_array_equal(expected_samples[None, :], pilot_signal.samples)
+        assert_array_equal(expected_samples[None, :], pilot_signal[:, :])
         self.assertEqual(self.waveform.sampling_rate, pilot_signal.sampling_rate)
 
     def test_symbols_per_frame(self) -> None:
@@ -565,7 +561,7 @@ class TestOrthogonalWaveform(TestCase):
         symbols = self.waveform.map(self.rng.integers(0, 2, self.waveform.bits_per_frame(self.waveform.num_data_symbols)))
         placed_symbols = self.waveform.place(symbols)
         frame_samples = self.waveform.modulate(placed_symbols)
-        frame_signal = Signal(frame_samples, self.waveform.sampling_rate)
+        frame_signal = Signal.Create(frame_samples, self.waveform.sampling_rate)
 
         self.assertAlmostEqual(self.waveform.power, frame_signal.power[0], places=2)
 
@@ -577,11 +573,6 @@ class TestOrthogonalWaveform(TestCase):
 
         with self.assertRaises(ValueError):
             self.waveform.num_subcarriers = -1
-            
-    def test_symbol_duration(self) -> None:
-        """Symbol duration property should return the correct value"""
-        
-        self.assertEqual(1/self.waveform.bandwidth, self.waveform.symbol_duration)
 
 
 class TestPilotSection(TestCase):

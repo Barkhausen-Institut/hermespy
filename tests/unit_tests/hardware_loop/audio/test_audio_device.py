@@ -12,10 +12,10 @@ from hermespy.hardware_loop.audio.device import AudioAntenna, AudioDeviceAntenna
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -32,10 +32,14 @@ class SineOperator(DuplexOperator[Transmission, Reception]):
         self.__frequency = frequency
 
         DuplexOperator.__init__(self)
+        
+    @property
+    def power(self) -> float:
+        return 1.0
 
     def _transmit(self, duration: float = 0.0) -> Transmission:
         sine = np.exp(2j * np.pi * np.arange(int(self.__duration * self.sampling_rate)) / self.sampling_rate * self.__frequency)
-        signal = Signal(sine[np.newaxis, :], self.sampling_rate, self.device.carrier_frequency)
+        signal = Signal.Create(sine[np.newaxis, :], self.sampling_rate, self.device.carrier_frequency)
 
         transmission = Transmission(signal=signal)
         return transmission
@@ -71,6 +75,13 @@ class TestAudioAntenna(TestCase):
 
     def setUp(self) -> None:
         self.antenna = AudioAntenna()
+        
+    def test_copy(self) -> None:
+        """Test copying the antenna stub"""
+        
+        copy = self.antenna.copy()
+        self.assertEqual(self.antenna.mode, copy.mode)
+        assert_array_almost_equal(self.antenna.pose, copy.pose)
 
     def test_characteristics(self) -> None:
         """Audio device antenna should always return ideal characteristics"""
@@ -250,7 +261,7 @@ class TestAudioDevice(TestCase):
 
         reception = operator.receive()
 
-        assert_array_almost_equal(transmission.signal.samples, reception.signal.samples)
+        assert_array_almost_equal(transmission.signal[:, :], reception.signal[:, :])
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""

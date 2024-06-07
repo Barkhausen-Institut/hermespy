@@ -23,7 +23,7 @@ __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -369,7 +369,7 @@ class ChirpFSKWaveform(PilotCommunicationWaveform, Serializable):
         samples_in_chirp = self.samples_in_chirp
 
         # Add pilot samples
-        pilot_samples = self.pilot_signal.samples.flatten()
+        pilot_samples = self.pilot_signal[:, :].flatten()
         num_pilot_samples = len(pilot_samples)
         frame_samples[:num_pilot_samples] = pilot_samples
         sample_idx += num_pilot_samples
@@ -492,7 +492,7 @@ class ChirpFSKWaveform(PilotCommunicationWaveform, Serializable):
                 pilot_idx * self.samples_in_chirp : (1 + pilot_idx) * self.samples_in_chirp
             ] = prototypes[pilot_idx % len(prototypes)]
 
-        return Signal(pilot_samples, self.sampling_rate)
+        return Signal.Create(pilot_samples, self.sampling_rate)
 
     def _clear_cache(self) -> None:
         """Clear cached properties because a parameter has changed."""

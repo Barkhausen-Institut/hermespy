@@ -11,10 +11,10 @@ from hermespy.core.signal_model import Signal
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "André Noll-Barreto"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["André Noll-Barreto"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -96,10 +96,10 @@ class TestQuantization(unittest.TestCase):
 
         input_signal = np.random.normal(size=self.num_samples) + 1j * np.random.normal(size=self.num_samples)
 
-        input_signal = Signal(sampling_rate=1.0, samples=input_signal)
+        input_signal = Signal.Create(sampling_rate=1.0, samples=input_signal)
         output_signal = self.quantizer.convert(input_signal)
 
-        np.testing.assert_array_equal(input_signal.samples, output_signal.samples)
+        np.testing.assert_array_equal(input_signal[:, :], output_signal[:, :])
 
     def test_quantization_no_gain_control(self):
         """Test correct quantizer output without gain control"""
@@ -122,11 +122,11 @@ class TestQuantization(unittest.TestCase):
         saturated_level = max_amplitude + 10.0
         input_signal = np.append(input_signal, [-saturated_level, saturated_level])
 
-        input_signal = Signal(samples=input_signal, sampling_rate=1.0)
+        input_signal = Signal.Create(samples=input_signal, sampling_rate=1.0)
 
         output_signal = self.quantizer.convert(input_signal)
 
-        np.testing.assert_almost_equal(np.real(output_signal.samples.flatten()), quantization_levels)
+        np.testing.assert_almost_equal(np.real(output_signal[:, :].flatten()), quantization_levels)
 
     def test_quantization_max_amplitude(self):
         """Test correct quantizer output with gain control to maximum amplitude"""
@@ -149,11 +149,11 @@ class TestQuantization(unittest.TestCase):
         input_signal = np.append(input_signal, [max_amplitude])
         quantization_levels = np.append(quantization_levels, [max_amplitude - quantization_step / 2])
 
-        input_signal = Signal(samples=input_signal, sampling_rate=1.0)
+        input_signal = Signal.Create(samples=input_signal, sampling_rate=1.0)
 
         output_signal = self.quantizer.convert(input_signal)
 
-        np.testing.assert_almost_equal(np.real(output_signal.samples.flatten()), quantization_levels)
+        np.testing.assert_almost_equal(np.real(output_signal[:, :].flatten()), quantization_levels)
 
     def test_quantization_rms(self):
         """Test correct quantizer output with gain control to rms amplitude"""
@@ -173,12 +173,12 @@ class TestQuantization(unittest.TestCase):
         quantizer_no_gain_control.gain = Gain(1 / rms_amplitude)
 
         # Output of both quantizers must be the same
-        input_signal = Signal(samples=input_signal, sampling_rate=1.0)
+        input_signal = Signal.Create(samples=input_signal, sampling_rate=1.0)
 
         output_signal_adaptive = self.quantizer.convert(input_signal)
         output_signal_non_adaptive = quantizer_no_gain_control.convert(input_signal)
 
-        np.testing.assert_almost_equal(output_signal_adaptive.samples, output_signal_non_adaptive.samples)
+        np.testing.assert_almost_equal(output_signal_adaptive[:, :], output_signal_non_adaptive[:, :])
 
     def test_quantization_complex(self):
         """Test correct quantization of complex numbers"""
@@ -197,11 +197,11 @@ class TestQuantization(unittest.TestCase):
         quantization_levels = quantization_levels[0, :] + 1j * quantization_levels[1, :]
         input_signal = input_signal[0, :] + 1j * input_signal[1, :]
 
-        input_signal = Signal(samples=input_signal, sampling_rate=1.0)
+        input_signal = Signal.Create(samples=input_signal, sampling_rate=1.0)
 
         output_signal = self.quantizer.convert(input_signal)
 
-        np.testing.assert_almost_equal(output_signal.samples.flatten(), quantization_levels)
+        np.testing.assert_almost_equal(output_signal[:, :].flatten(), quantization_levels)
 
     def test_quantization_mid_tread(self):
         """Test correct mid-tread quantizer output without gain control"""
@@ -227,11 +227,11 @@ class TestQuantization(unittest.TestCase):
         saturated_level_neg = min_quantization_level - 10.0
         input_signal = np.append(input_signal, [saturated_level_neg, saturated_level_pos])
 
-        input_signal = Signal(samples=input_signal, sampling_rate=1.0)
+        input_signal = Signal.Create(samples=input_signal, sampling_rate=1.0)
 
         output_signal = self.quantizer.convert(input_signal)
 
-        np.testing.assert_almost_equal(np.real(output_signal.samples.flatten()), quantization_levels)
+        np.testing.assert_almost_equal(np.real(output_signal[:, :].flatten()), quantization_levels)
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""

@@ -8,15 +8,15 @@ import numpy as np
 from numpy.testing import assert_array_equal
 from h5py import File
 
-from hermespy.core import DeviceInput, RandomNode, Signal, SignalReceiver, SignalTransmitter, SNRType, Transformation
-from hermespy.simulation import ProcessedSimulatedDeviceInput, SimulatedDevice, SimulatedDeviceOutput, SimulatedIdealAntenna, SimulatedUniformArray, TriggerModel, TriggerRealization, RandomTrigger, StaticTrigger, SampleOffsetTrigger, TimeOffsetTrigger
+from hermespy.core import DeviceInput, RandomNode, Signal, SignalReceiver, SignalTransmitter, Transformation
+from hermespy.simulation import N0, ProcessedSimulatedDeviceInput, SimulatedDevice, SimulatedDeviceOutput, SimulatedIdealAntenna, SimulatedUniformArray, SNR, TriggerModel, TriggerRealization, RandomTrigger, StaticTrigger, SampleOffsetTrigger, TimeOffsetTrigger
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -253,7 +253,7 @@ class TestSimulatedDeviceOutput(TestCase):
         self.sampling_rate = 1.23
         self.num_antennas = 1
         self.carrier_frequency = 4.56
-        self.emerging_signals = [Signal(np.zeros((1, 10)), self.sampling_rate, self.carrier_frequency) for _ in range(3)]
+        self.emerging_signals = [Signal.Create(np.zeros((1, 10)), self.sampling_rate, self.carrier_frequency) for _ in range(3)]
         self.trigger_realization = TriggerRealization(3, 1.0)
 
         self.output = SimulatedDeviceOutput(self.emerging_signals, self.trigger_realization, self.sampling_rate, self.num_antennas, self.carrier_frequency)
@@ -292,30 +292,29 @@ class TestProcessedSimulatedDeviceInput(TestCase):
         self.sampling_rate = 1.23
         self.num_antennas = 1
         self.carrier_frequency = 4.56
-        self.impinging_signals = [Signal(np.zeros((1, 10)), self.sampling_rate, self.carrier_frequency) for _ in range(3)]
-        self.leaking_signal = Signal(np.zeros((1, 10)), self.sampling_rate, self.carrier_frequency)
-        self.baseband_signal = Signal(np.zeros((1, 10)), self.sampling_rate, self.carrier_frequency)
+        self.impinging_signals = [Signal.Create(np.zeros((1, 10)), self.sampling_rate, self.carrier_frequency) for _ in range(3)]
+        self.leaking_signal = Signal.Create(np.zeros((1, 10)), self.sampling_rate, self.carrier_frequency)
+        self.baseband_signal = Signal.Create(np.zeros((1, 10)), self.sampling_rate, self.carrier_frequency)
         self.operator_separation = False
         self.operator_inputs = [s for s in self.impinging_signals]
-        self.noise_realizations = [Mock() for _ in range(3)]
+        self.noise_realization = Mock()
         self.trigger_realization = TriggerRealization(0, self.sampling_rate)
 
-        self.processed_input = ProcessedSimulatedDeviceInput(self.impinging_signals, self.leaking_signal, self.baseband_signal, self.operator_separation, self.operator_inputs, self.noise_realizations, self.trigger_realization)
+        self.processed_input = ProcessedSimulatedDeviceInput(self.impinging_signals, self.leaking_signal, self.baseband_signal, self.operator_separation, self.operator_inputs, self.noise_realization, self.trigger_realization)
 
     def test_init_validation(self) -> None:
         """Initialization parameters should be properly validated"""
 
         with self.assertRaises(ValueError):
-            ProcessedSimulatedDeviceInput([Mock()], self.leaking_signal, self.baseband_signal, self.operator_separation, self.operator_inputs, self.noise_realizations, self.trigger_realization)
+            ProcessedSimulatedDeviceInput([Mock()], self.leaking_signal, self.baseband_signal, self.operator_separation, self.operator_inputs, self.noise_realization, self.trigger_realization)
 
     def test_properties(self) -> None:
         """The properties should return the proper values"""
 
         self.assertIs(self.leaking_signal, self.processed_input.leaking_signal)
         self.assertIs(self.baseband_signal, self.processed_input.baseband_signal)
-        #self.assertTrue(self.processed_input.operator_separation)
         self.assertCountEqual(self.operator_inputs, self.processed_input.operator_inputs)
-        self.assertCountEqual(self.noise_realizations, self.processed_input.noise_realizations)
+        self.assertIs(self.noise_realization, self.processed_input.noise_realization)
         self.assertIs(self.trigger_realization, self.processed_input.trigger_realization)
 
     def test_hdf_serialization(self) -> None:
@@ -328,7 +327,7 @@ class TestProcessedSimulatedDeviceInput(TestCase):
         recalled_input = ProcessedSimulatedDeviceInput.from_HDF(group)
         file.close()
 
-        assert_array_equal(self.baseband_signal.samples, recalled_input.baseband_signal.samples)
+        assert_array_equal(self.baseband_signal[:, :], recalled_input.baseband_signal[:, :])
 
 
 class TestSimulatedDevice(TestCase):
@@ -345,8 +344,8 @@ class TestSimulatedDevice(TestCase):
         self.device = SimulatedDevice(scenario=self.scenario, antennas=self.antennas, pose=Transformation.From_RPY(self.orientation, self.position))
         self.device.random_mother = self.random_node
 
-        self.transmitter_alpha = SignalTransmitter(Signal(np.zeros((1, 10)), 1.0, 0.0))
-        self.transmitter_beta = SignalTransmitter(Signal(np.zeros((1, 10)), 1.0, 0.0))
+        self.transmitter_alpha = SignalTransmitter(Signal.Create(np.zeros((1, 10)), 1.0, 0.0))
+        self.transmitter_beta = SignalTransmitter(Signal.Create(np.zeros((1, 10)), 1.0, 0.0))
         self.device.transmitters.add(self.transmitter_alpha)
         self.device.transmitters.add(self.transmitter_beta)
 
@@ -377,14 +376,6 @@ class TestSimulatedDevice(TestCase):
 
         self.assertTrue(self.device.attached)
         self.assertFalse(SimulatedDevice().attached)
-
-    def test_noise_setget(self) -> None:
-        """Noise property getter should return setter argument"""
-
-        noise = Mock()
-        self.device.noise = noise
-
-        self.assertIs(noise, self.device.noise)
 
     def test_sampling_rate_inference(self) -> None:
         """Sampling rate property should attempt to infer the sampling rate from all possible sources"""
@@ -426,33 +417,21 @@ class TestSimulatedDevice(TestCase):
         except RuntimeError:
             self.fail()
 
-    def test_velocity_validation(self) -> None:
-        """Velocity property setter should raise ValueError on non-cartesian vectors"""
+    def test_noise_level_setget(self) -> None:
+        """Noise level property getter should return setter argument"""
 
-        with self.assertRaises(ValueError):
-            self.device.velocity = np.zeros(2)
+        noise_level = Mock()
+        self.device.noise_level = noise_level
 
-    def test_velocity_setget(self) -> None:
-        """Velocity property getter should return setter argument"""
+        self.assertIs(noise_level, self.device.noise_level)
 
-        velocity = np.array([1, 2, 3])
-        self.device.velocity = velocity
+    def test_noise_model_setget(self) -> None:
+        """Noise model property getter should return setter argument"""
 
-        assert_array_equal(velocity, self.device.velocity)
+        noise_model = Mock()
+        self.device.noise_model = noise_model
 
-    def test_snr_validation(self) -> None:
-        """SNR property setter should raise ValueError on negative arguments"""
-
-        with self.assertRaises(ValueError):
-            self.device.snr = -1.0
-
-    def test_snr_setget(self) -> None:
-        """SNR property getter should return setter argument"""
-
-        snr = 1.23
-        self.device.snr = snr
-
-        self.assertEqual(snr, self.device.snr)
+        self.assertIs(noise_model, self.device.noise_model)
 
     def test_generate_output_validation(self) -> None:
         """The generate output routine should raise a ValueError on invalid arguments"""
@@ -484,9 +463,6 @@ class TestSimulatedDevice(TestCase):
         with self.assertRaises(ValueError):
             _ = self.device.process_from_realization(Mock(), Mock())
 
-        with self.assertRaises(ValueError):
-            _ = self.device.process_from_realization([Mock()], Mock())
-
     def test_process_output_from_realization(self) -> None:
         """The process from realization routine should properly process a device output"""
 
@@ -500,7 +476,7 @@ class TestSimulatedDevice(TestCase):
     def test_process_device_input_from_realization(self) -> None:
         """The process from realization routine should properly process a device input"""
 
-        impinging_signals = [Signal(np.zeros((1, 10)), 1.0, 0.0)]
+        impinging_signals = [Signal.Create(np.zeros((1, 10)), 1.0, 0.0)]
         input = DeviceInput(impinging_signals=impinging_signals)
         device_realization = self.device.realize_reception()
 
@@ -511,7 +487,7 @@ class TestSimulatedDevice(TestCase):
     def test_process_signal_from_realization(self) -> None:
         """The process from realization routine should properly process a signal"""
 
-        signal = Signal(np.zeros((1, 10)), 1.0, 0.0)
+        signal = Signal.Create(np.zeros((1, 10)), 1.0, 0.0)
         device_realization = self.device.realize_reception()
 
         processed_input = self.device.process_from_realization(signal, device_realization)
@@ -521,7 +497,7 @@ class TestSimulatedDevice(TestCase):
     def test_process_impinging_signals_from_realization(self) -> None:
         """The process from realization routine should properly process impinging signals"""
 
-        impinging_signals = [Signal(np.zeros((1, 10)), 1.0, 0.0)]
+        impinging_signals = [Signal.Create(np.zeros((1, 10)), 1.0, 0.0)]
         device_realization = self.device.realize_reception()
 
         processed_input = self.device.process_from_realization(impinging_signals, device_realization)
@@ -531,7 +507,7 @@ class TestSimulatedDevice(TestCase):
     def test_process_input(self) -> None:
         """The process input routine should properly process a device input"""
 
-        impinging_signals = [Signal(np.zeros((1, 10)), 1.0, 0.0)]
+        impinging_signals = [Signal.Create(np.zeros((1, 10)), 1.0, 0.0)]
         input = DeviceInput(impinging_signals=impinging_signals)
         processed_input = self.device.process_input(input)
 
@@ -540,7 +516,7 @@ class TestSimulatedDevice(TestCase):
     def test_receive(self) -> None:
         """Test the device reception routine"""
 
-        impinging_signals = [Signal(np.zeros((1, 10)), 1.0, 0.0)]
+        impinging_signals = [Signal.Create(np.zeros((1, 10)), 1.0, 0.0)]
         reception = self.device.receive(impinging_signals)
 
         self.assertEqual(1, reception.num_operator_receptions)
@@ -550,19 +526,19 @@ class TestSimulatedDevice(TestCase):
 
         receiver = SignalReceiver(10000, 1.0, 1.0)
         self.device.receivers.add(receiver)
-        self.device.snr_type = SNRType.N0
+        self.device.noise_level = N0(0.0)
 
-        impinging_signals = Signal(
+        impinging_signals = Signal.Create(
             np.zeros((self.device.num_receive_antennas, 10000)),
             1.0, self.device.carrier_frequency,
         )
 
-        noise_power_candidates = [0, 1, 11, 123]
+        noise_power_candidates = [0, 1, 11]
         for noise_power in noise_power_candidates:
-            self.device.snr = noise_power
+            self.device.noise_level.power = noise_power
 
             reception = self.device.receive(impinging_signals)
-            self.assertAlmostEqual(noise_power, reception.operator_inputs[1].power[0], places=0)
+            self.assertAlmostEqual(noise_power, reception.operator_inputs[1].power[0], places=1)
 
     def test_receive_noise_relative(self) -> None:
         """The received signal noise should be of expected power"""
@@ -570,16 +546,16 @@ class TestSimulatedDevice(TestCase):
         expected_signal_power = 1.2345
         receiver = SignalReceiver(10000, 1.0, expected_signal_power)
         self.device.receivers.add(receiver)
-        self.device.snr_type = SNRType.PN0
+        self.device.noise_level = SNR(1, self.device)
 
-        impinging_signals = Signal(
+        impinging_signals = Signal.Create(
             np.zeros((self.device.num_receive_antennas, 10000)),
             1.0, self.device.carrier_frequency,
         )
 
         snr_candidates = [1, 11, 123]
         for snr in snr_candidates:
-            self.device.snr = snr
+            self.device.noise_level.snr = snr
             expected_noise_power = expected_signal_power / snr
             reception = self.device.receive(impinging_signals)
             self.assertAlmostEqual(expected_noise_power, reception.operator_inputs[1].power[0], places=0)

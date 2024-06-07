@@ -12,10 +12,10 @@ from hermespy.core import Drop, RecalledDrop, Signal, DeviceTransmission, Device
 from hermespy.core.drop import EvaluatedDrop
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -25,8 +25,8 @@ class TestDrop(TestCase):
     "Test drop class"
 
     def setUp(self) -> None:
-        self.transmission = DeviceTransmission([], Signal(np.random.standard_normal((1, 10)), 1.0))
-        self.reception = DeviceReception(Signal(np.random.standard_normal((1, 10)), 1.0), [], [])
+        self.transmission = DeviceTransmission([], Signal.Create(np.random.standard_normal((1, 10)), 1.0))
+        self.reception = DeviceReception(Signal.Create(np.random.standard_normal((1, 10)), 1.0), [], [])
         self.timestamp = 1.2345
 
         self.drop = Drop(self.timestamp, [self.transmission], [self.reception])
@@ -76,8 +76,8 @@ class TestEvaluatedDrop(TestCase):
     """Test evaluated drop class"""
 
     def setUp(self) -> None:
-        self.transmission = DeviceTransmission([], Signal(np.random.standard_normal((1, 10)), 1.0))
-        self.reception = DeviceReception(Signal(np.random.standard_normal((1, 10)), 1.0), [], [])
+        self.transmission = DeviceTransmission([], Signal.Create(np.random.standard_normal((1, 10)), 1.0))
+        self.reception = DeviceReception(Signal.Create(np.random.standard_normal((1, 10)), 1.0), [], [])
         self.timestamp = 1.2345
         self.artifacts = [Mock()]
 

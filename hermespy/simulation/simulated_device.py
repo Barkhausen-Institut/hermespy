@@ -4,19 +4,19 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from itertools import chain
-from typing import Dict, List, Set, Type
+from typing import List, Set, Type
 
 import numpy as np
 from h5py import Group
 
 from hermespy.core import (
+    AntennaArrayState,
     Device,
     DeviceInput,
     DeviceOutput,
     DeviceReception,
     DeviceTransmission,
     HDFSerializable,
-    Moveable,
     ProcessedDeviceInput,
     RandomNode,
     Transformation,
@@ -26,20 +26,20 @@ from hermespy.core import (
     Serializable,
     Signal,
     Receiver,
-    SNRType,
+    register,
 )
-from hermespy.channel import ChannelPropagation, DirectiveChannelRealization
+from .animation import Moveable, StaticTrajectory, Trajectory, TrajectorySample
 from .antennas import SimulatedAntennaArray, SimulatedIdealAntenna, SimulatedUniformArray
-from .noise import Noise, NoiseRealization, AWGN
+from .noise import NoiseLevel, NoiseModel, SNR, NoiseRealization, AWGN
 from .rf_chain.rf_chain import RfChain
 from .isolation import Isolation, PerfectIsolation
 from .coupling import Coupling, PerfectCoupling
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -190,8 +190,14 @@ class TriggerModel(ABC, RandomNode):
         return self.__devices
 
     @abstractmethod
-    def realize(self) -> TriggerRealization:
+    def realize(self, rng: np.random.Generator | None = None) -> TriggerRealization:
         """Realize a triggering of all controlled devices.
+
+        Args:
+
+            rng (np.random.Generator, optional):
+                Random number generator used to realize this trigger model.
+                If not specified, the object's internal generator will be queried.
 
         Returns: Realization of the trigger model.
         """
@@ -203,7 +209,7 @@ class StaticTrigger(TriggerModel, Serializable):
 
     yaml_tag = "StaticTrigger"
 
-    def realize(self) -> TriggerRealization:
+    def realize(self, rng: np.random.Generator | None = None) -> TriggerRealization:
         if self.num_devices < 1:
             sampling_rate = 1.0
 
@@ -251,7 +257,7 @@ class SampleOffsetTrigger(TriggerModel, Serializable):
 
         self.__num_offset_samples = value
 
-    def realize(self) -> TriggerRealization:
+    def realize(self, rng: np.random.Generator | None = None) -> TriggerRealization:
         if self.num_devices < 1:
             raise RuntimeError(
                 "Realizing a static trigger requires the trigger to control at least one device"
@@ -299,7 +305,7 @@ class TimeOffsetTrigger(TriggerModel, Serializable):
 
         self.__offset = value
 
-    def realize(self) -> TriggerRealization:
+    def realize(self, rng: np.random.Generator | None = None) -> TriggerRealization:
         if self.num_devices < 1:
             raise RuntimeError(
                 "Realizing a static trigger requires the trigger to control at least one device"
@@ -316,7 +322,7 @@ class RandomTrigger(TriggerModel, Serializable):
 
     yaml_tag = "RandomTrigger"
 
-    def realize(self) -> TriggerRealization:
+    def realize(self, rng: np.random.Generator | None = None) -> TriggerRealization:
         if self.num_devices < 1:
             raise RuntimeError(
                 "Realizing a random trigger requires the trigger to control at least one device"
@@ -341,7 +347,10 @@ class RandomTrigger(TriggerModel, Serializable):
         if max_trigger_delay == 0:
             return TriggerRealization(0, sampling_rate)
 
-        trigger_delay = self._rng.integers(0, max_trigger_delay)
+        # Select the proper random number generator
+        _rng = self._rng if rng is None else rng
+
+        trigger_delay = _rng.integers(0, max_trigger_delay)
         return TriggerRealization(trigger_delay, sampling_rate)
 
 
@@ -386,7 +395,7 @@ class SimulatedDeviceOutput(DeviceOutput):
         _emerging_signals = (
             [emerging_signals] if isinstance(emerging_signals, Signal) else emerging_signals
         )
-        superimposed_signal = Signal.empty(
+        superimposed_signal = Signal.Empty(
             sampling_rate, num_antennas, carrier_frequency=carrier_frequency
         )
 
@@ -585,9 +594,9 @@ class SimulatedDeviceTransmission(DeviceTransmission, SimulatedDeviceOutput):
 class SimulatedDeviceReceiveRealization(object):
     """Realization of a simulated device reception random process."""
 
-    __noise_realizations: Sequence[NoiseRealization]
+    __noise_realization: NoiseRealization
 
-    def __init__(self, noise_realizations: Sequence[NoiseRealization]) -> None:
+    def __init__(self, noise_realization: NoiseRealization) -> None:
         """
         Args:
 
@@ -595,16 +604,16 @@ class SimulatedDeviceReceiveRealization(object):
                 Noise realizations for each receive operator.
         """
 
-        self.__noise_realizations = noise_realizations
+        self.__noise_realization = noise_realization
 
     @property
-    def noise_realizations(self) -> Sequence[NoiseRealization]:
+    def noise_realization(self) -> NoiseRealization:
         """Receive operator noise realizations.
 
         Returns: Sequence of noise realizations corresponding to the number of registerd receive operators.
         """
 
-        return self.__noise_realizations
+        return self.__noise_realization
 
 
 class ProcessedSimulatedDeviceInput(SimulatedDeviceReceiveRealization, ProcessedDeviceInput):
@@ -622,7 +631,7 @@ class ProcessedSimulatedDeviceInput(SimulatedDeviceReceiveRealization, Processed
         baseband_signal: Signal,
         operator_separation: bool,
         operator_inputs: Sequence[Signal],
-        noise_realizations: Sequence[NoiseRealization],
+        noise_realization: NoiseRealization,
         trigger_realization: TriggerRealization,
     ) -> None:
         """
@@ -643,8 +652,8 @@ class ProcessedSimulatedDeviceInput(SimulatedDeviceReceiveRealization, Processed
             operator_inputs (Sequence[Signal]):
                 Information cached by the device operators.
 
-            noise_realization (Sequence[NoiseRealization]):
-                Noise realizations for each receive operator.
+            noise_realization (NoiseRealization):
+                Realization of the device's noise model.
 
             trigger_realization (TriggerRealization):
                 Trigger realization modeling the time delay between a drop start and frame start.
@@ -658,11 +667,11 @@ class ProcessedSimulatedDeviceInput(SimulatedDeviceReceiveRealization, Processed
         if len(impinging_signals) > 0:  # pragma: no cover
             if operator_separation and isinstance(impinging_signals[0], Sequence):  # type: ignore
                 for signal_sequence in impinging_signals:
-                    superposition = signal_sequence[0] if len(signal_sequence) > 0 else Signal.empty(1.0, 1)  # type: ignore
+                    superposition = signal_sequence[0] if len(signal_sequence) > 0 else Signal.Empty(1.0, 1)  # type: ignore
                     for subsignal in signal_sequence[1:]:  # type: ignore
-                        superposition.superimpose(subsignal)
+                        superposition.superimpose(subsignal)  # type: ignore
 
-                    _impinging_signals.append(superposition)
+                    _impinging_signals.append(superposition)  # type: ignore
 
             elif not operator_separation and isinstance(impinging_signals[0], Signal):
                 _impinging_signals = impinging_signals  # type: ignore
@@ -671,7 +680,7 @@ class ProcessedSimulatedDeviceInput(SimulatedDeviceReceiveRealization, Processed
                 raise ValueError("Invalid configuration")
 
         # Initialize base classes
-        SimulatedDeviceReceiveRealization.__init__(self, noise_realizations)
+        SimulatedDeviceReceiveRealization.__init__(self, noise_realization)
         ProcessedDeviceInput.__init__(self, _impinging_signals, operator_inputs)
 
         # Initialize attributes
@@ -730,7 +739,7 @@ class ProcessedSimulatedDeviceInput(SimulatedDeviceReceiveRealization, Processed
             Signal.from_HDF(group["leaking_signal"]) if "leaking_signal" in group else None
         )
         baseband_signal = Signal.from_HDF(group["baseband_signal"])
-        noise_realizations: Sequence[NoiseRealization] = []  # ToDo: Serialize noise realizations
+        noise_realization: NoiseRealization = None  # ToDo: Serialize noise realizations
         trigger_realization = TriggerRealization.from_HDF(group["trigger_realization"])
 
         return cls(
@@ -739,7 +748,7 @@ class ProcessedSimulatedDeviceInput(SimulatedDeviceReceiveRealization, Processed
             baseband_signal,
             operator_separation,
             device_input.operator_inputs,
-            noise_realizations,
+            noise_realization,
             trigger_realization,
         )
 
@@ -754,7 +763,7 @@ class SimulatedDeviceReception(ProcessedSimulatedDeviceInput, DeviceReception):
         baseband_signal: Signal,
         operator_separation: bool,
         operator_inputs: Sequence[Signal],
-        noise_realizations: Sequence[NoiseRealization],
+        noise_realization: NoiseRealization,
         trigger_realization: TriggerRealization,
         operator_receptions: Sequence[Reception],
     ) -> None:
@@ -776,8 +785,8 @@ class SimulatedDeviceReception(ProcessedSimulatedDeviceInput, DeviceReception):
             operator_inputs (Sequence[Signal]):
                 Information cached by the device operators.
 
-            noise_realization (Sequence[NoiseRealization]):
-                Noise realizations for each receive operator.
+            noise_realization (NoiseRealization):
+                Device noise realization.
 
             trigger_realization (TriggerRealization):
                 Trigger realization modeling the time delay between a drop start and frame start.
@@ -793,7 +802,7 @@ class SimulatedDeviceReception(ProcessedSimulatedDeviceInput, DeviceReception):
             baseband_signal,
             operator_separation,
             operator_inputs,
-            noise_realizations,
+            noise_realization,
             trigger_realization,
         )
         DeviceReception.__init__(self, self.impinging_signals, operator_inputs, operator_receptions)
@@ -823,7 +832,7 @@ class SimulatedDeviceReception(ProcessedSimulatedDeviceInput, DeviceReception):
             device_input.baseband_signal,
             device_input.operator_separation,
             device_input.operator_inputs,
-            device_input.noise_realizations,
+            device_input.noise_realization,
             device_input.trigger_realization,
             operator_receptions,
         )
@@ -842,8 +851,102 @@ class SimulatedDeviceReception(ProcessedSimulatedDeviceInput, DeviceReception):
         )
 
 
+class DeviceState(object):
+    """Data container representing the immutable physical state of a simulated device during simulation drop generation.
+
+    Generated by calling the :meth:`state<SimultedDevice.state>` property of a :class:`SimulatedDevice`.
+    """
+
+    __trajectory_sample: TrajectorySample
+    __carrier_frequency: float
+    __sampling_rate: float
+    __antennas: AntennaArrayState
+
+    def __init__(
+        self,
+        trajectory_sample: TrajectorySample,
+        carrier_frequency: float,
+        sampling_rate: float,
+        antennas: AntennaArrayState,
+        device: SimulatedDevice,
+    ) -> None:
+        """
+        Args:
+
+            trajectory_sample (TrajectorySample):
+                Position and orientation of the device in time and space.
+
+            carrier_frequency (float):
+                Carrier frequency of the device in Hz.
+
+            sampling_rate (float):
+                Sampling rate of the device in Hz.
+
+            antennas (AntennaArrayState):
+                State of the device's antenna array.
+
+            device (SimulatedDevice):
+                The device this state is associated with.
+        """
+
+        self.__trajectory_sample = trajectory_sample
+        self.__carrier_frequency = carrier_frequency
+        self.__sampling_rate = sampling_rate
+        self.__antennas = antennas
+        self.__device = device
+
+    @property
+    def position(self) -> np.ndarray:
+        """Global position of the device in cartesian coordinates.
+
+        Shorthand to :attr:`DeviceState.pose.translation`.
+        """
+
+        return self.__trajectory_sample.pose.translation
+
+    @property
+    def velocity(self) -> np.ndarray:
+        """Global velocity of the device in m/s."""
+
+        return self.__trajectory_sample.velocity
+
+    @property
+    def pose(self) -> Transformation:
+        """Global pose of the device."""
+
+        return self.__trajectory_sample.pose
+
+    @property
+    def carrier_frequency(self) -> float:
+        """Carrier frequency of the device in Hz."""
+
+        return self.__carrier_frequency
+
+    @property
+    def sampling_rate(self) -> float:
+        """Sampling rate of the device in Hz."""
+
+        return self.__sampling_rate
+
+    @property
+    def antennas(self) -> AntennaArrayState:
+        """State of the device's antenna array."""
+
+        return self.__antennas
+
+    @property
+    def device(self) -> SimulatedDevice:
+        """The device this state is associated with."""
+
+        return self.__device
+
+
 class SimulatedDevice(Device, Moveable, Serializable):
-    """Representation of an entity capable of emitting and receiving electromagnetic waves."""
+    """Representation of an entity capable of emitting and receiving electromagnetic waves.
+
+    A simulation scenario consists of a collection of devices,
+    interconnected by a network of channel models.
+    """
 
     yaml_tag = "SimulatedDevice"
     property_blacklist = {
@@ -869,16 +972,17 @@ class SimulatedDevice(Device, Moveable, Serializable):
     __trigger_model: TriggerModel
     """Model of the device's triggering behaviour"""
 
-    __received_channel_realizations: Dict[Device, DirectiveChannelRealization]
     __output: SimulatedDeviceOutput | None  # Most recent device output
     __input: ProcessedSimulatedDeviceInput | None  # Most recent device input
-    __noise: Noise  # Model of the hardware noise
+    __noise_level: NoiseLevel
+    __noise_model: NoiseModel
     __scenario: Scenario | None  # Scenario this device is attached to
     __sampling_rate: float | None  # Sampling rate at which this device operate
     __carrier_frequency: float  # Center frequency of the mixed signal in rf-band
-    __velocity: np.ndarray  # Cartesian device velocity vector
     __operator_separation: bool  # Operator separation flag
-    __realization: SimulatedDeviceReceiveRealization | None  # Most recent device receive realization
+    __realization: (
+        SimulatedDeviceReceiveRealization | None
+    )  # Most recent device receive realization
 
     def __init__(
         self,
@@ -890,12 +994,12 @@ class SimulatedDevice(Device, Moveable, Serializable):
         trigger_model: TriggerModel | None = None,
         sampling_rate: float | None = None,
         carrier_frequency: float = 0.0,
-        snr: float = float("inf"),
-        snr_type: SNRType = SNRType.PN0,
-        pose: Transformation | None = None,
+        noise_level: NoiseLevel | None = None,
+        noise_model: NoiseModel | None = None,
+        pose: Transformation | Trajectory | None = None,
         velocity: np.ndarray | None = None,
-        *args,
-        **kwargs,
+        power: float = 1.0,
+        seed: int | None = None,
     ) -> None:
         """
         Args:
@@ -941,24 +1045,28 @@ class SimulatedDevice(Device, Moveable, Serializable):
                 By default, the signal-to-noise ratio is specified in terms of the power of the noise
                 to the expected power of the received signal.
 
-            pose (Transformation, optional):
-                Initial pose of the moveable with respect to its reference coordinate frame.
-                By default, a unit transformation is assumed.
+            pose (Transformation | Trajectory, optional):
+                Position and orientation of the device in time and space.
+                If a `Transformation` is provided, the device is assumed to be static.
+                If not specified, the device is assumed to be at the origin with zero velocity.
 
             velocity (np.ndarray, optional):
                 Initial velocity of the moveable in local coordinates.
                 By default, the moveable is assumed to be resting.
+                Only considered if `pose` is a `Transformation`, otherwise the velocity is assumed from the `Trajectory`.
 
-            *args:
-                Device base class initialization parameters.
+            power (float, optional):
+                Power of the device.
+                Assumed to be 1.0 by default.
 
-            **kwargs:
-                Device base class initialization parameters.
+            seed (int, optional):
+                Seed of the device's pseudo-random number generator.
         """
 
         # Init base classes
-        Device.__init__(self, *args, **kwargs)
-        Moveable.__init__(self, pose=pose, velocity=velocity)
+        _trajectory = pose if isinstance(pose, Trajectory) else StaticTrajectory(pose, velocity)
+        Device.__init__(self, power, _trajectory.sample(0).pose, seed)
+        Moveable.__init__(self, _trajectory)
         Serializable.__init__(self)
 
         # Initialize class attributes
@@ -978,14 +1086,11 @@ class SimulatedDevice(Device, Moveable, Serializable):
         if trigger_model is not None:
             self.trigger_model = trigger_model
 
-        self.noise = AWGN()
-        self.snr = snr
-        self.snr_type = snr_type
+        self.noise_level = SNR(float("inf"), self) if noise_level is None else noise_level  # type: ignore[operator]
+        self.noise_model = AWGN() if noise_model is None else noise_model  # type: ignore[operator]
         self.operator_separation = False
         self.sampling_rate = sampling_rate
         self.carrier_frequency = carrier_frequency
-        self.velocity = np.zeros(3, dtype=float)
-        self.__received_channel_realizations = {}
         self.__input = None
         self.__output = None
         self.__realization = None
@@ -1034,22 +1139,43 @@ class SimulatedDevice(Device, Moveable, Serializable):
 
         return self.__scenario is not None
 
+    @register(first_impact="receive_devices", title="Device Noise Level")  # type: ignore[misc]
     @property
-    def noise(self) -> Noise:
-        """Model of the hardware noise.
+    def noise_level(self) -> NoiseLevel:
+        """Level of the simulated hardware noise."""
 
-        Returns:
-            Noise: Handle to the noise model.
+        return self.__noise_level
+
+    @noise_level.setter
+    def noise_level(self, value: NoiseLevel) -> None:
+        self.__noise_level = value
+
+    @register(first_impact="receive_devices", title="Device Noise Model")  # type: ignore[misc]
+    @property
+    def noise_model(self) -> NoiseModel:
+        """Model of the simulated hardware noise."""
+
+        return self.__noise_model
+
+    @noise_model.setter
+    def noise_model(self, value: NoiseModel) -> None:
+        self.__noise_model = value
+        self.__noise_model.random_mother = self
+
+    @register(first_impact="receive_devices", title="Device Noise Level")  # type: ignore[misc]
+    @property
+    def noise(self) -> float:
+        """Shorthand property for accessing the noise level of the device.
+
+        Raises:
+
+            ValueError: For negative noise levels.
         """
-
-        return self.__noise
+        return self.noise_level.level  # type: ignore[operator]
 
     @noise.setter
-    def noise(self, value: Noise) -> None:
-        """Set the model of the hardware noise."""
-
-        self.__noise = value
-        self.__noise.random_mother = self
+    def noise(self, value: float) -> None:
+        self.noise_level.level = value  # type: ignore[operator]
 
     @property
     def isolation(self) -> Isolation:
@@ -1138,18 +1264,27 @@ class SimulatedDevice(Device, Moveable, Serializable):
 
         self.__carrier_frequency = value
 
-    @property
-    def velocity(self) -> np.ndarray:
-        return self.__velocity
+    def state(self, timestamp: float = 0.0) -> DeviceState:
+        """Immutable physical state of the device during simulation drop generation.
 
-    @velocity.setter
-    def velocity(self, value: np.ndarray) -> None:
-        value = value.flatten()
+        Args:
 
-        if len(value) != 3:
-            raise ValueError("Velocity vector must be three-dimensional")
+            timestamp (float, optional):
+                Global timestamp in seconds.
+                By default, zero is assumed.
 
-        self.__velocity = value
+        Returns: Device state at the given timestamp.
+        """
+
+        trajectory_sample = self.trajectory.sample(timestamp)
+
+        return DeviceState(
+            trajectory_sample,
+            self.carrier_frequency,
+            self.sampling_rate,
+            self.antennas.state(trajectory_sample.pose),
+            self,
+        )
 
     @property
     def operator_separation(self) -> bool:
@@ -1238,7 +1373,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
 
         # If operator separation is disable, the transmissions are superimposed to a single signal model
         else:
-            superimposed_signal = Signal.empty(
+            superimposed_signal = Signal.Empty(
                 self.sampling_rate,
                 self.num_transmit_ports,
                 carrier_frequency=self.carrier_frequency,
@@ -1265,7 +1400,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
             dtype=complex,
         )
         for signal in emerging_signals:
-            signal.samples = np.append(trigger_padding, signal.samples, axis=1)
+            signal.set_samples(np.append(trigger_padding, signal[:, :], axis=1))
 
         # Genreate the output data object
         output = SimulatedDeviceOutput(
@@ -1315,36 +1450,6 @@ class SimulatedDevice(Device, Moveable, Serializable):
         return simulated_device_transmission
 
     @property
-    def snr(self) -> float:
-        """Signal to noise ratio at the receiver side.
-
-        Returns:
-
-            Linear ratio of signal to noise power.
-        """
-
-        return self.__snr
-
-    @snr.setter
-    def snr(self, value: float) -> None:
-        if value < 0:
-            raise ValueError(
-                f"The linear signal to noise ratio must be greater than zero (not {value})"
-            )
-
-        self.__snr = value
-
-    @property
-    def snr_type(self) -> SNRType:
-        """Type of signal to noise ratio assumed by the device model."""
-
-        return self.__snr_type
-
-    @snr_type.setter
-    def snr_type(self, value: SNRType) -> None:
-        self.__snr_type = value
-
-    @property
     def realization(self) -> SimulatedDeviceReceiveRealization | None:
         """Most recent random realization of a receive process.
 
@@ -1356,23 +1461,6 @@ class SimulatedDevice(Device, Moveable, Serializable):
         """
 
         return self.__realization
-
-    def channel_realization(
-        self, transmitter: SimulatedDevice
-    ) -> DirectiveChannelRealization | None:
-        """Channel realization between this device and a transmitter.
-
-        Args:
-
-            transmitter (SimulatedDevice):
-                The transmitter.
-
-        Returns:
-            The channel realization.
-            `None` if no channel realization is available.
-        """
-
-        return self.__received_channel_realizations.get(transmitter, None)
 
     @property
     def output(self) -> SimulatedDeviceOutput | None:
@@ -1401,18 +1489,22 @@ class SimulatedDevice(Device, Moveable, Serializable):
         return self.__input
 
     def realize_reception(
-        self, snr: float = float("inf"), snr_type: SNRType = SNRType.PN0, cache=True
+        self,
+        noise_level: NoiseLevel | None = None,
+        noise_model: NoiseModel | None = None,
+        cache=True,
     ) -> SimulatedDeviceReceiveRealization:
         """Generate a random realization for receiving over the simulated device.
 
         Args:
 
-            snr (float, optional):
-                Signal to noise power ratio.
-                Infinite by default, meaning no noise will be added to the received signals.
+            noise_level (NoiseLevel, optional):
+                Level of the simulated hardware noise.
+                If not specified, the device's configured noise level will be assumed.
 
-            snr_type (SNRType, optional):
-                Type of signal to noise ratio.
+            noise_model (NoiseModel, optional):
+                Model of the simulated hardware noise.
+                If not specified, the device's configured noise model will be assumed.
 
             cache (bool, optional):
                 Cache the generated realization at this device.
@@ -1421,16 +1513,13 @@ class SimulatedDevice(Device, Moveable, Serializable):
         Returns: The generated realization.
         """
 
-        if snr == float("inf"):
-            snr = self.snr
-
-        # Generate noise realizations for each registered receive operator
-        noise_realizations = [
-            self.noise.realize(r.noise_power(snr, snr_type)) for r in self.receivers
-        ]
+        # Generate a realization of the noise model
+        _noise_level = self.noise_level if noise_level is None else noise_level  # type: ignore[operator]
+        _noise_model = self.noise_model if noise_model is None else noise_model  # type: ignore[operator]
+        noise_realization = _noise_model.realize(_noise_level.get_power())
 
         # Return device receive realization
-        realization = SimulatedDeviceReceiveRealization(noise_realizations)
+        realization = SimulatedDeviceReceiveRealization(noise_realization)
 
         # Cache realization if the respective flag is enabled
         if cache:
@@ -1453,13 +1542,11 @@ class SimulatedDevice(Device, Moveable, Serializable):
             if receiver.selected_receive_ports is None
             else receiver.selected_receive_ports
         )
-        received_samples = baseband_signal.samples[receive_port_selection, :]  # type: ignore
-        received_signal = Signal(
-            received_samples, baseband_signal.sampling_rate, baseband_signal.carrier_frequency
-        )
+        received_samples = baseband_signal[receive_port_selection, :]  # type: ignore
+        received_signal = baseband_signal.from_ndarray(received_samples)
 
         # Add noise to the received signal
-        noisy_signal = self.__noise.add(received_signal, noise_realization)
+        noisy_signal = noise_realization.add_to(received_signal)
 
         # Simulate ADC behaviour
         quantized_signal = self.antennas.analog_digital_conversion(
@@ -1467,8 +1554,8 @@ class SimulatedDevice(Device, Moveable, Serializable):
         )
 
         # Select only the desired signal streams, as specified by the receiver
-        receiver_input = Signal(
-            quantized_signal.samples[receive_port_selection, :],  # type: ignore
+        receiver_input = Signal.Create(
+            quantized_signal[receive_port_selection, :],  # type: ignore
             quantized_signal.sampling_rate,
             quantized_signal.carrier_frequency,
             quantized_signal.delay,
@@ -1484,12 +1571,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
 
     def process_from_realization(
         self,
-        impinging_signals: DeviceInput
-        | Signal
-        | Sequence[Signal]
-        | ChannelPropagation
-        | Sequence[ChannelPropagation]
-        | SimulatedDeviceOutput,
+        impinging_signals: DeviceInput | Signal | Sequence[Signal] | SimulatedDeviceOutput,
         realization: SimulatedDeviceReceiveRealization,
         trigger_realization: TriggerRealization | None = None,
         leaking_signal: Signal | None = None,
@@ -1499,7 +1581,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
 
         Args:
 
-            impinging_signals (DeviceInput | Signal | Sequence[Signal] | ChannelPropagation | Sequence[ChannelPropagation] | SimulatedDeviceOutput):
+            impinging_signals (DeviceInput | Signal | Sequence[Signal] | SimulatedDeviceOutput):
                 List of signal models arriving at the device.
                 May also be a two-dimensional numpy object array where the first dimension indicates the link
                 and the second dimension contains the transmitted signal as the first element and the link channel
@@ -1528,54 +1610,32 @@ class SimulatedDevice(Device, Moveable, Serializable):
         """
 
         _impinging_signals: Sequence[Signal] = []
-        mixed_signal = Signal.empty(
-            sampling_rate=self.sampling_rate,
-            num_streams=self.num_receive_antennas,
-            num_samples=0,
-            carrier_frequency=self.carrier_frequency,
-        )
 
-        if isinstance(impinging_signals, DeviceInput):
-            for i in impinging_signals.impinging_signals:
-                mixed_signal.superimpose(i)
-
-            _impinging_signals = impinging_signals.impinging_signals
-
-        elif isinstance(impinging_signals, Signal):
-            mixed_signal.superimpose(impinging_signals)
-            _impinging_signals = [impinging_signals]
-
-        elif isinstance(impinging_signals, Sequence):
-            if len(impinging_signals) > 0:
-                if isinstance(impinging_signals[0], ChannelPropagation):
-                    propagation_impinging: ChannelPropagation
-                    for propagation_impinging in impinging_signals:  # type: ignore
-                        _impinging_signals.append(propagation_impinging.signal)  # type: ignore
-                        mixed_signal.superimpose(propagation_impinging.signal)
-                        self.__received_channel_realizations[propagation_impinging.transmitter] = propagation_impinging.realization  # type: ignore
-
-                elif isinstance(impinging_signals[0], Signal):
-                    for device_impinging in impinging_signals:
-                        mixed_signal.superimpose(device_impinging)  # type: ignore
-
-                    _impinging_signals = impinging_signals  # type: ignore
-
-                else:
-                    raise ValueError("Unsupported type of impinging signals")
-
-        elif isinstance(impinging_signals, ChannelPropagation):
-            mixed_signal = impinging_signals.signal
-            _impinging_signals = [impinging_signals.signal]
-            self.__received_channel_realizations[
-                impinging_signals.transmitter
-            ] = impinging_signals.realization
-
-        elif isinstance(impinging_signals, SimulatedDeviceOutput):
+        if isinstance(impinging_signals, SimulatedDeviceOutput):
             mixed_signal = impinging_signals.mixed_signal
             _impinging_signals = impinging_signals.emerging_signals
 
         else:
-            raise ValueError("Unsupported type of impinging signals")
+            if isinstance(impinging_signals, DeviceInput):
+                _impinging_signals = impinging_signals.impinging_signals
+
+            elif isinstance(impinging_signals, Signal):
+                _impinging_signals = [impinging_signals]
+
+            elif isinstance(impinging_signals, Sequence):
+                _impinging_signals = impinging_signals  # type: ignore
+
+            else:
+                raise ValueError("Unsupported type of impinging signals")
+
+            mixed_signal = Signal.Empty(
+                sampling_rate=self.sampling_rate,
+                num_streams=self.num_receive_antennas,
+                num_samples=0,
+                carrier_frequency=self.carrier_frequency,
+            )
+            for signal in _impinging_signals:
+                mixed_signal.superimpose(signal)
 
         # Correct the trigger realization
         num_trigger_offset_samples = (
@@ -1583,7 +1643,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
             if trigger_realization is None
             else trigger_realization.compute_num_offset_samples(self.sampling_rate)
         )
-        mixed_signal.samples = mixed_signal.samples[:, num_trigger_offset_samples:]
+        mixed_signal.set_samples(mixed_signal[:, num_trigger_offset_samples:])
 
         # Model the configured antenna array's input behaviour
         antenna_outputs = self.antennas.receive(
@@ -1591,7 +1651,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
         )
 
         # Generate individual operator inputs
-        operator_inputs = [self._generate_receiver_input(r, antenna_outputs, nr, cache) for r, nr in zip(self.receivers, realization.noise_realizations)]  # type: ignore
+        operator_inputs = [self._generate_receiver_input(r, antenna_outputs, realization.noise_realization, cache) for r in self.receivers]  # type: ignore
 
         # Generate output information
         processed_input = ProcessedSimulatedDeviceInput(
@@ -1600,7 +1660,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
             antenna_outputs,
             self.operator_separation,
             operator_inputs,
-            realization.noise_realizations,
+            realization.noise_realization,
             trigger_realization,
         )
 
@@ -1613,23 +1673,18 @@ class SimulatedDevice(Device, Moveable, Serializable):
 
     def process_input(
         self,
-        impinging_signals: DeviceInput
-        | Signal
-        | Sequence[Signal]
-        | ChannelPropagation
-        | Sequence[ChannelPropagation]
-        | SimulatedDeviceOutput,
+        impinging_signals: DeviceInput | Signal | Sequence[Signal] | SimulatedDeviceOutput,
         cache: bool = True,
         trigger_realization: TriggerRealization | None = None,
-        snr: float = float("inf"),
-        snr_type: SNRType | None = None,
+        noise_level: NoiseLevel | None = None,
+        noise_model: NoiseModel | None = None,
         leaking_signal: Signal | None = None,
     ) -> ProcessedSimulatedDeviceInput:
         """Process input signals at this device.
 
         Args:
 
-            impinging_signals (DeviceInput | Signal | Sequence[Signal] | ChannelPropagation | Sequence[ChannelPropagation] | SimulatedDeviceOutput):
+            impinging_signals (DeviceInput | Signal | Sequence[Signal] | SimulatedDeviceOutput):
                 List of signal models arriving at the device.
                 May also be a two-dimensional numpy object array where the first dimension indicates the link
                 and the second dimension contains the transmitted signal as the first element and the link channel
@@ -1643,13 +1698,13 @@ class SimulatedDevice(Device, Moveable, Serializable):
                 Trigger realization modeling the time delay between a drop start and frame start.
                 Perfect triggering is assumed by default.
 
-            snr (float, optional):
-                Signal to noise power ratio.
-                Infinite by default, meaning no noise will be added to the received signals.
+            noise_level (NoiseLevel, optional):
+                Level of the simulated hardware noise.
+                If not specified, the device's configured noise level will be assumed.
 
-            snr_type (SNRType, optional):
-                Type of signal to noise ratio.
-                If not specified, the device's default :attr:`snr_type` will be assumed.
+            noise_model (NoiseModel, optional):
+                Model of the simulated hardware noise.
+                If not specified, the device's configured noise model will be assumed.
 
             leaking_signal(Signal, optional):
                 Signal leaking from transmit to receive chains.
@@ -1657,10 +1712,8 @@ class SimulatedDevice(Device, Moveable, Serializable):
         Returns: The processed device input.
         """
 
-        _snr_type = self.snr_type if snr_type is None else snr_type
-
         # Realize the random process
-        realization = self.realize_reception(snr, _snr_type, cache=cache)
+        realization = self.realize_reception(noise_level, noise_model, cache)
 
         # Receive the signal
         processed_input = self.process_from_realization(
@@ -1672,12 +1725,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
 
     def receive(
         self,
-        impinging_signals: DeviceInput
-        | Signal
-        | Sequence[Signal]
-        | ChannelPropagation
-        | Sequence[ChannelPropagation]
-        | SimulatedDeviceOutput,
+        impinging_signals: DeviceInput | Signal | Sequence[Signal] | SimulatedDeviceOutput,
         cache: bool = True,
         trigger_realization: TriggerRealization | None = None,
     ) -> SimulatedDeviceReception:
@@ -1685,7 +1733,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
 
         Args:
 
-            impinging_signals (DeviceInput | Signal | Sequence[Signal] | ChannelPropagation | Sequence[ChannelPropagation] | SimulatedDeviceOutput):
+            impinging_signals (DeviceInput | Signal | Sequence[Signal] | SimulatedDeviceOutput):
                 List of signal models arriving at the device.
                 May also be a two-dimensional numpy object array where the first dimension indicates the link
                 and the second dimension contains the transmitted signal as the first element and the link channel

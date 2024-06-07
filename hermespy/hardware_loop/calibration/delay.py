@@ -16,10 +16,10 @@ from hermespy.core import Serializable, Signal
 from ..physical_device import DelayCalibrationBase, PhysicalDevice
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -103,7 +103,7 @@ class DelayCalibration(DelayCalibrationBase, Serializable):
         dirac_index = int(max_delay * sampling_rate)
         waveform = np.zeros((device.num_antennas, num_samples), dtype=complex)
         waveform[:, dirac_index] = 1.0
-        calibration_signal = Signal(waveform, sampling_rate, device.carrier_frequency)
+        calibration_signal = Signal.Create(waveform, sampling_rate, device.carrier_frequency)
 
         propagated_signals: List[Signal] = []
         propagated_dirac_indices = np.empty(num_iterations, dtype=int)
@@ -114,7 +114,7 @@ class DelayCalibration(DelayCalibrationBase, Serializable):
 
             # Infer the implicit delay by estimating the sample index of the propagated dirac
             propagated_signals.append(propagated_signal)
-            propagated_dirac_indices[n] = np.argmax(np.abs(propagated_signal.samples[0, :]))
+            propagated_dirac_indices[n] = np.argmax(np.abs(propagated_signal[0, :]))
 
             # Wait the configured amount of time between iterations
             sleep(wait)
@@ -129,9 +129,9 @@ class DelayCalibration(DelayCalibrationBase, Serializable):
         # fig, axes = plt.subplots(2, 1)
         # fig.suptitle("Device Delay Calibration")
 
-        # axes[0].plot(calibration_signal.timestamps, abs(calibration_signal.samples[0, :]))
+        # axes[0].plot(calibration_signal.timestamps, abs(calibration_signal[0, :]))
         # for sig in propagated_signals:
-        #    axes[1].plot(sig.timestamps, abs(sig.samples[0, :]), color="blue")
+        #    axes[1].plot(sig.timestamps, abs(sig[0, :]), color="blue")
         # axes[1].axvline(x=(dirac_index / sampling_rate - calibration_delay), color="red")
 
         return DelayCalibration(calibration_delay)

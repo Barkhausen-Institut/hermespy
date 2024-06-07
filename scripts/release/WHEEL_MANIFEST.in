@@ -1,5 +1,0 @@
-# Exclude the whole _skbuild folder and tests
-prune submodules
-prune lib
-prune _skbuild
-prune tests

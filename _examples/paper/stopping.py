@@ -16,7 +16,7 @@ from hermespy.channel import Channel
 from hermespy.core import ConsoleMode
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.3.0"
@@ -50,7 +50,7 @@ for (c, confidence), (t, tolerance) in product(enumerate(confidences), enumerate
     evaluator.confidence = confidence
     evaluator.tolerance = tolerance
 
-    simulation.new_dimension('snr', [db2lin(x) for x in np.arange(-10, 20, .5)])
+    simulation.new_dimension('noise_level', [db2lin(x) for x in np.arange(-10, 20, .5)])
     simulation.add_evaluator(evaluator)
     simulation.num_samples = 100000
     simulation.min_num_samples = 100

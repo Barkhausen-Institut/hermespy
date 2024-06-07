@@ -1,18 +1,17 @@
 # -*- coding: utf-8 -*-
 
 from unittest import TestCase
-from unittest.mock import Mock
 
 from h5py import Group
 
-from hermespy.core import ChannelStateInformation, DuplexOperator, Reception, Signal, SNRType, Transmission
+from hermespy.core import ChannelStateInformation, DuplexOperator, Reception, Signal, Transmission
 from hermespy.simulation import SimulatedDevice
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -24,10 +23,14 @@ class DuplexOperatorMock(DuplexOperator[Transmission, Reception]):
     __sampling_rate: float = 1e9
     __num_frame_samples = 10
     __frame_duration: float = 10e-9
+    
+    @property
+    def power(self) -> float:
+        return 1.0
 
     def _transmit(self, duration: float = 0) -> Transmission:
         samples = self._rng.normal(size=(self.device.antennas.num_transmit_antennas, self.__num_frame_samples))
-        return Transmission(Signal(samples, self.__sampling_rate, self.device.carrier_frequency))
+        return Transmission(Signal.Create(samples, self.__sampling_rate, self.device.carrier_frequency))
 
     def _receive(self, signal: Signal, csi: ChannelStateInformation) -> Reception:
         return Reception(signal)
@@ -37,9 +40,6 @@ class DuplexOperatorMock(DuplexOperator[Transmission, Reception]):
 
     def frame_duration(self) -> float:
         return self.__frame_duration
-
-    def _noise_power(self, strength: float, snr_type: SNRType) -> float:
-        return 0.0
 
     def _recall_reception(self, group: Group) -> Reception:
         return Reception.from_HDF(group)

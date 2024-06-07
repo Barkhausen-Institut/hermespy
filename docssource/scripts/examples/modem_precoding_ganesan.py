@@ -37,7 +37,7 @@ waveform = RootRaisedCosineWaveform(
     num_data_symbols=32,
     modulation_order=64,
     roll_off=.9,
-    channel_estimation=SingleCarrierIdealChannelEstimation(tx_device, rx_device),
+    channel_estimation=SingleCarrierIdealChannelEstimation(simulation.scenario.channel(tx_device, rx_device), tx_device, rx_device),
 )
 link.waveform = waveform
 

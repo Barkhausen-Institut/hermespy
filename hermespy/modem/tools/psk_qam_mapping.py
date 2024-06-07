@@ -17,14 +17,15 @@ This implementation has currently the following limitations:
     Tosato, Bisaglia, "Simplified Soft-Output Demapper for Binary Interleaved COFDM with
     Application to HIPERLAN/2", Proceedings of IEEE International Commun. Conf. (ICC) 2002
 """
+
 from typing import Union
 import numpy as np
 
 __author__ = "André Noll Barreto"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["André Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "André Noll Barreto"
 __email__ = "andre.nollbarreto@barkhauseninstitut.org"
 __status__ = "Prototype"

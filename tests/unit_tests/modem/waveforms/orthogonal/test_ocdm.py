@@ -7,12 +7,13 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 
 from hermespy.modem import DuplexModem, ElementType, GridElement, GridResource, OCDMWaveform, SymbolSection, TransmittingModem
+from hermespy.simulation import SimulatedDevice
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -60,6 +61,7 @@ class TestOCDMWaveform(TestCase):
         
         modem = TransmittingModem()
         modem.waveform = self.ocdm
+        modem.device = SimulatedDevice(seed=42)
         waveform = modem.transmit().signal
         
         power = waveform.power
@@ -70,6 +72,7 @@ class TestOCDMWaveform(TestCase):
         
         modem = TransmittingModem()
         modem.waveform = self.ocdm
+        modem.device = SimulatedDevice()
         waveform = modem.transmit().signal
         
         self.assertEqual(self.ocdm.sampling_rate, waveform.sampling_rate)
@@ -81,6 +84,7 @@ class TestOCDMWaveform(TestCase):
 
         modem = DuplexModem()
         modem.waveform = self.ocdm
+        modem.device = SimulatedDevice()
         
         transmission = modem.transmit()
         reception = modem.receive(transmission.signal)

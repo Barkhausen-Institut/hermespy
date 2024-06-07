@@ -9,10 +9,11 @@ from .antennas import (
     LinearAntenna,
     PatchAntenna,
     AntennaArray,
+    AntennaArrayState,
     CustomAntennaArray,
     UniformArray,
 )
-from .definitions import ConsoleMode, SNRType
+from .definitions import ConsoleMode
 from .evaluators import (
     ReceivedPowerEvaluator,
     ReceivedPowerResult,
@@ -23,7 +24,6 @@ from .logarithmic import dB, Logarithmic, LogarithmicSequence, ValueType
 from .operators import StaticOperator, SilentTransmitter, SignalTransmitter, SignalReceiver
 from .channel import ChannelStateFormat, ChannelStateInformation, ChannelStateDimension
 from .transformation import Direction, Transformable, TransformableBase, Transformation
-from .animation import Moveable
 from .device import (
     Operator,
     OperatorSlot,
@@ -56,6 +56,7 @@ from .monte_carlo import (
     EvaluationTemplate,
     GridDimension,
     SamplePoint,
+    ScalarDimension,
     ScalarEvaluationResult,
     MonteCarlo,
     MonteCarloActor,
@@ -66,12 +67,13 @@ from .monte_carlo import (
 from .random_node import RandomRealization, RandomNode
 from .drop import Drop, RecalledDrop
 from .scenario import Scenario, ScenarioMode, ScenarioType, ReplayScenario
-from .signal_model import Signal
+from .signal_model import Signal, SignalBlock, DenseSignal, SparseSignal
 from .visualize import (
     ScatterVisualization,
     PlotVisualization,
     StemVisualization,
     ImageVisualization,
+    QuadMeshVisualization,
     VAT,
     Visualization,
     VLT,
@@ -81,10 +83,10 @@ from .visualize import (
 )
 
 __author__ = "André Noll Barreto"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["André Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -99,6 +101,7 @@ __all__ = [
     "LinearAntenna",
     "PatchAntenna",
     "AntennaArray",
+    "AntennaArrayState",
     "CustomAntennaArray",
     "UniformArray",
     "SNRType",
@@ -121,7 +124,6 @@ __all__ = [
     "Transformable",
     "TransformableBase",
     "Transformation",
-    "Moveable",
     "Operator",
     "OperatorSlot",
     "MixingOperator",
@@ -152,6 +154,7 @@ __all__ = [
     "EvaluationTemplate",
     "GridDimension",
     "SamplePoint",
+    "ScalarDimension",
     "ScalarEvaluationResult",
     "MonteCarlo",
     "MonteCarloActor",
@@ -171,12 +174,16 @@ __all__ = [
     "ScenarioType",
     "ReplayScenario",
     "Signal",
+    "SignalBlock",
+    "DenseSignal",
+    "SparseSignal",
     "ProcessedDeviceInput",
     "DeviceInput",
     "ScatterVisualization",
     "PlotVisualization",
     "StemVisualization",
     "ImageVisualization",
+    "QuadMeshVisualization",
     "VAT",
     "Visualization",
     "VLT",

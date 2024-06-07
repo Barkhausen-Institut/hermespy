@@ -16,10 +16,10 @@ import numpy as np
 from hermespy.tools import db2lin, lin2db, DbConversionType
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -393,15 +393,13 @@ class LogarithmicSequence(np.ndarray):
 @overload
 def dB(
     *values: Sequence[Union[int, float]], conversion: DbConversionType = DbConversionType.POWER
-) -> LogarithmicSequence:
-    ...  # pragma no cover
+) -> LogarithmicSequence: ...  # pragma no cover
 
 
 @overload
 def dB(
     *values: Union[int, float], conversion: DbConversionType = DbConversionType.POWER
-) -> Union[Logarithmic, LogarithmicSequence]:
-    ...  # pragma no cover
+) -> Union[Logarithmic, LogarithmicSequence]: ...  # pragma no cover
 
 
 def dB(

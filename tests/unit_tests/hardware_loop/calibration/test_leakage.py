@@ -13,10 +13,10 @@ from hermespy.simulation import SimulatedIdealAntenna, SimulatedUniformArray, Se
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -62,32 +62,32 @@ class TestSelectiveLeakageCalibration(TestCase):
     def test_remove_leakage_validation(self) -> None:
         """Leakage removal should raise exceptions for invalid arguments"""
 
-        transmitted_signal = Signal(np.array([[1, 2, 3, 4, 5]], dtype=np.complex_), 1.0)
-        received_signal = Signal(np.array([[1, 2, 3, 4, 5]], dtype=np.complex_), 1.0)
+        transmitted_signal = Signal.Create(np.array([[1, 2, 3, 4, 5]], dtype=np.complex_), 1.0)
+        received_signal = Signal.Create(np.array([[1, 2, 3, 4, 5]], dtype=np.complex_), 1.0)
 
         with self.assertRaises(ValueError):
-            _ = self.calibration.remove_leakage(Signal(np.repeat(transmitted_signal.samples, 2, axis=0), transmitted_signal.sampling_rate), received_signal, 0.0)
+            _ = self.calibration.remove_leakage(Signal.Create(np.repeat(transmitted_signal[:, :], 2, axis=0), transmitted_signal.sampling_rate), received_signal, 0.0)
 
         with self.assertRaises(ValueError):
-            _ = self.calibration.remove_leakage(transmitted_signal, Signal(np.repeat(received_signal.samples, 2, axis=0), received_signal.sampling_rate), 0.0)
+            _ = self.calibration.remove_leakage(transmitted_signal, Signal.Create(np.repeat(received_signal[:, :], 2, axis=0), received_signal.sampling_rate), 0.0)
 
         with self.assertRaises(ValueError):
-            _ = self.calibration.remove_leakage(Signal(transmitted_signal.samples, 2 * transmitted_signal.sampling_rate), received_signal, 0.0)
+            _ = self.calibration.remove_leakage(Signal.Create(transmitted_signal[:, :], 2 * transmitted_signal.sampling_rate), received_signal, 0.0)
 
         with self.assertRaises(ValueError):
-            _ = self.calibration.remove_leakage(Signal(transmitted_signal.samples, transmitted_signal.sampling_rate, 10), received_signal, 0.0)
+            _ = self.calibration.remove_leakage(Signal.Create(transmitted_signal[:, :], transmitted_signal.sampling_rate, 10), received_signal, 0.0)
 
     def test_remove_leakage_positive(self) -> None:
         """Leakage should be correctly removed from the signal"""
 
-        transmitted_signal = Signal(np.array([[1, 2, 3, 4, 5]], dtype=np.complex_), 1.0)
-        received_signal = Signal(np.array([[1, 2, 3, 4, 5]], dtype=np.complex_), 1.0)
+        transmitted_signal = Signal.Create(np.array([[1, 2, 3, 4, 5]], dtype=np.complex_), 1.0)
+        received_signal = Signal.Create(np.array([[1, 2, 3, 4, 5]], dtype=np.complex_), 1.0)
 
         corrected_positive_signal = self.calibration.remove_leakage(transmitted_signal, received_signal, 3.0)
         corrected_negative_signal = self.calibration.remove_leakage(transmitted_signal, received_signal, -3.0)
 
-        assert_array_equal(np.array([[-1.0 + 0.0j, -1.0 - 1.0j, 3.0 + 0.0j, 4.0 + 0.0j, 5.0 + 0.0j]], dtype=np.complex_), corrected_positive_signal.samples)
-        assert_array_equal(np.array([[1.0 + 0.0j, 2.0 + 0.0j, 3.0 + 0.0j, 4.0 + 0.0j, 5.0 + 0.0j]], dtype=np.complex_), corrected_negative_signal.samples)
+        assert_array_equal(np.array([[-1.0 + 0.0j, -1.0 - 1.0j, 3.0 + 0.0j, 4.0 + 0.0j, 5.0 + 0.0j]], dtype=np.complex_), corrected_positive_signal[:, :])
+        assert_array_equal(np.array([[1.0 + 0.0j, 2.0 + 0.0j, 3.0 + 0.0j, 4.0 + 0.0j, 5.0 + 0.0j]], dtype=np.complex_), corrected_negative_signal[:, :])
 
     def test_plot(self) -> None:
         """Test the visualization of the calibration"""
@@ -149,6 +149,16 @@ class TestSelectiveLeakageCalibration(TestCase):
 
         calibration = SelectiveLeakageCalibration.MMSEEstimate(device)
         assert_array_almost_equal(leakage_model.leakage_response, calibration.leakage_response[:, :, :num_samples])
+
+    def test_least_squares_estimate(self) -> None:
+        num_samples = 32
+        sampling_rate = 1e8
+
+        device = PhysicalDeviceDummy(carrier_frequency=1e9, sampling_rate=sampling_rate, max_receive_delay=num_samples / sampling_rate, seed=42, antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1e-3, (2, 1, 1)), receive_transmission=False, noise_power=np.zeros(2))
+        leakage_model = SelectiveLeakage.Normal(device, num_samples=num_samples)
+        device.isolation = leakage_model
+
+        calibration = SelectiveLeakageCalibration.LeastSquaresEstimate(device)
 
     def test_yaml_serialization(self) -> None:
         """Test YAML serialization and deserialization"""

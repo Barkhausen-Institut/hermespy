@@ -12,10 +12,10 @@ from hermespy.simulation import SimulatedDevice, SimulatedUniformArray, Simulate
 from hermespy.tools import db2lin, lin2db
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -59,7 +59,7 @@ class TestSpecificIsolation(TestCase):
         expected_isolation = 20
         self.isolation.isolation = db2lin(expected_isolation)
 
-        signal = Signal(self.rng.normal(size=(self.device.num_antennas, num_samples)) + 1j * self.rng.normal(size=(self.device.num_antennas, num_samples)), 1.0)
+        signal = Signal.Create(self.rng.normal(size=(self.device.num_antennas, num_samples)) + 1j * self.rng.normal(size=(self.device.num_antennas, num_samples)), 1.0)
         leaking_signal = self.isolation.leak(signal)
 
         realised_isolation = lin2db(signal.power) - lin2db(leaking_signal.power)
@@ -68,7 +68,7 @@ class TestSpecificIsolation(TestCase):
     def test_leak_validation(self) -> None:
         """Leak subroutine should raise RuntimeErrors on invalid internal states"""
 
-        signal = Signal.empty(1, 1, 0)
+        signal = Signal.Empty(1, 1, 0)
 
         self.isolation._SpecificIsolation__leakage_factors = None
         with self.assertRaises(RuntimeError):

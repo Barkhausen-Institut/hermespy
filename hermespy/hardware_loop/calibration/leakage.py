@@ -6,7 +6,6 @@ Leakage Calibration
 """
 
 from __future__ import annotations
-from math import ceil
 from typing import Tuple, Type
 
 import matplotlib.pyplot as plt
@@ -14,17 +13,17 @@ import numpy as np
 from h5py import Group
 from numpy.linalg import svd
 from scipy.fft import fft, fftfreq, fftshift, ifft
-from scipy.signal import convolve
+from scipy.signal import convolve, find_peaks, peak_widths
 
 from hermespy.core import Serializable, Signal, VAT
 from ..physical_device import LeakageCalibrationBase, PhysicalDevice
 from .delay import DelayCalibration
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -134,12 +133,12 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Serializable):
         for m, n in np.ndindex(received_signal.num_streams, transmitted_signal.num_streams):
             # The leaked signal is the convolution of the transmitted signal with the leakage response
             predicted_siso_signal = convolve(
-                self.__leakage_response[m, n, :], transmitted_signal.samples[n, :], "full"
+                self.__leakage_response[m, n, :], transmitted_signal[n, :].flatten()
             )
 
             # The correction is achieved by subtracting the leaked signal from the received signal
             if delay_sample_shift >= 0:
-                corrected_signal.samples[
+                corrected_signal[
                     m,
                     delay_sample_shift : min(
                         delay_sample_shift + len(predicted_siso_signal),
@@ -153,7 +152,7 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Serializable):
                 ]
 
             else:
-                corrected_signal.samples[
+                corrected_signal[
                     m,
                     0 : min(
                         delay_sample_shift + len(predicted_siso_signal),
@@ -180,7 +179,7 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Serializable):
             frequency_bins = fftshift(fftfreq(self.__leakage_response.shape[2]))
 
             time_axes.plot(
-                sample_instances, self.__leakage_response[m, n, :].real, label=f"Tx: {n} Rx{m}"
+                sample_instances, np.abs(self.__leakage_response[m, n, :]), label=f"Tx: {n} Rx{m}"
             )
             freq_axes.plot(
                 frequency_bins,
@@ -221,6 +220,176 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Serializable):
         return DelayCalibration(delay)
 
     @staticmethod
+    def __probe_leakage(
+        device: PhysicalDevice, num_probes: int, num_wavelet_samples: int
+    ) -> Tuple[np.ndarray, np.ndarray]:
+        if num_probes < 1:
+            raise ValueError(f"Number of probes must be greater than zero (not {num_probes})")
+
+        if num_wavelet_samples < 1:
+            raise ValueError(
+                f"Number of samples must be greater than zero (not {num_wavelet_samples})"
+            )
+
+        # Generate zadoff-chu sequences to probe the device leakage
+        cf = num_wavelet_samples % 2
+        q = 1
+        sample_indices = np.arange(num_wavelet_samples)
+        probe_indices = np.arange(1, 1 + num_probes)
+        zadoff_chu_sequences = np.exp(
+            -1j
+            * np.pi
+            * np.outer(probe_indices, sample_indices * (sample_indices + cf + 2 * q))
+            / num_wavelet_samples
+        )
+
+        # Replicate the (periodic) ZC waveform such that any window of
+        # num_wavelet_samples will always contain an entire ZC sequence
+        # (time-shifted). Essentially, build a huge CP and CS around the center
+        # ZC sequence. At the receiver, we will focus on receiving the second
+        # (i.e. center) ZC waveform.
+        probing_waveforms = np.tile(zadoff_chu_sequences, (1, 3))
+        probing_frequencies = fft(zadoff_chu_sequences, axis=1, norm="ortho")
+        num_samples = probing_waveforms.shape[1]
+
+        # Collect received samples
+        received_waveforms = np.zeros(
+            (
+                num_probes,
+                device.antennas.num_receive_ports,
+                device.antennas.num_transmit_ports,
+                num_wavelet_samples,
+            ),
+            dtype=np.complex_,
+        )
+        for p, n in np.ndindex(num_probes, device.antennas.num_transmit_ports):
+            tx_samples = np.zeros(
+                (device.antennas.num_transmit_ports, num_samples), dtype=np.complex_
+            )
+            tx_samples[n, :] = probing_waveforms[p, :]
+            tx_signal = Signal.Create(
+                tx_samples,
+                sampling_rate=device.sampling_rate,
+                carrier_frequency=device.carrier_frequency,
+            )
+
+            rx_signal = device.trigger_direct(tx_signal, calibrate=False)
+            # From the received signal, collect the middle num_wavelet_samples of the transmitted
+            # ZC sequences. This should account for any delays of the transmission, as long as the
+            # sequence is long enough. If it's not long enough, the leakage calculation will fail.
+            # TODO: look at the estimated delay and its reliability. If the delay cannot be estimated
+            # reliably, most probably, the TX signal was not received in the window decided here
+            start = num_wavelet_samples
+            received_waveforms[p, :, n, :] = rx_signal[:, start : start + num_wavelet_samples]
+
+        # Compute received frequency spectra
+        received_frequencies = fft(received_waveforms, axis=3, norm="ortho")
+
+        # Return the collected probing and received frequency spectra
+        return probing_frequencies, received_frequencies
+
+    @staticmethod
+    def LeastSquaresEstimate(
+        device: PhysicalDevice,
+        num_probes: int = 7,
+        num_wavelet_samples: int = 4673,
+        configure_device: bool = True,
+        filter_calibration: bool = True,
+    ) -> SelectiveLeakageCalibration:
+        """Estimate the transmit-receive leakage for a physical device using Leat-Squares estimation.
+
+        Args:
+
+            device (PhysicalDevice):
+                Physical device to estimate the covariance matrix for.
+
+            num_probes (int, optional):
+                Number of probings transmitted to estimate the covariance matrix.
+                :math:`7` by default.
+
+            num_wavelet_samples (int, optional):
+                Number of samples transmitted per probing to estimate the covariance matrix.
+                :math:`4673` by default.
+
+            configure_device (bool, optional):
+                Configure the specified device by the estimated leakage calibration.
+                Enabled by default.
+
+            filter_calibration (bool, optional):
+                Filter the estimated calibration to consider only prominent peaks.
+                Enabled by default.
+
+        Returns: The initialized :class:`SelectiveLeakageCalibration` instance.
+
+        Raises:
+
+            ValueError: If the number of probes is not strictly positive.
+            ValueError: If the number of samples is not strictly positive.
+        """
+
+        # Probe the device leakage
+        probing_frequencies, received_frequencies = SelectiveLeakageCalibration.__probe_leakage(
+            device, num_probes, num_wavelet_samples
+        )
+        num_samples = probing_frequencies.shape[1]
+
+        estimated_frequency_response = np.zeros(
+            (device.antennas.num_receive_ports, device.antennas.num_transmit_ports, num_samples),
+            dtype=np.complex_,
+        )
+        for m, n in np.ndindex(
+            device.antennas.num_receive_ports, device.antennas.num_transmit_ports
+        ):
+            # Select the transmitted and received frequency spectra for the current antenna pairs
+            rx_frequencies = received_frequencies[:, m, n, :]
+            tx_frequencies = probing_frequencies[:, :]
+
+            # Estimate the frequency-selectivity by least-squares estimation
+            Rx = rx_frequencies
+            Tx = tx_frequencies
+
+            # Solve for X (i.e. the channel frequency response) in the least-squares sense:
+            # Minimize \|Rx - X*Tx\|^2 under the constraint that X is diagonal.
+            # See https://math.stackexchange.com/a/3502842/397295
+            # results in this expression:
+            # x_ls = np.diag(Tx.conj().T.dot(Rx)) / np.diag(Tx.conj().T.dot(Tx))
+
+            # optimized version:
+            x_ls = np.sum(Tx.conj() * Rx, axis=0) / np.sum(Tx.conj() * Tx, axis=0)
+
+            estimated_frequency_response[m, n, :] = x_ls
+
+        # Convert the estimated leakage-response into the time-domain
+        leakage_response = ifft(estimated_frequency_response, norm="backward")
+
+        # Only consider the leakage response around the highest peak
+        if filter_calibration:
+            summed_response = np.sum(abs(leakage_response), axis=(0, 1), keepdims=False)
+            peaks: np.ndarray = find_peaks(summed_response, 0.25 * summed_response.max())[0]
+            if peaks.size != 0:
+                widths: np.ndarray = np.ceil(
+                    peak_widths(summed_response, peaks, rel_height=0.75)[0]
+                )
+                new_leakage_response = np.zeros_like(leakage_response)
+                for p, w in zip(peaks, widths):
+                    p_start = max(0, int(p - w // 2))
+                    p_end = min(leakage_response.shape[2], 1 + int(p + w // 2))
+                    new_leakage_response[:, :, p_start:p_end] = leakage_response[
+                        :, :, p_start:p_end
+                    ]
+                leakage_response = new_leakage_response
+
+        calibration = SelectiveLeakageCalibration(
+            leakage_response, device.sampling_rate, device.delay_calibration.delay
+        )
+
+        # Configure the device with the estimated calibration if the respective flag is enabled
+        if configure_device:
+            device.leakage_calibration = calibration
+
+        return calibration
+
+    @staticmethod
     def MMSEEstimate(
         device: PhysicalDevice,
         num_probes: int = 7,
@@ -258,16 +427,13 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Serializable):
             ValueError: If the number of probes is not strictly positive.
             ValueError: If the number of samples is not strictly positive.
             ValueError: If the noise power is negative.
-
         """
 
-        if num_probes < 1:
-            raise ValueError(f"Number of probes must be greater than zero (not {num_probes})")
-
-        if num_wavelet_samples < 1:
-            raise ValueError(
-                f"Number of samples must be greater than zero (not {num_wavelet_samples}"
-            )
+        # Probe the device leakage
+        probing_frequencies, received_frequencies = SelectiveLeakageCalibration.__probe_leakage(
+            device, num_probes, num_wavelet_samples
+        )
+        num_samples = probing_frequencies.shape[1]
 
         # Estimate noise power if not specified
         if noise_power is None:
@@ -280,62 +446,8 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Serializable):
         if np.any(noise_power < 0.0):
             raise ValueError(f"Noise power must be non-negative (not {noise_power})")
 
-        if noise_power.ndim != 1 or noise_power.shape[0] != device.antennas.num_receive_antennas:
+        if noise_power.ndim != 1 or noise_power.shape[0] != device.antennas.num_receive_ports:
             raise ValueError("Noise power has invalid dimensions")
-
-        # Define estimation parameters
-        num_prefix_samples = 0
-        num_padding_samples = ceil(device.max_receive_delay * device.sampling_rate)
-        num_samples = num_wavelet_samples + num_prefix_samples + num_padding_samples
-
-        # Generate zadoff-chu sequences to probe the device leakage
-        cf = num_wavelet_samples % 2
-        q = 0
-        sample_indices = np.arange(num_wavelet_samples)
-        probe_indices = 1 + 2 * np.arange(0, num_probes)
-        probing_waveforms = np.exp(
-            -1j
-            * np.pi
-            * np.outer(probe_indices, sample_indices * (sample_indices + cf + 2 * q))
-            / num_wavelet_samples
-        )
-
-        # Add zero padding to waveforms to account for possible transmit delays
-        probing_waveforms = np.append(
-            probing_waveforms, np.zeros((num_probes, num_padding_samples)), axis=1
-        )
-
-        # Compute probing frequency spectra
-        probing_frequencies = fft(probing_waveforms, axis=1)
-
-        # Collect received samples
-        received_waveforms = np.zeros(
-            (
-                num_probes,
-                device.antennas.num_receive_antennas,
-                device.antennas.num_transmit_antennas,
-                num_samples,
-            ),
-            dtype=np.complex_,
-        )
-        for p, n in np.ndindex(num_probes, device.antennas.num_transmit_antennas):
-            tx_samples = np.zeros(
-                (device.antennas.num_transmit_antennas, num_samples), dtype=np.complex_
-            )
-            tx_samples[n, :] = probing_waveforms[p, :]
-            tx_signal = Signal(
-                tx_samples,
-                sampling_rate=device.sampling_rate,
-                carrier_frequency=device.carrier_frequency,
-            )
-
-            rx_signal = device.trigger_direct(tx_signal, calibrate=False)
-            rx_signal.samples = rx_signal.samples[:, :num_samples]
-
-            received_waveforms[p, :, n, :] = rx_signal.samples
-
-        # Compute received frequency spectra
-        received_frequencies = fft(received_waveforms, axis=3)
 
         # Estimate frequency spectra via MMSE estimation
         # https://nowak.ece.wisc.edu/ece830/ece830_fall11_lecture20.pdf
@@ -363,15 +475,11 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Serializable):
 
         # Estimate the frequency spectra for each antenna probing independently
         mmse_frequency_selectivity_estimation = np.zeros(
-            (
-                device.antennas.num_receive_antennas,
-                device.antennas.num_transmit_antennas,
-                num_samples,
-            ),
+            (device.antennas.num_receive_ports, device.antennas.num_transmit_ports, num_samples),
             dtype=np.complex_,
         )
         for m, n in np.ndindex(
-            device.antennas.num_receive_antennas, device.antennas.num_transmit_antennas
+            device.antennas.num_receive_ports, device.antennas.num_transmit_ports
         ):
             probing_estimation = mmse_estimator @ received_frequencies[:, m, n, :].flatten()
             mmse_frequency_selectivity_estimation[m, n, :] = probing_estimation

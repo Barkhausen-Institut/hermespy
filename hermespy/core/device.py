@@ -121,12 +121,10 @@ from itertools import chain
 from math import ceil
 from typing import Generic, Iterator, List, Optional, overload, Type, TypeVar
 
-import numpy as np
 from h5py import Group
 from scipy.constants import speed_of_light
 
 from .antennas import AntennaArray
-from .definitions import SNRType
 from .factory import HDFSerializable, Serializable
 from .random_node import RandomNode
 from .signal_model import Signal
@@ -134,10 +132,10 @@ from .transformation import Transformable, Transformation
 
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -752,7 +750,7 @@ class DeviceReception(ProcessedDeviceInput):
         group.attrs["num_operator_receptions"] = self.num_operator_receptions
 
 
-class MixingOperator(Generic[SlotType], Operator[SlotType], ABC):
+class MixingOperator(ABC, Generic[SlotType], Operator[SlotType]):
     """Base class for operators performing mixing operations."""
 
     __carrier_frequency: Optional[float]  # Carrier frequency
@@ -806,7 +804,7 @@ class MixingOperator(Generic[SlotType], Operator[SlotType], ABC):
         self.__carrier_frequency = value
 
 
-class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType]):
+class Receiver(MixingOperator["ReceiverSlot"], Generic[ReceptionType], RandomNode):
     """Operator receiving from a device."""
 
     __reference: Device | None
@@ -1061,47 +1059,14 @@ class Receiver(RandomNode, MixingOperator["ReceiverSlot"], Generic[ReceptionType
         """
         ...  # pragma: no cover
 
-    def noise_power(self, strength: float, snr_type: SNRType) -> float:
-        """Compute noise power for a given signal strength.
-
-        Internally calls :meth:`_noise_power` for some :class:`SNRTypes<hermespy.core.definitions.SNRType>`.
-
-        Args:
-
-            strength (float):
-                Signal strength indicator.
-                The unit depends on the `snr_type`.
-
-            snr_type (SNRType):
-                The considered signal to noise ratio type.
-
-        Raises:
-
-            ValueError: If the receiver does not support the required snr type.
-        """
-
-        # For the N0 snr_type the receiver implementation must not be queried
-        if snr_type is SNRType.N0:
-            return strength
-
-        return self._noise_power(strength, snr_type)
-
+    @property
     @abstractmethod
-    def _noise_power(self, strength: float, snr_type: SNRType) -> float:
-        """Compute noise power for a given signal strength.
+    def power(self) -> float:
+        """Expected power of the received signal in Watts.
 
-        Args:
-
-            strength (float):
-                Signal strength indicator.
-                The unit depends on the `snr_type`.
-
-            snr_type (SNRType):
-                The considered signal to noise ratio type.
-
-        Raises:
-
-            ValueError: If the receiver does not support the required snr type.
+        .. note::
+           Applies only to the signal-carrying parts of the transmission,
+           silent parts shuch as guard intervals should not be considered.
         """
         ...  # pragma: no cover
 
@@ -1245,12 +1210,10 @@ class OperatorSlot(Generic[OperatorType], Sequence[OperatorType]):
         return ceil(frame_duration * sampling_rate)
 
     @overload
-    def __getitem__(self, item: int) -> OperatorType:
-        ...  # pragma:  no cover
+    def __getitem__(self, item: int) -> OperatorType: ...  # pragma:  no cover
 
     @overload
-    def __getitem__(self, item: slice) -> Sequence[OperatorType]:
-        ...  # pragma: no cover
+    def __getitem__(self, item: slice) -> Sequence[OperatorType]: ...  # pragma: no cover
 
     def __getitem__(self, item: int | slice) -> OperatorType | Sequence[OperatorType]:
         return self.__operators[item]
@@ -1276,7 +1239,7 @@ TransmissionType = TypeVar("TransmissionType", bound="Transmission")
 """Type variable of a :class:`Transmission`."""
 
 
-class Transmitter(Generic[TransmissionType], RandomNode, MixingOperator["TransmitterSlot"]):
+class Transmitter(MixingOperator["TransmitterSlot"], Generic[TransmissionType], RandomNode):
     """Operator transmitting over a device."""
 
     __transmission: TransmissionType | None
@@ -1348,7 +1311,7 @@ class Transmitter(Generic[TransmissionType], RandomNode, MixingOperator["Transmi
         return transmission
 
     @abstractmethod
-    def _transmit(self, duration: float) -> TransmissionType:
+    def _transmit(self, duration: float = -1.0) -> TransmissionType:
         """Generate information to be transmitted.
 
         Subroutine of the public :meth:`transmit<Transmitter.transmit>` method that performs the pipeline-specific transmit-processing
@@ -1425,6 +1388,17 @@ class Transmitter(Generic[TransmissionType], RandomNode, MixingOperator["Transmi
                 HDF group containing the transmission.
 
         Returns: The recalled transmission
+        """
+        ...  # pragma: no cover
+
+    @property
+    @abstractmethod
+    def power(self) -> float:
+        """Expected power of the transmitted signal in Watts.
+
+        .. note::
+           Applies only to the signal-carrying parts of the transmission,
+           silent parts shuch as guard intervals should not be considered.
         """
         ...  # pragma: no cover
 
@@ -1622,7 +1596,6 @@ class Device(ABC, Transformable, RandomNode, Serializable):
         # Initalize device attributes and properties
         self.transmitters = TransmitterSlot(self)
         self.receivers = ReceiverSlot(self)
-
         self.power = power
 
     @property
@@ -1768,20 +1741,6 @@ class Device(ABC, Transformable, RandomNode, Serializable):
         """
         ...  # pragma: no cover
 
-    @property
-    @abstractmethod
-    def velocity(self) -> np.ndarray:
-        """Cartesian device velocity vector.
-
-        Returns:
-            np.ndarray: Velocity vector.
-
-        Raises:
-            ValueError: If `velocity` is not three-dimensional.
-            NotImplementedError: If `velocity` is unknown.
-        """
-        ...  # pragma: no cover
-
     def transmit_operators(self) -> List[Transmission]:
         """Generate transmitted information for all registered operators.
 
@@ -1821,7 +1780,7 @@ class Device(ABC, Transformable, RandomNode, Serializable):
         operator_streams = [o.selected_transmit_ports for o in self.transmitters]
 
         # Superimpose the operator transmissions to the device's RF configuration
-        superimposed_signal = Signal.empty(
+        superimposed_signal = Signal.Empty(
             self.sampling_rate, self.num_transmit_ports, carrier_frequency=self.carrier_frequency
         )
 
@@ -1889,7 +1848,7 @@ class Device(ABC, Transformable, RandomNode, Serializable):
 
         # Superimpose the impinging signal models
         if len(impinging_signals) != 1:
-            superimposed_signal = Signal.empty(
+            superimposed_signal = Signal.Empty(
                 self.sampling_rate,
                 self.antennas.num_receive_antennas,
                 carrier_frequency=self.carrier_frequency,
@@ -1908,12 +1867,8 @@ class Device(ABC, Transformable, RandomNode, Serializable):
                 slice(None) if selected_receive_antennas is None else selected_receive_antennas
             )
 
-            stream_samples = superimposed_signal.samples[stream_selector, :]  # type: ignore
-            operator_input = Signal(
-                stream_samples,
-                superimposed_signal.sampling_rate,
-                superimposed_signal.carrier_frequency,
-            )
+            stream_samples = superimposed_signal[stream_selector, :]
+            operator_input = superimposed_signal.from_ndarray(stream_samples)
             operator_inputs.append(operator_input)
 
         # Cache the operator inputs if the respective flag is enabled

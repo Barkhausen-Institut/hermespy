@@ -13,7 +13,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -119,7 +119,7 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT], Serializabl
             signal = signal[np.newaxis, :]
 
         # Query the pilot signal from the waveform generator
-        pilot_sequence = self.waveform.pilot_signal.samples.flatten()
+        pilot_sequence = self.waveform.pilot_signal[:, :].flatten()
 
         # Raise a runtime error if pilot sequence is empty
         if len(pilot_sequence) < 1:

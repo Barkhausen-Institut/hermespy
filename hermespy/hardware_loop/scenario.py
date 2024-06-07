@@ -12,15 +12,14 @@ from time import time
 from typing import Generic, Optional, TypeVar
 
 from hermespy.core import DeviceInput, DeviceReception, Scenario, Drop, Signal
-from hermespy.channel import ChannelPropagation
 from hermespy.simulation import SimulatedDeviceReception, SimulationScenario, TriggerRealization
 from .physical_device import PDT
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -43,10 +42,9 @@ class PhysicalScenario(Generic[PDT], Scenario[PDT]):
 
     def receive_devices(
         self,
-        impinging_signals: Sequence[DeviceInput]
-        | Sequence[Signal]
-        | Sequence[Sequence[Signal]]
-        | None = None,
+        impinging_signals: (
+            Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]] | None
+        ) = None,
         cache: bool = True,
     ) -> Sequence[DeviceReception]:
         """Receive over all scenario devices.
@@ -116,11 +114,9 @@ class SimulatedPhysicalScenario(SimulationScenario, PhysicalScenario):
 
     def receive_devices(
         self,
-        impinging_signals: Sequence[DeviceInput]
-        | Sequence[Signal]
-        | Sequence[Sequence[Signal]]
-        | Sequence[Sequence[ChannelPropagation]]
-        | None = None,
+        impinging_signals: (
+            Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]] | None
+        ) = None,
         cache: bool = True,
         trigger_realizations: Sequence[TriggerRealization] | None = None,
     ) -> Sequence[SimulatedDeviceReception]:

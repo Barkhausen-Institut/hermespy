@@ -80,17 +80,17 @@ from hermespy.core.monte_carlo import (
     ScalarEvaluationResult,
 )
 from hermespy.radar import Radar, RadarReception
-from hermespy.channel import RadarChannelBase
+from hermespy.channel.radar.radar import RadarChannelBase, RadarChannelSample
 from hermespy.radar.cube import RadarCube
 from hermespy.radar.detection import RadarPointCloud
 from hermespy.simulation import SimulatedDevice
 
 
 __author__ = "André Noll Barreto"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "André Noll Barreto"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -116,8 +116,11 @@ class RadarEvaluator(Evaluator, ABC):
     __radar_channel: RadarChannelBase  # Handle to the radar channel
     __receiving_device: SimulatedDevice
     __transmitting_device: SimulatedDevice
+    _channel_sample: RadarChannelSample | None
 
-    def __init__(self, receiving_radar: Radar, radar_channel: RadarChannelBase) -> None:
+    def __init__(
+        self, transmitting_radar: Radar, receiving_radar: Radar, radar_channel: RadarChannelBase
+    ) -> None:
         """
         Args:
 
@@ -129,30 +132,40 @@ class RadarEvaluator(Evaluator, ABC):
             ValueError: If the receiving radar is not an operator of the radar_channel receiver.
         """
 
-        if radar_channel.alpha_device is None or radar_channel.beta_device is None:
-            raise ValueError("Radar channel must be configured within a simulation scenario")
+        if transmitting_radar.device is None:
+            raise ValueError(
+                "Transmitting radar must be assigned a device within a simulation scenario"
+            )
 
         if receiving_radar.device is None:
-            raise ValueError("Radar must be assigned a device within a simulation scenario")
+            raise ValueError(
+                "Transmitting radar must be assigned a device within a simulation scenario"
+            )
 
+        self.__transmitting_device = transmitting_radar.device  # type: ignore
+        self.__receiving_device = receiving_radar.device  # type: ignore
         self.__receiving_radar = receiving_radar
         self.__radar_channel = radar_channel
 
-        if receiving_radar.device is radar_channel.alpha_device:
-            self.__receiving_device = radar_channel.alpha_device
-            self.__transmitting_device = radar_channel.beta_device
-
-        elif receiving_radar.device is radar_channel.beta_device:
-            self.__receiving_device = radar_channel.beta_device
-            self.__transmitting_device = radar_channel.alpha_device
-
-        else:
-            raise ValueError(
-                "Recieving radar to be evaluated must be assigned to the radar channel"
-            )
-
         # Initialize base class
         Evaluator.__init__(self)
+
+        # Register sample callback
+        self._channel_sample = None
+        radar_channel.add_sample_hook(
+            self.__sample_callback, self.__transmitting_device, self.__receiving_device
+        )
+
+    def __sample_callback(self, sample: RadarChannelSample) -> None:
+        """Callback for sampling radar channel realizations.
+
+        Args:
+
+            sample (RadarChannelSample):
+                Sampled radar channel realization.
+        """
+
+        self._channel_sample = sample
 
     @property
     def receiving_device(self) -> SimulatedDevice:
@@ -203,21 +216,14 @@ class DetectionProbabilityEvaluation(EvaluationTemplate[bool, ScatterVisualizati
 
     def _prepare_visualization(
         self, figure: plt.Figure | None, axes: VAT, **kwargs
-    ) -> ScatterVisualization:
-        # Configure axes
-        ax = axes.flat[0]
-        ax.set_xlabel("Target Detected")
-        ax.set_xlim([-0.5, 1.5])
-        ax.set_ylim([-1.0, 1.0])
-        ax.axvline(0.0, linestyle="--")
-        ax.axvline(1.0, linestyle="--")
+    ) -> ScatterVisualization:  # pragma: no cover
+        raise NotImplementedError("Detection probability evaluation does not support visualization")
 
-        paths = ax.scatter([0.5], [0.0])
-        return ScatterVisualization(figure, ax, paths)
-
-    def _update_visualization(self, visualization: ScatterVisualization, **kwargs) -> None:
+    def _update_visualization(
+        self, visualization: ScatterVisualization, **kwargs
+    ) -> None:  # pragma: no cover
         # ToDo: Implement updating the single-item scatter plot
-        return
+        raise NotImplementedError("Detection probability evaluation does not support visualization")
 
     def artifact(self) -> DetectionProbArtifact:
         return DetectionProbArtifact(self.evaluation)
@@ -505,7 +511,10 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
                 Number of different thresholds to be considered in ROC curve
         """
 
-        RadarEvaluator.__init__(self, receiving_radar=radar, radar_channel=radar_channel)
+        # Initialize base class
+        RadarEvaluator.__init__(self, radar, radar, radar_channel)
+
+        # Initialize class attributes
         self.__num_thresholds = num_thresholds
 
     @staticmethod
@@ -533,15 +542,16 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
         return RocEvaluation(radar_cube_h0, radar_cube_h1)
 
     def evaluate(self) -> RocEvaluation:
+
         # Collect required information from the simulation
-        one_hypothesis_channel_realization = self.radar_channel.realization
+        one_hypothesis_sample = self._channel_sample
         device_output = self.transmitting_device.output
         device_input = self.receiving_device.input
         device_index = self.radar_channel.scenario.device_index(self.transmitting_device)
         operator_index = self.receiving_device.receivers.operator_index(self.receiving_radar)
 
         # Check if the channel has been realized yet
-        if one_hypothesis_channel_realization is None:
+        if one_hypothesis_sample is None:
             raise RuntimeError("Channel has not been realized yet")
 
         # Check if the devices have been realized yet
@@ -549,14 +559,14 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
             raise RuntimeError("Channel devices lack cached transmission / reception information")
 
         # Generate the null hypothesis detection radar cube by re-running the radar detection routine
-        null_hypothesis_channel_realization = one_hypothesis_channel_realization.null_hypothesis()
+        null_hypothesis_sample = one_hypothesis_sample.null_hypothesis()
 
         # Propagate again over the radar channel
-        null_hypothesis_propagation = null_hypothesis_channel_realization.propagate(device_output)
+        null_hypothesis_propagation = null_hypothesis_sample.propagate(device_output)
 
         # Exchange the respective propagated signal
         impinging_signals = list(device_input.impinging_signals).copy()
-        impinging_signals[device_index] = null_hypothesis_propagation.signal
+        impinging_signals[device_index] = null_hypothesis_propagation
 
         # Receive again
         null_hypothesis_device_reception = self.receiving_device.process_from_realization(
@@ -901,24 +911,25 @@ class RootMeanSquareError(RadarEvaluator):
 
     def evaluate(self) -> Evaluation:
         reception = self.receiving_radar.reception
-
         if reception is None:
             raise RuntimeError(
                 "Root mean square evaluation requires its radar to have received a reception"
             )
 
         point_cloud = reception.cloud
-        channel_realization = self.radar_channel.realization
-
         if point_cloud is None:
             raise RuntimeError(
                 "Root mean square evaluation requires a detector to be configured at the radar"
             )
 
-        if channel_realization is None:
-            raise RuntimeError("Root mean square evaluation requires a realized radar channel")
+        if self._channel_sample is None:
+            raise RuntimeError("Root mean square evaluation requires a sampled radar channel")
 
-        return RootMeanSquareEvaluation(point_cloud, channel_realization.ground_truth())
+        # Consolide the ground truth
+        ground_truth = np.array(
+            [p.ground_truth[0] for p in self._channel_sample.paths if p.ground_truth is not None]
+        )
+        return RootMeanSquareEvaluation(point_cloud, ground_truth)
 
     @property
     def title(self) -> str:

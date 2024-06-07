@@ -29,14 +29,14 @@ simulation.set_channel(device_beta, device_beta, beta_beta_channel)
 simulation.set_channel(device_alpha, device_beta, alpha_beta_channel)
 
 # Sweep over the SNR from 0 to 20 dB in steps of 10 dB
-simulation.new_dimension("snr", dB(0, 10, 20))
+simulation.new_dimension("noise_level", dB(0, 10, 20), device_beta)
 
 # Sweep over the carrier frequency from 1 GHz to 100 GHz in steps of 10 GHz
 simulation.new_dimension("carrier_frequency", (1e9, 1e10, 1e11), device_alpha, device_beta)
 
 # Make both devices transmit 100 samples at 100 MHz
 ns, fs = 100, 1e8
-transmitted_signal = Signal(np.exp(2j * np.random.uniform(0, np.pi, (1, ns))), fs)
+transmitted_signal = Signal.Create(np.exp(2j * np.random.uniform(0, np.pi, (1, ns))), fs)
 alpha_transmitter = SignalTransmitter(transmitted_signal)
 beta_transmitter = SignalTransmitter(transmitted_signal)
 alpha_receiver = SignalReceiver(ns, fs, 1.0)

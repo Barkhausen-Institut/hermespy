@@ -13,22 +13,25 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 from scipy.constants import pi, speed_of_light
 
 from hermespy.channel import SingleTargetRadarChannel, MultiTargetRadarChannel, VirtualRadarTarget, PhysicalRadarTarget, FixedCrossSection
-from hermespy.channel.radar_channel import MultiTargetRadarChannelRealization, SingleTargetRadarChannelRealization, RadarChannelBase, RadarChannelRealization, RadarPathRealization, RadarInterferenceRealization, RadarTargetRealization
-from hermespy.core import ChannelStateInformation, ChannelStateFormat, Direction, FloatingError, Moveable, Signal, Transformation
+from hermespy.channel.radar import VirtualRadarTarget, PhysicalRadarTarget
+from hermespy.channel.radar.radar import RadarChannelBase, RadarPath, RadarTargetPath, RadarInterferencePath, RadarChannelRealization
+from hermespy.core import ChannelStateInformation, ChannelStateFormat, Direction, Signal, Transformation
 from hermespy.simulation import SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
+from hermespy.simulation.animation import Moveable, StaticTrajectory
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.utils import assert_signals_equal
 
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-RPRT = TypeVar("RPRT", bound=RadarPathRealization)
+RPT = TypeVar("RPT", bound=RadarPath)
 RCRT = TypeVar("RCRT", bound=RadarChannelRealization)
 RCT = TypeVar("RCT", bound=RadarChannelBase)
 
@@ -73,15 +76,15 @@ class TestVirtualRadarTarget(unittest.TestCase):
         self.cross_section = FixedCrossSection(1.234)
         self.velocity = np.array([1, 2, 3], dtype=float)
         self.pose = Transformation.From_Translation(np.array([2, 3, 4]))
+        self.trajectory = StaticTrajectory(self.pose, self.velocity)
 
-        self.target = VirtualRadarTarget(self.cross_section, self.velocity, self.pose)
+        self.target = VirtualRadarTarget(self.cross_section, self.trajectory)
 
     def test_init(self) -> None:
         """Initialization paramters should be properly stored as class attributes"""
 
         self.assertIs(self.cross_section, self.target.cross_section)
-        assert_array_almost_equal(self.velocity, self.target.velocity)
-        assert_array_almost_equal(self.pose, self.target.pose)
+        self.assertFalse(self.target.static)
 
     def test_cross_section_setget(self) -> None:
         """Cross section property getter should return setter argument"""
@@ -91,29 +94,24 @@ class TestVirtualRadarTarget(unittest.TestCase):
 
         self.assertIs(expected_cross_section, self.target.cross_section)
 
-    def test_velocity_setget(self) -> None:
-        """Velocity property getter should return setter argument"""
-
-        expected_velocity = np.array([4, 5, 6])
-        self.target.velocity = expected_velocity
-
-        assert_array_almost_equal(expected_velocity, self.target.velocity)
-
-    def test_get(self) -> None:
+    def test_sample_cross_section(self) -> None:
         """Getting target parameters should return correct information"""
 
-        self.assertEqual(1.234, self.target.get_cross_section(Direction(np.array([1, 0, 0])), Direction(np.array([1, 0, 0]))))
-        assert_array_almost_equal(self.velocity, self.target.get_velocity())
-        assert_array_almost_equal(self.target.forwards_transformation, self.target.get_forwards_transformation())
-        assert_array_almost_equal(self.target.backwards_transformation, self.target.get_backwards_transformation())
+        self.assertEqual(1.234, self.target.sample_cross_section(Direction(np.array([1, 0, 0])), Direction(np.array([1, 0, 0]))))
 
+    def test_sample_trajectory(self) -> None:
+        """Getting target parameters should return correct information"""
+        
+        sample = self.target.sample_trajectory(0.0)
+        self.assertEqual(0.0, sample.timestamp)
+        
 
 class TestPhysicalRadarTarget(unittest.TestCase):
     def setUp(self) -> None:
         self.cross_section = FixedCrossSection(1.234)
         self.velocity = np.array([1, 2, 3], dtype=float)
         self.pose = Transformation.From_Translation(np.array([2, 3, 4]))
-        self.moveable = Moveable(self.pose, self.velocity)
+        self.moveable = Moveable(StaticTrajectory(self.pose, self.velocity))
 
         self.target = PhysicalRadarTarget(self.cross_section, self.moveable)
 
@@ -122,6 +120,7 @@ class TestPhysicalRadarTarget(unittest.TestCase):
 
         self.assertIs(self.cross_section, self.target.cross_section)
         self.assertIs(self.moveable, self.target.moveable)
+        self.assertFalse(self.target.static)
 
     def test_cross_section_setget(self) -> None:
         """Cross section property getter should return setter argument"""
@@ -131,19 +130,22 @@ class TestPhysicalRadarTarget(unittest.TestCase):
 
         self.assertIs(expected_cross_section, self.target.cross_section)
 
-    def test_get(self) -> None:
-        """Getting target parameters should return correct information"""
+    def test_sample_cross_section(self) -> None:
+        """Sample target parameters should return correct information"""
 
-        self.assertEqual(1.234, self.target.get_cross_section(Direction(np.array([1, 0, 0])), Direction(np.array([1, 0, 0]))))
-        assert_array_almost_equal(self.velocity, self.target.get_velocity())
-        assert_array_almost_equal(self.moveable.forwards_transformation, self.target.get_forwards_transformation())
-        assert_array_almost_equal(self.moveable.backwards_transformation, self.target.get_backwards_transformation())
+        self.assertEqual(1.234, self.target.sample_cross_section(Direction(np.array([1, 0, 0])), Direction(np.array([1, 0, 0]))))
+
+    def test_sample_trajectory(self) -> None:
+        """Sample target parameters should return correct information"""
+
+        sample = self.target.sample_trajectory(0.0)
+        self.assertEqual(0.0, sample.timestamp)
 
 
-class _TestRadarPathRealization(Generic[RPRT], unittest.TestCase):
+class _TestRadarPathRealization(Generic[RPT], unittest.TestCase):
     """Test the radar path realization base class"""
 
-    def _init_realization(self) -> RPRT:
+    def _init_realization(self) -> RPT:
         ...
 
     def setUp(self) -> None:
@@ -159,18 +161,18 @@ class _TestRadarPathRealization(Generic[RPRT], unittest.TestCase):
         self.receiver = SimulatedDevice(carrier_frequency=self.carrier_frequency, antennas=SimulatedUniformArray(SimulatedIdealAntenna, 0.01, (2, 1, 1)), pose=Transformation.From_Translation(np.array([100.0, 0.0, 0.0], dtype=float)))
 
     def _test_propagate_state(self) -> None:
-        test_signal = Signal(self.rng.standard_normal((self.transmitter.antennas.num_transmit_antennas, 10)) + 1j * self.rng.standard_normal((self.transmitter.antennas.num_transmit_antennas, 10)), self.sampling_rate, self.carrier_frequency)
+        test_signal = Signal.Create(self.rng.standard_normal((self.transmitter.antennas.num_transmit_antennas, 10)) + 1j * self.rng.standard_normal((self.transmitter.antennas.num_transmit_antennas, 10)), self.sampling_rate, self.carrier_frequency)
 
         expected_sample_offset = int(self.path_realization.propagation_delay(self.transmitter, self.receiver) * self.sampling_rate)
         propagated_samples = np.zeros((self.receiver.antennas.num_receive_antennas, test_signal.num_samples + expected_sample_offset), dtype=np.complex_)
-        self.path_realization.add_propagation(self.transmitter, self.receiver, test_signal, propagated_samples)
+        self.path_realization.add_propagation(self.transmitter.state(0), self.receiver.state(0), test_signal[:, :], test_signal.sampling_rate, test_signal.carrier_frequency, propagated_samples)
 
         raw_state = np.zeros((self.receiver.antennas.num_receive_antennas, self.transmitter.antennas.num_transmit_antennas, test_signal.num_samples, 1 + expected_sample_offset), dtype=np.complex_)
-        self.path_realization.add_state(self.transmitter, self.receiver, 0, self.sampling_rate, raw_state)
+        self.path_realization.add_state(self.transmitter.state(0), self.receiver.state(0), self.sampling_rate, self.carrier_frequency, 0.0, raw_state)
         channel_state = ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE, raw_state)
-        state_propagated_samples = channel_state.propagate(test_signal).samples
+        state_propagated_samples = channel_state.propagate(test_signal)[:, :]
 
-        assert_array_almost_equal(propagated_samples, state_propagated_samples[:, : propagated_samples.size])
+        assert_array_almost_equal(propagated_samples, state_propagated_samples[:, :propagated_samples.size])
 
     def test_attenuate_setget(self) -> None:
         """Attenuate property getter should return setter argument"""
@@ -200,22 +202,23 @@ class _TestRadarPathRealization(Generic[RPRT], unittest.TestCase):
         """Adding a delayed state with a too high delay should do nothing"""
 
         state = np.zeros((1, 1, 5, 10), dtype=np.complex_)
-
-        self.path_realization.add_state(self.transmitter, self.receiver, -1e10, self.sampling_rate, state)
-
+        self.path_realization.add_state(self.transmitter.state(0), self.receiver.state(0), self.sampling_rate, self.carrier_frequency, -1e10, state)
         assert_array_equal(np.zeros_like(state), state)
 
+        state = np.zeros((1, 1, 5, 1), dtype=np.complex_)
+        self.path_realization.add_state(self.transmitter.state(0), self.receiver.state(0), self.sampling_rate, self.carrier_frequency, 0.0, state)
+        assert_array_equal(np.zeros_like(state), state)
 
-class TestRadarTargetRealization(_TestRadarPathRealization[RadarTargetRealization]):
+class TestRadarTargetRealization(_TestRadarPathRealization[RadarTargetPath]):
     """Test the radar target realization class"""
 
-    def _init_realization(self) -> RadarTargetRealization:
+    def _init_realization(self) -> RadarTargetPath:
         self.target_position = np.array([1.0, 2.0, 3.0], dtype=float)
         self.target_velocity = np.array([4.0, 5.0, 6.0], dtype=float)
         self.cross_section = 1.234
         self.reflection_phase = -1
 
-        return RadarTargetRealization(self.target_position, self.target_velocity, self.cross_section, self.reflection_phase, self.attenuate, self.static)
+        return RadarTargetPath(self.target_position, self.target_velocity, self.cross_section, self.reflection_phase, self.attenuate, self.static)
 
     def test_properties(self) -> None:
         """Class properties should return initialization arguments"""
@@ -236,18 +239,18 @@ class TestRadarTargetRealization(_TestRadarPathRealization[RadarTargetRealizatio
 
         file.close()
 
-        self.assertIsInstance(recalled_realization, RadarTargetRealization)
+        self.assertIsInstance(recalled_realization, RadarTargetPath)
         assert_array_equal(self.target_position, recalled_realization.position)
         assert_array_equal(self.target_velocity, recalled_realization.velocity)
         self.assertEqual(self.cross_section, recalled_realization.cross_section)
         self.assertEqual(self.reflection_phase, recalled_realization.reflection_phase)
 
 
-class TestInterferenceRealization(_TestRadarPathRealization[RadarInterferenceRealization]):
+class TestInterferenceRealization(_TestRadarPathRealization[RadarInterferencePath]):
     """Test the radar interference realization class"""
 
-    def _init_realization(self) -> RadarInterferenceRealization:
-        return RadarInterferenceRealization(self.attenuate, self.static)
+    def _init_realization(self) -> RadarInterferencePath:
+        return RadarInterferencePath(self.attenuate, self.static)
 
     def test_hdf_serialization(self) -> None:
         """Test serialization to and from HDF"""
@@ -260,104 +263,7 @@ class TestInterferenceRealization(_TestRadarPathRealization[RadarInterferenceRea
 
         file.close()
 
-        self.assertIsInstance(recalled_realization, RadarInterferenceRealization)
-
-
-class _TestRadarChannelRealization(Generic[RCRT], unittest.TestCase):
-    """Test the radar channel realization base class"""
-
-    def _init_realization(self) -> RCRT:
-        ...
-
-    def setUp(self) -> None:
-        self.carrier_frequency = 1e9
-        self.sampling_rate = 1e8
-
-        self.alpha_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, antennas=SimulatedUniformArray(SimulatedIdealAntenna, 0.01, (1, 1, 1)), pose=Transformation.From_Translation(np.array([0.0, 0.0, 0.0], dtype=float)))
-        self.beta_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, antennas=SimulatedUniformArray(SimulatedIdealAntenna, 0.01, (3, 1, 1)), pose=Transformation.From_Translation(np.array([100.0, 0.0, 0.0], dtype=float)))
-        self.gain = 0.9876
-
-        self.realization = self._init_realization()
-
-    def test_properties(self) -> None:
-        """Class properties should return initialization arguments"""
-
-        self.assertIs(self.alpha_device, self.realization.alpha_device)
-        self.assertIs(self.beta_device, self.realization.beta_device)
-        self.assertEqual(self.gain, self.realization.gain)
-
-    def test_propagate_state(self) -> None:
-        """Propagation behaviour and channel state information should match"""
-
-        signal = Signal(np.ones((self.alpha_device.antennas.num_transmit_antennas, 10)), self.sampling_rate, self.carrier_frequency)
-
-        propagation = self.realization.propagate(signal)
-        state = self.realization.state(self.alpha_device, self.beta_device, 0, self.sampling_rate, 20, 1 + propagation.signal.num_samples - signal.num_samples)
-        state_propagation = state.propagate(signal)
-
-        assert_array_almost_equal(propagation.signal.samples, state_propagation.samples[:, : propagation.signal.num_samples])
-
-    def test_hdf_serialization(self) -> None:
-        """Test serialization to and from HDF"""
-
-        file = File("test.h5", "w", driver="core", backing_store=False)
-        group = file.create_group("group")
-
-        self.realization.to_HDF(group)
-        recalled_realization = self.realization.From_HDF(group, self.alpha_device, self.beta_device)
-
-        file.close()
-
-        self.assertIsInstance(recalled_realization, RadarChannelRealization)
-        self.assertIs(self.alpha_device, recalled_realization.alpha_device)
-        self.assertIs(self.beta_device, recalled_realization.beta_device)
-        self.assertEqual(self.gain, recalled_realization.gain)
-
-
-class TestSingleTargetRadarChannelRealization(_TestRadarChannelRealization[SingleTargetRadarChannelRealization]):
-    """Test single target radar channel realization"""
-
-    def _init_realization(self) -> SingleTargetRadarChannelRealization:
-        self.target_realization = RadarTargetRealization(np.ones(3), np.zeros(3), 1.0, 1)
-        return SingleTargetRadarChannelRealization(self.alpha_device, self.beta_device, self.gain, self.target_realization)
-
-    def test_null_hypothesis(self) -> None:
-        """Null hypothesis realization should generate correct channel realization"""
-
-        null_realization = self.realization.null_hypothesis()
-        self.assertIsNone(null_realization.target_realization)
-
-    def test_ground_truth(self) -> None:
-        """Ground truth should return correct information"""
-
-        assert_array_equal(np.array([self.target_realization.position]), self.realization.ground_truth())
-
-
-class TestMultiTargetRadarChannelRealization(_TestRadarChannelRealization[MultiTargetRadarChannelRealization]):
-    """Test the multi target radar channel realization class"""
-
-    def _init_realization(self) -> MultiTargetRadarChannelRealization:
-        self.target_realization = RadarTargetRealization(np.ones(3), np.zeros(3), 1.0, 1)
-        self.interference_realization = RadarInterferenceRealization()
-        return MultiTargetRadarChannelRealization(self.alpha_device, self.beta_device, self.gain, self.interference_realization, [self.target_realization])
-
-    def test_properties(self) -> None:
-        super().test_properties()
-
-        self.assertIs(self.interference_realization, self.realization.interference_realization)
-        self.assertEqual(1, len(self.realization.target_realizations))
-        self.assertIs(self.target_realization, self.realization.target_realizations[0])
-
-    def test_null_hypothesis(self) -> None:
-        """Null hypothesis realization should generate correct channel realization"""
-
-        null_realization = self.realization.null_hypothesis()
-        self.assertEqual(0, null_realization.num_targets)
-
-    def test_ground_truth(self) -> None:
-        """Ground truth should return correct information"""
-
-        assert_array_equal(np.array([self.target_realization.position]), self.realization.ground_truth())
+        self.assertIsInstance(recalled_realization, RadarInterferencePath)
 
 
 class _TestRadarChannelBase(Generic[RCT], unittest.TestCase):
@@ -372,17 +278,11 @@ class _TestRadarChannelBase(Generic[RCT], unittest.TestCase):
         self.sampling_rate = 1e6
         self.carrier_frequency = 1e9
 
-        self.alpha_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, antennas=SimulatedUniformArray(SimulatedIdealAntenna, 0.01, (1, 1, 1)))
-        self.beta_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, antennas=SimulatedUniformArray(SimulatedIdealAntenna, 0.01, (1, 1, 1)))
+        self.alpha_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, sampling_rate=self.sampling_rate, antennas=SimulatedUniformArray(SimulatedIdealAntenna, 0.01, (1, 1, 1)))
+        self.beta_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, sampling_rate=self.sampling_rate, antennas=SimulatedUniformArray(SimulatedIdealAntenna, 0.01, (1, 1, 1)))
 
         self.channel = self._init_channel()
         self.channel.random_mother = self.random_root
-
-    def test_properties(self) -> None:
-        """Class properties should return initialization arguments"""
-
-        self.assertIs(self.alpha_device, self.channel.alpha_device)
-        self.assertIs(self.beta_device, self.channel.beta_device)
 
     def test_attenuate_setget(self) -> None:
         """Attenuate property getter should return setter argument"""
@@ -390,56 +290,10 @@ class _TestRadarChannelBase(Generic[RCT], unittest.TestCase):
         self.channel.attenuate = False
         self.assertFalse(self.channel.attenuate)
 
-    def test_realize_target(self) -> None:
-        """Test subroutine to realize a radar target"""
-
-        cross_section = FixedCrossSection(1.0)
-        veolicty = np.zeros(3, dtype=float)
-        pose = Transformation.From_Translation(np.array([100.0, 0.0, 0.0], dtype=float))
-        target = VirtualRadarTarget(cross_section, veolicty, pose)
-
-        realization = self.channel._realize_target(target)
-
-        self.assertAlmostEqual(2 * 100 / speed_of_light, realization.propagation_delay(self.alpha_device, self.beta_device), delta=1e-6)
-
-    def test_realize_target_validation(self) -> None:
-        """Target realization subroutine should raise errors on invalid parameter combinations"""
-
-        cross_section = FixedCrossSection(1.0)
-        veolicty = np.zeros(3, dtype=float)
-        pose = Transformation.From_Translation(np.array([100.0, 0.0, 0.0], dtype=float))
-        target = VirtualRadarTarget(cross_section, veolicty, pose)
-
-        target.position = self.alpha_device.global_position
-        with self.assertRaises(RuntimeError):
-            _ = self.channel._realize_target(target)
-
-        self.beta_device.position = np.array([1, 2, 3])
-        target.position = self.beta_device.global_position
-        with self.assertRaises(RuntimeError):
-            _ = self.channel._realize_target(target)
-
-    def test_null_hypothesis_validation(self) -> None:
-        """Null hypothesis realization should raise RuntimeError on invalid internal state"""
-
-        with self.assertRaises(RuntimeError):
-            self.channel.null_hypothesis()
-
-    def test_null_hypothesis(self) -> None:
-        """The radar channel null hypothesis routine should create a valid null hypothesis"""
-
-        signal = Signal(self.random_generator.normal(size=(self.alpha_device.antennas.num_transmit_antennas, 10)), self.alpha_device.sampling_rate, self.alpha_device.carrier_frequency)
-        _ = self.channel.propagate(signal)
-
-        null_hypothesis = self.channel.null_hypothesis()
-        self.assertIsInstance(null_hypothesis, RadarChannelRealization)
-
     def test_yaml_serialization(self) -> None:
         """Test YAML serialization"""
 
-        with patch("hermespy.channel.Channel.alpha_device", new_callable=PropertyMock) as alpha_mock, patch("hermespy.channel.Channel.beta_device", new_callable=PropertyMock) as beta_mock, patch("hermespy.channel.Channel.random_mother", new_callable=PropertyMock) as random_mock:
-            alpha_mock.return_value = None
-            beta_mock.return_value = None
+        with patch("hermespy.channel.Channel.random_mother", new_callable=PropertyMock) as random_mock:
             random_mock.return_value = None
 
             test_yaml_roundtrip_serialization(self, self.channel)
@@ -458,13 +312,24 @@ class _TestRadarChannelBase(Generic[RCT], unittest.TestCase):
         file.close()
 
         self.assertIsInstance(recalled_realization, type(realization))
-        self.assertIs(self.alpha_device, recalled_realization.alpha_device)
-        self.assertIs(self.beta_device, recalled_realization.beta_device)
 
+    def test_propagate_state(self) -> None:
+        """Test if the state propagation is correct"""
+        
+        test_signal = Signal.Create(self.random_generator.standard_normal((self.alpha_device.antennas.num_transmit_antennas, 10)) + 1j * self.random_generator.standard_normal((self.alpha_device.antennas.num_transmit_antennas, 10)), self.sampling_rate, self.carrier_frequency)
 
+        realization = self.channel.realize()
+        sample = realization.sample(self.alpha_device, self.beta_device)
+        
+        sample_propagation = sample.propagate(test_signal)
+        state_propagation = sample.state(10, 2).propagate(test_signal)
+
+        assert_signals_equal(self, sample_propagation, state_propagation)
+        
+    
 class TestSingleTargetRadarChannel(_TestRadarChannelBase[SingleTargetRadarChannel]):
     def _init_channel(self) -> SingleTargetRadarChannel:
-        return SingleTargetRadarChannel(self.range, self.radar_cross_section, alpha_device=self.alpha_device, beta_device=self.beta_device)
+        return SingleTargetRadarChannel(self.range, self.radar_cross_section)
 
     def setUp(self) -> None:
         self.range = 100.0
@@ -498,6 +363,31 @@ class TestSingleTargetRadarChannel(_TestRadarChannelBase[SingleTargetRadarChanne
 
         with self.assertRaises(ValueError):
             self.channel.target_range = "wrong argument type"
+            
+    def test_target_velocity_setget(self) -> None:
+        """Target velocity property getter should return setter argument"""
+
+        new_velocity = 10
+        self.channel.target_velocity = new_velocity
+        self.assertEqual(new_velocity, self.channel.target_velocity)
+        
+        new_velocity = (0, 10)
+        self.channel.target_velocity = new_velocity
+        self.assertEqual(new_velocity, self.channel.target_velocity)
+        
+        new_velocity = np.array([1, 2, 3])
+        self.channel.target_velocity = new_velocity
+        assert_array_equal(new_velocity, self.channel.target_velocity)
+        
+    def test_target_velocity_validation(self) -> None:
+        """Target velocity property setter should raise ValueError on invalid arguments"""
+
+        with self.assertRaises(ValueError):
+            self.channel.target_velocity = (1, 2, 3, 4)
+
+        with self.assertRaises(ValueError):
+            self.channel.target_velocity = (3, 2)
+            
 
     def test_radar_cross_section_get(self) -> None:
         """Radar cross section getter should return init param"""
@@ -515,14 +405,46 @@ class TestSingleTargetRadarChannel(_TestRadarChannelBase[SingleTargetRadarChanne
 
         except ValueError:
             self.fail()
+            
+    def test_target_azimuth_setget(self) -> None:
+        """Target azimuth property getter should return setter argument"""
 
-    def test_velocity_setget(self) -> None:
-        """Velocity getter should return setter argument"""
+        new_azimuth = 10
+        self.channel.target_azimuth = new_azimuth
+        self.assertEqual(new_azimuth, self.channel.target_azimuth)
+        
+        new_azimuth = (0, 10)
+        self.channel.target_azimuth = new_azimuth
+        self.assertEqual(new_azimuth, self.channel.target_azimuth)
+        
+    def test_target_azimuth_validation(self) -> None:
+        """Target azimuth property setter should raise ValueError on invalid arguments"""
 
-        new_velocity = 20
+        with self.assertRaises(ValueError):
+            self.channel.target_azimuth = (1, 2, 3, 4)
 
-        self.channel.target_velocity = new_velocity
-        self.assertEqual(new_velocity, self.channel.target_velocity)
+        with self.assertRaises(ValueError):
+            self.channel.target_azimuth = (3, 2)
+            
+    def test_target_zenith_setget(self) -> None:
+        """Target zenith property getter should return setter argument"""
+
+        new_zenith = 10
+        self.channel.target_zenith = new_zenith
+        self.assertEqual(new_zenith, self.channel.target_zenith)
+        
+        new_zenith = (0, 10)
+        self.channel.target_zenith = new_zenith
+        self.assertEqual(new_zenith, self.channel.target_zenith)
+        
+    def test_target_zenith_validation(self) -> None:
+        """Target zenith property setter should raise ValueError on invalid arguments"""
+
+        with self.assertRaises(ValueError):
+            self.channel.target_zenith = (1, 2, 3, 4)
+
+        with self.assertRaises(ValueError):
+            self.channel.target_zenith = (3, 2)
 
     def test_target_exists_setget(self) -> None:
         """Target exists flag getter should return setter argument"""
@@ -542,6 +464,19 @@ class TestSingleTargetRadarChannel(_TestRadarChannelBase[SingleTargetRadarChanne
         output_signal[:, :number_of_samples:interval_in_samples] = 1.0
 
         return output_signal
+    
+    def test_decorrelation_distance_setget(self) -> None:
+        """Decorrelation distance property getter should return setter argument"""
+
+        new_decorrelation_distance = 10
+        self.channel.decorrelation_distance = new_decorrelation_distance
+        self.assertEqual(new_decorrelation_distance, self.channel.decorrelation_distance)
+        
+    def test_decorrelation_distance_validation(self) -> None:
+        """Decorrelation distance property setter should raise ValueError on invalid arguments"""
+
+        with self.assertRaises(ValueError):
+            self.channel.decorrelation_distance = -1.12345
 
     def test_propagation_delay_integer_num_samples(self) -> None:
         """
@@ -560,10 +495,10 @@ class TestSingleTargetRadarChannel(_TestRadarChannelBase[SingleTargetRadarChanne
 
         self.channel.target_range = expected_range
 
-        propagation = self.channel.propagate(Signal(input_signal, self.sampling_rate, self.carrier_frequency))
+        propagation = self.channel.propagate(Signal.Create(input_signal, self.sampling_rate, self.carrier_frequency), self.alpha_device, self.beta_device)
 
         expected_output = np.hstack((np.zeros((1, delay_in_samples)), input_signal)) * expected_amplitude
-        assert_array_almost_equal(abs(expected_output), np.abs(propagation.signal.samples[:, : expected_output.size]))
+        assert_array_almost_equal(abs(expected_output), np.abs(propagation[:, :expected_output.size]))
 
     def test_propagation_delay_noninteger_num_samples(self) -> None:
         """
@@ -581,10 +516,10 @@ class TestSingleTargetRadarChannel(_TestRadarChannelBase[SingleTargetRadarChanne
 
         self.channel.target_range = expected_range
 
-        propagation = self.channel.propagate(Signal(input_signal, self.sampling_rate, self.carrier_frequency))
+        propagation = self.channel.propagate(Signal.Create(input_signal, self.sampling_rate, self.carrier_frequency), self.alpha_device, self.beta_device)
 
         straddle_loss = np.sinc(0.5)
-        peaks = np.abs(propagation.signal.samples[:, delay_in_samples : input_signal.size : samples_per_symbol])
+        peaks = np.abs(propagation[:, delay_in_samples : input_signal.size : samples_per_symbol])
 
         assert_array_almost_equal(peaks, expected_amplitude * straddle_loss * np.ones(peaks.shape))
 
@@ -617,10 +552,23 @@ class TestSingleTargetRadarChannel(_TestRadarChannelBase[SingleTargetRadarChanne
         self.channel.target_range = expected_range
         self.channel.target_velocity = velocity
 
-        propagation = self.channel.propagate(Signal(input_signal, self.sampling_rate, self.carrier_frequency))
+        propagation = self.channel.propagate(Signal.Create(input_signal, self.sampling_rate, self.carrier_frequency), self.alpha_device, self.beta_device)
 
-        assert_array_almost_equal(np.abs(propagation.signal.samples[0, peaks_in_samples].flatten()), expected_straddle_amplitude)
+        assert_array_almost_equal(np.abs(propagation[:, :][0, peaks_in_samples].flatten()), expected_straddle_amplitude)
 
+    def test_propagation_random_paramters(self) -> None:
+        """Test target parameter sampling from intervals"""
+        
+        self.channel.target_range = (10, 20)
+        self.channel.target_azimuth = (-pi, pi)
+        self.channel.target_zenith = (0, pi)
+        self.channel.target_velocity = (0, 10)
+        
+        sample = self.channel.realize().sample(self.alpha_device, self.beta_device)
+        target_path = sample.paths[0]
+        
+        self.assertTrue(10 <= .5 * target_path.propagation_delay(self.alpha_device.state(0), self.beta_device.state(0)) * speed_of_light <= 20)
+        
     def test_doppler_shift(self) -> None:
         """
         Test if the received signal corresponds to the expected delayed version, given time variant delays on account of
@@ -637,10 +585,10 @@ class TestSingleTargetRadarChannel(_TestRadarChannelBase[SingleTargetRadarChanne
         time = np.arange(num_samples) / self.sampling_rate
 
         input_signal = np.sin(2 * np.pi * sinewave_frequency * time)
-        propagation = self.channel.propagate(Signal(input_signal[np.newaxis, :], self.sampling_rate, self.carrier_frequency))
+        propagation = self.channel.propagate(Signal.Create(input_signal[np.newaxis, :], self.sampling_rate, self.carrier_frequency), self.alpha_device, self.beta_device)
 
         input_freq = np.fft.fft(input_signal)
-        output_freq = np.fft.fft(propagation.signal.samples.flatten()[-num_samples:])
+        output_freq = np.fft.fft(propagation[0, :].flatten()[-num_samples:])
 
         freq_resolution = self.sampling_rate / num_samples
 
@@ -658,9 +606,9 @@ class TestSingleTargetRadarChannel(_TestRadarChannelBase[SingleTargetRadarChanne
         input_signal = self._create_impulse_train(samples_per_symbol, num_pulses)
 
         self.channel.target_exists = False
-        propagation = self.channel.propagate(Signal(input_signal, self.sampling_rate))
+        propagation = self.channel.propagate(Signal.Create(input_signal, self.sampling_rate), self.alpha_device, self.beta_device)
 
-        assert_array_almost_equal(propagation.signal.samples, np.zeros(propagation.signal.samples.shape))
+        assert_array_almost_equal(propagation[:, :], np.zeros_like(input_signal))
 
     def test_no_attenuation(self) -> None:
         """Make sure the signal energy is preserved when the attenuate flag is disabled"""
@@ -668,26 +616,40 @@ class TestSingleTargetRadarChannel(_TestRadarChannelBase[SingleTargetRadarChanne
         self.channel.attenuate = False
         self.channel.target_range = 10.0
 
-        input_signal = Signal(self._create_impulse_train(500, 15), self.sampling_rate)
-        propagation = self.channel.propagate(input_signal)
+        input_signal = Signal.Create(self._create_impulse_train(500, 15), self.sampling_rate)
+        propagation = self.channel.propagate(input_signal, self.alpha_device, self.beta_device)
 
-        assert_array_almost_equal(input_signal.energy, propagation.signal.energy, 1)
+        assert_array_almost_equal(input_signal.energy, propagation.energy, 1)
 
 
 class TestMultiTargetRadarChannel(_TestRadarChannelBase[MultiTargetRadarChannel]):
     """Test the multi target radar channel class"""
 
     def _init_channel(self) -> MultiTargetRadarChannel:
-        return MultiTargetRadarChannel(alpha_device=self.alpha_device, beta_device=self.beta_device)
+        return MultiTargetRadarChannel()
 
     def setUp(self) -> None:
         super().setUp()
 
-        self.first_target = VirtualRadarTarget(FixedCrossSection(1.0), velocity=np.array([10, 0, 0]), pose=Transformation.From_Translation(np.array([-10, 0, 0], dtype=float)))
-        self.second_target = VirtualRadarTarget(FixedCrossSection(1.0), velocity=np.array([-10, 0, 0]), pose=Transformation.From_Translation(np.array([10, 0, 0], dtype=float)))
+        self.first_target = VirtualRadarTarget(FixedCrossSection(1.0), trajectory=StaticTrajectory(Transformation.From_Translation(np.array([-10, 0, 0], dtype=float)), velocity=np.array([10, 0, 0])))
+        self.second_target = VirtualRadarTarget(FixedCrossSection(1.0), trajectory=StaticTrajectory(Transformation.From_Translation(np.array([10, 0, 0], dtype=float)), velocity=np.array([-10, 0, 0])))
 
         self.channel.add_target(self.first_target)
         self.channel.add_target(self.second_target)
+        
+    def test_decorrelation_distance_setget(self) -> None:
+        """Decorrelation distance property getter should return setter argument"""
+
+        new_decorrelation_distance = 10.0
+        self.channel.decorrelation_distance = new_decorrelation_distance
+
+        self.assertEqual(new_decorrelation_distance, self.channel.decorrelation_distance)
+        
+    def test_decorrelation_distance_validation(self) -> None:
+        """Decorrelation distance property setter should raise ValueError on invalid arguments"""
+
+        with self.assertRaises(ValueError):
+            self.channel.decorrelation_distance = -1.0
 
     def test_add_virtual_target(self) -> None:
         """Test adding a new virtual radar target to the channel"""
@@ -708,50 +670,37 @@ class TestMultiTargetRadarChannel(_TestRadarChannelBase[MultiTargetRadarChannel]
     def test_make_target(self) -> None:
         """Test declaring a moveable as a radar target"""
 
-        moveable = Moveable()
+        moveable = Moveable(StaticTrajectory(Transformation.From_Translation(np.array([0, 0, 0], dtype=float)), np.array([0, 0, 0])))
         crosse_section = FixedCrossSection(1.1234)
         new_target = self.channel.make_target(moveable, crosse_section)
 
         self.assertCountEqual([self.first_target, self.second_target, new_target], self.channel.targets)
 
-    def test_realize_interference_monostatic(self) -> None:
-        """Realization should not realize self-interference"""
+    def test_target_device_collision(self) -> None:
+        """Sampling should fail if a device collides with a target"""
+        
+        self.alpha_device.trajectory = self.first_target.trajectory
+        
+        with self.assertRaises(RuntimeError):
+            self.channel.realize().sample(self.alpha_device, self.beta_device)
 
-        self.channel.beta_device = self.channel.alpha_device
-        self.assertIsNone(self.channel._realize_interference())
+        with self.assertRaises(RuntimeError):
+            self.channel.realize().sample(self.beta_device, self.alpha_device)
 
-    def test_realize_validation(self) -> None:
-        """Realization should raise FloatingError if devices aren't specified"""
-
-        with self.assertRaises(FloatingError):
-            MultiTargetRadarChannel().realize()
-
-    def test_realize(self) -> None:
-        """Test SISO channel realization"""
-
-        realization = self.channel.realize()
-        self.assertEqual(2, len(realization.target_realizations))
-
-    def test_null_hypothesis(self) -> None:
-        """Test the null hypthesis realization routine"""
-
-        _ = self.channel.realize()
-        null_hypothesis = self.channel.null_hypothesis()
-
-        self.assertEqual(0, null_hypothesis.num_targets)
-
-    def test_null_hypothesis_static(self) -> None:
-        """Test the null hypthoseis realization routine including a static target"""
-
-        static_target = VirtualRadarTarget(FixedCrossSection(1.0), pose=Transformation.From_Translation(np.array([10, 10, 10])), static=True)
-        self.channel.add_target(static_target)
-
-        _ = self.channel.realize()
-        null_hypothesis = self.channel.null_hypothesis()
-
-        self.assertEqual(1, null_hypothesis.num_targets)
+    def test_interference(self) -> None:
+        """Interference path should be properly added during sampling"""
+        
+        self.alpha_device.trajectory = StaticTrajectory(Transformation.From_Translation(np.array([0, 0, 0], dtype=float)), np.array([0, 0, 0]))
+        self.beta_device.trajectory = StaticTrajectory(Transformation.From_Translation(np.array([123, 0, 0], dtype=float)), np.array([0, 0, 0]))
+        
+        self.channel.interference = False
+        non_interference_sample = self.channel.realize().sample(self.alpha_device, self.beta_device)
+        
+        self.channel.interference = True
+        interference_sample = self.channel.realize().sample(self.alpha_device, self.beta_device)
+        
+        self.assertGreater(len(interference_sample.paths), len(non_interference_sample.paths))
 
 
 del _TestRadarPathRealization
-del _TestRadarChannelRealization
 del _TestRadarChannelBase

@@ -105,15 +105,6 @@ protected:
 
 PYBIND11_MODULE(rs, m)
 {
-    m.doc() = R"pbdoc(
-        ===================
-        Reed-Solomon Coding
-        ===================
-
-        A Python wrapper around the AFF3CT\ :footcite:`2019:cassagne` project,
-        transferring the Reed-Solomon\ :footcite:`1960:reed` implementations to the Hermes forward error correction pipeline structure.
-    )pbdoc";
-
     py::class_<ReedSolomon>(m, "ReedSolomonCoding")
 
         .def(py::init<const int, const int>(), R"pbdoc(

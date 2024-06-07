@@ -11,13 +11,14 @@ from numpy.testing import assert_array_almost_equal
 from scipy.constants import pi
 
 from hermespy.modem import DuplexModem, ElementType, GridElement, GridResource, OFDMWaveform, SchmidlCoxPilotSection, SchmidlCoxSynchronization, SymbolSection, TransmittingModem
+from hermespy.simulation import SimulatedDevice
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -76,6 +77,7 @@ class TestOFDMWaveform(TestCase):
         
         modem = TransmittingModem()
         modem.waveform = self.ofdm
+        modem.device = SimulatedDevice()
         waveform = modem.transmit().signal
         
         self.assertEqual(self.ofdm.sampling_rate, waveform.sampling_rate)
@@ -87,6 +89,7 @@ class TestOFDMWaveform(TestCase):
         
         modem = TransmittingModem()
         modem.waveform = self.ofdm
+        modem.device = SimulatedDevice()
         
         transmission = modem.transmit()
         power = transmission.signal.power
@@ -98,6 +101,7 @@ class TestOFDMWaveform(TestCase):
         self.ofdm.dc_suppression = True
         modem = DuplexModem()
         modem.waveform = self.ofdm
+        modem.device = SimulatedDevice()
         
         transmission = modem.transmit()
         reception = modem.receive(transmission.signal)
@@ -106,7 +110,7 @@ class TestOFDMWaveform(TestCase):
         assert_array_almost_equal(transmission.symbols.raw, reception.equalized_symbols.raw)
 
         # Make sure DC is actually suppressed
-        dc = np.mean(transmission.signal.samples[0, :])
+        dc = np.mean(transmission.signal[0, :])
         self.assertAlmostEqual(0, dc, delta=1e-2)
         
     def test_transmit_receive(self) -> None:
@@ -114,6 +118,7 @@ class TestOFDMWaveform(TestCase):
 
         modem = DuplexModem()
         modem.waveform = self.ofdm
+        modem.device = SimulatedDevice()
         
         transmission = modem.transmit()
         reception = modem.receive(transmission.signal)
@@ -127,6 +132,7 @@ class TestOFDMWaveform(TestCase):
         self.ofdm.dc_suppression = True
         modem = DuplexModem()
         modem.waveform = self.ofdm
+        modem.device = SimulatedDevice()
         
         transmission = modem.transmit()
         reception = modem.receive(transmission.signal)

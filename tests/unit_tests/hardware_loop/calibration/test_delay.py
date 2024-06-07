@@ -12,10 +12,10 @@ from hermespy.hardware_loop import DelayCalibration, PhysicalDeviceDummy
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -40,27 +40,27 @@ class TestDelayCalibration(TestCase):
         """Delays should be correctly corrected during transmission"""
 
         test_samples = np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 0]], dtype=np.complex_)
-        test_signal = Signal(test_samples, 5 / abs(self.delay))
+        test_signal = Signal.Create(test_samples, 5 / abs(self.delay))
 
         self.calibration.delay = abs(self.delay)
-        assert_array_equal(test_signal.samples, self.calibration.correct_transmit_delay(test_signal).samples)
+        assert_array_equal(test_signal[:, :], self.calibration.correct_transmit_delay(test_signal)[:, :])
 
         self.calibration.delay = -abs(self.delay)
-        expected_delayed_samples = np.concatenate((np.zeros((test_signal.num_streams, 5), dtype=complex), test_signal.samples), axis=1)
-        assert_array_equal(expected_delayed_samples, self.calibration.correct_transmit_delay(test_signal).samples)
+        expected_delayed_samples = np.concatenate((np.zeros((test_signal.num_streams, 5), dtype=complex), test_signal[:, :]), axis=1)
+        assert_array_equal(expected_delayed_samples, self.calibration.correct_transmit_delay(test_signal)[:, :])
 
     def test_correct_receive_delay(self) -> None:
         """Delays should be correctly corrected during reception"""
 
         test_samples = np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 0]], dtype=np.complex_)
-        test_signal = Signal(test_samples, 1 / abs(self.delay))
+        test_signal = Signal.Create(test_samples, 1 / abs(self.delay))
 
         self.calibration.delay = -abs(self.delay)
-        assert_array_equal(test_signal.samples, self.calibration.correct_receive_delay(test_signal).samples)
+        assert_array_equal(test_signal[:, :], self.calibration.correct_receive_delay(test_signal)[:, :])
 
         self.calibration.delay = abs(self.delay)
         expected_delayed_samples = test_samples[:, 1:]
-        assert_array_equal(expected_delayed_samples, self.calibration.correct_receive_delay(test_signal).samples)
+        assert_array_equal(expected_delayed_samples, self.calibration.correct_receive_delay(test_signal)[:, :])
 
     def test_estimate_validation(self) -> None:
         """Delay estimation routine should raise ValueErrors for invalid arguments"""
@@ -93,7 +93,7 @@ class TestDelayCalibration(TestCase):
             def trigger_side_effect(signal: Signal) -> Signal:
                 # Prepend delay samples
                 delayed_signal: Signal = signal.copy()
-                delayed_signal.samples = np.append(np.zeros((delayed_signal.num_streams, expected_delay_samples), dtype=complex), delayed_signal.samples)
+                delayed_signal.set_samples(np.append(np.zeros((delayed_signal.num_streams, expected_delay_samples), dtype=complex), delayed_signal[:, :]))
 
                 return delayed_signal
 

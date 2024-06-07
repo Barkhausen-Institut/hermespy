@@ -13,10 +13,10 @@ from sparse import SparseArray  # type: ignore
 from hermespy.core import HDFSerializable, VisualizableAttribute, ScatterVisualization, VAT
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -92,13 +92,15 @@ class _ConstellationPlot(VisualizableAttribute[ScatterVisualization]):
             self.__symbols.num_symbols * self.__symbols.num_blocks * self.__symbols.num_streams
         )
         zeros = np.zeros(num_symbols, dtype=np.float_)
-        path_collection = ax.scatter(zeros, zeros)
+        path_collection = np.empty((1, 1), dtype=np.object_)
+        path_collection[0, 0] = ax.scatter(zeros, zeros)
 
         return ScatterVisualization(figure, axes, path_collection)
 
     def _update_visualization(self, visualization: ScatterVisualization, **kwargs) -> None:
         symbols = self.__symbols.raw.flatten()
-        visualization.paths.set_offsets(np.array([symbols.real, symbols.imag]).T)
+        path: plt.PathCollection = visualization.paths[0, 0]
+        path.set_offsets(np.array([symbols.real, symbols.imag]).T)
 
 
 class Symbol(object):

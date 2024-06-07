@@ -8,14 +8,14 @@ import numpy as np
 from h5py import File
 from numpy.testing import assert_array_equal
 
-from hermespy.core import Signal, SNRType, StaticOperator, SilentTransmitter, SignalTransmitter, SignalReceiver
+from hermespy.core import Signal, StaticOperator, SilentTransmitter, SignalTransmitter, SignalReceiver
 from hermespy.simulation import SimulatedDevice
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -61,6 +61,11 @@ class TestSilentTransmitter(TestCase):
         self.transmitter = SilentTransmitter(self.num_samples, self.sampling_rate)
         self.device.transmitters.add(self.transmitter)
 
+    def test_power(self) -> None:
+        """Power should be zero"""
+
+        self.assertEqual(0.0, self.transmitter.power)
+
     def test_transmit(self) -> None:
         """Silent transmission should generate a silent signal"""
 
@@ -68,7 +73,7 @@ class TestSilentTransmitter(TestCase):
         custom_transmission = self.transmitter.transmit(10 / self.device.sampling_rate)
 
         self.assertEqual(self.num_samples, default_transmission.signal.num_samples)
-        self.assertCountEqual([0] * 10, custom_transmission.signal.samples[0, :].tolist())
+        self.assertCountEqual([0] * 10, custom_transmission.signal[0, :].flatten().tolist())
 
 
 class TestSignalTransmitter(TestCase):
@@ -79,14 +84,19 @@ class TestSignalTransmitter(TestCase):
 
         self.num_samples = 100
         self.sampling_rate = self.device.sampling_rate
-        self.signal = Signal(np.ones((1, 10)), sampling_rate=self.device.sampling_rate, carrier_frequency=self.device.carrier_frequency)
+        self.signal = Signal.Create(np.ones((1, 10)), sampling_rate=self.device.sampling_rate, carrier_frequency=self.device.carrier_frequency)
         self.transmitter = SignalTransmitter(self.signal)
         self.device.transmitters.add(self.transmitter)
+
+    def test_power(self) -> None:
+        """Power should be one"""
+
+        self.assertEqual(1.0, self.transmitter.power)
 
     def test_signal_setget(self) -> None:
         """Signal property getter should return setter argument"""
 
-        expected_seignal = Signal(np.zeros((1, 10)), sampling_rate=self.device.sampling_rate, carrier_frequency=self.device.carrier_frequency)
+        expected_seignal = Signal.Create(np.zeros((1, 10)), sampling_rate=self.device.sampling_rate, carrier_frequency=self.device.carrier_frequency)
         self.transmitter.signal = expected_seignal
 
         self.assertIs(expected_seignal, self.transmitter.signal)
@@ -96,7 +106,7 @@ class TestSignalTransmitter(TestCase):
 
         transmission = self.transmitter.transmit()
 
-        assert_array_equal(self.signal.samples, transmission.signal.samples)
+        assert_array_equal(self.signal[:, :], transmission.signal[:, :])
 
     def test_recall_transmission(self) -> None:
         """Recall transmission should recall the last transmission"""
@@ -111,7 +121,7 @@ class TestSignalTransmitter(TestCase):
             with File(file_location, "r") as file:
                 recalled_transmission = self.transmitter.recall_transmission(file["transmission"])
 
-        assert_array_equal(transmission.signal.samples, recalled_transmission.signal.samples)
+        assert_array_equal(transmission.signal[:, :], recalled_transmission.signal[:, :])
 
 
 class TestSignalReceiver(TestCase):
@@ -135,27 +145,17 @@ class TestSignalReceiver(TestCase):
 
         self.assertEqual(123.4, self.receiver.energy)
 
+    def test_power(self) -> None:
+        """Reported power should be the expected power"""
+
+        self.assertEqual(self.expected_power, self.receiver.power)
+
     def test_receive(self) -> None:
         """Receiver should receive a signal"""
 
-        power_signal = Signal(np.ones((1, 10)), sampling_rate=self.device.sampling_rate, carrier_frequency=self.device.carrier_frequency)
+        power_signal = Signal.Create(np.ones((1, 10)), sampling_rate=self.device.sampling_rate, carrier_frequency=self.device.carrier_frequency)
         self.device.process_input(power_signal)
 
         received_signal = self.receiver.receive().signal
 
-        assert_array_equal(received_signal.samples, power_signal.samples)
-
-    def test_noise_power_validation(self) -> None:
-        """Noise power routine should raise ValueError on invalid noise types"""
-
-        with self.assertRaises(ValueError):
-            self.receiver.noise_power(1, "invalid")
-
-    def test_noise_power(self) -> None:
-        """Noise power routine should compute the correct noise power"""
-
-        noise_power = self.receiver.noise_power(1, SNRType.PN0)
-        self.assertEqual(self.expected_power, noise_power)
-
-        noise_energy = self.receiver.noise_power(1, SNRType.EN0)
-        self.assertEqual(self.expected_power * self.num_samples, noise_energy)
+        assert_array_equal(received_signal[:, :], power_signal[:, :])

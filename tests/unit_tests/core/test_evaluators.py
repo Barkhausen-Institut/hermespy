@@ -11,10 +11,10 @@ from hermespy.core.evaluators import ReceivePowerArtifact, ReceivedPowerEvaluati
 from hermespy.simulation import SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -103,7 +103,7 @@ class TestReceivedPowerEvaluator(TestCase):
         self.sampling_rate = 1e6
         self.num_antennas = 2
 
-        self.transmitted_signal = Signal(self.rng.standard_normal((self.num_antennas, self.num_samples)) + 1j * self.rng.standard_normal((self.num_antennas, self.num_samples)), self.sampling_rate, 0, 0, 0)
+        self.transmitted_signal = Signal.Create(self.rng.standard_normal((self.num_antennas, self.num_samples)) + 1j * self.rng.standard_normal((self.num_antennas, self.num_samples)), self.sampling_rate, 0, 0, 0)
 
         self.device = SimulatedDevice(antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1.0, [self.num_antennas, 1, 1]))
         self.transmitter = SignalTransmitter(self.transmitted_signal)
@@ -145,7 +145,8 @@ class TestReceivedPowerEvaluator(TestCase):
 
         for signal_scale in signal_scales:
             signal = self.transmitted_signal.copy()
-            signal.samples *= signal_scale
+            for block in signal:
+                block *= signal_scale
 
             _ = self.device.receive(signal)
             artifacts[0].append(self.evaluator.evaluate().artifact())

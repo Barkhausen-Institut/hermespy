@@ -17,10 +17,10 @@ from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, Node
 from .factory import Serializable
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -169,6 +169,105 @@ class Transformation(np.ndarray, Serializable):
     def rotation_rpy(self, value: np.ndarray) -> None:
         self[:3, :3] = self._rotation_from_rpy(value)
 
+    @staticmethod
+    @jit(nopython=True)
+    def _rotation_from_quaternion(q: np.ndarray, normalize: bool) -> np.ndarray:  # pragma: no cover
+        """Calculate a rotation matrix from a quaternion.
+
+        Args:
+
+            q (np.ndarray):
+                Quaternion in w, x, y, z representation.
+
+            normalize (bool):
+                Normalize the quaternion before computing the rotation matrix.
+
+        Returns: A :math:`3 \\times 3` numpy matrix representing the rotation.
+        """
+
+        q = q / np.linalg.norm(q) if normalize else q
+
+        return np.array(
+            [
+                [
+                    1 - 2 * (q[2] ** 2 + q[3] ** 2),
+                    2 * (q[1] * q[2] - q[0] * q[3]),
+                    2 * (q[0] * q[2] + q[1] * q[3]),
+                ],
+                [
+                    2 * (q[1] * q[2] + q[0] * q[3]),
+                    1 - 2 * (q[1] ** 2 + q[3] ** 2),
+                    2 * (q[2] * q[3] - q[0] * q[1]),
+                ],
+                [
+                    2 * (q[1] * q[3] - q[0] * q[2]),
+                    2 * (q[0] * q[1] + q[2] * q[3]),
+                    1 - 2 * (q[1] ** 2 + q[2] ** 2),
+                ],
+            ],
+            dtype=np.float_,
+        )
+
+    @property
+    def rotation_quaternion(self) -> np.ndarray:  # pragma: no cover
+        """Orientation in Quaternion representation.
+
+        A numpy vector representing w, x, y, z.
+        """
+
+        tr = np.trace(self[:3, :3])
+
+        if tr > 0:
+            S = 2 * (tr + 1.0) ** 0.5
+            return np.array(
+                [
+                    0.25 / S,
+                    (self[2, 1] - self[1, 2]) / S,
+                    (self[0, 2] - self[2, 0]) / S,
+                    (self[1, 0] - self[0, 1]) / S,
+                ],
+                dtype=np.float_,
+            )
+
+        if self[0, 0] > self[1, 1] and self[0, 0] > self[2, 2]:
+            S = 2 * (1 + self[0, 0] - self[1, 1] - self[2, 2]) ** 0.5
+            return np.array(
+                [
+                    (self[2, 1] - self[1, 2]) / S,
+                    0.25 / S,
+                    (self[0, 1] + self[1, 0]) / S,
+                    (self[0, 2] + self[2, 0]) / S,
+                ],
+                dtype=np.float_,
+            )
+
+        if self[1, 1] > self[2, 2]:
+            S = 2 * (1 + self[1, 1] - self[0, 0] - self[2, 2]) ** 0.5
+            return np.array(
+                [
+                    (self[0, 2] - self[2, 0]) / S,
+                    (self[0, 1] + self[1, 0]) / S,
+                    0.25 / S,
+                    (self[1, 2] + self[2, 1]) / S,
+                ],
+                dtype=np.float_,
+            )
+
+        S = 2 * (1 + self[2, 2] - self[0, 0] - self[1, 1]) ** 0.5
+        return np.array(
+            [
+                (self[1, 0] - self[0, 1]) / S,
+                (self[0, 2] + self[2, 0]) / S,
+                (self[1, 2] + self[2, 1]) / S,
+                0.25 / S,
+            ],
+            dtype=np.float_,
+        )
+
+    @rotation_quaternion.setter
+    def rotation_quaternion(self, value: np.ndarray) -> None:
+        self[:3, :3] = self._rotation_from_quaternion(value, False)
+
     @classmethod
     def No(cls: Type[Transformation]) -> Transformation:
         return np.eye(4, 4, dtype=float).view(cls)
@@ -211,7 +310,61 @@ class Transformation(np.ndarray, Serializable):
         return rotation
 
     @classmethod
+    def From_Quaternion(
+        cls: Type[Transformation],
+        quaternion: np.ndarray,
+        pos: np.ndarray,
+        normalize_quaternion: bool = True,
+    ) -> Transformation:
+        """Initialize a transformation from a quaternion.
+
+        Args:
+
+            quaternion (np.ndarray):
+                Quaternion in w, x, y, z representation.
+
+            pos (np.ndarray):
+                Cartesian position in m.
+
+            normalize (bool, optional):
+                Normalize the quaternion before computing the rotation matrix.
+                Enabled by default.
+
+        Returns: The initialized transformation.
+        """
+
+        # Generate empty transformation matrix
+        transformation = np.empty((4, 4), dtype=float)
+
+        # Compute rotational transformation portion
+        transformation[:3, :3] = Transformation._rotation_from_quaternion(
+            quaternion, normalize_quaternion
+        )
+
+        # Copy translational transformation portion
+        transformation[0:3, 3] = pos
+
+        # Fill in the static portion
+        transformation[3, :] = (0, 0, 0, 1)
+
+        # Return by view
+        return transformation.view(cls)
+
+    @classmethod
     def From_RPY(cls: Type[Transformation], rpy: np.ndarray, pos: np.ndarray) -> Transformation:
+        """Initialize a transformation from roll pitch yaw angles.
+
+        Args:
+
+            rpy (np.ndarray):
+                Roll, pitch and yaw angles in radians.
+
+            pos (np.ndarray):
+                Cartesian position in m.
+
+        Returns: The initialized transformation.
+        """
+
         # Generate empty transformation matrix
         transformation = np.empty((4, 4), dtype=float)
 
@@ -309,7 +462,15 @@ class Transformation(np.ndarray, Serializable):
         Returns: The transformed direction.
         """
 
-        return Direction.From_Cartesian(self.transform_position(direction), normalize=normalize)
+        return Direction.From_Cartesian(self.rotate_direction(direction), normalize=normalize)
+
+    def invert(self) -> Transformation:
+        """Invert the transformation.
+
+        Returns: The inverted transformation.
+        """
+
+        return np.linalg.inv(self).view(Transformation)
 
     @classmethod
     def to_yaml(
@@ -568,21 +729,22 @@ class Transformable(Serializable, TransformableLink):
         Returns: The transformation.
         """
 
-        return np.linalg.inv(self.forwards_transformation).view(Transformation)
+        return self.forwards_transformation.invert()
 
     @overload
-    def to_local_coordinates(self, global_object: Transformable) -> Transformation:
-        ...  # pragma no cover
+    def to_local_coordinates(
+        self, global_object: Transformable
+    ) -> Transformation: ...  # pragma no cover
 
     @overload
-    def to_local_coordinates(self, global_object: Transformation) -> Transformation:
-        ...  # pragma no cover
+    def to_local_coordinates(
+        self, global_object: Transformation
+    ) -> Transformation: ...  # pragma no cover
 
     @overload
     def to_local_coordinates(
         self, position: np.ndarray, orientation: np.ndarray | None = None
-    ) -> Transformation:
-        ...  # pragma no cover
+    ) -> Transformation: ...  # pragma no cover
 
     def to_local_coordinates(self, arg_0: Transformable | Transformation | np.ndarray, arg_1: np.ndarray | None = None) -> Transformation:  # type: ignore
         if isinstance(arg_0, Transformable):

@@ -9,10 +9,10 @@ from hermespy.hardware_loop.audio import AudioDevice
 from hermespy.modem import DuplexModem, RootRaisedCosineWaveform, OFDMWaveform, GridElement, GridResource, SymbolSection, ElementType
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -38,8 +38,8 @@ class TestAudioDevice(TestCase):
         _ = self.device.receive()
 
         # Assert the transmit and receive spectra
-        transmit_spectrum = fftshift(fft(self.modem.transmission.signal.samples[0, :]))
-        receive_spectrum = fftshift(fft(self.modem.reception.signal.samples[0, :]))
+        transmit_spectrum = fftshift(fft(self.modem.transmission.signal[0, :]))
+        receive_spectrum = fftshift(fft(self.modem.reception.signal[0, :]))
         left_bin = int(0.375 * transmit_spectrum.shape[0])
         right_bin = int(0.625 * transmit_spectrum.shape[0])
         assert_array_almost_equal(transmit_spectrum[left_bin:right_bin], receive_spectrum[left_bin:right_bin])

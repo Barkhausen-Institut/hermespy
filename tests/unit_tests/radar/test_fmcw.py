@@ -6,10 +6,10 @@ from hermespy.radar import FMCW
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -35,6 +35,13 @@ class TestFMCW(TestCase):
         self.assertEqual(self.chirp_duration, self.fmcw.chirp_duration)
         self.assertEqual(self.pulse_rep_interval, self.fmcw.pulse_rep_interval)
         self.assertEqual(self.sampling_rate, self.fmcw.sampling_rate)
+        
+    def test_ping_validation(self) -> None:
+        """Creating a ping should raise a RuntimeError on invalid parameterizations"""
+
+        self.fmcw.sampling_rate = 0.5 * self.fmcw.bandwidth
+        with self.assertRaises(RuntimeError):
+            _ = self.fmcw.ping()
 
     def test_ping_estimate(self) -> None:
         """Pinging and estimating should result in a valid velocity-range profile"""
@@ -116,9 +123,6 @@ class TestFMCW(TestCase):
         """ADC sampling rate property setter should raise ValueError on arguments smaller or equal to zero"""
 
         with self.assertRaises(ValueError):
-            self.fmcw.adc_sampling_rate = 0.0
-
-        with self.assertRaises(ValueError):
             self.fmcw.adc_sampling_rate = -1.0
 
     def test_adc_sampling_rate_setget(self) -> None:
@@ -129,6 +133,9 @@ class TestFMCW(TestCase):
 
         self.assertEqual(adc_sampling_rate, self.fmcw.adc_sampling_rate)
 
+        self.fmcw.adc_sampling_rate = 0.0
+        self.assertEqual(self.fmcw.bandwidth, self.fmcw.adc_sampling_rate)
+
     def test_sampling_rate_setget(self) -> None:
         """Sampling rate property getter should return setter argument"""
 
@@ -137,11 +144,11 @@ class TestFMCW(TestCase):
 
         self.assertEqual(sampling_rate, self.fmcw.sampling_rate)
 
+        self.fmcw.sampling_rate = 0.0
+        self.assertEqual(self.fmcw.bandwidth, self.fmcw.sampling_rate)
+
     def test_sampling_rate_validation(self) -> None:
         """Sampling rate property setter should raise ValueError on arguments smaller or equal to zero"""
-
-        with self.assertRaises(ValueError):
-            self.fmcw.sampling_rate = 0.0
 
         with self.assertRaises(ValueError):
             self.fmcw.sampling_rate = -1.0

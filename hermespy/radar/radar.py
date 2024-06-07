@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from abc import abstractmethod
-from typing import Optional, Type
+from typing import Generic, Tuple, Type, TypeVar
 
 import numpy as np
 from h5py import Group
@@ -15,7 +15,6 @@ from hermespy.core import (
     FloatingError,
     Signal,
     Serializable,
-    SNRType,
     Transmission,
     Reception,
 )
@@ -23,10 +22,10 @@ from .cube import RadarCube
 from .detection import RadarDetector, RadarPointCloud
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "André Noll Barreto"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -294,7 +293,137 @@ class RadarReception(Reception):
         return RadarReception(signal, cube)
 
 
-class Radar(DuplexOperator[RadarTransmission, RadarReception], Serializable):
+RTT = TypeVar("RTT", bound=RadarTransmission)
+"""Type of radar transmission."""
+
+RRT = TypeVar("RRT", bound=RadarReception)
+"""Type of radar reception."""
+
+
+class RadarBase(Generic[RTT, RRT], DuplexOperator[RTT, RRT]):
+    """Base class class for radar sensing signal processing pipelines."""
+
+    __transmit_beamformer: TransmitBeamformer | None
+    __receive_beamformer: ReceiveBeamformer | None
+    __detector: RadarDetector | None
+
+    def __init__(self, *args, **kwargs) -> None:
+        # Initialize base class
+        DuplexOperator.__init__(self, *args, **kwargs)
+
+        # Initialize class attributes
+        self.receive_beamformer = None
+        self.transmit_beamformer = None
+        self.detector = None
+
+    @property
+    def transmit_beamformer(self) -> TransmitBeamformer | None:
+        """Beamforming applied during signal transmission.
+
+        The :class:`TransmitBeamformer<hermespy.beamforming.beamformer.TransmitBeamformer>`'s :meth:`transmit<hermespy.beamforming.beamformer.TransmitBeamformer.transmit>`
+        method is called as a subroutine of :meth:`Transmitter.transmit()<hermespy.core.device.Transmitter.transmit>`.
+        Configuration is required for if the assigned :class:`Device<hermespy.core.device.Device>` features multiple :meth:`antennas<hermespy.core.device.Device.antennas>`.
+        """
+
+        return self.__transmit_beamformer
+
+    @transmit_beamformer.setter
+    def transmit_beamformer(self, value: TransmitBeamformer | None) -> None:
+        if value is None:
+            self.__transmit_beamformer = None
+
+        else:
+            value.operator = self
+            self.__transmit_beamformer = value
+
+    @property
+    def receive_beamformer(self) -> ReceiveBeamformer | None:
+        """Beamforming applied during signal reception.
+
+        The :class:`TransmitBeamformer<hermespy.beamforming.beamformer.ReceiveBeamformer>`'s :meth:`receive<hermespy.beamforming.beamformer.ReceiveBeamformer.receive>`
+        method is called as a subroutine of :meth:`Receiver.receive()<hermespy.core.device.Receiver.receive>`.
+        Configuration is required for if the assigned :class:`Device<hermespy.core.device.Device>` features multiple :meth:`antennas<hermespy.core.device.Device.antennas>`.
+        """
+
+        return self.__receive_beamformer
+
+    @receive_beamformer.setter
+    def receive_beamformer(self, value: ReceiveBeamformer | None) -> None:
+        if value is None:
+            self.__receive_beamformer = None
+
+        else:
+            value.operator = self
+            self.__receive_beamformer = value
+
+    @property
+    def detector(self) -> RadarDetector | None:
+        """Detector routine configured to generate point clouds from radar cubes.
+
+        If configured, during :meth:`_receive<Radar._receive>` / :meth:`receive<Receiver.receive>`,
+        the detector's :meth:`detect<RadarDetector.detect>` method is called to generate a :class:`RadarPointCloud<hermespy.radar.detection.RadarPointCloud>`.
+        If not configured, i.e. :obj:`None`, the generated :class:`.RadarReception`'s :attr:`cloud<.RadarReception.cloud>` property will be :obj:`None`.
+        """
+
+        return self.__detector
+
+    @detector.setter
+    def detector(self, value: RadarDetector | None) -> None:
+        self.__detector = value
+
+    def _receive_beamform(self, signal: Signal) -> Tuple[np.ndarray, np.ndarray]:
+        """Apply digital beamforming to the received signal.
+
+        Subroutine of :meth:`_receive<Radar._receive>`.
+
+        Args:
+
+            signal (Signal): Received radar waveform.
+
+        Returns:
+            Tuple of the angles of interest and the beamformed samples.
+
+        Raises:
+
+            RuntimeError: If the device has more than one antenna, but no beamforming strategy is configured.
+            RuntimeError: If the beamforming configuration does not result in a single output stream.
+        """
+
+        if self.device.antennas.num_antennas > 1:
+            if self.receive_beamformer is None:
+                raise RuntimeError(
+                    "Receiving over a device with more than one antenna requires a beamforming configuration"
+                )
+
+            if self.receive_beamformer.num_receive_output_streams != 1:
+                raise RuntimeError(
+                    "Only receive beamformers generating a single output stream are supported by radar operators"
+                )
+
+            if (
+                self.receive_beamformer.num_receive_input_streams
+                != self.device.antennas.num_antennas
+            ):
+                raise RuntimeError(
+                    "Radar operator receive beamformers are required to consider the full number of antenna streams"
+                )
+
+            beamformed_samples = self.receive_beamformer.probe(signal)[:, 0, :]
+
+        else:
+            beamformed_samples = signal[:, :]
+
+        # Build the radar cube by generating a beam-forming line over all angles of interest
+        angles_of_interest = (
+            np.array([[0.0, 0.0]], dtype=float)
+            if self.receive_beamformer is None
+            else self.receive_beamformer.probe_focus_points[:, 0, :]
+        )
+
+        return angles_of_interest, beamformed_samples
+
+
+class Radar(RadarBase[RadarTransmission, RadarReception], Serializable):
     """Signal processing pipeline of a monostatic radar sensing its environment.
 
     The radar can be configured by assigning four composite objects to respective property attributes:
@@ -388,10 +517,7 @@ class Radar(DuplexOperator[RadarTransmission, RadarReception], Serializable):
     yaml_tag = "Radar"
     property_blacklist = {"slot"}
 
-    __transmit_beamformer: Optional[TransmitBeamformer]
-    __receive_beamformer: Optional[ReceiveBeamformer]
-    __waveform: Optional[RadarWaveform]
-    __detector: Optional[RadarDetector]
+    __waveform: RadarWaveform | None
 
     def __init__(self, device: Device | None = None, seed: int | None = None) -> None:
         """
@@ -405,52 +531,9 @@ class Radar(DuplexOperator[RadarTransmission, RadarReception], Serializable):
         """
 
         self.waveform = None
-        self.receive_beamformer = None
-        self.transmit_beamformer = None
         self.__waveform = None
-        self.detector = None
 
-        DuplexOperator.__init__(self, device, device, seed)
-
-    @property
-    def transmit_beamformer(self) -> TransmitBeamformer | None:
-        """Beamforming applied during signal transmission.
-
-        The :class:`TransmitBeamformer<hermespy.beamforming.beamformer.TransmitBeamformer>`'s :meth:`transmit<hermespy.beamforming.beamformer.TransmitBeamformer.transmit>`
-        method is called as a subroutine of :meth:`Transmitter.transmit()<hermespy.core.device.Transmitter.transmit>`.
-        Configuration is required for if the assigned :class:`Device<hermespy.core.device.Device>` features multiple :meth:`antennas<hermespy.core.device.Device.antennas>`.
-        """
-
-        return self.__transmit_beamformer
-
-    @transmit_beamformer.setter
-    def transmit_beamformer(self, value: TransmitBeamformer | None) -> None:
-        if value is None:
-            self.__transmit_beamformer = None
-
-        else:
-            value.operator = self
-            self.__transmit_beamformer = value
-
-    @property
-    def receive_beamformer(self) -> ReceiveBeamformer | None:
-        """Beamforming applied during signal reception.
-
-        The :class:`TransmitBeamformer<hermespy.beamforming.beamformer.ReceiveBeamformer>`'s :meth:`receive<hermespy.beamforming.beamformer.ReceiveBeamformer.receive>`
-        method is called as a subroutine of :meth:`Receiver.receive()<hermespy.core.device.Receiver.receive>`.
-        Configuration is required for if the assigned :class:`Device<hermespy.core.device.Device>` features multiple :meth:`antennas<hermespy.core.device.Device.antennas>`.
-        """
-
-        return self.__receive_beamformer
-
-    @receive_beamformer.setter
-    def receive_beamformer(self, value: Optional[ReceiveBeamformer]) -> None:
-        if value is None:
-            self.__receive_beamformer = None
-
-        else:
-            value.operator = self
-            self.__receive_beamformer = value
+        RadarBase.__init__(self, device, device, seed)
 
     @property
     def sampling_rate(self) -> float:
@@ -463,18 +546,12 @@ class Radar(DuplexOperator[RadarTransmission, RadarReception], Serializable):
 
         return self.waveform.frame_duration
 
-    def _noise_power(self, strength: float, snr_type: SNRType) -> float:
-        # No waveform configured equals no noise required
+    @property
+    def power(self) -> float:
         if self.waveform is None:
             return 0.0
 
-        if snr_type == SNRType.EN0:
-            return self.waveform.energy / strength
-
-        if snr_type == SNRType.PN0:
-            return self.waveform.power / strength
-
-        raise ValueError(f"SNR of type '{snr_type}' is not supported by radar operators")
+        return self.waveform.power
 
     @property
     def waveform(self) -> RadarWaveform | None:
@@ -533,21 +610,6 @@ class Radar(DuplexOperator[RadarTransmission, RadarReception], Serializable):
             / self.carrier_frequency
         )
 
-    @property
-    def detector(self) -> RadarDetector | None:
-        """Detector routine configured to generate point clouds from radar cubes.
-
-        If configured, during :meth:`_receive<Radar._receive>` / :meth:`receive<Receiver.receive>`,
-        the detector's :meth:`detect<RadarDetector.detect>` method is called to generate a :class:`RadarPointCloud<hermespy.radar.detection.RadarPointCloud>`.
-        If not configured, i.e. :obj:`None`, the generated :class:`.RadarReception`'s :attr:`cloud<.RadarReception.cloud>` property will be :obj:`None`.
-        """
-
-        return self.__detector
-
-    @detector.setter
-    def detector(self, value: Optional[RadarDetector]) -> None:
-        self.__detector = value
-
     def _transmit(self, duration: float = 0.0) -> RadarTransmission:
         if not self.__waveform:
             raise RuntimeError("Radar waveform not specified")
@@ -562,15 +624,14 @@ class Radar(DuplexOperator[RadarTransmission, RadarReception], Serializable):
         if self.device.antennas.num_antennas > 1:
             # If no beamformer is configured, only the first antenna will transmit the ping
             if self.transmit_beamformer is None:
-                additional_streams = Signal(
+                additional_streams = signal.from_ndarray(
                     np.zeros(
                         (
                             self.device.antennas.num_antennas - signal.num_streams,
                             signal.num_samples,
                         ),
                         dtype=complex,
-                    ),
-                    signal.sampling_rate,
+                    )
                 )
                 signal.append_streams(additional_streams)
 
@@ -607,37 +668,7 @@ class Radar(DuplexOperator[RadarTransmission, RadarReception], Serializable):
         signal = signal.resample(self.__waveform.sampling_rate)
 
         # If the device has more than one antenna, a beamforming strategy is required
-        if self.device.antennas.num_antennas > 1:
-            if self.receive_beamformer is None:
-                raise RuntimeError(
-                    "Receiving over a device with more than one antenna requires a beamforming configuration"
-                )
-
-            if self.receive_beamformer.num_receive_output_streams != 1:
-                raise RuntimeError(
-                    "Only receive beamformers generating a single output stream are supported by radar operators"
-                )
-
-            if (
-                self.receive_beamformer.num_receive_input_streams
-                != self.device.antennas.num_antennas
-            ):
-                raise RuntimeError(
-                    "Radar operator receive beamformers are required to consider the full number of antenna streams"
-                )
-
-            beamformed_samples = self.receive_beamformer.probe(signal)[:, 0, :]
-
-        else:
-            beamformed_samples = signal.samples
-
-        # Build the radar cube by generating a beam-forming line over all angles of interest
-        angles_of_interest = (
-            np.array([[0.0, 0.0]], dtype=float)
-            if self.receive_beamformer is None
-            else self.receive_beamformer.probe_focus_points[:, 0, :]
-        )
-
+        angles_of_interest, beamformed_samples = self._receive_beamform(signal)
         range_bins = self.waveform.range_bins
         doppler_bins = self.waveform.relative_doppler_bins
 
@@ -647,9 +678,7 @@ class Radar(DuplexOperator[RadarTransmission, RadarReception], Serializable):
 
         for angle_idx, line in enumerate(beamformed_samples):
             # Process the single angular line by the waveform generator
-            line_signal = Signal(
-                line, signal.sampling_rate, carrier_frequency=signal.carrier_frequency
-            )
+            line_signal = signal.from_ndarray(line)
             line_estimate = self.waveform.estimate(line_signal)
 
             cube_data[angle_idx, ::] = line_estimate

@@ -24,10 +24,10 @@ from hermespy.core import AntennaMode, Serializable, Signal, Antenna, AntennaArr
 from ..physical_device import PhysicalDevice
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -35,6 +35,9 @@ __status__ = "Prototype"
 
 class AudioAntenna(Antenna):
     """Antenna model for audio devices."""
+
+    def copy(self) -> AudioAntenna:
+        return AudioAntenna(self.mode, self.pose)
 
     def local_characteristics(self, azimuth: float, elevation) -> np.ndarray:
         return np.array([2**0.5, 2**0.5], dtype=float)
@@ -329,7 +332,7 @@ class AudioDevice(PhysicalDevice, Serializable):
         delay_samples = int(self.max_receive_delay * self.sampling_rate)
 
         # Mix to to positive frequencies for audio transmission
-        resampled_samples = signal.resample(self.sampling_rate).samples
+        resampled_samples = signal.resample(self.sampling_rate)[:, :]
         pressure_signal = np.roll(
             fft(resampled_samples), int(0.25 * resampled_samples.shape[1]), axis=1
         )
@@ -377,7 +380,7 @@ class AudioDevice(PhysicalDevice, Serializable):
         transform = np.roll(transform, -int(0.25 * transform.shape[1]), axis=1)
         complex_samples = ifft(2 * transform, axis=1)
 
-        signal_model = Signal(complex_samples, self.sampling_rate, 0)
+        signal_model = Signal.Create(complex_samples, self.sampling_rate, 0)
         return signal_model
 
     @staticmethod

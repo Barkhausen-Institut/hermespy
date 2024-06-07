@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 from hermespy.core import dB
-from hermespy.simulation.simulation import Simulation
+from hermespy.simulation import Simulation, SNR
 from hermespy.modem import TransmittingModem, ReceivingModem, BitErrorEvaluator, ThroughputEvaluator, RootRaisedCosineWaveform
 from hermespy.fec import RepetitionEncoder
 
@@ -13,10 +13,9 @@ simulation = Simulation()
 base_station = simulation.scenario.new_device()
 terminal = simulation.scenario.new_device()
 
-# Disable device self-interference by setting the gain
-# of the respective self-inteference channels to zero
-simulation.scenario.channel(base_station, base_station).gain = 0.
-simulation.scenario.channel(terminal, terminal).gain = 0.
+# Specify the hardware noise model
+base_station.noise_level = SNR(dB(20), base_station)
+terminal.noise_level = SNR(dB(20), base_station)
 
 # Configure a transmitting modem at the base station
 transmitter = TransmittingModem()
@@ -35,7 +34,7 @@ simulation.add_evaluator(BitErrorEvaluator(transmitter, receiver, plot_surface=F
 simulation.add_evaluator(ThroughputEvaluator(transmitter, receiver, plot_surface=True))
 
 # Configure simulation sweep dimensions
-snr_dimension = simulation.new_dimension('snr', dB(12, 10, 8, 6, 5, 4, 3, 2, 1, 0))
+snr_dimension = simulation.new_dimension('noise_level', dB(12, 10, 8, 6, 5, 4, 3, 2, 1, 0), terminal)
 rep_dimension = simulation.new_dimension('repetitions', [1, 3, 5, 7, 9], transmitter.encoder_manager[0], receiver.encoder_manager[0])
 snr_dimension.title = 'SNR'
 rep_dimension.title = 'Code Repetitions'

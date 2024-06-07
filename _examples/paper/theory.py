@@ -13,7 +13,7 @@ from hermespy.channel import Channel, MultipathFadingChannel
 from hermespy.core import ConsoleMode
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.3.0"
@@ -48,7 +48,7 @@ for modulation_order, (waveform_name, waveform), (channel_name, channel) in prod
     modem.waveform.modulation_order = modulation_order
     simulation.scenario.set_channel(device, device, channel)
 
-    simulation.new_dimension('snr', [db2lin(x) for x in np.arange(-10, 20, .5)])
+    simulation.new_dimension('noise_level', [db2lin(x) for x in np.arange(-10, 20, .5)])
     simulation.add_evaluator(BitErrorEvaluator(modem, modem))
     simulation.num_samples, simulation.min_num_samples = 100000, 100000
     simulation.plot_results = True

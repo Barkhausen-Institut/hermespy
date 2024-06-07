@@ -11,10 +11,10 @@ from hermespy.modem.waveform_correlation_synchronization import CorrelationSynch
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -71,14 +71,14 @@ class TestCorellationSynchronization(TestCase):
     def test_synchronize(self) -> None:
         """Synchronization should properly order pilot sections into frames"""
 
-        pilot_sequence = Signal(np.ones(20, dtype=complex), 1.0)
+        pilot_sequence = Signal.Create(np.ones(20, dtype=complex), 1.0)
 
         waveform = Mock()
         waveform.pilot_signal = pilot_sequence
         waveform.samples_per_frame = 20
         self.synchronization.waveform = waveform
 
-        shifted_sequence = np.append(np.zeros((1, 10), dtype=complex), pilot_sequence.samples, axis=1)
+        shifted_sequence = np.append(np.zeros((1, 10), dtype=complex), pilot_sequence[:, :], axis=1)
 
         pilot_indices = self.synchronization.synchronize(shifted_sequence)
         self.assertSequenceEqual([10], pilot_indices)
@@ -86,7 +86,7 @@ class TestCorellationSynchronization(TestCase):
     def test_default_synchronize(self) -> None:
         """Synchronization should properly order pilot sections into frames"""
 
-        pilot_sequence = Signal(np.ones(20, dtype=complex), 1.0)
+        pilot_sequence = Signal.Create(np.ones(20, dtype=complex), 1.0)
 
         waveform = Mock()
         waveform.pilot_signal = pilot_sequence

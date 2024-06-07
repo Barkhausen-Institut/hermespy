@@ -6,10 +6,10 @@ from hermespy.core import FloatingError, Serializable, Signal
 from .isolation import Isolation
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -36,14 +36,14 @@ class PerfectIsolation(Serializable, Isolation):
 
     def _leak(self, signal: Signal | None) -> Signal:
         if signal is None:
-            return Signal.empty(
+            return Signal.Empty(
                 self.device.sampling_rate,
                 self.device.antennas.num_receive_antennas,
                 carrier_frequency=self.device.carrier_frequency,
             )
 
         else:
-            return Signal.empty(
+            return Signal.Empty(
                 signal.sampling_rate,
                 self.device.antennas.num_receive_antennas,
                 carrier_frequency=signal.carrier_frequency,

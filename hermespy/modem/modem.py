@@ -3,7 +3,7 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from functools import cached_property
-from typing import List, Set, Tuple, Type
+from typing import Generic, List, Set, Sequence, Tuple, Type
 
 import numpy as np
 from h5py import Group
@@ -19,19 +19,18 @@ from hermespy.core import (
     Device,
     Transmitter,
     Receiver,
-    SNRType,
 )
 from hermespy.precoding import ReceiveStreamCoding, TransmitStreamCoding
 from .precoding import SymbolPrecoding
 from .bits_source import BitsSource, RandomBitsSource
 from .symbols import StatedSymbols, Symbols
-from .waveform import CommunicationWaveform
+from .waveform import CommunicationWaveform, CWT
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -435,7 +434,7 @@ class CommunicationReception(Reception):
             frame.to_HDF(group.create_group(f"frame_{f:02d}"))
 
 
-class BaseModem(RandomNode, ABC):
+class BaseModem(ABC, Generic[CWT], RandomNode):
     """Base class for wireless modems transmitting or receiving information over devices.
 
     Configure a :class:`TransmittingModem`, :class:`ReceivingModem` or the convenience
@@ -444,7 +443,7 @@ class BaseModem(RandomNode, ABC):
 
     __encoder_manager: EncoderManager
     __precoding: SymbolPrecoding
-    __waveform: CommunicationWaveform | None
+    __waveform: CWT | None
 
     @staticmethod
     def _arg_signature() -> Set[str]:
@@ -454,7 +453,7 @@ class BaseModem(RandomNode, ABC):
         self,
         encoding: EncoderManager | None = None,
         precoding: SymbolPrecoding | None = None,
-        waveform: CommunicationWaveform | None = None,
+        waveform: CWT | None = None,
         seed: int | None = None,
     ) -> None:
         """
@@ -467,7 +466,7 @@ class BaseModem(RandomNode, ABC):
             precoding (SymbolPrecoding, optional):
                 Modulation symbol coding configuration.
 
-            waveform (CommunicationWaveform, optional):
+            waveform (CWT, optional):
                 The waveform to be transmitted by this modem.
 
             seed (int, optional):
@@ -515,7 +514,7 @@ class BaseModem(RandomNode, ABC):
         new_manager.modem = self
 
     @property
-    def waveform(self) -> CommunicationWaveform | None:
+    def waveform(self) -> CWT | None:
         """Description of the communication waveform emitted by this modem.
 
         The only mandatory attribute required to transmit or receive over a
@@ -525,7 +524,7 @@ class BaseModem(RandomNode, ABC):
         return self.__waveform
 
     @waveform.setter
-    def waveform(self, value: CommunicationWaveform | None) -> None:
+    def waveform(self, value: CWT | None) -> None:
         self.__waveform = value
 
         if value is not None:
@@ -628,36 +627,14 @@ class BaseModem(RandomNode, ABC):
 
         return 0  # pragma: no cover
 
-    def _noise_power(self, strength: float, snr_type: SNRType) -> float:
-        # No waveform configured equals no noise required
-        if self.waveform is None:
-            return 0.0
 
-        if snr_type == SNRType.EBN0:
-            return self.waveform.bit_energy / strength
+class TransmittingModemBase(Generic[CWT], BaseModem[CWT]):
+    """Base class of signal processing algorithms transmitting information."""
 
-        if snr_type == SNRType.ESN0:
-            return self.waveform.symbol_energy / strength
-
-        if snr_type == SNRType.PN0:
-            return self.waveform.power / strength
-
-        raise ValueError(f"SNR of type '{snr_type}' is not supported by modem operators")
-
-
-class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Serializable):
-    """Representation of a wireless modem exclusively transmitting."""
-
-    yaml_tag = "TxModem"
-
-    # Source configuration of the transmitted bits
     __bits_source: BitsSource
-    # Stream MIMO coding configuration
     __transmit_stream_coding: TransmitStreamCoding
 
-    def __init__(
-        self, bits_source: BitsSource | None = None, device: Device | None = None, *args, **kwargs
-    ) -> None:
+    def __init__(self, bits_source: BitsSource | None = None, *args, **kwargs) -> None:
         """
         Args:
 
@@ -668,29 +645,10 @@ class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Seria
 
         # Initialize base classes
         BaseModem.__init__(self, *args, **kwargs)
-        Transmitter.__init__(self)
 
         # Initialize clas attributes
         self.bits_source = RandomBitsSource() if bits_source is None else bits_source
         self.__transmit_stream_coding = TransmitStreamCoding(modem=self)
-        self.device = device
-
-    @property
-    def transmitting_device(self) -> Device | None:
-        # The transmitting device resolves to the operated device
-        return self.device
-
-    @property
-    def receiving_device(self) -> Device | None:
-        return None
-
-    @Transmitter.device.setter  # type: ignore
-    def device(self, value: Device) -> None:
-        if Transmitter.device.fget(self) is not None:  # type: ignore
-            self.device.transmitters.remove(self)
-
-        if value is not None and self not in value.transmitters:
-            value.transmitters.add(self)
 
     @property
     def bits_source(self) -> BitsSource:
@@ -744,13 +702,16 @@ class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Seria
 
         return symbols
 
-    def __modulate(self, symbols: Symbols) -> Signal:
+    def __modulate(self, symbols: Symbols, carrier_frequency: float) -> Signal:
         """Modulates a sequence of MIMO signals into a base-band communication waveform.
 
         Args:
 
             symbols (Symbols):
                 Communication symbols to be modulated.
+
+            carrier_frequency (float):
+                Carrier frequency of the communication signal.
 
         Returns:
 
@@ -769,7 +730,7 @@ class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Seria
             frame_samples[s, :] = self.waveform.modulate(placed_symbols)
 
         # Apply the stream transmit coding configuration
-        frame_signal = Signal(frame_samples, self.waveform.sampling_rate, self.carrier_frequency)
+        frame_signal = Signal.Create(frame_samples, self.waveform.sampling_rate, carrier_frequency)
         return frame_signal
 
     def _transmit(self, duration: float = -1.0) -> CommunicationTransmission:
@@ -790,6 +751,11 @@ class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Seria
             duration = self.frame_duration
 
         # Infer required parameters
+        carrier_frequency = (
+            self.transmitting_device.carrier_frequency
+            if self.transmitting_device is not None
+            else 0.0
+        )
         frame_duration = self.frame_duration
         num_mimo_frames = int(duration / frame_duration)
         (required_num_data_bits, required_num_code_bits) = self._bit_requirements()
@@ -807,15 +773,13 @@ class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Seria
             num_output_streams = 1
 
         # Assert that the number of output streams matches the antenna count
-        if self.device is not None and num_output_streams != self.num_transmit_ports:
+        if num_output_streams != self.num_transmit_ports:
             raise RuntimeError(
                 f"Modem MIMO configuration generates invalid number of antenna streams ({num_output_streams} instead of {self.num_transmit_ports})"
             )
 
-        signal = Signal.empty(
-            self.waveform.sampling_rate,
-            num_output_streams,
-            carrier_frequency=self.carrier_frequency,
+        signal = Signal.Empty(
+            self.waveform.sampling_rate, num_output_streams, carrier_frequency=carrier_frequency
         )
 
         # Abort if no frame is to be transmitted within the current duration
@@ -851,7 +815,7 @@ class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Seria
             )
 
             # Modulate symbols to a base-band signal
-            frame_signal = self.__modulate(encoded_symbols)
+            frame_signal = self.__modulate(encoded_symbols, carrier_frequency)
 
             # Apply stream encoding configuration
             encoded_frame_signal = self.__transmit_stream_coding.encode(frame_signal)
@@ -869,57 +833,83 @@ class TransmittingModem(BaseModem, Transmitter[CommunicationTransmission], Seria
                 )
             )
 
-        # Update the assumed signal carrier frequency to RF band
-        signal.carrier_frequency = self.carrier_frequency
-
         # Save the transmitted information
         transmission = CommunicationTransmission(signal, frames)
         return transmission
 
-    def _recall_transmission(self, group: Group) -> CommunicationTransmission:
-        return CommunicationTransmission.from_HDF(group)
 
+class TransmittingModem(
+    TransmittingModemBase[CommunicationWaveform],
+    Transmitter[CommunicationTransmission],
+    Serializable,
+):
+    """Representation of a wireless modem exclusively transmitting."""
 
-class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
-    """Representation of a wireless modem exclusively receiving."""
+    yaml_tag = "TxModem"
 
-    yaml_tag = "RxModem"
-    """YAML serialization tag"""
+    def __init__(
+        self,
+        *args,
+        device: Device | None = None,
+        selected_transmit_ports: Sequence[int] | None = None,
+        **kwargs,
+    ) -> None:
+        """
+        Args:
 
-    # MIMO stream configuration during signal rececption
-    __receive_stream_coding: ReceiveStreamCoding
+            device (Device, optional):
+                Device operated by the modem.
 
-    def __init__(self, device: Device | None = None, *args, **kwargs) -> None:
-        self.__receive_stream_coding = ReceiveStreamCoding(modem=self)
+            selected_transmit_ports (Sequence[int] | None):
+                Indices of antenna ports selected for transmission from the operated :class:`Device's<Device>` antenna array.
+                If not specified, all available ports will be considered.
 
-        BaseModem.__init__(self, *args, **kwargs)
-        Receiver.__init__(self)
+            *args, \**kwargs:
+                Modem initialization parameters.
+                Refer to :class:`TransmittingModemBase` for further details.
+        """
+
+        # Initialize base classes
+        # Note that the initialization order matters here
+        Transmitter.__init__(self, selected_transmit_ports=selected_transmit_ports)
+        TransmittingModemBase.__init__(self, *args, **kwargs)
+        Serializable.__init__(self)
 
         self.device = device
 
     @property
     def transmitting_device(self) -> Device | None:
-        return None
+        # The transmitting device resolves to the operated device
+        return self.device
 
     @property
     def receiving_device(self) -> Device | None:
-        # The receiving device resolves to the operated device
-        return self.device
+        return None
 
-    @Receiver.device.setter  # type: ignore
+    @Transmitter.device.setter  # type: ignore
     def device(self, value: Device) -> None:
-        if Receiver.device.fget(self) is not None:  # type: ignore
-            self.device.receivers.remove(self)
+        if Transmitter.device.fget(self) is not None:  # type: ignore
+            self.device.transmitters.remove(self)
 
-        if value is not None and self not in value.receivers:
-            value.receivers.add(self)
+        if value is not None and self not in value.transmitters:
+            value.transmitters.add(self)
 
     @property
-    def num_receive_ports(self) -> int:
-        if self.receiving_device is None:
-            return 0
-        else:
-            return self.receiving_device.num_receive_ports
+    def power(self) -> float:
+        return self.waveform.power if self.waveform is not None else 0.0
+
+    def _recall_transmission(self, group: Group) -> CommunicationTransmission:
+        return CommunicationTransmission.from_HDF(group)
+
+
+class ReceivingModemBase(Generic[CWT], BaseModem[CWT]):
+    """Base class of signal processing algorithms receiving information."""
+
+    __receive_stream_coding: ReceiveStreamCoding
+
+    def __init__(self, *args, **kwargs) -> None:
+        self.__receive_stream_coding = ReceiveStreamCoding(modem=self)
+        BaseModem.__init__(self, *args, **kwargs)
 
     @property
     def receive_stream_coding(self) -> ReceiveStreamCoding:
@@ -951,13 +941,13 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
         """
 
         # Synchronize raw MIMO data into frames
-        frame_start_indices = self.waveform.synchronization.synchronize(received_signal.samples)
+        frame_start_indices = self.waveform.synchronization.synchronize(received_signal[:, :])
         frame_length = self.waveform.samples_per_frame
 
         synchronized_signals = []
         for frame_start in frame_start_indices:
             frame_stop = frame_start + frame_length
-            frame_samples = received_signal.samples[:, frame_start:frame_stop]
+            frame_samples = received_signal[:, frame_start:frame_stop]
 
             # Pad the frame if it is too short
             # This may happen if the last frame is incomplete, or synhronization is not perfect
@@ -968,7 +958,7 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
                     mode="constant",
                 )
 
-            frame_signal = Signal(frame_samples, received_signal.sampling_rate)
+            frame_signal = Signal.Create(frame_samples, received_signal.sampling_rate)
 
             synchronized_signals.append(frame_signal)
 
@@ -988,7 +978,7 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
         """
 
         symbols = Symbols()
-        for stream in frame.samples:
+        for stream in frame[:]:
             stream_symbols = self.waveform.demodulate(stream)
             symbols.append_stream(stream_symbols)
 
@@ -1072,6 +1062,73 @@ class ReceivingModem(BaseModem, Receiver[CommunicationReception], Serializable):
         reception = CommunicationReception(signal=signal, frames=frames)
         return reception
 
+
+class ReceivingModem(
+    ReceivingModemBase[CommunicationWaveform], Receiver[CommunicationReception], Serializable
+):
+    """Representation of a wireless modem exclusively receiving."""
+
+    yaml_tag = "RxModem"
+    """YAML serialization tag"""
+
+    def __init__(
+        self,
+        *args,
+        device: Device | None = None,
+        selected_receive_ports: Sequence[int] | None = None,
+        **kwargs,
+    ) -> None:
+        """
+        Args:
+
+            device (Device, optional):
+                Device operated by the modem.
+
+            selected_receive_ports (Sequence[int] | None):
+                Indices of antenna ports selected for reception from the operated :class:`Device's<Device>` antenna array.
+                If not specified, all available antenna ports will be considered.
+
+            *args, \**kwargs:
+                Modem initialization parameters.
+                Refer to :class:`ReceivingModemBase` for further details.
+        """
+
+        # Initialize base classes
+        # Note that the initialization order matters here
+        Receiver.__init__(self, selected_receive_ports=selected_receive_ports)
+        ReceivingModemBase.__init__(self, *args, **kwargs)
+        Serializable.__init__(self)
+
+        self.device = device
+
+    @property
+    def transmitting_device(self) -> Device | None:
+        return None
+
+    @property
+    def receiving_device(self) -> Device | None:
+        # The receiving device resolves to the operated device
+        return self.device
+
+    @Receiver.device.setter  # type: ignore
+    def device(self, value: Device) -> None:
+        if Receiver.device.fget(self) is not None:  # type: ignore
+            self.device.receivers.remove(self)
+
+        if value is not None and self not in value.receivers:
+            value.receivers.add(self)
+
+    @property
+    def num_receive_ports(self) -> int:
+        if self.receiving_device is None:
+            return 0
+        else:
+            return self.receiving_device.num_receive_ports
+
+    @property
+    def power(self) -> float:
+        return self.waveform.power if self.waveform is not None else 0.0
+
     def _recall_reception(self, group: Group) -> CommunicationReception:
         return CommunicationReception.from_HDF(group)
 
@@ -1081,17 +1138,43 @@ class DuplexModem(TransmittingModem, ReceivingModem):
 
     yaml_tag = "Modem"
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(
+        self,
+        *args,
+        bits_source: BitsSource | None = None,
+        selected_transmit_ports: Sequence[int] | None = None,
+        selected_receive_ports: Sequence[int] | None = None,
+        **kwargs,
+    ) -> None:
         """
         Args:
+
+            bits_source (BitsSource, optional):
+                Source configuration of communication bits transmitted by this modem.
+                Bits are randomly generated by default.
+
+            selected_transmit_ports (Sequence[int] | None):
+                Indices of antenna ports selected for transmission from the operated :class:`Device's<Device>` antenna array.
+                If not specified, all available ports will be considered.
+
+            selected_receive_ports (Sequence[int] | None):
+                Indices of antenna ports selected for reception from the operated :class:`Device's<Device>` antenna array.
+                If not specified, all available ports will be considered.
 
             *args, \**kwargs:
                 Modem initialization parameters.
                 Refer to :class:`TransmittingModem` and :class:`ReceivingModem` for further details.
         """
 
-        ReceivingModem.__init__(self)
-        TransmittingModem.__init__(self, *args, **kwargs)
+        # Initialize base classes
+        ReceivingModem.__init__(self, selected_receive_ports=selected_receive_ports, **kwargs)
+        TransmittingModem.__init__(
+            self,
+            *args,
+            bits_source=bits_source,
+            selected_transmit_ports=selected_transmit_ports,
+            **kwargs,
+        )
 
     @property
     def transmitting_device(self) -> Device | None:
@@ -1115,7 +1198,14 @@ class SimplexLink(TransmittingModem, ReceivingModem):
     __receiving_device: Device  # Receiving device
 
     def __init__(
-        self, transmitting_device: Device, receiving_device: Device, *args, **kwargs
+        self,
+        transmitting_device: Device,
+        receiving_device: Device,
+        *args,
+        bits_source: BitsSource | None = None,
+        selected_transmit_ports: Sequence[int] | None = None,
+        selected_receive_ports: Sequence[int] | None = None,
+        **kwargs,
     ) -> None:
         """
         Args:
@@ -1125,6 +1215,18 @@ class SimplexLink(TransmittingModem, ReceivingModem):
             receiving_device (Device):
                 Receiving device.
 
+            bits_source (BitsSource, optional):
+                Source configuration of communication bits transmitted by this modem.
+                Bits are randomly generated by default.
+
+            selected_transmit_ports (Sequence[int] | None):
+                Indices of antenna ports selected for transmission from the operated :class:`Device's<Device>` antenna array.
+                If not specified, all available ports will be considered.
+
+            selected_receive_ports (Sequence[int] | None):
+                Indices of antenna ports selected for reception from the operated :class:`Device's<Device>` antenna array.
+                If not specified, all available ports will be considered.
+
             *args, \**kwargs:
                 Modem initialization parameters.
                 Refer to :class:`TransmittingModem` and :class:`ReceivingModem` for further details.
@@ -1133,8 +1235,12 @@ class SimplexLink(TransmittingModem, ReceivingModem):
         self.__transmitting_device = transmitting_device
         self.__receiving_device = receiving_device
 
-        TransmittingModem.__init__(self, *args, **kwargs)
-        ReceivingModem.__init__(self, *args, **kwargs)
+        TransmittingModem.__init__(
+            self, bits_source=bits_source, selected_transmit_ports=selected_transmit_ports, **kwargs
+        )
+        ReceivingModem.__init__(
+            self, *args, selected_receive_ports=selected_receive_ports, **kwargs
+        )
 
         transmitting_device.transmitters.add(self)
         receiving_device.receivers.add(self)

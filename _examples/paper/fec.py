@@ -11,7 +11,7 @@ from hermespy.simulation import Simulation
 from hermespy.modem import TransmittingModem, ReceivingModem, OFDMWaveform, GridResource, GridElement, SymbolSection, BitErrorEvaluator, BlockErrorEvaluator, FrameErrorEvaluator, ThroughputEvaluator
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.3.0"
@@ -39,7 +39,7 @@ rx_modem.encoder_manager.add_encoder(TurboCoding(40, 13, 15, 10))
 tx_device.transmitters.add(tx_modem)
 rx_device.receivers.add(rx_modem)
 
-simulation.new_dimension('snr', [db2lin(x) for x in np.arange(-10, 20, .5)])
+simulation.new_dimension('noise_level', [db2lin(x) for x in np.arange(-10, 20, .5)])
 simulation.add_evaluator(BitErrorEvaluator(tx_modem, rx_modem))
 simulation.add_evaluator(BlockErrorEvaluator(tx_modem, rx_modem))
 simulation.add_evaluator(FrameErrorEvaluator(tx_modem, rx_modem))

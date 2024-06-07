@@ -1,97 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-=======
-PyMonte
-=======
-
-PyMonte is a stand-alone core module of HermesPy,
-enabling efficient and flexible Monte Carlo simulations over arbitrary configuration parameter combinations.
-By wrapping the core of the `Ray`_ project,
-any object serializable by the `pickle`_ standard module can become a system model for a Monte Carlo style simulation
-campaign.
-
-.. mermaid::
-
-   %%{init: {'theme': 'dark'}}%%
-   flowchart LR
-
-   subgraph gridsection[Grid Section]
-
-      parameter_a(Parameter)
-      parameter_b(Parameter)
-   end
-
-   object((Investigated Object))
-   evaluator_a{{Evaluator}}
-   evaluator_b{{Evaluator}}
-   evaluator_c{{Evaluator}}
-
-   subgraph sample[Sample]
-
-       artifact_a[(Artifact)]
-       artifact_b[(Artifact)]
-       artifact_c[(Artifact)]
-   end
-
-   parameter_a --> object
-   parameter_b --> object
-   object ---> evaluator_a ---> artifact_a
-   object ---> evaluator_b ---> artifact_b
-   object ---> evaluator_c ---> artifact_c
-
-
-Monte Carlo simulations usually sweep over multiple combinations of multiple parameters settings,
-configuring the underlying system model and generating simulation samples from independent realizations
-of the model state.
-PyMonte refers to a single parameter combination as :class:`.GridSection`,
-with the set of all parameter combinations making up the simulation grid.
-Each settable property of the investigated object is treated as a potential simulation parameter within the grid,
-i.e. each settable property can be represented by an axis within the multidimensional simulation grid.
-
-:class:`.Evaluator` instances extract performance indicators from each investigated object realization, referred to as :class:`.Artifact`.
-A set of artifacts drawn from the same investigated object realization make up a single :class:`.MonteCarloSample`.
-During the execution of PyMonte simulations between :math:`M_\\mathrm{min}` and :math:`M_\\mathrm{max}`
-are generated from investigated object realizations for each grid section.
-The sample generation for each grid section may be aborted prematurely if all evaluators have reached a configured
-confidence threshold
-Refer to :footcite:t:`2014:bayer` for a detailed description of the implemented algorithm.
-
-.. mermaid::
-
-   %%{init: {'theme': 'dark'}}%%
-   flowchart LR
-
-   controller{Simulation Controller}
-
-   gridsection_a[Grid Section]
-   gridsection_b[Grid Section]
-
-   sample_a[Sample]
-   sample_b[Sample]
-
-   subgraph actor_a[Actor #1]
-
-       object_a((Investigated Object))
-   end
-
-   subgraph actor_b[Actor #N]
-
-       object_b((Investigated Object))
-   end
-
-   controller --> gridsection_a --> actor_a --> sample_a
-   controller --> gridsection_b --> actor_b --> sample_b
-
-
-The actual simulation workload distribution is visualized in the previous flowchart.
-Using `Ray`_, PyMonte spawns a number of :class:`.MonteCarloActor` containers,
-with the number of actors depending on the available resources (i.e. number of CPU cores) detected.
-A central simulation controller schedules the workload by assigning :class:`.GridSection` indices as tasks
-to the actors, which return the resulting simulation Samples after the simulation iteration is completed.
-
-.. _Ray: https://www.ray.io/
-.. _pickle: https://docs.python.org/3/library/pickle.html
-"""
 
 from __future__ import annotations
 
@@ -108,6 +15,7 @@ from typing import (
     Callable,
     Generic,
     List,
+    Mapping,
     Optional,
     Type,
     TypeVar,
@@ -139,10 +47,10 @@ from .logarithmic import LogarithmicSequence, ValueType
 from .visualize import PlotVisualization, VAT, Visualizable, VT
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -1237,6 +1145,12 @@ class SampleGrid(object):
         return iter(self.__sections.flat)
 
 
+class UnmatchableException(Exception):
+    """An exception that can never get caught."""
+
+    ...
+
+
 class MonteCarloActor(Generic[MO]):
     """Monte Carlo Simulation Actor.
 
@@ -1250,11 +1164,13 @@ class MonteCarloActor(Generic[MO]):
     __evaluators: Sequence[
         Evaluator
     ]  # Evaluators used to process the investigated object sample state
+    __stage_arguments: Mapping[str, Sequence[tuple]]
 
     def __init__(
         self,
         argument_tuple: Tuple[MO, Sequence[GridDimension], Sequence[Evaluator]],
         index: int,
+        stage_arguments: Mapping[str, Sequence[tuple]] | None = None,
         catch_exceptions: bool = True,
     ) -> None:
         """
@@ -1268,10 +1184,19 @@ class MonteCarloActor(Generic[MO]):
             index (int):
                 Global index of the actor.
 
+            stage_arguments (Mapping[str, Sequence[Tuple]], optional):
+                Arguments for the simulation stages.
+
             catch_exceptions (bool, optional):
                 Catch exceptions during run.
                 Enabled by default.
         """
+
+        # Assert that stage arguments are valid
+        _stage_arguments = dict() if stage_arguments is None else stage_arguments
+        for stage_key in _stage_arguments:
+            if stage_key not in self.stage_identifiers():
+                raise ValueError(f"Invalid stage identifier in stage arguments {stage_key}")
 
         investigated_object = argument_tuple[0]
         grid = argument_tuple[1]
@@ -1285,6 +1210,7 @@ class MonteCarloActor(Generic[MO]):
         self.__stage_identifiers = self.stage_identifiers()
         self.__stage_executors = self.stage_executors()
         self.__num_stages = len(self.__stage_executors)
+        self.__stage_arguments = _stage_arguments
 
     @property
     def _investigated_object(self) -> MO:
@@ -1295,6 +1221,31 @@ class MonteCarloActor(Generic[MO]):
         """
 
         return self.__investigated_object  # pragma: no cover
+
+    def __execute_stages(self, start: int, stop: int, artifacts: list[list[Artifact]]) -> None:
+        """Recursive subroutine of run, collecting artifacts from the simulation stage parametrizations.
+
+        Args:
+
+            start (int): Index of the first stage to be executed
+            stop (int): Index of the last stage to be executed
+        """
+
+        # Abort and collect artifacts if the end of the stage list is reached
+        if start > stop:
+            artifacts.append([evaluator.evaluate().artifact() for evaluator in self.__evaluators])
+            return
+
+        # Execute the next stage
+        stage_identifier = self.__stage_identifiers[start]
+        stage_executor = self.__stage_executors[start]
+        stage_arguments = self.__stage_arguments.get(stage_identifier, [tuple()])
+        for arguments in stage_arguments:
+            # Execute the stage with the provided arguments
+            stage_executor(*arguments)
+
+            # Proceed to the next stage
+            self.__execute_stages(start + 1, stop, artifacts)
 
     def run(self, program: List[Tuple[int, ...]]) -> ActorRunResult:
         """Run the simulation actor.
@@ -1360,26 +1311,18 @@ class MonteCarloActor(Generic[MO]):
                 if last_impact <= 0:
                     last_impact = self.__num_stages - 1
 
-                # Execute impacted simulation stages
-                # Note that for the first grid_section all stages are executed
-                for stage in self.__stage_executors[first_impact : 1 + last_impact]:
-                    stage()
-
-                # Collect evaluation artifacts
-                artifacts = [evaluator.evaluate().artifact() for evaluator in self.__evaluators]
-
-                # Save the samples
-                result.samples.append(MonteCarloSample(section_indices, 0, artifacts))
+                artifacts: list[list[Artifact]] = []
+                self.__execute_stages(first_impact, last_impact, artifacts)
+                result.samples.extend(
+                    MonteCarloSample(section_indices, a, artifact)
+                    for a, artifact in enumerate(artifacts)
+                )
 
                 # Update the recent section for the next iteration
                 recent_section_indices = section_index_array
 
-        except Exception as e:
-            if self.catch_exceptions:
-                result.message = str(e)
-
-            else:
-                raise e  # pragma: no cover
+        except Exception if self.catch_exceptions else UnmatchableException as e:
+            result.message = str(e)
 
         return result
 
@@ -1586,6 +1529,35 @@ class SamplePoint(object):
         return self.__value.__class__.__name__
 
 
+class ScalarDimension(ABC):
+    """Base class for objects that can be configured by scalar values.
+
+    When a property of type :class:`ScalarDimension` is defined as a simulation parameter :class:`GridDimension`,
+    the simulation will automatically configure the object with the scalar value of the sample point
+    during simulation runtime.
+
+    The configuration operation is represented by the lshift operator `<<`.
+    """
+
+    @abstractmethod
+    def __lshift__(self, scalar: float) -> None:
+        """Configure the object with a scalar value.
+
+        Args:
+            scalar (float): Scalar value to configure the object with.
+        """
+        ...  # pragma: no cover
+
+    @property
+    @abstractmethod
+    def title(self) -> str:
+        """Title of the scalar dimension.
+
+        Displayed in plots and tables during simulation runtime.
+        """
+        ...  # pragma: no cover
+
+
 class GridDimension(object):
     """Single axis within the simulation grid.
 
@@ -1687,11 +1659,13 @@ class GridDimension(object):
         for considered_object in _considered_objects:
             # Make sure the dimension exists
             try:
-                dimension_object = reduce(
+                dimension_mother_object = reduce(
                     lambda obj, attr: getattr(obj, attr), object_path, considered_object
                 )
-                dimension_class = type(dimension_object)
-                dimension_property: RegisteredDimension = getattr(dimension_class, property_name)
+                dimension_registration: RegisteredDimension = getattr(
+                    type(dimension_mother_object), property_name
+                )
+                dimension_value = getattr(dimension_mother_object, property_name)
 
             except AttributeError:
                 raise ValueError(
@@ -1702,9 +1676,9 @@ class GridDimension(object):
                 raise ValueError("A simulation grid dimension must have at least one sample point")
 
             # Update impacts if the dimension is registered as a PyMonte simulation dimension
-            if RegisteredDimension.is_registered(dimension_property):
-                first_impact = dimension_property.first_impact
-                last_impact = dimension_property.last_impact
+            if RegisteredDimension.is_registered(dimension_registration):
+                first_impact = dimension_registration.first_impact
+                last_impact = dimension_registration.last_impact
 
                 if self.__first_impact and first_impact != self.__first_impact:
                     raise ValueError(
@@ -1720,11 +1694,24 @@ class GridDimension(object):
                 self.__last_impact = last_impact
 
                 # Updated the depicted title if the dimension offers an option and it wasn't exactly specified
-                if title is None and dimension_property.title is not None:
-                    self.__title = dimension_property.title
+                if title is None and dimension_registration.title is not None:
+                    self.__title = dimension_registration.title
 
             self.__considered_objects += (considered_object,)
-            self.__setter_lambdas += (self.__create_setter_lambda(considered_object, dimension),)
+
+            # If the dimension value is a scalar dimension, we can directly use the lshift operator to configure
+            # the object with the sample point values, given that the sample points are scalars as well
+            if isinstance(dimension_value, ScalarDimension) and np.all(
+                np.vectorize(np.isscalar)(sample_points)
+            ):
+                self.__setter_lambdas += (dimension_value.__lshift__,)
+                self.__title = dimension_value.title
+
+            # Otherwise, the dimension value is a regular attribute and we need to create a setter lambda
+            else:
+                self.__setter_lambdas += (
+                    self.__create_setter_lambda(considered_object, dimension),
+                )
 
     @property
     def considered_objects(self) -> Tuple[Any, ...]:
@@ -2016,8 +2003,6 @@ class MonteCarlo(Generic[MO]):
     __console_mode: ConsoleMode
     # Number of samples per section block
     __section_block_size: int | None
-    # Cache simulation results in a database during runtime
-    __database_caching: bool
     # Number of CPUs reserved for a single actor
     __cpus_per_actor: int
     runtime_env: bool
@@ -2116,7 +2101,12 @@ class MonteCarlo(Generic[MO]):
         self.catch_exceptions = catch_exceptions
         self.__progress_log_interval = progress_log_interval
 
-    def simulate(self, actor: Type[MonteCarloActor]) -> MonteCarloResult:
+    def simulate(
+        self,
+        actor: Type[MonteCarloActor],
+        additional_dimensions: set[GridDimension] | None = None,
+        stage_arguments: Mapping[str, Any] | None = None,
+    ) -> MonteCarloResult:
         """Launch the Monte Carlo simulation.
 
         Args:
@@ -2124,8 +2114,14 @@ class MonteCarlo(Generic[MO]):
             actor (Type[MonteCarloActor]):
                 The actor from which to generate the simulation samples.
 
-        Returns:
-            np.ndarray: Generated samples.
+            additional_dimensions (Set[GridDimension], optional):
+                Additional dimensions to be added to the simulation grid.
+
+            stage_arguments (Mapping[str, Any], optional):
+                Arguments to be passed to the simulation stages.
+                If the argument is a sequence, the respective stage will iterate over the sequence.
+
+        Returns: A `MonteCarloResult` dataclass containing the simulation results.
         """
 
         # Generate start timestamp
@@ -2136,6 +2132,11 @@ class MonteCarlo(Generic[MO]):
             self.console.log(
                 f"Launched simulation campaign with {self.num_actors} dedicated actors"
             )
+
+        # Add additional dimensions to configured simulation grid
+        _dimensions = self.__dimensions.copy()
+        if additional_dimensions is not None:
+            _dimensions.extend(additional_dimensions)
 
         # Sort dimensions after impact in descending order
         def sort(dimension: GridDimension) -> int:
@@ -2181,7 +2182,8 @@ class MonteCarlo(Generic[MO]):
         # Launch actors and queue the first tasks
         with self.console.status("Launching Actor Pool...", spinner="dots") if self.__console_mode == ConsoleMode.INTERACTIVE else nullcontext():  # type: ignore
             # Generate the actor pool
-            actor_pool = ActorPool([actor.options(num_cpus=self.cpus_per_actor).remote((self.__investigated_object, self.__dimensions, self.__evaluators), a, self.catch_exceptions) for a in range(self.num_actors)])  # type: ignore
+            actors = [actor.options(num_cpus=self.cpus_per_actor).remote((self.__investigated_object, self.__dimensions, self.__evaluators), a, stage_arguments, self.catch_exceptions) for a in range(self.num_actors)]  # type: ignore[attr-defined]
+            actor_pool = ActorPool(actors)  # type: ignore
 
             # Generate section sample containers and meta-information
             grid_task_count = np.zeros(

@@ -22,10 +22,10 @@ from hermespy.core import (
 from .modem import TransmittingModem, ReceivingModem
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -507,3 +507,71 @@ class ThroughputEvaluator(CommunicationEvaluator, Serializable):
     @property
     def abbreviation(self) -> str:
         return "DRX"
+
+
+class EVMArtifact(ArtifactTemplate[float]):
+    """Artifact of a error vector magnitude (EVM) evaluation between two modems exchanging information."""
+
+    ...  # pragma: no cover
+
+
+class EVMEvaluation(EvaluationTemplate[float, PlotVisualization]):
+    __transmitted_symbols: np.ndarray
+    __received_symbols: np.ndarray
+    __evm: float
+
+    def __init__(self, transmitted_symbols: np.ndarray, received_symbols: np.ndarray) -> None:
+        """
+        Args:
+
+            transmitted_symbols (np.ndarray): Originally transmitted communication symbols.
+            received_symbols (np.ndarray): Received communication symbols.
+        """
+
+        _transmitted_symbols = transmitted_symbols.flatten()
+        _received_symbols = received_symbols.flatten()
+        size = min(transmitted_symbols.size, received_symbols.size)
+        self.__transmitted_symbols = _transmitted_symbols[:size]
+        self.__received_symbols = _received_symbols[:size]
+
+        self.__evm = np.sqrt(
+            np.mean(np.abs(self.__transmitted_symbols[:size] - self.__received_symbols[:size]) ** 2)
+        )
+
+    @property
+    def title(self) -> str:
+        return "Error Vector Magnitude"
+
+    @property
+    def abbreviation(self) -> str:
+        return "EVM"
+
+    def artifact(self) -> EVMArtifact:
+        return EVMArtifact(self.__evm)
+
+    def _prepare_visualization(
+        self, figure: plt.Figure | None, axes: VAT, **kwargs
+    ) -> PlotVisualization:
+        lines = np.empty_like(axes, dtype=np.object_)
+        return PlotVisualization(figure, axes, lines)
+
+    def _update_visualization(self, visualization: PlotVisualization, **kwargs) -> None:
+        pass
+
+
+class ConstellationEVM(CommunicationEvaluator):
+    """Evaluate the error vector magnitude (EVM) of a constellation diagram."""
+
+    def evaluate(self) -> EVMEvaluation:
+        return EVMEvaluation(
+            self.transmitting_modem.transmission.symbols.raw,
+            self.receiving_modem.reception.equalized_symbols.raw,
+        )
+
+    @property
+    def title(self) -> str:
+        return "Error Vector Magnitude"
+
+    @property
+    def abbreviation(self) -> str:
+        return "EVM"

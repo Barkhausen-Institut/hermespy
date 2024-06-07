@@ -8,6 +8,7 @@ from scipy.signal import convolve
 from sparse import COO  # type: ignore
 
 from hermespy.core import ChannelStateInformation, Serializable
+from hermespy.channel import Channel, ChannelSample
 from hermespy.modem import (
     ChannelEstimation,
     FilteredSingleCarrierWaveform,
@@ -16,21 +17,21 @@ from hermespy.modem import (
     ReferencePosition,
     StatedSymbols,
     Symbols,
-    WaveformType,
+    CWT,
 )
 from ..simulated_device import SimulatedDevice
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.0.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class IdealChannelEstimation(Generic[WaveformType], ChannelEstimation[WaveformType]):
+class IdealChannelEstimation(Generic[CWT], ChannelEstimation[CWT]):
     """Channel estimation accessing the ideal channel state informaion.
 
     This type of channel estimation is only available during simulation runtime.
@@ -38,33 +39,48 @@ class IdealChannelEstimation(Generic[WaveformType], ChannelEstimation[WaveformTy
 
     yaml_tag = "IdealChannelEstimation"
 
-    __transmitter: SimulatedDevice
-    __receiver: SimulatedDevice
+    __cached_sample: ChannelSample | None = None
 
     def __init__(
         self,
+        channel: Channel,
         transmitter: SimulatedDevice,
         receiver: SimulatedDevice,
-        waveform: WaveformType | None = None,
+        waveform: CWT | None = None,
     ) -> None:
         # Initialize base class
         ChannelEstimation.__init__(self, waveform)
 
-        # Initialize class attributes
+        # Register a hook to cache the channel sample
+        channel.add_sample_hook(self.__channel_sample_callback, transmitter, receiver)
+
+        # Store class attributes
+        self.__channel = channel
         self.__transmitter = transmitter
         self.__receiver = receiver
 
     @property
+    def channel(self) -> Channel:
+        """Channel to estimate."""
+
+        return self.__channel
+
+    @property
     def transmitter(self) -> SimulatedDevice:
-        """Device transmitting into the channel to be estimated."""
+        """Transmitting device."""
 
         return self.__transmitter
 
     @property
     def receiver(self) -> SimulatedDevice:
-        """Device receiving from the channel to be estimated."""
+        """Receiving device."""
 
         return self.__receiver
+
+    def __channel_sample_callback(self, sample: ChannelSample) -> None:
+        """Callback to cache the channel sample."""
+
+        self.__cached_sample = sample
 
     def _csi(
         self, delay: float, sampling_rate: float | None = None, num_samples: int | None = None
@@ -98,18 +114,15 @@ class IdealChannelEstimation(Generic[WaveformType], ChannelEstimation[WaveformTy
         if self.waveform.modem is None or self.waveform.modem.receiving_device is None:
             raise RuntimeError("Operating modem floating")
 
-        cached_realization = self.receiver.channel_realization(self.transmitter)
-        if cached_realization is None:
+        if self.__cached_sample is None:
             raise RuntimeError(
-                "No channel realization available from which to estimate the ideal channel state information"
+                "No channel sample available from which to estimate the ideal channel state information"
             )
 
         sampling_rate = self.waveform.sampling_rate if sampling_rate is None else sampling_rate
         num_samples = self.waveform.samples_per_frame if num_samples is None else num_samples
 
-        channel_state_information = cached_realization.state(
-            delay, sampling_rate, num_samples, num_samples
-        )
+        channel_state_information = self.__cached_sample.state(num_samples, num_samples)
         return channel_state_information
 
 
@@ -165,6 +178,7 @@ class OFDMIdealChannelEstimation(IdealChannelEstimation[OFDMWaveform], Serializa
 
     def __init__(
         self,
+        channel: Channel,
         transmitter: SimulatedDevice,
         receiver: SimulatedDevice,
         reference_position: ReferencePosition = ReferencePosition.IDEAL,
@@ -185,7 +199,7 @@ class OFDMIdealChannelEstimation(IdealChannelEstimation[OFDMWaveform], Serializa
         """
 
         self.reference_position = reference_position
-        IdealChannelEstimation.__init__(self, transmitter, receiver, *args, **kwargs)  # type: ignore
+        IdealChannelEstimation.__init__(self, channel, transmitter, receiver, *args, **kwargs)  # type: ignore
 
     def __extract_channel(
         self, section: GridSection, csi: np.ndarray, reference_position: ReferencePosition

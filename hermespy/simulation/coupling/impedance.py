@@ -12,10 +12,10 @@ if TYPE_CHECKING:
     from hermespy.simulation import SimulatedDevice  # pragma: no cover
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -179,9 +179,9 @@ class ImpedanceCoupling(Serializable, Coupling):
         )
 
         transmit_coupling = transmit_impedance.real**-0.5 @ transmit_correlation**0.5
-        transmitted_samples = transmit_coupling @ signal.samples
+        transmitted_samples = transmit_coupling @ signal[:, :]
 
-        return Signal(transmitted_samples, signal.sampling_rate, signal.carrier_frequency)
+        return signal.from_ndarray(transmitted_samples)
 
     def _receive(self, signal: Signal) -> Signal:
         receive_impedance = (
@@ -207,6 +207,6 @@ class ImpedanceCoupling(Serializable, Coupling):
             @ np.linalg.inv(matching_impedance + receive_correlation)
             @ receive_correlation**0.5
         )
-        received_samples = receive_coupling @ signal.samples
+        received_samples = receive_coupling @ signal[:, :]
 
-        return Signal(received_samples, signal.sampling_rate, signal.carrier_frequency)
+        return signal.from_ndarray(received_samples)

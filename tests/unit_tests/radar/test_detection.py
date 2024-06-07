@@ -10,12 +10,13 @@ from scipy.constants import speed_of_light
 from scipy.ndimage import gaussian_filter
 
 from hermespy.radar import PointDetection, RadarCube, RadarPointCloud, ThresholdDetector, MaxDetector, CFARDetector
+from unit_tests.utils import SimulationTestContext
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Egor Achkasov"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -108,18 +109,9 @@ class TestRadarPointCloud(TestCase):
     def test_plot(self) -> None:
         """Point clouds should be properly plotted"""
 
-        figure_mock = Mock(spec=plt.Figure)
-        axes_mock = Mock()
-        axes_collection = np.array([[axes_mock]], dtype=np.object_)
-
-        with patch("matplotlib.pyplot.subplots") as subplots_patch:
-            subplots_patch.return_value = (figure_mock, axes_collection)
-
+        with SimulationTestContext():
             self.cloud.add_point(PointDetection(np.zeros(3), np.zeros(3), 1.0))
-            self.cloud.visualize()
-
-            subplots_patch.assert_called_once()
-            axes_mock.scatter.assert_called()
+            _ = self.cloud.visualize()
 
 
 class TestThresholdDetector(TestCase):

@@ -1,6 +1,6 @@
 from os.path import join
 
-from hermespy.channel import MultipathFading5GTDL
+from hermespy.channel import TDL
 from hermespy.hardware_loop import HardwareLoop, PhysicalDeviceDummy, PhysicalScenarioDummy, ReceivedConstellationPlot, DeviceTransmissionPlot, DeviceReceptionPlot
 from hermespy.modem import BitErrorEvaluator, SimplexLink, RootRaisedCosineWaveform, SingleCarrierLeastSquaresChannelEstimation, SingleCarrierZeroForcingChannelEqualization
 
@@ -14,7 +14,7 @@ rx_device = hardware_loop.new_device(carrier_frequency=1e9)
 
 # Specifiy the channel instance linking the two devices
 # Only available for PhysicalScenarioDummy, which is a simulation of hardware behaviour
-hardware_scenario.set_channel(tx_device, rx_device, MultipathFading5GTDL())
+hardware_scenario.set_channel(tx_device, rx_device, TDL())
 
 # Define a simplex communication link between the two devices
 link = SimplexLink(tx_device, rx_device)

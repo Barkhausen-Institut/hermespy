@@ -20,10 +20,10 @@ from .waveform import (
 )
 
 __author__ = "André Noll Barreto"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["André Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -122,9 +122,9 @@ class OFDMWaveform(OrthogonalWaveform, Serializable):
         padding_start_idx = (
             self.oversampling_factor * self.num_subcarriers
         ) // 2 - self.num_subcarriers // 2
-        padded_symbol_grid[
-            :, padding_start_idx : self.num_subcarriers + padding_start_idx
-        ] = normalized_symbols
+        padded_symbol_grid[:, padding_start_idx : self.num_subcarriers + padding_start_idx] = (
+            normalized_symbols
+        )
 
         # Shift in order to suppress the dc component
         # Note that for configurations without any oversampling the DC component will not be suppressed

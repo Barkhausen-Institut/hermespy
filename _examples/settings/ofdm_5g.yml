@@ -32,11 +32,12 @@ Devices:
 # Specify channel models interconnecting devices 
 Channels:
 
-  # 5G TDL model at the self-interference channel of device_alpha
-  - !<5GTDL>
-    devices: [*device_alpha, *device_alpha] # Devices linked by the channel
-    model_type: !<TDLType> E                # Type of the TDL model. A-E are available
-    rms_delay: 100e-9                       # Root mean square delay in seconds    
+  - # 5G TDL model at the self-interference channel of device_alpha
+    - *device_alpha
+    - *device_alpha
+    - &channel !<5GTDL>
+      model_type: !<TDLType> E           # Type of the TDL model. A-E are available
+      rms_delay: 100e-9                  # Root mean square delay in seconds    
 
 
 # Operators transmitting or receiving signals over the devices
@@ -69,6 +70,7 @@ Operators:
       dc_suppression: False             # Do not ignore the DC component during the DFT
       num_subcarriers: 4096             # Number of subcarriers per communiction frame
       channel_estimation: !<OFDM-Ideal> # Assume ideal channel state information at the receiver
+        channel: *channel
         transmitter: *device_alpha
         receiver: *device_alpha
       channel_equalization: !<ZF>       # Least-squares channel equalization
@@ -146,7 +148,8 @@ Evaluators:
 # Simulation parameters
 num_samples: 1000                  # Number of samples per simulation grid section
 min_num_samples: 100               # Minimum number of samples per simulation grid section before premature stopping
-snr_type: EBN0                     # SNR is defined as the ratio between bit energy and noise power
+noise_level: !<EBN0>               # SNR is defined as the ratio between bit energy and noise power
+  reference: *ofdm                 # The SNR is calculated with respect to the referenced waveform's power 
 plot_results: True                 # Visualize the evaluations after the simulation has finished
 num_actors: 1                      # This simulation is quite memory demanding. It might be necessary to limit the number of actors.
 
@@ -154,5 +157,5 @@ num_actors: 1                      # This simulation is quite memory demanding. 
 Dimensions:
 
   # Sweep over the global receiver signal-to-noise ratio
-  - property: 'snr'
+  - property: 'noise_level'
     points: [0, 1, ..., 20] dB

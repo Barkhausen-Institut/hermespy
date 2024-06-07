@@ -17,10 +17,10 @@ from hermespy.modem import ChannelEstimation, ConfigurablePilotWaveform, CustomP
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -94,7 +94,7 @@ class MockPilotCommunicationWaveform(MockCommunicationWaveform, ConfigurablePilo
     """Mock communication waveform for modem testing"""
 
     def pilot_signal(self) -> Signal:
-        return Signal(np.zeros(self.samples_per_frame), self.sampling_rate)
+        return Signal.Create(np.zeros(self.samples_per_frame), self.sampling_rate)
 
 
 class TestSynchronization(unittest.TestCase):

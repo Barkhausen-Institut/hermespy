@@ -138,6 +138,7 @@ From there, the result can be printed to the console, plotted, or saved to the d
    
    simulation.simulation.Simulation
    simulation.simulated_device
+   simulation.animation
    simulation.antennas
    simulation.noise
    simulation.synchronization

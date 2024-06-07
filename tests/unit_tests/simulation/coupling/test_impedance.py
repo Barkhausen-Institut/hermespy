@@ -11,10 +11,10 @@ from hermespy.core import Signal
 from hermespy.simulation import ImpedanceCoupling, SimulatedDevice
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -132,9 +132,9 @@ class TestImpedanceCoupling(TestCase):
     def test_transmit_receive(self) -> None:
         """Transmit and receive routine should be properly called"""
 
-        signal = Signal(self.rng.normal(size=(1, 10)) + 1j * self.rng.normal(size=(1, 10)), 1, carrier_frequency=0.0)
+        signal = Signal.Create(self.rng.normal(size=(1, 10)) + 1j * self.rng.normal(size=(1, 10)), 1, carrier_frequency=0.0)
 
         tx = self.coupling.transmit(signal)
         rx = self.coupling.receive(tx)
 
-        assert_array_almost_equal(signal.samples, rx.samples)
+        assert_array_almost_equal(signal[:, :], rx[:, :])

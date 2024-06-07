@@ -65,7 +65,7 @@ input_signal_py = matlab2python(input_signal,'complex64');
 input_signal_py.resize(py.int(1),py.int(num_samples)); 
 
 % create a Signal object
-signal = core.Signal(input_signal_py, py.int(transmitter.sampling_rate));
+signal = core.Signal.Create(input_signal_py, py.int(transmitter.sampling_rate));
 
 % propate input through the channel
 output_tupple = radar_channel.propagate(signal);
@@ -73,7 +73,7 @@ output_tupple = radar_channel.propagate(signal);
 % retrieve the out samples
 output_list = output_tupple{1};
 output_cell = output_list.cell{1};
-output = python2matlab(output_cell.samples);
+output = python2matlab(output_cell[:, :]);
 
 % plot received signal after the radar channel
 figure

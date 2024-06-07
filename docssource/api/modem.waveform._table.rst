@@ -30,6 +30,10 @@
      - Yes
      - Yes
      - Yes
+   * - :doc:`OTFS<modem.waveforms.orthogonal.otfs>`
+     - Yes
+     - Yes
+     - Yes
    * - :doc:`Chirp FSK<modem.waveform.chirp_fsk>`
      - Yes
      - No

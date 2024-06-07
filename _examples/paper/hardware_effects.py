@@ -10,7 +10,7 @@ from hermespy.tools import db2lin
 from hermespy.core import ConsoleMode
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.3.0"
@@ -31,7 +31,7 @@ modem.waveform = RaisedCosineWaveform(oversampling_factor=4, num_preamble_symbol
 modem.waveform.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
 modem.waveform.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
 
-simulation.new_dimension('snr', [db2lin(x) for x in np.arange(-10, 20, .5)])
+simulation.new_dimension('noise_level', [db2lin(x) for x in np.arange(-10, 20, .5)])
 simulation.add_evaluator(BitErrorEvaluator(modem, modem))
 simulation.num_samples, simulation.min_num_samples = 100000, 100000
 simulation.plot_results = True

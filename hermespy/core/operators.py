@@ -12,15 +12,14 @@ from __future__ import annotations
 import numpy as np
 from h5py import Group
 
-from .definitions import SNRType
 from .device import Transmission, Transmitter, Receiver, Reception
 from .signal_model import Signal
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -92,11 +91,15 @@ class SilentTransmitter(StaticOperator, Transmitter[Transmission]):
         StaticOperator.__init__(self, num_samples, sampling_rate)
         Transmitter.__init__(self, *args, **kwargs)
 
+    @property
+    def power(self) -> float:
+        return 0.0
+
     def _transmit(self, duration: float = 0.0) -> Transmission:
         # Compute the number of samples to be transmitted
         num_samples = self.num_samples if duration <= 0.0 else int(duration * self.sampling_rate)
 
-        silence = Signal(
+        silence = Signal.Create(
             np.zeros((self.device.num_antennas, num_samples), dtype=complex),
             sampling_rate=self.sampling_rate,
             carrier_frequency=self.device.carrier_frequency,
@@ -132,6 +135,10 @@ class SignalTransmitter(StaticOperator, Transmitter[Transmission]):
 
         # Init class attributes
         self.__signal = signal
+
+    @property
+    def power(self) -> float:
+        return np.mean(self.signal.power)
 
     @property
     def signal(self) -> Signal:
@@ -181,18 +188,13 @@ class SignalReceiver(StaticOperator, Receiver[Reception]):
     def energy(self) -> float:
         return self.__expected_power * self.num_samples
 
+    @property
+    def power(self) -> float:
+        return self.__expected_power
+
     def _receive(self, signal: Signal) -> Reception:
         received_signal = signal.resample(self.sampling_rate)
         return Reception(received_signal)
-
-    def _noise_power(self, strength: float, snr_type: SNRType) -> float:
-        if snr_type == SNRType.PN0:
-            return self.__expected_power / strength
-
-        if snr_type == SNRType.EN0:
-            return self.__expected_power / strength * self.num_samples
-
-        raise ValueError(f"SNR type {snr_type} is not supported by the SignalReceiver")
 
     def _recall_reception(self, group: Group) -> Reception:
         return Reception.from_HDF(group)

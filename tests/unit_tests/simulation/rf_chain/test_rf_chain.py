@@ -7,10 +7,10 @@ from hermespy.core import Signal
 from hermespy.simulation.rf_chain import RfChain
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -72,7 +72,7 @@ class TestRfChain(TestCase):
     def test_transmit_power_amplifier_integration(self) -> None:
         """Power amplifier should be called during transmit"""
 
-        signal = Signal.empty(1.0, 1, 0, carrier_frequency=0.0)
+        signal = Signal.Empty(1.0, 1, 0, carrier_frequency=0.0)
 
         pa = Mock()
         pa.send.side_effect = lambda x: x

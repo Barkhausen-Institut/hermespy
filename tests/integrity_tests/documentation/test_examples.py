@@ -9,10 +9,10 @@ import ray as ray
 from unit_tests.utils import SimulationTestContext
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -46,105 +46,70 @@ class TestDocumentationExamples(TestCase):
         with self.test_context:
             exec(open(script_path).read())
 
-    def test_channel_cdl_indoor_factory_los(self) -> None:
+    def test_channel_cdl_indoor_factory(self) -> None:
         """Test example snippet for indoor channel factory with LOS"""
 
-        self.__run_example("channel_cdl_indoor_factory_los.py")
+        self.__run_example("channel_cdl_indoor_factory.py")
 
-    def test_channel_cdl_indoor_factory_nlos(self) -> None:
-        """Test example snippet for indoor channel factory with NLOS"""
-
-        self.__run_example("channel_cdl_indoor_factory_nlos.py")
-
-    def test_channel_cdl_indoor_office_los(self) -> None:
+    def test_channel_cdl_indoor_offices(self) -> None:
         """Test example snippet for indoor office channel with LOS"""
 
-        self.__run_example("channel_cdl_indoor_office_los.py")
+        self.__run_example("channel_cdl_indoor_office.py")
 
-    def test_channel_cdl_indoor_office_nlos(self) -> None:
-        """Test example snippet for indoor office channel with NLOS"""
-
-        self.__run_example("channel_cdl_indoor_office_nlos.py")
-
-    def test_channel_cdl_rural_macrocells_los(self) -> None:
+    def test_channel_cdl_rural_macrocells(self) -> None:
         """Test example snippet for rural macrocells channel with LOS"""
 
-        self.__run_example("channel_cdl_rural_macrocells_los.py")
+        self.__run_example("channel_cdl_rural_macrocells.py")
 
-    def test_channel_cdl_rural_macrocells_nlos(self) -> None:
-        """Test example snippet for rural macrocells channel with NLOS"""
-
-        self.__run_example("channel_cdl_rural_macrocells_nlos.py")
-
-    def test_channel_cdl_street_canyon_los(self) -> None:
+    def test_channel_cdl_street_canyon(self) -> None:
         """Test example snippet for street canyon channel with LOS"""
 
-        self.__run_example("channel_cdl_street_canyon_los.py")
+        self.__run_example("channel_cdl_street_canyon.py")
 
-    def test_channel_cdl_street_canyon_nlos(self) -> None:
-        """Test example snippet for street canyon channel with NLOS"""
-
-        self.__run_example("channel_cdl_street_canyon_nlos.py")
-
-    def test_channel_cdl_street_canyon_o2i(self) -> None:
-        """Test example snippet for street canyon channel with O2I"""
-
-        self.__run_example("channel_cdl_street_canyon_o2i.py")
-
-    def test_channel_cdl_urban_macrocells_los(self) -> None:
+    def test_channel_cdl_urban_macrocells(self) -> None:
         """Test example snippet for urban macrocells channel with LOS"""
 
-        self.__run_example("channel_cdl_urban_macrocells_los.py")
+        self.__run_example("channel_cdl_urban_macrocells.py")
 
-    def test_channel_cdl_urban_macrocells_nlos(self) -> None:
-        """Test example snippet for urban macrocells channel with NLOS"""
-
-        self.__run_example("channel_cdl_urban_macrocells_nlos.py")
-
-    def test_channel_cdl_urban_macrocells_o2i(self) -> None:
-        """Test example snippet for urban macrocells channel with O2I"""
-
-        self.__run_example("channel_cdl_urban_macrocells_o2i.py")
-
-    def test_channel_MultipathFading5GTDL(self) -> None:
+    def test_channel_fading_TDL(self) -> None:
         """Test example snippet for 5G TDL multipath fading channel"""
 
-        self.__run_example("channel_MultipathFading5GTDL.py")
+        self.__run_example("channel_fading_tdl.py")
 
-    def test_channel_MultipathFadingChannel(self) -> None:
+    def test_channel_fading_fading(self) -> None:
         """Test example snippet for multipath fading channel"""
 
-        self.__run_example("channel_MultipathFadingChannel.py")
+        self.__run_example("channel_fading_fading.py")
 
-    def test_channel_MultipathFadingCost259(self) -> None:
+    def test_channel_fading_cost259(self) -> None:
         """Test example snippet for COST 259 multipath fading channel"""
 
-        self.__run_example("channel_MultipathFadingCost259.py")
+        self.__run_example("channel_fading_cost259.py")
 
-    def test_channel_MultipathFadingExponential(self) -> None:
+    def test_channel_fading_exponential(self) -> None:
         """Test example snippet for exponential multipath fading channel"""
 
-        self.__run_example("channel_MultipathFadingExponential.py")
+        self.__run_example("channel_fading_exponential.py")
 
-    def test_channel_MultiTargetRadarChannel(self) -> None:
+    def test_channel_radar_multi(self) -> None:
         """Test example snippet for multi-target radar channel"""
 
-        self.__run_example("channel_MultiTargetRadarChannel.py")
+        self.__run_example("channel_radar_multi.py")
 
-    def test_channel_RandomDelayChannel(self) -> None:
-        """Test example snippet for random delay channel"""
-
-        self.__run_example("channel_RandomDelayChannel.py")
-
-    def test_channel_SingleTargetRadarChannel(self) -> None:
+    def test_channel_radar_single(self) -> None:
         """Test example snippet for single-target radar channel"""
 
-        self.__run_example("channel_SingleTargetRadarChannel.py")
+        self.__run_example("channel_radar_single.py")
 
-    def test_channel_SpatialDelayChannel(self) -> None:
+    def test_channel_delay_random(self) -> None:
+        """Test example snippet for random delay channel"""
+
+        self.__run_example("channel_delay_random.py")
+
+    def test_channel_delay_spatial(self) -> None:
         """Test example snippet for spatial delay channel"""
 
-        self.__run_example("channel_SpatialDelayChannel.py")
+        self.__run_example("channel_delay_spatial.py")
 
     def test_channel(self) -> None:
         """Test example snippet for channel"""
@@ -165,6 +130,11 @@ class TestDocumentationExamples(TestCase):
         """Test example snippet for block error rate evaluation"""
 
         self.__run_example('modem_evaluators_bler.py')
+
+    def test_modem_evaluators_evm(self) -> None:
+        """Test example snippet for error vector magnitude evaluation"""
+
+        self.__run_example('modem_evaluators_evm.py')
 
     def test_modem_evaluators_fer(self) -> None:
         """Test example snippet for frame error rate evaluation"""
@@ -250,21 +220,26 @@ class TestDocumentationExamples(TestCase):
         """Test example snippet for RRC waveforms"""
 
         self.__run_example("modem_waveforms_rrc.py")
-        
+
     def test_modem_waveforms_orthogonal(self) -> None:
         """Test example snippet for orthogonal waveforms"""
-        
+
         self.__run_example("modem_waveforms_orthogonal.py")
-        
+
     def test_modem_waveforms_ofdm(self) -> None:
         """Test example snippet for OFDM waveforms"""
-        
+
         self.__run_example("modem_waveforms_ofdm.py")
-        
+
     def test_modem_waveforms_ocdm(self) -> None:
         """Test example snippet for OCDM waveforms"""
-        
+
         self.__run_example("modem_waveforms_ocdm.py")
+
+    def test_modem_waveforms_otfs(self) -> None:
+        """Test example snippet for OTFS waveforms"""
+
+        self.__run_example("modem_waveforms_otfs.py")
 
     def test_modem(self) -> None:
         """Test example snippet for modem"""
@@ -310,6 +285,11 @@ class TestDocumentationExamples(TestCase):
         """Test example snippet for amplifier"""
 
         self.__run_example("simulation_amplifier.py")
+
+    def test_simulation_animation(self) -> None:
+        """Test example snippet for animation"""
+
+        self.__run_example("simulation_animation.py")
 
     def test_simulation_isolation(self) -> None:
         """Test example snippet for isolation"""

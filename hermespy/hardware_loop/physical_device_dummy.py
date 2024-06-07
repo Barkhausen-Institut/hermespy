@@ -12,9 +12,10 @@ from collections.abc import Sequence
 
 import numpy as np
 
-from hermespy.core import DeviceInput, Serializable, Signal, SNRType
-from hermespy.channel import ChannelPropagation
+from hermespy.core import DeviceInput, Serializable, Signal
 from hermespy.simulation import (
+    NoiseLevel,
+    NoiseModel,
     ProcessedSimulatedDeviceInput,
     SimulatedAntennaArray,
     SimulatedDevice,
@@ -28,10 +29,10 @@ from .physical_device import PhysicalDevice
 from .scenario import PhysicalScenario
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.2.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -63,8 +64,8 @@ class PhysicalDeviceDummy(SimulatedDevice, PhysicalDevice, Serializable):
 
         # Initialize internal state
         self.receive_transmission = receive_transmission
-        self.__uploaded_signal = Signal.empty(1.0, self.num_antennas)
-        self.__downloaded_signal = Signal.empty(1.0, self.num_antennas)
+        self.__uploaded_signal = Signal.Empty(1.0, self.num_antennas)
+        self.__downloaded_signal = Signal.Empty(1.0, self.num_antennas)
 
     @property
     def receive_transmission(self) -> bool:
@@ -95,35 +96,33 @@ class PhysicalDeviceDummy(SimulatedDevice, PhysicalDevice, Serializable):
 
     def process_input(
         self,
-        impinging_signals: DeviceInput
-        | Signal
-        | Sequence[Signal]
-        | ChannelPropagation
-        | Sequence[ChannelPropagation]
-        | SimulatedDeviceOutput
-        | None = None,
+        impinging_signals: (
+            DeviceInput | Signal | Sequence[Signal] | SimulatedDeviceOutput | None
+        ) = None,
         cache: bool = True,
         trigger_realization: TriggerRealization | None = None,
-        snr: float = float("inf"),
-        snr_type: SNRType = SNRType.PN0,
+        noise_level: NoiseLevel | None = None,
+        noise_model: NoiseModel | None = None,
         leaking_signal: Signal | None = None,
     ) -> ProcessedSimulatedDeviceInput:
         _impinging_signals = (
             self.__uploaded_signal if impinging_signals is None else impinging_signals
         )
         return SimulatedDevice.process_input(
-            self, _impinging_signals, cache, trigger_realization, snr, snr_type, leaking_signal
+            self,
+            _impinging_signals,
+            cache,
+            trigger_realization,
+            noise_level,
+            noise_model,
+            leaking_signal,
         )
 
     def receive(
         self,
-        impinging_signals: DeviceInput
-        | Signal
-        | Sequence[Signal]
-        | ChannelPropagation
-        | Sequence[ChannelPropagation]
-        | SimulatedDeviceOutput
-        | None = None,
+        impinging_signals: (
+            DeviceInput | Signal | Sequence[Signal] | SimulatedDeviceOutput | None
+        ) = None,
         *args,
         **kwargs,
     ) -> SimulatedDeviceReception:
@@ -137,15 +136,17 @@ class PhysicalDeviceDummy(SimulatedDevice, PhysicalDevice, Serializable):
             self.__downloaded_signal = self.__uploaded_signal
 
         else:
-            samples = np.zeros(self.__uploaded_signal.samples.shape)
-            self.__downloaded_signal = Signal(samples, self.sampling_rate, self.carrier_frequency)
+            samples = np.zeros(self.__uploaded_signal.shape)
+            self.__downloaded_signal = Signal.Create(
+                samples, self.sampling_rate, self.carrier_frequency
+            )
 
     def trigger_direct(self, signal: Signal, calibrate: bool = True) -> Signal:
         if self.receive_transmission:
             input = signal
 
         else:
-            input = Signal(
+            input = Signal.Create(
                 np.zeros(
                     (self.antennas.num_receive_antennas, signal.num_samples), dtype=np.complex_
                 ),
@@ -200,11 +201,9 @@ class PhysicalScenarioDummy(
 
     def receive_devices(
         self,
-        impinging_signals: Sequence[DeviceInput]
-        | Sequence[Signal]
-        | Sequence[Sequence[Signal]]
-        | Sequence[Sequence[ChannelPropagation]]
-        | None = None,
+        impinging_signals: (
+            Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]] | None
+        ) = None,
         cache: bool = True,
         trigger_realizations: Sequence[TriggerRealization] | None = None,
     ) -> Sequence[SimulatedDeviceReception]:

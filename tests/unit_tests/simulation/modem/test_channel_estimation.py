@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch, PropertyMock
 import numpy as np
 from numpy.random import default_rng
 
-from hermespy.channel import Cost259Type, MultipathFadingCost259
+from hermespy.channel import Cost259Type, Cost259
 from hermespy.modem import(
     CustomPilotSymbolSequence,
     SimplexLink,
@@ -27,10 +27,10 @@ from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 from unit_tests.modem.test_waveform_single_carrier import MockSingleCarrierWaveform
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -48,7 +48,8 @@ class TestIdealChannelEstimation(TestCase):
     def setUp(self) -> None:
         self.alpha_device = SimulatedDevice()
         self.beta_device = SimulatedDevice()
-        self.estimation = MockIdealChannelEstimation(self.alpha_device, self.beta_device)
+        self.channel = Mock()
+        self.estimation = MockIdealChannelEstimation(self.channel, self.alpha_device, self.beta_device)
 
         self.waveform = Mock()
         self.waveform.modem = Mock()
@@ -83,7 +84,7 @@ class _TestIdealChannelEstimation(TestCase):
         self.alpha_device = SimulatedDevice(carrier_frequency=self.carrier_frequency)
         self.beta_device = SimulatedDevice(carrier_frequency=self.carrier_frequency)
 
-        self.channel = MultipathFadingCost259(Cost259Type.URBAN, self.alpha_device, self.beta_device)
+        self.channel = Cost259(Cost259Type.URBAN)
         self.channel.seed = 42
 
         self.link = SimplexLink(self.alpha_device, self.beta_device)
@@ -92,18 +93,16 @@ class _TestIdealChannelEstimation(TestCase):
     def test_properties(self) -> None:
         """Test ideal channel estimation properties"""
 
-        self.assertIs(self.estimation.transmitter, self.alpha_device)
-        self.assertIs(self.estimation.receiver, self.beta_device)
         self.assertIs(self.link.waveform, self.estimation.waveform)
 
     def test_estimate_channel(self) -> None:
         """Ideal channel estimation should correctly fetch the channel estimate"""
 
         transmission = self.alpha_device.transmit()
-        propagation = self.channel.propagate(transmission)
+        propagation = self.channel.propagate(transmission, self.alpha_device, self.beta_device)
         self.beta_device.receive(propagation)
 
-        symbols = self.link.waveform.demodulate(propagation.signal.samples[0, :])
+        symbols = self.link.waveform.demodulate(propagation[0, :].flatten())
         stated_symbols = self.estimation.estimate_channel(symbols)
         picked_symbols = self.waveform.pick(stated_symbols)
 
@@ -156,7 +155,7 @@ class TestOFDMIdealChannelEstimation(_TestIdealChannelEstimation):
         self.waveform.pilot_symbol_sequence = CustomPilotSymbolSequence(np.arange(1, 200))
         self.waveform.pilot_section = SchmidlCoxPilotSection()
 
-        self.estimation = OFDMIdealChannelEstimation(self.alpha_device, self.beta_device)
+        self.estimation = OFDMIdealChannelEstimation(self.channel, self.alpha_device, self.beta_device)
         self.waveform.channel_estimation = self.estimation
 
 
@@ -167,7 +166,7 @@ class TestSingleCarrierIdealChannelEstimation(_TestIdealChannelEstimation):
         super().setUp()
 
         self.waveform = MockSingleCarrierWaveform(symbol_rate=1e6, num_preamble_symbols=3, num_postamble_symbols=3, num_data_symbols=100, pilot_rate=10, modem=self.link)
-        self.estimation = SingleCarrierIdealChannelEstimation(self.alpha_device, self.beta_device)
+        self.estimation = SingleCarrierIdealChannelEstimation(self.channel, self.alpha_device, self.beta_device)
         self.waveform.channel_estimation = self.estimation
 
 

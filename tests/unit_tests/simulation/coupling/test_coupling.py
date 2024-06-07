@@ -9,10 +9,10 @@ from hermespy.core import FloatingError, Signal
 from hermespy.simulation import Coupling, SimulatedDevice
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -47,7 +47,7 @@ class TestCoupling(TestCase):
         """Transmit method should raise ValueError on invalid arguments"""
 
         with self.assertRaises(ValueError):
-            self.coupling.transmit(Signal(np.zeros((2, 1)), 1.0, 0.0))
+            self.coupling.transmit(Signal.Create(np.zeros((2, 1)), 1.0, 0.0))
 
         self.coupling.device = None
         with self.assertRaises(FloatingError):
@@ -57,7 +57,7 @@ class TestCoupling(TestCase):
         """Receive method should raise ValueError on invalid arguments"""
 
         with self.assertRaises(ValueError):
-            self.coupling.receive(Signal(np.zeros((2, 1)), 1.0, 0.0))
+            self.coupling.receive(Signal.Create(np.zeros((2, 1)), 1.0, 0.0))
 
         self.coupling.device = None
         with self.assertRaises(FloatingError):

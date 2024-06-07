@@ -13,10 +13,10 @@ from hermespy.hardware_loop.uhd import UsrpAntennas, UsrpDevice
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.1.0"
+__version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -73,6 +73,7 @@ class TestUsrpDevice(TestCase):
         self.client_mock.getSupportedSamplingRates.return_value = [1.0, 2.0, 3.0, 4.0]
         self.client_mock.ip = self.ip
         self.client_mock.port = self.port
+        self.client_mock.getNumAntennas.return_value = 4
 
         self.client_create_patch = patch("hermespy.hardware_loop.uhd.usrp.UsrpClient.create")
         self.client_create_mock: MagicMock = self.client_create_patch.start()
@@ -106,7 +107,7 @@ class TestUsrpDevice(TestCase):
         def raiseRemoteError(*args, **kwargs):
             raise RemoteError("a", "b", "c")
 
-        signal = Signal.empty(self.usrp.sampling_rate, self.usrp.antennas.num_transmit_antennas, carrier_frequency=self.usrp.carrier_frequency)
+        signal = Signal.Empty(self.usrp.sampling_rate, self.usrp.antennas.num_transmit_antennas, carrier_frequency=self.usrp.carrier_frequency)
 
         self.client_mock.configureTx.side_effect = raiseLostRemote
         with self.assertRaises(RuntimeError):
@@ -122,7 +123,7 @@ class TestUsrpDevice(TestCase):
         # Enable transmission scaling for increased coverage
         self.usrp.scale_transmission = True
 
-        transmitted_signal = Signal(self.rng.normal(size=(self.usrp.num_transmit_ports, 11)), sampling_rate=self.usrp.sampling_rate, carrier_frequency=self.usrp.carrier_frequency)
+        transmitted_signal = Signal.Create(self.rng.normal(size=(self.usrp.num_transmit_ports, 11)), sampling_rate=self.usrp.sampling_rate, carrier_frequency=self.usrp.carrier_frequency)
 
         self.usrp._upload(transmitted_signal)
 
@@ -132,7 +133,7 @@ class TestUsrpDevice(TestCase):
     def test_transmit(self) -> None:
         """Test transmitting operator behaviour"""
 
-        transmitted_signal = Signal(self.rng.normal(size=(self.usrp.num_transmit_ports, 11)), sampling_rate=self.usrp.sampling_rate, carrier_frequency=self.usrp.carrier_frequency)
+        transmitted_signal = Signal.Create(self.rng.normal(size=(self.usrp.num_transmit_ports, 11)), sampling_rate=self.usrp.sampling_rate, carrier_frequency=self.usrp.carrier_frequency)
         transmitter = SignalTransmitter(transmitted_signal)
         self.usrp.transmitters.add(transmitter)
 
@@ -143,7 +144,7 @@ class TestUsrpDevice(TestCase):
 
         self.client_mock.configureTx.assert_called_once()
         self.client_mock.configureRx.assert_called_once()
-        assert_array_equal(transmitted_signal.samples, transmission.mixed_signal.samples)
+        assert_array_equal(transmitted_signal[:, :], transmission.mixed_signal[:, :])
 
     def test_receive_no_collection(self) -> None:
         """Test reception without enabled collection"""
@@ -160,13 +161,13 @@ class TestUsrpDevice(TestCase):
     def test_download(self) -> None:
         """Test the device download subroutine"""
 
-        received_signal = Signal(self.rng.normal(size=(self.usrp.num_receive_ports, 11)), sampling_rate=self.usrp.sampling_rate, carrier_frequency=self.usrp.carrier_frequency)
+        received_signal = Signal.Create(self.rng.normal(size=(self.usrp.num_receive_ports, 11)), sampling_rate=self.usrp.sampling_rate, carrier_frequency=self.usrp.carrier_frequency)
 
         self.usrp._UsrpDevice__collection_enabled = True
-        self.client_mock.collect.return_value = [MimoSignal([s for s in received_signal.samples])]
+        self.client_mock.collect.return_value = [MimoSignal([s for s in received_signal[:, :]])]
         signal = self.usrp._download()
 
-        assert_array_equal(received_signal.samples, signal.samples)
+        assert_array_equal(received_signal[:, :], signal[:, :])
 
     def test_client(self) -> None:
         """Test access to the UHD client"""
