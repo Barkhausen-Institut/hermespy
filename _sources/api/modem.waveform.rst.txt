@@ -18,14 +18,14 @@ The following waveforms are currently supported:
 
 .. autoclass:: hermespy.modem.waveform.ConfigurablePilotWaveform
 
-.. autoclass:: hermespy.modem.waveform.WaveformType
+.. autoclass:: hermespy.modem.waveform.CWT
 
 .. toctree::
    :maxdepth: 1
    :hidden:
 
    modem.waveform.single_carrier
-   modem.waveform.ofdm
+   modem.waveforms.orthogonal
    modem.waveform.chirp_fsk
    modem.waveform.Synchronization
    modem.waveform.ChannelEstimation

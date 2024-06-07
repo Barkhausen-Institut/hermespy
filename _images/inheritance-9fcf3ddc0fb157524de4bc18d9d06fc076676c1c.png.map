@@ -1,0 +1,4 @@
+<map id="inheritance1caad235ee" name="inheritance1caad235ee">
+<area shape="rect" id="node1" href="../channel.ChannelSample.html#hermespy.channel.channel.ChannelSample" target="_top" title="Immutable sample of a wireless channel model in time and space." alt="" coords="31,5,155,31"/>
+<area shape="rect" id="node2" href="#hermespy.channel.fading.fading.MultipathFadingSample" target="_top" title="Immutable sample of a statistical multipath fading channel." alt="" coords="5,79,180,104"/>
+</map>

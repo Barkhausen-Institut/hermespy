@@ -2,17 +2,17 @@
 <html class="no-js" lang="en" data-content_root="../">
   <head><meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
-    <meta name="color-scheme" content="light dark"><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+    <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Correlation" href="modem.waveform.correlation_synchronization.html" /><link rel="prev" title="C-FSK" href="modem.waveform.chirp_fsk.html" />
 
-    <!-- Generated with Sphinx 7.2.6 and Furo 2023.09.10 -->
+    <!-- Generated with Sphinx 7.3.7 and Furo 2024.05.06 -->
         <title>Synchronization - HermesPy</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=135e06be" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=387cc868" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=eafc0fe6" />
-    <link rel="stylesheet" type="text/css" href="../_static/tweaks.css?v=72d4c74a" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+    <link rel="stylesheet" type="text/css" href="../_static/tweaks.css?v=c2f9d16b" />
     <link rel="stylesheet" type="text/css" href="../_static/tabs.css?v=a5c4661c" />
     <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
     
@@ -75,7 +75,7 @@
   <symbol id="svg-sun" viewBox="0 0 24 24">
     <title>Light mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather-sun">
       <circle cx="12" cy="12" r="5"></circle>
       <line x1="12" y1="1" x2="12" y2="3"></line>
       <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -90,7 +90,7 @@
   <symbol id="svg-moon" viewBox="0 0 24 24">
     <title>Dark mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-moon">
       <path stroke="none" d="M0 0h24v24H0z" fill="none" />
       <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
     </svg>
@@ -98,7 +98,7 @@
   <symbol id="svg-sun-half" viewBox="0 0 24 24">
     <title>Auto light/dark mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
       <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
       <circle cx="12" cy="12" r="9" />
       <path d="M13 12h5" />
@@ -106,6 +106,60 @@
       <path d="M13 18h1" />
       <path d="M13 9h4" />
       <path d="M13 6h1" />
+    </svg>
+  </symbol>
+  <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
+    <title>Auto light/dark, in light mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path style="opacity: 50%" d="M 5.411 14.504 C 5.471 14.504 5.532 14.504 5.591 14.504 C 3.639 16.319 4.383 19.569 6.931 20.352 C 7.693 20.586 8.512 20.551 9.25 20.252 C 8.023 23.207 4.056 23.725 2.11 21.184 C 0.166 18.642 1.702 14.949 4.874 14.536 C 5.051 14.512 5.231 14.5 5.411 14.5 L 5.411 14.504 Z"/>
+      <line x1="14.5" y1="3.25" x2="14.5" y2="1.25"/>
+      <line x1="14.5" y1="15.85" x2="14.5" y2="17.85"/>
+      <line x1="10.044" y1="5.094" x2="8.63" y2="3.68"/>
+      <line x1="19" y1="14.05" x2="20.414" y2="15.464"/>
+      <line x1="8.2" y1="9.55" x2="6.2" y2="9.55"/>
+      <line x1="20.8" y1="9.55" x2="22.8" y2="9.55"/>
+      <line x1="10.044" y1="14.006" x2="8.63" y2="15.42"/>
+      <line x1="19" y1="5.05" x2="20.414" y2="3.636"/>
+      <circle cx="14.5" cy="9.55" r="3.6"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-moon-with-sun" viewBox="0 0 24 24">
+    <title>Auto light/dark, in dark mode</title>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+      class="icon-custom-derived-from-feather-sun-and-tabler-moon">
+      <path d="M 8.282 7.007 C 8.385 7.007 8.494 7.007 8.595 7.007 C 5.18 10.184 6.481 15.869 10.942 17.24 C 12.275 17.648 13.706 17.589 15 17.066 C 12.851 22.236 5.91 23.143 2.505 18.696 C -0.897 14.249 1.791 7.786 7.342 7.063 C 7.652 7.021 7.965 7 8.282 7 L 8.282 7.007 Z"/>
+      <line style="opacity: 50%" x1="18" y1="3.705" x2="18" y2="2.5"/>
+      <line style="opacity: 50%" x1="18" y1="11.295" x2="18" y2="12.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="4.816" x2="14.464" y2="3.964"/>
+      <line style="opacity: 50%" x1="20.711" y1="10.212" x2="21.563" y2="11.063"/>
+      <line style="opacity: 50%" x1="14.205" y1="7.5" x2="13.001" y2="7.5"/>
+      <line style="opacity: 50%" x1="21.795" y1="7.5" x2="23" y2="7.5"/>
+      <line style="opacity: 50%" x1="15.316" y1="10.184" x2="14.464" y2="11.036"/>
+      <line style="opacity: 50%" x1="20.711" y1="4.789" x2="21.563" y2="3.937"/>
+      <circle style="opacity: 50%" cx="18" cy="7.5" r="2.169"/>
+    </svg>
+  </symbol>
+  <symbol id="svg-pencil" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-pencil-code">
+      <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
+      <path d="M13.5 6.5l4 4" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" /
+    </svg>
+  </symbol>
+  <symbol id="svg-eye" viewBox="0 0 24 24">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-eye-code">
+      <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+      <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+      <path
+        d="M11.11 17.958c-3.209 -.307 -5.91 -2.293 -8.11 -5.958c2.4 -4 5.4 -6 9 -6c3.6 0 6.6 2 9 6c-.21 .352 -.427 .688 -.647 1.008" />
+      <path d="M20 21l2 -2l-2 -2" />
+      <path d="M17 17l-2 2l2 2" />
     </svg>
   </symbol>
 </svg>
@@ -118,6 +172,8 @@
 <label class="overlay toc-overlay" for="__toc">
   <div class="visually-hidden">Hide table of contents sidebar</div>
 </label>
+
+<a class="skip-to-content muted-link" href="#furo-main-content">Skip to content</a>
 
 
 
@@ -136,7 +192,8 @@
       <div class="theme-toggle-container theme-toggle-header">
         <button class="theme-toggle">
           <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
-          <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+          <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+          <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
           <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
           <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
         </button>
@@ -191,44 +248,46 @@
 <li class="toctree-l5"><a class="reference internal" href="modem.waveform.single_carrier.RootRaisedCosine.html">Root Raised Cosine</a></li>
 </ul>
 </li>
-<li class="toctree-l4 has-children"><a class="reference internal" href="modem.waveform.ofdm.html">OFDM</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of OFDM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l5"><a class="reference internal" href="modem.waveform.ofdm.FrameElement.html">Frame Element</a></li>
-<li class="toctree-l5"><a class="reference internal" href="modem.waveform.ofdm.FrameGuardSection.html">Guard Section</a></li>
-<li class="toctree-l5"><a class="reference internal" href="modem.waveform.ofdm.FrameResource.html">Resource</a></li>
-<li class="toctree-l5"><a class="reference internal" href="modem.waveform.ofdm.FrameSection.html">Section</a></li>
-<li class="toctree-l5"><a class="reference internal" href="modem.waveform.ofdm.FrameSymbolSection.html">Symbol Section</a></li>
-<li class="toctree-l5"><a class="reference internal" href="modem.waveform.ofdm.OFDMChannelEqualization.html">Channel Equalization</a></li>
-<li class="toctree-l5"><a class="reference internal" href="modem.waveform.ofdm.OFDMCorrelationSynchronization.html">Correlation Synchronization</a></li>
-<li class="toctree-l5"><a class="reference internal" href="modem.waveform.ofdm.OFDMLeastSquaresChannelEstimation.html">Least Squares Channel Estimation</a></li>
-<li class="toctree-l5"><a class="reference internal" href="modem.waveform.ofdm.OFDMSynchronization.html">Synchronization</a></li>
-<li class="toctree-l5"><a class="reference internal" href="modem.waveform.ofdm.OFDMWaveform.html">OFDM Waveform</a></li>
-<li class="toctree-l5"><a class="reference internal" href="modem.waveform.ofdm.OFDMZeroForcingChannelEqualization.html">Zero Forcing Equalization</a></li>
-<li class="toctree-l5"><a class="reference internal" href="modem.waveform.ofdm.PilotSection.html">Pilot Section</a></li>
-<li class="toctree-l5"><a class="reference internal" href="modem.waveform.ofdm.SchmidlCoxPilotSection.html">Schmidl Cox Pilot</a></li>
-<li class="toctree-l5"><a class="reference internal" href="modem.waveform.ofdm.SchmidlCoxSynchronization.html">Schmidl Cox Synchronization</a></li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="modem.waveforms.orthogonal.html">Orthogonal</a><input class="toctree-checkbox" id="toctree-checkbox-6" name="toctree-checkbox-6" role="switch" type="checkbox"/><label for="toctree-checkbox-6"><div class="visually-hidden">Toggle navigation of Orthogonal</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5 has-children"><a class="reference internal" href="modem.waveforms.orthogonal.ofdm.html">OFDM</a><input class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of OFDM</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l6"><a class="reference internal" href="modem.waveforms.orthogonal.ofdm.OFDMWaveform.html">OFDM Waveform</a></li>
+<li class="toctree-l6"><a class="reference internal" href="modem.waveforms.orthogonal.ofdm.SchmidlCoxPilotSection.html">Schmidl Cox Pilot</a></li>
+<li class="toctree-l6"><a class="reference internal" href="modem.waveforms.orthogonal.ofdm.SchmidlCoxSynchronization.html">Schmidl Cox Synchronization</a></li>
+</ul>
+</li>
+<li class="toctree-l5"><a class="reference internal" href="modem.waveforms.orthogonal.ocdm.html">OCDM</a></li>
+<li class="toctree-l5"><a class="reference internal" href="modem.waveforms.orthogonal.otfs.html">OTFS</a></li>
+<li class="toctree-l5"><a class="reference internal" href="modem.waveforms.orthogonal.OrthogonalWaveform.html">Waveform</a></li>
+<li class="toctree-l5"><a class="reference internal" href="modem.waveforms.orthogonal.GridElement.html">Grid Element</a></li>
+<li class="toctree-l5"><a class="reference internal" href="modem.waveforms.orthogonal.GridResource.html">Resource</a></li>
+<li class="toctree-l5"><a class="reference internal" href="modem.waveforms.orthogonal.GridSection.html">Section</a></li>
+<li class="toctree-l5"><a class="reference internal" href="modem.waveforms.orthogonal.GuardSection.html">Guard Section</a></li>
+<li class="toctree-l5"><a class="reference internal" href="modem.waveforms.orthogonal.PilotSection.html">Pilot Section</a></li>
+<li class="toctree-l5"><a class="reference internal" href="modem.waveforms.orthogonal.SymbolSection.html">Symbol Section</a></li>
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="modem.waveform.chirp_fsk.html">C-FSK</a></li>
-<li class="toctree-l4 current has-children current-page"><a class="current reference internal" href="#">Synchronization</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-7" name="toctree-checkbox-7" role="switch" type="checkbox"/><label for="toctree-checkbox-7"><div class="visually-hidden">Toggle navigation of Synchronization</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4 current has-children current-page"><a class="current reference internal" href="#">Synchronization</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Synchronization</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="modem.waveform.correlation_synchronization.html">Correlation</a></li>
 </ul>
 </li>
 <li class="toctree-l4"><a class="reference internal" href="modem.waveform.ChannelEstimation.html">Channel Estimation</a></li>
-<li class="toctree-l4 has-children"><a class="reference internal" href="modem.waveform.ChannelEqualization.html">Channel Equalization</a><input class="toctree-checkbox" id="toctree-checkbox-8" name="toctree-checkbox-8" role="switch" type="checkbox"/><label for="toctree-checkbox-8"><div class="visually-hidden">Toggle navigation of Channel Equalization</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="modem.waveform.ChannelEqualization.html">Channel Equalization</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Channel Equalization</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l5"><a class="reference internal" href="modem.waveform.ZeroForcingChannelEqualization.html">Zero-Forcing</a></li>
 </ul>
 </li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="modem.evaluators.html">Evaluators</a><input class="toctree-checkbox" id="toctree-checkbox-9" name="toctree-checkbox-9" role="switch" type="checkbox"/><label for="toctree-checkbox-9"><div class="visually-hidden">Toggle navigation of Evaluators</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="modem.evaluators.html">Evaluators</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of Evaluators</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="modem.evaluators.ber.html">Bit Error Rate</a></li>
 <li class="toctree-l4"><a class="reference internal" href="modem.evaluators.bler.html">Block Error Rate</a></li>
 <li class="toctree-l4"><a class="reference internal" href="modem.evaluators.fer.html">Frame Error Rate</a></li>
 <li class="toctree-l4"><a class="reference internal" href="modem.evaluators.throughput.html">Throughput</a></li>
+<li class="toctree-l4"><a class="reference internal" href="modem.evaluators.evm.html">Error Vector Magnitude</a></li>
 <li class="toctree-l4"><a class="reference internal" href="modem.evaluators.CommunicationEvaluator.html">Communication Evaluator</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="modem.precoding.html">Communication Precoding</a><input class="toctree-checkbox" id="toctree-checkbox-10" name="toctree-checkbox-10" role="switch" type="checkbox"/><label for="toctree-checkbox-10"><div class="visually-hidden">Toggle navigation of Communication Precoding</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="modem.precoding.html">Communication Precoding</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Communication Precoding</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="modem.precoding.dft.html">Discrete Fourier Transform</a></li>
 <li class="toctree-l4"><a class="reference internal" href="modem.precoding.ratio_combining.html">Maximal Ratio Combining</a></li>
 <li class="toctree-l4"><a class="reference internal" href="modem.precoding.single_carrier.html">Single Carrier Decoding</a></li>
@@ -238,7 +297,7 @@
 <li class="toctree-l4"><a class="reference internal" href="modem.precoding.symbol_precoding.SymbolPrecoding.html">Symbol Precoding</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="modem.symbols.html">Communication Symbols</a></li>
+<li class="toctree-l3"><a class="reference internal" href="modem.symbols.html">Symbols</a></li>
 <li class="toctree-l3"><a class="reference internal" href="modem.bits_source.html">Bit Sources</a></li>
 <li class="toctree-l3"><a class="reference internal" href="modem.modem.TransmittingModem.html">Transmitting Modem</a></li>
 <li class="toctree-l3"><a class="reference internal" href="modem.modem.ReceivingModem.html">Receiving Modem</a></li>
@@ -251,23 +310,23 @@
 <li class="toctree-l3"><a class="reference internal" href="modem.modem.CommunicationReceptionFrame.html">Reception Frame</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="radar.html">Sensing</a><input class="toctree-checkbox" id="toctree-checkbox-11" name="toctree-checkbox-11" role="switch" type="checkbox"/><label for="toctree-checkbox-11"><div class="visually-hidden">Toggle navigation of Sensing</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="radar.html">Sensing</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of Sensing</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="radar.radar.Radar.html">Radar</a></li>
 <li class="toctree-l3"><a class="reference internal" href="radar.radar.RadarReception.html">Radar Reception</a></li>
 <li class="toctree-l3"><a class="reference internal" href="radar.radar.RadarTransmission.html">Radar Transmission</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="radar.radar.RadarWaveform.html">Radar Waveform</a><input class="toctree-checkbox" id="toctree-checkbox-12" name="toctree-checkbox-12" role="switch" type="checkbox"/><label for="toctree-checkbox-12"><div class="visually-hidden">Toggle navigation of Radar Waveform</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="radar.radar.RadarWaveform.html">Radar Waveform</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Radar Waveform</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="radar.fmcw.html">FMCW</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="radar.cube.RadarCube.html">Radar Cube</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="radar.detection.RadarDetector.html">Radar Detector</a><input class="toctree-checkbox" id="toctree-checkbox-13" name="toctree-checkbox-13" role="switch" type="checkbox"/><label for="toctree-checkbox-13"><div class="visually-hidden">Toggle navigation of Radar Detector</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="radar.detection.RadarDetector.html">Radar Detector</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Radar Detector</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="radar.detection.ThresholdDetector.html">Threshold</a></li>
 <li class="toctree-l4"><a class="reference internal" href="radar.detection.MaxDetector.html">Max</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="radar.detection.PointDetection.html">Point Detection</a></li>
 <li class="toctree-l3"><a class="reference internal" href="radar.detection.RadarPointCloud.html">Radar Point Cloud</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="radar.evaluators.RadarEvaluator.html">Radar Evaluator</a><input class="toctree-checkbox" id="toctree-checkbox-14" name="toctree-checkbox-14" role="switch" type="checkbox"/><label for="toctree-checkbox-14"><div class="visually-hidden">Toggle navigation of Radar Evaluator</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="radar.evaluators.RadarEvaluator.html">Radar Evaluator</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of Radar Evaluator</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="radar.evaluators.DetectionProbEvaluator.html">Detection Probability Evaluator</a></li>
 <li class="toctree-l4"><a class="reference internal" href="radar.evaluators.ReceiverOperatingCharacteristic.html">Reiver Operating Characteristic</a></li>
 <li class="toctree-l4"><a class="reference internal" href="radar.evaluators.RootMeanSquareError.html">Root Mean Square Error</a></li>
@@ -275,127 +334,130 @@
 </li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="channel.html">Channel Modeling</a><input class="toctree-checkbox" id="toctree-checkbox-15" name="toctree-checkbox-15" role="switch" type="checkbox"/><label for="toctree-checkbox-15"><div class="visually-hidden">Toggle navigation of Channel Modeling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="channel.channel.Channel.html">Channel Model</a></li>
-<li class="toctree-l3"><a class="reference internal" href="channel.channel.ChannelPropagation.html">Channel Propagation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="channel.channel.ChannelRealization.html">Channel Realization</a></li>
-<li class="toctree-l3"><a class="reference internal" href="channel.channel.DirectiveChannelRealization.html">Directive Channel Realization</a></li>
-<li class="toctree-l3"><a class="reference internal" href="channel.channel.InterpolationMode.html">Interpolation Mode</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="channel.ideal.html">Ideal Channel</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of Ideal Channel</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="channel.ideal.IdealChannel.html">Ideal Channel</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.ideal.IdealChannelRealization.html">Ideal Channel Realization</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="channel/channel.html">Channel Modeling</a><input class="toctree-checkbox" id="toctree-checkbox-16" name="toctree-checkbox-16" role="switch" type="checkbox"/><label for="toctree-checkbox-16"><div class="visually-hidden">Toggle navigation of Channel Modeling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="channel/channel.Channel.html">Channel</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel/channel.ChannelRealization.html">Channel Realization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel/channel.ChannelSample.html">Channel Sample</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel/ideal.html">Ideal Channel</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="channel/fading/fading.html">Multipath Fading</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of Multipath Fading</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="channel/fading/cost259.html">Cost 259</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel/fading/exponential.html">Exponential</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel/fading/tdl.html">5G TDL</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel/fading/fading.AntennaCorrelation.html">Antenna Correlation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel/fading/fading.MultipathFadingChannel.html">Multipath Fading Channel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel/fading/fading.MultipathFadingRealization.html">Multipath Fading Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel/fading/fading.MultipathFadingSample.html">Multipath Fading Sample</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="channel.multipath_fading_channel.html">Multipath Fading Channels</a><input class="toctree-checkbox" id="toctree-checkbox-17" name="toctree-checkbox-17" role="switch" type="checkbox"/><label for="toctree-checkbox-17"><div class="visually-hidden">Toggle navigation of Multipath Fading Channels</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="channel.multipath_fading_channel.MultipathFadingChannel.html">Multipath Fading Channel</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.multipath_fading_channel.MultipathFadingRealization.html">Multipath Fading Realization</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.multipath_fading_channel.PathRealization.html">Path Realization</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.multipath_fading_channel.AntennaCorrelation.html">Antenna Correlation</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.multipath_fading_channel.CustomAntennaCorrelation.html">Custom Antenna Correlation</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.multipath_fading_templates.MultipathFading5GTDL.html">5G TDL Channel Model</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.multipath_fading_templates.MultipathFadingCost259.html">Cost 259 Channel Model</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.multipath_fading_templates.MultipathFadingExponential.html">Exponential Channel Model</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="channel/cdl/cluster_delay_lines.html">3GPP Cluster Delay Line Models</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of 3GPP Cluster Delay Line Models</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="channel/cdl/cdl.html">Static CDL</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel/cdl/indoor_factory.html">Indoor Factory</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel/cdl/indoor_office.html">Indoor Office</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel/cdl/rural_macrocells.html">Rural Macrocells</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel/cdl/urban_macrocells.html">Urban Macrocells</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel/cdl/urban_microcells.html">Urban Microcells</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="channel.cluster_delay_lines.html">3GPP Cluster Delay Line Models</a><input class="toctree-checkbox" id="toctree-checkbox-18" name="toctree-checkbox-18" role="switch" type="checkbox"/><label for="toctree-checkbox-18"><div class="visually-hidden">Toggle navigation of 3GPP Cluster Delay Line Models</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.IndoorFactoryBase.html">Indoor Factory Base</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.IndoorFactoryLineOfSight.html">Indoor Factory LOS</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_line_indoor_factory.IndoorFactoryNoLineOfSight.html">Indoor Factory NLOS</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_line_indoor_office.IndoorOfficeLineOfSight.html">Indoor Office LOS</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_line_indoor_office.IndoorOfficeNoLineOfSight.html">Indoor Office NLOS</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.RuralMacrocellsLineOfSight.html">Rural Marocells LOS</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.RuralMacrocellsNoLineOfSight.html">Rural Marocells NLOS</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_line_rural_macrocells.RuralMacrocellsOutsideToInside.html">Rural Marocells O2I</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_line_street_canyon.StreetCanyonLineOfSight.html">Street Canyon LOS</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_line_street_canyon.StreetCanyonNoLineOfSight.html">Street Canyon NLOS</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_line_street_canyon.StreetCanyonOutsideToInside.html">Street Canyon O2I</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsLineOfSight.html">Urban Macrocells LOS</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsNoLineOfSight.html">Urban Macrocells NLOS</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_line_urban_macrocells.UrbanMacrocellsOutsideToInside.html">Urban Macrocells O2I</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_lines.ClusterDelayLineBase.html">Cluster Delay Line Base</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_lines.ClusterDelayLine.html">Custom Cluster Delay Line</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_lines.ClusterDelayLineRealization.html">Cluster Delay Line Realization</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.cluster_delay_lines.DelayNormalization.html">Delay Normalization</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="channel/delay/delay.html">Delay Channels</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of Delay Channels</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="channel/delay/spatial.html">Spatial Delay Channel</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel/delay/random.html">Random Delay Channel</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="channel.delay.html">Delay Channels</a><input class="toctree-checkbox" id="toctree-checkbox-19" name="toctree-checkbox-19" role="switch" type="checkbox"/><label for="toctree-checkbox-19"><div class="visually-hidden">Toggle navigation of Delay Channels</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="channel.delay.DelayChannelBase.html">Delay Channel Base</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.delay.DelayChannelRealization.html">Delay Channel Realization</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.delay.RandomDelayChannel.html">Random Delay Channel</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.delay.RandomDelayChannelRealization.html">Random Delay Channel Realization</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.delay.SpatialDelayChannel.html">Spatial Delay Channel</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.delay.SpatialDelayChannelRealization.html">Spatial Delay Channel Realization</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="channel/radar/radar.html">Radar Channels</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of Radar Channels</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="channel/radar/single.html">Single Target</a></li>
+<li class="toctree-l4"><a class="reference internal" href="channel/radar/multi.html">Multi Target</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="channel.radar.html">Radar Channels</a><input class="toctree-checkbox" id="toctree-checkbox-20" name="toctree-checkbox-20" role="switch" type="checkbox"/><label for="toctree-checkbox-20"><div class="visually-hidden">Toggle navigation of Radar Channels</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="channel.radar.FixedCrossSection.html">Fixed Cross Section</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.radar.MultiTargetRadarChannel.html">Multi Target Channel</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.radar.MultiTargetRadarChannelRealization.html">Multi Target Channel Realization</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.radar.PhysicalRadarTarget.html">Physical Target</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.radar.RadarChannelBase.html">Radar Channel Base</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.radar.RadarChannelRealization.html">Radar Channel Realization</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.radar.RadarCrossSectionModel.html">Radar Cross Section</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.radar.RadarInterferenceRealization.html">Radar Interference Realization</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.radar.RadarPathRealization.html">Radar Path Realization</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.radar.RadarTarget.html">Radar Target</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.radar.RadarTargetRealization.html">Radar Target Realization</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.radar.SingleTargetRadarChannel.html">Single Target Channel</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.radar.SingleTargetRadarChannelRealization.html">Single Target Channel Realization</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.radar.VirtualRadarTarget.html">Virtual Target</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel/quadriga.html">Quadriga</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel/consistent.html">Spatial Consistency</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="channel.quadriga.html">Quadriga</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of Quadriga</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="channel.quadriga.QuadrigaChannel.html">Quadriga Channel</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.quadriga.QuadrigaChannelRealization.html">Quadriga Channel Realization</a></li>
-<li class="toctree-l4"><a class="reference internal" href="channel.quadriga.QuadrigaInterface.html">Quadriga Interface</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="simulation.html">Simulation</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of Simulation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="simulation.html">Simulation</a><input class="toctree-checkbox" id="toctree-checkbox-21" name="toctree-checkbox-21" role="switch" type="checkbox"/><label for="toctree-checkbox-21"><div class="visually-hidden">Toggle navigation of Simulation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="simulation.simulation.Simulation.html">Simulation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.simulation.SimulationScenario.html">Simulation Scenario</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.simulation.SimulatedDrop.html">Simulated Drop</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.simulated_device.SimulatedDevice.html">Simulated Device</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.simulated_device.SimulatedDeviceReception.html">Device Reception</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.simulated_device.SimulatedDeviceTransmission.html">Device Transmission</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="simulation.antennas.html">Antenna Arrays Modeling</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Antenna Arrays Modeling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="simulation.antennas.SimulatedAntenna.html">Simulated Antenna</a></li>
-<li class="toctree-l4"><a class="reference internal" href="simulation.antennas.SimulatedAntennaPort.html">Simulated Antenna Port</a></li>
-<li class="toctree-l4"><a class="reference internal" href="simulation.antennas.SimulatedAntennas.html">Simulated Antennas</a></li>
-<li class="toctree-l4"><a class="reference internal" href="simulation.antennas.SimulatedCustomArray.html">Simulated Custom Array</a></li>
-<li class="toctree-l4"><a class="reference internal" href="simulation.antennas.SimulatedDipole.html">Simulated Dipole Antenna</a></li>
-<li class="toctree-l4"><a class="reference internal" href="simulation.antennas.SimulatedIdealAntenna.html">Simulated Ideal Antenna</a></li>
-<li class="toctree-l4"><a class="reference internal" href="simulation.antennas.SimulatedLinearAntenna.html">Simulated Linear Antenna</a></li>
-<li class="toctree-l4"><a class="reference internal" href="simulation.antennas.SimulatedPatchAntenna.html">Simulated Patch Antenna</a></li>
-<li class="toctree-l4"><a class="reference internal" href="simulation.antennas.SimulatedUniformArray.html">Simulated Uniform Array</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="simulation.simulated_device.html">Devices</a><input class="toctree-checkbox" id="toctree-checkbox-22" name="toctree-checkbox-22" role="switch" type="checkbox"/><label for="toctree-checkbox-22"><div class="visually-hidden">Toggle navigation of Devices</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="simulation.simulated_device.ProcessedSimulatedDeviceInput.html">Processed Input</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.simulated_device.SimulatedDeviceOutput.html">Device Output</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.simulated_device.SimulatedDeviceReceiveRealization.html">Receive Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.simulated_device.SimulatedDeviceReception.html">Device Reception</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.simulated_device.SimulatedDeviceTransmission.html">Device Transmission</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.html">Hardware Radio Frequency Chain Modeling</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.power_amplifier.html">Power Amplifier Modeling</a></li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.phase_noise.html">Phase Noise Modeling</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="simulation.rf_chain.adc.html">Analog-to-Digital Conversion</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of Analog-to-Digital Conversion</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="simulation.animation.html">Animation</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="simulation.antennas.html">Antennas</a><input class="toctree-checkbox" id="toctree-checkbox-23" name="toctree-checkbox-23" role="switch" type="checkbox"/><label for="toctree-checkbox-23"><div class="visually-hidden">Toggle navigation of Antennas</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4 has-children"><a class="reference internal" href="simulation.antennas.SimulatedAntennaArray.html">Antenna Arrays</a><input class="toctree-checkbox" id="toctree-checkbox-24" name="toctree-checkbox-24" role="switch" type="checkbox"/><label for="toctree-checkbox-24"><div class="visually-hidden">Toggle navigation of Antenna Arrays</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="simulation.antennas.SimulatedCustomArray.html">Custom Array</a></li>
+<li class="toctree-l5"><a class="reference internal" href="simulation.antennas.SimulatedUniformArray.html">Uniform Array</a></li>
+</ul>
+</li>
+<li class="toctree-l4 has-children"><a class="reference internal" href="simulation.antennas.SimulatedAntenna.html">Antenna</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Antenna</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l5"><a class="reference internal" href="simulation.antennas.SimulatedDipole.html">Dipole</a></li>
+<li class="toctree-l5"><a class="reference internal" href="simulation.antennas.SimulatedIdealAntenna.html">Ideal Isotropic</a></li>
+<li class="toctree-l5"><a class="reference internal" href="simulation.antennas.SimulatedLinearAntenna.html">Linear</a></li>
+<li class="toctree-l5"><a class="reference internal" href="simulation.antennas.SimulatedPatchAntenna.html">Patch</a></li>
+</ul>
+</li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.antennas.SimulatedAntennaPort.html">Antenna Port</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="simulation.noise.html">Noise</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Noise</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="simulation.noise.model.AWGN.html">AWGN Model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.noise.model.AWGNRealization.html">AWGN Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.noise.level.N0.html">N0</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.noise.level.SNR.html">SNR</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.modem.noise.EBN0.html">EBN0</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.modem.noise.ESN0.html">ESN0</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="simulation.synchronization.html">Synchronization</a><input class="toctree-checkbox" id="toctree-checkbox-27" name="toctree-checkbox-27" role="switch" type="checkbox"/><label for="toctree-checkbox-27"><div class="visually-hidden">Toggle navigation of Synchronization</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="simulation.synchronization.TriggerModel.html">Trigger Model</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.synchronization.TriggerRealization.html">Trigger Realization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.synchronization.StaticTrigger.html">Static Trigger</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.synchronization.RandomTrigger.html">Random Trigger</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.synchronization.SampleOffsetTrigger.html">Sample Offset Trigger</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.synchronization.TimeOffsetTrigger.html">Time Offset Trigger</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="simulation.rf_chain.adc.html">A/D Conversion</a><input class="toctree-checkbox" id="toctree-checkbox-28" name="toctree-checkbox-28" role="switch" type="checkbox"/><label for="toctree-checkbox-28"><div class="visually-hidden">Toggle navigation of A/D Conversion</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="simulation.rf_chain.adc.AnalogDigitalConverter.html">Analog Digital Converter</a></li>
 <li class="toctree-l4"><a class="reference internal" href="simulation.rf_chain.adc.AutomaticGainControl.html">Automatic Gain Control</a></li>
 <li class="toctree-l4"><a class="reference internal" href="simulation.rf_chain.adc.Gain.html">Constant Gain</a></li>
 <li class="toctree-l4"><a class="reference internal" href="simulation.rf_chain.adc.GainControlBase.html">Gain Control Base</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.rf_chain.adc.GainControlType.html">Gain Control Type</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.rf_chain.adc.QuantizerType.html">Quantizer Type</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="simulation.noise.html">Noise Modeling</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="simulation.coupling.html">Mutual Coupling</a><input class="toctree-checkbox" id="toctree-checkbox-25" name="toctree-checkbox-25" role="switch" type="checkbox"/><label for="toctree-checkbox-25"><div class="visually-hidden">Toggle navigation of Mutual Coupling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="simulation.rf_chain.html">Radio-Frequency Chain</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="simulation.rf_chain.phase_noise.html">Phase Noise</a><input class="toctree-checkbox" id="toctree-checkbox-29" name="toctree-checkbox-29" role="switch" type="checkbox"/><label for="toctree-checkbox-29"><div class="visually-hidden">Toggle navigation of Phase Noise</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="simulation.rf_chain.phase_noise.NoPhaseNoise.html">No Phase Noise</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.rf_chain.phase_noise.OscillatorPhaseNoise.html">Oscillator Phase Noise</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="simulation.rf_chain.amplifier.html">Amplification</a><input class="toctree-checkbox" id="toctree-checkbox-30" name="toctree-checkbox-30" role="switch" type="checkbox"/><label for="toctree-checkbox-30"><div class="visually-hidden">Toggle navigation of Amplification</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="simulation.rf_chain.amplifier.ClippingPowerAmplifier.html">Clipping Power Amplifier</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.rf_chain.amplifier.CustomPowerAmplifier.html">Custom Power Amplifier</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.rf_chain.amplifier.PowerAmplifier.html">Power Amplifier</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.rf_chain.amplifier.RappPowerAmplifier.html">Rapp Power Amplifier</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.rf_chain.amplifier.SalehPowerAmplifier.html">Saleh Power Amplifier</a></li>
+</ul>
+</li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="simulation.coupling.html">Mutual Coupling</a><input class="toctree-checkbox" id="toctree-checkbox-31" name="toctree-checkbox-31" role="switch" type="checkbox"/><label for="toctree-checkbox-31"><div class="visually-hidden">Toggle navigation of Mutual Coupling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l4"><a class="reference internal" href="simulation.coupling.perfect.html">Perfect Coupling</a></li>
 <li class="toctree-l4"><a class="reference internal" href="simulation.coupling.impedance.html">Impedance Coupling</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.coupling.coupling.html">Coupling</a></li>
 </ul>
 </li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="simulation.isolation.html">Antenna Isolation Modeling</a><input class="toctree-checkbox" id="toctree-checkbox-26" name="toctree-checkbox-26" role="switch" type="checkbox"/><label for="toctree-checkbox-26"><div class="visually-hidden">Toggle navigation of Antenna Isolation Modeling</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="simulation.isolation.html">Isolation</a><input class="toctree-checkbox" id="toctree-checkbox-32" name="toctree-checkbox-32" role="switch" type="checkbox"/><label for="toctree-checkbox-32"><div class="visually-hidden">Toggle navigation of Isolation</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="simulation.isolation.isolation.html">Isolation</a></li>
 <li class="toctree-l4"><a class="reference internal" href="simulation.isolation.perfect.html">Perfect Isolation</a></li>
-<li class="toctree-l4"><a class="reference internal" href="simulation.isolation.impedance.html">Impedance Isolation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="simulation.isolation.selective.html">Selective Leakage</a></li>
 <li class="toctree-l4"><a class="reference internal" href="simulation.isolation.specific.html">Specific Isolation</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.simulation.SimulationScenario.html">Simulation Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="simulation.simulation.SimulatedDrop.html">Simulated Drop</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a><input class="toctree-checkbox" id="toctree-checkbox-27" name="toctree-checkbox-27" role="switch" type="checkbox"/><label for="toctree-checkbox-27"><div class="visually-hidden">Toggle navigation of Hardware Loop</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="hardware_loop.html">Hardware Loop</a><input class="toctree-checkbox" id="toctree-checkbox-33" name="toctree-checkbox-33" role="switch" type="checkbox"/><label for="toctree-checkbox-33"><div class="visually-hidden">Toggle navigation of Hardware Loop</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="hardware_loop.hardware_loop.HardwareLoop.html">Hardaware Loop</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hardware_loop.scenario.PhysicalScenario.html">Physical Scenario</a></li>
 <li class="toctree-l3"><a class="reference internal" href="hardware_loop.physical_device.PhysicalDevice.html">Physical Device</a></li>
@@ -411,20 +473,25 @@
 <li class="toctree-l3"><a class="reference internal" href="hardware_loop.calibration.leakage.html">Leakage Calibration</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="core.html">Core</a><input class="toctree-checkbox" id="toctree-checkbox-28" name="toctree-checkbox-28" role="switch" type="checkbox"/><label for="toctree-checkbox-28"><div class="visually-hidden">Toggle navigation of Core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="core.html">Core</a><input class="toctree-checkbox" id="toctree-checkbox-34" name="toctree-checkbox-34" role="switch" type="checkbox"/><label for="toctree-checkbox-34"><div class="visually-hidden">Toggle navigation of Core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html">PyMonte</a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.executable.html">Executable</a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.factory.html">Serialization Factory</a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.definitions.html">General Definitions</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.Device.html">Device</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.DeviceOutput.html">Device Output</a></li>
+<li class="toctree-l3 has-children"><a class="reference internal" href="core.device.Device.html">Device</a><input class="toctree-checkbox" id="toctree-checkbox-35" name="toctree-checkbox-35" role="switch" type="checkbox"/><label for="toctree-checkbox-35"><div class="visually-hidden">Toggle navigation of Device</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="core.device.DeviceInput.html">Device Input</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core.device.DeviceOutput.html">Device Output</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core.device.DeviceReception.html">Device Reception</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core.device.DeviceTransmission.html">Device Transmission</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core.device.ProcessedDeviceInput.html">Processed Device Input</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="core.device.Transmitter.html">Transmitter</a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.device.Receiver.html">Receiver</a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.device.Transmission.html">Transmission</a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.device.Reception.html">Reception</a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.device.OperationResult.html">Operation Result</a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.drop.Drop.html">Drop</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.Evaluator.html">Evaluator</a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.operators.html">Extra Operators</a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.duplex.html">Duplex Operation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.logarithmic.html">Logarithmics</a></li>
@@ -435,38 +502,45 @@
 <li class="toctree-l3"><a class="reference internal" href="core.channel_state_information.html">Channel State Information</a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.antennas.html">Antenna Descriptions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.transformation.html">Coordinate System Transformations</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.animation.html">Animation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="core.visualize.html">Visualization</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="fec.html">Error Correction</a><input class="toctree-checkbox" id="toctree-checkbox-29" name="toctree-checkbox-29" role="switch" type="checkbox"/><label for="toctree-checkbox-29"><div class="visually-hidden">Toggle navigation of Error Correction</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="fec.html">Error Correction</a><input class="toctree-checkbox" id="toctree-checkbox-36" name="toctree-checkbox-36" role="switch" type="checkbox"/><label for="toctree-checkbox-36"><div class="visually-hidden">Toggle navigation of Error Correction</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="fec.coding.html">Coding Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fec.bch.html">BCH Coding</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fec.block_interleaver.html">Interleaving</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fec.crc.html">Cyclic Redundancy Checks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fec.ldpc.html">Low Differential Parity Checks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fec.polar.html">Polar Coding</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fec.repetition.html">Repetition Coding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fec.rs.html">Reed-Solomon Coding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fec.rsc.html">RSC Coding</a></li>
 <li class="toctree-l3"><a class="reference internal" href="fec.scrambler.html">Scrambling</a></li>
+<li class="toctree-l3"><a class="reference internal" href="fec.turbo.html">Turbo Coding</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="jcas.html">JCAS</a><input class="toctree-checkbox" id="toctree-checkbox-30" name="toctree-checkbox-30" role="switch" type="checkbox"/><label for="toctree-checkbox-30"><div class="visually-hidden">Toggle navigation of JCAS</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="jcas.matched_filtering.html">Matched Filter JCAS</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="jcas.html">JCAS</a><input class="toctree-checkbox" id="toctree-checkbox-37" name="toctree-checkbox-37" role="switch" type="checkbox"/><label for="toctree-checkbox-37"><div class="visually-hidden">Toggle navigation of JCAS</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3"><a class="reference internal" href="jcas.matched_filtering.html">Matched Filtering</a></li>
+<li class="toctree-l3"><a class="reference internal" href="jcas.ofdm_radar.html">OFDM Radar</a></li>
+<li class="toctree-l3"><a class="reference internal" href="jcas.jcas.html">Duplex JCAS Operator</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="precoding.html">Precoding</a><input class="toctree-checkbox" id="toctree-checkbox-31" name="toctree-checkbox-31" role="switch" type="checkbox"/><label for="toctree-checkbox-31"><div class="visually-hidden">Toggle navigation of Precoding</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="precoding.html">Precoding</a><input class="toctree-checkbox" id="toctree-checkbox-38" name="toctree-checkbox-38" role="switch" type="checkbox"/><label for="toctree-checkbox-38"><div class="visually-hidden">Toggle navigation of Precoding</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="precoding.precoding.html">Precoding Configuration</a></li>
 <li class="toctree-l3"><a class="reference internal" href="precoding.stream_precoding.html">Stream Precoding</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="beamforming.html">Beamforming</a><input class="toctree-checkbox" id="toctree-checkbox-32" name="toctree-checkbox-32" role="switch" type="checkbox"/><label for="toctree-checkbox-32"><div class="visually-hidden">Toggle navigation of Beamforming</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="beamforming.html">Beamforming</a><input class="toctree-checkbox" id="toctree-checkbox-39" name="toctree-checkbox-39" role="switch" type="checkbox"/><label for="toctree-checkbox-39"><div class="visually-hidden">Toggle navigation of Beamforming</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="beamforming.beamformer.html">Beamformer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="beamforming.conventional.html">Conventional Beamformer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="beamforming.capon.html">Capon Beamformer</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="bin.html">Entry Points</a><input class="toctree-checkbox" id="toctree-checkbox-33" name="toctree-checkbox-33" role="switch" type="checkbox"/><label for="toctree-checkbox-33"><div class="visually-hidden">Toggle navigation of Entry Points</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="bin.html">Entry Points</a><input class="toctree-checkbox" id="toctree-checkbox-40" name="toctree-checkbox-40" role="switch" type="checkbox"/><label for="toctree-checkbox-40"><div class="visually-hidden">Toggle navigation of Entry Points</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="bin.hermes.html">Hermes Command Line Interface</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="tools.html">Tools</a><input class="toctree-checkbox" id="toctree-checkbox-34" name="toctree-checkbox-34" role="switch" type="checkbox"/><label for="toctree-checkbox-34"><div class="visually-hidden">Toggle navigation of Tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tools.html">Tools</a><input class="toctree-checkbox" id="toctree-checkbox-41" name="toctree-checkbox-41" role="switch" type="checkbox"/><label for="toctree-checkbox-41"><div class="visually-hidden">Toggle navigation of Tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="tools.math.html">Math Tools</a></li>
 <li class="toctree-l3"><a class="reference internal" href="tools.resampling.html">Resampling Routines</a></li>
 <li class="toctree-l3"><a class="reference internal" href="tools.tile.html">Tile Figures</a></li>
@@ -476,7 +550,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../examples/examples.html">YAML Examples</a><input class="toctree-checkbox" id="toctree-checkbox-35" name="toctree-checkbox-35" role="switch" type="checkbox"/><label for="toctree-checkbox-35"><div class="visually-hidden">Toggle navigation of YAML Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a><input class="toctree-checkbox" id="toctree-checkbox-42" name="toctree-checkbox-42" role="switch" type="checkbox"/><label for="toctree-checkbox-42"><div class="visually-hidden">Toggle navigation of Configuration Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../examples/chirp_fsk_lora.html">Chirp FSK LORA</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../examples/chirp_qam.html">Chirp QAM</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../examples/hardware_model.html">Hardware Modeling</a></li>
@@ -510,11 +584,17 @@
           <span>Back to top</span>
         </a>
         <div class="content-icon-container">
-          
+          <div class="view-this-page">
+  <a class="muted-link" href="../_sources/api/modem.waveform.Synchronization.rst.txt" title="View this page">
+    <svg><use href="#svg-eye"></use></svg>
+    <span class="visually-hidden">View this page</span>
+  </a>
+</div>
 <div class="theme-toggle-container theme-toggle-content">
             <button class="theme-toggle">
               <div class="visually-hidden">Toggle Light / Dark / Auto color theme</div>
-              <svg class="theme-icon-when-auto"><use href="#svg-sun-half"></use></svg>
+              <svg class="theme-icon-when-auto-light"><use href="#svg-sun-with-moon"></use></svg>
+              <svg class="theme-icon-when-auto-dark"><use href="#svg-moon-with-sun"></use></svg>
               <svg class="theme-icon-when-dark"><use href="#svg-moon"></use></svg>
               <svg class="theme-icon-when-light"><use href="#svg-sun"></use></svg>
             </button>
@@ -524,12 +604,16 @@
             <i class="icon"><svg><use href="#svg-toc"></use></svg></i>
           </label>
         </div>
-        <article role="main">
+        <article role="main" id="furo-main-content">
           <section id="synchronization">
-<h1>Synchronization<a class="headerlink" href="#synchronization" title="Link to this heading">#</a></h1>
-<div class="graphviz"><object data="../_images/inheritance-3b6f9351a238418611403585788c76eb32d97db2.svg" type="image/svg+xml" class="inheritance graphviz">
-<p class="warning">Inheritance diagram of hermespy.modem.waveform.Synchronization</p></object></div>
-<p>Synchronization in Hermes refers to the process of partitioning streams of received base-band samples
+<h1>Synchronization<a class="headerlink" href="#synchronization" title="Link to this heading">¶</a></h1>
+<div class="graphviz"><img src="../_images/inheritance-904c8166cd2eb673f6aa84cdbeb5fa6fa4351a99.png" alt="Inheritance diagram of hermespy.modem.waveform.Synchronization" usemap="#inheritance1be115ab94" class="inheritance graphviz" /></div>
+<map id="inheritance1be115ab94" name="inheritance1be115ab94">
+<area shape="rect" id="node1" href="https://docs.python.org/3/library/abc.html#abc.ABC" target="_top" title="Helper class that provides a standard way to create an ABC using" alt="" coords="5,5,77,31"/>
+<area shape="rect" id="node4" href="#hermespy.modem.waveform.Synchronization" target="_top" title="Abstract base class for synchronization routines of waveform generators." alt="" coords="74,79,201,104"/>
+<area shape="rect" id="node2" href="https://docs.python.org/3/library/typing.html#typing.Generic" target="_top" title="Abstract base class for generic types." alt="" coords="101,5,173,31"/>
+<area shape="rect" id="node3" href="core.factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="197,5,296,31"/>
+</map><p>Synchronization in Hermes refers to the process of partitioning streams of received base-band samples
 into communication frames.
 Synchronization can be interpreted as an optimization problem</p>
 <div class="math-wrapper docutils container">
@@ -544,8 +628,8 @@ Therefore, link-level simulations tend to ignore synchronization and only focus 
 When considering spatial channel models with realistic propagation delays or, more importantly, transmitting waveforms over real hardware, estimating the introduced propagation delays becomes vital for error-free information transmission.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.modem.waveform.Synchronization">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Synchronization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waveform</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/modem/waveform.html#Synchronization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.modem.waveform.Synchronization" title="Link to this definition">#</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generic" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code></a>[<a class="reference internal" href="modem.waveform.html#hermespy.modem.waveform.WaveformType" title="hermespy.modem.waveform.WaveformType"><code class="xref py py-obj docutils literal notranslate"><span class="pre">WaveformType</span></code></a>], <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Synchronization</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">waveform</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/modem/waveform.html#Synchronization"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.modem.waveform.Synchronization" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generic" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code></a>[<a class="reference internal" href="modem.waveform.html#hermespy.modem.waveform.CWT" title="hermespy.modem.waveform.CWT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CWT</span></code></a>], <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
 <p>Abstract base class for synchronization routines of waveform generators.</p>
 <p>Refer to Nasir <em>et al.</em><a class="footnote-reference brackets" href="#footcite-2016-nasir" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a> for an overview of the current state of the art.</p>
 <dl class="field-list simple">
@@ -555,7 +639,7 @@ When considering spatial channel models with realistic propagation delays or, mo
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.modem.waveform.Synchronization.synchronize">
-<span class="sig-name descname"><span class="pre">synchronize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/modem/waveform.html#Synchronization.synchronize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.modem.waveform.Synchronization.synchronize" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">synchronize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/modem/waveform.html#Synchronization.synchronize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.modem.waveform.Synchronization.synchronize" title="Link to this definition">¶</a></dt>
 <dd><p>Simulates time-synchronization at the receiver-side.</p>
 <p>Sorts base-band signal-sections into frames in time-domain.</p>
 <dl class="field-list simple">
@@ -576,14 +660,14 @@ When considering spatial channel models with realistic propagation delays or, mo
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.modem.waveform.Synchronization.waveform">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">waveform</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="modem.waveform.html#hermespy.modem.waveform.WaveformType" title="hermespy.modem.waveform.WaveformType"><span class="pre">WaveformType</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></em><a class="headerlink" href="#hermespy.modem.waveform.Synchronization.waveform" title="Link to this definition">#</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">waveform</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="modem.waveform.html#hermespy.modem.waveform.CWT" title="hermespy.modem.waveform.CWT"><span class="pre">CWT</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></em><a class="headerlink" href="#hermespy.modem.waveform.Synchronization.waveform" title="Link to this definition">¶</a></dt>
 <dd><p>Waveform generator this synchronization routine is attached to.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Handle to tghe waveform generator. None if the synchronization routine is floating.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>Optional[<a class="reference internal" href="modem.waveform.html#hermespy.modem.waveform.WaveformType" title="hermespy.modem.waveform.WaveformType">WaveformType</a>]</p>
+<dd class="field-even"><p>Optional[WaveformType]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -593,7 +677,8 @@ When considering spatial channel models with realistic propagation delays or, mo
 <div class="toctree-wrapper compound">
 </div>
 <div class="docutils container" id="id2">
-<aside class="footnote brackets" id="footcite-2016-nasir" role="note">
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="footcite-2016-nasir" role="doc-footnote">
 <span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
 <p>Ali A. Nasir, Salman Durrani, Hani Mehrpouyan, Steven D. Blostein, and Rodney A. Kennedy. Timing and carrier synchronization in wireless communication systems: a survey and classification of research in the last 5 years. <em>EURASIP Journal on Wireless Communications and Networking</em>, 2016(1):180, 2016. <a class="reference external" href="https://doi.org/10.1186/s13638-016-0670-9">doi:10.1186/s13638-016-0670-9</a>.</p>
 </aside>
@@ -630,7 +715,7 @@ When considering spatial channel models with realistic propagation delays or, mo
         <div class="bottom-of-page">
           <div class="left-details">
             <div class="copyright">
-                Copyright &#169; 2023, Barkhausen Institut gGmbH
+                Copyright &#169; 2024, Barkhausen Institut gGmbH
             </div>
             Made with <a href="https://www.sphinx-doc.org/">Sphinx</a> and <a class="muted-link" href="https://pradyunsg.me">@pradyunsg</a>'s
             
@@ -651,9 +736,9 @@ When considering spatial channel models with realistic propagation delays or, mo
     </aside>
   </div>
 </div><script src="../_static/documentation_options.js?v=5929fcd5"></script>
-    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/scripts/furo.js?v=32e29ea5"></script>
+    <script src="../_static/scripts/furo.js?v=4e2eecee"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>

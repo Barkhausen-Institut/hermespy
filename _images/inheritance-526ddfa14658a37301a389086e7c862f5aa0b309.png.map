@@ -1,0 +1,5 @@
+<map id="inheritancef4051ed258" name="inheritancef4051ed258">
+<area shape="rect" id="node1" href="core.drop.Drop.html#hermespy.core.drop.Drop" target="_top" title="Drop containing the information transmitted and received by all devices" alt="" coords="32,79,104,104"/>
+<area shape="rect" id="node3" href="#hermespy.simulation.drop.SimulatedDrop" target="_top" title="Drop containing all information generated during a simulated wireless scenario transmission," alt="" coords="9,152,127,177"/>
+<area shape="rect" id="node2" href="core.factory.html#hermespy.core.factory.HDFSerializable" target="_top" title="Base class for object serializable to the HDF5 format." alt="" coords="5,5,131,31"/>
+</map>

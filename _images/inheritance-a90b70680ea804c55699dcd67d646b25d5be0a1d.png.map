@@ -1,0 +1,6 @@
+<map id="inheritance0a9e294bac" name="inheritance0a9e294bac">
+<area shape="rect" id="node1" href="#hermespy.modem.precoding.space_time_block_coding.Alamouti" target="_top" title="Alamouti precoder distributing symbols in space and time." alt="" coords="37,79,118,104"/>
+<area shape="rect" id="node2" href="modem.precoding.symbol_precoding.SymbolPrecoder.html#hermespy.modem.precoding.symbol_precoding.SymbolPrecoder" target="_top" title="Abstract base class for signal processing algorithms operating on complex data symbols streams." alt="" coords="5,5,133,31"/>
+<area shape="rect" id="node4" href="#hermespy.modem.precoding.space_time_block_coding.Ganesan" target="_top" title="Girish Ganesan and Petre Stoica general precoder distributing symbols in space and time." alt="" coords="158,79,237,104"/>
+<area shape="rect" id="node3" href="core.factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="157,5,256,31"/>
+</map>

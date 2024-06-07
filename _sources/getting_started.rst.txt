@@ -84,7 +84,7 @@ submitting it to its assigned :doc:`Device<api/core.device.Device>`,
 followed by the :doc:`Device<api/core.device.Device>` emitting the submitted transmission in RF-band, while simultaneously recording impinging broadcasts.
 The recorded broadcasts are submitted to the assigend :doc:`Receivers<api/core.device.Receiver>` to be processed.
 
-There are two types of devices, namely :doc:`Simulated<api/simulation.simulated_device.SimulatedDevice>` and :doc:`Physical<api/hardware_loop.physical_device.PhysicalDevice>`,
+There are two types of devices, namely :doc:`Simulated<api/simulation.simulated_device>` and :doc:`Physical<api/hardware_loop.physical_device.PhysicalDevice>`,
 which both inherit from the abstract :doc:`Device<api/core.device.Device>` base:
 
 .. mermaid::
@@ -126,7 +126,7 @@ which both inherit from the abstract :doc:`Device<api/core.device.Device>` base:
 
    link Device "api/core.device.Device.html" "Device"
    link PhysicalDevice "api/hardware_loop.physical_device.PhysicalDevice.html" "Physical Device"
-   link SimulatedDevice "api/simulation.simulated_device.SimulatedDevice.html" "Simulated Device"
+   link SimulatedDevice "api/simulation.simulated_device.html" "Simulated Device"
    link Transmitter "api/core.device.Transmitter.html"
    link Receiver "api/core.device.Receiver.html"
 
@@ -148,45 +148,12 @@ The following subsections will introduce how to set up simulations and run hardw
 Simulations
 ============
 
-:doc:`Simulation<api/simulation>` campaigns are defined by a set of :doc:`SimulatedDevices<api/simulation.simulated_device.SimulatedDevice>` interconnected by :doc:`Channel Models<api/channel.channel.Channel>`,
+:doc:`Simulation<api/simulation>` campaigns are defined by a set of :doc:`SimulatedDevices<api/simulation.simulated_device>` interconnected by :doc:`Channel Models<api/channel/channel.Channel>`,
 with the combination of both forming a :doc:`SimulationScenario<api/simulation.simulation.SimulationScenario>`.
-Therefore, considering channel reciprocity, a :doc:`SimulationScenario<api/simulation.simulation.SimulationScenario>` featuring :math:`D` devices requires the specification of :math:`\tfrac{D(D+1)}{2}` :doc:`Channel Models<api/channel.channel.Channel>`.
+Therefore, considering channel reciprocity, a :doc:`SimulationScenario<api/simulation.simulation.SimulationScenario>` featuring :math:`D` devices requires the specification of :math:`\tfrac{D(D+1)}{2}` :doc:`Channel Models<api/channel/channel.Channel>`.
 Considering a model featuring :math:`D=2` dedicated devices, the following simulated physical layer model is formed:
 
-.. mermaid::
-   :align: center
-
-   %%{init: {"flowchart":{"useMaxWidth": false, "curve": "linear"}}}%%
-   graph LR
-
-   subgraph phys [Simulated Physical Layer]
-      direction LR
-
-      dai[SimulatedDevice A]
-      dbi[SimulatedDevice B]
-
-      caa{{Channel A,A}}
-      cab{{Channel A,B}}
-      cba{{Channel B,A}}
-      cbb{{Channel B,B}}
-
-      dao[SimulatedDevice A]
-      dbo[SimulatedDevice B]
-   end
-
-   dai -.-> caa -.-> dao
-   dai -.-> cab -.-> dbo
-   dbi -.-> cbb -.-> dbo
-   dbi -.-> cba -.-> dao
-
-   click dai "api/simulation.simulated_device.SimulatedDevice.html" "Simulated Device"
-   click dbi "api/simulation.simulated_device.SimulatedDevice.html" "Simulated Device"
-   click dao "api/simulation.simulated_device.SimulatedDevice.html" "Simulated Device"
-   click dbo "api/simulation.simulated_device.SimulatedDevice.html" "Simulated Device"
-   click caa "api/channel.channel.Channel.html" "Channel Model"
-   click cab "api/channel.channel.Channel.html" "Channel Model"
-   click cba "api/channel.channel.Channel.html" "Channel Model"
-   click cbb "api/channel.channel.Channel.html" "Channel Model"
+.. include:: flowcharts/simulated_physical_layer.rst
 
 Each device is linked to two channel instances.
 Note that, even though four channels are depicted, channel `B, A` links to the same channel instance as `A, B` due to the reciprocity assumption,
@@ -200,16 +167,16 @@ devices:
    :lines: 08-13
 
 When adding new devices to a simulation, the simulation will automatically intialize the required channel instances
-as :doc:`IdealChannels<api/channel.ideal.IdealChannel>`.
-However, the user may freely select from a multitude of different channel models, which are provided by the :doc:`Channel<api/channel>` package.
-For example, the following snippet configures the depicted scenario with a :doc:`5G Multipath Fading Channel<api/channel.multipath_fading_templates.MultipathFading5GTDL>`:
+as :doc:`IdealChannels<api/channel/ideal>`.
+However, the user may freely select from a multitude of different channel models, which are provided by the :doc:`Channel<api/channel/channel>` package.
+For example, the following snippet configures the depicted scenario with a :doc:`5G Tapped Delay Line Channel<api/channel/fading/tdl>`:
 
 .. literalinclude:: ../_examples/library/getting_started_simulation.py
    :language: python
    :linenos:
-   :lines: 15-16
+   :lines: 19-20
 
-While :doc:`SimulatedDevices<api/simulation.simulated_device.SimulatedDevice>` and :doc:`Channel Models<api/channel.channel.Channel>` form the physical layer description
+While :doc:`SimulatedDevices<api/simulation.simulated_device>` and :doc:`Channel Models<api/channel/channel.Channel>` form the physical layer description
 of a simulation, the signal processing, i.e. the transmit and receive layer, generates the waveforms that will actually be generated by devices and transmitted
 over the channels.
 For communication cases in which we want to declare one device as the sole transmitter and one device as the sole receiver,
@@ -218,7 +185,7 @@ HermesPy offers the :doc:`SimplexLink<api/modem.modem.SimplexLink>` class, which
 .. literalinclude:: ../_examples/library/getting_started_simulation.py
    :language: python
    :linenos:
-   :lines: 18-19
+   :lines: 22-23
 
 The :doc:`Modem<api/modem>` package provides a range of communication waveform implementations,
 for this minimal introduction we will choose a :doc:`Root-Raised-Cosine<api/modem.waveform.single_carrier.RootRaisedCosine>` single carrier waveform:
@@ -226,7 +193,7 @@ for this minimal introduction we will choose a :doc:`Root-Raised-Cosine<api/mode
 .. literalinclude:: ../_examples/library/getting_started_simulation.py
    :language: python
    :linenos:
-   :lines: 21-24
+   :lines: 25-28
 
 We may now already directly call the :doc:`SimplexLink<api/modem.modem.SimplexLink>`'s transmit and receive rountines to directly generate, process and visualize
 the generated information such as base-band waveforms and symbol constellations:
@@ -234,7 +201,7 @@ the generated information such as base-band waveforms and symbol constellations:
 .. literalinclude:: ../_examples/library/getting_started_simulation.py
    :language: python
    :linenos:
-   :lines: 28-34
+   :lines: 32-38
 
 This will bypass physical layer simulations including device and channel models and directly receive the transmitted waveform, resulting in perfect information recovery.
 Refering back to the intial architecture graph, we patched the transmit layer directly into the receive layer.
@@ -248,7 +215,7 @@ The generated information is collected in :doc:`SimulatedDrops<api/simulation.si
 .. literalinclude:: ../_examples/library/getting_started_simulation.py
    :language: python
    :linenos:
-   :lines: 36-39
+   :lines: 40-43
 
 After the generation of a new :doc:`SimulatedDrop<api/simulation.simulation.SimulatedDrop>`,
 :doc:`Evaluators<api/core.monte_carlo.Evaluator>` may be used to conveniently extract performance information.
@@ -257,32 +224,14 @@ For instance, the bit error rate of the generated drop may be extracted by a :do
 .. literalinclude:: ../_examples/library/getting_started_simulation.py
    :language: python
    :linenos:
-   :lines: 41-43
+   :lines: 45-47
 
 This is the core routine of a typical Monte Carlo simulation, which is usually conducted over a grid of parameter values.
 For each parameter combination, a new :doc:`SimulatedDrop<api/simulation.simulation.SimulatedDrop>` is generated and evaluated.
 This process is executed multiple times in parallel, depending on the number of available CPU cores and the user's configuration.
 Finally, the generated evaluations are concatenated towards a single result.
 
-.. mermaid::
-   :align: center
-
-   %%{init: {"flowchart":{"useMaxWidth": false}}}%%
-   flowchart TD
-
-   pla[Simulated Physical Layer]
-   plb[Simulated Physical Layer]
-
-   c{Simulation}
-
-   plc[Simulated Physical Layer]
-
-   pla --> |Evaluations| c 
-   c --> |Parameters| pla
-   plb --> |Evaluations| c 
-   c --> |Parameters| plb
-   plc --> |Evaluations| c 
-   c --> |Parameters| plc
+.. include:: flowcharts/simulation_parallel_monte_carlo.rst
 
 A simulation iterating over the receiving device's signal to noise ratio as parameters and estimating the respective bit error RootRaisedCosine
 can be launched by executing
@@ -290,7 +239,7 @@ can be launched by executing
 .. literalinclude:: ../_examples/library/getting_started_simulation.py
    :language: python
    :linenos:
-   :lines: 45-50
+   :lines: 49-54
 
 which will result in a rendered plot being generated.
 The full code snippet implementing the above introduction can be downloaded from `GitHub - Getting Started Simulation <https://github.com/Barkhausen-Institut/hermespy/blob/main/_examples/library/getting_started_simulation.py>`_.
@@ -348,7 +297,7 @@ and passing it to a new :doc:`HardwareLoop<api/hardware_loop.hardware_loop.Hardw
 
 The :doc:`PhysicalScenarioDummy<api/hardware_loop.physical_device_dummy.PhysicalScenarioDummy>` is a physical scenario implementation intended for testing and demonstration
 purposes and does not require real hardware.
-Instead, the :doc:`PhysicalDeviceDummies<api/hardware_loop.physical_device_dummy.PhysicalDeviceDummy>` instances behave identical to :doc:`SimulatedDevices<api/simulation.simulated_device.SimulatedDevice>`.
+Instead, the :doc:`PhysicalDeviceDummies<api/hardware_loop.physical_device_dummy.PhysicalDeviceDummy>` instances behave identical to :doc:`SimulatedDevices<api/simulation.simulated_device>`.
 For this reason, we can also assign channel models to the managing :doc:`PhysicalScenarioDummy<api/hardware_loop.physical_device_dummy.PhysicalScenarioDummy>` instances:
 
 .. literalinclude:: ../_examples/library/getting_started_loop.py

@@ -7,7 +7,7 @@ from hermespy.core import Executable, Signal
 from hermespy.simulation import AnalogDigitalConverter, QuantizerType
 
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2023, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "0.2.7"

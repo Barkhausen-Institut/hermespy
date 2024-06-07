@@ -1,0 +1,9 @@
+<map id="inheritance3c2a706ebf" name="inheritance3c2a706ebf">
+<area shape="rect" id="node1" href="modem.waveform.html#hermespy.modem.waveform.CommunicationWaveform" target="_top" title="Abstract base class for all communication waveform descriptions." alt="" coords="26,5,218,31"/>
+<area shape="rect" id="node3" href="modem.waveform.html#hermespy.modem.waveform.PilotCommunicationWaveform" target="_top" title="Abstract base class of communication waveform generators generating a pilot signal." alt="" coords="11,79,233,104"/>
+<area shape="rect" id="node2" href="modem.waveform.html#hermespy.modem.waveform.ConfigurablePilotWaveform" target="_top" title="ConfigurablePilotWaveform" alt="" coords="22,152,222,177"/>
+<area shape="rect" id="node4" href="modem.waveform.single_carrier.html#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform" target="_top" title="This method provides a class for a generic PSK/QAM modem." alt="" coords="11,225,233,251"/>
+<area shape="rect" id="node5" href="modem.waveform.single_carrier.html#hermespy.modem.waveform_single_carrier.RolledOffSingleCarrierWaveform" target="_top" title="Base class for single carrier waveforms applying linear filters longer than a single symbol duration." alt="" coords="5,299,239,324"/>
+<area shape="rect" id="node6" href="#hermespy.modem.waveform_single_carrier.RootRaisedCosineWaveform" target="_top" title="Root&#45;Raised&#45;Cosine filtered single carrier modulation." alt="" coords="113,372,320,397"/>
+<area shape="rect" id="node7" href="core.factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="263,299,362,324"/>
+</map>

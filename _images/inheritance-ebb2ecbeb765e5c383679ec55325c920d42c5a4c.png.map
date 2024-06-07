@@ -1,0 +1,4 @@
+<map id="inheritance2f38c02443" name="inheritance2f38c02443">
+<area shape="rect" id="node1" href="#hermespy.core.device.DeviceOutput" target="_top" title="Base class for the output of a device." alt="" coords="13,79,123,104"/>
+<area shape="rect" id="node2" href="core.factory.html#hermespy.core.factory.HDFSerializable" target="_top" title="Base class for object serializable to the HDF5 format." alt="" coords="5,5,131,31"/>
+</map>

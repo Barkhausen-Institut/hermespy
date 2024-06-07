@@ -1,0 +1,5 @@
+<map id="inheritance53eb64456c" name="inheritance53eb64456c">
+<area shape="rect" id="node1" href="core.factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="5,5,104,31"/>
+<area shape="rect" id="node2" href="#hermespy.modem.precoding.single_carrier.SingleCarrier" target="_top" title="Single Carrier data symbol precoding step." alt="" coords="71,79,177,104"/>
+<area shape="rect" id="node3" href="modem.precoding.symbol_precoding.SymbolPrecoder.html#hermespy.modem.precoding.symbol_precoding.SymbolPrecoder" target="_top" title="Abstract base class for signal processing algorithms operating on complex data symbols streams." alt="" coords="128,5,256,31"/>
+</map>

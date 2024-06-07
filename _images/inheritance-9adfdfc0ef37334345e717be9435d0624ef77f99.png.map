@@ -1,0 +1,5 @@
+<map id="inheritanceaa75dd7a9b" name="inheritanceaa75dd7a9b">
+<area shape="rect" id="node1" href="#hermespy.simulation.noise.model.AWGNRealization" target="_top" title="Realization of additive white Gaussian noise" alt="" coords="12,152,148,177"/>
+<area shape="rect" id="node2" href="simulation.noise.html#hermespy.simulation.noise.model.NoiseRealization" target="_top" title="Realization of a noise model" alt="" coords="14,79,146,104"/>
+<area shape="rect" id="node3" href="core.random_node.html#hermespy.core.random_node.RandomRealization" target="_top" title="Realization of a random node." alt="" coords="5,5,155,31"/>
+</map>
