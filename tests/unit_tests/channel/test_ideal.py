@@ -73,14 +73,14 @@ class TestIdealChannel(unittest.TestCase):
                 forwards_signal = forwards_sample.propagate(signal)
                 backwards_signal = backwards_sample.propagate(signal)
 
-                assert_array_almost_equal(expected_propagated_samples, forwards_signal[:, :])
-                assert_array_almost_equal(expected_propagated_samples, backwards_signal[:, :])
+                assert_array_almost_equal(expected_propagated_samples, forwards_signal.getitem())
+                assert_array_almost_equal(expected_propagated_samples, backwards_signal.getitem())
                 
                 forwards_state_propagation = forwards_sample.state(num_samples, 1).propagate(signal)
                 backwards_state_propagation = backwards_sample.state(num_samples, 1).propagate(signal)
 
-                assert_array_almost_equal(expected_propagated_samples, forwards_state_propagation[:, :])
-                assert_array_almost_equal(expected_propagated_samples, backwards_state_propagation[:, :])
+                assert_array_almost_equal(expected_propagated_samples, forwards_state_propagation.getitem())
+                assert_array_almost_equal(expected_propagated_samples, backwards_state_propagation.getitem())
 
     def test_propagate_SIMO(self) -> None:
         """Test valid propagation for the Single-Input-Multiple-Output channel"""
@@ -106,14 +106,14 @@ class TestIdealChannel(unittest.TestCase):
                 forwards_propagation = forwards_sample.propagate(forwards_input)
                 backwards_propagation = backwards_sample.propagate(backwards_input)
 
-                assert_array_almost_equal(expected_forwards_samples, forwards_propagation[:, :])
-                assert_array_almost_equal(expected_backwards_samples, backwards_propagation[:, :])
+                assert_array_almost_equal(expected_forwards_samples, forwards_propagation.getitem())
+                assert_array_almost_equal(expected_backwards_samples, backwards_propagation.getitem())
 
                 forwards_state_propagation = forwards_sample.state(num_samples, 1).propagate(forwards_input)
                 backwards_state_propagation = backwards_sample.state(num_samples, 1).propagate(backwards_input)
 
-                assert_array_almost_equal(expected_forwards_samples, forwards_state_propagation[:, :])
-                assert_array_almost_equal(expected_backwards_samples, backwards_state_propagation[:, :])
+                assert_array_almost_equal(expected_forwards_samples, forwards_state_propagation.getitem())
+                assert_array_almost_equal(expected_backwards_samples, backwards_state_propagation.getitem())
 
     def test_propagate_MISO(self) -> None:
         """Test valid propagation for the Multiple-Input-Single-Output channel"""
@@ -139,14 +139,14 @@ class TestIdealChannel(unittest.TestCase):
                 forwards_signal = forwards_sample.propagate(forwards_input)
                 backwards_signal = backwards_sample.propagate(backwards_input)
 
-                assert_array_almost_equal(expected_forwards_samples, forwards_signal[:, :])
-                assert_array_almost_equal(expected_backwards_samples, backwards_signal[:, :])
+                assert_array_almost_equal(expected_forwards_samples, forwards_signal.getitem())
+                assert_array_almost_equal(expected_backwards_samples, backwards_signal.getitem())
 
                 forwards_state_propagation = forwards_sample.state(num_samples, 1).propagate(forwards_input)
                 backwards_state_propagation = backwards_sample.state(num_samples, 1).propagate(backwards_input)
 
-                assert_array_almost_equal(expected_forwards_samples, forwards_state_propagation[:, :])
-                assert_array_almost_equal(expected_backwards_samples, backwards_state_propagation[:, :])
+                assert_array_almost_equal(expected_forwards_samples, forwards_state_propagation.getitem())
+                assert_array_almost_equal(expected_backwards_samples, backwards_state_propagation.getitem())
 
     def test_propagate_MIMO(self) -> None:
         """Test valid propagation for the Multiple-Input-Multiple-Output channel"""
@@ -172,8 +172,8 @@ class TestIdealChannel(unittest.TestCase):
                 forwards_signal = forwards_sample.propagate(forwards_transmission)
                 backwards_signal = backwards_sample.propagate(backwards_transmission)
 
-                assert_array_almost_equal(expected_forwards_propagated_samples, forwards_signal[:, :])
-                assert_array_almost_equal(expected_backwards_propagated_samples, backwards_signal[:, :])
+                assert_array_almost_equal(expected_forwards_propagated_samples, forwards_signal.getitem())
+                assert_array_almost_equal(expected_backwards_propagated_samples, backwards_signal.getitem())
 
                 forwards_state_propagation = forwards_sample.state(num_samples, 1).propagate(forwards_transmission)
                 backwards_state_propagation = backwards_sample.state(num_samples, 1).propagate(backwards_transmission)

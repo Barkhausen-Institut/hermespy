@@ -119,14 +119,14 @@ class RfChain(Serializable):
         transmitted_signal = input_signal.copy()
 
         # Simulate IQ imbalance
-        transmitted_signal.set_samples(self.add_iq_imbalance(transmitted_signal[:, :]))
+        transmitted_signal.set_samples(self.add_iq_imbalance(transmitted_signal.getitem()))
 
         # Simulate phase noise
         transmitted_signal = self.phase_noise.add_noise(transmitted_signal)
 
         # Simulate power amplifier
         if self.power_amplifier is not None:
-            transmitted_signal.set_samples(self.power_amplifier.send(transmitted_signal[:, :]))
+            transmitted_signal.set_samples(self.power_amplifier.send(transmitted_signal.getitem()))
 
         return transmitted_signal
 
@@ -162,7 +162,7 @@ class RfChain(Serializable):
         input_signal = input_signal.copy()
 
         # Simulate IQ imbalance
-        input_signal.set_samples(self.add_iq_imbalance(input_signal[:, :]))
+        input_signal.set_samples(self.add_iq_imbalance(input_signal.getitem()))
 
         # Simulate phase noise
         input_signal = self.phase_noise.add_noise(input_signal)

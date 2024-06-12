@@ -425,7 +425,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
             delayed_propagation = delayed_channel.propagate(transmit_signal, self.alpha_device, self.beta_device)
 
             zero_pads = int(self.sampling_rate * float(delay))
-            assert_array_almost_equal(reference_propagation[:, :], delayed_propagation[:, zero_pads:])
+            assert_array_almost_equal(reference_propagation.getitem(), delayed_propagation.getitem((slice(None, None), slice(zero_pads, None))))
 
     def test_rayleigh(self) -> None:
         """
@@ -573,7 +573,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
         channel_gain._rng = np.random.default_rng(42)  # Reset random number rng
         propagation_gain = channel_gain.propagate(tx_signal, self.alpha_device, self.beta_device)
 
-        assert_array_almost_equal(propagation_no_gain[:, :] * gain ** .5, propagation_gain[:, :])
+        assert_array_almost_equal(propagation_no_gain.getitem() * gain ** .5, propagation_gain.getitem())
 
     def test_antenna_correlation(self) -> None:
         """Test channel simulation with antenna correlation modeling"""

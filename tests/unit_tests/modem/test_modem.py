@@ -100,12 +100,12 @@ class TestCommunicationReception(TestCase):
                 group = file["testgroup"]
                 reception = self.reception.from_HDF(group)
 
-        np.testing.assert_array_equal(self.base_signal[:, :], reception.signal[:, :])
+        np.testing.assert_array_equal(self.base_signal.getitem(), reception.signal.getitem())
         self.assertEqual(2, reception.num_frames)
 
         for initial_frame, serialized_frame in zip(self.frames, reception.frames):
-            np.testing.assert_array_equal(initial_frame.signal[:, :], serialized_frame.signal[:, :])
-            np.testing.assert_array_equal(initial_frame.decoded_signal[:, :], serialized_frame.decoded_signal[:, :])
+            np.testing.assert_array_equal(initial_frame.signal.getitem(), serialized_frame.signal.getitem())
+            np.testing.assert_array_equal(initial_frame.decoded_signal.getitem(), serialized_frame.decoded_signal.getitem())
             np.testing.assert_array_equal(initial_frame.symbols.raw, serialized_frame.symbols.raw)
             np.testing.assert_array_equal(initial_frame.decoded_symbols.raw, serialized_frame.decoded_symbols.raw)
             self.assertEqual(initial_frame.timestamp, serialized_frame.timestamp)
@@ -147,7 +147,7 @@ class TestCommunicationTransmission(TestCase):
                 group = file["testgroup"]
                 transmission = self.transmission.from_HDF(group)
 
-        np.testing.assert_array_equal(self.base_signal[:, :], transmission.signal[:, :])
+        np.testing.assert_array_equal(self.base_signal.getitem(), transmission.signal.getitem())
         self.assertEqual(2, transmission.num_frames)
 
         for initial_frame, serialized_frame in zip(self.frames, transmission.frames):
@@ -155,7 +155,7 @@ class TestCommunicationTransmission(TestCase):
             np.testing.assert_array_equal(initial_frame.encoded_bits, serialized_frame.encoded_bits)
             np.testing.assert_array_equal(initial_frame.symbols.raw, serialized_frame.symbols.raw)
             np.testing.assert_array_equal(initial_frame.encoded_symbols.raw, serialized_frame.encoded_symbols.raw)
-            np.testing.assert_array_equal(initial_frame.signal[:, :], serialized_frame.signal[:, :])
+            np.testing.assert_array_equal(initial_frame.signal.getitem(), serialized_frame.signal.getitem())
 
 
 class BaseModemMock(BaseModem):
@@ -491,7 +491,7 @@ class TestDuplexModem(TestBaseModem):
         """Received frames should be padded to the correct length"""
 
         transmission = self.modem.transmit()
-        cutoff_samples = transmission.signal[:, :transmission.signal.num_samples//2]
+        cutoff_samples = transmission.signal.getitem((slice(None, None), slice(None, transmission.signal.num_samples//2)))
         self.waveform.synchronization.synchronize = lambda s: [0]
         self.device.process_input(Signal.Create(cutoff_samples, transmission.signal.sampling_rate, self.device.carrier_frequency))
         reception = self.modem.receive()

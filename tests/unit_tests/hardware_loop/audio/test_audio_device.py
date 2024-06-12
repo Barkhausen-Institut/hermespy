@@ -261,7 +261,7 @@ class TestAudioDevice(TestCase):
 
         reception = operator.receive()
 
-        assert_array_almost_equal(transmission.signal[:, :], reception.signal[:, :])
+        assert_array_almost_equal(transmission.signal.getitem(), reception.signal.getitem())
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""

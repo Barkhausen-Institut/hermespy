@@ -78,12 +78,12 @@ class _TestSimulatedAntenna(TestCase):
 
         signal = Signal.Create(np.random.normal(size=(1, 10)) + 1j * np.random.normal(size=(1, 10)), 1, 1)
         weight = 2+3j
-        expected_samples = weight * signal[:, :]
+        expected_samples = weight * signal.getitem()
 
         self.antenna.weight = weight
         transmitted_signal = self.antenna.transmit(signal)
 
-        assert_array_almost_equal(expected_samples, transmitted_signal[:, :])
+        assert_array_almost_equal(expected_samples, transmitted_signal.getitem())
 
     def test_receive_validation(self) -> None:
         """Receive routine should raise ValueError if signal model has more than one stream"""
@@ -98,12 +98,12 @@ class _TestSimulatedAntenna(TestCase):
 
         signal = Signal.Create(np.random.normal(size=(1, 10)) + 1j * np.random.normal(size=(1, 10)), 1, 1)
         weight = 2+3j
-        expected_samples = weight * signal[:, :]
+        expected_samples = weight * signal.getitem()
 
         self.antenna.weight = weight
         received_signal = self.antenna.receive(signal)
 
-        assert_array_almost_equal(expected_samples, received_signal[:, :])
+        assert_array_almost_equal(expected_samples, received_signal.getitem())
 
 
 class TestSimulatedDipole(_TestSimulatedAntenna):
@@ -179,10 +179,10 @@ class _TestSimulatedAntennas(TestCase):
         signal = Signal.Create(rng.normal(size=(self.array.num_receive_ports, 10)) + 1j * rng.normal(size=(self.array.num_receive_ports, 10)), 1, 1)
         rf_chain = RfChain()
 
-        expected_samples = signal[:, :]
+        expected_samples = signal.getitem()
         received_signal = self.array.receive(signal, rf_chain)
 
-        assert_array_almost_equal(expected_samples, received_signal[:, :])
+        assert_array_almost_equal(expected_samples, received_signal.getitem())
 
     def test_receive_weights(self) -> None:
         """Receive routine should properly apply the antenna weights"""
@@ -195,10 +195,10 @@ class _TestSimulatedAntennas(TestCase):
         for antenna, weight in zip(self.array.receive_antennas, weights):
             antenna.weight = weight
 
-        expected_samples = weights[:, None] * signal[:, :]
+        expected_samples = weights[:, None] * signal.getitem()
         received_signal = self.array.receive(signal, rf_chain)
 
-        assert_array_almost_equal(expected_samples, received_signal[:, :])
+        assert_array_almost_equal(expected_samples, received_signal.getitem())
 
     def test_receive_coupling(self) -> None:
         """Mutual coupling should be properly applied to the received signal"""
@@ -235,10 +235,10 @@ class _TestSimulatedAntennas(TestCase):
 
         leakage = Signal.Create(rng.normal(size=(self.array.num_receive_ports, 10)) + 1j * rng.normal(size=(self.array.num_receive_ports, 10)), 1, 1)
 
-        expected_samples = signal[:, :] + leakage[:, :]
+        expected_samples = signal.getitem() + leakage.getitem()
         received_signal = self.array.receive(signal, rf_chain, leakage)
 
-        assert_array_almost_equal(expected_samples, received_signal[:, :])
+        assert_array_almost_equal(expected_samples, received_signal.getitem())
 
     def test_receive_rf_chains(self) -> None:
         """RF chains should only be called once per receive call"""

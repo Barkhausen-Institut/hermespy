@@ -46,7 +46,7 @@ class TestJCASTransmission(TestCase):
                 group = file["testgroup"]
                 transmission = self.transmission.from_HDF(group)
 
-        assert_array_equal(self.signal[:, :], transmission.signal[:, :])
+        assert_array_equal(self.signal.getitem(), transmission.signal.getitem())
 
 
 class TestJCASReception(TestCase):
@@ -73,4 +73,4 @@ class TestJCASReception(TestCase):
                 group = file["testgroup"]
                 reception = JCASReception.from_HDF(group)
 
-        assert_array_equal(self.signal[:, :], reception.signal[:, :])
+        assert_array_equal(self.signal.getitem(), reception.signal.getitem())

@@ -104,7 +104,7 @@ class TestRadarReception(TestCase):
             recalled_reception = RadarReception.from_HDF(file["g1"])
             file.close()
 
-        assert_array_equal(self.reception.signal[:, :], recalled_reception.signal[:, :])
+        assert_array_equal(self.reception.signal.getitem(), recalled_reception.signal.getitem())
 
 
 class TestRadar(TestCase):
@@ -248,7 +248,7 @@ class TestRadar(TestCase):
         beamformer.num_transmit_output_streams = 2
 
         ping = self.waveform.ping()
-        ping.set_samples(np.repeat(ping[:, :], 2, 0))
+        ping.set_samples(np.repeat(ping.getitem(), 2, 0))
         beamformer.transmit.return_value = ping
         self.radar.transmit_beamformer = beamformer
 

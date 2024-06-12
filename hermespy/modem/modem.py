@@ -941,13 +941,13 @@ class ReceivingModemBase(Generic[CWT], BaseModem[CWT]):
         """
 
         # Synchronize raw MIMO data into frames
-        frame_start_indices = self.waveform.synchronization.synchronize(received_signal[:, :])
+        frame_start_indices = self.waveform.synchronization.synchronize(received_signal.getitem())
         frame_length = self.waveform.samples_per_frame
 
         synchronized_signals = []
         for frame_start in frame_start_indices:
             frame_stop = frame_start + frame_length
-            frame_samples = received_signal[:, frame_start:frame_stop]
+            frame_samples = received_signal.getitem((slice(None, None), slice(frame_start, frame_stop)))
 
             # Pad the frame if it is too short
             # This may happen if the last frame is incomplete, or synhronization is not perfect
@@ -978,7 +978,7 @@ class ReceivingModemBase(Generic[CWT], BaseModem[CWT]):
         """
 
         symbols = Symbols()
-        for stream in frame[:]:
+        for stream in frame.getitem():
             stream_symbols = self.waveform.demodulate(stream)
             symbols.append_stream(stream_symbols)
 
