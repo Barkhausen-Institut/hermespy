@@ -96,6 +96,7 @@ class TestExecutable(unittest.TestCase):
     def test_default_results_dir(self, getcwd: MagicMock) -> None:
         """Test default directory generation"""
 
+        # Test default function behavior
         with tempfile.TemporaryDirectory() as tempdir:
             getcwd.return_value = tempdir
             results_dir = self.executable.default_results_dir()
@@ -104,6 +105,16 @@ class TestExecutable(unittest.TestCase):
 
             second_results_dir = self.executable.default_results_dir()
             self.assertTrue(exists(second_results_dir))
+            
+        # Test experiment directory generation
+        with tempfile.TemporaryDirectory() as tempdir:
+            getcwd.return_value = tempdir
+            
+            overwrite_results_dir = self.executable.default_results_dir("experiment", overwrite_results=True)
+            self.assertTrue(exists(overwrite_results_dir))
+            
+            dated_results_dir = self.executable.default_results_dir("experiment")
+            self.assertTrue(exists(dated_results_dir))
 
     def test_style_setget(self) -> None:
         """Style property getter should return setter argument"""
