@@ -13,7 +13,7 @@ import datetime
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from glob import glob
-from os import getcwd, mkdir
+from os import getcwd, mkdir, makedirs
 from sys import exit
 from typing import Any, Generator, List, Union
 
@@ -190,31 +190,52 @@ class Executable(ABC):
         return self.__debug
 
     @staticmethod
-    def default_results_dir() -> str:
+    def default_results_dir(experiment: str | None = None, overwrite_results: bool = False) -> str:
         """Create a default directory to store execution results.
 
-        Returns:
-            str: Path to the newly created directory.
+        .. warning::
+           If `overwrite_results` is set to True, the current results directory will be erased.
+           Proceed with caution as to not lose any important data.
+
+        Args:
+
+            experiment(str, optional):
+                Name of the experiment.
+                If specified, will generate a subdirectory with the experiment name.
+
+            overwrite_results(bool, optional):
+                If False, a new dated directory will be created with a unique index.
+                If True, executing this function will erase the current results directory.
+
+        Returns: Path to the newly created directory.
         """
 
-        today = str(datetime.date.today())
-
-        dir_index = 0
-
+        # Select the base directory
         base_directory = path.join(getcwd(), "results")
 
+        if experiment is not None:
+            base_directory = path.join(base_directory, experiment)
+
         # Create results directory within the current working directory if it does not exist yet
-        if not path.exists(base_directory):
-            mkdir(base_directory)
+        makedirs(base_directory, 511, True)
 
-        results_dir = path.join(base_directory, today + "_" + "{:03d}".format(dir_index))
+        # Select the current base directory as the results directory if the overwrite flag is set
+        if overwrite_results:
+            results_dir = base_directory
 
-        while path.exists(results_dir):
-            dir_index += 1
+        # Otherwise, create a new dated directory with a unique index
+        else:
+
+            today = str(datetime.date.today())
+            dir_index = 0
+
             results_dir = path.join(base_directory, today + "_" + "{:03d}".format(dir_index))
+            while path.exists(results_dir):
+                dir_index += 1
+                results_dir = path.join(base_directory, today + "_" + "{:03d}".format(dir_index))
 
-        # Create the results directory
-        mkdir(results_dir)
+            # Create the results directory
+            mkdir(results_dir)
 
         return results_dir
 
