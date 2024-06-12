@@ -411,7 +411,7 @@ class RadarBase(Generic[RTT, RRT], DuplexOperator[RTT, RRT]):
             beamformed_samples = self.receive_beamformer.probe(signal)[:, 0, :]
 
         else:
-            beamformed_samples = signal[:, :]
+            beamformed_samples = signal.getitem()
 
         # Build the radar cube by generating a beam-forming line over all angles of interest
         angles_of_interest = (

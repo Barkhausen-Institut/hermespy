@@ -73,7 +73,7 @@ class TestSilentTransmitter(TestCase):
         custom_transmission = self.transmitter.transmit(10 / self.device.sampling_rate)
 
         self.assertEqual(self.num_samples, default_transmission.signal.num_samples)
-        self.assertCountEqual([0] * 10, custom_transmission.signal[0, :].flatten().tolist())
+        self.assertCountEqual([0] * 10, custom_transmission.signal.getitem(0).flatten().tolist())
 
 
 class TestSignalTransmitter(TestCase):
@@ -106,7 +106,7 @@ class TestSignalTransmitter(TestCase):
 
         transmission = self.transmitter.transmit()
 
-        assert_array_equal(self.signal[:, :], transmission.signal[:, :])
+        assert_array_equal(self.signal.getitem(), transmission.signal.getitem())
 
     def test_recall_transmission(self) -> None:
         """Recall transmission should recall the last transmission"""
@@ -121,7 +121,7 @@ class TestSignalTransmitter(TestCase):
             with File(file_location, "r") as file:
                 recalled_transmission = self.transmitter.recall_transmission(file["transmission"])
 
-        assert_array_equal(transmission.signal[:, :], recalled_transmission.signal[:, :])
+        assert_array_equal(transmission.signal.getitem(), recalled_transmission.signal.getitem())
 
 
 class TestSignalReceiver(TestCase):
@@ -158,4 +158,4 @@ class TestSignalReceiver(TestCase):
 
         received_signal = self.receiver.receive().signal
 
-        assert_array_equal(received_signal[:, :], power_signal[:, :])
+        assert_array_equal(received_signal.getitem(), power_signal.getitem())

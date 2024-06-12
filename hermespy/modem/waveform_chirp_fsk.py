@@ -369,7 +369,7 @@ class ChirpFSKWaveform(PilotCommunicationWaveform, Serializable):
         samples_in_chirp = self.samples_in_chirp
 
         # Add pilot samples
-        pilot_samples = self.pilot_signal[:, :].flatten()
+        pilot_samples = self.pilot_signal.getitem().flatten()
         num_pilot_samples = len(pilot_samples)
         frame_samples[:num_pilot_samples] = pilot_samples
         sample_idx += num_pilot_samples

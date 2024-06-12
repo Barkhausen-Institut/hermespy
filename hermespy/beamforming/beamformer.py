@@ -512,7 +512,7 @@ class TransmitBeamformer(BeamformerBase[Transmitter], TransmitStreamEncoder, ABC
             )
 
         carrier_frequency = signal.carrier_frequency
-        samples = signal[:, :]
+        samples = signal.getitem()
         focus_angles = np.array([focus.spherical_angles for focus in _focus], dtype=np.float_)
 
         steered_samples = self._encode(samples, carrier_frequency, focus_angles, _array)
@@ -730,7 +730,7 @@ class ReceiveBeamformer(BeamformerBase[Receiver], ReceiveStreamDecoder, ABC):
             )
 
         carrier_frequency = signal.carrier_frequency
-        samples = signal[:, :]
+        samples = signal.getitem()
         focus_angles = np.array([[focus.spherical_angles for focus in _focus]], dtype=np.float_)
 
         beamformed_samples = self._decode(samples, carrier_frequency, focus_angles, _array)
@@ -803,6 +803,6 @@ class ReceiveBeamformer(BeamformerBase[Receiver], ReceiveStreamDecoder, ABC):
             )
 
         carrier_frequency = signal.carrier_frequency
-        samples = signal[:, :]
+        samples = signal.getitem()
 
         return self._decode(samples, carrier_frequency, focus_points, self.operator.device.antennas)

@@ -78,7 +78,7 @@ class TestCorellationSynchronization(TestCase):
         waveform.samples_per_frame = 20
         self.synchronization.waveform = waveform
 
-        shifted_sequence = np.append(np.zeros((1, 10), dtype=complex), pilot_sequence[:, :], axis=1)
+        shifted_sequence = np.append(np.zeros((1, 10), dtype=complex), pilot_sequence.getitem(), axis=1)
 
         pilot_indices = self.synchronization.synchronize(shifted_sequence)
         self.assertSequenceEqual([10], pilot_indices)

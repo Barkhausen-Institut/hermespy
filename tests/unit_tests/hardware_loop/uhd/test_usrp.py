@@ -144,7 +144,7 @@ class TestUsrpDevice(TestCase):
 
         self.client_mock.configureTx.assert_called_once()
         self.client_mock.configureRx.assert_called_once()
-        assert_array_equal(transmitted_signal[:, :], transmission.mixed_signal[:, :])
+        assert_array_equal(transmitted_signal.getitem(), transmission.mixed_signal.getitem())
 
     def test_receive_no_collection(self) -> None:
         """Test reception without enabled collection"""
@@ -164,10 +164,10 @@ class TestUsrpDevice(TestCase):
         received_signal = Signal.Create(self.rng.normal(size=(self.usrp.num_receive_ports, 11)), sampling_rate=self.usrp.sampling_rate, carrier_frequency=self.usrp.carrier_frequency)
 
         self.usrp._UsrpDevice__collection_enabled = True
-        self.client_mock.collect.return_value = [MimoSignal([s for s in received_signal[:, :]])]
+        self.client_mock.collect.return_value = [MimoSignal([s for s in received_signal.getitem()])]
         signal = self.usrp._download()
 
-        assert_array_equal(received_signal[:, :], signal[:, :])
+        assert_array_equal(received_signal.getitem(), signal.getitem())
 
     def test_client(self) -> None:
         """Test access to the UHD client"""

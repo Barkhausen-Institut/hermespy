@@ -114,7 +114,7 @@ class DelayCalibration(DelayCalibrationBase, Serializable):
 
             # Infer the implicit delay by estimating the sample index of the propagated dirac
             propagated_signals.append(propagated_signal)
-            propagated_dirac_indices[n] = np.argmax(np.abs(propagated_signal[0, :]))
+            propagated_dirac_indices[n] = np.max([np.argmax(b[0]) for b in propagated_signal])
 
             # Wait the configured amount of time between iterations
             sleep(wait)
@@ -129,7 +129,7 @@ class DelayCalibration(DelayCalibrationBase, Serializable):
         # fig, axes = plt.subplots(2, 1)
         # fig.suptitle("Device Delay Calibration")
 
-        # axes[0].plot(calibration_signal.timestamps, abs(calibration_signal[0, :]))
+        # axes[0].plot(calibration_signal.timestamps, abs(calibration_signal.getitem(0)))
         # for sig in propagated_signals:
         #    axes[1].plot(sig.timestamps, abs(sig[0, :]), color="blue")
         # axes[1].axvline(x=(dirac_index / sampling_rate - calibration_delay), color="red")

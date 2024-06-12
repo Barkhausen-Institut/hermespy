@@ -1400,7 +1400,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
             dtype=complex,
         )
         for signal in emerging_signals:
-            signal.set_samples(np.append(trigger_padding, signal[:, :], axis=1))
+            signal.set_samples(np.append(trigger_padding, signal.getitem(), axis=1))
 
         # Genreate the output data object
         output = SimulatedDeviceOutput(
@@ -1541,9 +1541,8 @@ class SimulatedDevice(Device, Moveable, Serializable):
             slice(None)
             if receiver.selected_receive_ports is None
             else receiver.selected_receive_ports
-        )
-        received_samples = baseband_signal[receive_port_selection, :]  # type: ignore
-        received_signal = baseband_signal.from_ndarray(received_samples)
+        )  # type: slice | Sequence[int]
+        received_signal = baseband_signal.getstreams(receive_port_selection)
 
         # Add noise to the received signal
         noisy_signal = noise_realization.add_to(received_signal)
@@ -1554,13 +1553,8 @@ class SimulatedDevice(Device, Moveable, Serializable):
         )
 
         # Select only the desired signal streams, as specified by the receiver
-        receiver_input = Signal.Create(
-            quantized_signal[receive_port_selection, :],  # type: ignore
-            quantized_signal.sampling_rate,
-            quantized_signal.carrier_frequency,
-            quantized_signal.delay,
-            noise_realization.power,
-        )
+        receiver_input = quantized_signal.getstreams(receive_port_selection)
+        receiver_input.noise_power = noise_realization.power
 
         # Cache signal and channel state information if the respective flag is enabled
         if cache:
@@ -1643,7 +1637,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
             if trigger_realization is None
             else trigger_realization.compute_num_offset_samples(self.sampling_rate)
         )
-        mixed_signal.set_samples(mixed_signal[:, num_trigger_offset_samples:])
+        mixed_signal.set_samples(mixed_signal.getitem((slice(None, None), slice(num_trigger_offset_samples, None))))
 
         # Model the configured antenna array's input behaviour
         antenna_outputs = self.antennas.receive(

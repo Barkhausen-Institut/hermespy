@@ -90,5 +90,5 @@ class SpecificIsolation(Serializable, Isolation):
                 "don't match the antenna array ({self.device.antennas.num_receive_antennas})"
             )
 
-        leaked_samples = self.__leakage_factors @ signal[:, :]
+        leaked_samples = self.__leakage_factors @ signal.getitem()
         return signal.from_ndarray(leaked_samples)

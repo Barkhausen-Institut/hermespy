@@ -119,7 +119,7 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT], Serializabl
             signal = signal[np.newaxis, :]
 
         # Query the pilot signal from the waveform generator
-        pilot_sequence = self.waveform.pilot_signal[:, :].flatten()
+        pilot_sequence = self.waveform.pilot_signal.getitem().flatten()
 
         # Raise a runtime error if pilot sequence is empty
         if len(pilot_sequence) < 1:

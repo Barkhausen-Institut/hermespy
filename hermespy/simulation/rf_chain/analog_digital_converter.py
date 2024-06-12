@@ -392,7 +392,7 @@ class AnalogDigitalConverter(Serializable):
         adjusted_signal = self.gain.adjust_signal(frame_signal, gain)
 
         # Quantize adjusted signal
-        adjusted_signal.set_samples(self._quantize(adjusted_signal[:, :]))
+        adjusted_signal.set_samples(self._quantize(adjusted_signal.getitem()))
 
         # Rescale adjusted signal to the original amplitude range
         output_signal = self.gain.scale_quantized_signal(adjusted_signal, gain)
@@ -431,7 +431,10 @@ class AnalogDigitalConverter(Serializable):
 
         # Iterate over each frame independtenly
         for f in range(num_frames):
-            frame_samples = input_signal[:, f * num_frame_samples : (f + 1) * num_frame_samples]
+            frame_samples = input_signal.getitem((
+                slice(None, None),
+                slice(f * num_frame_samples, (f + 1) * num_frame_samples)
+            ))
             frame_signal = input_signal.from_ndarray(frame_samples)
 
             converted_frame_signal = self.__convert_frame(frame_signal)
@@ -516,7 +519,7 @@ class AnalogDigitalConverter(Serializable):
         else:
             quant_axes = fig_axes
 
-        output_samples = self.convert(Signal.Create(_input_samples, 1.0))[:, :].flatten()
+        output_samples = self.convert(Signal.Create(_input_samples, 1.0)).getitem().flatten()
         quant_axes.plot(np.real(_input_samples), np.real(output_samples))
 
         quant_axes.axhline(0)

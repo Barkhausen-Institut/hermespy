@@ -165,12 +165,12 @@ class _TestRadarPathRealization(Generic[RPT], unittest.TestCase):
 
         expected_sample_offset = int(self.path_realization.propagation_delay(self.transmitter, self.receiver) * self.sampling_rate)
         propagated_samples = np.zeros((self.receiver.antennas.num_receive_antennas, test_signal.num_samples + expected_sample_offset), dtype=np.complex_)
-        self.path_realization.add_propagation(self.transmitter.state(0), self.receiver.state(0), test_signal[:, :], test_signal.sampling_rate, test_signal.carrier_frequency, propagated_samples)
+        self.path_realization.add_propagation(self.transmitter.state(0), self.receiver.state(0), test_signal.getitem(), test_signal.sampling_rate, test_signal.carrier_frequency, propagated_samples)
 
         raw_state = np.zeros((self.receiver.antennas.num_receive_antennas, self.transmitter.antennas.num_transmit_antennas, test_signal.num_samples, 1 + expected_sample_offset), dtype=np.complex_)
         self.path_realization.add_state(self.transmitter.state(0), self.receiver.state(0), self.sampling_rate, self.carrier_frequency, 0.0, raw_state)
         channel_state = ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE, raw_state)
-        state_propagated_samples = channel_state.propagate(test_signal)[:, :]
+        state_propagated_samples = channel_state.propagate(test_signal).getitem()
 
         assert_array_almost_equal(propagated_samples, state_propagated_samples[:, :propagated_samples.size])
 
@@ -498,7 +498,7 @@ class TestSingleTargetRadarChannel(_TestRadarChannelBase[SingleTargetRadarChanne
         propagation = self.channel.propagate(Signal.Create(input_signal, self.sampling_rate, self.carrier_frequency), self.alpha_device, self.beta_device)
 
         expected_output = np.hstack((np.zeros((1, delay_in_samples)), input_signal)) * expected_amplitude
-        assert_array_almost_equal(abs(expected_output), np.abs(propagation[:, :expected_output.size]))
+        assert_array_almost_equal(abs(expected_output), np.abs(propagation.getitem((slice(None, None), slice(None, expected_output.size)))))
 
     def test_propagation_delay_noninteger_num_samples(self) -> None:
         """
@@ -519,7 +519,7 @@ class TestSingleTargetRadarChannel(_TestRadarChannelBase[SingleTargetRadarChanne
         propagation = self.channel.propagate(Signal.Create(input_signal, self.sampling_rate, self.carrier_frequency), self.alpha_device, self.beta_device)
 
         straddle_loss = np.sinc(0.5)
-        peaks = np.abs(propagation[:, delay_in_samples : input_signal.size : samples_per_symbol])
+        peaks = np.abs(propagation.getitem((slice(None, None), slice(delay_in_samples, input_signal.size, samples_per_symbol))))
 
         assert_array_almost_equal(peaks, expected_amplitude * straddle_loss * np.ones(peaks.shape))
 
@@ -554,7 +554,7 @@ class TestSingleTargetRadarChannel(_TestRadarChannelBase[SingleTargetRadarChanne
 
         propagation = self.channel.propagate(Signal.Create(input_signal, self.sampling_rate, self.carrier_frequency), self.alpha_device, self.beta_device)
 
-        assert_array_almost_equal(np.abs(propagation[:, :][0, peaks_in_samples].flatten()), expected_straddle_amplitude)
+        assert_array_almost_equal(np.abs(propagation.getitem()[0, peaks_in_samples].flatten()), expected_straddle_amplitude)
 
     def test_propagation_random_paramters(self) -> None:
         """Test target parameter sampling from intervals"""
@@ -588,7 +588,7 @@ class TestSingleTargetRadarChannel(_TestRadarChannelBase[SingleTargetRadarChanne
         propagation = self.channel.propagate(Signal.Create(input_signal[np.newaxis, :], self.sampling_rate, self.carrier_frequency), self.alpha_device, self.beta_device)
 
         input_freq = np.fft.fft(input_signal)
-        output_freq = np.fft.fft(propagation[0, :].flatten()[-num_samples:])
+        output_freq = np.fft.fft(propagation.getitem((0, slice(-num_samples, None))).flatten())
 
         freq_resolution = self.sampling_rate / num_samples
 
@@ -608,7 +608,7 @@ class TestSingleTargetRadarChannel(_TestRadarChannelBase[SingleTargetRadarChanne
         self.channel.target_exists = False
         propagation = self.channel.propagate(Signal.Create(input_signal, self.sampling_rate), self.alpha_device, self.beta_device)
 
-        assert_array_almost_equal(propagation[:, :], np.zeros_like(input_signal))
+        assert_array_almost_equal(propagation.getitem(), np.zeros_like(input_signal))
 
     def test_no_attenuation(self) -> None:
         """Make sure the signal energy is preserved when the attenuate flag is disabled"""

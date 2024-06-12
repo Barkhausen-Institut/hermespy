@@ -317,7 +317,7 @@ class TestClusterDelayLine(TestCase):
         propagated_signal = sample.propagate(signal)
         
         expected_tof_delay = np.linalg.norm(self.alpha_device.state(0).position - self.beta_device.state(0).position) / speed_of_light * self.bandwidth
-        delay = np.argmax(np.abs(propagated_signal[0, :]) != 0.0)
+        delay = np.argmax(np.abs(propagated_signal.getitem(0)) != 0.0)
         
         self.assertAlmostEqual(expected_tof_delay, delay, delta=1)
         
@@ -331,7 +331,7 @@ class TestClusterDelayLine(TestCase):
         signal = DenseSignal(np.ones((sample.num_transmit_antennas, 1)), self.bandwidth, self.carrier_frequency)
         propagated_signal = sample.propagate(signal)
         
-        delay = np.argmax(np.abs(propagated_signal[0, :]) != 0.0)
+        delay = np.argmax(np.abs(propagated_signal.getitem(0)) != 0.0)
         
         self.assertAlmostEqual(0, delay, delta=1)
         

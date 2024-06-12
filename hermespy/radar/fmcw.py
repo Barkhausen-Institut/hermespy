@@ -109,10 +109,10 @@ class FMCW(RadarWaveform, Serializable):
 
         resampled_input_signal = input_signal.resample(self.sampling_rate)
         input_samples = (
-            resampled_input_signal[0, :num_frame_samples]
+            resampled_input_signal.getitem((0, slice(None, num_frame_samples)))
             if resampled_input_signal.num_samples >= num_frame_samples
             else np.append(
-                resampled_input_signal[0, :],
+                resampled_input_signal.getitem(0),
                 np.zeros(num_frame_samples - resampled_input_signal.num_samples),
             )
         )
