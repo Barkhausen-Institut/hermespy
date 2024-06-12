@@ -1865,11 +1865,8 @@ class Device(ABC, Transformable, RandomNode, Serializable):
             selected_receive_antennas = receiver.selected_receive_ports
             stream_selector = (
                 slice(None) if selected_receive_antennas is None else selected_receive_antennas
-            )
-
-            stream_samples = superimposed_signal[stream_selector, :]
-            operator_input = superimposed_signal.from_ndarray(stream_samples)
-            operator_inputs.append(operator_input)
+            )  # type: slice | Sequence[int]
+            operator_inputs.append(superimposed_signal.getstreams(stream_selector))
 
         # Cache the operator inputs if the respective flag is enabled
         if cache:

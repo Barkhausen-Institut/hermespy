@@ -98,7 +98,7 @@ class TestOperationResult(TestCase):
             recalled_result = OperationResult.from_HDF(file["g1"])
             file.close()
 
-            assert_array_equal(self.result.signal, recalled_result.signal)
+            assert_array_equal(self.result.signal.getitem(), recalled_result.signal.getitem())
 
 
 class TestOperator(TestCase):
@@ -193,7 +193,7 @@ class TestDeviceOutput(TestCase):
             recalled_output = DeviceOutput.from_HDF(file["g1"])
             file.close()
 
-            assert_array_equal(self.signal, recalled_output.mixed_signal)
+            assert_array_equal(self.signal.getitem(), recalled_output.mixed_signal.getitem())
 
 
 class TestDeviceTransmission(TestCase):
@@ -231,8 +231,8 @@ class TestDeviceTransmission(TestCase):
             recalled_transmission = DeviceTransmission.Recall(file["g1"], self.device)
             file.close()
 
-            assert_array_equal(self.mixed_signal, deserialized_transmission.mixed_signal)
-            assert_array_equal(self.mixed_signal, recalled_transmission.mixed_signal)
+            assert_array_equal(self.mixed_signal.getitem(), deserialized_transmission.mixed_signal.getitem())
+            assert_array_equal(self.mixed_signal.getitem(), recalled_transmission.mixed_signal.getitem())
 
 
 class TestDeviceInput(TestCase):
@@ -263,7 +263,7 @@ class TestDeviceInput(TestCase):
             recalled_input = DeviceInput.from_HDF(file["g1"])
             file.close()
 
-            assert_array_equal(self.impinging_signals[0][:, :], recalled_input.impinging_signals[0][:, :])
+            assert_array_equal(self.impinging_signals[0].getitem(), recalled_input.impinging_signals[0].getitem())
 
 
 class TestProcessedDeviceInput(TestCase):
@@ -298,7 +298,7 @@ class TestProcessedDeviceInput(TestCase):
             recalled_input = ProcessedDeviceInput.from_HDF(file["g1"])
             file.close()
 
-            assert_array_equal(self.impinging_signals[0][:, :], recalled_input.impinging_signals[0][:, :])
+            assert_array_equal(self.impinging_signals[0].getitem(), recalled_input.impinging_signals[0].getitem())
 
 
 class TestDeviceReception(TestCase):
@@ -332,8 +332,8 @@ class TestDeviceReception(TestCase):
 
         file.close()
 
-        assert_array_equal(self.operator_receptions[0].signal[:, :], deserialized_reception.operator_receptions[0].signal[:, :])
-        assert_array_equal(self.operator_receptions[0].signal[:, :], recalled_reception.operator_receptions[0].signal[:, :])
+        assert_array_equal(self.operator_receptions[0].signal.getitem(), deserialized_reception.operator_receptions[0].signal.getitem())
+        assert_array_equal(self.operator_receptions[0].signal.getitem(), recalled_reception.operator_receptions[0].signal.getitem())
 
 
 class MixingOperatorMock(MixingOperator):
@@ -882,7 +882,7 @@ class TestDevice(TestCase):
         transmitter.transmit()
 
         output = self.device.generate_output()
-        assert_array_equal(transmitter.mock_transmission.signal[:, :], output.mixed_signal[:, :])
+        assert_array_equal(transmitter.mock_transmission.signal.getitem(), output.mixed_signal.getitem())
 
     def test_transmit(self) -> None:
         """Transmit should return the proper transmission"""
@@ -891,7 +891,7 @@ class TestDevice(TestCase):
         self.device.transmitters.add(transmitter)
 
         transmission = self.device.transmit()
-        assert_array_equal(transmitter.mock_transmission.signal[:, :], transmission.mixed_signal[:, :])
+        assert_array_equal(transmitter.mock_transmission.signal.getitem(), transmission.mixed_signal.getitem())
 
     def test_cache_transmission(self) -> None:
         """Cache device transmission should properly cache operator transmissions"""
@@ -916,11 +916,11 @@ class TestDevice(TestCase):
 
         processed_input = self.device.process_input(impinging_signal)
         receiver.cache_reception.assert_called()
-        assert_array_equal(impinging_signal[:, :], processed_input.impinging_signals[0][:, :])
+        assert_array_equal(impinging_signal.getitem(), processed_input.impinging_signals[0].getitem())
 
         processed_input = self.device.process_input([impinging_signal, impinging_signal])
-        assert_array_equal(impinging_signal[:, :], processed_input.impinging_signals[0][:, :])
-        assert_array_equal(impinging_signal[:, :], processed_input.impinging_signals[1][:, :])
+        assert_array_equal(impinging_signal.getitem(), processed_input.impinging_signals[0].getitem())
+        assert_array_equal(impinging_signal.getitem(), processed_input.impinging_signals[1].getitem())
 
     def test_receive_operators_validation(self) -> None:
         """Receive operators should raise a ValueError if number of signals doesn't match number of receivers"""
@@ -957,4 +957,4 @@ class TestDevice(TestCase):
         self.device.receivers.add(receiver)
 
         reception = self.device.receive(impinging_signal)
-        assert_array_equal(impinging_signal[:, :], reception.impinging_signals[0][:, :])
+        assert_array_equal(impinging_signal.getitem(), reception.impinging_signals[0].getitem())

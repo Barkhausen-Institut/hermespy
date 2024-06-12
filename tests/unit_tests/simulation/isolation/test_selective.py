@@ -50,4 +50,4 @@ class TestSelectiveLeakage(TestCase):
         test_signal[:, 0] = 1.0
 
         leaked_signal = self.leakage.leak(test_signal)
-        assert_array_almost_equal(np.abs(6 * test_signal[:, :]), np.abs(leaked_signal[:, :100]))
+        assert_array_almost_equal(np.abs(6 * test_signal.getitem()), np.abs(leaked_signal.getitem((slice(None, None), slice(None, 100)))))

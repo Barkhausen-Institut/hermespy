@@ -43,11 +43,11 @@ class TestDelayCalibration(TestCase):
         test_signal = Signal.Create(test_samples, 5 / abs(self.delay))
 
         self.calibration.delay = abs(self.delay)
-        assert_array_equal(test_signal[:, :], self.calibration.correct_transmit_delay(test_signal)[:, :])
+        assert_array_equal(test_signal.getitem(), self.calibration.correct_transmit_delay(test_signal).getitem())
 
         self.calibration.delay = -abs(self.delay)
-        expected_delayed_samples = np.concatenate((np.zeros((test_signal.num_streams, 5), dtype=complex), test_signal[:, :]), axis=1)
-        assert_array_equal(expected_delayed_samples, self.calibration.correct_transmit_delay(test_signal)[:, :])
+        expected_delayed_samples = np.concatenate((np.zeros((test_signal.num_streams, 5), dtype=complex), test_signal.getitem()), axis=1)
+        assert_array_equal(expected_delayed_samples, self.calibration.correct_transmit_delay(test_signal).getitem())
 
     def test_correct_receive_delay(self) -> None:
         """Delays should be correctly corrected during reception"""
@@ -56,11 +56,11 @@ class TestDelayCalibration(TestCase):
         test_signal = Signal.Create(test_samples, 1 / abs(self.delay))
 
         self.calibration.delay = -abs(self.delay)
-        assert_array_equal(test_signal[:, :], self.calibration.correct_receive_delay(test_signal)[:, :])
+        assert_array_equal(test_signal.getitem(), self.calibration.correct_receive_delay(test_signal).getitem())
 
         self.calibration.delay = abs(self.delay)
         expected_delayed_samples = test_samples[:, 1:]
-        assert_array_equal(expected_delayed_samples, self.calibration.correct_receive_delay(test_signal)[:, :])
+        assert_array_equal(expected_delayed_samples, self.calibration.correct_receive_delay(test_signal).getitem())
 
     def test_estimate_validation(self) -> None:
         """Delay estimation routine should raise ValueErrors for invalid arguments"""
@@ -93,7 +93,7 @@ class TestDelayCalibration(TestCase):
             def trigger_side_effect(signal: Signal) -> Signal:
                 # Prepend delay samples
                 delayed_signal: Signal = signal.copy()
-                delayed_signal.set_samples(np.append(np.zeros((delayed_signal.num_streams, expected_delay_samples), dtype=complex), delayed_signal[:, :]))
+                delayed_signal.set_samples(np.append(np.zeros((delayed_signal.num_streams, expected_delay_samples), dtype=complex), delayed_signal.getitem()))
 
                 return delayed_signal
 

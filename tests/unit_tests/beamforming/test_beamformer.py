@@ -233,7 +233,7 @@ class TestTransmitBeamformer(TestCase):
         signal = Signal.Create(np.ones((2, 10), dtype=complex), 1.0)
         encoded_signal = self.beamformer.encode_streams(signal)
 
-        assert_array_equal(signal[:, :], encoded_signal[:, :])
+        assert_array_equal(signal.getitem(), encoded_signal.getitem())
 
     def test_precoding_setget(self) -> None:
         """Precoding property getter should return setter argument"""
@@ -295,7 +295,7 @@ class TestTransmitBeamformer(TestCase):
         focus = SphericalFocus(0, 0)
 
         steered_signal = self.beamformer.transmit(expected_signal, focus)
-        assert_array_equal(expected_signal[:, :], steered_signal[:, :])
+        assert_array_equal(expected_signal.getitem(), steered_signal.getitem())
 
     def test_transmit_sequence_argument(self) -> None:
         """Transmit routine should correctly envoke the encode subroutine"""
@@ -304,7 +304,7 @@ class TestTransmitBeamformer(TestCase):
         focus = [SphericalFocus(0, f) for f in range(self.beamformer.num_transmit_focus_points)]
 
         steered_signal = self.beamformer.transmit(expected_signal, focus)
-        assert_array_equal(expected_signal[:, :], steered_signal[:, :])
+        assert_array_equal(expected_signal.getitem(), steered_signal.getitem())
 
 
 class ReceiveBeamformerMock(ReceiveBeamformer):
@@ -353,7 +353,7 @@ class TestReceiveBeamformer(TestCase):
         signal = Signal.Create(np.ones((2, 10), dtype=complex), 1.0)
         decoded_signal = self.beamformer.decode_streams(signal)
 
-        assert_array_equal(signal[:, :], decoded_signal[:, :])
+        assert_array_equal(signal.getitem(), decoded_signal.getitem())
 
     def test_precoding_setget(self) -> None:
         """Precoding property getter should return setter argument"""
@@ -435,7 +435,7 @@ class TestReceiveBeamformer(TestCase):
         focus = SphericalFocus(0, 0)
 
         steered_signal = self.beamformer.receive(expected_signal, focus)
-        assert_array_equal(expected_signal[:, :], steered_signal[:, :])
+        assert_array_equal(expected_signal.getitem(), steered_signal.getitem())
 
     def test_receive_sequence_argument(self) -> None:
         """Receive routine should correctly envoke the encode subroutine"""
@@ -444,7 +444,7 @@ class TestReceiveBeamformer(TestCase):
         focus = [SphericalFocus(0, f) for f in range(self.beamformer.num_receive_focus_points)]
 
         steered_signal = self.beamformer.receive(expected_signal, focus)
-        assert_array_equal(expected_signal[:, :], steered_signal[:, :])
+        assert_array_equal(expected_signal.getitem(), steered_signal.getitem())
 
     def test_probe_validation(self) -> None:
         """Probe routine should raise exceptions on invalid configurations"""

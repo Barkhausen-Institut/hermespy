@@ -197,7 +197,7 @@ class TestSignal():
         self.assertEqual(kwargs['num_streams'], empty_signal.num_streams)
 
     def test_setgetitem(self) -> None:
-        """__setitem__ and __getitem__ should return the correct slices of the original samples."""
+        """__setitem__ and getitem should return the correct slices of the original samples."""
 
         slice_full = slice(None, None)
 
@@ -230,9 +230,9 @@ class TestSignal():
             np.array([*[[False]*self.num_samples]]*self.num_streams, dtype=bool)
         ]
 
-        # __getitem__
+        # getitem
         for key in keys:
-            assert_array_equal(self.samples_dense[key].flatten(), self.signal[key].flatten())
+            assert_array_equal(self.samples_dense[key].flatten(), self.signal.getitem(key).flatten())
 
         # __setitem__
         dummy_value = 13.37 + 73.31j
@@ -246,11 +246,11 @@ class TestSignal():
                 # Try assigning a scalar
                 signal_new = self.signal.copy()
                 signal_new[key] = dummy_value
-                assert_array_equal(signal_new[key].flatten(), dummy_samples_full[key].flatten())
+                assert_array_equal(signal_new.getitem(key).flatten(), dummy_samples_full[key].flatten())
                 # Try assigning a ndarray
                 signal_new = self.signal.copy()
                 signal_new[key] = dummy_samples_diff[key]
-                assert_array_equal(signal_new[key].flatten(), dummy_samples_diff[key].flatten())
+                assert_array_equal(signal_new.getitem(key).flatten(), dummy_samples_diff[key].flatten())
             except NotImplementedError as e:
                 # Currently this happens only in the following situations:
                 # On non-positive steps
@@ -270,25 +270,45 @@ class TestSignal():
                 raise AssertionError(f"Unexpected NotImplementedError:\n{e}")
 
         # Extra cases
-        samples_init = self.signal[:, :]
+        samples_init = self.signal.getitem()
         # key, value, expected result
         key_value_expectedRes = [
             # nothing should be done
             (slice(self.num_streams+1, self.num_streams+2),
              dummy_value,
              samples_init),
-            # replace only the one stream
+            # replace only one stream
             ((0, slice_full),
              np.arange(0, self.signal.num_samples),
              np.append(
                  np.arange(0, self.signal.num_samples).reshape((1, self.signal.num_samples)),
-                 self.signal[1:, :],
+                 self.signal.getitem(slice(1, None)),
                  0))
         ]
         for key, value, expected_result in key_value_expectedRes:
             signal_new = self.signal.copy()
             signal_new[key] = value
-            assert_array_equal(signal_new[:, :], expected_result[:, :])
+            assert_array_equal(signal_new.getitem(), expected_result[:, :])
+
+    def test_getstreams(self) -> None:
+        """getstreams should yield the same result a getitem, but casted to the Signal."""
+
+        keys = [
+            0, 1, -1,
+            slice(None, None),
+            slice(1, None),
+            slice(1, -1),
+            slice(None, None, 2),
+            slice(None, None, -1)
+        ]
+
+        for key in keys:
+            expected_samples = self.signal.getitem(key)
+            actual = self.signal.getstreams(key)
+            assert_array_equal(actual.getitem(), expected_samples)
+            self.assertEqual(actual.__class__, self.signal.__class__)
+            for prop_actual, prop_expected in zip(actual.kwargs, self.signal.kwargs):
+                self.assertEqual(prop_actual[1], prop_expected[1])
 
     def test_setitem_validation(self) -> None:
         """__setitem__ should raise a ValueError or an IndexError on attempts to set incorrect data."""
@@ -367,14 +387,14 @@ class TestSignal():
         signal_new.set_samples(samples_new, self.offsets)
         self.assertEquals(signal_new.num_streams, 1)
         for s, o in zip(samples_new, self.offsets):
-            assert_array_equal(signal_new[:, o:o+s.shape[1]], s)
+            assert_array_equal(signal_new.getitem((slice(None, None), slice(o, o+s.shape[1]))), s)
 
         # Try setting non-complex samples
         signal_new = self.signal.copy()
         samples_new = [s.astype(np.float_) for s in self.samples_sparse]
         signal_new.set_samples(samples_new, self.offsets)
         for s, o in zip(samples_new, self.offsets):
-            assert_array_equal(signal_new[:, o:o+s.shape[1]], s)
+            assert_array_equal(signal_new.getitem((slice(None, None), slice(o, o+s.shape[1]))), s)
         for b in self.signal:
             self.assertTrue(np.iscomplexobj(b))
 
@@ -387,7 +407,7 @@ class TestSignal():
         # should clamp the offsets to the ends of the windows
         signal_new = self.signal.copy()
         signal_new.set_samples(self.samples_sparse)
-        assert_array_equal(signal_new[:, :], np.concatenate(self.samples_sparse, axis=1))
+        assert_array_equal(signal_new.getitem(), np.concatenate(self.samples_sparse, axis=1))
 
         # Try setting samples as a 3D tensor
         signal_new = self.signal.copy()
@@ -396,7 +416,7 @@ class TestSignal():
         samples_new = np.asarray(samples_new)
         signal_new.set_samples(samples_new, self.offsets)
         for s, o in zip(samples_new, self.offsets):
-            assert_array_equal(signal_new[:, o:o+s.shape[1]], s)
+            assert_array_equal(signal_new.getitem((slice(None, None), slice(o, o+s.shape[1]))), s)
 
         # Try setting a higher dim tensor
         with self.assertRaises(ValueError):
@@ -564,7 +584,7 @@ class TestSignal():
         down_signal = up_signal.resample(self.sampling_rate, False)
 
         # Compare to the initial samples
-        assert_array_almost_equal(initial_samples, down_signal[:, :], decimal=2)
+        assert_array_almost_equal(initial_samples, down_signal.getitem(), decimal=2)
         self.assertEqual(self.sampling_rate, down_signal.sampling_rate)
 
     def test_resampling_circular_filter(self) -> None:
@@ -581,7 +601,7 @@ class TestSignal():
         down_signal = up_signal.resample(self.sampling_rate, aliasing_filter=True)
 
         # Compare to the initial samples
-        assert_array_almost_equal(abs(samples[:, 10:]), abs(down_signal[:, 10:]), decimal=1)
+        assert_array_almost_equal(abs(samples[:, 10:]), abs(down_signal.getitem((slice(None, None), slice(10, None)))), decimal=1)
         self.assertEqual(self.sampling_rate, down_signal.sampling_rate)
 
     def test_superimpose_validation(self) -> None:
@@ -604,7 +624,7 @@ class TestSignal():
         copied_signal.set_samples(self.random.random((self.num_streams, self.num_samples)) + 1j * self.random.random((self.num_streams, self.num_samples)))
         self.signal.superimpose(copied_signal, stream_indices=[])
 
-        assert_array_equal(self.signal[:, :], self.samples_dense)
+        assert_array_equal(self.signal.getitem(), self.samples_dense)
 
     def test_superimpose_empty_samples(self) -> None:
         """Superimposition to an empty signal should pad it with zeros"""
@@ -612,7 +632,7 @@ class TestSignal():
         signal_empty = self.signal.Empty(num_streams=self.num_streams, num_samples=0, **self.signal.kwargs)
         signal_empty.superimpose(self.signal)
 
-        assert_array_equal(signal_empty[:, :], self.signal[:, :])
+        assert_array_equal(signal_empty.getitem(), self.signal.getitem())
 
     def test_superimpose_no_overlap(self) -> None:
         """Superimposing two non-overlapping signal models should yield the original signal"""
@@ -621,7 +641,7 @@ class TestSignal():
         copied_signal.carrier_frequency = self.signal.carrier_frequency + 4 * self.signal.sampling_rate
         self.signal.superimpose(copied_signal)
 
-        assert_array_equal(self.signal[:, :], self.samples_dense)
+        assert_array_equal(self.signal.getitem(), self.samples_dense)
 
     def test_superimpose_power_full(self) -> None:
         """Superimposing two full overlapping signal models should yield approximately the sum of both model's individual power"""
@@ -726,7 +746,7 @@ class TestSignal():
         """Appending a signal model should yield the proper result"""
 
         # Init
-        samples = self.signal[:, :].copy()
+        samples = self.signal.getitem().copy()
         append_samples = samples + 1j
         append_signal = self.signal.from_ndarray(append_samples)
         expected_samples = np.append(samples, append_samples, axis=1)
@@ -734,28 +754,27 @@ class TestSignal():
         # Try appending a signal
         signal_new = self.signal.copy()
         signal_new.append_samples(append_signal)
-        assert_array_equal(expected_samples, signal_new[:, :])
+        assert_array_equal(expected_samples, signal_new.getitem())
 
         # Try appending a np.ndarray
         signal_new = self.signal.copy()
         signal_new.append_samples(append_samples)
-        assert_array_equal(expected_samples, signal_new[:, :])
+        assert_array_equal(expected_samples, signal_new.getitem())
 
         # Try appending to an empty signal
         signal_new = self.signal.Empty(num_streams=self.signal.num_streams, **self.signal.kwargs)
         signal_new.append_samples(self.signal)
-        assert_array_equal(self.signal[:, :], signal_new[:, :])
+        assert_array_equal(self.signal.getitem(), signal_new.getitem())
 
     def test_append_samples_validation(self) -> None:
         """Appending to a signal model should raise a ValueError if the models don't match"""
 
         with self.assertRaises(ValueError):
-            samples = self.signal[0, :]
-            append_signal = self.signal.from_ndarray(samples)
+            append_signal = self.signal.getstreams(0)
             self.signal.append_samples(append_signal)
 
         with self.assertRaises(ValueError):
-            samples = self.signal[:, :]
+            samples = self.signal.getitem()
             append_signal = self.signal.Create(samples, self.signal.sampling_rate, 0.0)
             self.signal.append_samples(append_signal)
 
@@ -763,7 +782,7 @@ class TestSignal():
         """Appending a signal model should yield the proper result"""
 
         # Init
-        samples = self.signal[:, :].copy()
+        samples = self.signal.getitem().copy()
         append_samples = samples + 1j
         append_signal = self.signal.from_ndarray(append_samples)
         expected_samples = np.append(samples, append_samples, axis=0)
@@ -771,28 +790,28 @@ class TestSignal():
         # Try appending a signal
         signal_new = self.signal.copy()
         signal_new.append_streams(append_signal)
-        assert_array_equal(expected_samples, signal_new[:, :])
+        assert_array_equal(expected_samples, signal_new.getitem())
 
         # Try appending a np.ndarray
         signal_new = self.signal.copy()
         signal_new.append_streams(append_samples)
-        assert_array_equal(expected_samples, signal_new[:, :])
+        assert_array_equal(expected_samples, signal_new.getitem())
 
         # Try appending to an empty signal
         signal_new = self.signal.Empty(num_streams=0, **self.signal.kwargs)
         signal_new.append_streams(self.signal)
-        assert_array_equal(self.signal[:, :], signal_new[:, :])
+        assert_array_equal(self.signal.getitem(), signal_new.getitem())
 
     def test_append_stream_validation(self) -> None:
         """Appending to a signal model should raise a ValueError if the models don't match"""
 
         with self.assertRaises(ValueError):
-            samples = self.signal[:, 0]
+            samples = self.signal.getitem((slice(None, None), 0))
             append_signal = Signal.Create(samples, self.signal.sampling_rate, self.signal.carrier_frequency)
             self.signal.append_streams(append_signal)
 
         with self.assertRaises(ValueError):
-            samples = self.signal[:, :]
+            samples = self.signal.getitem()
             append_signal = Signal.Create(samples, self.signal.sampling_rate, 0.0)
             self.signal.append_streams(append_signal)
 
@@ -807,7 +826,7 @@ class TestSignal():
         interleaved_signal = self.signal.to_interleaved(scale=True)
         deinterleaved_signal = self.signal.from_interleaved(interleaved_signal, **self.kwargs)
 
-        assert_array_almost_equal(np.angle(self.samples_dense), np.angle(deinterleaved_signal[:, :]), decimal=3)
+        assert_array_almost_equal(np.angle(self.samples_dense), np.angle(deinterleaved_signal.getitem()), decimal=3)
         self.assertEqual(self.signal.sampling_rate, deinterleaved_signal.sampling_rate)
         self.assertEqual(self.signal.carrier_frequency, deinterleaved_signal.carrier_frequency)
         self.assertEqual(self.signal.delay, deinterleaved_signal.delay)
@@ -840,7 +859,7 @@ class TestSignal():
     def test_to_dense(self) -> None:
         """to_dense method should return a DenseSignal version of the signal."""
 
-        assert_array_equal(self.signal[:, :], self.signal.to_dense()[:, :])
+        assert_array_equal(self.signal.getitem(), self.signal.to_dense().getitem())
 
 
 class TestDenseSignal(TestSignal, TestCase):
@@ -872,7 +891,7 @@ class TestSparseSignal(TestSignal, TestCase):
         self.assertEqual("Sparse Signal Model", self.signal.title)
 
     def test_setgetitem_validation(self) -> None:
-        """__setitem__ and __getitem__ should raise IndexError on incorrect slicing."""
+        """__setitem__ and getitem should raise IndexError on incorrect slicing."""
 
         keys_index_error = [
             # "Streams slice start must be lower then stop"
@@ -901,13 +920,13 @@ class TestSparseSignal(TestSignal, TestCase):
             1.5
         ]
 
-        # __getitem__
+        # getitem
         for key in keys_index_error:
             with self.assertRaises(IndexError):
-                self.signal[key]
+                self.signal.getitem(key)
         for key in keys_type_error:
             with self.assertRaises(TypeError):
-                self.signal[key]
+                self.signal.getitem(key)
 
         # __setitem__
         dummy_value = 13.37 + 73.31j

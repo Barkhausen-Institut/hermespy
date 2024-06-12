@@ -66,16 +66,16 @@ class TestSelectiveLeakageCalibration(TestCase):
         received_signal = Signal.Create(np.array([[1, 2, 3, 4, 5]], dtype=np.complex_), 1.0)
 
         with self.assertRaises(ValueError):
-            _ = self.calibration.remove_leakage(Signal.Create(np.repeat(transmitted_signal[:, :], 2, axis=0), transmitted_signal.sampling_rate), received_signal, 0.0)
+            _ = self.calibration.remove_leakage(Signal.Create(np.repeat(transmitted_signal.getitem(), 2, axis=0), transmitted_signal.sampling_rate), received_signal, 0.0)
 
         with self.assertRaises(ValueError):
-            _ = self.calibration.remove_leakage(transmitted_signal, Signal.Create(np.repeat(received_signal[:, :], 2, axis=0), received_signal.sampling_rate), 0.0)
+            _ = self.calibration.remove_leakage(transmitted_signal, Signal.Create(np.repeat(received_signal.getitem(), 2, axis=0), received_signal.sampling_rate), 0.0)
 
         with self.assertRaises(ValueError):
-            _ = self.calibration.remove_leakage(Signal.Create(transmitted_signal[:, :], 2 * transmitted_signal.sampling_rate), received_signal, 0.0)
+            _ = self.calibration.remove_leakage(Signal.Create(transmitted_signal.getitem(), 2 * transmitted_signal.sampling_rate), received_signal, 0.0)
 
         with self.assertRaises(ValueError):
-            _ = self.calibration.remove_leakage(Signal.Create(transmitted_signal[:, :], transmitted_signal.sampling_rate, 10), received_signal, 0.0)
+            _ = self.calibration.remove_leakage(Signal.Create(transmitted_signal.getitem(), transmitted_signal.sampling_rate, 10), received_signal, 0.0)
 
     def test_remove_leakage_positive(self) -> None:
         """Leakage should be correctly removed from the signal"""
@@ -86,8 +86,8 @@ class TestSelectiveLeakageCalibration(TestCase):
         corrected_positive_signal = self.calibration.remove_leakage(transmitted_signal, received_signal, 3.0)
         corrected_negative_signal = self.calibration.remove_leakage(transmitted_signal, received_signal, -3.0)
 
-        assert_array_equal(np.array([[-1.0 + 0.0j, -1.0 - 1.0j, 3.0 + 0.0j, 4.0 + 0.0j, 5.0 + 0.0j]], dtype=np.complex_), corrected_positive_signal[:, :])
-        assert_array_equal(np.array([[1.0 + 0.0j, 2.0 + 0.0j, 3.0 + 0.0j, 4.0 + 0.0j, 5.0 + 0.0j]], dtype=np.complex_), corrected_negative_signal[:, :])
+        assert_array_equal(np.array([[-1.0 + 0.0j, -1.0 - 1.0j, 3.0 + 0.0j, 4.0 + 0.0j, 5.0 + 0.0j]], dtype=np.complex_), corrected_positive_signal.getitem())
+        assert_array_equal(np.array([[1.0 + 0.0j, 2.0 + 0.0j, 3.0 + 0.0j, 4.0 + 0.0j, 5.0 + 0.0j]], dtype=np.complex_), corrected_negative_signal.getitem())
 
     def test_plot(self) -> None:
         """Test the visualization of the calibration"""

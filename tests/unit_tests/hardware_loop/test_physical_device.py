@@ -194,7 +194,7 @@ class TestPhysicalDevice(TestCase):
         transmission = self.device.transmit()
 
         _upload.assert_called_once()
-        assert_array_equal(transmitted_signal[:, :], transmission.mixed_signal[:, :])
+        assert_array_equal(transmitted_signal.getitem(), transmission.mixed_signal.getitem())
 
     @patch("hermespy.hardware_loop.physical_device.PhysicalDevice._upload")
     def test_transmit_adpative_sampling(self, _upload: MagicMock) -> None:
@@ -211,7 +211,7 @@ class TestPhysicalDevice(TestCase):
         transmission = self.device.transmit()
 
         _upload.assert_called_once()
-        assert_array_equal(transmitted_signal[:, :], transmission.mixed_signal[:, :])
+        assert_array_equal(transmitted_signal.getitem(), transmission.mixed_signal.getitem())
 
     def test_transmit_validation(self) -> None:
         """Phyiscal device extended transmit routine should raise RuntimeErrors on invalid configurations"""
@@ -313,11 +313,11 @@ class TestPhysicalDevice(TestCase):
 
         # Check with default cutoff frequency
         self.device.lowpass_bandwidth = 0.0
-        default_filtered_samples = self.device.process_input().impinging_signals[0][:, :]
+        default_filtered_samples = self.device.process_input().impinging_signals[0].getitem()
 
         # Check with specific cutoff frequency
         self.device.lowpass_bandwidth = 0.5 * self.device.sampling_rate
-        filtered_samples = self.device.process_input().impinging_signals[0][:, :]
+        filtered_samples = self.device.process_input().impinging_signals[0].getitem()
 
         assert_array_equal(default_filtered_samples, filtered_samples)
 
@@ -442,7 +442,7 @@ class TestNoDelayCalibration(TestCase):
         test_samples = np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 0]], dtype=np.complex_)
         test_signal = Signal.Create(test_samples, 1.0)
 
-        assert_array_equal(test_signal[:, :], self.calibration.correct_transmit_delay(test_signal)[:, :])
+        assert_array_equal(test_signal.getitem(), self.calibration.correct_transmit_delay(test_signal).getitem())
 
     def test_correct_receive_delay(self) -> None:
         """Delays should be correctly corrected during reception"""
@@ -450,7 +450,7 @@ class TestNoDelayCalibration(TestCase):
         test_samples = np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 0]], dtype=np.complex_)
         test_signal = Signal.Create(test_samples, 1.0)
 
-        assert_array_equal(test_signal[:, :], self.calibration.correct_receive_delay(test_signal)[:, :])
+        assert_array_equal(test_signal.getitem(), self.calibration.correct_receive_delay(test_signal).getitem())
 
     def test_yaml_serialization(self) -> None:
         """Test YAML serialization and deserialization"""
@@ -470,7 +470,7 @@ class TestNoLeakageCalibration(TestCase):
         transmitted_signal = Signal.Create(np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 0]], dtype=np.complex_), 1.0)
         received_signal = Signal.Create(np.array([[1, 2, 3, 4, 2], [6, 7, 8, 1, 0]], dtype=np.complex_), 1.0)
 
-        assert_array_equal(received_signal[:, :], self.leakage_calibration.remove_leakage(transmitted_signal, received_signal)[:, :])
+        assert_array_equal(received_signal.getitem(), self.leakage_calibration.remove_leakage(transmitted_signal, received_signal).getitem())
 
     def test_yaml_serialization(self) -> None:
         """Test YAML serialization and deserialization"""
