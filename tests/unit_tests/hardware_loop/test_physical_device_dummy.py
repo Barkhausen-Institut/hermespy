@@ -43,8 +43,8 @@ class TestPhysicalDeviceDummy(TestCase):
         self.dummy.trigger()
         reception = self.dummy.receive()
 
-        assert_array_almost_equal(expected_signal[:, :], transmission.mixed_signal[:, :])
-        assert_array_almost_equal(expected_signal[:, :], reception.operator_receptions[0].signal[:, :])
+        assert_array_almost_equal(expected_signal.getitem(), transmission.mixed_signal.getitem())
+        assert_array_almost_equal(expected_signal.getitem(), reception.operator_receptions[0].signal.getitem())
 
     def test_receive_transmission_flag(self) -> None:
         """Device dummy should receive nothing if respective flag is enabled"""
@@ -61,10 +61,10 @@ class TestPhysicalDeviceDummy(TestCase):
         self.dummy.trigger()
         reception = self.dummy.receive()
 
-        assert_array_almost_equal(np.zeros(expected_signal.shape), reception.operator_receptions[0].signal[:, :])
+        assert_array_almost_equal(np.zeros(expected_signal.shape), reception.operator_receptions[0].signal.getitem())
 
         direct_reception = self.dummy.trigger_direct(expected_signal)
-        assert_array_almost_equal(np.zeros(expected_signal.shape), direct_reception[:, :])
+        assert_array_almost_equal(np.zeros(expected_signal.shape), direct_reception.getitem())
 
     def test_trigger_direction(self) -> None:
         """Test trigger direct routine"""
@@ -72,7 +72,7 @@ class TestPhysicalDeviceDummy(TestCase):
         expected_signal = Signal.Create(self.rng.normal(size=(1, 100)), self.sampling_rate)
         direction_reception = self.dummy.trigger_direct(expected_signal)
 
-        assert_array_almost_equal(expected_signal[:, :], direction_reception[:, :])
+        assert_array_almost_equal(expected_signal.getitem(), direction_reception.getitem())
 
 
 class TestPhysicalScenarioDummy(TestCase):

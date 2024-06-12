@@ -474,7 +474,7 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
             carrier_frequency,
         )
         for propagation, stream_indices in zip(propagations, stream_indices):
-            combined_signal[stream_indices, : propagation.num_samples] = propagation[:, :]
+            combined_signal[stream_indices, : propagation.num_samples] = propagation.getitem()
 
         return combined_signal
 
@@ -510,7 +510,7 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
         # Simulate RF chain transmission for all specified RF chains
         rf_signals: List[Signal] = []
         for rf_chain, stream_indices in rf_chains.items():
-            stream_signal = signal.from_ndarray(signal[stream_indices, :])
+            stream_signal = signal.getstreams(stream_indices)
             rf_signals.append(rf_chain.transmit(stream_signal))
 
         # Recombine the RF chain transmissions into a single signal model
@@ -523,17 +523,17 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
         )
 
         # Simulate antenna transmission for all antennas
-        antenna_signals = signal.from_ndarray(
-            np.empty(
-                (self.num_transmit_antennas, combined_rf_signal.num_samples), dtype=np.complex_
-            )
+        antenna_signals = signal.Empty(
+            **signal.kwargs,
+            num_streams=self.num_transmit_antennas,
+            num_samples=combined_rf_signal.num_samples
         )
 
         antenna_idx = 0
-        for port, input_samples in zip(self.transmit_ports, combined_rf_signal[:, :]):
-            antenna_input = combined_rf_signal.from_ndarray(input_samples[None, :])
+        for port, stream_idx in zip(self.transmit_ports, range(combined_rf_signal.num_streams)):
+            antenna_input = combined_rf_signal.getstreams(stream_idx)
             for antenna in port.antennas:
-                antenna_signals[antenna_idx, :] = antenna.transmit(antenna_input)[:, :]
+                antenna_signals[antenna_idx, :] = antenna.transmit(antenna_input).getitem()
                 antenna_idx += 1
 
         return antenna_signals
@@ -577,11 +577,11 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
             num_samples=impinging_signal.num_samples,
             **impinging_signal.kwargs,
         )
-        for antenna_idx, (antenna_input, antenna) in enumerate(
-            zip(impinging_signal[:, :], self.receive_antennas)
+        for antenna_idx, (stream_idx, antenna) in enumerate(
+            zip(range(impinging_signal.num_streams), self.receive_antennas)
         ):
-            antenna_input_signal = impinging_signal.Create(antenna_input[None, :])
-            antenna_outputs[antenna_idx, :] = antenna.receive(antenna_input_signal)[:, :]
+            antenna_input_signal = impinging_signal.getstreams(stream_idx)
+            antenna_outputs[antenna_idx, :] = antenna.receive(antenna_input_signal).getitem()
 
         # Simulate mutual coupling between receiving antennas
         if coupling_model is not None:
@@ -600,7 +600,7 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
         rf_chains = self._rf_receive_chains(default_rf_chain)
         rf_signals: List[Signal] = []
         for rf_chain, stream_indices in rf_chains.items():
-            stream_signal = antenna_outputs.from_ndarray(antenna_outputs[stream_indices, :])
+            stream_signal = antenna_outputs.getstreams(stream_indices)
             rf_signals.append(rf_chain.receive(stream_signal))
 
         rf_receptions = self.__combine_rf_propagations(
@@ -638,7 +638,8 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
         quantized_signals: List[Signal] = []
         for rf_chain, stream_indices in rf_chains.items():
             quantized_signal = rf_chain.adc.convert(
-                rf_signal.from_ndarray(rf_signal[stream_indices, :]), frame_duration
+                rf_signal.getstreams(stream_indices),
+                frame_duration
             )
             quantized_signals.append(quantized_signal)
 
@@ -799,7 +800,7 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
                     carrier_frequency,
                 ),
                 array=self,
-            )[:, :]
+            ).getitem()
 
             antenna_weights = np.empty(self.num_transmit_antennas, dtype=np.complex_)
             antenna_idx = 0
@@ -814,7 +815,7 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
             for p, port_response in enumerate(port_responses):
                 s = Signal.Create(port_response[:, None], 1.0, carrier_frequency)
                 s = arg_0.receive(s, array=self)
-                power[p] = np.abs(s[:, :]) ** 2
+                power[p] = np.abs(s.getitem()) ** 2
 
         power /= power.max()  # Normalize for visualization purposes
 

@@ -504,7 +504,7 @@ class PhysicalDevice(Device, ABC):
                     filter_cutoff = 0.5 * self.lowpass_bandwidth
 
                 filter = butter(5, filter_cutoff, output="sos", fs=self.sampling_rate)
-                filtered_signal.set_samples(sosfilt(filter, filtered_signal[:, :], axis=1))
+                filtered_signal.set_samples(sosfilt(filter, filtered_signal.getitem(), axis=1))
 
             _impinging_signals = filtered_signal
 
@@ -678,7 +678,7 @@ class DelayCalibrationBase(Calibration, ABC):
         delay_in_samples = round(-self.delay * signal.sampling_rate)
         signal.set_samples(
             np.concatenate(
-                (np.zeros((signal.num_streams, delay_in_samples), dtype=np.complex_), signal[:, :]),
+                (np.zeros((signal.num_streams, delay_in_samples), dtype=np.complex_), signal.getitem()),
                 axis=1,
             )
         )
@@ -703,7 +703,7 @@ class DelayCalibrationBase(Calibration, ABC):
 
         # Remove samples from the signal to account for positive delays
         delay_in_samples = round(self.delay * signal.sampling_rate)
-        signal.set_samples(signal[:, delay_in_samples:])
+        signal.set_samples(signal.getitem((slice(None, None), slice(delay_in_samples, None))))
 
         return signal
 

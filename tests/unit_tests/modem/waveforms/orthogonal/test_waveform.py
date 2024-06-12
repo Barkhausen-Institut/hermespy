@@ -412,7 +412,7 @@ class TestOrthogonalWaveform(TestCase):
         self.waveform.pilot_section = pilot_mock
         pilot_signal = self.waveform.pilot_signal
 
-        assert_array_equal(expected_samples[None, :], pilot_signal[:, :])
+        assert_array_equal(expected_samples[None, :], pilot_signal.getitem())
         self.assertEqual(self.waveform.sampling_rate, pilot_signal.sampling_rate)
 
     def test_symbols_per_frame(self) -> None:

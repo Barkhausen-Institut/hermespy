@@ -100,7 +100,7 @@ class MatchedFilterJcas(DuplexJCASOperator[CommunicationWaveform], Serializable)
         correlation = (
             abs(
                 correlate(
-                    signal[:, :], self.transmission.signal[:, :], mode="valid", method="fft"
+                    signal.getitem(), self.transmission.signal.getitem(), mode="valid", method="fft"
                 ).flatten()
             )
             / self.transmission.signal.num_samples

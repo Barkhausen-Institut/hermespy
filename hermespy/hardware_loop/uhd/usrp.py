@@ -289,7 +289,7 @@ class UsrpDevice(PhysicalDevice, Serializable):
 
         # Scale signal to a maximum absolute vlaue of zero to full exploit the DAC range
         if baseband_signal.num_samples > 0 and self.scale_transmission:
-            maxAmp = np.abs(baseband_signal[:, :]).max()
+            maxAmp = np.abs([b for b in baseband_signal]).max()
             if maxAmp != 0:
                 for block in baseband_signal:
                     block /= maxAmp
@@ -303,7 +303,7 @@ class UsrpDevice(PhysicalDevice, Serializable):
                     np.zeros(
                         (baseband_signal.num_streams, self.num_prepeneded_zeros), dtype=np.complex_
                     ),
-                    baseband_signal[:, :],
+                    baseband_signal.getitem(),
                     np.zeros(
                         (baseband_signal.num_streams, self.num_appended_zeros), dtype=np.complex_
                     ),
@@ -315,7 +315,7 @@ class UsrpDevice(PhysicalDevice, Serializable):
         if baseband_signal.num_samples % 4 != 0:
             baseband_signal.set_samples(
                 np.append(
-                    baseband_signal[:, :],
+                    baseband_signal.getitem(),
                     np.zeros(
                         (baseband_signal.num_streams, 4 - baseband_signal.num_samples % 4),
                         dtype=complex,
@@ -327,7 +327,7 @@ class UsrpDevice(PhysicalDevice, Serializable):
         # Append a zero vector for unselected transmit ports
         # Workaround for the USRP wrapper missing dedicated port selections
         tx_config = TxStreamingConfig(
-            max(0.0, -self.delay_calibration.delay), MimoSignal(baseband_signal[:, :])
+            max(0.0, -self.delay_calibration.delay), MimoSignal(baseband_signal.getitem())
         )
         self.__rpc_call_wrapper(self.__usrp_client.configureTx, tx_config)
 
@@ -378,13 +378,14 @@ class UsrpDevice(PhysicalDevice, Serializable):
 
         for mimo_signal in mimo_signals:
             streams = np.array([mimo_signal.signals[i] for i in self.__selected_receive_ports])
-            signal_model.set_samples(np.append(signal_model[:, :], streams, axis=1))
+            signal_model.append_samples(streams)
 
         # Remove the zero padding hack
         signal_model.set_samples(
-            signal_model[
-                :, self.num_prepeneded_zeros : signal_model.num_samples - self.num_appended_zeros
-            ]
+            signal_model.getitem((
+                slice(None, None),
+                slice(self.num_prepeneded_zeros, signal_model.num_samples - self.num_appended_zeros)
+            ))
         )
         return signal_model
 

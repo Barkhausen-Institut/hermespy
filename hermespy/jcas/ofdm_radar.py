@@ -101,7 +101,7 @@ class OFDMRadar(DuplexJCASOperator[OFDMWaveform], Serializable):
         """
 
         # Demodulate the signal received from an angle of interest
-        received_symbols = self.waveform.demodulate(received_signal[0, :])
+        received_symbols = self.waveform.demodulate(received_signal.getitem(0))
 
         # Normalize received demodulated symbols equation (8)
         normalized_symbols = np.divide(

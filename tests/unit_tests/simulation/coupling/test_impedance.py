@@ -137,4 +137,4 @@ class TestImpedanceCoupling(TestCase):
         tx = self.coupling.transmit(signal)
         rx = self.coupling.receive(tx)
 
-        assert_array_almost_equal(signal[:, :], rx[:, :])
+        assert_array_almost_equal(signal.getitem(), rx.getitem())

@@ -327,7 +327,7 @@ class TestProcessedSimulatedDeviceInput(TestCase):
         recalled_input = ProcessedSimulatedDeviceInput.from_HDF(group)
         file.close()
 
-        assert_array_equal(self.baseband_signal[:, :], recalled_input.baseband_signal[:, :])
+        assert_array_equal(self.baseband_signal.getitem(), recalled_input.baseband_signal.getitem())
 
 
 class TestSimulatedDevice(TestCase):

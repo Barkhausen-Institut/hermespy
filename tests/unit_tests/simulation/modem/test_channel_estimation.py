@@ -102,7 +102,7 @@ class _TestIdealChannelEstimation(TestCase):
         propagation = self.channel.propagate(transmission, self.alpha_device, self.beta_device)
         self.beta_device.receive(propagation)
 
-        symbols = self.link.waveform.demodulate(propagation[0, :].flatten())
+        symbols = self.link.waveform.demodulate(propagation.getitem(0).flatten())
         stated_symbols = self.estimation.estimate_channel(symbols)
         picked_symbols = self.waveform.pick(stated_symbols)
 
