@@ -196,7 +196,7 @@ class TestHardwareLoop(TestCase):
 
     def setUp(self) -> None:
         self.scenario = PhysicalScenarioDummy()
-        self.hardware_loop = HardwareLoop[PhysicalScenarioDummy, PhysicalDeviceDummy](self.scenario)
+        self.hardware_loop = HardwareLoop[PhysicalScenarioDummy, PhysicalDeviceDummy](self.scenario, debug=True)
 
     def test_init(self) -> None:
         """Physical device class should be properly initialized"""

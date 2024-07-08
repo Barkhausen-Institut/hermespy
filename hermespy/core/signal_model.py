@@ -2049,7 +2049,9 @@ class SparseSignal(Signal):
                 b_off = b_offs[i]
                 b_stop = b_stops[i]
                 b_new = self.getitem((slice(None, None), slice(b_off, b_stop)))
-                b_new[stream_idx, :] = incoming_signal.getitem((slice(None, None), slice(b_off, min(b_stop, s11))))
+                b_new[stream_idx, :] = incoming_signal.getitem(
+                    (slice(None, None), slice(b_off, min(b_stop, s11)))
+                )
                 blocks_new_mid_new.append(SignalBlock(b_new, b_off))
             blocks_new_mid = blocks_new_mid_new
 
@@ -2200,7 +2202,7 @@ class SparseSignal(Signal):
             if is_signal_oftype_signal:
                 b2 = signal.getitem((slice(None, None), slice(b_offs[i], b_stops[i])))  # type: ignore
             else:
-                b2 = signal[:, b_offs[i]:b_stops[i]]  # type: ignore
+                b2 = signal[:, b_offs[i] : b_stops[i]]  # type: ignore
             b_new = np.concatenate((b1, b2), 0)
             blocks_new.append(SignalBlock(b_new, b_offs[i]))
 

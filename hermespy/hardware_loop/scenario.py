@@ -119,16 +119,17 @@ class SimulatedPhysicalScenario(SimulationScenario, PhysicalScenario):
         ) = None,
         cache: bool = True,
         trigger_realizations: Sequence[TriggerRealization] | None = None,
+        leaking_signals: Sequence[Signal] | Sequence[Sequence[Signal]] | None = None,
     ) -> Sequence[SimulatedDeviceReception]:
         if impinging_signals is None:
             physical_device_receptions = PhysicalScenario.receive_devices(self, None, cache)
             impinging_signals = [r.impinging_signals for r in physical_device_receptions]
 
             return SimulationScenario.receive_devices(
-                self, impinging_signals, cache, trigger_realizations
+                self, impinging_signals, cache, trigger_realizations, leaking_signals
             )
 
         else:
             return SimulationScenario.receive_devices(
-                self, impinging_signals, cache, trigger_realizations
+                self, impinging_signals, cache, trigger_realizations, leaking_signals
             )

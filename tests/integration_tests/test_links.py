@@ -325,8 +325,8 @@ class _TestLinksBase(TestCase):
         ber_treshold = 1e-2
         
         # Test signal powers
-        # transmitted_power = self.device_transmission.emerging_signals[0].power
-        # expected_transmit_power = self.link.power
+        transmitted_power = self.device_transmission.emerging_signals[0].power
+        expected_transmit_power = self.link.power
 
         self.assertGreaterEqual(ber_treshold, self.ber.evaluate().artifact().to_scalar())
         # assert_array_almost_equal(expected_transmit_power * np.ones_like(transmitted_power), transmitted_power, 1, "Transmitted waveform's power does not match expectations")

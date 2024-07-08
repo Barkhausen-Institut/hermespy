@@ -431,10 +431,9 @@ class AnalogDigitalConverter(Serializable):
 
         # Iterate over each frame independtenly
         for f in range(num_frames):
-            frame_samples = input_signal.getitem((
-                slice(None, None),
-                slice(f * num_frame_samples, (f + 1) * num_frame_samples)
-            ))
+            frame_samples = input_signal.getitem(
+                (slice(None, None), slice(f * num_frame_samples, (f + 1) * num_frame_samples))
+            )
             frame_signal = input_signal.from_ndarray(frame_samples)
 
             converted_frame_signal = self.__convert_frame(frame_signal)

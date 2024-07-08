@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from h5py import Group
 from matplotlib.projections.polar import PolarAxes
+from mpl_toolkits.mplot3d import Axes3D  # type: ignore
 from scipy.constants import pi, speed_of_light
 
 from hermespy.core import (
@@ -584,6 +585,7 @@ class ClusterDelayLineSample(ChannelSample):
 
     def plot_rays(self, title: str | None = None) -> plt.Figure:
         with Executable.style_context():
+            axis: Axes3D
             figure, axis = plt.subplots(subplot_kw={"projection": "3d"})
             colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
