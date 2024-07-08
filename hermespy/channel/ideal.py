@@ -101,7 +101,7 @@ class IdealChannelSample(ChannelSample):
 
         # MIMO case
         else:
-            propagated_samples = signal[:self.num_receive_antennas]
+            propagated_samples = signal[: self.num_receive_antennas]
             if self.num_transmit_antennas < self.num_receive_antennas:
                 propagated_samples = np.append(
                     propagated_samples,

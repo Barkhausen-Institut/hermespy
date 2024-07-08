@@ -103,7 +103,7 @@ class PhysicalDeviceDummy(SimulatedDevice, PhysicalDevice, Serializable):
         trigger_realization: TriggerRealization | None = None,
         noise_level: NoiseLevel | None = None,
         noise_model: NoiseModel | None = None,
-        leaking_signal: Signal | None = None,
+        leaking_signals: Signal | Sequence[Signal] | None = None,
     ) -> ProcessedSimulatedDeviceInput:
         _impinging_signals = (
             self.__uploaded_signal if impinging_signals is None else impinging_signals
@@ -115,7 +115,7 @@ class PhysicalDeviceDummy(SimulatedDevice, PhysicalDevice, Serializable):
             trigger_realization,
             noise_level,
             noise_model,
-            leaking_signal,
+            leaking_signals,
         )
 
     def receive(
@@ -156,7 +156,7 @@ class PhysicalDeviceDummy(SimulatedDevice, PhysicalDevice, Serializable):
 
         # Apply the simulation receive model
         leaking_signal = self.isolation.leak(signal)
-        processed_input = self.process_input(input, False, leaking_signal=leaking_signal)
+        processed_input = self.process_input(input, False, leaking_signals=leaking_signal)
         baseband_signal = processed_input.baseband_signal
 
         # Apply correction routines if calibrations are available
@@ -206,13 +206,14 @@ class PhysicalScenarioDummy(
         ) = None,
         cache: bool = True,
         trigger_realizations: Sequence[TriggerRealization] | None = None,
+        leaking_signals: Sequence[Signal] | Sequence[Sequence[Signal]] | None = None,
     ) -> Sequence[SimulatedDeviceReception]:
         if impinging_signals is None:
             physical_device_receptions = PhysicalScenario.receive_devices(self, None, cache)
             impinging_signals = [r.impinging_signals for r in physical_device_receptions]
 
         return SimulationScenario.receive_devices(
-            self, impinging_signals, cache, trigger_realizations
+            self, impinging_signals, cache, trigger_realizations, leaking_signals
         )
 
     def _trigger(self) -> None:
