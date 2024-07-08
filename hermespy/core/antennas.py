@@ -268,7 +268,8 @@ class Antenna(ABC, Generic[APT], Transformable, Serializable):
         """
 
         with Executable.style_context():
-            figure, axes = plt.subplots(1, 2, subplot_kw={"projection": "3d"})
+            axes: np.ndarray
+            figure, axes = plt.subplots(1, 2, subplot_kw={"projection": "3d"})  # type: ignore[assignment]
             figure.suptitle("Antenna Polarization")
 
             azimuth_angles = 2 * pi * np.arange(angle_resolution) / angle_resolution - pi
@@ -362,6 +363,7 @@ class Antenna(ABC, Generic[APT], Transformable, Serializable):
         """
 
         with Executable.style_context():
+            axes: Axes3D
             figure, axes = plt.subplots(subplot_kw={"projection": "3d"})
             figure.suptitle("Antenna Gain")
 

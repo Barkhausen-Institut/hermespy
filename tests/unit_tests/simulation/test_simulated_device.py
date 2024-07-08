@@ -254,9 +254,10 @@ class TestSimulatedDeviceOutput(TestCase):
         self.num_antennas = 1
         self.carrier_frequency = 4.56
         self.emerging_signals = [Signal.Create(np.zeros((1, 10)), self.sampling_rate, self.carrier_frequency) for _ in range(3)]
+        self.leaking_signals = [Signal.Create(np.zeros((1, 10)), self.sampling_rate, self.carrier_frequency) for _ in range(3)]
         self.trigger_realization = TriggerRealization(3, 1.0)
 
-        self.output = SimulatedDeviceOutput(self.emerging_signals, self.trigger_realization, self.sampling_rate, self.num_antennas, self.carrier_frequency)
+        self.output = SimulatedDeviceOutput(self.emerging_signals, self.leaking_signals, self.trigger_realization, self.sampling_rate, self.num_antennas, self.carrier_frequency)
 
     def test_properties(self) -> None:
         """The properties should return the proper values"""
@@ -271,13 +272,13 @@ class TestSimulatedDeviceOutput(TestCase):
         """Initialization parameters should be properly validated"""
 
         with self.assertRaises(ValueError):
-            _ = SimulatedDeviceOutput(self.emerging_signals, self.trigger_realization, 10.2345, self.num_antennas, self.carrier_frequency)
+            _ = SimulatedDeviceOutput(self.emerging_signals, self.leaking_signals, self.trigger_realization, 10.2345, self.num_antennas, self.carrier_frequency)
 
         with self.assertRaises(ValueError):
-            _ = SimulatedDeviceOutput(self.emerging_signals, self.trigger_realization, self.sampling_rate, 3, self.carrier_frequency)
+            _ = SimulatedDeviceOutput(self.emerging_signals, self.leaking_signals, self.trigger_realization, self.sampling_rate, 3, self.carrier_frequency)
 
         with self.assertRaises(ValueError):
-            _ = SimulatedDeviceOutput(self.emerging_signals, self.trigger_realization, self.sampling_rate, self.num_antennas, 10.456)
+            _ = SimulatedDeviceOutput(self.emerging_signals, self.leaking_signals, self.trigger_realization, self.sampling_rate, self.num_antennas, 10.456)
 
     def test_operator_separation_get(self) -> None:
         """The operator separation getter should return the proper value"""

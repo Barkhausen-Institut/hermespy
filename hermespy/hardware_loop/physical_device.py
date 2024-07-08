@@ -678,7 +678,10 @@ class DelayCalibrationBase(Calibration, ABC):
         delay_in_samples = round(-self.delay * signal.sampling_rate)
         signal.set_samples(
             np.concatenate(
-                (np.zeros((signal.num_streams, delay_in_samples), dtype=np.complex_), signal.getitem()),
+                (
+                    np.zeros((signal.num_streams, delay_in_samples), dtype=np.complex_),
+                    signal.getitem(),
+                ),
                 axis=1,
             )
         )

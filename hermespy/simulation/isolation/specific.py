@@ -5,7 +5,7 @@ from typing import Optional, Union, TYPE_CHECKING
 
 import numpy as np
 
-from hermespy.core import register, Serializable, Signal
+from hermespy.core import register, ScalarDimension, Serializable, Signal
 from .isolation import Isolation
 
 if TYPE_CHECKING:
@@ -21,7 +21,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class SpecificIsolation(Serializable, Isolation):
+class SpecificIsolation(ScalarDimension, Serializable, Isolation):
     """Specific leakage between RF chains."""
 
     yaml_tag = "Specific"
@@ -71,6 +71,13 @@ class SpecificIsolation(Serializable, Isolation):
 
         # The leaking power is the square root of the inverse isolation
         self.__leakage_factors = np.power(value, -0.5)
+
+    def __lshift__(self, scalar: float) -> None:
+        self.isolation = scalar  # type: ignore[operator]
+
+    @property
+    def title(self) -> str:
+        return "Tx-Rx Isolation"
 
     def _leak(self, signal: Signal) -> Signal:
         if self.__leakage_factors is None:

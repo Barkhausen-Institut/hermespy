@@ -382,10 +382,15 @@ class UsrpDevice(PhysicalDevice, Serializable):
 
         # Remove the zero padding hack
         signal_model.set_samples(
-            signal_model.getitem((
-                slice(None, None),
-                slice(self.num_prepeneded_zeros, signal_model.num_samples - self.num_appended_zeros)
-            ))
+            signal_model.getitem(
+                (
+                    slice(None, None),
+                    slice(
+                        self.num_prepeneded_zeros,
+                        signal_model.num_samples - self.num_appended_zeros,
+                    ),
+                )
+            )
         )
         return signal_model
 

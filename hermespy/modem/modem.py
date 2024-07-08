@@ -947,7 +947,9 @@ class ReceivingModemBase(Generic[CWT], BaseModem[CWT]):
         synchronized_signals = []
         for frame_start in frame_start_indices:
             frame_stop = frame_start + frame_length
-            frame_samples = received_signal.getitem((slice(None, None), slice(frame_start, frame_stop)))
+            frame_samples = received_signal.getitem(
+                (slice(None, None), slice(frame_start, frame_stop))
+            )
 
             # Pad the frame if it is too short
             # This may happen if the last frame is incomplete, or synhronization is not perfect
