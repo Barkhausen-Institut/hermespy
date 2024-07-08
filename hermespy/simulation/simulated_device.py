@@ -363,6 +363,7 @@ class SimulatedDeviceOutput(DeviceOutput):
     def __init__(
         self,
         emerging_signals: Signal | Sequence[Signal],
+        leaking_signals: Signal | Sequence[Signal],
         trigger_realization: TriggerRealization,
         sampling_rate: float,
         num_antennas: int,
@@ -373,6 +374,9 @@ class SimulatedDeviceOutput(DeviceOutput):
 
             emerging_signals (Signal | Sequence[Signal]):
                 Signal models emerging from the device.
+
+            leaking_signals (Signal | Sequence[Signal]):
+                Signal models leaking from transmit to receive chains.
 
             trigger_realization (TriggerRealization):
                 Trigger realization modeling the time delay between a drop start and frame start.
@@ -394,6 +398,9 @@ class SimulatedDeviceOutput(DeviceOutput):
 
         _emerging_signals = (
             [emerging_signals] if isinstance(emerging_signals, Signal) else emerging_signals
+        )
+        _leaking_signals = (
+            [leaking_signals] if isinstance(leaking_signals, Signal) else leaking_signals
         )
         superimposed_signal = Signal.Empty(
             sampling_rate, num_antennas, carrier_frequency=carrier_frequency
@@ -421,6 +428,7 @@ class SimulatedDeviceOutput(DeviceOutput):
         # Initialize attributes
         self.__trigger_realization = trigger_realization
         self.__emerging_signals = _emerging_signals
+        self.__leaking_signals = _leaking_signals
 
         # Initialize base class
         DeviceOutput.__init__(self, superimposed_signal)
@@ -430,6 +438,7 @@ class SimulatedDeviceOutput(DeviceOutput):
         cls: Type[SimulatedDeviceOutput],
         device_output: DeviceOutput,
         emerging_signals: Signal | Sequence[Signal],
+        leaking_signals: Signal | Sequence[Signal],
         trigger_realization: TriggerRealization,
     ) -> SimulatedDeviceOutput:
         """Initialize a simulated device output from its base class.
@@ -442,6 +451,9 @@ class SimulatedDeviceOutput(DeviceOutput):
             emerging_signals (Union[Signal, List[Signal]]):
                 Signal models emerging from the device.
 
+            leaking_signals (Union[Signal, List[Signal]]):
+                Signal models leaking from transmit to receive chains.
+
             trigger_realization (TriggerRealization):
                 Trigger realization modeling the time delay between a drop start and frame start.
 
@@ -450,6 +462,7 @@ class SimulatedDeviceOutput(DeviceOutput):
 
         return cls(
             emerging_signals,
+            leaking_signals,
             trigger_realization,
             device_output.sampling_rate,
             device_output.num_antennas,
@@ -476,7 +489,24 @@ class SimulatedDeviceOutput(DeviceOutput):
 
     @property
     def emerging_signals(self) -> Sequence[Signal]:
+        """Signal models emerging from the device."""
+
         return self.__emerging_signals
+
+    @property
+    def leaking_signals(self) -> Sequence[Signal]:
+        """Signal models leaking from transmit to receive chains."""
+
+        return self.__leaking_signals
+
+    @property
+    def num_leaking_signals(self) -> int:
+        """Number of leaking signals.
+
+        Returns: Number of leaking signals.
+        """
+
+        return len(self.__leaking_signals)
 
     @classmethod
     def from_HDF(cls: Type[SimulatedDeviceOutput], group: Group) -> SimulatedDeviceOutput:
@@ -489,11 +519,19 @@ class SimulatedDeviceOutput(DeviceOutput):
             Signal.from_HDF(group[f"emerging_signal_{s:02d}"]) for s in range(num_emerging_signals)
         ]
 
+        # Recall leaking signals
+        num_leaking_signals = group.attrs.get("num_leaking_signals", 0)
+        leaking_signals = [
+            Signal.from_HDF(group[f"leaking_signal_{s:02d}"]) for s in range(num_leaking_signals)
+        ]
+
         # Recall trigger realization
         trigger_realization = TriggerRealization.from_HDF(group["trigger_realization"])
 
         # Initialize object
-        return cls.From_DeviceOutput(device_output, emerging_signals, trigger_realization)
+        return cls.From_DeviceOutput(
+            device_output, emerging_signals, leaking_signals, trigger_realization
+        )
 
     def to_HDF(self, group: Group) -> None:
         # Serialize base class
@@ -503,6 +541,11 @@ class SimulatedDeviceOutput(DeviceOutput):
         group.attrs["num_emerging_signals"] = self.num_emerging_signals
         for e, emerging_signal in enumerate(self.emerging_signals):
             emerging_signal.to_HDF(group.create_group(f"emerging_signal_{e:02d}"))
+
+        # Serialize leaking signals
+        group.attrs["num_leaking_signals"] = self.num_leaking_signals
+        for ell, leaking_signal in enumerate(self.leaking_signals):
+            leaking_signal.to_HDF(group.create_group(f"leaking_signal_{ell:02d}"))
 
         # Serialize trigger realization
         self.trigger_realization.to_HDF(self._create_group(group, "trigger_realization"))
@@ -515,6 +558,7 @@ class SimulatedDeviceTransmission(DeviceTransmission, SimulatedDeviceOutput):
         self,
         operator_transmissions: Sequence[Transmission],
         emerging_signals: Signal | Sequence[Signal],
+        leaking_signals: Signal | Sequence[Signal],
         trigger_realization: TriggerRealization,
         sampling_rate: float,
         num_antennas: int,
@@ -528,6 +572,9 @@ class SimulatedDeviceTransmission(DeviceTransmission, SimulatedDeviceOutput):
 
             emerging_signals (Signal | Sequence[Signal]):
                 Signal models emerging from the device.
+
+            leaking_signals (Signal | Sequence[Signal]):
+                Signal models leaking from transmit to receive chains.
 
             trigger_realization (TriggerRealization):
                 Trigger realization modeling the time delay between a drop start and frame start.
@@ -551,6 +598,7 @@ class SimulatedDeviceTransmission(DeviceTransmission, SimulatedDeviceOutput):
         SimulatedDeviceOutput.__init__(
             self,
             emerging_signals,
+            leaking_signals,
             trigger_realization,
             sampling_rate,
             num_antennas,
@@ -567,6 +615,7 @@ class SimulatedDeviceTransmission(DeviceTransmission, SimulatedDeviceOutput):
         return cls(
             operator_transmissions,
             output.emerging_signals,
+            output.leaking_signals,
             output.trigger_realization,
             output.sampling_rate,
             output.num_antennas,
@@ -1301,7 +1350,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
     def operator_separation(self, value: bool) -> None:
         self.__operator_separation = value
 
-    def _simulate_output(self, signal: Signal) -> Signal:
+    def _simulate_output(self, signal: Signal) -> tuple[Signal, Signal]:
         """Simulate a device output over the device's hardware model.
 
         Args:
@@ -1312,13 +1361,15 @@ class SimulatedDevice(Device, Moveable, Serializable):
         """
 
         # Simulate transmission over the device's antenna array and connected RF chains
-        antenna_transmissions = self.antennas.transmit(signal, self.rf_chain)
+        antenna_transmissions, leaking_signal = self.antennas.transmit(
+            signal, self.rf_chain, self.isolation
+        )
 
         # Simulate mutual coupling behaviour
         coupled_signal = self.coupling.transmit(antenna_transmissions)
 
         # Return result
-        return coupled_signal
+        return coupled_signal, leaking_signal
 
     def generate_output(
         self,
@@ -1365,11 +1416,16 @@ class SimulatedDevice(Device, Moveable, Serializable):
             )
 
         # Generate emerging signals
-        emerging_signals: List[Signal] = []
+        # Represented by a tuple of the RF signal and the leaking signal
+        emerging_signals: list[Signal] = []
+        leaking_signals: list[Signal] = []
 
         # If operator separation is enabled, each operator transmission is processed independetly
         if self.operator_separation:
-            emerging_signals = [self._simulate_output(t.signal) for t in _operator_transmissions]
+            for t in _operator_transmissions:
+                rf_signal, leaking_signal = self._simulate_output(t.signal)
+                emerging_signals.append(rf_signal)
+                leaking_signals.append(leaking_signal)
 
         # If operator separation is disable, the transmissions are superimposed to a single signal model
         else:
@@ -1385,7 +1441,9 @@ class SimulatedDevice(Device, Moveable, Serializable):
                         transmission.signal, stream_indices=stream_indices
                     )
 
-            emerging_signals = [self._simulate_output(superimposed_signal)]
+            rf_signal, leaking_signal = self._simulate_output(superimposed_signal)
+            emerging_signals.append(rf_signal)
+            leaking_signals.append(leaking_signal)
 
         # Generate a new trigger realization of none was provided
         if trigger_realization is None:
@@ -1405,6 +1463,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
         # Genreate the output data object
         output = SimulatedDeviceOutput(
             emerging_signals,
+            leaking_signals,
             trigger_realization,
             self.sampling_rate,
             self.num_transmit_antennas,
@@ -1568,7 +1627,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
         impinging_signals: DeviceInput | Signal | Sequence[Signal] | SimulatedDeviceOutput,
         realization: SimulatedDeviceReceiveRealization,
         trigger_realization: TriggerRealization | None = None,
-        leaking_signal: Signal | None = None,
+        leaking_signals: Signal | Sequence[Signal] | None = None,
         cache: bool = True,
     ) -> ProcessedSimulatedDeviceInput:
         """Simulate a signal reception for this device model.
@@ -1590,6 +1649,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
 
             leaking_signal(Signal, optional):
                 Signal leaking from transmit to receive chains.
+                Expected to be a sequence of signals if operator_separation is enabled.
                 If not specified, no leakage is considered during signal reception.
 
             cache (bool, optional):
@@ -1637,9 +1697,15 @@ class SimulatedDevice(Device, Moveable, Serializable):
             if trigger_realization is None
             else trigger_realization.compute_num_offset_samples(self.sampling_rate)
         )
-        mixed_signal.set_samples(mixed_signal.getitem((slice(None, None), slice(num_trigger_offset_samples, None))))
+        mixed_signal.set_samples(
+            mixed_signal.getitem((slice(None, None), slice(num_trigger_offset_samples, None)))
+        )
 
         # Model the configured antenna array's input behaviour
+        # Hack: Only consider the first leaking signal
+        leaking_signal = (
+            leaking_signals[0] if isinstance(leaking_signals, Sequence) else leaking_signals
+        )
         antenna_outputs = self.antennas.receive(
             mixed_signal, self.rf_chain, leaking_signal, self.coupling
         )
@@ -1650,7 +1716,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
         # Generate output information
         processed_input = ProcessedSimulatedDeviceInput(
             _impinging_signals,
-            None,
+            leaking_signal,
             antenna_outputs,
             self.operator_separation,
             operator_inputs,
@@ -1672,7 +1738,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
         trigger_realization: TriggerRealization | None = None,
         noise_level: NoiseLevel | None = None,
         noise_model: NoiseModel | None = None,
-        leaking_signal: Signal | None = None,
+        leaking_signals: Signal | Sequence[Signal] | None = None,
     ) -> ProcessedSimulatedDeviceInput:
         """Process input signals at this device.
 
@@ -1700,8 +1766,10 @@ class SimulatedDevice(Device, Moveable, Serializable):
                 Model of the simulated hardware noise.
                 If not specified, the device's configured noise model will be assumed.
 
-            leaking_signal(Signal, optional):
-                Signal leaking from transmit to receive chains.
+            leaking_signals(Signal, optional):
+                Signals leaking from transmit to receive chains.
+                Expected to be a sequence of signals if operator_separation is enabled.
+                If not specified, no leakage is considered during signal reception.
 
         Returns: The processed device input.
         """
@@ -1711,7 +1779,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
 
         # Receive the signal
         processed_input = self.process_from_realization(
-            impinging_signals, realization, trigger_realization, leaking_signal, cache
+            impinging_signals, realization, trigger_realization, leaking_signals, cache
         )
 
         # Return result

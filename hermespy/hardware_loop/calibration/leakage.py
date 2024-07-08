@@ -139,25 +139,26 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Serializable):
             # The correction is achieved by subtracting the leaked signal from the received signal
             if delay_sample_shift >= 0:
                 leak_range = min(
-                    delay_sample_shift + len(predicted_siso_signal),
-                    corrected_signal.num_samples,
+                    delay_sample_shift + len(predicted_siso_signal), corrected_signal.num_samples
                 )
                 min_num_samples = min(
-                    corrected_signal.num_samples - delay_sample_shift,
-                    len(predicted_siso_signal),
+                    corrected_signal.num_samples - delay_sample_shift, len(predicted_siso_signal)
                 )
-                corrected_signal[m, delay_sample_shift : leak_range] = corrected_signal.getitem((m, slice(delay_sample_shift, leak_range))) - predicted_siso_signal[:min_num_samples]
+                corrected_signal[m, delay_sample_shift:leak_range] = (
+                    corrected_signal.getitem((m, slice(delay_sample_shift, leak_range)))
+                    - predicted_siso_signal[:min_num_samples]
+                )
 
             else:
                 leak_range = min(
                     delay_sample_shift + len(predicted_siso_signal),
-                    corrected_signal.num_samples + delay_sample_shift
+                    corrected_signal.num_samples + delay_sample_shift,
                 )
-                min_num_samples = min(
-                    corrected_signal.num_samples,
-                    len(predicted_siso_signal)
+                min_num_samples = min(corrected_signal.num_samples, len(predicted_siso_signal))
+                corrected_signal[m, 0:leak_range] = (
+                    corrected_signal.getitem((m, slice(0, leak_range)))
+                    - predicted_siso_signal[-delay_sample_shift:min_num_samples]
                 )
-                corrected_signal[m, 0 : leak_range] = corrected_signal.getitem((m, slice(0, leak_range))) - predicted_siso_signal[-delay_sample_shift : min_num_samples]
 
         return corrected_signal
 
@@ -275,7 +276,9 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Serializable):
             # TODO: look at the estimated delay and its reliability. If the delay cannot be estimated
             # reliably, most probably, the TX signal was not received in the window decided here
             start = num_wavelet_samples
-            received_waveforms[p, :, n, :] = rx_signal.getitem((slice(None, None), slice(start, start + num_wavelet_samples)))
+            received_waveforms[p, :, n, :] = rx_signal.getitem(
+                (slice(None, None), slice(start, start + num_wavelet_samples))
+            )
 
         # Compute received frequency spectra
         received_frequencies = fft(received_waveforms, axis=3, norm="ortho")

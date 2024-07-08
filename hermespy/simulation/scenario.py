@@ -569,6 +569,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         impinging_signals: Sequence[DeviceInput],
         cache: bool = True,
         trigger_realizations: Sequence[TriggerRealization] | None = None,
+        leaking_signals: Sequence[Signal] | Sequence[Sequence[Signal]] | None = None,
     ) -> list[ProcessedSimulatedDeviceInput]: ...  # pragma: no cover
 
     @overload
@@ -577,6 +578,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         impinging_signals: Sequence[Signal],
         cache: bool = True,
         trigger_realizations: Sequence[TriggerRealization] | None = None,
+        leaking_signals: Sequence[Signal] | Sequence[Sequence[Signal]] | None = None,
     ) -> list[ProcessedSimulatedDeviceInput]: ...  # pragma: no cover
 
     @overload
@@ -585,6 +587,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         impinging_signals: Sequence[Sequence[Signal]],
         cache: bool = True,
         trigger_realizations: Sequence[TriggerRealization] | None = None,
+        leaking_signals: Sequence[Signal] | Sequence[Sequence[Signal]] | None = None,
     ) -> list[ProcessedSimulatedDeviceInput]: ...  # pragma: no cover
 
     def process_inputs(
@@ -592,6 +595,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]],
         cache: bool = True,
         trigger_realizations: Sequence[TriggerRealization] | None = None,
+        leaking_signals: Sequence[Signal] | Sequence[Sequence[Signal]] | None = None,
     ) -> list[ProcessedSimulatedDeviceInput]:
         """Process input signals impinging onto the scenario's devices.
 
@@ -607,6 +611,10 @@ class SimulationScenario(Scenario[SimulatedDevice]):
             trigger_realizations (Sequence[TriggerRealization], optional):
                 Sequence of trigger realizations.
                 If not specified, ideal triggerings are assumed for all devices.
+
+            leaking_signals (Sequence[Signal] | Sequence[Sequence[Signal]], optional):
+                Signals leaking from transmit to receive chains within the individual devices.
+                If not specified, no leakage is assumed.
 
         Returns: list of the processed device input information.
 
@@ -631,8 +639,14 @@ class SimulationScenario(Scenario[SimulatedDevice]):
                 f"Number of trigger realizations ({len(trigger_realizations)}) does not match the number if registered devices ({self.num_devices}) within this scenario"
             )
 
+        _leaking_signals = [None] * self.num_devices if leaking_signals is None else leaking_signals
+        if len(_leaking_signals) != self.num_devices:
+            raise ValueError(
+                f"Number of leaking signals ({len(_leaking_signals)}) does not match the number if registered devices ({self.num_devices}) within this scenario"
+            )
+
         # Call the process input method for each device
-        processed_inputs = [d.process_input(i, cache, t, self.noise_level, self.noise_model) for d, i, t in zip(self.devices, impinging_signals, trigger_realizations)]  # type: ignore
+        processed_inputs = [d.process_input(i, cache, t, self.noise_level, self.noise_model, l) for d, i, t, l in zip(self.devices, impinging_signals, trigger_realizations, _leaking_signals)]  # type: ignore
 
         return processed_inputs
 
@@ -642,6 +656,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         impinging_signals: Sequence[DeviceInput],
         cache: bool = True,
         trigger_realizations: Sequence[TriggerRealization] | None = None,
+        leaking_signals: Sequence[Signal] | Sequence[Sequence[Signal]] | None = None,
     ) -> Sequence[SimulatedDeviceReception]: ...  # pragma: no cover
 
     @overload
@@ -650,6 +665,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         impinging_signals: Sequence[Signal],
         cache: bool = True,
         trigger_realizations: Sequence[TriggerRealization] | None = None,
+        leaking_signals: Sequence[Signal] | Sequence[Sequence[Signal]] | None = None,
     ) -> Sequence[SimulatedDeviceReception]: ...  # pragma: no cover
 
     @overload
@@ -658,6 +674,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         impinging_signals: Sequence[Sequence[Signal]],
         cache: bool = True,
         trigger_realizations: Sequence[TriggerRealization] | None = None,
+        leaking_signals: Sequence[Signal] | Sequence[Sequence[Signal]] | None = None,
     ) -> Sequence[SimulatedDeviceReception]: ...  # pragma: no cover
 
     def receive_devices(
@@ -665,6 +682,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]],
         cache: bool = True,
         trigger_realizations: Sequence[TriggerRealization] | None = None,
+        leaking_signals: Sequence[Signal] | Sequence[Sequence[Signal]] | None = None,
     ) -> Sequence[SimulatedDeviceReception]:
         """Receive over all simulated scenario devices.
 
@@ -683,6 +701,10 @@ class SimulationScenario(Scenario[SimulatedDevice]):
                 Sequence of trigger realizations.
                 If not specified, ideal triggerings are assumed for all devices.
 
+            leaking_signals (Sequence[Signal] | Sequence[Sequence[Signal]], optional):
+                Signals leaking from transmit to receive chains within the individual devices.
+                If not specified, no leakage is assumed.
+
         Returns: list of the processed device input information.
 
         Raises:
@@ -692,7 +714,7 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
         # Generate inputs
         processed_inputs = self.process_inputs(
-            impinging_signals, cache=cache, trigger_realizations=trigger_realizations
+            impinging_signals, cache, trigger_realizations, leaking_signals
         )
 
         # Generate operator receptions
@@ -716,8 +738,9 @@ class SimulationScenario(Scenario[SimulatedDevice]):
 
         # Process receptions
         trigger_realizations = [t.trigger_realization for t in device_transmissions]
+        leaking_signals = [t.leaking_signals for t in device_transmissions]
         device_receptions = self.receive_devices(
-            channel_propagations, trigger_realizations=trigger_realizations
+            channel_propagations, True, trigger_realizations, leaking_signals
         )
 
         # Return finished drop

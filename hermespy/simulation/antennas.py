@@ -7,6 +7,7 @@ import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 import numpy as np
+from mpl_toolkits.mplot3d import Axes3D  # type: ignore
 from scipy.constants import pi
 
 from hermespy.beamforming import TransmitBeamformer, ReceiveBeamformer
@@ -26,6 +27,7 @@ from hermespy.core import (
     UniformArray,
 )
 from .coupling import Coupling
+from .isolation import Isolation
 from .rf_chain import RfChain
 
 __author__ = "Jan Adler"
@@ -478,7 +480,9 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
 
         return combined_signal
 
-    def transmit(self, signal: Signal, default_rf_chain: RfChain) -> Signal:
+    def transmit(
+        self, signal: Signal, default_rf_chain: RfChain, isolation_model: Isolation | None = None
+    ) -> tuple[Signal, Signal]:
         """Transmit a signal over the antenna array.
 
         The transmission may be distorted by the antennas impulse response / frequency characteristics,
@@ -492,7 +496,12 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
             default_rf_chain (RfChain):
                 The default RF chain to be used if no RF chain is specified for a port.
 
-        Returns: The actually transmitted (distorted) signal model.
+            isolation_model (Isolation, optional):
+                Model of the signal leaking from the transmit chains to the receive chains.
+                If not specified, no leakage is assumed.
+
+        Returns:
+            Tuple of the actually transmitted (distorted) signal model and the leakage signal model.
 
         Raises:
 
@@ -522,11 +531,19 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
             rf_chains.values(),
         )
 
+        # Simulate the transmit-receive leakage
+        if isolation_model is not None:
+            leaking_signal = isolation_model.leak(combined_rf_signal)
+        else:
+            leaking_signal = combined_rf_signal.from_ndarray(
+                np.empty((combined_rf_signal.num_streams, 0), dtype=np.complex_)
+            )
+
         # Simulate antenna transmission for all antennas
         antenna_signals = signal.Empty(
             **signal.kwargs,
             num_streams=self.num_transmit_antennas,
-            num_samples=combined_rf_signal.num_samples
+            num_samples=combined_rf_signal.num_samples,
         )
 
         antenna_idx = 0
@@ -536,7 +553,7 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
                 antenna_signals[antenna_idx, :] = antenna.transmit(antenna_input).getitem()
                 antenna_idx += 1
 
-        return antenna_signals
+        return antenna_signals, leaking_signal
 
     def receive(
         self,
@@ -638,8 +655,7 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
         quantized_signals: List[Signal] = []
         for rf_chain, stream_indices in rf_chains.items():
             quantized_signal = rf_chain.adc.convert(
-                rf_signal.getstreams(stream_indices),
-                frame_duration
+                rf_signal.getstreams(stream_indices), frame_duration
             )
             quantized_signals.append(quantized_signal)
 
@@ -828,6 +844,7 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
             dtype=np.float_,
         )
 
+        axes: Axes3D
         figure, axes = plt.subplots(subplot_kw={"projection": "3d"})
         figure.suptitle(f"Antenna Array {mode_str} Characteristics" if title is None else title)
 
