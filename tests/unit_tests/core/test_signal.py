@@ -234,6 +234,12 @@ class TestSignal():
         for key in keys:
             assert_array_equal(self.samples_dense[key].flatten(), self.signal.getitem(key).flatten())
 
+        # getitem with unflatten=False
+        assert_array_equal(self.signal.getitem(0, False).shape,
+                           (self.signal.num_samples,))
+        assert_array_equal(self.signal.getitem((slice_full, 0), False).shape,
+                           (self.signal.num_streams,))
+
         # __setitem__
         dummy_value = 13.37 + 73.31j
         dummy_samples_full = np.full((self.num_streams, self.num_samples),
