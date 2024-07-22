@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
+from importlib.metadata import version
 from typing import Tuple
 from math import ceil
 from functools import lru_cache
@@ -27,6 +28,9 @@ __version__ = "1.3.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
+
+
+scipy_minor_version = int(version("scipy").split('.')[1])
 
 
 class ChirpFSKWaveform(PilotCommunicationWaveform, Serializable):
@@ -464,7 +468,13 @@ class ChirpFSKWaveform(PilotCommunicationWaveform, Serializable):
             frequency = chirp_time * slope + initial_frequency
             frequency[frequency > f1] -= self.chirp_bandwidth
 
-            phase = 2 * np.pi * integrate.cumtrapz(frequency, dx=1 / self.sampling_rate, initial=0)
+            # integrate.cumtrapz was changed to cumulative_trapezoid in scipy 1.14.0
+            phase: np.ndarray
+            if scipy_minor_version < 14:
+                phase = integrate.cumtrapz(frequency, dx=1 / self.sampling_rate, initial=0)
+            else:
+                phase = integrate.cumulative_trapezoid(frequency, dx=1 / self.sampling_rate, initial=0)
+            phase *= 2 * np.pi
             prototypes[idx, :] = np.exp(1j * phase)
 
         symbol_energy = sum(abs(prototypes[0, :]) ** 2)
