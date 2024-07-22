@@ -164,7 +164,7 @@ class TestClusterDelayLineSample(TestCase):
         spread = self.sample.zenith_departure_spread
         
     def test_reciprocal(self) -> None:
-        """Reciprocal channel should simply switch transmitter and dreceiver states"""
+        """Reciprocal channel should simply switch transmitter and receiver states"""
         
         reciprocal_sample = self.sample.reciprocal(LinkState(
             self.receiver_state, self.transmitter_state, self.carrier_frequency, self.bandwidth, 0.0)

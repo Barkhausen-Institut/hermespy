@@ -355,7 +355,7 @@ class TestCFARDetector(TestCase):
             velocity = cube.velocity_bins[px]
             range = cube.range_bins[py]
             power_indicator = cube.data[1, px, py]
-            point_detection_expected = PointDetection.FromSpherical(zenith, azimuth, velocity, range, power_indicator)
+            point_detection_expected = PointDetection.FromSpherical(zenith, azimuth, range, velocity, power_indicator)
             assert point_detection_expected in cloud.points
 
     def test_empty_detect(self) -> None:
