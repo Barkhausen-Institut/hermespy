@@ -259,6 +259,7 @@ Note that these models might require specifying the linked devices :meth:`positi
    delay/delay
    radar/radar
    quadriga
+   sionna-rt
 
 .. toctree::
    :hidden:

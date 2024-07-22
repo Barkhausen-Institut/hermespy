@@ -14,7 +14,6 @@ from hermespy.core import (
     RandomNode,
     SerializableEnum,
     Signal,
-    SparseSignal,
     Transformation,
     ChannelStateInformation,
     Serializable,
@@ -396,12 +395,8 @@ class ChannelSample(object):
             )
 
         # Propagate each signal block
-        propagated_signal = SparseSignal.Empty(
-            self.bandwidth, self.num_receive_antennas, carrier_frequency=self.carrier_frequency
-        )
-        for signal_block in _signal:
-            propagated_signal._blocks.append(self._propagate(signal_block, interpolation_mode))
-        return propagated_signal
+        signal_blocks_propagated = [self._propagate(b, interpolation_mode) for b in _signal]
+        return _signal.Create(signal_blocks_propagated, self.bandwidth, self.carrier_frequency)
 
     @abstractmethod
     def state(
