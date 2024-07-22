@@ -70,7 +70,7 @@ Unit Testing:
     - Build Python 3.11
   before_script:
     - apt -qq update && apt-get -qq install -y octave portaudio19-dev python-dev-is-python3 unzip  # remove for docker
-    - pip install -qq -e .\[develop,test,quadriga,audio\]
+    - pip install -qq -e .\[develop,test,quadriga,audio,sionna\]
     - unzip dist/$HERMES_WHEEL_11 "hermespy/fec/aff3ct/*.so"
     - pip install -qq pyzmq>=25.1.1 usrp-uhd-client memray>=1.11.0
   script:
@@ -93,7 +93,7 @@ Integration Testing:
     - Build Python 3.11
   before_script:
     - apt -qq update && apt-get -qq install -y octave portaudio19-dev python-dev-is-python3  # remove for docker
-    - pip install -qq dist/$HERMES_WHEEL_11\[test,quadriga,audio\]
+    - pip install -qq dist/$HERMES_WHEEL_11\[test,quadriga,audio,sionna\]
     - pip install -qq memray
   script:
     - python ./tests/test_install.py ./tests/integration_tests/
