@@ -581,7 +581,7 @@ class CFARDetector(RadarDetector, Serializable):
             power_indicator = cube.data[tuple(point_indices)]
 
             cloud.add_point(
-                PointDetection.FromSpherical(zenith, azimuth, velocity, range, power_indicator)
+                PointDetection.FromSpherical(zenith, azimuth, range, velocity, power_indicator)
             )
 
         return cloud
