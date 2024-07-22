@@ -34,7 +34,7 @@ jobs:
         sudo apt update
         sudo apt-get install -y build-essential octave portaudio19-dev python-dev-is-python3
         export MAKEFLAGS="-j $(grep -c ^processor /proc/cpuinfo)"
-        pip install -e .[develop,test,documentation,quadriga,uhd,audio]
+        pip install -e .[develop,test,documentation,quadriga,uhd,sionna,audio]
 
     - name: Run unit tests
       run: |
@@ -78,7 +78,7 @@ jobs:
         sudo apt update
         sudo apt-get install -y build-essential octave portaudio19-dev python-dev-is-python3 pandoc graphviz
         export MAKEFLAGS="-j $(grep -c ^processor /proc/cpuinfo)"
-        pip install -e .[test,documentation,quadriga,uhd,audio]
+        pip install -e .[test,documentation,quadriga,uhd,sionna,audio]
 
     - name: Build documentation
       run: sphinx-build docssource/ documentation/
