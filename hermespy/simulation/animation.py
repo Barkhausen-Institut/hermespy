@@ -4,6 +4,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 
 import numpy as np
+from scipy.spatial.transform import Slerp, Rotation
 
 from hermespy.core import Serializable, Transformation
 
@@ -56,6 +57,34 @@ class TrajectorySample(object):
 class Trajectory(ABC):
     """Base class for motion trajectories of moveable objects within simulation scenarios."""
 
+    # lookat attributes
+    _lookat_flag: bool = False
+    _lookat_target: Trajectory = None
+    _lookat_up: np.ndarray = np.array([0., 1., 0.,], float)  # (3,), float
+
+    def lookat(self,
+               target: Trajectory,
+               up: np.ndarray = np.array([0., 1., 0.,], float)) -> None:
+        """Set a target to look at and track.
+
+        Args:
+            target (Trajectory): Target trajectory.
+            up (np.ndarray): Up/sky/head/ceiling global unit vector. Defaults to [0., 1., 0.].
+        """
+
+        self._lookat_flag = True
+        self._lookat_target = target
+        self._lookat_up = up
+
+    def lookat_disable(self) -> None:
+        self._lookat_flag = False
+
+    def lookat_enable(self) -> None:
+        if self._lookat_target is None:
+            raise RuntimeError("Cannot enable lookat whithout a target. Use the \"lookat\" method.")
+
+        self._lookat_flag = True
+
     @property
     @abstractmethod
     def max_timestamp(self) -> float:
@@ -67,16 +96,59 @@ class Trajectory(ABC):
         ...  # pragma: no cover
 
     @abstractmethod
+    def sample_velocity(self, timestamp: float) -> np.ndarray:
+        """Sample the trajectory's velocity.
+
+        Args:
+            timestamp (float): Time at which to sample the trajectory in seconds.
+
+        Returns: A sample of the trajectory's velocity (vector (3,) of floats).
+        """
+        ...  # pragma: no cover
+
+    @abstractmethod
+    def sample_translation(self, timestamp: float) -> np.ndarray:
+        """Sample the trajectory's translation.
+
+        Args:
+            timestamp (float): Time at which to sample the trajectory in seconds.
+
+        Returns: A sample of the trajectory's translation (vector (3,) of floats).
+        """
+        ...  # pragma: no cover
+
+    @abstractmethod
+    def sample_orientation(self, timestamp: float) -> np.ndarray:
+        """Sample the trajectory's orientation. Does not consider lookat.
+
+        Args:
+            timestamp (float): Time at which to sample the trajectory in seconds.
+
+        Returns: A sample of the trajectory's orientation matrix (matrix (3, 3) of float).
+        """
+        ...  # pragma: no cover
+
     def sample(self, timestamp: float) -> TrajectorySample:
         """Sample the trajectory at a given point in time.
 
         Args:
-
             timestamp (float): Time at which to sample the trajectory in seconds.
 
         Returns: A sample of the trajectory.
         """
-        ...  # pragma: no cover
+
+        # Init transformation and sample position
+        transformation = np.eye(4, 4, dtype=float).view(Transformation)
+        transformation[:3, 3] = self.sample_translation(timestamp)
+
+        # Sample orientation
+        if self._lookat_flag:
+            target_translation = self._lookat_target.sample_translation(timestamp)
+            transformation = transformation.lookat(target_translation, self._lookat_up)
+        else:
+            transformation[:3, :3] = self.sample_orientation(timestamp)
+
+        return TrajectorySample(timestamp, transformation, self.sample_velocity(timestamp))
 
 
 class LinearTrajectory(Trajectory):
@@ -104,37 +176,31 @@ class LinearTrajectory(Trajectory):
 
         # Initialize class attributes
         self.__initial_pose = initial_pose
-        self.__final_pose = final_pose
         self.__duration = duration
         self.__start = start
 
         # Infer velocity from start and end poses
         self.__velocity = (final_pose.translation - initial_pose.translation) / duration
-        self.__initial_quaternion = initial_pose.rotation_quaternion
-        self.__quaternion_velocity = (
-            final_pose.rotation_quaternion - initial_pose.rotation_quaternion
-        ) / duration
+        rotations = Rotation.from_matrix([initial_pose[:3, :3], final_pose[:3, :3]])
+        self.__slerp = Slerp([start, start + duration], rotations)
 
     @property
     def max_timestamp(self) -> float:
         return self.__start + self.__duration
 
-    def sample(self, timestamp: float) -> TrajectorySample:
+    def sample_velocity(self, timestamp: float) -> np.ndarray:
+        if timestamp >= self.__start and timestamp < self.__start + self.__duration:
+            return self.__velocity
+        else:
+            return np.zeros(3, np.float_)
 
-        # If the timestamp is outside the trajectory, return the initial or final pose
-        if timestamp < self.__start:
-            return TrajectorySample(timestamp, self.__initial_pose, np.zeros(3, dtype=np.float_))
+    def sample_translation(self, timestamp: float) -> np.ndarray:
+        t = np.clip(timestamp, self.__start, self.__start + self.__duration) - self.__start
+        return self.__initial_pose.translation + t * self.__velocity
 
-        if timestamp >= self.__start + self.__duration:
-            return TrajectorySample(timestamp, self.__final_pose, np.zeros(3, dtype=np.float_))
-
-        # Interpolate orientation and position
-        t = timestamp - self.__start
-        orientation = self.__initial_quaternion + t * self.__quaternion_velocity
-        translation = self.__initial_pose.translation + t * self.__velocity
-        transformation = Transformation.From_Quaternion(orientation, translation)
-
-        return TrajectorySample(timestamp, transformation, self.__velocity)
+    def sample_orientation(self, timestamp: float) -> np.ndarray:
+        t = np.clip(timestamp, self.__start, self.__start + self.__duration)
+        return self.__slerp(t).as_matrix()
 
 
 class StaticTrajectory(Serializable, Trajectory):
@@ -168,6 +234,15 @@ class StaticTrajectory(Serializable, Trajectory):
     @property
     def max_timestamp(self) -> float:
         return 0.0
+
+    def sample_velocity(self, timestamp: float) -> np.ndarray:
+        return self.__velocity
+
+    def sample_translation(self, timestamp: float) -> np.ndarray:
+        return self.__pose.translation
+
+    def sample_orientation(self, timestamp: float) -> np.ndarray:
+        return self.__pose[:3, :3]
 
     def sample(self, timestamp: float) -> TrajectorySample:
         return TrajectorySample(timestamp, self.__pose, self.__velocity)
@@ -229,17 +304,8 @@ class BITrajectoryB(Trajectory):
     def max_timestamp(self) -> float:
         return self.__duration
 
-    def sample(self, timestamp: float) -> TrajectorySample:
-
-        if timestamp >= self.__duration:
-            return TrajectorySample(
-                timestamp,
-                Transformation.From_Translation(
-                    np.array([0, 0.5 * self.__height, 0], dtype=np.float_)
-                ),
-                np.zeros(3, dtype=np.float_),
-            )
-
+    def __start_end_point_time(self, timestamp: float) -> tuple:
+        """Returns start start_point, end_point, start_time and end_time of the straight path section."""
         if timestamp > self.__duration * 4 / 5:
             start_point = self.__height * np.array([0.5, 0.5, 0], dtype=np.float_)
             end_point = self.__height * np.array([0, 0.5, 0], dtype=np.float_)
@@ -264,10 +330,19 @@ class BITrajectoryB(Trajectory):
             start_time = 0
             end_time = self.__duration * 2 / 5
 
-        leg_duration = end_time - start_time
-        velocity = (end_point - start_point) / leg_duration
-        interpolated_position = start_point + velocity * (timestamp - start_time)
+        return start_point, end_point, start_time, end_time
 
-        return TrajectorySample(
-            timestamp, Transformation.From_Translation(interpolated_position), velocity
-        )
+    def sample_velocity(self, timestamp: float) -> np.ndarray:
+        start_point, end_point, start_time, end_time = self.__start_end_point_time(timestamp)
+        if timestamp <= start_time or timestamp >= end_time:
+            return np.zeros(3, np.float_)
+        return (end_point - start_point) / end_time - start_time
+
+    def sample_translation(self, timestamp: float) -> np.ndarray:
+        start_point, _, start_time, end_time = self.__start_end_point_time(timestamp)
+        if timestamp <= start_time or timestamp >= end_time:
+            return np.array([0, 0.5 * self.__height, 0], np.float_)
+        return start_point + self.sample_velocity(timestamp) * (timestamp - start_time)
+
+    def sample_orientation(self, timestamp: float) -> np.ndarray:
+        return np.array([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]], float)
