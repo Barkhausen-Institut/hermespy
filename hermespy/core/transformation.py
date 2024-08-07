@@ -472,6 +472,53 @@ class Transformation(np.ndarray, Serializable):
 
         return np.linalg.inv(self).view(Transformation)
 
+    def lookat(self,
+               target: np.ndarray = np.array([0., 0., 0.], float),
+               up: np.ndarray = np.array([0., 1., 0.], float)) -> Transformation:
+        """Rotate and loook at the given coordinates. Modifies `orientation` property.
+
+        Args:
+            target (np.ndarray):
+                Cartesean coordinates to look at.
+                Defaults to np.array([0., 0., 0.], float)
+            up (np.ndarray):
+                Global catesean sky vector.
+                Defines the upward direction of the local viewport.
+                Defaults to np.array([0., 1., 0.], float)
+
+        Returns:
+            self (Transformation): This modified Transformation.
+        """
+
+        # Validate arguments
+        target_ = np.asarray(target)
+        if target_.shape != (3,):
+            raise ValueError(f"Got target of an unexpected shape (expected (3,), got {target_.shape})")
+        up_ = np.asarray(up)
+        if up_.shape != (3,):
+            raise ValueError(f"Got up of an unexpected shape (expected (3,), got {up_.shape})")
+        up_ /= np.linalg.norm(up_)
+
+        # Calculate new orientation
+        # forward vector
+        pos = self.translation
+        f = target_ - pos
+        f_norm = np.linalg.norm(f)
+        f = f / f_norm if f_norm != 0. else pos  # normalize
+        # side/right vector
+        s = np.cross(up_, f)
+        s_norm = np.linalg.norm(s)
+        s = s / s_norm if s_norm != 0. else up_  # normalize
+        # up vector
+        u = np.cross(f, s)
+        # Calcualte the new transformation matrix
+        self[:3, 0] = s
+        self[:3, 1] = u
+        self[:3, 2] = f
+        self[3, :] = [0., 0., 0., 1.]
+
+        return self
+
     @classmethod
     def to_yaml(
         cls: Type[Transformation], representer: SafeRepresenter, node: Transformation
@@ -762,6 +809,23 @@ class Transformable(Serializable, TransformableLink):
 
         local_transformation = self.backwards_transformation @ arg_0
         return local_transformation.view(Transformation)
+
+    def lookat(self,
+               target: np.ndarray = np.array([0., 0., 0.], float),
+               up: np.ndarray = np.array([0., 1., 0.], float)) -> None:
+        """Rotate and loook at the given coordinates. Modifies `orientation` property.
+
+        Args:
+            target (np.ndarray):
+                Cartesean coordinates to look at.
+                Defaults to np.ndarray([0., 0., 0.], float).
+            up (array of 3 numbers):
+                Global catesean sky vector.
+                Defines the upward direction of the local viewport.
+                Defaults to np.ndarray([0., 1., 0.], float).
+        """
+
+        self.pose.lookat(target, up)
 
     def _kinematics_updated(self) -> None:
         # Clear the cached forwards transformation if the base has been updated
