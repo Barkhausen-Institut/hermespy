@@ -472,9 +472,11 @@ class Transformation(np.ndarray, Serializable):
 
         return np.linalg.inv(self).view(Transformation)
 
-    def lookat(self,
-               target: np.ndarray = np.array([0., 0., 0.], float),
-               up: np.ndarray = np.array([0., 1., 0.], float)) -> Transformation:
+    def lookat(
+        self,
+        target: np.ndarray = np.array([0.0, 0.0, 0.0], float),
+        up: np.ndarray = np.array([0.0, 1.0, 0.0], float),
+    ) -> Transformation:
         """Rotate and loook at the given coordinates. Modifies `orientation` property.
 
         Args:
@@ -493,7 +495,9 @@ class Transformation(np.ndarray, Serializable):
         # Validate arguments
         target_ = np.asarray(target)
         if target_.shape != (3,):
-            raise ValueError(f"Got target of an unexpected shape (expected (3,), got {target_.shape})")
+            raise ValueError(
+                f"Got target of an unexpected shape (expected (3,), got {target_.shape})"
+            )
         up_ = np.asarray(up)
         if up_.shape != (3,):
             raise ValueError(f"Got up of an unexpected shape (expected (3,), got {up_.shape})")
@@ -504,18 +508,18 @@ class Transformation(np.ndarray, Serializable):
         pos = self.translation
         f = target_ - pos
         f_norm = np.linalg.norm(f)
-        f = f / f_norm if f_norm != 0. else pos  # normalize
+        f = f / f_norm if f_norm != 0.0 else pos  # normalize
         # side/right vector
         s = np.cross(up_, f)
         s_norm = np.linalg.norm(s)
-        s = s / s_norm if s_norm != 0. else up_  # normalize
+        s = s / s_norm if s_norm != 0.0 else up_  # normalize
         # up vector
         u = np.cross(f, s)
         # Calcualte the new transformation matrix
         self[:3, 0] = s
         self[:3, 1] = u
         self[:3, 2] = f
-        self[3, :] = [0., 0., 0., 1.]
+        self[3, :] = [0.0, 0.0, 0.0, 1.0]
 
         return self
 
@@ -810,9 +814,11 @@ class Transformable(Serializable, TransformableLink):
         local_transformation = self.backwards_transformation @ arg_0
         return local_transformation.view(Transformation)
 
-    def lookat(self,
-               target: np.ndarray = np.array([0., 0., 0.], float),
-               up: np.ndarray = np.array([0., 1., 0.], float)) -> None:
+    def lookat(
+        self,
+        target: np.ndarray = np.array([0.0, 0.0, 0.0], float),
+        up: np.ndarray = np.array([0.0, 1.0, 0.0], float),
+    ) -> None:
         """Rotate and loook at the given coordinates. Modifies `orientation` property.
 
         Args:
