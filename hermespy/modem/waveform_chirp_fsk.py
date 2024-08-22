@@ -30,7 +30,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-scipy_minor_version = int(version("scipy").split('.')[1])
+scipy_minor_version = int(version("scipy").split(".")[1])
 
 
 class ChirpFSKWaveform(PilotCommunicationWaveform, Serializable):
@@ -473,7 +473,9 @@ class ChirpFSKWaveform(PilotCommunicationWaveform, Serializable):
             if scipy_minor_version < 14:
                 phase = integrate.cumtrapz(frequency, dx=1 / self.sampling_rate, initial=0)
             else:
-                phase = integrate.cumulative_trapezoid(frequency, dx=1 / self.sampling_rate, initial=0)
+                phase = integrate.cumulative_trapezoid(
+                    frequency, dx=1 / self.sampling_rate, initial=0
+                )
             phase *= 2 * np.pi
             prototypes[idx, :] = np.exp(1j * phase)
 
