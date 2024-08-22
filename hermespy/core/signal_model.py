@@ -766,7 +766,9 @@ class Signal(ABC, HDFSerializable):
         s1 = s1 if s1 >= 0 else s1 % dim_size
         return s0, s1, s2
 
-    def _parse_validate_itemkey(self, key: Any) -> Tuple[int, int, int, int, int, int, bool, bool, bool]:
+    def _parse_validate_itemkey(
+        self, key: Any
+    ) -> Tuple[int, int, int, int, int, int, bool, bool, bool]:
         """Parse and validate key in __getitem__ and __setitem__.
 
         Raises:
@@ -843,7 +845,17 @@ class Signal(ABC, HDFSerializable):
             else:
                 raise TypeError(f"Samples key is ofan unsupported type ({type(key[1])})")
 
-            return s00, s01, s02, s10, s11, s12, False, should_flatten_streams, should_flatten_samples
+            return (
+                s00,
+                s01,
+                s02,
+                s10,
+                s11,
+                s12,
+                False,
+                should_flatten_streams,
+                should_flatten_samples,
+            )
         # ======================================================================
         # done Key is a tuple of two
 
@@ -881,7 +893,17 @@ class Signal(ABC, HDFSerializable):
             except ValueError:
                 raise TypeError(f"Unsupported key type {type(key)}")
 
-        return s00, s01, s02, s10, s11, s12, isboolmask, should_flatten_streams, should_flatten_samples
+        return (
+            s00,
+            s01,
+            s02,
+            s10,
+            s11,
+            s12,
+            isboolmask,
+            should_flatten_streams,
+            should_flatten_samples,
+        )
 
     def _find_affected_blocks(self, s10: int, s11: int) -> Tuple[int, int]:
         """Find indices of blocks that are affected by the given samples slice.
@@ -924,7 +946,7 @@ class Signal(ABC, HDFSerializable):
 
         return b_start, b_stop
 
-    def getitem(self, key: Any = slice(None, None), unflatten : bool = True) -> np.ndarray:
+    def getitem(self, key: Any = slice(None, None), unflatten: bool = True) -> np.ndarray:
         """Get specified samples.
         Works like np.ndarray.__getitem__, but de-sparsifies the signal.
 
@@ -954,7 +976,9 @@ class Signal(ABC, HDFSerializable):
 
         Returns: np.ndarray with ndim 2 or less and  dtype dtype np.complex_"""
 
-        s00, s01, s02, s10, s11, s12, isboolmask, should_flatten_streams, should_flatten_samples = self._parse_validate_itemkey(key)
+        s00, s01, s02, s10, s11, s12, isboolmask, should_flatten_streams, should_flatten_samples = (
+            self._parse_validate_itemkey(key)
+        )
         num_streams = -((s01 - s00) // -s02)
         num_samples = -((s11 - s10) // -s12)
         if self.num_samples == 0 or self.num_streams == 0:  # if this signal is empty

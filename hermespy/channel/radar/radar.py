@@ -11,6 +11,7 @@ from scipy.constants import pi, speed_of_light
 from sparse import GCXS  # type: ignore
 
 from hermespy.core import (
+    AntennaMode,
     ChannelStateInformation,
     ChannelStateFormat,
     Direction,
@@ -609,10 +610,10 @@ class RadarTargetPath(RadarPath):
     ) -> np.ndarray:
         # Query the sensor array responses
         rx_response = receiver.antennas.cartesian_array_response(
-            carrier_frequency, self.position, "global"
+            carrier_frequency, self.position, "global", AntennaMode.RX
         )
         tx_response = transmitter.antennas.cartesian_array_response(
-            carrier_frequency, self.position, "global"
+            carrier_frequency, self.position, "global", AntennaMode.TX
         ).conj()
 
         if self.attenuate:

@@ -84,7 +84,8 @@ class MatchedFilterJcas(DuplexJCASOperator[CommunicationWaveform], Serializable)
             signal.append_samples(
                 Signal.Create(
                     np.zeros(
-                        (1, required_num_received_samples - signal.num_samples), dtype=complex
+                        (signal.num_streams, required_num_received_samples - signal.num_samples),
+                        dtype=complex,
                     ),
                     self.sampling_rate,
                     signal.carrier_frequency,
@@ -93,20 +94,18 @@ class MatchedFilterJcas(DuplexJCASOperator[CommunicationWaveform], Serializable)
                 )
             )
 
-        # Remove possible overhead samples if signal is too long
-        # resampled_signal.set_samples(re)
-        # sampled_signal[:, :num_samples]
+        # Digital receive beamformer
+        angle_bins, beamformed_samples = self._receive_beamform(signal)
 
+        # Transmit-receive correlation for range estimation
+        transmitted_samples = self.transmission.signal.getitem(0)
         correlation = (
-            abs(
-                correlate(
-                    signal.getitem(), self.transmission.signal.getitem(), mode="valid", method="fft"
-                ).flatten()
-            )
+            abs(correlate(beamformed_samples, transmitted_samples, mode="valid", method="fft"))
             / self.transmission.signal.num_samples
         )
+
         lags = correlation_lags(
-            signal.num_samples, self.transmission.signal.num_samples, mode="valid"
+            beamformed_samples.shape[1], transmitted_samples.shape[1], mode="valid"
         )
 
         # Append zeros for correct depth estimation
@@ -114,10 +113,9 @@ class MatchedFilterJcas(DuplexJCASOperator[CommunicationWaveform], Serializable)
         # correlation = np.append(correlation, np.zeros(num_appended_zeros))
 
         # Create the cube object
-        angle_bins = np.array([[0.0, 0.0]])
         velocity_bins = np.array([0.0])
         range_bins = 0.5 * lags[:num_propagated_samples] * resolution
-        cube_data = np.array([[correlation[:num_propagated_samples]]], dtype=float)
+        cube_data = correlation[:, None, :num_propagated_samples]
         cube = RadarCube(cube_data, angle_bins, velocity_bins, range_bins, self.carrier_frequency)
 
         # Infer the point cloud, if a detector has been configured

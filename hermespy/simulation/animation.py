@@ -60,11 +60,9 @@ class Trajectory(ABC):
     # lookat attributes
     _lookat_flag: bool = False
     _lookat_target: Trajectory = None
-    _lookat_up: np.ndarray = np.array([0., 1., 0.,], float)  # (3,), float
+    _lookat_up: np.ndarray = np.array([0.0, 1.0, 0.0], float)  # (3,), float
 
-    def lookat(self,
-               target: Trajectory,
-               up: np.ndarray = np.array([0., 1., 0.,], float)) -> None:
+    def lookat(self, target: Trajectory, up: np.ndarray = np.array([0.0, 1.0, 0.0], float)) -> None:
         """Set a target to look at and track.
 
         Args:
@@ -81,7 +79,7 @@ class Trajectory(ABC):
 
     def lookat_enable(self) -> None:
         if self._lookat_target is None:
-            raise RuntimeError("Cannot enable lookat whithout a target. Use the \"lookat\" method.")
+            raise RuntimeError('Cannot enable lookat whithout a target. Use the "lookat" method.')
 
         self._lookat_flag = True
 
@@ -345,4 +343,4 @@ class BITrajectoryB(Trajectory):
         return start_point + self.sample_velocity(timestamp) * (timestamp - start_time)
 
     def sample_orientation(self, timestamp: float) -> np.ndarray:
-        return np.array([[1., 0., 0.], [0., 1., 0.], [0., 0., 1.]], float)
+        return np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]], float)
