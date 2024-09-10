@@ -100,6 +100,9 @@ develop = [
 sionna = [
     "sionna>=0.17.0",
 ]
+scapy = [
+    "scapy>=2.5.0",
+]
 
 [tool.scikit-build]
 cmake.verbose = true

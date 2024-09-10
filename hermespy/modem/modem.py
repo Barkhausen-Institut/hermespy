@@ -25,6 +25,7 @@ from .precoding import SymbolPrecoding
 from .bits_source import BitsSource, RandomBitsSource
 from .symbols import StatedSymbols, Symbols
 from .waveform import CommunicationWaveform, CWT
+from .frame_generator import FrameGenerator, FrameGeneratorStub
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -444,6 +445,7 @@ class BaseModem(ABC, Generic[CWT], RandomNode):
     __encoder_manager: EncoderManager
     __precoding: SymbolPrecoding
     __waveform: CWT | None
+    __frame_generator: FrameGenerator
 
     @staticmethod
     def _arg_signature() -> Set[str]:
@@ -454,6 +456,7 @@ class BaseModem(ABC, Generic[CWT], RandomNode):
         encoding: EncoderManager | None = None,
         precoding: SymbolPrecoding | None = None,
         waveform: CWT | None = None,
+        frame_generator: FrameGenerator | None = None,
         seed: int | None = None,
     ) -> None:
         """
@@ -479,6 +482,7 @@ class BaseModem(ABC, Generic[CWT], RandomNode):
         self.encoder_manager = EncoderManager() if encoding is None else encoding
         self.precoding = SymbolPrecoding(modem=self) if precoding is None else precoding
         self.waveform = waveform
+        self.frame_generator = FrameGeneratorStub() if frame_generator is None else frame_generator
 
     @property
     @abstractmethod
@@ -530,6 +534,14 @@ class BaseModem(ABC, Generic[CWT], RandomNode):
         if value is not None:
             value.modem = self
             value.random_mother = self
+
+    @property
+    def frame_generator(self) -> FrameGenerator:
+        return self.__frame_generator
+
+    @frame_generator.setter
+    def frame_generator(self, value: FrameGenerator) -> None:
+        self.__frame_generator = value
 
     @property
     def precoding(self) -> SymbolPrecoding:
@@ -790,10 +802,10 @@ class TransmittingModemBase(Generic[CWT], BaseModem[CWT]):
         frames: List[CommunicationTransmissionFrame] = []
         for n in range(num_mimo_frames):
             # Generate plain data bits
-            data_bits = self.bits_source.generate_bits(required_num_data_bits)
+            frame_bits = self.frame_generator.pack_frame(self.bits_source, required_num_data_bits)
 
             # Apply forward error correction
-            encoded_bits = self.encoder_manager.encode(data_bits, required_num_code_bits)
+            encoded_bits = self.encoder_manager.encode(frame_bits, required_num_code_bits)
 
             # Map bits to communication symbols
             mapped_symbols = self.__map(encoded_bits, self.precoding.num_input_streams)
@@ -825,7 +837,7 @@ class TransmittingModemBase(Generic[CWT], BaseModem[CWT]):
             frames.append(
                 CommunicationTransmissionFrame(
                     signal=frame_signal,
-                    bits=data_bits,
+                    bits=frame_bits,
                     encoded_bits=encoded_bits,
                     symbols=mapped_symbols,
                     encoded_symbols=encoded_symbols,
@@ -1046,6 +1058,9 @@ class ReceivingModemBase(Generic[CWT], BaseModem[CWT]):
             # Apply inverse FEC configuration to correct errors and remove redundancies
             decoded_bits = self.encoder_manager.decode(encoded_bits, required_num_data_bits)
 
+            # Decode the frame
+            payload_bits = self.frame_generator.unpack_frame(decoded_bits)
+
             # Store the received information
             frames.append(
                 CommunicationReceptionFrame(
@@ -1056,7 +1071,7 @@ class ReceivingModemBase(Generic[CWT], BaseModem[CWT]):
                     timestamp=frame_index * signal.sampling_rate,
                     equalized_symbols=equalized_symbols,
                     encoded_bits=encoded_bits,
-                    decoded_bits=decoded_bits,
+                    decoded_bits=payload_bits,
                 )
             )
 
