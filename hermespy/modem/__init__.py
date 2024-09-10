@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from .bits_source import RandomBitsSource, StreamBitsSource
+from .frame_generator import FrameGenerator, FrameGeneratorStub
 from .symbols import Symbol, Symbols, StatedSymbols
 from .modem import (
     CommunicationReception,
@@ -110,6 +111,8 @@ RectWaveform = RectangularWaveform
 __all__ = [
     "RandomBitsSource",
     "StreamBitsSource",
+    "FrameGenerator",
+    "FrameGeneratorStub",
     "Symbol",
     "Symbols",
     "StatedSymbols",
