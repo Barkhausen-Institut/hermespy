@@ -7,17 +7,14 @@ Drop
 
 from __future__ import annotations
 from collections.abc import Sequence
-from typing import Type, TYPE_CHECKING
+from typing import Generic, Type, TypeVar
 
 from h5py import Group
 
-from .device import DeviceReception, DeviceTransmission
+from .device import Device, DeviceReception, DeviceTransmission, DRT, DTT
 from .factory import HDFSerializable
 from .signal_model import Signal
 from .monte_carlo import Artifact
-
-if TYPE_CHECKING:
-    from .scenario import Scenario  # pragma: no cover
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -29,19 +26,19 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class Drop(HDFSerializable):
+class Drop(Generic[DTT, DRT], HDFSerializable):
     """Drop containing the information transmitted and received by all devices
     within a scenario."""
 
     __timestamp: float  # Time at which the drop was generated
-    __device_transmissions: Sequence[DeviceTransmission]  # Transmitted device information
-    __device_receptions: Sequence[DeviceReception]  # Received device information
+    __device_transmissions: Sequence[DTT]  # Transmitted device information
+    __device_receptions: Sequence[DRT]  # Received device information
 
     def __init__(
         self,
         timestamp: float,
-        device_transmissions: Sequence[DeviceTransmission],
-        device_receptions: Sequence[DeviceReception],
+        device_transmissions: Sequence[DTT],
+        device_receptions: Sequence[DRT],
     ) -> None:
         """
         Args:
@@ -49,10 +46,10 @@ class Drop(HDFSerializable):
             timestamp (float):
                 Time at which the drop was generated.
 
-            device_transmissions (Sequence[DeviceTransmission]):
+            device_transmissions (Sequence[DTT]):
                 Transmitted device information.
 
-            device_receptions (Sequence[DeviceReception]):
+            device_receptions (Sequence[DRT]):
                 Received device information.
         """
 
@@ -67,13 +64,13 @@ class Drop(HDFSerializable):
         return self.__timestamp
 
     @property
-    def device_transmissions(self) -> Sequence[DeviceTransmission]:
+    def device_transmissions(self) -> Sequence[DTT]:
         """Transmitted device information within this drop."""
 
         return self.__device_transmissions
 
     @property
-    def device_receptions(self) -> Sequence[DeviceReception]:
+    def device_receptions(self) -> Sequence[DRT]:
         """Received device information within this drop."""
 
         return self.__device_receptions
@@ -100,19 +97,29 @@ class Drop(HDFSerializable):
         return [reception.operator_inputs for reception in self.device_receptions]
 
     @classmethod
-    def from_HDF(cls: Type[Drop], group: Group) -> Drop:
+    def from_HDF(cls: Type[Drop], group: Group, devices: Sequence[Device] | None = None) -> Drop:
         # Recall attributes
         timestamp = group.attrs.get("timestamp", 0.0)
-        num_transmissions = group.attrs.get("num_transmissions", 0)
-        num_receptions = group.attrs.get("num_receptions", 0)
+        num_transmissions: int = group.attrs.get("num_transmissions", 0)
+        num_receptions: int = group.attrs.get("num_receptions", 0)
 
-        transmissions = [
-            DeviceTransmission.from_HDF(group[f"transmission_{t:02d}"])
-            for t in range(num_transmissions)
-        ]
-        receptions = [
-            DeviceReception.from_HDF(group[f"reception_{r:02d}"]) for r in range(num_receptions)
-        ]
+        if devices is None:
+            transmissions = [
+                DeviceTransmission.from_HDF(group[f"transmission_{t:02d}"])
+                for t in range(num_transmissions)
+            ]
+            receptions = [
+                DeviceReception.from_HDF(group[f"reception_{r:02d}"]) for r in range(num_receptions)
+            ]
+        else:
+            transmissions = [
+                device.recall_transmission(group[f"transmission_{t:02d}"])
+                for t, device in zip(range(num_transmissions), devices)
+            ]
+            receptions = [
+                device.recall_reception(group[f"reception_{r:02d}"])
+                for r, device in zip(range(num_receptions), devices)
+            ]
 
         drop = cls(
             timestamp=timestamp, device_transmissions=transmissions, device_receptions=receptions
@@ -133,46 +140,8 @@ class Drop(HDFSerializable):
         group.attrs["num_receptions"] = self.num_device_receptions
 
 
-class RecalledDrop(Drop):
-    """Drop recalled from serialization containing the information transmitted and received by all devices
-    within a scenario."""
-
-    __group: Group
-
-    def __init__(self, group: Group, scenario: Scenario) -> None:
-        # Recall attributes
-        timestamp = group.attrs.get("timestamp", 0.0)
-        num_transmissions = group.attrs.get("num_transmissions", 0)
-        num_receptions = group.attrs.get("num_receptions", 0)
-
-        device_transmissions = [
-            DeviceTransmission.Recall(group[f"transmission_{t:02d}"], device)
-            for t, device in zip(range(num_transmissions), scenario.devices)
-        ]
-        device_receptions = [
-            DeviceReception.Recall(group[f"reception_{r:02d}"], device)
-            for r, device in zip(range(num_receptions), scenario.devices)
-        ]
-
-        # Initialize base class
-        Drop.__init__(
-            self,
-            timestamp=timestamp,
-            device_transmissions=device_transmissions,
-            device_receptions=device_receptions,
-        )
-
-        # Initialize class attributes
-        self.__group = group
-
-    @property
-    def group(self) -> Group:
-        """HDF group this drop was recalled from.
-
-        Returns: Handle to an HDF group.
-        """
-
-        return self.__group
+DropType = TypeVar("DropType", bound=Drop)
+"""Type of a drop."""
 
 
 class EvaluatedDrop(Drop):

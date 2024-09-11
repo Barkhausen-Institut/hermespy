@@ -16,6 +16,7 @@ from typing import Generic, overload, Type, TypeVar, Union
 from h5py import File, Group
 
 from .device import (
+    Device,
     DeviceInput,
     DeviceOutput,
     DeviceReception,
@@ -28,7 +29,7 @@ from .device import (
     Receiver,
     Operator,
 )
-from .drop import Drop, RecalledDrop
+from .drop import Drop, DropType
 from .factory import Factory
 from .random_node import RandomNode
 from .signal_model import Signal
@@ -66,7 +67,7 @@ class ScenarioMode(IntEnum):
     """
 
 
-class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
+class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType, DropType]):
     """A wireless scenario.
 
     Scenarios consist of several devices transmitting and receiving electromagnetic signals.
@@ -857,7 +858,7 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
         return None
 
     @abstractmethod
-    def _drop(self) -> Drop:
+    def _drop(self) -> DropType:
         """Generate a single scenario drop.
 
         Wrapped by the scenario base class :meth:`.drop` method.
@@ -867,13 +868,24 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
         """
         ...  # pragma no cover
 
-    def drop(self) -> Drop:
+    @abstractmethod
+    def _recall_drop(self, group: Group) -> DropType:
+        """Recall a recorded drop from a HDF5 group.
+
+        Args:
+
+            group (Group):
+                HDF5 group containing the drop information.
+
+        Returns: The recalled drop.
+        """
+        ...  # pragma no cover
+
+    def drop(self) -> DropType:
         """Generate a single data drop from all scenario devices.
 
         Return: The generated drop information.
         """
-
-        drop: Drop
 
         if self.mode == ScenarioMode.REPLAY:
             # Recall the drop from the savefile
@@ -882,7 +894,7 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType]):
                 self.__drop_counter = (self.__drop_counter + 1) % self.__file.attrs["num_drops"]
 
                 if drop_path in self.__file:
-                    drop = RecalledDrop(self.__file[drop_path], self)
+                    drop = self._recall_drop(self.__file[drop_path])
                     break
 
             # Replay device operator transmissions
@@ -912,8 +924,11 @@ ScenarioType = TypeVar("ScenarioType", bound="Scenario")
 """Type of scenario."""
 
 
-class ReplayScenario(Scenario):
+class ReplayScenario(Scenario[Device, Drop]):
     """Scenario which is unable to generate drops."""
 
     def _drop(self) -> Drop:
         raise RuntimeError("Replay scenario may not generate data drops.")
+
+    def _recall_drop(self, group: Group) -> Drop:
+        return Drop.from_HDF(group)
