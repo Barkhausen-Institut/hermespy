@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from typing import List, Sequence, Type, TYPE_CHECKING
+from typing import List, Sequence, Type
 
 from h5py import Group
 
-from hermespy.channel import ChannelRealization
-from hermespy.core import Drop
+from hermespy.channel import Channel, ChannelRealization
+from hermespy.core import Device, Drop
 from .simulated_device import SimulatedDeviceReception, SimulatedDeviceTransmission
-
-if TYPE_CHECKING:
-    from hermespy.simulation import SimulationScenario  # pragma: no cover
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -22,7 +19,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class SimulatedDrop(Drop):
+class SimulatedDrop(Drop[SimulatedDeviceTransmission, SimulatedDeviceReception]):
     """Drop containing all information generated during a simulated wireless scenario transmission,
     channel propagation and reception."""
 
@@ -51,7 +48,10 @@ class SimulatedDrop(Drop):
                 Received device information.
         """
 
+        # Initialize attributes
         self.__channel_realizations = channel_realizations
+
+        # Initialize base class
         Drop.__init__(self, timestamp, device_transmissions, device_receptions)
 
     @property
@@ -80,37 +80,43 @@ class SimulatedDrop(Drop):
 
     @classmethod
     def from_HDF(
-        cls: Type[SimulatedDrop], group: Group, scenario: SimulationScenario | None = None
+        cls: Type[SimulatedDrop],
+        group: Group,
+        devices: Sequence[Device] | None = None,
+        channels: Sequence[Channel] | None = None,
     ) -> SimulatedDrop:
-        # Require a scenario to be specified
-        # Maybe there is a workaround possible since this is validates object-oriented principles
-        if scenario is None:
-            raise ValueError("Simulation drops must be deserialized with a scenario instance")
+        """Recall a simulated drop from a HDF5 group.
+
+        Args:
+
+            group (Group): The HDF5 group containing the serialized drop.
+            devices (Sequence[Device], optional): The devices participating in the scenario.
+            channels (Sequence[Channel], optional): The channels used in the scenario.
+        """
 
         # Recall attributes
         timestamp = group.attrs.get("timestamp", 0.0)
         num_transmissions = group.attrs.get("num_transmissions", 0)
         num_receptions = group.attrs.get("num_receptions", 0)
         num_devices = group.attrs.get("num_devices", 1)
-
-        # Assert that the scenario parameters match the serialization
-        if scenario.num_devices != num_devices:
-            raise ValueError(
-                f"Number of scenario devices does not match the serialization ({scenario.num_devices} != {num_devices})"
-            )
+        _devices = [None] * num_devices if devices is None else devices
 
         # Recall groups
         transmissions = [
-            SimulatedDeviceTransmission.from_HDF(group[f"transmission_{t:02d}"])
-            for t in range(num_transmissions)
+            SimulatedDeviceTransmission.from_HDF(
+                group[f"transmission_{t:02d}"], None if d is None else list(d.transmitters)
+            )
+            for t, d in zip(range(num_transmissions), _devices)
         ]
         receptions = [
-            SimulatedDeviceReception.from_HDF(group[f"reception_{r:02d}"])
-            for r in range(num_receptions)
+            SimulatedDeviceReception.from_HDF(
+                group[f"reception_{r:02d}"], None if d is None else list(d.receivers)
+            )
+            for r, d in zip(range(num_receptions), _devices)
         ]
 
         channel_realizations: List[ChannelRealization] = []
-        for c, channel in enumerate(scenario.channels):
+        for c, channel in enumerate(channels):
             realization = channel.recall_realization(group[f"channel_realization_{c:02d}"])
             channel_realizations.append(realization)
 

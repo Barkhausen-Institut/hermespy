@@ -32,24 +32,6 @@ class TestSimulatedDrop(TestCase):
 
         self.assertEqual(1, len(self.drop.channel_realizations))
 
-    def test_hdf_serialization_validation(self) -> None:
-        """HDF serialization should raise ValueError on invalid scenario arguments"""
-
-        file = File("test.h5", "w", driver="core", backing_store=False)
-        group = file.create_group("group")
-
-        self.drop.to_HDF(group)
-
-        with self.assertRaises(ValueError):
-            _ = self.drop.from_HDF(group)
-
-        self.scenario.new_device()
-
-        with self.assertRaises(ValueError):
-            _ = SimulatedDrop.from_HDF(group, scenario=self.scenario)
-
-        file.close()
-
     def test_hdf_serialization(self) -> None:
         """Test HDF roundtrip serialization"""
 
@@ -57,7 +39,7 @@ class TestSimulatedDrop(TestCase):
         group = file.create_group("group")
 
         self.drop.to_HDF(group)
-        deserialization = SimulatedDrop.from_HDF(group, scenario=self.scenario)
+        deserialization = SimulatedDrop.from_HDF(group, self.scenario.devices, self.scenario.channels)
 
         file.close()
 

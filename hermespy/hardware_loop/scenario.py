@@ -11,6 +11,8 @@ from collections.abc import Sequence
 from time import time
 from typing import Generic, Optional, TypeVar
 
+from h5py import Group
+
 from hermespy.core import DeviceInput, DeviceReception, Scenario, Drop, Signal
 from hermespy.simulation import SimulatedDeviceReception, SimulationScenario, TriggerRealization
 from .physical_device import PDT
@@ -25,7 +27,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class PhysicalScenario(Generic[PDT], Scenario[PDT]):
+class PhysicalScenario(Generic[PDT], Scenario[PDT, Drop]):
     """Scenario of physical device bindings.
 
     Managing physical devices by a scenario enables synchronized triggering
@@ -96,6 +98,9 @@ class PhysicalScenario(Generic[PDT], Scenario[PDT]):
         device_receptions = self.receive_devices()
 
         return Drop(timestamp, device_transmissions, device_receptions)
+
+    def _recall_drop(self, group: Group) -> Drop:
+        return Drop.from_HDF(group, self.devices)
 
     def add_device(self, device: PDT) -> None:
         Scenario.add_device(self, device)

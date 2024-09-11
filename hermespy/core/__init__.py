@@ -65,7 +65,7 @@ from .monte_carlo import (
     register,
 )
 from .random_node import RandomRealization, RandomNode
-from .drop import Drop, RecalledDrop
+from .drop import Drop
 from .scenario import Scenario, ScenarioMode, ScenarioType, ReplayScenario
 from .signal_model import Signal, SignalBlock, DenseSignal, SparseSignal
 from .visualize import (
@@ -168,7 +168,6 @@ __all__ = [
     "RandomRealization",
     "RandomNode",
     "Drop",
-    "RecalledDrop",
     "Scenario",
     "ScenarioMode",
     "ScenarioType",

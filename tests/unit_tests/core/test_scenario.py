@@ -7,9 +7,9 @@ from unittest import TestCase
 from unittest.mock import PropertyMock, MagicMock, Mock, patch
 
 import numpy.random as rnd
-from h5py import File
+from h5py import File, Group
 
-from hermespy.core import Drop, Scenario, ScenarioMode, Signal, SignalReceiver, SilentTransmitter, ReplayScenario
+from hermespy.core import Device, Drop, Scenario, ScenarioMode, Signal, SignalReceiver, SilentTransmitter, ReplayScenario
 from hermespy.simulation import SimulatedDevice
 
 __author__ = "Tobias Kronauer"
@@ -22,7 +22,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class MockScenario(Scenario):
+class MockScenario(Scenario[Device, Drop]):
     """Implementation of abstract scenario base for testing purpuses"""
 
     def _drop(self) -> Drop:
@@ -30,6 +30,9 @@ class MockScenario(Scenario):
         transmissions = self.transmit_devices()
         receptions = self.receive_devices([t.mixed_signal for t in transmissions])
         return Drop(0.0, transmissions, receptions)
+
+    def _recall_drop(self, group: Group) -> Drop:
+        return Drop.from_HDF(group)
 
 
 class TestScenario(TestCase):
