@@ -24,7 +24,7 @@ class FrameGeneratorScapy(FrameGenerator):
             packet(Packet): Packet to which a payload will be attached.
         """
         self.packet = packet
-        self.packet_num_bits = len(packet)*8
+        self.packet_num_bits = len(packet) * 8
         self.packet_type = packet.layers()[0]
 
     def pack_frame(self, source: BitsSource, num_bits: int) -> np.ndarray:
@@ -42,12 +42,16 @@ class FrameGeneratorScapy(FrameGenerator):
 
         payload_num_bits = num_bits - self.packet_num_bits
         if payload_num_bits < 0:
-            raise ValueError(f"Packet header is bigger then the requested amount of bits ({len(self.packet)*8} > {num_bits}).")
+            raise ValueError(
+                f"Packet header is bigger then the requested amount of bits ({len(self.packet)*8} > {num_bits})."
+            )
         packet_new = self.packet_type()
         packet_new.add_payload(np.packbits(source.generate_bits(payload_num_bits)).tobytes())
         return np.unpackbits(np.frombuffer(raw(packet_new), np.uint8))
 
     def unpack_frame(self, frame: np.ndarray) -> np.ndarray:
         if frame.size < self.packet_num_bits:
-            raise ValueError(f"The frame contains less bits then the header ({frame.size} < {self.packet_num_bits}).")
-        return frame[self.packet_num_bits:]
+            raise ValueError(
+                f"The frame contains less bits then the header ({frame.size} < {self.packet_num_bits})."
+            )
+        return frame[self.packet_num_bits :]

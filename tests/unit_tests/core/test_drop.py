@@ -8,7 +8,7 @@ from unittest.mock import Mock
 import numpy as np
 from h5py import File, Group
 
-from hermespy.core import Drop, RecalledDrop, Signal, DeviceTransmission, DeviceReception
+from hermespy.core import Drop, Signal, DeviceTransmission, DeviceReception
 from hermespy.core.drop import EvaluatedDrop
 
 __author__ = "Jan Adler"
@@ -60,7 +60,7 @@ class TestDrop(TestCase):
             mock_device.receivers = []
             mock_device.transmitters = []
             mock_scenario.devices = [mock_device]
-            recalled_drop = RecalledDrop(file["g1"], mock_scenario)
+            recalled_drop = Drop.from_HDF(file["g1"], mock_scenario.devices)
             file.close()
 
         self.assertEqual(self.drop.timestamp, deserialization.timestamp)
@@ -69,7 +69,6 @@ class TestDrop(TestCase):
         self.assertEqual(self.drop.timestamp, recalled_drop.timestamp)
         self.assertEqual(self.drop.num_device_transmissions, recalled_drop.num_device_transmissions)
         self.assertEqual(self.drop.num_device_receptions, recalled_drop.num_device_receptions)
-        self.assertIsInstance(recalled_drop.group, Group)
 
 
 class TestEvaluatedDrop(TestCase):
