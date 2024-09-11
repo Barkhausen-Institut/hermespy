@@ -21,6 +21,7 @@ from hermespy.core import (
     RandomNode,
     Transformation,
     Transmission,
+    Transmitter,
     Reception,
     Scenario,
     Serializable,
@@ -624,10 +625,12 @@ class SimulatedDeviceTransmission(DeviceTransmission, SimulatedDeviceOutput):
 
     @classmethod
     def from_HDF(
-        cls: Type[SimulatedDeviceTransmission], group: Group
+        cls: Type[SimulatedDeviceTransmission],
+        group: Group,
+        operators: Sequence[Transmitter] | None = None,
     ) -> SimulatedDeviceTransmission:
         # Recover base classes
-        device_transmission = DeviceTransmission.from_HDF(group)
+        device_transmission = DeviceTransmission.from_HDF(group, operators)
         devic_output = SimulatedDeviceOutput.from_HDF(group)
 
         # Initialize class from device output and operator transmissions
@@ -891,9 +894,13 @@ class SimulatedDeviceReception(ProcessedSimulatedDeviceInput, DeviceReception):
         DeviceReception.to_HDF(self, group)
 
     @classmethod
-    def from_HDF(cls: Type[SimulatedDeviceReception], group: Group) -> SimulatedDeviceReception:
+    def from_HDF(
+        cls: Type[SimulatedDeviceReception],
+        group: Group,
+        operators: Sequence[Receiver] | None = None,
+    ) -> SimulatedDeviceReception:
         device_input = ProcessedSimulatedDeviceInput.from_HDF(group)
-        device_reception = DeviceReception.from_HDF(group)
+        device_reception = DeviceReception.from_HDF(group, operators)
 
         return cls.From_ProcessedSimulatedDeviceInput(
             device_input, device_reception.operator_receptions

@@ -6,6 +6,7 @@ from typing import Sequence, Tuple, overload
 
 import matplotlib.pyplot as plt
 import numpy as np
+from h5py import Group
 from mpl_toolkits.mplot3d.axes3d import Axes3D  # type: ignore
 from mpl_toolkits.mplot3d.art3d import Line3DCollection  # type: ignore
 
@@ -180,7 +181,7 @@ class _ScenarioVisualizer(VisualizableAttribute[ScenarioVisualization]):
             )
 
 
-class SimulationScenario(Scenario[SimulatedDevice]):
+class SimulationScenario(Scenario[SimulatedDevice, SimulatedDrop]):
     """Description of a physical layer wireless communication scenario."""
 
     yaml_tag = "SimulationScenario"
@@ -747,6 +748,9 @@ class SimulationScenario(Scenario[SimulatedDevice]):
         return SimulatedDrop(
             timestamp, device_transmissions, channel_realizations, device_receptions
         )
+
+    def _recall_drop(self, group: Group) -> SimulatedDrop:
+        return SimulatedDrop.from_HDF(group, self.devices, self.channels)
 
     @property
     def visualize(self) -> _ScenarioVisualizer:

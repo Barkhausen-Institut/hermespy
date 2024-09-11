@@ -37,7 +37,7 @@ class FrameGenerator(ABC, Serializable):
 class FrameGeneratorStub(FrameGenerator):
     """A dummy placeholder frame generator, packing and unpacking payload without any overhead."""
 
-    yaml_tag = 'GeneratorStub'
+    yaml_tag = "GeneratorStub"
 
     def pack_frame(self, source: BitsSource, num_bits: int) -> np.ndarray:
         return source.generate_bits(num_bits)

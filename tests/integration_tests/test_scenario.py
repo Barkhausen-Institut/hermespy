@@ -7,8 +7,7 @@ from unittest import TestCase
 
 from numpy.testing import assert_array_almost_equal
 
-from hermespy.core import Drop
-from hermespy.simulation import SimulationScenario
+from hermespy.simulation import SimulatedDrop, SimulationScenario
 from hermespy.modem import TransmittingModem, ReceivingModem, RaisedCosineWaveform
 
 __author__ = "Jan Adler"
@@ -49,7 +48,7 @@ class TestRecordReplay(TestCase):
         self.scenario.stop()
         self.tempdir.cleanup()
 
-    def _record(self) -> List[Drop]:
+    def _record(self) -> List[SimulatedDrop]:
         """Record some drops for testing.
 
         Returns: List of recorded drops.
