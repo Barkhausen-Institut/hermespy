@@ -19,6 +19,7 @@ from hermespy.core import (
     AntennaPort,
     CustomAntennaArray,
     Dipole,
+    Executable,
     IdealAntenna,
     LinearAntenna,
     PatchAntenna,
@@ -669,6 +670,45 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
         )
         return combined_quantized_signal
 
+    def visualize_far_field_pattern(
+        self, signal: Signal, *, title: str | None = None
+    ) -> plt.Figure:
+        """Visualize a signal radiated by the antenna array in its far-field.
+
+        Returns: The Figure of the visualization.
+        """
+
+        # Collect angle candidates
+        zenith_angles = np.linspace(0, 0.5 * pi, 31)
+        azimuth_angles = np.linspace(-pi, pi, 31)
+        zenith_samples, azimuth_samples = np.meshgrid(zenith_angles[1:], azimuth_angles)
+        aoi = np.append(
+            np.array([azimuth_samples.flatten(), zenith_samples.flatten()]).T,
+            np.zeros((1, 2)),
+            axis=0,
+        )
+
+        far_field_power = np.empty(aoi.shape[0], dtype=np.float64)
+        for idx, (azimuth, zenith) in enumerate(aoi):
+            phase_response = self.spherical_phase_response(
+                signal.carrier_frequency, azimuth, zenith, AntennaMode.TX
+            )
+
+            for block in signal:
+                far_field_power[idx] += np.linalg.norm(phase_response @ block, 2) ** 2
+
+        axes: Axes3D
+        with Executable.style_context():
+            figure, axes = plt.subplots(subplot_kw={"projection": "3d"})
+            figure.suptitle(
+                "Antenna Array Transmitted Signal Spatial Characteristics"
+                if title is None
+                else title
+            )
+            self.__visualize_pattern(axes, far_field_power, aoi)
+
+        return figure
+
     @overload
     def plot_pattern(
         self,
@@ -833,8 +873,22 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
                 s = arg_0.receive(s, array=self)
                 power[p] = np.abs(s.getitem()) ** 2
 
+        axes: Axes3D
+        with Executable.style_context():
+            figure, axes = plt.subplots(subplot_kw={"projection": "3d"})
+            figure.suptitle(f"Antenna Array {mode_str} Characteristics" if title is None else title)
+            self.__visualize_pattern(axes, power, aoi)
+
+        return figure
+
+    @staticmethod
+    def __visualize_pattern(axes: Axes3D, power: np.ndarray, aoi: np.ndarray) -> None:
         power /= power.max()  # Normalize for visualization purposes
 
+        # Threshold the lower values for better visualization
+        power[power < 0.01] = 0.01
+
+        # Compute surface
         surface = np.array(
             [
                 power * np.cos(aoi[:, 0]) * np.sin(aoi[:, 1]),
@@ -843,10 +897,6 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
             ],
             dtype=np.float_,
         )
-
-        axes: Axes3D
-        figure, axes = plt.subplots(subplot_kw={"projection": "3d"})
-        figure.suptitle(f"Antenna Array {mode_str} Characteristics" if title is None else title)
 
         triangles = tri.Triangulation(aoi[:, 0], aoi[:, 1])
         cmap = plt.cm.ScalarMappable(norm=colors.Normalize(power.min(), power.max()), cmap="jet")
@@ -865,9 +915,6 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
         axes.set_zlim((0, 1))
         axes.set_xlabel("X")
         axes.set_ylabel("Y")
-        axes.set_zlabel("Z")
-
-        return figure
 
     def antenna_state(self, base_pose: Transformation) -> AntennaArrayState:
         """Return the antenna array's state with respect to a base pose.
