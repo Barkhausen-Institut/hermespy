@@ -10,6 +10,8 @@ from hermespy.beamforming import BeamformingReceiver, BeamformingTransmitter, Ca
 from hermespy.core import AntennaMode, Signal
 from hermespy.simulation import RfChain, SimulatedAntenna, SimulatedAntennaPort, SimulatedAntennaArray, SimulatedCustomArray, SimulatedDevice, SimulatedDipole, SimulatedIdealAntenna, SimulatedLinearAntenna, SimulatedPatchAntenna, SimulatedUniformArray
 
+from unit_tests.utils import SimulationTestContext
+
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
@@ -269,6 +271,18 @@ class _TestSimulatedAntennas(TestCase):
         quantized_signal = self.array.analog_digital_conversion(test_signal, default_rf_chain, 10)
         self.assertEqual(quantized_signal.num_samples, test_signal.num_samples)
         self.assertEqual(quantized_signal.num_streams, test_signal.num_streams)
+
+    def test_visualize_far_field_pattern(self) -> None:
+        """Far field pattern visualization should return a new figure"""
+
+        signal = Signal.Create(
+            np.random.normal(size=(self.array.num_transmit_antennas, 10)) + 1j * np.random.normal(size=(self.array.num_transmit_antennas, 10)),
+            carrier_frequency=1e9,
+            sampling_rate=1e7,
+        )
+
+        with SimulationTestContext():
+            figure = self.array.visualize_far_field_pattern(signal)
 
     def test_plot_pattern_validation(self) -> None:
         """Pattern plotting routine should raise ValueErrors on invalid arguments"""
