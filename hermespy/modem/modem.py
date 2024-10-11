@@ -1137,8 +1137,12 @@ class ReceivingModem(
 
     @property
     def num_receive_ports(self) -> int:
-        if self.receiving_device is None:
+        if self.selected_receive_ports is not None:
+            return len(self.selected_receive_ports)
+
+        elif self.receiving_device is None:
             return 0
+
         else:
             return self.receiving_device.num_receive_ports
 
