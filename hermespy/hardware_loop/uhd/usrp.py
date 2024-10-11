@@ -377,7 +377,7 @@ class UsrpDevice(PhysicalDevice, Serializable):
         )
 
         for mimo_signal in mimo_signals:
-            streams = np.array([mimo_signal.signals[i] for i in self.__selected_receive_ports])
+            streams = np.array([mimo_signal.signals[i] for i in range(self.num_receive_ports)])
             signal_model.append_samples(streams)
 
         # Remove the zero padding hack
