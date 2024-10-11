@@ -389,7 +389,7 @@ class RadarBase(Generic[RTT, RRT], DuplexOperator[RTT, RRT]):
             RuntimeError: If the beamforming configuration does not result in a single output stream.
         """
 
-        if self.device.antennas.num_receive_ports > 1:
+        if self.num_receive_ports > 1:
             if self.receive_beamformer is None:
                 raise RuntimeError(
                     "Receiving over a device with more than one RF port requires a beamforming configuration"

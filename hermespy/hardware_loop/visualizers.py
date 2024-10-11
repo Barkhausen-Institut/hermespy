@@ -340,6 +340,12 @@ class RadarRangePlot(HardwareLoopPlot[PlotVisualization]):
         self.__radar = radar
 
     @property
+    def radar(self) -> Radar:
+        """Radar of which information is to be plotted."""
+
+        return self.__radar
+
+    @property
     def _default_title(self) -> str:
         return "Range-Power Profile"
 
@@ -474,10 +480,8 @@ class ArtifactPlot(HardwareLoopEvaluatorPlot[PlotVisualization]):
         ax: plt.Axes = axes.flat[0]
         lines = np.empty_like(axes, dtype=np.object_)
         lines[0, 0] = ax.plot(self.__artifact_indices, self.__artifact_queue)
-        # try:
-        #    ax.set_yscale(self.evaluator.plot_scale)
-        # except Exception:
-        #    pass
+        ax.set_yscale(self.evaluator.plot_scale)
+
         return PlotVisualization(axes[0, 0].get_figure(), axes, lines)
 
     def _update_plot(self, sample: HardwareLoopSample, visualization: PlotVisualization) -> None:
@@ -486,3 +490,7 @@ class ArtifactPlot(HardwareLoopEvaluatorPlot[PlotVisualization]):
 
         # Update visualization
         visualization.lines[0, 0][0].set_ydata(self.__artifact_queue)
+
+        # Rescale the visualization
+        visualization.axes[0, 0].relim()
+        visualization.axes[0, 0].autoscale_view(True, True, True)
