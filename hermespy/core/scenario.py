@@ -87,6 +87,7 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType, DropType]
     __file: File | None  # HDF5 file handle
     __drop_counter: int  # Internal drop counter
     __campaign: str  # Measurement campaign name
+    __num_replayed_drops: int  # Number of replayed drops
 
     def __init__(
         self, seed: int | None = None, devices: Sequence[DeviceType] | None = None
@@ -113,6 +114,7 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType, DropType]
         self.__file = None
         self.__drop_counter = 0
         self.__campaign = "default"
+        self.__num_replayed_drops = 0
 
         # Add devices if specified
         if devices is not None:
@@ -442,6 +444,7 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType, DropType]
         overwrite: bool = False,
         campaign: str = "default",
         state: Scenario | None = None,
+        serialize_state: bool = True,
     ) -> None:
         """Start recording drop information generated from this scenario.
 
@@ -463,6 +466,10 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType, DropType]
             state (scenario, optional):
                 Scenario to be used for state serialization.
                 By default, this scenario is assumed.
+
+            serialize_state (bool, optional):
+                Serialize the scenario state to the recording.
+                Enabled by default.
 
         Raises:
 
@@ -501,18 +508,19 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType, DropType]
         if "/campaigns" not in self.__file:
             self.__file.create_group("/campaigns")
 
-        if "/state" not in self.__file:
-            self.__file.create_group("state")
-
         # Write scenario state to the dataset for easy recollection
         # Future feature: Write a locking mechanism during recording
-        factory = Factory()
+        if serialize_state:
+            if "/state" not in self.__file:
+                self.__file.create_group("state")
 
-        if state is None:
-            self._state_to_HDF(factory, self.__file["/state"])
+            factory = Factory()
 
-        else:
-            state._state_to_HDF(factory, self.__file["/state"])
+            if state is None:
+                self._state_to_HDF(factory, self.__file["/state"])
+
+            else:
+                state._state_to_HDF(factory, self.__file["/state"])
 
         # Write meta-information
         self.__file.attrs["hermes_version"] = __version__
@@ -586,6 +594,7 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType, DropType]
         self.__file = _file
         self.__drop_counter = 0
         self.__campaign = campaign
+        self.__num_replayed_drops = len(_file["/campaigns/" + campaign])
 
         # Switch mode
         self.__mode = ScenarioMode.REPLAY
@@ -853,7 +862,7 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType, DropType]
             return self.__drop_counter
 
         if self.mode == ScenarioMode.REPLAY:
-            return self.__file.attrs["num_drops"]
+            return self.__num_replayed_drops
 
         return None
 
@@ -889,9 +898,9 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType, DropType]
 
         if self.mode == ScenarioMode.REPLAY:
             # Recall the drop from the savefile
-            for _ in range(self.__file.attrs["num_drops"]):
+            for _ in range(self.__num_replayed_drops):
                 drop_path = f"/campaigns/{self.__campaign}/drop_{self.__drop_counter:02d}"
-                self.__drop_counter = (self.__drop_counter + 1) % self.__file.attrs["num_drops"]
+                self.__drop_counter = (self.__drop_counter + 1) % self.__num_replayed_drops
 
                 if drop_path in self.__file:
                     drop = self._recall_drop(self.__file[drop_path])

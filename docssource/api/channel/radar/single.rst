@@ -10,7 +10,7 @@ Model of a radar channel featuring a single reflecting target.
 The following minimal example outlines how to configure the channel model
 within the context of a :class:`Simulation<hermespy.simulation.simulation.Simulation>`:
 
-.. literalinclude:: ../../../scripts/examples/channel_SingleTargetRadarChannel.py
+.. literalinclude:: ../../../scripts/examples/channel_radar_single.py
    :language: python
    :linenos:
    :lines: 11-30

@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
-"""
-=====================
-Audio Device Scenario
-=====================
-"""
 
+from hermespy.core import Signal
 from ..scenario import PhysicalScenario
 from .device import AudioDevice
 
@@ -44,5 +40,11 @@ class AudioScenario(PhysicalScenario[AudioDevice]):
         return device
 
     def _trigger(self) -> None:
-        # Trigger of the audio scenario is not implemented
-        return
+        for device in self.devices:
+            device.trigger()
+
+    def _trigger_direct(
+        self, transmissions: list[Signal], devices: list[AudioDevice], calibrate: bool = True
+    ) -> list[Signal]:
+        transmissions = [d.trigger_direct(t) for d, t in zip(devices, transmissions)]
+        return transmissions

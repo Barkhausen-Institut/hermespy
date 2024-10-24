@@ -242,24 +242,26 @@ class TestAudioDevice(TestCase):
         self.device.sampling_rate = 1.0
         self.assertEqual(1.0, self.device.max_sampling_rate)
 
-    @patch("sounddevice.playrec")
-    def test_transmit_receive(self, playrec_mock: MagicMock) -> None:
+    def test_transmit_receive(self) -> None:
         """Test all device stages."""
 
         def side_effect(*args, **kwargs):
             self.device._AudioDevice__reception = args[0]
 
-        playrec_mock.side_effect = side_effect
+        sd_mock = Mock()
+        sd_mock.playrec.side_effect = side_effect
+        with patch.object(self.device, "_import_sd") as import_sd_mock:
+            import_sd_mock.return_value = sd_mock
 
-        operator = SineOperator()
-        operator.device = self.device
-        transmission = operator.transmit()
+            operator = SineOperator()
+            operator.device = self.device
+            transmission = operator.transmit()
 
-        self.device.transmit()
-        self.device.trigger()
-        self.device.process_input()
+            self.device.transmit()
+            self.device.trigger()
+            self.device.process_input()
 
-        reception = operator.receive()
+            reception = operator.receive()
 
         assert_array_almost_equal(transmission.signal.getitem(), reception.signal.getitem())
 
