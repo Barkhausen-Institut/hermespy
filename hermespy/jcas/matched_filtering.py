@@ -6,7 +6,7 @@ import numpy as np
 from scipy.constants import speed_of_light
 from scipy.signal import correlate, correlation_lags
 
-from hermespy.core import Device, Signal, Serializable
+from hermespy.core import AntennaMode, Device, Signal, Serializable
 from hermespy.modem import TransmittingModemBase, ReceivingModemBase, CommunicationWaveform
 from hermespy.radar import RadarReception, RadarCube
 from .jcas import DuplexJCASOperator, JCASTransmission, JCASReception
@@ -97,8 +97,19 @@ class MatchedFilterJcas(DuplexJCASOperator[CommunicationWaveform], Serializable)
         # Digital receive beamformer
         angle_bins, beamformed_samples = self._receive_beamform(signal)
 
+        # Predict the signal transmitted towards the angles of interest
+        transmitted_samples = np.empty(
+            (angle_bins.shape[0], self.transmission.signal.num_samples), dtype=np.complex_
+        )
+        for t, angle in enumerate(angle_bins):
+            phase_response = self.device.antennas.horizontal_phase_response(
+                self.transmission.signal.carrier_frequency, angle[0], angle[1], AntennaMode.TX
+            )
+            transmitted_samples[t, :] = phase_response.conj() @ self.transmission.signal.getitem(
+                unflatten=True
+            )
+
         # Transmit-receive correlation for range estimation
-        transmitted_samples = self.transmission.signal.getitem(0)
         correlation = (
             abs(correlate(beamformed_samples, transmitted_samples, mode="valid", method="fft"))
             / self.transmission.signal.num_samples

@@ -68,7 +68,7 @@ class Coupling(ABC):
 
         if self.device.num_transmit_antennas != signal.num_streams:
             raise ValueError(
-                "Number of signal streams ({signal.num_streams}) does not match the number of transmitting antennas ({self.device.num_transmit_antennas})"
+                f"Number of signal streams ({signal.num_streams}) does not match the number of transmitting antenna ports ({self.device.num_transmit_antennas})"
             )
 
         return self._transmit(signal)
@@ -103,9 +103,9 @@ class Coupling(ABC):
         if self.device is None:
             raise FloatingError("Error trying to simulate coupling of a floating model")
 
-        if self.device.num_receive_antennas != signal.num_streams:
+        if self.device.num_receive_ports != signal.num_streams:
             raise ValueError(
-                f"Number of signal streams ({signal.num_streams}) does not match the number of transmitting antennas ({self.device.num_transmit_antennas})"
+                f"Number of signal streams ({signal.num_streams}) does not match the number of receiving antenna ports ({self.device.num_receive_ports})"
             )
 
         return self._receive(signal)

@@ -23,7 +23,7 @@ The sensor array response :math:`\mathbf{A}^{(\alpha,\beta)}` is always assumed 
 The following minimal example outlines how to configure the channel model
 within the context of a :class:`Simulation<hermespy.simulation.simulation.Simulation>`:
 
-.. literalinclude:: ../../../scripts/examples/channel_RandomDelayChannel.py
+.. literalinclude:: ../../../scripts/examples/channel_delay_random.py
     :language: python
     :linenos:
     :lines: 11-38

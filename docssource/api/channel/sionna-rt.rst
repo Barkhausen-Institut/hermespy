@@ -53,7 +53,7 @@ It should be noted that `sionna.rt.Scene` is a singleton class. So when a new sc
 The following minimal example outlines how to configure the channel model
 within the context of a :class:`Simulation<hermespy.simulation.simulation.Simulation>`:
 
-.. literalinclude:: ../../../scripts/examples/channel_SionnaRT.py
+.. literalinclude:: ../../scripts/examples/channel_SionnaRT.py
    :language: python
    :linenos:
    :lines: 11-36

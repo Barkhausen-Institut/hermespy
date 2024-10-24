@@ -398,20 +398,29 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDrop]):
         if value is not None:
             self.__noise_model.random_mother = self
 
-    def realize_triggers(self) -> Sequence[TriggerRealization]:
+    def realize_triggers(
+        self, devices: Sequence[SimulatedDevice] | None = None
+    ) -> Sequence[TriggerRealization]:
         """Realize the trigger models of all registered devices.
 
         Devices sharing trigger models will be triggered simulatenously.
 
+        Args:
+
+            devices (Sequence[SimulatedDevice], optional):
+                The devices for which to realize the trigger models.
+                If not specified, all registered devices are considered.
+
         Returns: A sequence of trigger model realizations.
         """
+        _devices = self.devices if devices is None else devices
 
         # Collect unique triggers
         triggers: list[TriggerModel] = []
         unique_realizations: list[TriggerRealization] = []
         device_realizations: list[TriggerRealization] = []
 
-        for device in self.devices:
+        for device in _devices:
             device_realization: TriggerRealization
 
             if device.trigger_model not in triggers:

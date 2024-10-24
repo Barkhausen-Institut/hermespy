@@ -13,7 +13,7 @@ respective delay and power.
 The following minimal example outlines how to configure the channel model
 within the context of a :class:`Simulation<hermespy.simulation.simulation.Simulation>`:
 
-.. literalinclude:: ../../../scripts/examples/channel_MultipathFading5GTDL.py
+.. literalinclude:: ../../../scripts/examples/channel_fading_tdl.py
    :language: python
    :linenos:
    :lines: 11-37

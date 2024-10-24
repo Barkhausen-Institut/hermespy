@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from h5py import Group
 from numpy.linalg import svd
-from scipy.fft import fft, fftfreq, fftshift, ifft
+from scipy.fft import fft, ifft
 from scipy.signal import convolve, find_peaks, peak_widths
 
 from hermespy.core import Serializable, Signal, VAT
@@ -101,9 +101,28 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Serializable):
 
         return self.__delay
 
-    def remove_leakage(
-        self, transmitted_signal: Signal, received_signal: Signal, delay_correction: float = 0.0
-    ) -> Signal:
+    def predict_leakage(self, transmitted_signal: Signal) -> Signal:
+        if transmitted_signal.num_streams != self.leakage_response.shape[1]:
+            raise ValueError(
+                f"Transmitted signal has unxpected number of streams ({transmitted_signal.num_streams} instead of {self.leakage_response.shape[1]})"
+            )
+
+        predicted_signal_samples = np.zeros(
+            (
+                self.leakage_response.shape[0],
+                transmitted_signal.num_samples + self.leakage_response.shape[2] - 1,
+            ),
+            dtype=np.complex_,
+        )
+        for m, n in np.ndindex(self.leakage_response.shape[0], transmitted_signal.num_streams):
+            # The leaked signal is the convolution of the transmitted signal with the leakage response
+            predicted_signal_samples[m, :] += convolve(
+                self.__leakage_response[m, n, :], transmitted_signal.getitem(n).flatten()
+            )
+
+        return transmitted_signal.from_ndarray(predicted_signal_samples)
+
+    def remove_leakage(self, transmitted_signal: Signal, received_signal: Signal) -> Signal:
         if transmitted_signal.num_streams != self.leakage_response.shape[1]:
             raise ValueError(
                 f"Transmitted signal has unxpected number of streams ({transmitted_signal.num_streams} instead of {self.leakage_response.shape[1]})"
@@ -124,8 +143,15 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Serializable):
                 f"Transmitted and received signal must have the same carrier frequency ({transmitted_signal.carrier_frequency} != {received_signal.carrier_frequency})"
             )
 
+        # Compute the delay correction
+        delay_correction = transmitted_signal.delay + received_signal.delay
+
         # The received signal is corrected by subtracting the leaked samples
         corrected_signal = received_signal.copy()
+
+        # If nothing has been transmitted, abort
+        if transmitted_signal.num_samples < 1:
+            return corrected_signal
 
         # Compute the implicit delay shift in samples
         delay_sample_shift = round((self.delay - delay_correction) * received_signal.sampling_rate)
@@ -165,26 +191,31 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Serializable):
     def plot(self) -> Tuple[plt.FigureBase, VAT]:
         """Plot the leakage response in the time and frequency domain."""
 
-        figure, axes = plt.subplots(1, 2, squeeze=False)
+        num_tx = self.__leakage_response.shape[1]
+        num_rx = self.__leakage_response.shape[0]
+        figure, axes = plt.subplots(num_rx, num_tx, squeeze=False)
 
-        time_axes: plt.Axes = axes[0, 0]
-        freq_axes: plt.Axes = axes[0, 1]
+        max_amplitude = 0.0
+        sample_instances = np.arange(self.__leakage_response.shape[2]) / self.__sampling_rate
+        for m, n in np.ndindex(num_rx, num_tx):
+            # frequency_bins = fftshift(fftfreq(self.__leakage_response.shape[2]))
 
-        for m, n in np.ndindex(self.__leakage_response.shape[0], self.__leakage_response.shape[1]):
-            sample_instances = np.arange(self.__leakage_response.shape[2]) / self.__sampling_rate
-            frequency_bins = fftshift(fftfreq(self.__leakage_response.shape[2]))
+            samples = np.abs(self.__leakage_response[m, n, :])
+            max_amplitude = max(samples.max(), max_amplitude)
+            axes[m, n].plot(sample_instances, samples)
+            # freq_axes.plot(
+            #    frequency_bins,
+            #    fftshift(abs(fft(self.__leakage_response[m, n, :]))),
+            #    label=f"Tx: {n} Rx{m}",
+            # )
 
-            time_axes.plot(
-                sample_instances, np.abs(self.__leakage_response[m, n, :]), label=f"Tx: {n} Rx{m}"
-            )
-            freq_axes.plot(
-                frequency_bins,
-                fftshift(abs(fft(self.__leakage_response[m, n, :]))),
-                label=f"Tx: {n} Rx{m}",
-            )
+            axes[m, n].set_xlabel("Time [s]")
+            axes[m, n].set_ylabel("Absolute Amplitude")
+            # freq_axes.set_xlabel("Frequency [Hz]")
 
-            time_axes.set_xlabel("Time [s]")
-            freq_axes.set_xlabel("Frequency [Hz]")
+        # Set the y-axis limits to the maximum amplitude
+        for ax in axes.flat:
+            ax.set_ylim(0, max_amplitude)
 
         return figure, axes
 

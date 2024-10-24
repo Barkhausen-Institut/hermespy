@@ -13,8 +13,7 @@ from typing import Generic, Optional, TypeVar
 
 from h5py import Group
 
-from hermespy.core import DeviceInput, DeviceReception, Scenario, Drop, Signal
-from hermespy.simulation import SimulatedDeviceReception, SimulationScenario, TriggerRealization
+from hermespy.core import DeviceInput, DeviceReception, Scenario, Signal, Drop
 from .physical_device import PDT
 
 __author__ = "Jan Adler"
@@ -41,6 +40,47 @@ class PhysicalScenario(Generic[PDT], Scenario[PDT, Drop]):
     def _trigger(self) -> None:
         """Trigger synchronzed transmission and reception for all managed devices."""
         ...  # pragma no cover
+
+    @abstractmethod
+    def _trigger_direct(
+        self, transmissions: list[Signal], devices: list[PDT], calibrate: bool = True
+    ) -> list[Signal]:
+        """Trigger a synchronized transmission and reception for a selection of managed devices.
+
+        Subroutine of :meth:`PhysicalScenario.trigger_direct<hermespy.hardware_loop.scenario.PhysicalScenario.trigger_direct>`.
+
+        Args:
+
+            transmissions: List of signals to be transmitted.
+            devices: List of devices to be triggered.
+            calibrate: Apply device calibrations during transmission and reception.
+
+        Returns: List of signals received by all devices.
+        """
+        ...  # pragma: no cover
+
+    def trigger_direct(
+        self, transmissions: list[Signal], devices: list[PDT] | None = None, calibrate: bool = True
+    ) -> list[Signal]:
+        """Trigger a synchronized transmission and reception for all managed devices.
+
+        Args:
+
+            transmissions: List of signals to be transmitted.
+            devices: List of devices to be triggered.
+            calibrate: Apply device calibrations during transmission and reception.
+
+        Returns: List of signals received by all devices.
+        """
+
+        _devices = self.devices if devices is None else devices
+
+        if len(transmissions) != len(_devices):
+            raise ValueError(
+                f"The number of transmissions does not match the number of devices ({len(transmissions)} != {len(_devices)})"
+            )
+
+        return self._trigger_direct(transmissions, _devices, calibrate)
 
     def receive_devices(
         self,
@@ -108,33 +148,3 @@ class PhysicalScenario(Generic[PDT], Scenario[PDT, Drop]):
 
 PhysicalScenarioType = TypeVar("PhysicalScenarioType", bound=PhysicalScenario)
 """Type of physical scenario"""
-
-
-class SimulatedPhysicalScenario(SimulationScenario, PhysicalScenario):
-    """Simulated physical scenario for testing purposes."""
-
-    def _trigger(self) -> None:
-        # Triggering does nothing
-        pass  # pragma: no cover
-
-    def receive_devices(
-        self,
-        impinging_signals: (
-            Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]] | None
-        ) = None,
-        cache: bool = True,
-        trigger_realizations: Sequence[TriggerRealization] | None = None,
-        leaking_signals: Sequence[Signal] | Sequence[Sequence[Signal]] | None = None,
-    ) -> Sequence[SimulatedDeviceReception]:
-        if impinging_signals is None:
-            physical_device_receptions = PhysicalScenario.receive_devices(self, None, cache)
-            impinging_signals = [r.impinging_signals for r in physical_device_receptions]
-
-            return SimulationScenario.receive_devices(
-                self, impinging_signals, cache, trigger_realizations, leaking_signals
-            )
-
-        else:
-            return SimulationScenario.receive_devices(
-                self, impinging_signals, cache, trigger_realizations, leaking_signals
-            )

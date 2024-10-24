@@ -9,7 +9,7 @@ Exponentially decaying channel model.
 The following minimal example outlines how to configure the channel model
 within the context of a :class:`Simulation<hermespy.simulation.simulation.Simulation>`:
 
-.. literalinclude:: ../../../scripts/examples/channel_MultipathFadingExponential.py
+.. literalinclude:: ../../../scripts/examples/channel_fading_exponential.py
    :language: python
    :linenos:
    :lines: 11-36
