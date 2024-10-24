@@ -8,7 +8,7 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from hermespy.channel import SingleTargetRadarChannel
-from hermespy.hardware_loop import HardwareLoop, SimulatedPhysicalScenario
+from hermespy.hardware_loop import HardwareLoop, PhysicalScenarioDummy
 from hermespy.radar import Radar, FMCW, ReceiverOperatingCharacteristic
 from hermespy.simulation import SpecificIsolation, N0
 
@@ -33,7 +33,7 @@ class TestRocFromMeasurements(TestCase):
         carrier_frequency = 10e9
         chirp_duration = 2e-8
 
-        system = SimulatedPhysicalScenario()
+        system = PhysicalScenarioDummy()
         system.noise_level = N0(1e-13)
 
         hardware_loop = HardwareLoop(system)

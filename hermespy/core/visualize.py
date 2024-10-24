@@ -69,6 +69,14 @@ class Visualization(ABC):
 
         return self.__axes
 
+    def show(self) -> None:
+        """Show this visualization only.
+
+        Note that, depending on the visualizuation, this may be a blocking command.
+        """
+
+        self.__figure.show(warn=False)
+
 
 VT = TypeVar("VT", bound=Visualization)
 """Type variable for a visualization."""

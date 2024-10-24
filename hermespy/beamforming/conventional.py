@@ -154,6 +154,7 @@ class ConventionalBeamformer(Serializable, TransmitBeamformer, ReceiveBeamformer
             - array.global_position
         )
         direction = Direction.From_Spherical(azimuth, zenith)
+        # Conventional steering vector
         weights = np.exp(-1j * 2 * pi * carrier_frequency / speed_of_light * (topology @ direction))
 
         # Weight the streams accordingly
