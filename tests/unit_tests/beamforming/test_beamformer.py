@@ -6,9 +6,9 @@ from unittest.mock import Mock
 import numpy as np
 from numpy.testing import assert_array_equal
 
-from hermespy.beamforming import BeamFocus, BeamformerBase, CoordinateFocus, DeviceFocus, ReceiveBeamformer, SphericalFocus, TransmitBeamformer
-from hermespy.core import AntennaArray, Direction, Device, FloatingError, Signal
-from hermespy.simulation import SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
+from hermespy.beamforming import BeamFocus, BeamformerBase, CoordinateFocus, ReceiveBeamformer, SphericalFocus, TransmitBeamformer
+from hermespy.core import AntennaArray, Direction, Device, FloatingError, Signal, Transformation
+from hermespy.simulation import DeviceFocus, SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
 __author__ = "Jan Adler"
@@ -67,10 +67,12 @@ class TestDeviceFocus(_TestBeamFocus):
     """Test device focusing beam focus class."""
 
     def setUp(self) -> None:
-        self.focused_device = SimulatedDevice()
-        self.focused_device.position = np.arange(3)
+        self.transmitting_device = SimulatedDevice()
+        self.focused_device = SimulatedDevice(
+            pose=Transformation.From_Translation(np.ones(3))
+        )
 
-        self.focus = DeviceFocus(self.focused_device)
+        self.focus = DeviceFocus(self.transmitting_device, self.focused_device)
 
         self.beamformer = Mock(spec=BeamformerBase)
         self.beamformer.operator = Mock()
@@ -78,25 +80,10 @@ class TestDeviceFocus(_TestBeamFocus):
         self.beamformer.operator.device.global_position = np.arange(1, 4)
         self.focus.beamformer = self.beamformer
 
-    def test_spherical_angles_validation(self) -> None:
-        """Spherical angles property getter should raise RuntimeErrors on invalid configurations"""
-
-        self.beamformer.operator.device = None
-        with self.assertRaises(RuntimeError):
-            _ = self.focus.spherical_angles
-
-        self.beamformer.operator = None
-        with self.assertRaises(RuntimeError):
-            _ = self.focus.spherical_angles
-
-        self.focus.beamformer = None
-        with self.assertRaises(RuntimeError):
-            _ = self.focus.spherical_angles
-
     def test_spherical_angles(self) -> None:
         """Spherical angles property getter should return the correct angles"""
 
-        expected_angles = Direction.From_Cartesian(-np.ones(3), normalize=True).to_spherical()
+        expected_angles = Direction.From_Cartesian(np.ones(3), normalize=True).to_spherical()
         assert_array_equal(expected_angles, self.focus.spherical_angles)
 
 

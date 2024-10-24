@@ -27,9 +27,9 @@ class PerfectIsolation(Serializable, Isolation):
         if signal is None:
             return self._leak(None)
 
-        if self.device.antennas.num_transmit_antennas != signal.num_streams:
+        if self.device.antennas.num_transmit_ports != signal.num_streams:
             raise ValueError(
-                "Number of signal streams ({signal.num_streams}) does not match the number of transmitting antennas ({self.device.antennas.num_transmit_antennas})"
+                "Number of signal streams ({signal.num_streams}) does not match the number of transmitting antenna ports ({self.device.antennas.num_transmit_ports})"
             )
 
         return self._leak(signal)

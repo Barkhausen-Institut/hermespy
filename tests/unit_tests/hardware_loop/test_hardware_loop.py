@@ -197,6 +197,7 @@ class TestHardwareLoop(TestCase):
     def setUp(self) -> None:
         self.scenario = PhysicalScenarioDummy()
         self.hardware_loop = HardwareLoop[PhysicalScenarioDummy, PhysicalDeviceDummy](self.scenario, debug=True)
+        self.hardware_loop.plot_information = False  # Disable plotting for testing
 
     def test_init(self) -> None:
         """Physical device class should be properly initialized"""

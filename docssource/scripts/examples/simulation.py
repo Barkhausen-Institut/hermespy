@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from hermespy.core import dB, ReceivedPowerEvaluator, Signal, SignalReceiver, SignalTransmitter
+from hermespy.core import dB, ReceivePowerEvaluator, Signal, SignalReceiver, SignalTransmitter
 from hermespy.channel import IdealChannel
 from hermespy.simulation import Simulation
 
@@ -48,8 +48,8 @@ device_alpha.receivers.add(alpha_receiver)
 device_beta.receivers.add(beta_receiver)
 
 # Add an evaluator estimating the received power to the simulation
-simulation.add_evaluator(ReceivedPowerEvaluator(alpha_receiver))
-simulation.add_evaluator(ReceivedPowerEvaluator(beta_receiver))
+simulation.add_evaluator(ReceivePowerEvaluator(alpha_receiver))
+simulation.add_evaluator(ReceivePowerEvaluator(beta_receiver))
 
 # Run the simulation
 result = simulation.run()

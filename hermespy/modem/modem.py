@@ -785,7 +785,7 @@ class TransmittingModemBase(Generic[CWT], BaseModem[CWT]):
             num_output_streams = 1
 
         # Assert that the number of output streams matches the antenna count
-        if num_output_streams != self.num_transmit_ports:
+        if num_output_streams != self.num_transmit_ports and self.num_transmit_ports > 0:
             raise RuntimeError(
                 f"Modem MIMO configuration generates invalid number of antenna streams ({num_output_streams} instead of {self.num_transmit_ports})"
             )

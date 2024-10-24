@@ -57,6 +57,9 @@ from unittest.mock import Mock
 import matplotlib.pyplot as plt
 import numpy as np
 from h5py import File
+from rich import get_console
+from rich.console import Console
+from rich.progress import track
 from scipy.stats import uniform
 
 from hermespy.core import (
@@ -403,25 +406,25 @@ class RocEvaluationResult(EvaluationResult):
 
     def __init__(
         self,
-        grid: Sequence[GridDimension],
-        evaluator: ReceiverOperatingCharacteristic,
         detection_probabilities: np.ndarray,
         false_alarm_probabilities: np.ndarray,
+        grid: Sequence[GridDimension],
+        evaluator: ReceiverOperatingCharacteristic | None = None,
     ) -> None:
         """
         Args:
-
-            grid (Sequence[GridDimension]):
-                Grid dimensions of the evaluation result.
-
-            evaluator (ReceiverOperatingCharacteristic):
-                Evaluator that generated the evaluation result.
 
             detection_probabilities (np.ndarray):
                 Detection probabilities for each grid point.
 
             false_alarm_probabilities (np.ndarray):
                 False alarm probabilities for each grid point.
+
+            grid (Sequence[GridDimension]):
+                Grid dimensions of the evaluation result.
+
+            evaluator (ReceiverOperatingCharacteristic, optional):
+                Evaluator that generated the evaluation result.
         """
 
         # Initialize base class
@@ -593,6 +596,63 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
     def title(self) -> str:
         return ReceiverOperatingCharacteristic._title  # pragma: no cover
 
+    @staticmethod
+    def GenerateResult(
+        grid: Sequence[GridDimension],
+        artifacts: np.ndarray,
+        num_thresholds: int = 101,
+        evaluator: ReceiverOperatingCharacteristic | None = None,
+    ) -> RocEvaluationResult:
+        """Generate a new receiver operating characteristics evaluation result.
+
+        Args:
+
+            grid (Sequence[GridDimension]):
+                Grid dimensions of the evaluation result.
+
+            artifacts (numpy.ndarray):
+                Artifacts of the evaluation result.
+
+            num_thresholds (int, optional):
+                Number of different thresholds to be considered in ROC curve
+                101 by default.
+
+            evaluator (ReceiverOperatingCharacteristic, optional):
+                Evaluator that generated the evaluation result.
+
+        Returns: The generated result.
+        """
+
+        # Prepare result containers
+        if len(grid) > 0:
+            dimensions = tuple(g.num_sample_points for g in grid)
+        else:
+            dimensions = (1,)
+            artifacts = artifacts.reshape(dimensions)
+
+        detection_probabilities = np.empty((*dimensions, num_thresholds), dtype=float)
+        false_alarm_probabilities = np.empty((*dimensions, num_thresholds), dtype=float)
+
+        # Convert artifacts to raw data array
+        for grid_coordinates in np.ndindex(dimensions):
+            artifact_line = artifacts[grid_coordinates]
+            roc_data = np.array([[a.h0_value, a.h1_value] for a in artifact_line])
+
+            for t, threshold in enumerate(
+                np.linspace(roc_data.min(), roc_data.max(), num_thresholds, endpoint=True)
+            ):
+                threshold_coordinates = grid_coordinates + (t,)
+                detection_probabilities[threshold_coordinates] = np.mean(
+                    roc_data[:, 1] >= threshold
+                )
+                false_alarm_probabilities[threshold_coordinates] = np.mean(
+                    roc_data[:, 0] >= threshold
+                )
+
+        return RocEvaluationResult(
+            detection_probabilities, false_alarm_probabilities, grid, evaluator
+        )
+
     def generate_result(
         self, grid: Sequence[GridDimension], artifacts: np.ndarray
     ) -> RocEvaluationResult:
@@ -609,33 +669,7 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
         Returns: The generated result.
         """
 
-        # Prepare result containers
-        if len(grid) > 0:
-            dimensions = tuple(g.num_sample_points for g in grid)
-        else:
-            dimensions = (1,)
-            artifacts = artifacts.reshape(dimensions)
-
-        detection_probabilities = np.empty((*dimensions, self.__num_thresholds), dtype=float)
-        false_alarm_probabilities = np.empty((*dimensions, self.__num_thresholds), dtype=float)
-
-        # Convert artifacts to raw data array
-        for grid_coordinates in np.ndindex(dimensions):
-            artifact_line = artifacts[grid_coordinates]
-            roc_data = np.array([[a.h0_value, a.h1_value] for a in artifact_line])
-
-            for t, threshold in enumerate(
-                np.linspace(roc_data.min(), roc_data.max(), self.__num_thresholds, endpoint=True)
-            ):
-                threshold_coordinates = grid_coordinates + (t,)
-                detection_probabilities[threshold_coordinates] = np.mean(
-                    roc_data[:, 1] >= threshold
-                )
-                false_alarm_probabilities[threshold_coordinates] = np.mean(
-                    roc_data[:, 0] >= threshold
-                )
-
-        return RocEvaluationResult(grid, self, detection_probabilities, false_alarm_probabilities)
+        return self.GenerateResult(grid, artifacts, self.__num_thresholds, self)
 
     def from_scenarios(
         self,
@@ -780,6 +814,45 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
         radar.device = channel.alpha_device
         evaluator = ReceiverOperatingCharacteristic(radar, channel)
         return evaluator.from_scenarios(h0_scenario, h1_scenario, h0_operator, h1_operator)
+
+    @staticmethod
+    def FromScenario(
+        scenario: Scenario,
+        operator: Radar,
+        h0_campaign: str = "h0",
+        h1_campaign: str = "h1",
+        console: Console | None = None,
+    ) -> RocEvaluationResult:
+        _console = get_console() if console is None else console
+
+        # Check if the scenario is in replay mode
+        if scenario.mode != ScenarioMode.REPLAY:
+            raise ValueError("Scenario is not in replay mode")
+
+        null_receptions: list[RadarReception] = []
+        alt_receptions: list[RadarReception] = []
+
+        # Collect receptions for both hypothesis
+        for campaign, hypothesis, receptions in zip(
+            [h0_campaign, h1_campaign],
+            ["null hypothesis", "alt hypothesis"],
+            [null_receptions, alt_receptions],
+        ):
+            scenario.replay(campaign=campaign)
+            for _ in track(
+                range(scenario.num_drops), description="Replaying " + hypothesis, console=_console
+            ):
+                _ = scenario.drop()
+                receptions.append(operator.reception)
+
+        # Generate the evaluation result
+        grid: Sequence[GridDimension] = []
+        artifacts = np.empty(1, dtype=object)
+        artifacts[0] = [
+            ReceiverOperatingCharacteristic.__evaluation_from_receptions(h0, h1).artifact()
+            for h0, h1 in zip(null_receptions, alt_receptions)
+        ]
+        return ReceiverOperatingCharacteristic.GenerateResult(grid, artifacts)
 
     @classmethod
     def From_HDF(

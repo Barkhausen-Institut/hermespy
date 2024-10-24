@@ -7,7 +7,7 @@ from scipy.constants import pi, speed_of_light
 from ray import init as ray_init
 
 from hermespy.beamforming import BeamformingTransmitter, ConventionalBeamformer, DeviceFocus, SphericalFocus
-from hermespy.core import AntennaMode, ReceivedPowerEvaluator, SamplePoint, Signal, SignalReceiver, Transformation, ValueType
+from hermespy.core import AntennaMode, ReceivePowerEvaluator, SamplePoint, Signal, SignalReceiver, Transformation, ValueType
 from hermespy.channel import StreetCanyonLineOfSight
 from hermespy.simulation import SimulatedCustomArray, SimulatedIdealAntenna, SimulatedAntennaPort, Simulation
 
@@ -64,7 +64,7 @@ base_station_transmitter.device = base_station_device
 
 user_equipment_receiver = SignalReceiver(120, sampling_rate, test_signal.power[0])
 user_equipment_receiver.device = user_equipment_device
-simulation.add_evaluator(ReceivedPowerEvaluator(user_equipment_receiver))
+simulation.add_evaluator(ReceivePowerEvaluator(user_equipment_receiver))
 
 off_target_focus = SphericalFocus(-.75 * pi, .4 * pi)
 beamformer.transmit_focus = off_target_focus

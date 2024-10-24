@@ -24,7 +24,7 @@ The sensor array response :math:`\mathbf{A}^{(\alpha,\beta)}` depends on the dev
 The following minimal example outlines how to configure the channel model
 within the context of a :class:`Simulation<hermespy.simulation.simulation.Simulation>`:
 
-.. literalinclude:: ../../../scripts/examples/channel_SpatialDelayChannel.py
+.. literalinclude:: ../../../scripts/examples/channel_delay_spatial.py
     :language: python
     :linenos:
     :lines: 11-38

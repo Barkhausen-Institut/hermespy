@@ -12,12 +12,13 @@ from contextlib import AbstractContextManager, ExitStack
 from os import path
 from signal import signal, SIGINT
 from types import TracebackType
-from typing import Any, Generic, List, Mapping, Sequence, Tuple, Type
+from typing import Any, Callable, Generic, List, Mapping, Sequence, Tuple, Type
 from warnings import catch_warnings, simplefilter
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
+from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TimeElapsedColumn
 from rich.prompt import Confirm
 from ruamel.yaml import SafeConstructor, Node, SafeRepresenter, MappingNode
@@ -450,9 +451,11 @@ class HardwareLoop(
     record_drops: bool
     """Record drops during loop runtime"""
 
-    __dimensions: List[GridDimension]  # Parameter dimension over which a run sweeps
-    __evaluators: List[Evaluator]  # Evaluators further processing drop information
-    __plots: List[HardwareLoopPlot]
+    __dimensions: list[GridDimension]  # Parameter dimension over which a run sweeps
+    __evaluators: list[Evaluator]  # Evaluators further processing drop information
+    __plots: list[HardwareLoopPlot]
+    __pre_drop_hooks: list[Callable[[PhysicalScenarioType, Console], None]]
+    __post_drop_hooks: list[Callable[[PhysicalScenarioType, Console], None]]
     __iteration_priority: IterationPriority
     __interrupt_run: bool
 
@@ -499,6 +502,8 @@ class HardwareLoop(
         self.__dimensions = []
         self.__evaluators = []
         self.__plots = []
+        self.__pre_drop_hooks = []
+        self.__post_drop_hooks = []
         self.__interrupt_run = False
 
     def new_dimension(
@@ -602,6 +607,64 @@ class HardwareLoop(
         return self.__evaluators.index(evaluator)
 
     @property
+    def pre_drop_hooks(self) -> list[Callable[[PhysicalScenarioType, Console], None]]:
+        """List of pre-drop hooks.
+
+        Pre-drop hooks are called before each drop is generated and can be used to
+        add additional actions not natively supported by the hardware loop.
+        """
+
+        return self.__pre_drop_hooks
+
+    def add_pre_drop_hook(self, hook: Callable[[PhysicalScenarioType, Console], None]) -> None:
+        """Add a pre-drop hook.
+
+        Args:
+
+            hook (Callable[[PhysicalScenarioType, Console], None]):
+                The hook to be added.
+                The hook must accept the scenario and console as arguments.
+
+        Raises:
+
+            ValueError: If the hook is already registered.
+        """
+
+        if hook in self.pre_drop_hooks:
+            raise ValueError("Hook already registered")
+
+        self.__pre_drop_hooks.append(hook)
+
+    @property
+    def post_drop_hooks(self) -> list[Callable[[PhysicalScenarioType, Console], None]]:
+        """List of post-drop hooks.
+
+        Post-drop hooks are called after each drop is generated and can be used to
+        add additional actions not natively supported by the hardware loop.
+        """
+
+        return self.__post_drop_hooks
+
+    def add_post_drop_hook(self, hook: Callable[[PhysicalScenarioType, Console], None]) -> None:
+        """Add a post-drop hook.
+
+        Args:
+
+            hook (Callable[[PhysicalScenarioType, Console], None]):
+                The hook to be added.
+                The hook must accept the scenario and console as arguments.
+
+        Raises:
+
+            ValueError: If the hook is already registered.
+        """
+
+        if hook in self.post_drop_hooks:
+            raise ValueError("Hook already registered")
+
+        self.__post_drop_hooks.append(hook)
+
+    @property
     def iteration_priority(self) -> IterationPriority:
         """Iteration priority of the hardware loop."""
 
@@ -611,7 +674,7 @@ class HardwareLoop(
     def iteration_priority(self, value: IterationPriority) -> None:
         self.__iteration_priority = value
 
-    def run(self, overwrite=True, campaign: str = "default") -> None:
+    def run(self, overwrite=True, campaign: str = "default", serialize_state: bool = True) -> None:
         """Run the hardware loop configuration.
 
         Args:
@@ -621,6 +684,10 @@ class HardwareLoop(
 
             campaing (str, optional):
                 Name of the measurement campaign.
+
+            serialize_state (bool, optional):
+                Serialize the state of the scenario to the results file.
+                Enabled by default.
         """
 
         # Prepare the results file
@@ -649,14 +716,23 @@ class HardwareLoop(
                         operator.device = state.devices[device_idx]  # type: ignore
 
                     self.scenario.record(
-                        file_location, overwrite=overwrite, campaign=campaign, state=state
+                        file_location,
+                        overwrite=overwrite,
+                        campaign=campaign,
+                        state=state,
+                        serialize_state=serialize_state,
                     )
 
                     for (_, device_idx), operator in zip(operator_devices, state.operators):
                         operator.device = self.scenario.devices[device_idx]  # type: ignore
 
                 else:
-                    self.scenario.record(file_location, overwrite=overwrite, campaign=campaign)
+                    self.scenario.record(
+                        file_location,
+                        overwrite=overwrite,
+                        campaign=campaign,
+                        serialize_state=serialize_state,
+                    )
 
             else:
                 if (
@@ -834,6 +910,10 @@ class HardwareLoop(
 
                 # Generate the next drop
                 try:
+                    # Execute pre-drop hooks
+                    for hook in self.__pre_drop_hooks:
+                        hook(self.scenario, self.console)
+
                     # Generate a new samples
                     loop_sample = self.__generate_sample(section_indices, sample_index)
                     grid_sample = MonteCarloSample(
@@ -865,6 +945,10 @@ class HardwareLoop(
                     if self.plot_information:
                         for thread in plot_threads:
                             thread.update_plot(loop_sample)
+
+                    # Execute post-drop hooks
+                    for hook in self.__post_drop_hooks:
+                        hook(self.scenario, self.console)
 
                 except Exception as e:
                     self._handle_exception(e, confirm=False)

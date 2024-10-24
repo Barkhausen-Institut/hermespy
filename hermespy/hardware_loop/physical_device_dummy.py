@@ -12,7 +12,7 @@ from collections.abc import Sequence
 
 import numpy as np
 
-from hermespy.core import DeviceInput, Serializable, Signal
+from hermespy.core import DeviceInput, Serializable, Signal, Transmission
 from hermespy.simulation import (
     NoiseLevel,
     NoiseModel,
@@ -164,7 +164,7 @@ class PhysicalDeviceDummy(SimulatedDevice, PhysicalDevice, Serializable):
             baseband_signal
             if not calibrate or self.leakage_calibration is None
             else self.leakage_calibration.remove_leakage(
-                signal, baseband_signal, self.delay_calibration.delay
+                signal, baseband_signal
             )
         )
 
@@ -219,3 +219,70 @@ class PhysicalScenarioDummy(
     def _trigger(self) -> None:
         # Triggering is equivalent to generating a new simulation drop
         SimulationScenario.drop(self)  # type: ignore
+
+    def _trigger_direct(
+        self,
+        transmissions: list[Signal],
+        devices: list[PhysicalDeviceDummy],
+        calibrate: bool = True,
+        timestamp: float = 0.0,
+    ) -> list[Signal]:
+        # Realize triggers
+        triggers = self.realize_triggers(devices)
+
+        # Generate transmissions considering the hardware models
+        device_outputs = [
+            device.generate_output(
+                [Transmission(transmission)],
+                False,
+                trigger,
+                [np.arange(device.num_transmit_ports).tolist()],
+            )
+            for device, transmission, trigger in zip(devices, transmissions, triggers)
+        ]
+
+        # Realize all channels
+        channel_realizations = self.realize_channels()
+
+        # Propgate over all channels
+        propagated_signals = np.empty((len(devices), len(devices)), dtype=object)
+        for n, (alpha_device, alpha_transmission) in enumerate(zip(devices, device_outputs)):
+            for m, (beta_device, beta_transmission) in enumerate(
+                zip(devices[n:], device_outputs[n:]), n
+            ):
+                # Select the correct channel and its respective realization
+                channel_index = self.channels.index(self.channel(alpha_device, beta_device))
+                channel_realization = channel_realizations[channel_index]
+
+                # Sample the propagations, optimizing for reciprocal channels
+                alpha_sample = channel_realization.sample(
+                    alpha_device,
+                    beta_device,
+                    timestamp,
+                    alpha_transmission.carrier_frequency,
+                    alpha_transmission.sampling_rate,
+                )
+                beta_sample = channel_realization.reciprocal_sample(
+                    alpha_sample,
+                    beta_device,
+                    alpha_device,
+                    timestamp,
+                    beta_transmission.carrier_frequency,
+                    beta_transmission.sampling_rate,
+                )
+
+                # Propagate
+                beta_reception = alpha_sample.propagate(alpha_transmission)
+                alpha_reception = beta_sample.propagate(beta_transmission)
+
+                # Store the impinging signals
+                propagated_signals[m, n] = beta_reception
+                propagated_signals[n, m] = alpha_reception
+
+        # Receive devices
+        received_base_band_signals = [
+            device.process_input(impinging_signals.tolist(), False, trigger).baseband_signal
+            for impinging_signals, device, trigger in zip(propagated_signals, devices, triggers)
+        ]
+
+        return received_base_band_signals
