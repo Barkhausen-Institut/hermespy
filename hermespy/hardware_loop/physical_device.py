@@ -24,6 +24,7 @@ from hermespy.core import (
     ProcessedDeviceInput,
     Serializable,
     Signal,
+    SignalBlock,
 )
 
 __author__ = "Jan Adler"
@@ -55,6 +56,7 @@ class PhysicalDevice(Device, ABC):
     __noise_power: np.ndarray | None
     __leakage_calibration: LeakageCalibrationBase
     __delay_calibration: DelayCalibrationBase
+    __antenna_calibration: AntennaCalibration
 
     def __init__(
         self,
@@ -62,6 +64,7 @@ class PhysicalDevice(Device, ABC):
         noise_power: np.ndarray | None = None,
         leakage_calibration: LeakageCalibrationBase | None = None,
         delay_calibration: DelayCalibrationBase | None = None,
+        antenna_calibration: AntennaCalibration | None = None,
         *args,
         **kwargs,
     ) -> None:
@@ -83,6 +86,10 @@ class PhysicalDevice(Device, ABC):
                 The delay calibration routine to apply to received signals.
                 If not provided, defaults to the :class:`NoDelayCalibration` stub routine.
 
+            antenna_calibration (AntennaCalibration, optional):
+                The antenna calibration routine to apply to transmitted and received signals.
+                If not provided, defaults to the :class:`NoAntennaCalibration` stub routine.
+
             *args:
                 :class:`Device` base class initialization parameters.
 
@@ -102,16 +109,11 @@ class PhysicalDevice(Device, ABC):
         self.__noise_power = noise_power
 
         self.__leakage_calibration = NoLeakageCalibration()
-        if leakage_calibration is None:
-            self.__leakage_calibration.device = self
-        else:
-            self.leakage_calibration = leakage_calibration
-
+        self.__antenna_calibration = NoAntennaCalibration()
         self.__delay_calibration = NoDelayCalibration()
-        if delay_calibration is None:
-            self.__delay_calibration.device = self
-        else:
-            self.delay_calibration = delay_calibration
+        LeakageCalibrationBase._configure_slot(self, leakage_calibration)
+        DelayCalibrationBase._configure_slot(self, delay_calibration)
+        AntennaCalibration._configure_slot(self, antenna_calibration)
 
     @abstractmethod
     def trigger(self) -> None:
@@ -156,6 +158,23 @@ class PhysicalDevice(Device, ABC):
         self.__delay_calibration = value
         self.__delay_calibration.device = self
 
+    @property
+    def antenna_calibration(self) -> AntennaCalibration:
+        """Antenna calibration routine to apply to transmitted and received signals.
+
+        Returns: Handle to the antenna calibration routine.
+        """
+
+        return self.__antenna_calibration
+
+    @antenna_calibration.setter
+    def antenna_calibration(self, value: AntennaCalibration) -> None:
+        if self.__antenna_calibration is value:
+            return
+
+        self.__antenna_calibration = value
+        self.__antenna_calibration.device = self
+
     def save_calibration(self, path: str) -> None:
         """Save the calibration file to the hard drive.
 
@@ -169,11 +188,15 @@ class PhysicalDevice(Device, ABC):
 
         # Write leakage calibration to file
         file.attrs[LeakageCalibrationBase.hdf_group_name] = self.leakage_calibration.yaml_tag
-        self.leakage_calibration.to_HDF(file.create_group("leakage_calibration"))
+        self.leakage_calibration.to_HDF(file.create_group(LeakageCalibrationBase.hdf_group_name))
 
         # Write delay calibration to file
         file.attrs[DelayCalibrationBase.hdf_group_name] = self.delay_calibration.yaml_tag
-        self.delay_calibration.to_HDF(file.create_group("delay_calibration"))
+        self.delay_calibration.to_HDF(file.create_group(DelayCalibrationBase.hdf_group_name))
+
+        # Write antenna calibration to file
+        file.attrs[AntennaCalibration.hdf_group_name] = self.antenna_calibration.yaml_tag
+        self.antenna_calibration.to_HDF(file.create_group(AntennaCalibration.hdf_group_name))
 
         # Close file handle
         file.close()
@@ -231,6 +254,11 @@ class PhysicalDevice(Device, ABC):
         delay_calibration = self.__calibration_from_hdf(file, factory, DelayCalibrationBase)  # type: ignore
         if delay_calibration is not None:
             self.delay_calibration = delay_calibration
+
+        # Load antenna calibration if available in save file
+        antenna_calibration = self.__calibration_from_hdf(file, factory, AntennaCalibration)  # type: ignore
+        if antenna_calibration is not None:
+            self.antenna_calibration = antenna_calibration
 
         file.close()
 
@@ -429,6 +457,8 @@ class PhysicalDevice(Device, ABC):
 
         Returns:
             A signal model of the downloaded samples.
+            If the actual physical device applied an internal delay correction,
+            the signal's delay will represent the delay by which the received signal was alrady corrected.
         """
 
         # This method is a stub by default
@@ -465,6 +495,11 @@ class PhysicalDevice(Device, ABC):
                 f"Sampling rate of the transmitted signal does not match the device's sampling rate ({signal.sampling_rate} != {self.sampling_rate})"
             )
 
+        if calibrate:
+            signal = signal.copy()
+            for block in signal._blocks:
+                block = self.antenna_calibration.correct_transmission(block)
+
         # Upload signal to the device's memory
         uploaded_samples = self._upload(signal)
 
@@ -479,7 +514,7 @@ class PhysicalDevice(Device, ABC):
             received_signal
             if not calibrate or self.leakage_calibration is None
             else self.leakage_calibration.remove_leakage(
-                uploaded_samples, received_signal, self.delay_calibration.delay
+                uploaded_samples, received_signal,
             )
         )
 
@@ -537,9 +572,7 @@ class PhysicalDevice(Device, ABC):
                 carrier_frequency=_impinging_signals.carrier_frequency,
             )
         )
-        corrected_signal = self.leakage_calibration.remove_leakage(
-            transmitted_signal, _impinging_signals, self.delay_calibration.delay
-        )
+        corrected_signal = self.leakage_calibration.remove_leakage(transmitted_signal, _impinging_signals)
 
         # Defer to the default device input processing routine
         return Device.process_input(self, corrected_signal, cache)
@@ -749,9 +782,21 @@ class LeakageCalibrationBase(Calibration):
         device.leakage_calibration = NoLeakageCalibration() if value is None else value
 
     @abstractmethod
-    def remove_leakage(
-        self, transmitted_signal: Signal, received_signal: Signal, delay_correction: float = 0.0
-    ) -> Signal:
+    def predict_leakage(self, transmitted_signal: Signal) -> Signal:
+        """Predict the leakage of a transmitted signal.
+
+        Args:
+
+            transmitted_signal (Signal):
+                The transmitted signal.
+
+        Returns:
+            The predicted leakage.
+        """
+        ...  # pragma: no cover
+
+    @abstractmethod
+    def remove_leakage(self, transmitted_signal: Signal, received_signal: Signal) -> Signal:
         """Remove leakage from a received signal.
 
         Args:
@@ -761,10 +806,6 @@ class LeakageCalibrationBase(Calibration):
 
             recveived_signal (Signal):
                 The received signal from which to remove the leakage.
-
-            delay_correction (float, optional):
-                Delay correction applied by the device during reception in seconds.
-                Assumed zero by default.
 
         Returns:
             The signal with removed leakage.
@@ -777,9 +818,10 @@ class NoLeakageCalibration(LeakageCalibrationBase, Serializable):
 
     yaml_tag = "NoLeakageCalibration"
 
-    def remove_leakage(
-        self, transmitted_signal: Signal, received_signal: Signal, delay_correction: float = 0.0
-    ) -> Signal:
+    def predict_leakage(self, transmitted_signal: Signal) -> Signal:
+        return Signal.Empty(transmitted_signal.sampling_rate, self.device.num_receive_ports, 0)
+
+    def remove_leakage(self, transmitted_signal: Signal, received_signal: Signal) -> Signal:
         return received_signal
 
     def to_HDF(self, group: Group) -> None:
@@ -787,4 +829,57 @@ class NoLeakageCalibration(LeakageCalibrationBase, Serializable):
 
     @classmethod
     def from_HDF(cls: Type[NoLeakageCalibration], group: Group) -> NoLeakageCalibration:
+        return cls()
+
+
+class AntennaCalibration(Calibration):
+    """Base class for antenna array calibrations."""
+
+    hdf_group_name = "antenna_calibration"
+
+    @classmethod
+    def _configure_slot(
+        cls: Type[AntennaCalibration], device: PhysicalDevice, value: AntennaCalibration | None
+    ) -> None:
+        device.antenna_calibration = NoAntennaCalibration() if value is None else value
+
+    @abstractmethod
+    def correct_transmission(self, transmission: SignalBlock) -> None:
+        """Correct a transmitted signal block in-place.
+
+        Args:
+
+            transmission: The signal block to be corrected.
+        """
+        ...  # pragma: no cover
+
+    @abstractmethod
+    def correct_reception(self, reception: SignalBlock) -> None:
+        """Correct a received signal block in-place.
+
+        Args:
+
+            reception: The signal block to be corrected.
+        """
+        ...  # pragma: no cover
+
+
+class NoAntennaCalibration(AntennaCalibration):
+    """No calibration for antenna arrays."""
+
+    yaml_tag = 'NoAntennaCalibration'
+
+    yaml_tag = "NoAntennaCalibration"
+
+    def correct_transmission(self, transmission: SignalBlock):
+        pass  # Do nothing, since this is a stub
+
+    def correct_reception(self, reception: SignalBlock):
+        pass  # Do nothing, since this is a stub
+
+    def to_HDF(self, group: Group) -> None:
+        return
+
+    @classmethod
+    def from_HDF(cls: Type[NoAntennaCalibration], group: Group) -> NoAntennaCalibration:
         return cls()

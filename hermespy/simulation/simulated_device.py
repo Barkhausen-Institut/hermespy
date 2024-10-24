@@ -1383,6 +1383,7 @@ class SimulatedDevice(Device, Moveable, Serializable):
         operator_transmissions: List[Transmission] | None = None,
         cache: bool = True,
         trigger_realization: TriggerRealization | None = None,
+        operator_transmit_ports: Sequence[Sequence[int]] | None = None,
     ) -> SimulatedDeviceOutput:
         """Generate the simulated device's output.
 
@@ -1415,9 +1416,13 @@ class SimulatedDevice(Device, Moveable, Serializable):
         )
 
         # Query the intended transmission ports of each operator
-        operator_streams = [o.selected_transmit_ports for o in self.transmitters]
+        _operator_transmit_ports = (
+            [o.selected_transmit_ports for o in self.transmitters]
+            if operator_transmit_ports is None
+            else operator_transmit_ports
+        )
 
-        if len(_operator_transmissions) != self.transmitters.num_operators:
+        if len(_operator_transmissions) != len(_operator_transmit_ports):
             raise ValueError(
                 f"Unexpcted amount of operator transmissions provided ({len(_operator_transmissions)} instead of {self.transmitters.num_operators})"
             )
@@ -1442,7 +1447,9 @@ class SimulatedDevice(Device, Moveable, Serializable):
                 carrier_frequency=self.carrier_frequency,
             )
 
-            for transmission, stream_indices in zip(_operator_transmissions, operator_streams):
+            for transmission, stream_indices in zip(
+                _operator_transmissions, _operator_transmit_ports
+            ):
                 if transmission:
                     superimposed_signal.superimpose(
                         transmission.signal, stream_indices=stream_indices

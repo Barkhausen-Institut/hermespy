@@ -14,7 +14,15 @@ import numpy as np
 from zerorpc.exceptions import LostRemote, RemoteError
 from usrp_client import UsrpClient, MimoSignal, TxStreamingConfig, RxStreamingConfig, RfConfig
 
-from hermespy.core import Antenna, AntennaArray, AntennaPort, Serializable, Signal, Transformation
+from hermespy.core import (
+    Antenna,
+    AntennaArray,
+    AntennaPort,
+    IdealAntenna,
+    Serializable,
+    Signal,
+    Transformation,
+)
 from ..physical_device import PhysicalDevice
 
 __author__ = "Jan Adler"
@@ -89,6 +97,22 @@ class UsrpAntennas(AntennaArray[AntennaPort, Antenna]):
     def _new_port(self) -> AntennaPort:
         return AntennaPort(array=self)
 
+    @property
+    def transmit_antennas(self) -> Sequence[Antenna]:
+        return [IdealAntenna(pose=port.pose) for port in self.transmit_ports]
+
+    @property
+    def receive_antennas(self) -> Sequence[Antenna]:
+        return [IdealAntenna(pose=port.pose) for port in self.receive_ports]
+
+    @property
+    def num_transmit_antennas(self) -> int:
+        return self.num_transmit_ports
+
+    @property
+    def num_receive_antennas(self) -> int:
+        return self.num_receive_ports
+
 
 class UsrpDevice(PhysicalDevice, Serializable):
     """Bindung to a USRP device via the UHD library."""
@@ -110,6 +134,7 @@ class UsrpDevice(PhysicalDevice, Serializable):
     __max_selected_receive_port: int
     __max_selected_transmit_port: int
     __current_configuration: RfConfig
+    __receive_delay: float  # Configured front-end delay during reception
 
     def __init__(
         self,
@@ -209,6 +234,7 @@ class UsrpDevice(PhysicalDevice, Serializable):
         self._configure_device(force=True)
         self.__collection_enabled = False
         self.__scale_transmission = scale_transmission
+        self.__receive_delay = 0.0
 
     def __rpc_call_wrapper(self, call: Callable, *args, **kwargs) -> Any:
         """Wrapper to RPC client calls to perform multiple calls to hack the timeout bug.
@@ -287,37 +313,45 @@ class UsrpDevice(PhysicalDevice, Serializable):
         # Reset the streaming config
         self.__rpc_call_wrapper(self.__usrp_client.resetStreamingConfigs)
 
-        # Scale signal to a maximum absolute vlaue of zero to full exploit the DAC range
-        if baseband_signal.num_samples > 0 and self.scale_transmission:
-            maxAmp = np.abs([b for b in baseband_signal]).max()
-            if maxAmp != 0:
-                for block in baseband_signal:
-                    block /= maxAmp
-
+        # Make a copy in order to avoid changing baseband_signal
         uploaded_samples = baseband_signal.copy()
 
+        # Apply the antenna array calibration
+        for block in uploaded_samples:
+            self.antenna_calibration.correct_transmission(block)
+
+        # Scale signal to a maximum absolute vlaue of zero to full exploit the DAC range
+        if uploaded_samples.num_samples > 0 and self.scale_transmission:
+            maxAmp = np.abs([b for b in uploaded_samples]).max()
+            if maxAmp != 0:
+                for block in uploaded_samples:
+                    block /= maxAmp
+
+        # Make a copy here
+        corrected_uploaded_samples = uploaded_samples.copy()
+
         # Hack: Prepend some zeros to account for the premature transmission stop
-        baseband_signal.set_samples(
+        uploaded_samples.set_samples(
             np.concatenate(
                 (
                     np.zeros(
-                        (baseband_signal.num_streams, self.num_prepeneded_zeros), dtype=np.complex_
+                        (uploaded_samples.num_streams, self.num_prepeneded_zeros), dtype=np.complex_
                     ),
-                    baseband_signal.getitem(),
+                    uploaded_samples.getitem(),
                     np.zeros(
-                        (baseband_signal.num_streams, self.num_appended_zeros), dtype=np.complex_
+                        (uploaded_samples.num_streams, self.num_appended_zeros), dtype=np.complex_
                     ),
                 ),
                 axis=1,
             )
         )
 
-        if baseband_signal.num_samples % 4 != 0:
-            baseband_signal.set_samples(
+        if uploaded_samples.num_samples % 4 != 0:
+            uploaded_samples.set_samples(
                 np.append(
-                    baseband_signal.getitem(),
+                    uploaded_samples.getitem(),
                     np.zeros(
-                        (baseband_signal.num_streams, 4 - baseband_signal.num_samples % 4),
+                        (uploaded_samples.num_streams, 4 - uploaded_samples.num_samples % 4),
                         dtype=complex,
                     ),
                     axis=1,
@@ -326,13 +360,16 @@ class UsrpDevice(PhysicalDevice, Serializable):
 
         # Append a zero vector for unselected transmit ports
         # Workaround for the USRP wrapper missing dedicated port selections
+        transmit_delay = max(0.0, -self.delay_calibration.delay)
+        self.__receive_delay = max(0.0, self.delay_calibration.delay)
+        uploaded_samples.delay = transmit_delay
         tx_config = TxStreamingConfig(
-            max(0.0, -self.delay_calibration.delay), MimoSignal(baseband_signal.getitem())
+            transmit_delay, MimoSignal(uploaded_samples.getitem())
         )
         self.__rpc_call_wrapper(self.__usrp_client.configureTx, tx_config)
 
         # Configure reception
-        duration = self.receivers.min_frame_duration
+        duration = max(self.receivers.min_frame_duration, uploaded_samples.duration)
 
         if duration > 0.0:
             num_receive_samples = int((duration + self.max_receive_delay) * self.sampling_rate)
@@ -344,23 +381,23 @@ class UsrpDevice(PhysicalDevice, Serializable):
             num_receive_samples += 4 - num_receive_samples % 4
 
             rx_config = RxStreamingConfig(
-                max(0.0, self.delay_calibration.delay), num_receive_samples
+                self.__receive_delay, num_receive_samples
             )
             self.__rpc_call_wrapper(self.__usrp_client.configureRx, rx_config)
-
             self.__collection_enabled = True
 
         else:
-            num_receive_samples = baseband_signal.num_samples + 4 - baseband_signal.num_samples % 4
+            num_receive_samples = (
+                uploaded_samples.num_samples + 4 - uploaded_samples.num_samples % 4
+            )
 
             rx_config = RxStreamingConfig(
-                max(0.0, self.delay_calibration.delay), num_receive_samples
+                self.__receive_delay, num_receive_samples
             )
             self.__rpc_call_wrapper(self.__usrp_client.configureRx, rx_config)
-
             self.__collection_enabled = True
 
-        return uploaded_samples
+        return corrected_uploaded_samples
 
     def trigger(self) -> None:
         # Queue execution command
@@ -373,7 +410,10 @@ class UsrpDevice(PhysicalDevice, Serializable):
 
         mimo_signals = self.__usrp_client.collect()
         signal_model = Signal.Empty(
-            self.sampling_rate, self.num_receive_ports, carrier_frequency=self.carrier_frequency
+            self.sampling_rate,
+            self.num_receive_ports,
+            carrier_frequency=self.carrier_frequency,
+            delay=self.__receive_delay,
         )
 
         for mimo_signal in mimo_signals:
@@ -392,6 +432,11 @@ class UsrpDevice(PhysicalDevice, Serializable):
                 )
             )
         )
+
+        # Apply the antenna array calibration
+        for block in signal_model:
+            self.antenna_calibration.correct_reception(block)
+
         return signal_model
 
     @property

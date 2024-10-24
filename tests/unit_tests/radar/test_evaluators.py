@@ -186,7 +186,7 @@ class TestRocEvaluationResult(TestCase):
             self.false_alarm_probabilities[i] = np.arange(10) / 10
             self.detection_probabilities[i] = np.arange(10) / 10 / (i + 1)
 
-        self.result = RocEvaluationResult(grid, evaluator, self.detection_probabilities, self.false_alarm_probabilities)
+        self.result = RocEvaluationResult(self.detection_probabilities, self.false_alarm_probabilities, grid, evaluator)
 
     def test_plot(self) -> None:
         """ROC plotting should be properly handled"""

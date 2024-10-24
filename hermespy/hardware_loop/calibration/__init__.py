@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from .antennas import ScalarAntennaCalibration
 from .delay import DelayCalibration
 from .leakage import SelectiveLeakageCalibration
 
@@ -13,4 +14,4 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-__all__ = ["DelayCalibration", "SelectiveLeakageCalibration"]
+__all__ = ["ScalarAntennaCalibration", "DelayCalibration", "SelectiveLeakageCalibration"]

@@ -15,10 +15,11 @@ from .antennas import (
 )
 from .definitions import ConsoleMode
 from .evaluators import (
-    ReceivedPowerEvaluator,
-    ReceivedPowerResult,
-    ReceivePowerArtifact,
-    ReceivedPowerEvaluation,
+    ReceivePowerEvaluator,
+    PowerResult,
+    PowerArtifact,
+    PowerEvaluation,
+    TransmitPowerEvaluator,
 )
 from .logarithmic import dB, Logarithmic, LogarithmicSequence, ValueType
 from .operators import StaticOperator, SilentTransmitter, SignalTransmitter, SignalReceiver
@@ -105,10 +106,11 @@ __all__ = [
     "CustomAntennaArray",
     "UniformArray",
     "SNRType",
-    "ReceivedPowerEvaluator",
-    "ReceivedPowerResult",
-    "ReceivePowerArtifact",
-    "ReceivedPowerEvaluation",
+    "ReceivePowerEvaluator",
+    "PowerResult",
+    "PowerArtifact",
+    "PowerEvaluation",
+    "TransmitPowerEvaluator",
     "dB",
     "Logarithmic",
     "LogarithmicSequence",

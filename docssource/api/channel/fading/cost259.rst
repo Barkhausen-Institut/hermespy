@@ -12,7 +12,7 @@ Parametrizations can be found in the standard :footcite:t:`3GPP:TR125943`.
 The following minimal example outlines how to configure the channel model
 within the context of a :class:`Simulation<hermespy.simulation.simulation.Simulation>`:
 
-.. literalinclude:: ../../../scripts/examples/channel_MultipathFadingCost259.py
+.. literalinclude:: ../../../scripts/examples/channel_fading_cost259.py
    :language: python
    :linenos:
    :lines: 11-36
