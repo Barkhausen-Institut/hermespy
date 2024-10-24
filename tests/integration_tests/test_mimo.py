@@ -6,7 +6,6 @@ import numpy as np
 from numpy.testing import assert_array_equal
 from scipy.constants import speed_of_light, pi
 
-from hermespy.beamforming import ConventionalBeamformer, DeviceFocus
 from hermespy.core import Transformation
 from hermespy.modem import Alamouti, Ganesan, SimplexLink, ChannelEqualization, CommunicationReception, CommunicationTransmission, OFDMWaveform, OrthogonalZeroForcingChannelEqualization, PilotSection, GridResource, GridElement, ElementType, SymbolSection, OrthogonalZeroForcingChannelEqualization, OFDMCorrelationSynchronization, ReferencePosition, OrthogonalLeastSquaresChannelEstimation
 from hermespy.simulation import SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray, OFDMIdealChannelEstimation

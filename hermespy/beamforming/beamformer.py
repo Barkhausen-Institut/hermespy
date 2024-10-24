@@ -20,7 +20,6 @@ import numpy as np
 
 from hermespy.core import (
     AntennaArray,
-    Device,
     Direction,
     FloatingError,
     Operator,
@@ -84,54 +83,6 @@ class BeamFocus(ABC, Serializable):
     def __str__(self) -> str:
         angles = self.spherical_angles
         return f"{self.__class__.__name__}({angles[0]:.2f}, {angles[1]:.2f})"
-
-
-class DeviceFocus(BeamFocus):
-    """Focus point targeting a device."""
-
-    yaml_tag = "DeviceFocus"
-    __device: Device  # Device focused by the beamformer
-
-    def __init__(self, device: Device) -> None:
-        """
-        Args:
-
-            device (Device): Device focused by the beamformer.
-        """
-
-        # Initialize base class
-        BeamFocus.__init__(self)
-
-        # Initialize class members
-        self.__device = device
-
-    def copy(self) -> DeviceFocus:
-        return DeviceFocus(self.__device)
-
-    @property
-    def device(self) -> Device:
-        """Device focused by the beamformer."""
-
-        return self.__device
-
-    @property
-    def spherical_angles(self) -> np.ndarray:
-        if self.beamformer is None:
-            raise RuntimeError("Device focus requires the beamformer to be specified")
-
-        if self.beamformer.operator is None:
-            raise RuntimeError("Device focues requires the beaformer to be assigned to an operator")
-
-        base = self.beamformer.operator.device
-        if base is None:
-            raise RuntimeError(
-                "Device focus requires the beamformer's operator to be assigned to a device"
-            )
-
-        direction = Direction.From_Cartesian(
-            self.__device.global_position - base.global_position, True
-        )
-        return direction.to_spherical()
 
 
 class SphericalFocus(BeamFocus):

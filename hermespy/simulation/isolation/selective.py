@@ -63,7 +63,7 @@ class SelectiveLeakage(Serializable, Isolation):
         cls: Type[SelectiveLeakage],
         device: SimulatedDevice,
         num_samples: int = 100,
-        mean: float = 1.0,
+        mean: float = 0.0,
         variance: float = 1.0,
     ) -> SelectiveLeakage:
         """Initialize a frequency-selective leakage model with a normally distributed frequency response.

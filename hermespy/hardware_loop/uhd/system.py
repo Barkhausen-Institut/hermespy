@@ -7,8 +7,9 @@ UHD System
 
 from usrp_client import System as _UsrpSystem
 
-from hermespy.core import Serializable
+from hermespy.core import Serializable, Signal
 from .usrp import UsrpDevice
+from ..physical_device import PDT
 from ..scenario import PhysicalScenario
 
 __author__ = "Jan Adler"
@@ -62,3 +63,17 @@ class UsrpSystem(Serializable, PhysicalScenario[UsrpDevice]):
 
     def _trigger(self) -> None:
         self.__system.execute()
+
+    def _trigger_direct(
+        self, transmissions: list[Signal], devices: list[PDT], calibrate: bool = True
+    ) -> list[Signal]:
+        # Upload transmissions to devices
+        for transmission, device in zip(transmissions, devices):
+            device._upload(transmission)
+
+        # Trigger devices
+        self._trigger()
+
+        # Download receptions from devices
+        receptions = [device._download() for device in devices]
+        return receptions

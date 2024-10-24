@@ -351,7 +351,7 @@ class AudioDevice(PhysicalDevice, Serializable):
 
     def trigger(self) -> None:
         # Import sounddevice
-        sd = self.__import_sd()
+        sd = self._import_sd()
 
         # Simultaneously play and record samples
         sd.playrec(
@@ -366,7 +366,7 @@ class AudioDevice(PhysicalDevice, Serializable):
 
     def _download(self) -> Signal:
         # Import sounddevice
-        sd = self.__import_sd()
+        sd = self._import_sd()
 
         # Wait for recording and playing instructions to be finished
         sd.wait()
@@ -384,7 +384,7 @@ class AudioDevice(PhysicalDevice, Serializable):
         return signal_model
 
     @staticmethod
-    def __import_sd() -> ModuleType:
+    def _import_sd() -> ModuleType:
         """Import sounddevice.
 
         Required to prevent sounddevice from constantly messing with the system's audio settings.

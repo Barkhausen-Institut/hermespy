@@ -11,6 +11,7 @@ from .antennas import (
     SimulatedPatchAntenna,
     SimulatedUniformArray,
 )
+from .beamforming import DeviceFocus
 from .drop import SimulatedDrop
 from .scenario import SimulationScenario
 from .simulation import Simulation
@@ -79,6 +80,7 @@ __all__ = [
     "SimulatedPatchAntenna",
     "SimulatedUniformArray",
     "Simulation",
+    "DeviceFocus",
     "SimulatedDrop",
     "SimulationScenario",
     "DeviceState",

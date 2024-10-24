@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from .calibration import DelayCalibration, SelectiveLeakageCalibration
+from .calibration import DelayCalibration, ScalarAntennaCalibration, SelectiveLeakageCalibration
 from .hardware_loop import (
     EvaluatorRegistration,
     EvaluatorPlotMode,
@@ -11,15 +11,17 @@ from .hardware_loop import (
 )
 from .physical_device import (
     Calibration,
+    AntennaCalibration,
     DelayCalibrationBase,
     LeakageCalibrationBase,
+    NoAntennaCalibration,
     NoDelayCalibration,
     NoLeakageCalibration,
     PhysicalDevice,
     PDT,
 )
 from .physical_device_dummy import PhysicalDeviceDummy, PhysicalScenarioDummy
-from .scenario import PhysicalScenario, PhysicalScenarioType, SimulatedPhysicalScenario
+from .scenario import PhysicalScenario, PhysicalScenarioType
 from .audio import AudioDevice, AudioScenario
 from .visualizers import (
     DeviceReceptionPlot,
@@ -46,6 +48,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 __all__ = [
+    "ScalarAntennaCalibration",
     "DelayCalibration",
     "SelectiveLeakageCalibration",
     "EvaluatorRegistration",
@@ -55,8 +58,10 @@ __all__ = [
     "HardwareLoopSample",
     "IterationPriority",
     "Calibration",
+    "AntennaCalibration",
     "DelayCalibrationBase",
     "LeakageCalibrationBase",
+    "NoAntennaCalibration",
     "NoDelayCalibration",
     "NoLeakageCalibration",
     "PhysicalDevice",
@@ -65,7 +70,6 @@ __all__ = [
     "PhysicalScenarioDummy",
     "PhysicalScenario",
     "PhysicalScenarioType",
-    "SimulatedPhysicalScenario",
     "UsrpAntennas",
     "UsrpDevice",
     "UsrpSystem",

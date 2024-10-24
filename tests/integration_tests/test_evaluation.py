@@ -5,7 +5,7 @@ import numpy as np
 
 from hermespy.modem import DuplexModem, RootRaisedCosineWaveform, BitErrorEvaluator, BlockErrorEvaluator, FrameErrorEvaluator, ThroughputEvaluator
 from hermespy.simulation import SimulatedDevice
-from hermespy.core.evaluators import ReceivedPowerEvaluator
+from hermespy.core.evaluators import ReceivePowerEvaluator
 from hermespy.core.monte_carlo import Evaluator, GridDimension
 from unit_tests.utils import SimulationTestContext
 
@@ -93,5 +93,5 @@ class TestEvaluators(TestCase):
     def test_received_power_evaluator(self) -> None:
         """Test the received power evaluation"""
 
-        pow = ReceivedPowerEvaluator(self.modem)
+        pow = ReceivePowerEvaluator(self.modem)
         self._test_evaluator(pow)

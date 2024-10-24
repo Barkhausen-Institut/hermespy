@@ -10,7 +10,7 @@ Model of a spatial radar channel featuring multiple reflecting targets.
 The following minimal example outlines how to configure the channel model
 within the context of a :class:`Simulation<hermespy.simulation.simulation.Simulation>`:
 
-.. literalinclude:: ../../../scripts/examples/channel_MultiTargetRadarChannel.py
+.. literalinclude:: ../../../scripts/examples/channel_radar_multi.py
    :language: python
    :linenos:
    :lines: 11-43
