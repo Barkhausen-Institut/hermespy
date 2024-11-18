@@ -43,7 +43,7 @@ class TestLDPCCoding(TestCase):
     def tearDown(self) -> None:
         rmtree(self.g_directory)
 
-    def _test_encode_decode(self) -> None:
+    def test_encode_decode(self) -> None:
         """Encoding a data block should yield a valid code."""
 
         for i in range(self.num_attempts):
@@ -56,7 +56,7 @@ class TestLDPCCoding(TestCase):
             decoded_block = self.coding.decode(code_block)
             assert_array_equal(data_block, decoded_block)
 
-    def _test_pickle(self) -> None:
+    def test_pickle(self) -> None:
         """Pickeling and unpickeling the C++ wrapper"""
 
         with NamedTemporaryFile() as file:

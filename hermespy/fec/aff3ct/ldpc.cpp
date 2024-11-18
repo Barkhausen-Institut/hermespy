@@ -29,8 +29,7 @@ public:
         syndromeChecking(syndromeChecking)
     {
         // Read the H matrix
-        this->infoBitPos = std::vector<uint32_t>(dataBlockSize);
-        this->H = std::make_unique<Sparse_matrix>(LDPC_matrix_handler::read(hSourcePath, &infoBitPos));
+        this->H = std::make_unique<Sparse_matrix>(LDPC_matrix_handler::read(hSourcePath));
         
         // Infer parameters
         this->updateRule = std::make_unique<Update_rule_SPA<float>>((unsigned int)this->H->get_cols_max_degree());
@@ -38,7 +37,7 @@ public:
         this->codeBlockSize = this->H->get_n_rows();
 
         this->encoder = std::make_unique<Encoder_LDPC_from_H<int>>(this->dataBlockSize, this->codeBlockSize, *this->H, "IDENTITY", gSavePath, false);   
-        if (this->infoBitPos.size() < 1) this->infoBitPos = this->encoder->get_info_bits_pos();
+        this->infoBitPos = this->encoder->get_info_bits_pos();
 
         this->decoder = std::make_unique<Decoder_LDPC_BP_flooding<int, float>>(this->dataBlockSize, this->codeBlockSize, numIterations, *this->H, infoBitPos, *this->updateRule, syndromeChecking, minNumIterations);
     }
