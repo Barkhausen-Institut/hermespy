@@ -30,11 +30,11 @@ public:
     {
         // Read the H matrix
         this->H = std::make_unique<Sparse_matrix>(LDPC_matrix_handler::read(hSourcePath));
-        
-        // Infer parameters
+        this->codeBlockSize = this->H->get_n_rows();  // N
+        this->dataBlockSize = this->codeBlockSize - this->H->get_n_cols();  // K
+
+        // Create the encoder and decoder
         this->updateRule = std::make_unique<Update_rule_SPA<float>>((unsigned int)this->H->get_cols_max_degree());
-        this->dataBlockSize = this->H->get_n_cols();
-        this->codeBlockSize = this->H->get_n_rows();
 
         this->encoder = std::make_unique<Encoder_LDPC_from_H<int>>(this->dataBlockSize, this->codeBlockSize, *this->H, "IDENTITY", gSavePath, false);   
         this->infoBitPos = this->encoder->get_info_bits_pos();
