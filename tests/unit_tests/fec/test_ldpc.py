@@ -69,11 +69,18 @@ class TestLDPCCoding(TestCase):
     def test_pickle(self) -> None:
         """Pickeling and unpickeling the C++ wrapper"""
 
-        coding = LDPCCoding(self.num_iterations, path.join(self.h_directory, self.h_candidates[0] + '.alist'), self.g_path, False, 10)
+        coding = LDPCCoding(self.num_iterations, path.join(self.h_directory, self.h_candidates[0] + '.alist'), "", False, 10)
 
         with NamedTemporaryFile() as file:
             dump(coding, file)
             file.seek(0)
 
-            coding = load(file)
-            self.assertEqual(self.num_iterations, coding.num_iterations)
+            deserialized_coding = load(file)
+            self.assertEqual(self.num_iterations, deserialized_coding.num_iterations)
+
+            # Actuall run a full encoding and decoding with the unpickled object
+            data_block = self.rng.integers(0, 2, deserialized_coding.bit_block_size, dtype=np.int32)
+            code_block = deserialized_coding.encode(data_block)
+            decoded_block = deserialized_coding.decode(code_block)
+            
+            assert_array_equal(data_block, decoded_block)

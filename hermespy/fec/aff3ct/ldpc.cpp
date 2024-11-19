@@ -181,12 +181,11 @@ PYBIND11_MODULE(ldpc, m)
             C++ bindings are always enabled.
         )pbdoc")
 
-        .def(py::pickle(
-            [](const LDPC& ldpc) {
-                return py::make_tuple(ldpc.getNumIterations(), ldpc.getHSourcePath(), ldpc.getGSavePath(), ldpc.getSyndromeChecking(), ldpc.getMinNumIterations());
-            },
-            [](py::tuple t) {
-                return LDPC(t[0].cast<int>(), t[1].cast<std::string>(), t[2].cast<std::string>(), t[3].cast<bool>(), t[4].cast<int>());
-            }
-        ));
+        .def("__getstate__", [](const LDPC& ldpc) {
+            return py::make_tuple(ldpc.getNumIterations(), ldpc.getHSourcePath(), ldpc.getGSavePath(), ldpc.getSyndromeChecking(), ldpc.getMinNumIterations());
+        })
+
+        .def("__setstate__", [](LDPC& ldpc, py::tuple t) {
+            new (&ldpc) LDPC{t[0].cast<int>(), t[1].cast<std::string>(), t[2].cast<std::string>(), t[3].cast<bool>(), t[4].cast<int>()};
+        });
 }
