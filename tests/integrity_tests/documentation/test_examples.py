@@ -45,6 +45,16 @@ class TestDocumentationExamples(TestCase):
 
         with self.test_context:
             exec(open(script_path).read())
+            
+    def test_beamforming_nullsteeringbeamformer_radiation_pattern(self) -> None:
+        """Test example snippet for nullsteeringbeamformer radition pattern"""
+
+        self.__run_example("beamforming_nullsteeringbeamformer_radiation_pattern.py")
+
+    def test_beamforming_nullsteeringbeamformer(self) -> None:
+        """Test example snippet for nullsteeringbeamformer"""
+
+        self.__run_example("beamforming_nullsteeringbeamformer.py")
 
     def test_channel_cdl_indoor_factory(self) -> None:
         """Test example snippet for indoor channel factory with LOS"""

@@ -19,6 +19,7 @@ from .beamformer import (
 )
 from .conventional import ConventionalBeamformer
 from .capon import CaponBeamformer
+from .nullsteeringbeamformer import NullSteeringBeamformer
 from .operators import BeamformingReceiver, BeamformingTransmitter
 
 __all__ = [
@@ -32,4 +33,5 @@ __all__ = [
     "SphericalFocus",
     "ConventionalBeamformer",
     "CaponBeamformer",
+    "NullSteeringBeamformer",
 ]

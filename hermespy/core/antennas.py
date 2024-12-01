@@ -1145,7 +1145,7 @@ class AntennaArrayBase(ABC, Transformable):
         distances = np.linalg.norm(self._topology(mode).T - position, axis=0, keepdims=False)
 
         # Transform the distances to complex phases, i.e. the array response
-        phase_response = np.exp(2j * pi * carrier_frequency * distances / speed_of_light)
+        phase_response = np.exp(-2j * pi * carrier_frequency * distances / speed_of_light)
 
         # That's it
         return phase_response
