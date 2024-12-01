@@ -68,6 +68,11 @@ public:
         return this->codeBlockSize;
     }
 
+    float getRate() const
+    {
+        return (float)this->dataBlockSize / (float)this->codeBlockSize;
+    }
+
     int getNumIterations() const
     {
         return this->numIterations;
@@ -171,6 +176,10 @@ PYBIND11_MODULE(ldpc, m)
 
         .def_property("code_block_size", &LDPC::getCodeBlockSize, nullptr, R"pbdoc(
             Number of bits within a code block to be decoded.
+        )pbdoc")
+
+        .def_property_readonly("rate", &LDPC::getRate, R"pbdoc(
+            Coding rate of the LDPC code.
         )pbdoc")
 
         .def_property("num_iterations", &LDPC::getNumIterations, &LDPC::setNumIterations, R"pbdoc(
