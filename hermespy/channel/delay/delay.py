@@ -85,7 +85,7 @@ class DelayChannelSample(ChannelSample):
 
         transmit_response = self.transmitter_state.antennas.cartesian_array_response(
             self.carrier_frequency, self.receiver_state.position, "global", AntennaMode.TX
-        ).conj()
+        )
         receive_response = self.receiver_state.antennas.cartesian_array_response(
             self.carrier_frequency, self.transmitter_state.position, "global", AntennaMode.RX
         )

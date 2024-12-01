@@ -463,7 +463,7 @@ class ClusterDelayLineSample(ChannelSample):
                 # Combination of Equation 7.5-23, 7.5.24 and 7.5.28
                 tx_array_response = self.transmitter_antennas.cartesian_array_response(
                     center_frequency, tx_direction.view(np.ndarray), "global", AntennaMode.TX
-                ).conj()
+                )
                 rx_array_response = self.receiver_antennas.cartesian_array_response(
                     center_frequency, rx_direction.view(np.ndarray), "global", AntennaMode.RX
                 )
@@ -494,7 +494,7 @@ class ClusterDelayLineSample(ChannelSample):
             # Equation 7.5-29
             tx_array_response = self.transmitter_antennas.cartesian_array_response(
                 center_frequency, self.receiver_pose.translation, "global", AntennaMode.TX
-            ).conj()
+            )
             rx_array_response = self.receiver_antennas.cartesian_array_response(
                 center_frequency, self.transmitter_pose.translation, "global", AntennaMode.RX
             )

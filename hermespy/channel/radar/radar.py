@@ -614,7 +614,7 @@ class RadarTargetPath(RadarPath):
         )
         tx_response = transmitter.antennas.cartesian_array_response(
             carrier_frequency, self.position, "global", AntennaMode.TX
-        ).conj()
+        )
 
         if self.attenuate:
             # Compute propagation distances
@@ -684,7 +684,7 @@ class RadarInterferencePath(RadarPath):
         # Model the sensor arrays' spatial responses
         rx_response = receiver.antennas.cartesian_array_response(
             carrier_frequency, transmitter.position, "global"
-        ).conj()
+        )
         tx_response = transmitter.antennas.cartesian_array_response(
             carrier_frequency, receiver.position, "global"
         )
