@@ -33,6 +33,8 @@ class TestLDPCCoding(TestCase):
         self.h_candidates = [
             'DEBUG_6_3',
             'CCSDS_64_128',
+            'MACKAY_504_1008',
+            'WIMAX_288_576',
         ]
 
         self.g_directory = mkdtemp()
