@@ -104,7 +104,7 @@ class ScalarAntennaCalibration(AntennaCalibration):
         expected_phase_response_tx = (
             device.antennas.cartesian_phase_response(
                 device.carrier_frequency, reference_device.global_position, "global", AntennaMode.TX
-            )[:, None].conj()
+            )[:, None]
             @ reference_device.antennas.cartesian_phase_response(
                 device.carrier_frequency, device.global_position, "global", AntennaMode.RX
             )[None, :]
@@ -113,7 +113,7 @@ class ScalarAntennaCalibration(AntennaCalibration):
         expected_phase_response_rx = (
             reference_device.antennas.cartesian_phase_response(
                 reference_device.carrier_frequency, device.global_position, "global", AntennaMode.TX
-            )[:, None].conj()
+            )[:, None]
             @ device.antennas.cartesian_phase_response(
                 reference_device.carrier_frequency,
                 reference_device.global_position,

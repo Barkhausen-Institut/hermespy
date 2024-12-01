@@ -10,10 +10,9 @@ Also refererd to as Delay and Sum Beamformer.
 from typing import Optional
 
 import numpy as np
-from numba import jit
 from scipy.constants import pi, speed_of_light
 
-from hermespy.core import AntennaArray, Direction, DuplexOperator, Serializable
+from hermespy.core import AntennaArray, AntennaMode, Direction, DuplexOperator, Serializable
 from .beamformer import TransmitBeamformer, ReceiveBeamformer
 
 
@@ -99,7 +98,7 @@ class ConventionalBeamformer(Serializable, TransmitBeamformer, ReceiveBeamformer
 
     # @lru_cache(maxsize=2)
     def _codebook(
-        self, carrier_frequency: float, angles: np.ndarray, array: AntennaArray
+        self, carrier_frequency: float, angles: np.ndarray, array: AntennaArray, mode: AntennaMode,
     ) -> np.ndarray:
         """Compute the beamforming codebook for a given set of angles of interest.
 
@@ -116,28 +115,31 @@ class ConventionalBeamformer(Serializable, TransmitBeamformer, ReceiveBeamformer
             array (AntennaArray):
                 The antenna array to compute the codebook for.
 
+            mode (AntennaMode):
+                The antenna mode to compute the codebook for, i.e. TX or RX.
+
         Returns:
 
             The codebook represented by a two-dimensional numpy array,
             with the first dimension being the number of angles and the second dimension the number of antennas.
         """
 
-        # Query topology of receiving antenna ports
+        # Query the antenna array's topology
+        ports = array.transmit_ports if mode == AntennaMode.TX else array.receive_ports
         topology = (
-            np.array([p.global_position for p in array.receive_ports], dtype=np.float_)
+            np.array([p.global_position for p in ports], dtype=np.float_)
             - array.global_position
         )
 
         # Build receive beamforming codebook of steering vectors for each angle of interest
-        book = np.empty((angles.shape[0], array.num_receive_ports), dtype=complex)
+        book = np.empty((angles.shape[0], len(ports)), dtype=complex)
         for n, (azimuth, zenith) in enumerate(angles):
             direction = Direction.From_Spherical(azimuth, zenith)
             weights = np.exp(
                 1j * 2 * pi * carrier_frequency / speed_of_light * (topology @ direction)
             )
             book[n, :] = weights
-
-        return book / array.num_receive_ports
+        return book
 
     def _encode(
         self,
@@ -146,38 +148,13 @@ class ConventionalBeamformer(Serializable, TransmitBeamformer, ReceiveBeamformer
         focus_angles: np.ndarray,
         array: AntennaArray,
     ) -> np.ndarray:
-        azimuth, zenith = focus_angles[0, :]
-
-        # Compute conventional beamformer weights
-        topology = (
-            np.array([p.global_position for p in array.transmit_ports], dtype=np.float_)
-            - array.global_position
-        )
-        direction = Direction.From_Spherical(azimuth, zenith)
-        # Conventional steering vector
-        weights = np.exp(-1j * 2 * pi * carrier_frequency / speed_of_light * (topology @ direction))
-
-        # Weight the streams accordingly
-        samples = weights[:, np.newaxis] @ samples
-
-        # That's it
-        return samples
-
-    @staticmethod
-    @jit(nopython=True)
-    def _beamform(
-        codebook: np.ndarray, samples: np.ndarray, conjugate: bool = False
-    ) -> np.ndarray:  # pragma: no cover
-        if conjugate:
-            return codebook.conj() @ samples
-
-        else:
-            return codebook @ samples
+        codebook = self._codebook(carrier_frequency, focus_angles[[0], :], array, AntennaMode.TX)
+        beamformed_samples = codebook.T @ samples
+        return beamformed_samples
 
     def _decode(
         self, samples: np.ndarray, carrier_frequency: float, angles: np.ndarray, array: AntennaArray
     ) -> np.ndarray:
-        codebook = self._codebook(carrier_frequency, angles[:, 0, :], array)
-        beamformed_samples = self._beamform(codebook, samples, True)
-
+        codebook = self._codebook(carrier_frequency, angles[:, 0, :], array, AntennaMode.RX)
+        beamformed_samples = (codebook @ samples) / array.num_receive_ports
         return beamformed_samples[:, np.newaxis, :]
