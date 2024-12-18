@@ -105,7 +105,7 @@ class TestNotebooks(TestCase):
         """Test the audio device loop example notebook"""
 
         notebook = self.__load_notebook("audio.ipynb")
-        self.__patch_notebook(notebook, 2, patches={0: "from hermespy.hardware_loop import PhysicalDeviceDummy"})
+        self.__patch_notebook(notebook, 2, patches={2: "from hermespy.hardware_loop import PhysicalDeviceDummy"})
         self.__patch_notebook(notebook, 4, patches={0: "device = PhysicalDeviceDummy()"})
         self.__test_notebook(notebook)
 
@@ -184,5 +184,5 @@ class TestNotebooks(TestCase):
         """Test the communication waveform implementation example notebook"""
 
         notebook = self.__load_notebook("waveform.ipynb")
-        self.__patch_notebook(notebook, 9, patches={3: "simulation = Simulation(console_mode=ConsoleMode.SILENT, num_actors=1)", 11: "simulation.num_samples = 1"}, inserts={0: "import ray as ray", 3: "ray.init(local_mode=True)"})
+        self.__patch_notebook(notebook, 10, patches={3: "simulation = Simulation(console_mode=ConsoleMode.SILENT, num_actors=1)", 11: "simulation.num_samples = 1"}, inserts={0: "import ray as ray", 3: "ray.init(local_mode=True)"})
         self.__test_notebook(notebook)

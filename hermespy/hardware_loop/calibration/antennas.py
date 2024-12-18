@@ -129,15 +129,19 @@ class ScalarAntennaCalibration(AntennaCalibration):
 
         # Probe the transmit chain
         tx_probes = np.empty(
-            (device.num_transmit_ports, reference_device.num_receive_ports, num_samples),
+            (
+                device.num_digital_transmit_ports,
+                reference_device.num_digital_receive_ports,
+                num_samples,
+            ),
             np.complex128,
         )
         transmit_zeros = np.zeros(
-            (reference_device.num_receive_ports, num_samples), dtype=np.complex128
+            (reference_device.num_digital_receive_ports, num_samples), dtype=np.complex128
         )
-        for n in range(device.num_transmit_ports):
+        for n in range(device.num_digital_transmit_ports):
             calibration_waveform = np.zeros(
-                (device.num_transmit_ports, num_samples), dtype=np.complex128
+                (device.num_digital_transmit_ports, num_samples), dtype=np.complex128
             )
             calibration_waveform[n, :] = calibration_pulse
             _, reference_reception = scenario.trigger_direct(
@@ -159,13 +163,19 @@ class ScalarAntennaCalibration(AntennaCalibration):
 
         # Probe the receive chain
         rx_probes = np.empty(
-            (reference_device.num_transmit_ports, device.num_receive_ports, num_samples),
+            (
+                reference_device.num_digital_transmit_ports,
+                device.num_digital_receive_ports,
+                num_samples,
+            ),
             np.complex128,
         )
-        transmit_zeros = np.zeros((device.num_transmit_ports, num_samples), dtype=np.complex128)
-        for n in range(reference_device.num_transmit_ports):
+        transmit_zeros = np.zeros(
+            (device.num_digital_transmit_ports, num_samples), dtype=np.complex128
+        )
+        for n in range(reference_device.num_digital_transmit_ports):
             calibration_waveform = np.zeros(
-                (reference_device.num_transmit_ports, num_samples), dtype=np.complex128
+                (reference_device.num_digital_transmit_ports, num_samples), dtype=np.complex128
             )
             calibration_waveform[n, :] = calibration_pulse
             device_reception, _ = scenario.trigger_direct(

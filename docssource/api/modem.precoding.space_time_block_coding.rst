@@ -18,7 +18,7 @@ The following example shows how to configure a modem with a Alamouti precoder wi
 .. literalinclude:: ../scripts/examples/modem_precoding_alamouti.py
    :language: python
    :linenos:
-   :lines: 19-45
+   :lines: 19-47
 
 Note that Alamouti precoding requires channel state information at the receiver,
 therefore waveform's :attr:`channel_estimation<hermespy.modem.waveform.CommunicationWaveform.channel_estimation>` attribute must be configured.
@@ -28,7 +28,7 @@ The following example shows how to configure a modem with a Ganesan precoder wit
 .. literalinclude:: ../scripts/examples/modem_precoding_ganesan.py
    :language: python
    :linenos:
-   :lines: 19-45
+   :lines: 19-47
 
 Note that Ganesan precoding requires channel state information at the receiver,
 therefore waveform's :attr:`channel_estimation<hermespy.modem.waveform.CommunicationWaveform.channel_estimation>` attribute must be configured.

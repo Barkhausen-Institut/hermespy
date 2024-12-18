@@ -21,7 +21,7 @@ property of multiple simulated devices:
 
 .. literalinclude:: ../scripts/examples/simulation_synchronization.py
    :language: python
-   :lines: 10-18, 35-42
+   :lines: 10-18, 39-46
 
 Of course, the abstract *TriggerModel* in the above snippet must be replaced by the desired implementation
 from the list above.

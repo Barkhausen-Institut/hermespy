@@ -543,7 +543,7 @@ class ChannelStateInformation(HDFSerializable):
 
         # Propagate the signal
         propagated_samples = np.zeros(
-            (state.shape[0], signal.num_samples + state.shape[3] - 1), dtype=np.complex_
+            (state.shape[0], signal.num_samples + state.shape[3] - 1), dtype=np.complex128
         )
 
         for delay_index in range(state.shape[3]):

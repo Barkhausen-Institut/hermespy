@@ -7,6 +7,7 @@ UHD Device
 
 from __future__ import annotations
 from collections.abc import Sequence
+from datetime import datetime
 from functools import cached_property
 from typing import Any, List, Callable
 
@@ -23,7 +24,7 @@ from hermespy.core import (
     Signal,
     Transformation,
 )
-from ..physical_device import PhysicalDevice
+from ..physical_device import PhysicalDevice, PhysicalDeviceState
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -58,8 +59,8 @@ class UsrpAntennas(AntennaArray[AntennaPort, Antenna]):
 
         # Initialize attributes
         self.__device = device
-        self.__transmit_ports = [self._new_port() for _ in range(device.num_transmit_ports)]
-        self.__receive_ports = [self._new_port() for _ in range(device.num_receive_ports)]
+        self.__transmit_ports = [self._new_port() for _ in range(device.num_digital_transmit_ports)]
+        self.__receive_ports = [self._new_port() for _ in range(device.num_digital_receive_ports)]
 
         # Configure kinematic chain
         self.set_base(device)
@@ -84,11 +85,11 @@ class UsrpAntennas(AntennaArray[AntennaPort, Antenna]):
 
     @property
     def num_transmit_ports(self) -> int:
-        return self.__device.num_transmit_ports
+        return self.__device.num_digital_transmit_ports
 
     @property
     def num_receive_ports(self) -> int:
-        return self.__device.num_receive_ports
+        return self.__device.num_digital_receive_ports
 
     @property
     def num_ports(self) -> int:
@@ -114,7 +115,7 @@ class UsrpAntennas(AntennaArray[AntennaPort, Antenna]):
         return self.num_receive_ports
 
 
-class UsrpDevice(PhysicalDevice, Serializable):
+class UsrpDevice(PhysicalDevice[PhysicalDeviceState], Serializable):
     """Bindung to a USRP device via the UHD library."""
 
     yaml_tag = "USRP"
@@ -209,15 +210,29 @@ class UsrpDevice(PhysicalDevice, Serializable):
         # Query the available number of antennas ports
         max_num_ports = self.__usrp_client.getNumAntennas()
 
-        self.__selected_transmit_ports = selected_transmit_ports or [0] if max_num_ports > 0 else []
-        self.__max_selected_transmit_port = max(self.__selected_transmit_ports)
+        # Configure transmit port selection
+        if selected_transmit_ports is not None:
+            self.__selected_transmit_ports = selected_transmit_ports
+        elif max_num_ports > 0:
+            self.__selected_transmit_ports = [0]
+        else:
+            self.__selected_transmit_ports = []
+        self.__max_selected_transmit_port = max(self.__selected_transmit_ports, default=0)
         if 1 + self.__max_selected_transmit_port > max_num_ports:
+
             raise ValueError(
                 f"Selected transmit ports exceed the maximum number of ports ({1 + self.__max_selected_transmit_port} > {max_num_ports})"
             )
 
-        self.__selected_receive_ports = selected_receive_ports or [0] if max_num_ports > 0 else []
-        self.__max_selected_receive_port = max(self.__selected_receive_ports)
+        # Configure receive port selection
+        if selected_receive_ports is not None:
+            self.__selected_receive_ports = selected_receive_ports
+        elif max_num_ports > 0:
+            self.__selected_receive_ports = [0]
+        else:
+            self.__selected_receive_ports = []
+        self.__max_selected_receive_port = max(self.__selected_receive_ports, default=0)
+
         if 1 + self.__max_selected_receive_port > max_num_ports:
             raise ValueError(
                 f"Selected receive ports exceed the maximum number of ports ({1 + self.__max_selected_receive_port} > {max_num_ports})"
@@ -235,6 +250,19 @@ class UsrpDevice(PhysicalDevice, Serializable):
         self.__collection_enabled = False
         self.__scale_transmission = scale_transmission
         self.__receive_delay = 0.0
+
+    def state(self) -> PhysicalDeviceState:
+        return PhysicalDeviceState(
+            id(self),
+            datetime.now().timestamp(),
+            self.pose,
+            self.velocity,
+            self.carrier_frequency,
+            self.sampling_rate,
+            self.num_digital_transmit_ports,
+            self.num_digital_receive_ports,
+            self.antennas.state(self.pose),
+        )
 
     def __rpc_call_wrapper(self, call: Callable, *args, **kwargs) -> Any:
         """Wrapper to RPC client calls to perform multiple calls to hack the timeout bug.
@@ -295,8 +323,8 @@ class UsrpDevice(PhysicalDevice, Serializable):
                 rxCarrierFrequency=rx_carrier_frequency,
                 txGain=tx_gain,
                 rxGain=rx_gain,
-                noTxStreams=self.num_transmit_ports,
-                noRxStreams=self.num_receive_ports,
+                noTxStreams=self.num_digital_transmit_ports,
+                noRxStreams=self.num_digital_receive_ports,
                 txAntennaMapping=self.selected_transmit_ports,
                 rxAntennaMapping=self.selected_receive_ports,
             )
@@ -335,11 +363,11 @@ class UsrpDevice(PhysicalDevice, Serializable):
             np.concatenate(
                 (
                     np.zeros(
-                        (uploaded_samples.num_streams, self.num_prepeneded_zeros), dtype=np.complex_
+                        (uploaded_samples.num_streams, self.num_prepeneded_zeros), dtype=np.complex128
                     ),
                     uploaded_samples.getitem(),
                     np.zeros(
-                        (uploaded_samples.num_streams, self.num_appended_zeros), dtype=np.complex_
+                        (uploaded_samples.num_streams, self.num_appended_zeros), dtype=np.complex128
                     ),
                 ),
                 axis=1,
@@ -363,9 +391,7 @@ class UsrpDevice(PhysicalDevice, Serializable):
         transmit_delay = max(0.0, -self.delay_calibration.delay)
         self.__receive_delay = max(0.0, self.delay_calibration.delay)
         uploaded_samples.delay = transmit_delay
-        tx_config = TxStreamingConfig(
-            transmit_delay, MimoSignal(uploaded_samples.getitem())
-        )
+        tx_config = TxStreamingConfig(transmit_delay, MimoSignal(uploaded_samples.getitem()))
         self.__rpc_call_wrapper(self.__usrp_client.configureTx, tx_config)
 
         # Configure reception
@@ -380,9 +406,7 @@ class UsrpDevice(PhysicalDevice, Serializable):
             # Workaround for the uneven sample bug
             num_receive_samples += 4 - num_receive_samples % 4
 
-            rx_config = RxStreamingConfig(
-                self.__receive_delay, num_receive_samples
-            )
+            rx_config = RxStreamingConfig(self.__receive_delay, num_receive_samples)
             self.__rpc_call_wrapper(self.__usrp_client.configureRx, rx_config)
             self.__collection_enabled = True
 
@@ -391,9 +415,7 @@ class UsrpDevice(PhysicalDevice, Serializable):
                 uploaded_samples.num_samples + 4 - uploaded_samples.num_samples % 4
             )
 
-            rx_config = RxStreamingConfig(
-                self.__receive_delay, num_receive_samples
-            )
+            rx_config = RxStreamingConfig(self.__receive_delay, num_receive_samples)
             self.__rpc_call_wrapper(self.__usrp_client.configureRx, rx_config)
             self.__collection_enabled = True
 
@@ -406,18 +428,20 @@ class UsrpDevice(PhysicalDevice, Serializable):
     def _download(self) -> Signal:
         # Abort if no samples are to be expcted during collection
         if not self.__collection_enabled:
-            return Signal.Empty(self.sampling_rate, self.num_receive_ports)
+            return Signal.Empty(self.sampling_rate, self.num_receive_antenna_ports)
 
         mimo_signals = self.__usrp_client.collect()
         signal_model = Signal.Empty(
             self.sampling_rate,
-            self.num_receive_ports,
+            self.num_receive_antenna_ports,
             carrier_frequency=self.carrier_frequency,
             delay=self.__receive_delay,
         )
 
         for mimo_signal in mimo_signals:
-            streams = np.array([mimo_signal.signals[i] for i in range(self.num_receive_ports)])
+            streams = np.array(
+                [mimo_signal.signals[i] for i in range(self.num_receive_antenna_ports)]
+            )
             signal_model.append_samples(streams)
 
         # Remove the zero padding hack
@@ -491,13 +515,13 @@ class UsrpDevice(PhysicalDevice, Serializable):
         self.__rx_gain = value
 
     @property
-    def num_transmit_ports(self) -> int:
+    def num_transmit_antenna_ports(self) -> int:
         """Number of transmit ports controlled on the USRP device."""
 
         return len(self.__selected_transmit_ports)
 
     @property
-    def num_receive_ports(self) -> int:
+    def num_receive_antenna_ports(self) -> int:
         """Number of receive ports controlled on the USRP device."""
 
         return len(self.__selected_receive_ports)

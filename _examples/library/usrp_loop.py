@@ -1,14 +1,14 @@
-from numpy import linspace
+# -*- coding: utf-8 -*-
 
 from hermespy.hardware_loop import HardwareLoop, UsrpSystem
-from hermespy.modem import SimplexLink, DuplexModem, RRCWaveform, SCCorrelationSynchronization, SCLeastSquaresChannelEstimation, SCZeroForcingChannelEqualization, BitErrorEvaluator
+from hermespy.modem import SimplexLink, RRCWaveform, SCCorrelationSynchronization, SCLeastSquaresChannelEstimation, SCZeroForcingChannelEqualization, BitErrorEvaluator
 
 
 loop = HardwareLoop(UsrpSystem(), manual_triggering=False, plot_information=True)
 loop.verbosity = "ALL"
 
 # Configure a single carrier waveform modulated with 16-QAM root-raised cosine 
-# shaped pulses at a rate of 61.44 MHz 
+# shaped pulses at a rate of 61.44 MHz
 wave = RRCWaveform(symbol_rate=61.44e6, num_preamble_symbols=100,
                    num_data_symbols=1000, modulation_order=4)
 
@@ -28,19 +28,18 @@ device_configuration = {
 }
 
 transmitting_device = loop.new_device("192.168.189.131", **device_configuration)
-# receiving_device = loop.new_device("192.168.189.132", **device_configuration)
-
-# @jan.adler if this line is commented out, the code breaks afterwards, because somehow
-# the filter BW is not correct
-# print(device.estimate_noise_power())
+receiving_device = loop.new_device("192.168.189.132", **device_configuration)
 
 # Initialize a communicationlink between two dedicated devices
-link = SimplexLink(transmitting_device, transmitting_device, waveform=wave)
+link = SimplexLink()
+link.waveform = wave
+transmitting_device.transmitters.add(link)
+receiving_device.receivers.add(link)
 
 # Configure a bit error rate evaluation for each link
 ber = BitErrorEvaluator(link, link)
 loop.add_evaluator(ber)
-    
+
 # Configure  a parameter sweep over the TX gain (i.e. transmit power) of the device
 #gains = linspace(0, 40, 5, endpoint=True)
 #loop.new_dimension('tx_gain', gains, transmitting_device)

@@ -10,11 +10,61 @@
 
 !<Simulation>
 
+# Operators transmitting or receiving signals over the devices
+Operators:
+
+  # The base station is operated by a joint communication and sensing algorithm
+  - &base_station_operator !<MatchedFilterJcas>
+
+    max_range: 10         # Maximal detectable range of the range estimation in m
+
+    # Waveform configuration
+    waveform: !<SC-Rectangular>
+
+      # Symbol settings
+      symbol_rate: 100e6
+      modulation_order: 16
+      oversampling_factor: 4
+
+      # Frame settings
+      num_preamble_symbols: 16
+      num_data_symbols: 100
+      pilot_rate: 2e6
+      guard_interval: 1e-6
+
+    # Radar detection configuration
+    detector: !<Threshold>
+      min_power: 2e-2
+
+  # The terminal is operated by a communication modem
+  - &terminal_operator !<RxModem>
+    # reference: *base_station
+
+    # Waveform configuration
+    waveform: !<SC-Rectangular>
+
+      channel_estimation: !<SC-LS>
+      channel_equalization: !<SC-ZF>
+
+      # Symbol settings
+      symbol_rate: 100e6
+      modulation_order: 16
+      oversampling_factor: 4
+
+      # Frame settings
+      num_preamble_symbols: 16
+      num_data_symbols: 100
+      pilot_rate: 2e6
+      guard_interval: 1e-6
+
+
 # Physical device models within the simulated scenario
 Devices:
 
   - &base_station !<SimulatedDevice>
     carrier_frequency: 1e9    # 1GHz assumed carrier frequency
+    transmitters: [*base_station_operator]  # Transmit DSP layers operating on the device
+    receivers: [*base_station_operator]     # Receive DSP layers operating on the device
 
     # Assume a transmit-receive leakage
     isolation: !<Specific>
@@ -22,6 +72,7 @@ Devices:
 
   - &terminal !<SimulatedDevice>
     carrier_frequency: 1e9    # 1GHz assumed carrier frequency
+    receivers: [*terminal_operator]  # Receive DSP layers operating on the device
 
 
 # Channel models between device models
@@ -47,57 +98,6 @@ Channels:
       gain: 0.
 
 
-# Operators transmitting or receiving signals over the devices
-Operators:
-
-  # The base station is operated by a joint communication and sensing algorithm
-  - &base_station_operator !<MatchedFilterJcas>
-
-    device: *base_station # Operater controls the base station device
-    max_range: 10         # Maximal detectable range of the range estimation in m
-
-    # Waveform configuration
-    waveform: !<SC-Rectangular>
-
-      # Symbol settings
-      symbol_rate: 100e6
-      modulation_order: 16
-      oversampling_factor: 4
-
-      # Frame settings
-      num_preamble_symbols: 16
-      num_data_symbols: 100
-      pilot_rate: 2e6
-      guard_interval: 1e-6
-
-    # Radar detection configuration
-    detector: !<Threshold>
-      min_power: 2e-2
-
-  # The terminal is operated by a communication modem
-  - &terminal_operator !<RxModem>
-
-    device: *terminal         # Operator controls the terminal device
-    reference: *base_station
-
-    # Waveform configuration
-    waveform: !<SC-Rectangular>
-
-      channel_estimation: !<SC-LS>
-      channel_equalization: !<SC-ZF>
-
-      # Symbol settings
-      symbol_rate: 100e6
-      modulation_order: 16
-      oversampling_factor: 4
-
-      # Frame settings
-      num_preamble_symbols: 16
-      num_data_symbols: 100
-      pilot_rate: 2e6
-      guard_interval: 1e-6
-
-
 # Performance indication evaluation configuration
 Evaluators:
 
@@ -113,7 +113,9 @@ Evaluators:
   # Evaluate the radar detector operating characteristics
   - !<ROC>
 
-    radar: *base_station_operator
+    receiving_radar: *base_station_operator
+    transmitting_device: *base_station
+    receiving_device: *base_station
     radar_channel: *radar_channel
 
 

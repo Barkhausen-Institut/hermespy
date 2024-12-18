@@ -139,21 +139,21 @@ class TestSNR(_TestNoiseLevel):
         tx_device.sampling_rate = sampling_rate
         rx_device = SimulatedDevice(sampling_rate=sampling_rate)
         rx_device.noise_model = AWGN(seed=42)
-        
+
         rx_dsp = SignalReceiver(num_samples, sampling_rate)
-        rx_dsp.device = rx_device
-        
+        rx_device.receivers.add(rx_dsp)
+
         noise_level = SNR(1.5, tx_device, channel)
         rx_device.noise_level = noise_level
-        
+
         unit_power_signal = DenseSignal(np.ones(num_samples), sampling_rate, 0)
-        
+
         propagated_signal = channel.propagate(unit_power_signal, tx_device, rx_device)
-        rx_device.receive(propagated_signal)
-        
+        device_reception = rx_device.receive(propagated_signal)
+
         expected_received_power = (unit_power_signal.power * (1 + 1/noise_level.snr)) * expected_energy_scale
-        received_power = rx_dsp.signal.power[0]
+        received_power = device_reception.operator_receptions[0].signal.power
         self.assertAlmostEqual(expected_received_power, received_power, delta=.1)
-        
+
 
 del _TestNoiseLevel

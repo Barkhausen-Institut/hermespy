@@ -435,7 +435,7 @@ class RuralMacrocells(ClusterDelayLineBase[RuralMacrocellsRealization, O2IState]
                 [+0.24, +0.26, -0.22],  # 19: ZSA vs ASA
                 [-0.07, -0.27, +0.00],  # 20: ZSD vs ZSA
             ],
-            dtype=np.float_,
+            dtype=np.float64,
         ).T
 
     def _initialize_realization(

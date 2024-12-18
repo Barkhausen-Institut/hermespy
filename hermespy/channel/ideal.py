@@ -63,19 +63,19 @@ class IdealChannelSample(ChannelSample):
         # MISO case
         if self.num_receive_antennas == 1:
             spatial_response = np.ones(
-                (1, self.transmitter_state.antennas.num_transmit_antennas), dtype=np.complex_
+                (1, self.transmitter_state.antennas.num_transmit_antennas), dtype=np.complex128
             )
 
         # SIMO case
         elif self.num_transmit_antennas == 1:
             spatial_response = np.ones(
-                (self.receiver_state.antennas.num_receive_antennas, 1), dtype=np.complex_
+                (self.receiver_state.antennas.num_receive_antennas, 1), dtype=np.complex128
             )
 
         # MIMO case
         else:
             spatial_response = np.eye(
-                self.num_receive_antennas, self.num_transmit_antennas, dtype=np.complex_
+                self.num_receive_antennas, self.num_transmit_antennas, dtype=np.complex128
             )
 
         # Scale response by channel gain
@@ -97,7 +97,7 @@ class IdealChannelSample(ChannelSample):
 
         # No receiving antenna case
         elif self.num_receive_antennas == 0:
-            propagated_samples = np.empty((0, signal.num_samples), dtype=np.complex_)
+            propagated_samples = np.empty((0, signal.num_samples), dtype=np.complex128)
 
         # MIMO case
         else:
@@ -110,7 +110,7 @@ class IdealChannelSample(ChannelSample):
                             self.num_receive_antennas - self.num_transmit_antennas,
                             signal.num_samples,
                         ),
-                        dtype=np.complex_,
+                        dtype=np.complex128,
                     ),
                     axis=0,
                 )

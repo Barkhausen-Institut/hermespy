@@ -582,7 +582,7 @@ class IndoorFactory(ClusterDelayLineBase[IndoorFactoryRealization, LOSState], Se
                 [+0.00, +0.00],  # 19: ZSA vs ASA
                 [+0.00, +0.00],  # 20: ZSD vs ZSA
             ],
-            dtype=np.float_,
+            dtype=np.float64,
         ).T
 
     def _initialize_realization(

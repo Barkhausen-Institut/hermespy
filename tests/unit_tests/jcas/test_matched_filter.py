@@ -46,21 +46,19 @@ class TestMatchedFilterJoint(TestCase):
         """Receiving should raise a RuntimeError if there's no cached transmission"""
 
         with self.assertRaises(RuntimeError):
-            self.joint.receive(Signal.Create(np.zeros((1, 10)), 1.0))
+            self.joint.receive(Signal.Create(np.zeros((1, 10)), 1.0), self.device.state())
 
     def test_transmit_receive(self) -> None:
         num_delay_samples = 10
-        transmission = self.joint.transmit()
+        transmission = self.joint.transmit(self.device.state())
 
         delay_offset = Signal.Create(np.zeros((1, num_delay_samples), dtype=complex), transmission.signal.sampling_rate, carrier_frequency=self.carrier_frequency)
         delay_offset.append_samples(transmission.signal)
 
-        self.joint.cache_reception(delay_offset)
-
-        reception = self.joint.receive()
+        reception = self.joint.receive(delay_offset, self.device.state())
         self.assertTrue(10, reception.cube.data.argmax)
 
-        padded_reception = self.joint.receive(transmission.signal)
+        padded_reception = self.joint.receive(transmission.signal, self.device.state())
         self.assertTrue(10, padded_reception.cube.data.argmax)
 
     def test_range_resolution_setget(self) -> None:
@@ -101,20 +99,10 @@ class TestMatchedFilterJoint(TestCase):
         with self.assertRaises(ValueError):
             self.joint.max_range = 0.0
 
-    def test_device_setget(self) -> None:
-        """Device property getter should return setter argument"""
-
-        expected_device = SimulatedDevice()
-        self.joint.device = expected_device
-
-        self.assertIs(expected_device, self.joint.device)
-        self.assertIs(expected_device, DuplexModem.device.fget(self.joint))
-        self.assertIs(expected_device, Radar.device.fget(self.joint))
-
     def test_recall_transmission(self) -> None:
         """Test joint transmission recall from HDF"""
 
-        transmission = self.joint.transmit()
+        transmission = self.joint.transmit(self.device.state())
 
         with TemporaryDirectory() as tempdir:
             file_location = path.join(tempdir, "testfile.hdf5")
@@ -131,8 +119,8 @@ class TestMatchedFilterJoint(TestCase):
     def test_recall_reception(self) -> None:
         """Test joint reception recall from HDF"""
 
-        transmission = self.joint.transmit()
-        reception = self.joint.receive(transmission.signal)
+        transmission = self.joint.transmit(self.device.state())
+        reception = self.joint.receive(transmission.signal, self.device.state())
 
         with TemporaryDirectory() as tempdir:
             file_location = path.join(tempdir, "testfile.hdf5")

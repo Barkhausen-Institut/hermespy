@@ -87,8 +87,10 @@ class _TestIdealChannelEstimation(TestCase):
         self.channel = Cost259(Cost259Type.URBAN)
         self.channel.seed = 42
 
-        self.link = SimplexLink(self.alpha_device, self.beta_device)
+        self.link = SimplexLink()
         self.link.seed = 42
+        self.alpha_device.transmitters.add(self.link)
+        self.beta_device.receivers.add(self.link)
 
     def test_properties(self) -> None:
         """Test ideal channel estimation properties"""
@@ -108,12 +110,6 @@ class _TestIdealChannelEstimation(TestCase):
 
         # ToDo: How could this be tested?
         return
-
-    def test_yaml_serialization(self) -> None:
-        """Test YAML serialization"""
-
-        test_yaml_roundtrip_serialization(self, self.estimation)
-
 
 class TestOFDMIdealChannelEstimation(_TestIdealChannelEstimation):
     """Test ideal channel estimation for multicarrier waveforms."""

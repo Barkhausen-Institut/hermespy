@@ -46,6 +46,8 @@ class TestOFDMWaveform(TestCase):
             oversampling_factor = 4,
         )
         
+        self.device = SimulatedDevice()
+        
     def test_subcarrier_spacing_validation(self) -> None:
         """Subcarrier spacing property should raise a value error for invalid values"""
         
@@ -77,8 +79,7 @@ class TestOFDMWaveform(TestCase):
         
         modem = TransmittingModem()
         modem.waveform = self.ofdm
-        modem.device = SimulatedDevice()
-        waveform = modem.transmit().signal
+        waveform = modem.transmit(self.device.state()).signal
         
         self.assertEqual(self.ofdm.sampling_rate, waveform.sampling_rate)
         self.assertEqual(self.ofdm.bandwidth * self.ofdm.oversampling_factor, waveform.sampling_rate)
@@ -89,9 +90,8 @@ class TestOFDMWaveform(TestCase):
         
         modem = TransmittingModem()
         modem.waveform = self.ofdm
-        modem.device = SimulatedDevice()
         
-        transmission = modem.transmit()
+        transmission = modem.transmit(self.device.state())
         power = transmission.signal.power
         assert_array_almost_equal(np.ones_like(power) * self.ofdm.power, power, decimal=1)
 
@@ -101,10 +101,9 @@ class TestOFDMWaveform(TestCase):
         self.ofdm.dc_suppression = True
         modem = DuplexModem()
         modem.waveform = self.ofdm
-        modem.device = SimulatedDevice()
         
-        transmission = modem.transmit()
-        reception = modem.receive(transmission.signal)
+        transmission = modem.transmit(self.device.state())
+        reception = modem.receive(transmission.signal, self.device.state())
         
         # Make sure the symbols are properly received
         assert_array_almost_equal(transmission.symbols.raw, reception.equalized_symbols.raw)
@@ -118,10 +117,9 @@ class TestOFDMWaveform(TestCase):
 
         modem = DuplexModem()
         modem.waveform = self.ofdm
-        modem.device = SimulatedDevice()
         
-        transmission = modem.transmit()
-        reception = modem.receive(transmission.signal)
+        transmission = modem.transmit(self.device.state())
+        reception = modem.receive(transmission.signal ,self.device.state())
         
         # Make sure the symbols are properly received
         assert_array_almost_equal(transmission.symbols.raw, reception.equalized_symbols.raw)
@@ -132,10 +130,9 @@ class TestOFDMWaveform(TestCase):
         self.ofdm.dc_suppression = True
         modem = DuplexModem()
         modem.waveform = self.ofdm
-        modem.device = SimulatedDevice()
         
-        transmission = modem.transmit()
-        reception = modem.receive(transmission.signal)
+        transmission = modem.transmit(self.device.state())
+        reception = modem.receive(transmission.signal, self.device.state())
 
         # Make sure the symbols are properly received
         assert_array_almost_equal(transmission.symbols.raw, reception.equalized_symbols.raw)
@@ -174,7 +171,7 @@ class TestSchmidlCoxSynchronization(TestCase):
     def test_synchronize_empty_signal(self) -> None:
         """Test the proper estimation of delays during correlation synchronization for an empty signal"""
 
-        signal = np.empty((self.num_streams, 0), dtype=np.complex_)
+        signal = np.empty((self.num_streams, 0), dtype=np.complex128)
         frame_delays = self.synchronization.synchronize(signal)
 
         self.assertEqual(0, len(frame_delays))
@@ -186,9 +183,9 @@ class TestSchmidlCoxSynchronization(TestCase):
             symbols = [self.frame.map(self.rng.integers(0, 2, size=self.frame.bits_per_frame(self.frame.num_data_symbols))) for _ in range(n)]
             frames = [np.outer(np.exp(2j * pi * self.rng.uniform(0, 1, (self.num_streams, 1))), self.frame.modulate(symbols[f])) for f in range(n)]
 
-            signal = np.empty((self.num_streams, 0), dtype=np.complex_)
+            signal = np.empty((self.num_streams, 0), dtype=np.complex128)
             for frame in frames:
-                signal = np.concatenate((signal, np.zeros((self.num_streams, d), dtype=np.complex_), frame), axis=1)
+                signal = np.concatenate((signal, np.zeros((self.num_streams, d), dtype=np.complex128), frame), axis=1)
 
             estimated_delays = self.synchronization.synchronize(signal)
             self.assertEqual(n, len(estimated_delays))

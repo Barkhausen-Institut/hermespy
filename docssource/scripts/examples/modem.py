@@ -12,8 +12,10 @@ simulation = Simulation()
 device_alpha = simulation.new_device(carrier_frequency=1e8, pose=Transformation.From_Translation(np.zeros(3)))
 device_beta = simulation.new_device(carrier_frequency=1e8, pose=Transformation.From_Translation(np.array([100, 0, 0])))
 
-tx_modem = TransmittingModem(device=device_alpha)
-rx_modem = ReceivingModem(device=device_beta)
+tx_modem = TransmittingModem()
+rx_modem = ReceivingModem()
+device_alpha.add_dsp(tx_modem)
+device_beta.add_dsp(rx_modem)
 
 ofdm_resources = [GridResource(elements=[GridElement('DATA', 1024)])]
 ofdm_structure = [SymbolSection(10, [0])]
@@ -29,6 +31,5 @@ propagation = channel.propagate(transmission, device_alpha, device_beta)
 reception = device_beta.receive(propagation)
 
 transmission.mixed_signal.plot(title='Transmitted Signal')
-
 
 plt.show()

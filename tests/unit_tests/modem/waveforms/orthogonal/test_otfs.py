@@ -46,15 +46,16 @@ class TestOTFSMWaveform(TestCase):
             oversampling_factor = 16,
             modulation_order=4,
         )
+        
+        self.device = SimulatedDevice()
 
     def test_transmit_power(self) -> None:
         """Transmitted signal power should approximately be unit"""
         
         modem = TransmittingModem()
         modem.waveform = self.ofdm
-        modem.device = SimulatedDevice()
         
-        transmission = modem.transmit()
+        transmission = modem.transmit(self.device.state())
         power = transmission.signal.power
         assert_array_almost_equal(np.ones_like(power) * self.ofdm.power, power, decimal=1)
 
@@ -63,10 +64,9 @@ class TestOTFSMWaveform(TestCase):
 
         modem = DuplexModem()
         modem.waveform = self.ofdm
-        modem.device = SimulatedDevice()
 
-        transmission = modem.transmit()
-        reception = modem.receive(transmission.signal)
+        transmission = modem.transmit(self.device.state())
+        reception = modem.receive(transmission.signal, self.device.state())
         
         # Make sure the symbols are properly received
         assert_array_almost_equal(transmission.symbols.raw, reception.equalized_symbols.raw)
@@ -77,10 +77,9 @@ class TestOTFSMWaveform(TestCase):
         self.ofdm.dc_suppression = True
         modem = DuplexModem()
         modem.waveform = self.ofdm
-        modem.device = SimulatedDevice()
 
-        transmission = modem.transmit()
-        reception = modem.receive(transmission.signal)
+        transmission = modem.transmit(self.device.state())
+        reception = modem.receive(transmission.signal, self.device.state())
 
         # Make sure the symbols are properly received
         assert_array_almost_equal(transmission.symbols.raw, reception.equalized_symbols.raw)

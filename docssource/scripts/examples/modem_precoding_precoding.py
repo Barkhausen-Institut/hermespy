@@ -3,25 +3,29 @@
 from __future__ import annotations
 
 from hermespy.modem import (
-    SymbolPrecoding,
-    Alamouti as SymbolPrecoder,
-    ReceivingModem as Modem,
+    TransmitSymbolCoding,
+    ReceiveSymbolCoding,
+    DFT as TransmitSymbolEncoder,
+    DFT as ReceiveSymbolDecoder,
+    SimplexLink as Modem,
 )
 
 
-# Initialize a new precoding configuration
-precoding = SymbolPrecoding()
+# Initialize a new transmit precoding configuration
+tx_precoding = TransmitSymbolCoding()
+rx_preocoding = ReceiveSymbolCoding()
 
 # Add precoding steps
-precoding[0] = SymbolPrecoder()
-precoding[1] = SymbolPrecoder()
+tx_precoding[0] = TransmitSymbolEncoder()
+rx_preocoding[0] = ReceiveSymbolDecoder()
 
 # Initialize a new modem
 modem = Modem()
 
 # Add precoding configuration to modem
-modem.precoding = precoding
+modem.transmit_symbol_coding = tx_precoding
+modem.receive_symbol_coding = rx_preocoding
 
 # Directly configure the precoding configuration
-modem.precoding[0] = SymbolPrecoder()
-modem.precoding[1] = SymbolPrecoder()
+modem.transmit_symbol_coding[0] = TransmitSymbolEncoder()
+modem.receive_symbol_coding[1] = ReceiveSymbolDecoder()

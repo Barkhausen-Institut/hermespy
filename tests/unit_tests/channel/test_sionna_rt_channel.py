@@ -65,12 +65,6 @@ class TestSionnaRTChannel(unittest.TestCase):
         self.assertEqual(self.channel.scene, self.realization.scene)
         # sample implimentation does not store the scene so it cannot be asserted here
 
-        # Assert devices
-        self.assertEqual(self.sample_forward.transmitter_state.device, self.alpha_device)
-        self.assertEqual(self.sample_forward.receiver_state.device, self.beta_device)
-        self.assertEqual(self.sample_backward.transmitter_state.device, self.beta_device)
-        self.assertEqual(self.sample_backward.receiver_state.device, self.alpha_device)
-
     def test_expected_energy_scale(self) -> None:
         """Channel sample should correctly calculate energy scaling.
         TODO current method implementation is not correct. Fix this test after the method is fixed.
@@ -148,7 +142,7 @@ class TestSionnaRTChannel(unittest.TestCase):
 
         # Init test signal
         signal_shape = (self.alpha_device.num_transmit_antennas, 150)
-        samples = np.empty(signal_shape, np.complex_)
+        samples = np.empty(signal_shape, np.complex128)
         signal_orig = Signal.Create(samples, self.sampling_rate, self.carrier_freq)
 
         # Test state
@@ -171,7 +165,5 @@ class TestSionnaRTChannel(unittest.TestCase):
                 0,
                 self.carrier_freq,
                 self.sampling_rate)
-            self.assertIs(self.alpha_device, rSample.transmitter_state.device)
-            self.assertIs(self.beta_device, rSample.receiver_state.device)
             self.assertEqual(rSample.carrier_frequency, self.carrier_freq)
             self.assertEqual(rSample.bandwidth, self.sampling_rate)

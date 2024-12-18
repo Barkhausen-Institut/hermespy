@@ -160,7 +160,7 @@ class SingleTargetRadarChannelRealization(RadarChannelRealization):
     ) -> SingleTargetRadarChannelRealization:
         target_velocity: np.ndarray | Tuple[float, float] | float
         if "target_velocity" in group:  # pragma: no cover
-            target_velocity = np.asarray(group["target_velocity"], dtype=np.float_)
+            target_velocity = np.asarray(group["target_velocity"], dtype=np.float64)
         else:
             target_velocity = HDFSerializable._range_from_HDF(group, "target_velocity")
 

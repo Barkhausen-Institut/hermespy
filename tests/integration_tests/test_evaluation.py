@@ -39,7 +39,8 @@ class TestEvaluators(TestCase):
 
         self.modem = DuplexModem()
         self.modem.waveform = waveform
-        self.modem.device = self.device
+        self.device.transmitters.add(self.modem)
+        self.device.receivers.add(self.modem)
 
         investigated_object = InvestigatedObject()
         self.dimension = GridDimension(investigated_object, "dimension", [0], "title")
@@ -47,9 +48,8 @@ class TestEvaluators(TestCase):
     def _test_evaluator(self, evaluator: Evaluator) -> None:
         """Generate a result from a given evaluator and test its plotting routine."""
 
-        transmission = self.modem.transmit()
-        self.device.process_input(transmission.signal)
-        _ = self.modem.receive()
+        transmission = self.device.transmit()
+        self.device.receive(transmission)
 
         try:
             evaluation = evaluator.evaluate()

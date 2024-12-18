@@ -116,7 +116,7 @@ class SelectiveLeakage(Serializable, Isolation):
     def _leak(self, signal: Signal) -> Signal:
         num_leaked_samples = self.leakage_response.shape[2] + signal.num_samples - 1
         leaking_samples = np.zeros(
-            (self.leakage_response.shape[0], num_leaked_samples), dtype=np.complex_
+            (self.leakage_response.shape[0], num_leaked_samples), dtype=np.complex128
         )
 
         for m, n in np.ndindex(self.leakage_response.shape[0], signal.num_streams):

@@ -70,7 +70,7 @@ class TestLibraryExamples(TestCase):
             import getting_started_loop  # type: ignore  # noqa: F401
         except Exception as e:
             self.fail(f"Exception raised: {e}")
-            
+
     def test_getting_started_mobility(self) -> None:
         """Test getting started library mobility example execution"""
 

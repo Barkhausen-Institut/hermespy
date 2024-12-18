@@ -82,7 +82,9 @@ class TestMIMOLink(TestCase):
             seed=42,
         )
 
-        self.link = SimplexLink(self.tx_device, self.rx_device)
+        self.link = SimplexLink()
+        self.tx_device.transmitters.add(self.link)
+        self.rx_device.receivers.add(self.link)
         self.link.waveform = self.__configure_ofdm_waveform(self.channel)
 
     def __propagate(self) -> Tuple[CommunicationTransmission, CommunicationReception]:
@@ -119,7 +121,8 @@ class TestMIMOLink(TestCase):
         self.tx_device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 0.5 * self.wavelength, [2])
         self.rx_device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 0.5 * self.wavelength, [1])
 
-        self.link.precoding[0] = Alamouti()
+        self.link.transmit_symbol_coding[0] = Alamouti()
+        self.link.receive_symbol_coding[0] = Alamouti()
         self.link.waveform.channel_estimation = OFDMIdealChannelEstimation(self.channel, self.tx_device, self.rx_device)
         self.link.waveform.channel_equalization = ChannelEqualization()
 
@@ -132,8 +135,8 @@ class TestMIMOLink(TestCase):
         self.tx_device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 0.5 * self.wavelength, [4])
         self.rx_device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 0.5 * self.wavelength, [1])
 
-        self.link.precoding[0] = Ganesan()
-        self.link.precoding[0] = Ganesan()
+        self.link.transmit_symbol_coding[0] = Ganesan()
+        self.link.receive_symbol_coding[0] = Ganesan()
         self.link.waveform.channel_estimation = OFDMIdealChannelEstimation(self.channel, self.tx_device, self.rx_device)
         self.link.waveform.channel_equalization = ChannelEqualization()
 

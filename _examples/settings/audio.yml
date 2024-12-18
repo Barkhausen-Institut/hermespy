@@ -14,6 +14,8 @@
       playback_channels: [1]
       record_channels: [1]
       max_receive_delay: 1.
+      transmitters: [ *modem ]
+      receivers: [ *modem ]
 
 
   # Operators transmitting or receiving signals over the devices
@@ -22,8 +24,6 @@
     # A single modem operating the device #0
     - &modem !<Modem>
 
-      device: *device                     # Device the modem is operating on
-      
       # Configuration of the waveform emitted by this transmitter
       waveform: !<OFDM>
 

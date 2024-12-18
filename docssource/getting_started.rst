@@ -72,7 +72,7 @@ They form HermesPy's general abstraction for digital signal processing applied b
 
    click oai "api/core.device.Transmitter.html" "Transmitter"
    click obi "api/core.device.Transmitter.html" "Transmitter"
-   click dai "api/core.device.Device.html" "Device"  
+   click dai "api/core.device.Device.html" "Device"
    click dbi "api/core.device.Device.html" "Device"
    click dao "api/core.device.Device.html" "Device"
    click dbo "api/core.device.Device.html" "Device"
@@ -185,7 +185,7 @@ HermesPy offers the :doc:`SimplexLink<api/modem.modem.SimplexLink>` class, which
 .. literalinclude:: ../_examples/library/getting_started_simulation.py
    :language: python
    :linenos:
-   :lines: 22-23
+   :lines: 22-25
 
 The :doc:`Modem<api/modem>` package provides a range of communication waveform implementations,
 for this minimal introduction we will choose a :doc:`Root-Raised-Cosine<api/modem.waveform.single_carrier.RootRaisedCosine>` single carrier waveform:
@@ -193,7 +193,7 @@ for this minimal introduction we will choose a :doc:`Root-Raised-Cosine<api/mode
 .. literalinclude:: ../_examples/library/getting_started_simulation.py
    :language: python
    :linenos:
-   :lines: 25-28
+   :lines: 27-32
 
 We may now already directly call the :doc:`SimplexLink<api/modem.modem.SimplexLink>`'s transmit and receive rountines to directly generate, process and visualize
 the generated information such as base-band waveforms and symbol constellations:
@@ -201,7 +201,7 @@ the generated information such as base-band waveforms and symbol constellations:
 .. literalinclude:: ../_examples/library/getting_started_simulation.py
    :language: python
    :linenos:
-   :lines: 32-38
+   :lines: 36-32
 
 This will bypass physical layer simulations including device and channel models and directly receive the transmitted waveform, resulting in perfect information recovery.
 Refering back to the intial architecture graph, we patched the transmit layer directly into the receive layer.
@@ -215,7 +215,7 @@ The generated information is collected in :doc:`SimulatedDrops<api/simulation.si
 .. literalinclude:: ../_examples/library/getting_started_simulation.py
    :language: python
    :linenos:
-   :lines: 40-43
+   :lines: 44-47
 
 After the generation of a new :doc:`SimulatedDrop<api/simulation.simulation.SimulatedDrop>`,
 :doc:`Evaluators<api/core.monte_carlo.Evaluator>` may be used to conveniently extract performance information.
@@ -224,7 +224,7 @@ For instance, the bit error rate of the generated drop may be extracted by a :do
 .. literalinclude:: ../_examples/library/getting_started_simulation.py
    :language: python
    :linenos:
-   :lines: 45-47
+   :lines: 49-50
 
 This is the core routine of a typical Monte Carlo simulation, which is usually conducted over a grid of parameter values.
 For each parameter combination, a new :doc:`SimulatedDrop<api/simulation.simulation.SimulatedDrop>` is generated and evaluated.
@@ -239,7 +239,7 @@ can be launched by executing
 .. literalinclude:: ../_examples/library/getting_started_simulation.py
    :language: python
    :linenos:
-   :lines: 49-54
+   :lines: 42-57
 
 which will result in a rendered plot being generated.
 The full code snippet implementing the above introduction can be downloaded from `GitHub - Getting Started Simulation <https://github.com/Barkhausen-Institut/hermespy/blob/main/_examples/library/getting_started_simulation.py>`_.
@@ -315,7 +315,7 @@ HermesPy offers the :doc:`SimplexLink<api/modem.modem.SimplexLink>` class, which
 .. literalinclude:: ../_examples/library/getting_started_loop.py
    :language: python
    :linenos:
-   :lines: 19-20
+   :lines: 19-22
 
 The :doc:`Modem<api/modem>` package provides a range of communication waveform implementations,
 for this minimal introduction we will choose a :doc:`Root-Raised-Cosine<api/modem.waveform.single_carrier.RootRaisedCosine>` single carrier waveform:
@@ -323,7 +323,7 @@ for this minimal introduction we will choose a :doc:`Root-Raised-Cosine<api/mode
 .. literalinclude:: ../_examples/library/getting_started_loop.py
    :language: python
    :linenos:
-   :lines: 22-27
+   :lines: 24-29
 
 Just like the simulation pipeline, the hardware loop runtime will generate drops to be evaluated.
 However, instead of multiple drops being generated in parallel, the hardware loop's drop generation is performed sequentially by triggering
@@ -336,7 +336,7 @@ For instance, the bit error rate of the generated drop may be extracted by a :do
 .. literalinclude:: ../_examples/library/getting_started_loop.py
    :language: python
    :linenos:
-   :lines: 29-31
+   :lines: 31-33
 
 Working with real hardware usually requires a lot of oversight and debugging,
 so the :doc:`HardwareLoop<api/hardware_loop.hardware_loop.HardwareLoop>` features a visualization
@@ -345,7 +345,7 @@ interface which will render plots of required information in real-time:
 .. literalinclude:: ../_examples/library/getting_started_loop.py
    :language: python
    :linenos:
-   :lines: 33-36
+   :lines: 35-38
 
 The plots will be updated with each new :doc:`Drop<api/core.drop.Drop>`.
 An overview of existing visualization routines can be found in :doc:`Visualizers<api/hardware_loop.visualizers>`.
@@ -356,7 +356,7 @@ can be configured to iterate over a grid of parameter values and generate a fixe
 .. literalinclude:: ../_examples/library/getting_started_loop.py
    :language: python
    :linenos:
-   :lines: 38-43
+   :lines: 40-42
 
 Setting the `results_dir` parameter will result in a consolidation of all drop data and evaluations into a single `drops.h5` file within the respective directory.
 The data can be accessed by the user for further processing, or even directly replayed by the :doc:`HardwareLoop<api/hardware_loop.hardware_loop.HardwareLoop>`:
@@ -364,7 +364,7 @@ The data can be accessed by the user for further processing, or even directly re
 .. literalinclude:: ../_examples/library/getting_started_loop.py
    :language: python
    :linenos:
-   :lines: 45-46
+   :lines: 44-45
 
 The full code snippet implementing the above introduction can be downloaded from `GitHub - Getting Started Loop <https://github.com/Barkhausen-Institut/hermespy/blob/main/_examples/library/getting_started_loop.py>`_.
 For more complex simulation examples and instructions on how to integrate and evaluate your own signal processing algorithms in HermesPy,

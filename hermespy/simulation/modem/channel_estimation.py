@@ -111,9 +111,6 @@ class IdealChannelEstimation(Generic[CWT], ChannelEstimation[CWT]):
         if self.waveform is None:
             raise RuntimeError("Ideal channel state estimation routine floating")
 
-        if self.waveform.modem is None or self.waveform.modem.receiving_device is None:
-            raise RuntimeError("Operating modem floating")
-
         if self.__cached_sample is None:
             raise RuntimeError(
                 "No channel sample available from which to estimate the ideal channel state information"
@@ -239,7 +236,7 @@ class OFDMIdealChannelEstimation(IdealChannelEstimation[OFDMWaveform], Serializa
 
         symbol_csi = np.zeros(
             (symbols.num_streams, ideal_csi.shape[1], symbols.num_blocks, symbols.num_symbols),
-            dtype=np.complex_,
+            dtype=np.complex128,
         )
 
         sample_index = 0

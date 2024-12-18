@@ -190,8 +190,8 @@ class DualConsistentRealization(ConsistentRealization):
 
     @classmethod
     def from_HDF(cls, group: Group) -> DualConsistentRealization:
-        frequencies = np.array(group["frequencies"], dtype=np.float_)
-        phases = np.array(group["phases"], dtype=np.float_)
+        frequencies = np.array(group["frequencies"], dtype=np.float64)
+        phases = np.array(group["phases"], dtype=np.float64)
         return DualConsistentRealization(frequencies, phases)
 
 
@@ -236,7 +236,7 @@ class StaticConsistentRealization(ConsistentRealization):
 
     @classmethod
     def from_HDF(cls, group: Group) -> StaticConsistentRealization:
-        return StaticConsistentRealization(np.array(group["scalar_samples"], dtype=np.float_))
+        return StaticConsistentRealization(np.array(group["scalar_samples"], dtype=np.float64))
 
 
 class ConsistentGenerator(object):
@@ -334,8 +334,8 @@ class ConsistentGenerator(object):
             return cached_cdf
 
         # Eq. 12
-        u_candidates = np.linspace(0, 1, 1 + num_samples, endpoint=True, dtype=np.float_)[:-1]
-        radial_velocities = np.empty(num_samples, dtype=np.float_)
+        u_candidates = np.linspace(0, 1, 1 + num_samples, endpoint=True, dtype=np.float64)[:-1]
+        radial_velocities = np.empty(num_samples, dtype=np.float64)
         a = 1 / decorrelation_distance
 
         fr_max = 1

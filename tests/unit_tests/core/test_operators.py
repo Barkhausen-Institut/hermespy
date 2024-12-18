@@ -69,8 +69,8 @@ class TestSilentTransmitter(TestCase):
     def test_transmit(self) -> None:
         """Silent transmission should generate a silent signal"""
 
-        default_transmission = self.transmitter.transmit()
-        custom_transmission = self.transmitter.transmit(10 / self.device.sampling_rate)
+        default_transmission = self.transmitter.transmit(self.device.state())
+        custom_transmission = self.transmitter.transmit(self.device.state(), duration=10 / self.device.sampling_rate)
 
         self.assertEqual(self.num_samples, default_transmission.signal.num_samples)
         self.assertCountEqual([0] * 10, custom_transmission.signal.getitem(0).flatten().tolist())
@@ -104,14 +104,14 @@ class TestSignalTransmitter(TestCase):
     def test_transmit(self) -> None:
         """Transmit routine should transmit the submitted signal samples"""
 
-        transmission = self.transmitter.transmit()
+        transmission = self.transmitter.transmit(self.device.state())
 
         assert_array_equal(self.signal.getitem(), transmission.signal.getitem())
 
     def test_recall_transmission(self) -> None:
         """Recall transmission should recall the last transmission"""
 
-        transmission = self.transmitter.transmit()
+        transmission = self.transmitter.transmit(self.device.state())
 
         with TemporaryDirectory() as temp:
             file_location = join(temp, "test.h5")
@@ -154,8 +154,8 @@ class TestSignalReceiver(TestCase):
         """Receiver should receive a signal"""
 
         power_signal = Signal.Create(np.ones((1, 10)), sampling_rate=self.device.sampling_rate, carrier_frequency=self.device.carrier_frequency)
-        self.device.process_input(power_signal)
+        device_state = self.device.state()
+        processed_input = self.device.process_input(power_signal, device_state)
+        reception = self.receiver.receive(processed_input.operator_inputs[0], device_state)
 
-        received_signal = self.receiver.receive().signal
-
-        assert_array_equal(received_signal.getitem(), power_signal.getitem())
+        assert_array_equal(reception.signal.getitem(), power_signal.getitem())

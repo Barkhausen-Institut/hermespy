@@ -27,8 +27,6 @@ class TestSCMatchedFilterJcas(TestCase):
 
     def setUp(self) -> None:
         self.rng = default_rng(42)
-        self.device = SimulatedDevice()
-        self.device.carrier_frequency = 1e9
 
         self.target_range = 5
         self.max_range = 10
@@ -37,12 +35,15 @@ class TestSCMatchedFilterJcas(TestCase):
         self.oversampling_factor = 16
 
         self.operator = MatchedFilterJcas(self.max_range)
-        self.operator.device = self.device
         self.operator.waveform = RootRaisedCosineWaveform(oversampling_factor=self.oversampling_factor, modulation_order=4, num_preamble_symbols=20, num_data_symbols=100, pilot_rate=10, symbol_rate=1e6)
         self.operator.waveform.pilot_symbol_sequence = CustomPilotSymbolSequence(np.array([1, -1, 1j, -1j]))
         self.operator.waveform.synchronization = SingleCarrierCorrelationSynchronization()
         self.operator.waveform.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
         self.operator.waveform.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
+
+        self.device = SimulatedDevice()
+        self.device.carrier_frequency = 1e9
+        self.device.add_dsp(self.operator)
 
     def test_jcas(self) -> None:
         """The target distance should be properly estimated while transmitting information."""
@@ -55,7 +56,7 @@ class TestSCMatchedFilterJcas(TestCase):
             propagation = self.channel.propagate(transmission, self.device, self.device)
 
             # Receive signal
-            self.device.receive(propagation)
+            reception = self.device.receive(propagation).operator_receptions[0]
 
             # The bits should be recovered correctly
-            assert_array_equal(self.operator.transmission.bits, self.operator.reception.bits)
+            assert_array_equal(transmission.operator_transmissions[0].bits, reception.bits)

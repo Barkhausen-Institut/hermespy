@@ -28,12 +28,14 @@ terminal.trajectory = LinearTrajectory(
 
 # Configure a downlink communicating between base station and terminal
 # via a single-carrier waveform
-link = SimplexLink(base_station, terminal)
+link = SimplexLink()
 link.waveform = RootRaisedCosineWaveform(symbol_rate=1e6, oversampling_factor=8,
                                          num_preamble_symbols=10, num_data_symbols=100,
                                          roll_off=.9)
 link.waveform.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
 link.waveform.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
+base_station.transmitters.add(link)
+terminal.receivers.add(link)
 
 # Specify the channel model between base station and terminal
 channel = IndoorOffice(expected_state=LOSState.LOS)

@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from fractions import Fraction
 
 import numpy as np
 from sparse import SparseArray  # type: ignore
 
 from hermespy.core import Serializable
 from ..symbols import StatedSymbols
-from .symbol_precoding import SymbolPrecoder
+from .symbol_precoding import TransmitSymbolEncoder, ReceiveSymbolDecoder
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -20,7 +19,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class Alamouti(SymbolPrecoder, Serializable):
+class Alamouti(TransmitSymbolEncoder, ReceiveSymbolDecoder, Serializable):
     """Alamouti precoder distributing symbols in space and time.
 
     Support for 2 transmit antennas only.
@@ -29,51 +28,68 @@ class Alamouti(SymbolPrecoder, Serializable):
 
     yaml_tag = "ALAMOUTI"
 
-    def encode(self, symbols: StatedSymbols) -> StatedSymbols:
+    def __init__(self) -> None:
+        # Initialize base classes
+        TransmitSymbolEncoder.__init__(self)
+        ReceiveSymbolDecoder.__init__(self)
+        Serializable.__init__(self)
+
+    def encode_symbols(self, symbols: StatedSymbols, num_output_streams: int) -> StatedSymbols:
         """Encode data into multiple antennas with space-time/frequency block codes.
 
         Args:
-            symbols (StatedSymbols): Input signal featuring :math:`K` blocks.
+
+            symbols (StatedSymbols):
+                Input signal featuring :math:`K` blocks.
+
+            num_output_streams (int):
+                Number of required streams resulting from the encoding process.
+                Should always be 2 for Alamouti encoding.
 
         Returns: Encoded data with size :math:`2 \\times K` symbols
 
         Raises:
 
             ValueError: If more than a single symbol stream is provided.
-            RuntimeError: If the number of transmit antennas is not two.
+            ValueError: If the number of transmit antennas is not two.
             ValueError: If the number of data symbols is not even.
         """
 
         if symbols.num_streams != 1:
             raise ValueError("Space-Time block codings require a single symbol input stream")
 
-        num_tx_streams = self.required_num_output_streams
         input_data = symbols.raw[0, :, :]
 
         # 2x2 MIMO Alamouti code
-        if num_tx_streams != 2:
-            raise RuntimeError(
-                f"Alamouti encoding requires two transmit antennas ({num_tx_streams} requested)"
+        if num_output_streams != 2:
+            raise ValueError(
+                f"Alamouti encoding requires two transmit antennas ({num_output_streams} requested)"
             )
 
         if symbols.num_blocks % 2 != 0:
             raise ValueError("Alamouti encoding must contain an even amount of data symbols blocks")
 
-        output = np.empty((2, symbols.num_blocks, symbols.num_symbols), dtype=np.complex_)
+        output = np.empty((2, symbols.num_blocks, symbols.num_symbols), dtype=np.complex128)
         output[0, :, :] = input_data
         output[1, 0::2, :] = -input_data[1::2, :].conj()
         output[1, 1::2, :] = input_data[0::2, :].conj()
 
-        state = np.repeat(symbols.states, num_tx_streams, axis=0)
+        state = np.repeat(symbols.states, num_output_streams, axis=0)
         return StatedSymbols(output, state)
 
-    def decode(self, symbols: StatedSymbols) -> StatedSymbols:
+    def decode_symbols(self, symbols: StatedSymbols, num_output_streams: int) -> StatedSymbols:
         """Decode data for STBC with 2 antenna streams
 
         Received signal with equal noise power is assumed, the decoded signal has same noise level as input.
 
         Args:
-            symbols (StatedSymbols): Input signal with :math:`N \\times K` symbol blocks.
+
+            symbols (StatedSymbols):
+                Input signal with :math:`N \\times K` symbol blocks.
+
+            num_output_streams (int):
+                Number of required streams resulting from the decoding process.
+                 Will be ignored by this decoder.
 
         Returns: Decoded data with size :math:`N \\times K`
         """
@@ -107,18 +123,30 @@ class Alamouti(SymbolPrecoder, Serializable):
             ),
         )
 
-    @property
-    def num_input_streams(self) -> int:
-        # Alamouti coding requires a single symbol input stream
-        return 1
+    def _num_transmit_input_streams(self, num_output_streams: int) -> int:
+        return 1 if num_output_streams == 2 else -1
+
+    def num_receive_output_streams(self, num_input_streams: int) -> int:
+        return num_input_streams
 
     @property
-    def num_output_streams(self) -> int:
-        # Alamouti coding will always produce 2 symbol output streams
+    def num_transmit_input_symbols(self) -> int:
+        return 2
+
+    @property
+    def num_transmit_output_symbols(self) -> int:
+        return 2
+
+    @property
+    def num_receive_input_symbols(self) -> int:
+        return 2
+
+    @property
+    def num_receive_output_symbols(self) -> int:
         return 2
 
 
-class Ganesan(SymbolPrecoder, Serializable):
+class Ganesan(TransmitSymbolEncoder, ReceiveSymbolDecoder, Serializable):
     """Girish Ganesan and Petre Stoica general precoder distributing symbols in space and time.
 
     Supports 4 transmit antennas. Features a :math:`\\frac{3}{4}` symbol rate.
@@ -127,12 +155,18 @@ class Ganesan(SymbolPrecoder, Serializable):
 
     yaml_tag = "GANESAN"
 
-    def encode(self, symbols: StatedSymbols) -> StatedSymbols:
+    def encode_symbols(self, symbols: StatedSymbols, num_output_streams: int) -> StatedSymbols:
         """Encode data into multiple antennas with space-time/frequency block codes.
         Note that Ganesan schema's symbol rate is :math:`\\frac{3}{4}` so the encoding process increases the number of blocks by :math:`\\frac{4}{3}`.
 
         Args:
-            symbols (StatedSymbols): Input signal featuring :math:`K` blocks.
+
+            symbols (StatedSymbols):
+                Input signal featuring :math:`K` blocks.
+
+            num_output_streams (int):
+                Number of required streams resulting from the encoding process.
+                Should always be 4 for Ganesan encoding.
 
         Returns:
             Encoded data with size :math:`\\frac{4}{3} \\times K` symbol blocks. Thus num_blocks is changed to num_blocks / 3 * 4.
@@ -147,20 +181,19 @@ class Ganesan(SymbolPrecoder, Serializable):
         if symbols.num_streams != 1:
             raise ValueError("Space-Time block codings require a single symbol input stream")
 
-        num_tx_streams = self.required_num_output_streams
         input_data = symbols.raw[0, :, :]
 
-        if num_tx_streams != 4:
+        if num_output_streams != 4:
             raise RuntimeError(
-                f"Ganesan encoding requires 4 transmit antennas ({num_tx_streams} requested)"
+                f"Ganesan encoding requires 4 transmit antennas ({num_output_streams} requested)"
             )
 
         if symbols.num_blocks % 3 != 0:
             raise ValueError("Number of blocks must be divisable by 3.")
 
         # Change symbol block amount because of the 3/4 symbol rate.
-        output = np.empty((4, symbols.num_blocks // 3 * 4, symbols.num_symbols), dtype=np.complex_)
-        zero = np.zeros((symbols.num_blocks // 3, symbols.num_symbols), dtype=np.complex_)
+        output = np.empty((4, symbols.num_blocks // 3 * 4, symbols.num_symbols), dtype=np.complex128)
+        zero = np.zeros((symbols.num_blocks // 3, symbols.num_symbols), dtype=np.complex128)
         # Encode data explicitly element-wise.
         # Notice that matrix Z (Eq. 41) is m by N in the paper,
         # where m = num Tx, and N = num symbol periods,
@@ -192,12 +225,18 @@ class Ganesan(SymbolPrecoder, Serializable):
         st = np.ones((4, st.shape[1], st.shape[2] // 3 * 4, st.shape[3]))
         return StatedSymbols(output, st)
 
-    def decode(self, symbols: StatedSymbols) -> StatedSymbols:
+    def decode_symbols(self, symbols: StatedSymbols, num_output_streams: int) -> StatedSymbols:
         """Decode data for STBC with 4 antenna streams
         Note that Ganesan schema's symbol rate is :math:`\\frac{3}{4}` so the decoding process decreases the number of blocks by :math:`\\frac{3}{4}`.
 
         Args:
-            symbols (StatedSymbols): Input signal with :math:`4 \\times N` symbol blocks.
+
+            symbols (StatedSymbols):
+                Input signal with :math:`4 \\times N` symbol blocks.
+
+            num_output_streams (int):
+                Number of required streams resulting from the decoding process.
+                Will be ignored by this decoder.
 
         Returns:
             Decoded data with size :math:`3 \\times N`
@@ -220,7 +259,7 @@ class Ganesan(SymbolPrecoder, Serializable):
         # Init the decoded symbols ndarray. Notice that num_blocks is reduced because of the 3/4 symbol rate.
         num_rx = symbols.num_streams
         decoded_symbols = np.empty(
-            (num_rx, symbols.num_blocks // 4 * 3, symbols.num_symbols), dtype=np.complex_
+            (num_rx, symbols.num_blocks // 4 * 3, symbols.num_symbols), dtype=np.complex128
         )
 
         # split the r vector onto real and imag vectors and concatenate them
@@ -248,11 +287,11 @@ class Ganesan(SymbolPrecoder, Serializable):
 
         # Init result(decoded_symbols), matrix A(an) and estimator with lhs(b) of the linear system
         decoded_symbols = np.empty(
-            (num_rx, symbols.num_blocks * 3 // 4, symbols.num_symbols), dtype=np.complex_
+            (num_rx, symbols.num_blocks * 3 // 4, symbols.num_symbols), dtype=np.complex128
         )
-        an = np.empty((num_rx, 6, 8, symbols.num_symbols), dtype=np.float_)
-        estimator = np.empty((symbols.num_symbols, symbols.num_streams, 6, 8), dtype=np.float_)
-        b = np.empty((num_rx, 8, symbols.num_symbols), dtype=np.float_)
+        an = np.empty((num_rx, 6, 8, symbols.num_symbols), dtype=np.float64)
+        estimator = np.empty((symbols.num_symbols, symbols.num_streams, 6, 8), dtype=np.float64)
+        b = np.empty((num_rx, 8, symbols.num_symbols), dtype=np.float64)
 
         # Init einsum paths to optimize einsum in the future
         an_path = np.einsum_path("ikjl,jk->lijk", an, signs_matrix, optimize="optimal")[0]
@@ -291,14 +330,24 @@ class Ganesan(SymbolPrecoder, Serializable):
         ideal_states = np.ones((num_rx, 1, decoded_symbols.shape[1], decoded_symbols.shape[2]))
         return StatedSymbols(decoded_symbols, ideal_states)
 
-    @property
-    def num_input_streams(self) -> int:
-        return 1
+    def _num_transmit_input_streams(self, num_output_streams: int) -> int:
+        return 1 if num_output_streams == 4 else -1
+
+    def num_receive_output_streams(self, num_input_streams: int) -> int:
+        return num_input_streams
 
     @property
-    def num_output_streams(self) -> int:
+    def num_transmit_input_symbols(self) -> int:
+        return 3
+
+    @property
+    def num_transmit_output_symbols(self) -> int:
         return 4
 
     @property
-    def rate(self) -> Fraction:
-        return Fraction(3, 4)
+    def num_receive_input_symbols(self) -> int:
+        return 4
+
+    @property
+    def num_receive_output_symbols(self) -> int:
+        return 3
