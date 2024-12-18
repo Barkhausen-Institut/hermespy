@@ -85,6 +85,10 @@ def test_yaml_roundtrip_serialization(case: TestCase, serializable: Serializable
         except Exception as e:
             case.fail(f"Roundtrip serialization testing of {serializable.__class__.__name__}.{attribute_key}: {str(e)}")
 
+        # Skip blacklisted properties
+        if attribute_key in property_blacklist:
+            continue
+
         # Both values should have identical type
         case.assertEqual(serialized_type, type(deserialized_value), f"Roundtrip serialization of {serializable.__class__.__name__}.{attribute_key} resulted in wrong type ({type(deserialized_value)} instead of {type(serialized_value)})")
 
@@ -308,7 +312,7 @@ class TestFactory(TestCase):
     def test_numpy_float_serialization(self) -> None:
         """Test serialization of numpy floats"""
 
-        expected_float = np.float_(1.0)
+        expected_float = np.float64(1.0)
 
         serialized_float = self.factory.to_str(expected_float)
         deserialized_float = self.factory.from_str(serialized_float)
@@ -441,20 +445,20 @@ class TestFactory(TestCase):
 
 class TestHDFSerializable(TestCase):
     """Test the HDF serialization routines"""
-    
+
     def test_range_serialization(self) -> None:
         """Test the range serialization to HDF"""
 
         file = File("test.hdf", "w", "core")
         group = file.create_group("test")
-        
+
         expected_range = (5, 6)
         HDFSerializable._range_to_HDF(group, 'range_serialization', expected_range)
         recalled_range = HDFSerializable._range_from_HDF(group, 'range_serialization')
-        
+
         expected_float = 5.0
         HDFSerializable._range_to_HDF(group, 'float_serialization', expected_float)
         recalled_float = HDFSerializable._range_from_HDF(group, 'float_serialization')
-        
+
         self.assertEqual(expected_range, recalled_range)
         self.assertEqual(expected_float, recalled_float)

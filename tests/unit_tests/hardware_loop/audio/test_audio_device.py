@@ -3,10 +3,10 @@
 from unittest import TestCase
 
 import numpy as np
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 from numpy.testing import assert_array_almost_equal
 
-from hermespy.core import DuplexOperator, Reception, Signal, Transmission
+from hermespy.core import Reception, Receiver, ReceiveState, Signal, Transmission, TransmitState, Transmitter
 from hermespy.hardware_loop.audio import AudioDevice
 from hermespy.hardware_loop.audio.device import AudioAntenna, AudioDeviceAntennas, AudioPlaybackPort, AudioRecordPort
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
@@ -21,36 +21,36 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class SineOperator(DuplexOperator[Transmission, Reception]):
+class SineOperator(Transmitter[Transmission], Receiver[Reception]):
     """Operator transmitting a sine wave for testing purposes."""
 
     __duration: float
     __frequency: float
 
     def __init__(self, duration=3, frequency=-5e3) -> None:
+        Transmitter.__init__(self)
+        Receiver.__init__(self)
         self.__duration = duration
         self.__frequency = frequency
 
-        DuplexOperator.__init__(self)
-        
     @property
     def power(self) -> float:
         return 1.0
 
-    def _transmit(self, duration: float = 0.0) -> Transmission:
+    def _transmit(self, device: TransmitState, duration: float) -> Transmission:
         sine = np.exp(2j * np.pi * np.arange(int(self.__duration * self.sampling_rate)) / self.sampling_rate * self.__frequency)
-        signal = Signal.Create(sine[np.newaxis, :], self.sampling_rate, self.device.carrier_frequency)
+        signal = Signal.Create(sine[np.newaxis, :], device.sampling_rate, device.carrier_frequency)
 
-        transmission = Transmission(signal=signal)
+        transmission = Transmission(signal)
         return transmission
 
-    def _receive(self, *args) -> Reception:
-        reception = Reception(signal=self.signal)
+    def _receive(self, signal: Signal, device: ReceiveState) -> Reception:
+        reception = Reception(signal)
         return reception
 
     @property
     def sampling_rate(self) -> float:
-        return self.device.sampling_rate
+        return 40e3
 
     @property
     def frame_duration(self) -> float:
@@ -75,10 +75,10 @@ class TestAudioAntenna(TestCase):
 
     def setUp(self) -> None:
         self.antenna = AudioAntenna()
-        
+
     def test_copy(self) -> None:
         """Test copying the antenna stub"""
-        
+
         copy = self.antenna.copy()
         self.assertEqual(self.antenna.mode, copy.mode)
         assert_array_almost_equal(self.antenna.pose, copy.pose)
@@ -253,17 +253,17 @@ class TestAudioDevice(TestCase):
         with patch.object(self.device, "_import_sd") as import_sd_mock:
             import_sd_mock.return_value = sd_mock
 
-            operator = SineOperator()
-            operator.device = self.device
-            transmission = operator.transmit()
+            state = self.device.state()
+            dsp = SineOperator()
+            self.device.transmitters.add(dsp)
+            self.device.receivers.add(dsp)
 
-            self.device.transmit()
+            transmission = self.device.transmit(state)
             self.device.trigger()
-            self.device.process_input()
+            processed_input = self.device.process_input(state=state)
+            reception = self.device.receive(processed_input.operator_inputs[0], state)
 
-            reception = operator.receive()
-
-        assert_array_almost_equal(transmission.signal.getitem(), reception.signal.getitem())
+        assert_array_almost_equal(transmission.operator_transmissions[0].signal.getitem(), reception.operator_inputs[0].getitem())
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""

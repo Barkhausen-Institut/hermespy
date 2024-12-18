@@ -8,10 +8,35 @@
 
 !<Simulation>
 
+# Operators transmitting or receiving signals over the devices
+Operators:
+
+  # A single modem operating the device #0
+  - &modem_alpha !<Modem>
+
+    # Waveform configuration
+    waveform: !<SC-RootRaisedCosine>
+
+        # Symbol settings
+        symbol_rate: 100e6
+        modulation_order: 16
+        oversampling_factor: 4
+
+        # Frame settings
+        num_preamble_symbols: 10
+        num_data_symbols: 1000
+        pilot_rate: 1e6
+        guard_interval: 1e-6
+
+
 # Physical device models within the simulated scenario
 Devices:
 
-  - &device_alpha !<SimulatedDevice>
+  - !<SimulatedDevice>
+  
+    carrier_frequency: 2.4e9      # Center frequency of Rf-band emitted signal
+    transmitters: [*modem_alpha]  # Transmit DSP layers operating on the device
+    receivers: [*modem_alpha]     # Receive DSP layers operating on the device
 
     # RF-Chain hardware model
     rf_chain: !<RfChain>           
@@ -32,32 +57,11 @@ Devices:
         num_quantization_bits: 16
         gain: !<AutomaticGainControl>
 
-# Operators transmitting or receiving signals over the devices
-Operators:
-
-  # A single modem operating the device #0
-  - &modem_alpha !<Modem>
-
-    device: *device_alpha           # Device the modem is operating on
-
-    # Waveform configuration
-    waveform: !<SC-RootRaisedCosine>
-
-        # Symbol settings
-        symbol_rate: 100e6
-        modulation_order: 16
-        oversampling_factor: 4
-
-        # Frame settings
-        num_preamble_symbols: 10
-        num_data_symbols: 1000
-        pilot_rate: 1e6
-        guard_interval: 1e-6
 
 # Performance indication evaluation configuration
 Evaluators:
 
-  # Evaluate the bit errors of `modem_alpha` communicating over `device_alpha`
+  # Evaluate the bit errors of `modem_alpha` communicating over the device
   - !<BitErrorEvaluator>
 
     transmitting_modem: *modem_alpha

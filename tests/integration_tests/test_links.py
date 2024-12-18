@@ -10,7 +10,6 @@ from hermespy.channel import Channel, IdealChannel, TDL, Cost259, RandomDelayCha
 from hermespy.core import Transformation
 from hermespy.simulation import SimulatedDevice, SimulationScenario, SingleCarrierIdealChannelEstimation, OFDMIdealChannelEstimation, SimulatedUniformArray, SimulatedIdealAntenna
 from hermespy.modem import (
-    SpatialMultiplexing,
     SimplexLink,
     BitErrorEvaluator,
     RootRaisedCosineWaveform,
@@ -61,14 +60,21 @@ class _TestLinksBase(TestCase):
         # Configure a 1x1link scenario
         scenario = SimulationScenario(seed=42)
         carrier_frequency = 2.4e9
-        self.tx_device = scenario.new_device(pose=Transformation.From_Translation(np.array([0, 0, 50])), carrier_frequency=carrier_frequency)
-        self.rx_device = scenario.new_device(pose=Transformation.From_Translation(np.array([80, 80, 20])), carrier_frequency=carrier_frequency)
+        self.tx_device = scenario.new_device(
+            pose=Transformation.From_Translation(np.array([0, 0, 50])),
+            carrier_frequency=carrier_frequency,
+        )
+        self.rx_device = scenario.new_device(
+            pose=Transformation.From_Translation(np.array([80, 80, 20])),
+            carrier_frequency=carrier_frequency,
+        )
         self.rx_device.velocity = 1 * (self.rx_device.position - self.tx_device.position) / np.linalg.norm(self.rx_device.position - self.tx_device.position)
 
         # Define a simplex linke between the two devices
-        self.link = SimplexLink(self.tx_device, self.rx_device)
-        self.link.precoding[0] = SpatialMultiplexing()
-        # self.link.precoding[1] = DFT()
+        self.link = SimplexLink()
+        self.tx_device.transmitters.add(self.link)
+        self.rx_device.receivers.add(self.link)
+        # self.link.precoding[0] = DFT()
 
         self.repeater = RepetitionEncoder(bit_block_size=16)
         self.link.encoder_manager.add_encoder(self.repeater)
@@ -91,13 +97,11 @@ class _TestLinksBase(TestCase):
         channel.seed = 42
         self.link.seed = 42
 
-
         self.device_transmission = self.tx_device.transmit()
         channel_realization = channel.realize()
         self.channel_sample = channel_realization.sample(self.tx_device, self.rx_device)
         channel_propagation = self.channel_sample.propagate(self.device_transmission)
-        self.rx_device.process_input(channel_propagation)
-        self.link_reception = self.link.receive()
+        self.rx_device.receive(channel_propagation)
 
         # Debug:
         #

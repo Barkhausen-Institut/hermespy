@@ -19,7 +19,7 @@ attribute:
 .. literalinclude:: ../scripts/examples/modem_precoding_dft.py
    :language: python
    :linenos:
-   :lines: 18-42
+   :lines: 17-42
 
 .. autoclass:: hermespy.modem.precoding.dft.DFT
 

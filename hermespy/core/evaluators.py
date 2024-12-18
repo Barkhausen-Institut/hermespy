@@ -8,7 +8,8 @@ import matplotlib.pyplot as plt
 
 import numpy as np
 
-from .device import Device, Receiver, Transmitter
+from .device import Receiver, Reception, Transmitter, Transmission
+from .hooks import Hook
 from .monte_carlo import Artifact, Evaluation, ScalarEvaluationResult, Evaluator, GridDimension
 from .visualize import StemVisualization, VAT
 
@@ -151,7 +152,8 @@ class PowerEvaluation(Evaluation[StemVisualization]):
 class ReceivePowerEvaluator(Evaluator):
     """Estimates the signal power received receivers."""
 
-    __target: Receiver
+    __receive_hook: Hook[Reception]
+    __reception: Reception | None
 
     def __init__(self, target: Receiver, plot_scale: str = "log") -> None:
         """
@@ -169,20 +171,22 @@ class ReceivePowerEvaluator(Evaluator):
         Evaluator.__init__(self)
 
         # Initialize class members
-        self.__target = target
+        self.__receive_hook = target.add_receive_callback(self.__receive_callback)
+        self.__reception = None
         self.plot_scale = plot_scale
 
-    @property
-    def target(self) -> Receiver:
-        """The device or receiver to measure the received power of."""
+    def __receive_callback(self, reception: Reception) -> None:
+        """Callback function notifying the evaluator of a new reception."""
 
-        return self.__target
+        self.__reception = reception
 
     def evaluate(self) -> PowerEvaluation:
-        if self.target.reception is None:
-            raise RuntimeError("The target has no reception to evaluate")
+        if self.__reception is None:
+            raise RuntimeError(
+                "Power evaluator could not fetch reception. Has the receiver received data?"
+            )
 
-        power = self.target.reception.signal.power
+        power = self.__reception.signal.power
         return PowerEvaluation(power)
 
     @property
@@ -194,13 +198,12 @@ class ReceivePowerEvaluator(Evaluator):
         return "Receive Power"
 
     def generate_result(self, grid: Sequence[GridDimension], artifacts: np.ndarray) -> PowerResult:
-        device: Device | None = self.target.device
-        if device is None:
-            raise RuntimeError("The target has no device to evaluate")
-
-        average_powers = np.zeros(
-            (*artifacts.shape, self.target.num_receive_ports), dtype=np.float_
+        # Find the maximum number of receive ports over all artifacts
+        max_ports = max(
+            max(artifact.power.size for artifact in artifacts) for artifacts in artifacts.flat
         )
+
+        average_powers = np.zeros((*artifacts.shape, max_ports), dtype=np.float64)
         for grid_index, artifacts in np.ndenumerate(artifacts):
             for artifact in artifacts:
                 average_powers[grid_index] += artifact.power
@@ -211,18 +214,22 @@ class ReceivePowerEvaluator(Evaluator):
 
         return PowerResult(average_powers, grid, self)
 
+    def __del__(self) -> None:
+        self.__receive_hook.remove()
+
 
 class TransmitPowerEvaluator(Evaluator):
     """Estimates the signal power transmitted by transmitters."""
 
-    __target: Transmitter
+    __transmit_hook: Hook[Transmission]
+    __transmission: Transmission | None
 
     def __init__(self, target: Transmitter, plot_scale: str = "log") -> None:
         """
 
         Args:
 
-            target (Receiver):
+            target (Transmitter):
                 The device or receiver to measure the received power of.
 
             plot_scale (str):
@@ -233,20 +240,22 @@ class TransmitPowerEvaluator(Evaluator):
         Evaluator.__init__(self)
 
         # Initialize class members
-        self.__target = target
+        self.__transmit_hook = target.add_transmit_callback(self.__transmit_callback)
+        self.__transmission = None
         self.plot_scale = plot_scale
 
-    @property
-    def target(self) -> Transmitter:
-        """The transmitter to measure the transmitted power of."""
+    def __transmit_callback(self, transmission: Transmission) -> None:
+        """Callback function notifying the evaluator of a new transmission."""
 
-        return self.__target
+        self.__transmission = transmission
 
     def evaluate(self) -> PowerEvaluation:
-        if self.target.transmission is None:
-            raise RuntimeError("The target has no transmission to evaluate")
+        if self.__transmission is None:
+            raise RuntimeError(
+                "Power evaluator could not fetch transmission. Has the transmitter transmitted data?"
+            )
 
-        return PowerEvaluation(self.target.transmission.signal.power)
+        return PowerEvaluation(self.__transmission.signal.power)
 
     @property
     def abbreviation(self) -> str:
@@ -257,13 +266,12 @@ class TransmitPowerEvaluator(Evaluator):
         return "Transmit Power"
 
     def generate_result(self, grid: Sequence[GridDimension], artifacts: np.ndarray) -> PowerResult:
-        device: Device | None = self.target.device
-        if device is None:
-            raise RuntimeError("The target has no device to evaluate")
-
-        average_powers = np.zeros(
-            (*artifacts.shape, self.target.num_transmit_ports), dtype=np.float_
+        # Find the maximum number of receive ports over all artifacts
+        max_ports = max(
+            max(artifact.power.size for artifact in artifacts) for artifacts in artifacts.flat
         )
+
+        average_powers = np.zeros((*artifacts.shape, max_ports), dtype=np.float64)
         for grid_index, artifacts in np.ndenumerate(artifacts):
             for artifact in artifacts:
                 average_powers[grid_index] += artifact.power
@@ -273,3 +281,6 @@ class TransmitPowerEvaluator(Evaluator):
                 average_powers[grid_index] /= len(artifacts)
 
         return PowerResult(average_powers, grid, self)
+
+    def __del__(self) -> None:
+        self.__transmit_hook.remove()

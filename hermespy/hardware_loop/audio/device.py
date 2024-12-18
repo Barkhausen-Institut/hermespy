@@ -14,6 +14,7 @@ which is typically either :math:`44.1~\\mathrm{kHz}` or :math:`48~\\mathrm{kHz}`
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
+from datetime import datetime
 from types import ModuleType
 from typing import Optional, Sequence
 
@@ -21,7 +22,7 @@ import numpy as np
 from scipy.fft import fft, ifft
 
 from hermespy.core import AntennaMode, Serializable, Signal, Antenna, AntennaArray, AntennaPort
-from ..physical_device import PhysicalDevice
+from ..physical_device import PhysicalDevice, PhysicalDeviceState
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -168,7 +169,7 @@ class AudioDeviceAntennas(AntennaArray[AudioPort, AudioAntenna]):
         return len(self.__device.record_channels)
 
 
-class AudioDevice(PhysicalDevice, Serializable):
+class AudioDevice(PhysicalDevice[PhysicalDeviceState], Serializable):
     """HermesPy binding to an arbitrary audio device. Let's rock!"""
 
     yaml_tag = "AudioDevice"
@@ -233,6 +234,19 @@ class AudioDevice(PhysicalDevice, Serializable):
         self.__transmission = None
         self.__reception = np.empty(0, float)
         self.__antennas = AudioDeviceAntennas(self)
+
+    def state(self) -> PhysicalDeviceState:
+        return PhysicalDeviceState(
+            id(self),
+            datetime.now().timestamp(),
+            self.pose,
+            self.velocity,
+            self.carrier_frequency,
+            self.sampling_rate,
+            self.num_digital_transmit_ports,
+            self.num_digital_receive_ports,
+            self.antennas.state(self.pose),
+        )
 
     @property
     def antennas(self) -> AudioDeviceAntennas:
@@ -378,9 +392,9 @@ class AudioDevice(PhysicalDevice, Serializable):
         transform = fft(reception, axis=1)
         transform[:, int(0.5 * transform.shape[1]) :] = 0.0
         transform = np.roll(transform, -int(0.25 * transform.shape[1]), axis=1)
-        complex_samples = ifft(2 * transform, axis=1)
+        complex128samples = ifft(2 * transform, axis=1)
 
-        signal_model = Signal.Create(complex_samples, self.sampling_rate, 0)
+        signal_model = Signal.Create(complex128samples, self.sampling_rate, 0)
         return signal_model
 
     @staticmethod

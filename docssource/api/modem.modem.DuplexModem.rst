@@ -24,7 +24,7 @@ to :meth:`ReceivingModem._receive()<hermespy.modem.modem.ReceivingModem._receive
 .. literalinclude:: ../scripts/examples/modem_DuplexModem.py
    :language: python
    :linenos:
-   :lines: 19-34
+   :lines: 19-35
 
 For a detailed description of the transmit and receive routines,
 refer to the :doc:`modem.modem.TransmittingModem` and a :doc:`modem.modem.ReceivingModem` of
@@ -42,7 +42,7 @@ The barebone configuration can be extend by additional components such as
 .. literalinclude:: ../scripts/examples/modem_DuplexModem.py
    :language: python
    :linenos:
-   :lines: 26-57
+   :lines: 37-59
 
 .. autoclass:: hermespy.modem.modem.DuplexModem
 

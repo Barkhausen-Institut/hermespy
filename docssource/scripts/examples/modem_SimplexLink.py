@@ -21,9 +21,6 @@ simulation = Simulation()
 tx_device = simulation.new_device(carrier_frequency=1e10)
 rx_device = simulation.new_device(carrier_frequency=1e10)
 
-# Configure the link modeling the devices' transmit DSP
-link = SimplexLink(tx_device, rx_device)
-
 # Configure the links's waveform
 waveform = RootRaisedCosineWaveform(
     oversampling_factor=4,
@@ -32,7 +29,10 @@ waveform = RootRaisedCosineWaveform(
     num_data_symbols=32,
     modulation_order=64,
 )
-link.waveform = waveform
+
+# Configure the link to connect both devices
+link = SimplexLink(waveform=waveform)
+link.connect(tx_device, rx_device)
 
 # Configure a custom bits source for the modem
 link.bits_source = RandomBitsSource(seed=42)
@@ -41,11 +41,12 @@ link.bits_source = RandomBitsSource(seed=42)
 link.waveform.synchronization = SingleCarrierCorrelationSynchronization()
 
 # Add a custom stream precoding to the modem
-link.transmit_stream_coding[0] = ConventionalBeamformer()
-link.receive_stream_coding[0] = ConventionalBeamformer()
+link.transmit_signal_coding[0] = ConventionalBeamformer()
+link.receive_signal_coding[0] = ConventionalBeamformer()
 
 # Add a custom symbol precoding to the modem
-link.precoding[0] = DFT()
+link.transmit_symbol_coding[0] = DFT()
+link.receive_symbol_coding[0] = DFT()
 
 # Configure the waveform's channel estimation routine
 link.waveform.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
@@ -62,7 +63,7 @@ transmission = tx_device.transmit()
 rx_signal = transmission.mixed_signal
 
 # Generate a single reception of the modem
-modem_reception = link.receive(rx_signal)
+modem_reception = rx_device.receive(transmission).operator_receptions[0]
 modem_reception.signal.plot(title='Modem Base-Band Waveform')
 modem_reception.symbols.plot_constellation(title='Modem Constellation Diagram')
 

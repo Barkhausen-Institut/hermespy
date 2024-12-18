@@ -145,9 +145,10 @@ class PowerAmplifier(Serializable):
                 In other words, the x-axis of the resulting characteristics plot.
         """
 
+        fig: plt.Figure
         if axes:
             _axes = axes
-            fig = axes.get_figure()
+            fig = axes.get_figure()  # type: ignore
         else:
             fig, _axes = plt.subplots(1, 1, squeeze=True)
             fig.suptitle(title if title else self.title)

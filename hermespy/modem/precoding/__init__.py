@@ -1,8 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from .symbol_precoding import SymbolPrecoder, SymbolPrecoding
+from .symbol_precoding import (
+    TransmitSymbolCoding,
+    ReceiveSymbolCoding,
+    TransmitSymbolEncoder,
+    ReceiveSymbolDecoder,
+)
 from .single_carrier import SingleCarrier
-from .spatial_multiplexing import SpatialMultiplexing
 from .dft import DFT
 from .space_time_block_coding import Alamouti, Ganesan
 from .ratio_combining import MaximumRatioCombining
@@ -18,10 +22,11 @@ __status__ = "Prototype"
 
 
 __all__ = [
-    "SymbolPrecoder",
-    "SymbolPrecoding",
+    "TransmitSymbolCoding",
+    "ReceiveSymbolCoding",
+    "TransmitSymbolEncoder",
+    "ReceiveSymbolDecoder",
     "SingleCarrier",
-    "SpatialMultiplexing",
     "DFT",
     "Alamouti",
     "Ganesan",

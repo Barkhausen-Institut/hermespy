@@ -33,7 +33,7 @@ author = 'Barkhausen Institut gGmbH'
 # ones.
 extensions = [
     'sphinx_carousel.carousel',                 # Image slideshows
-    #'nbsphinx',                                 # Integrate jupyter notebooks
+    'nbsphinx',                                 # Integrate jupyter notebooks
     'sphinxcontrib.mermaid',                    # Smooth flowcahrts
     'sphinxcontrib.bibtex',                     # Latex bibliography support
     'sphinx.ext.autodoc',

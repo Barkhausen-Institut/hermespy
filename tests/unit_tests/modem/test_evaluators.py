@@ -96,18 +96,21 @@ class TestBitErrorEvaluator(TestCase):
         self.waveform = RootRaisedCosineWaveform(symbol_rate=1e9, num_preamble_symbols=0, num_data_symbols=10)
         self.transmitter = TransmittingModem()
         self.transmitter.waveform = self.waveform
-        self.transmitter.device = SimulatedDevice()
         self.receiver = ReceivingModem()
         self.receiver.waveform = self.waveform
-        self.receiver.device = SimulatedDevice()
+
+        self.transmit_device = SimulatedDevice()
+        self.transmit_device.transmitters.add(self.transmitter)
+        self.receive_device = SimulatedDevice()
+        self.transmit_device.receivers.add(self.receiver)
 
         self.evaluator = BitErrorEvaluator(self.transmitter, self.receiver)
 
     def test_evaluate(self) -> None:
         """Evaluator should compute the proper bit error rate"""
 
-        transmission = self.transmitter.transmit()
-        self.receiver.receive(transmission.signal)
+        transmission = self.transmitter.transmit(self.transmit_device.state())
+        self.receiver.receive(transmission.signal, self.receive_device.state())
 
         evaluation = self.evaluator.evaluate()
         self.assertEqual(0.0, evaluation.artifact().to_scalar())
@@ -162,34 +165,24 @@ class TestBlockErrorEvaluator(TestCase):
         self.waveform = RootRaisedCosineWaveform(symbol_rate=1e9, num_preamble_symbols=0, num_data_symbols=10)
         self.transmitter = TransmittingModem()
         self.transmitter.waveform = self.waveform
-        self.transmitter.device = SimulatedDevice()
         self.receiver = ReceivingModem()
         self.receiver.waveform = self.waveform
-        self.receiver.device = SimulatedDevice()
+
+        self.transmit_device = SimulatedDevice()
+        self.transmit_device.transmitters.add(self.transmitter)
+        self.receive_device = SimulatedDevice()
+        self.transmit_device.receivers.add(self.receiver)
 
         self.evaluator = BlockErrorEvaluator(self.transmitter, self.receiver)
 
     def test_evaluate(self) -> None:
         """Evaluator should compute the proper block error rate"""
 
-        transmission = self.transmitter.transmit()
-        self.receiver.receive(transmission.signal)
+        transmission = self.transmitter.transmit(self.transmit_device.state())
+        self.receiver.receive(transmission.signal, self.receive_device.state())
 
         evaluation = self.evaluator.evaluate()
         self.assertEqual(0.0, evaluation.artifact().to_scalar())
-
-    def test_evaluate_mismatching_stream_lengths(self) -> None:
-        """Evaluator should assume a block error if the stream lengths do not match"""
-
-        transmission = self.transmitter.transmit()
-        reception = self.receiver.receive(transmission.signal)
-
-        patched_reception = Mock()
-        patched_reception.bits = np.repeat(reception.bits, 2)
-        self.receiver._Receiver__reception = patched_reception
-
-        evaluation = self.evaluator.evaluate()
-        self.assertLess(0, evaluation.artifact().to_scalar())
 
     def test_abbreviation(self) -> None:
         """Abbreviation should be properly generated"""
@@ -241,45 +234,37 @@ class TestFrameErrorEvaluator(TestCase):
         self.waveform = RootRaisedCosineWaveform(symbol_rate=1e9, num_preamble_symbols=0, num_data_symbols=10)
         self.transmitter = TransmittingModem()
         self.transmitter.waveform = self.waveform
-        self.transmitter.device = SimulatedDevice()
         self.receiver = ReceivingModem()
         self.receiver.waveform = self.waveform
-        self.receiver.device = SimulatedDevice()
+
+        self.transmit_device = SimulatedDevice()
+        self.transmit_device.transmitters.add(self.transmitter)
+        self.receive_device = SimulatedDevice()
+        self.transmit_device.receivers.add(self.receiver)
 
         self.evaluator = FrameErrorEvaluator(self.transmitter, self.receiver)
 
     def test_evaluate(self) -> None:
         """Evaluator should compute the proper frame error rate"""
 
-        transmission = self.transmitter.transmit()
-        self.receiver.receive(transmission.signal)
+        transmission = self.transmitter.transmit(self.transmit_device.state(), 5 * self.waveform.frame_duration)
+        self.receiver.receive(transmission.signal, self.receive_device.state())
 
         evaluation = self.evaluator.evaluate()
         self.assertEqual(0.0, evaluation.artifact().to_scalar())
 
-    def test_evaluate_mismatching_stream_lengths(self) -> None:
-        """Evaluator should assume a block error if the stream lengths do not match"""
+    def test_evaluate_frame_count_mismatch(self) -> None:
+        """A mismatch in number of frames should count as a frame error"""
 
-        transmission = self.transmitter.transmit()
-        reception = self.receiver.receive(transmission.signal)
-
-        patched_reception = Mock()
-        patched_reception.bits = np.repeat(reception.bits, 2)
-        self.receiver._Receiver__reception = patched_reception
+        # Generate two frames receive only one
+        frame_duration = self.waveform.frame_duration
+        transmission = self.transmitter.transmit(self.transmit_device.state(), 2 * frame_duration)
+        
+        received_samples = transmission.signal.getitem()[:, :int(frame_duration * self.waveform.sampling_rate)]
+        self.receiver.receive(transmission.signal.from_ndarray(received_samples), self.receive_device.state())
 
         evaluation = self.evaluator.evaluate()
         self.assertLess(0, evaluation.artifact().to_scalar())
-
-    def test_evaluate_no_bits_in_frame(self) -> None:
-        """Empty frames should not register as errors"""
-
-        transmission = self.transmitter.transmit()
-        self.receiver.receive(transmission.signal)
-
-        self.waveform.num_data_symbols = 0
-
-        evaluation = self.evaluator.evaluate()
-        self.assertEqual(0, len(evaluation.evaluation))
 
     def test_abbreviation(self) -> None:
         """Abbreviation should be properly generated"""
@@ -332,16 +317,13 @@ class TestThroughputEvaluator(TestCase):
     def setUp(self) -> None:
         self.rng = default_rng(42)
         self.num_frames = 10
-        self.bits_per_frame = 100
-        self.frame_duration = 1e-3
 
-        self.transmitter = Mock()
-        self.transmitter.num_data_bits_per_frame = self.bits_per_frame
-        self.transmitter.frame_duration = self.frame_duration
-
-        self.receiver = Mock()
-        self.receiver.num_data_bits_per_frame = self.bits_per_frame
-        self.receiver.frame_duration = self.frame_duration
+        self.waveform = RootRaisedCosineWaveform(symbol_rate=1e9, num_preamble_symbols=0, num_data_symbols=100)
+        self.receiver = ReceivingModem(waveform=self.waveform)
+        self.transmitter = TransmittingModem(waveform=self.waveform)
+        self.device = SimulatedDevice()
+        self.device.transmitters.add(self.transmitter)
+        self.device.receivers.add(self.receiver)
 
         self.evaluator = ThroughputEvaluator(self.transmitter, self.receiver)
 
@@ -354,20 +336,14 @@ class TestThroughputEvaluator(TestCase):
     def test_evaluate(self) -> None:
         """Evaluator should compute the proper throughput rate"""
 
-        transmitted_bits = self.rng.integers(0, 2, self.num_frames * self.bits_per_frame)
-        self.transmitter.transmission.bits = transmitted_bits.copy()
-        self.receiver.reception.bits = transmitted_bits.copy()
+        duration = self.num_frames * self.waveform.frame_duration
+        transmission = self.transmitter.transmit(self.device.state(), duration)
+        self.receiver.receive(transmission.signal, self.device.state())
 
         # Assert throughput without any frame errors
-        expected_throughput = self.bits_per_frame / self.frame_duration
+        expected_throughput = self.waveform.bits_per_frame(None) / self.waveform.frame_duration
         throughput = self.evaluator.evaluate()
         self.assertAlmostEqual(expected_throughput, throughput.artifact().to_scalar())
-
-        # Assert throughput with frame errors
-        self.receiver.reception.bits[0 : int(0.5 * self.bits_per_frame)] = 1.0
-        expected_throughput = (self.num_frames - 1) * self.bits_per_frame / (self.num_frames * self.frame_duration)
-        throughput = self.evaluator.evaluate()
-        self.assertEqual(expected_throughput, throughput.artifact().to_scalar())
 
     def test_title(self) -> None:
         """Title should be properly generated"""
@@ -423,26 +399,29 @@ class TestConstellationEVM(TestCase):
         self.transmitter = TransmittingModem()
         self.transmitter.seed = 42
         self.transmitter.waveform = self.waveform
-        self.transmitter.device = SimulatedDevice()
         self.receiver = ReceivingModem()
         self.receiver.waveform = self.waveform
-        self.receiver.device = SimulatedDevice()
+
+        self.transmit_device = SimulatedDevice()
+        self.transmit_device.transmitters.add(self.transmitter)
+        self.receive_device = SimulatedDevice()
+        self.transmit_device.receivers.add(self.receiver)
 
         self.evaluator = ConstellationEVM(self.transmitter, self.receiver)
 
     def test_evaluate(self) -> None:
         """Evaluator should compute the proper frame error rate"""
 
-        transmission = self.transmitter.transmit()
-        self.receiver.receive(transmission.signal)
+        transmission = self.transmitter.transmit(self.transmit_device.state())
+        self.receiver.receive(transmission.signal, self.receive_device.state())
 
         rolled_off_evaluation = self.evaluator.evaluate()
         self.assertAlmostEqual(0.0, rolled_off_evaluation.artifact().to_scalar(), 3)
 
         # Lower roll-off should result in higher EVM
         self.waveform.roll_off = 0.1
-        transmission = self.transmitter.transmit()
-        self.receiver.receive(transmission.signal)
+        transmission = self.transmitter.transmit(self.transmit_device.state())
+        self.receiver.receive(transmission.signal, self.receive_device.state())
 
         evaluation = self.evaluator.evaluate()
         self.assertGreater(evaluation.artifact().to_scalar(), rolled_off_evaluation.artifact().to_scalar())

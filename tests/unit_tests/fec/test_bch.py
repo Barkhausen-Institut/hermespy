@@ -45,7 +45,7 @@ class TestBCHCoding(TestCase):
             code_block[flip_index] = not bool(code_block[flip_index])
 
             decoded_block = self.coding.decode(code_block)
-            assert_array_equal(data_block, decoded_block)
+            assert_array_equal(decoded_block, data_block)
 
     def test_pickle(self) -> None:
         """Pickeling and unpickeling the C++ wrapper"""

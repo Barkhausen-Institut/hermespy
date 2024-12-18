@@ -462,7 +462,7 @@ class IndoorOffice(ClusterDelayLineBase[IndoorOfficeRealization, LOSState], Seri
                 [+0.50, +0.43],  # 19: ZSA vs ASA
                 [+0.00, +0.42],  # 20: ZSD vs ZSA
             ],
-            dtype=np.float_,
+            dtype=np.float64,
         ).T
 
     def _initialize_realization(

@@ -3,7 +3,6 @@
 from __future__ import annotations
 import logging
 from io import StringIO
-from os import getenv
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import Mock, patch
@@ -28,7 +27,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-GENERATE_OUTPUT = getenv("HERMES_TEST_PLOT", "False").lower() == "true"
+GENERATE_OUTPUT = True  # getenv("HERMES_TEST_PLOT", "False").lower() == "true"
 
 
 class TestSimulationRunner(TestCase):
@@ -61,13 +60,13 @@ class TestSimulationRunner(TestCase):
         """Make sure the stages all execute without exceptions"""
 
         try:
-            
+
             # Realize channels
             self.runner.realize_channels()
-            
+
             # Sample trajectories
-            self.runner.sample_trajectories()
-            
+            self.runner.sample_states()
+
             # Transmit operators
             self.runner.transmit_operators()
 
@@ -96,31 +95,33 @@ class TestSimulationRunner(TestCase):
         """Process inputs should raise RuntimeErrors for invalid internal states"""
 
         self.runner.realize_channels()
-        self.runner.sample_trajectories()
+        self.runner.sample_states()
 
         # No trigger realizations cached
         with self.assertRaises(RuntimeError):
             self.runner.process_inputs()
-            
+
         self.runner.transmit_operators()
         self.runner.generate_outputs()
-        
+
         # No propagation matrix cached
         with self.assertRaises(RuntimeError):
             self.runner.process_inputs()
-            
+
         self.runner.propagate()
 
         # Invalid number of trigger realizations
         _ = self.scenario.new_device()        
         with self.assertRaises(RuntimeError):
             self.runner.process_inputs()
-            
-        # Invalid number of impinging signals+
+
+        # Invalid number of impinging signals
+        self.runner.sample_states()
         self.runner.transmit_operators()
         self.runner.generate_outputs()
         with self.assertRaises(RuntimeError):
             self.runner.process_inputs()
+
 
 class TestSimulationActor(TestCase):
     """Test the Simulation Actor"""
@@ -164,9 +165,12 @@ class TestSimulation(TestCase):
         self.simulation.num_drops = 1
 
         self.device = self.simulation.new_device()
+
         self.modem = DuplexModem()
         self.modem.waveform = RRCWaveform(symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=10)
-        self.modem.device = self.device
+        self.device.transmitters.add(self.modem)
+        self.device.receivers.add(self.modem)
+
         self.evaluator = BitErrorEvaluator(self.modem, self.modem)
 
         self.dimension = self.simulation.new_dimension("noise_level", [N0(p) for p in (1, 2, 3)])

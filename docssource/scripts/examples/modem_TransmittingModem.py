@@ -13,7 +13,8 @@ simulation = Simulation()
 device = simulation.new_device(carrier_frequency=1e10)
 
 # Configure the modem modeling the device's transmit DSP
-tx_modem = TransmittingModem(device=device)
+tx_modem = TransmittingModem()
+device.transmitters.add(tx_modem)
 
 # Configure the modem's waveform
 waveform = RootRaisedCosineWaveform(
@@ -33,13 +34,13 @@ tx_modem.encoder_manager.add_encoder(RepetitionEncoder(32, 3))
 tx_modem.encoder_manager.add_encoder(BlockInterleaver(192, 32))
 
 # Add a custom symbol precoding to the modem
-tx_modem.precoding[0] = DFT()
+tx_modem.transmit_symbol_coding[0] = DFT()
 
 # Add a custom stream precoding to the modem
-tx_modem.transmit_stream_coding[0] = ConventionalBeamformer()
+tx_modem.transmit_signal_coding[0] = ConventionalBeamformer()
 
 # Generate a single transmission of the modem
-modem_transmission = tx_modem.transmit()
+modem_transmission = device.transmit().operator_transmissions[0]
 modem_transmission.signal.plot(title='Modem Base-Band Waveform')
 modem_transmission.symbols.plot_constellation(title='Modem Constellation Diagram')
 

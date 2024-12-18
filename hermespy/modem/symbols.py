@@ -91,7 +91,7 @@ class _ConstellationPlot(VisualizableAttribute[ScatterVisualization]):
         num_symbols = (
             self.__symbols.num_symbols * self.__symbols.num_blocks * self.__symbols.num_streams
         )
-        zeros = np.zeros(num_symbols, dtype=np.float_)
+        zeros = np.zeros(num_symbols, dtype=np.float64)
         path_collection = np.empty((1, 1), dtype=np.object_)
         path_collection[0, 0] = ax.scatter(zeros, zeros)
 

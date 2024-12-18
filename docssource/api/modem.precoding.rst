@@ -15,7 +15,6 @@ The following types of precoders are supported:
    modem.precoding.ratio_combining
    modem.precoding.single_carrier
    modem.precoding.space_time_block_coding
-   modem.precoding.spatial_multiplexing
 
 Configuring a precoder within a signal processing pipeline requires adding an instance
 of said precoder to a :class:`SymbolPrecoding<hermespy.modem.precoding.symbol_precoding.SymbolPrecoding>`
@@ -24,7 +23,7 @@ pipeline, that can hold multiple precoders to be applied in sequence:
 .. literalinclude:: ../scripts/examples/modem_precoding_precoding.py
    :language: python
    :linenos:
-   :lines: 12-17
+   :lines: 14-20
 
 Within the context of a modem,
 the precoding can either be assigned to the :attr:`precoding<hermespy.modem.modem.BaseModem.precoding>`
@@ -33,7 +32,7 @@ property, or the precoders can be configured directly:
 .. literalinclude:: ../scripts/examples/modem_precoding_precoding.py
    :language: python
    :linenos:
-   :lines: 19-27
+   :lines: 25-31
 
 Refer to :doc:`/notebooks/precoding` for instructions and examples of how to implement
 custom symbol precoders.

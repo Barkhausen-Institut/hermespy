@@ -138,7 +138,7 @@ class TestSignal():
             self.offsets[i] = self.offsets[i-1] + self.window_sizes[i-1] + self.num_mid_zeros
 
         # Convert these samples into a dense form
-        self.samples_dense = np.zeros((self.num_streams, self.num_samples), dtype=np.complex_)
+        self.samples_dense = np.zeros((self.num_streams, self.num_samples), dtype=np.complex128)
         for i in range(self.num_windows):
             w_off = self.offsets[i]
             w_end = w_off + self.window_sizes[i]
@@ -243,7 +243,7 @@ class TestSignal():
         # __setitem__
         dummy_value = 13.37 + 73.31j
         dummy_samples_full = np.full((self.num_streams, self.num_samples),
-                                     dtype=np.complex_, fill_value=dummy_value)
+                                     dtype=np.complex128, fill_value=dummy_value)
         dummy_samples_diff = np.arange(0, self.num_streams*self.num_samples).reshape(
             (self.num_streams, self.num_samples)
         )
@@ -397,7 +397,7 @@ class TestSignal():
 
         # Try setting non-complex samples
         signal_new = self.signal.copy()
-        samples_new = [s.astype(np.float_) for s in self.samples_sparse]
+        samples_new = [s.astype(np.float64) for s in self.samples_sparse]
         signal_new.set_samples(samples_new, self.offsets)
         for s, o in zip(samples_new, self.offsets):
             assert_array_equal(signal_new.getitem((slice(None, None), slice(o, o+s.shape[1]))), s)

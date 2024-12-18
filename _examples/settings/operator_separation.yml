@@ -5,34 +5,11 @@
 
 !<Simulation>
 
-# Physical device models within the simulated scenario
-Devices:
-
-   # Representation of a single (virtual) device
-  - &device_alpha !<SimulatedDevice>
-
-    carrier_frequency: 865e6      # Center frequency of Rf-band emitted signal
-    operator_separation: True     # Enable separation of operator streams at transmit
-
-
-# Channel models between devices
-Channels:
-
-  # Rayleigh fading between transmitter n = 0 and receiver m = 1
-  - !<MultipathFading>
-    devices: [*device_alpha, *device_alpha]
-    delays: [ 0 ]           # Delay of the channel in seconds
-    power_profile: [ 0 ]    # Channel gain in dB
-    rice_factors: [ .inf ]
-
-
 # Operators transmitting or receiving signals over the devices
 Operators:
 
   # First modem operating the device alpha
   - &modem_alpha !<Modem>
-
-    device: *device_alpha          # Device the modem is operating on
 
     waveform: !<ChirpFsk>         # Configuration of the waveform emitted by this transmitter
 
@@ -46,8 +23,6 @@ Operators:
 
   # Second modem operating the device alpha
   - &modem_beta !<Modem>
-
-    device: *device_alpha          # Device the modem is operating on
 
     # Bit encoding configuration before mapping to modulation symbols
     encoding: !<Encoding>
@@ -67,6 +42,30 @@ Operators:
       modulation_order: 256       # Modulation order, in other words 16 bit per data chirp
 
       guard_interval: 0.          # Pause between frame transmissions in seconds
+
+
+# Physical device models within the simulated scenario
+Devices:
+
+   # Representation of a single (virtual) device
+  - &device_alpha !<SimulatedDevice>
+
+    carrier_frequency: 865e6      # Center frequency of Rf-band emitted signal
+    operator_separation: True     # Enable separation of operator streams at transmit
+    transmitters: [*modem_alpha, *modem_beta]  # Transmit DSP layers operating on the device
+    receivers: [*modem_alpha, *modem_beta]     # Receive DSP layers operating on the device
+
+
+# Channel models between devices
+Channels:
+
+  - # Rayleigh fading between transmitter n = 0 and receiver m = 0
+    - *device_alpha
+    - *device_alpha
+    - !<MultipathFading>
+      delays: [ 0 ]           # Delay of the channel in seconds
+      power_profile: [ 0 ]    # Channel gain in dB
+      rice_factors: [ .inf ]
 
 
 # Performance indication evaluation configuration

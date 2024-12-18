@@ -13,7 +13,7 @@ from typing import Generic, Optional, TypeVar
 
 from h5py import Group
 
-from hermespy.core import DeviceInput, DeviceReception, Scenario, Signal, Drop
+from hermespy.core import DeviceInput, DeviceReception, DeviceState, Scenario, Signal, Drop
 from .physical_device import PDT
 
 __author__ = "Jan Adler"
@@ -26,7 +26,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class PhysicalScenario(Generic[PDT], Scenario[PDT, Drop]):
+class PhysicalScenario(Generic[PDT], Scenario[PDT, DeviceState, Drop]):
     """Scenario of physical device bindings.
 
     Managing physical devices by a scenario enables synchronized triggering
@@ -87,7 +87,8 @@ class PhysicalScenario(Generic[PDT], Scenario[PDT, Drop]):
         impinging_signals: (
             Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]] | None
         ) = None,
-        cache: bool = True,
+        states: Sequence[DeviceState | None] | None = None,
+        notify: bool = True,
     ) -> Sequence[DeviceReception]:
         """Receive over all scenario devices.
 
@@ -99,8 +100,12 @@ class PhysicalScenario(Generic[PDT], Scenario[PDT, Drop]):
                 List of signals impinging onto the devices.
                 If not specified, the device will download the signal samples from its binding.
 
-            cache (bool, optional):
-                Cache the operator inputs at the registered receive operators for further processing.
+            states (Sequence[DeviceState | None], optional):
+                States of the transmitting devices.
+                If not specified, the current device states will be queried by calling :meth:`Device.state
+
+            notify (bool, optional):
+                Notify the receiving DSP layer's callbacks about the reception results.
                 Enabled by default.
 
         Returns: List of the processed device input information.
@@ -110,15 +115,16 @@ class PhysicalScenario(Generic[PDT], Scenario[PDT, Drop]):
             ValueError: If the number of `impinging_signals` does not match the number of registered devices.
         """
 
-        impinging_signals = (
+        _impinging_signals = (
             [None] * self.num_devices if impinging_signals is None else impinging_signals
         )
+        _states = [None] * self.num_devices if states is None else states
 
         # Generate inputs
-        device_inputs = [d.process_input(i, cache) for d, i in zip(self.devices, impinging_signals)]  # type: ignore
+        device_inputs = [d.process_input(i, s) for d, s, i in zip(self.devices, _states, _impinging_signals)]  # type: ignore
 
         # Generate operator receptions
-        receptions = self.receive_operators(device_inputs)
+        receptions = self.receive_operators(device_inputs, _states, notify)
 
         # Generate device receptions
         return [

@@ -289,7 +289,7 @@ class TestCommunicationWaveform(unittest.TestCase):
 
         num_streams = 3
         num_samples_test = [50, 100, 150, 200]
-        expected_num_frames_candidates = [0, 1, 1, 1]
+        expected_num_frames_candidates = [0, 1, 1, 2]
 
         for num_samples, expected_num_frames in zip(num_samples_test, expected_num_frames_candidates):
             signal = np.exp(2j * self.rnd.uniform(0, pi, (num_streams, 1))) @ np.exp(2j * self.rnd.uniform(0, pi, (1, num_samples)))

@@ -16,7 +16,7 @@ from .drop import SimulatedDrop
 from .scenario import SimulationScenario
 from .simulation import Simulation
 from .simulated_device import (
-    DeviceState,
+    SimulatedDeviceState,
     ProcessedSimulatedDeviceInput,
     SimulatedDevice,
     SimulatedDeviceOutput,
@@ -83,7 +83,7 @@ __all__ = [
     "DeviceFocus",
     "SimulatedDrop",
     "SimulationScenario",
-    "DeviceState",
+    "SimulatedDeviceState",
     "ProcessedSimulatedDeviceInput",
     "SimulatedDevice",
     "SimulatedDeviceOutput",

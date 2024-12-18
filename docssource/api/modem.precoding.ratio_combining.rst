@@ -17,7 +17,7 @@ attribute:
 .. literalinclude:: ../scripts/examples/modem_precoding_mrc.py
    :language: python
    :linenos:
-   :lines: 19-42
+   :lines: 19-43
 
 Note that decoding requires channel state information at the receiver,
 therefore waveform's :attr:`channel_estimation<hermespy.modem.waveform.CommunicationWaveform.channel_estimation>` attribute must be configured.

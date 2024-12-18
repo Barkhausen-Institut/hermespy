@@ -257,7 +257,7 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
         pilot_symbols = self.pilot_symbols(
             self.num_preamble_symbols + self._num_pilot_symbols + self.num_postamble_symbols
         )
-        placed_symbols = np.empty(self._num_frame_symbols, dtype=np.complex_)
+        placed_symbols = np.empty(self._num_frame_symbols, dtype=np.complex128)
 
         # Assign preamble symbols within the frame
         placed_symbols[: self.num_preamble_symbols] = pilot_symbols[: self.num_preamble_symbols]
@@ -633,7 +633,7 @@ class SingleCarrierMinimumMeanSquareChannelEqualization(SingleCarrierChannelEqua
 
     def equalize_channel(self, symbols: StatedSymbols) -> Symbols:
         # Query SNR and cached CSI from the device
-        snr = self.waveform.modem.receiving_device.snr
+        snr = float("inf")  # self.waveform.modem.receiving_device.snr
 
         # If no information about transmitted streams is available, assume orthogonal channels
         if symbols.num_transmit_streams < 2 and symbols.num_streams < 2:

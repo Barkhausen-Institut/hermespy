@@ -23,7 +23,7 @@ class TestAudioDevice(TestCase):
         self.device = AudioDevice(6, 4, [1], [1])
 
         self.modem = DuplexModem(seed=42)
-        self.modem.device = self.device
+        self.device.add_dsp(self.modem)
 
     @patch("sounddevice.playrec")
     def propagate(self, playrec_mock: MagicMock) -> None:
@@ -33,17 +33,17 @@ class TestAudioDevice(TestCase):
         playrec_mock.side_effect = side_effect
 
         # Execute a fulle device transmit-receive cycle
-        _ = self.device.transmit()
+        transmission = self.device.transmit().operator_transmissions[0]
         self.device.trigger()
-        _ = self.device.receive()
+        reception = self.device.receive().operator_receptions[0]
 
         # Assert the transmit and receive spectra
-        transmit_spectrum = fftshift(fft(self.modem.transmission.signal.getitem(0)))
-        receive_spectrum = fftshift(fft(self.modem.reception.signal.getitem(0)))
+        transmit_spectrum = fftshift(fft(transmission.signal.getitem(0)))
+        receive_spectrum = fftshift(fft(reception.signal.getitem(0)))
         left_bin = int(0.375 * transmit_spectrum.shape[0])
         right_bin = int(0.625 * transmit_spectrum.shape[0])
         assert_array_almost_equal(transmit_spectrum[left_bin:right_bin], receive_spectrum[left_bin:right_bin])
-        assert_array_equal(self.modem.transmission.bits, self.modem.reception.bits)
+        assert_array_equal(transmission.bits, reception.bits)
 
     def test_single_carrier(self) -> None:
         """Test single carrier data transmission over audio devices"""

@@ -26,32 +26,13 @@ class TestMaximumRatioCombinging(TestCase):
 
     def setUp(self) -> None:
         self.rng = np.random.default_rng(42)
-        self.precoder = MaximumRatioCombining()
-        
-        self.modem = ReceivingModem()
-        self.modem.device = SimulatedDevice(antennas=SimulatedUniformArray(SimulatedIdealAntenna, .1, [2, 1, 1]))
-        self.modem.precoding[0] = self.precoder
+        self.mrc = MaximumRatioCombining()
 
     def test_properties(self) -> None:
         """Properties should return the expected values"""
 
-        self.assertEqual(1, self.precoder.num_input_streams)
-        self.assertEqual(2, self.precoder.num_output_streams)
-
-    def test_encode_validation(self) -> None:
-        """Encoding should raise a RuntimeError on invalid input"""
-
-        with self.assertRaises(RuntimeError):
-            symbols = Mock(spec=StatedSymbols)
-            symbols.num_transmit_streams = 2
-            self.precoder.encode(symbols)
-            
-    def test_encode(self) -> None:
-        """Encode shoud be a stub for single stream symbols"""
-
-        symbols = Mock(spec=StatedSymbols)
-        symbols.num_transmit_streams = 1
-        self.assertIs(symbols, self.precoder.encode(symbols))
+        self.assertEqual(1, self.mrc.num_receive_input_symbols)
+        self.assertEqual(1, self.mrc.num_receive_output_symbols)
 
     def test_decode_validation(self) -> None:
         """Decoding should raise a RuntimeError if the number of input streams is not 1"""
@@ -60,7 +41,7 @@ class TestMaximumRatioCombinging(TestCase):
         states = self.rng.standard_normal((2, 2, 2, 100)) + 1j * self.rng.standard_normal((2, 2, 2, 100))
 
         with self.assertRaises(RuntimeError):
-            self.precoder.decode(StatedSymbols(raw_symbols, states))
+            self.mrc.decode_symbols(StatedSymbols(raw_symbols, states), 1)
 
     def test_decode(self) -> None:
         """Decoding should return the expected values"""
@@ -71,10 +52,15 @@ class TestMaximumRatioCombinging(TestCase):
         propagated_raw_symbols = states * raw_symbols
         propaged_stated_symbols = StatedSymbols(propagated_raw_symbols, states[:, None, :, :])
 
-        decoded_symbols = self.precoder.decode(propaged_stated_symbols)
+        decoded_symbols = self.mrc.decode_symbols(propaged_stated_symbols, 1)
         assert_array_almost_equal(raw_symbols, decoded_symbols.raw)
+
+    def test_num_receive_output_streams(self) -> None:
+        """Number of output streams should always be 1"""
+
+        self.assertEqual(1, self.mrc.num_receive_output_streams(12))
 
     def test_yaml_roundtrip_serialization(self) -> None:
         """Test YAML roundtrip serialization"""
 
-        test_yaml_roundtrip_serialization(self, MaximumRatioCombining())
+        test_yaml_roundtrip_serialization(self, self.mrc)

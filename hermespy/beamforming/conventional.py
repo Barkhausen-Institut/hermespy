@@ -7,12 +7,10 @@ Conventional Beamformer
 Also refererd to as Delay and Sum Beamformer.
 """
 
-from typing import Optional
-
 import numpy as np
 from scipy.constants import pi, speed_of_light
 
-from hermespy.core import AntennaArray, AntennaMode, Direction, DuplexOperator, Serializable
+from hermespy.core import AntennaArrayState, Direction, Serializable
 from .beamformer import TransmitBeamformer, ReceiveBeamformer
 
 
@@ -60,22 +58,17 @@ class ConventionalBeamformer(Serializable, TransmitBeamformer, ReceiveBeamformer
     yaml_tag = "ConventionalBeamformer"
     """YAML serialization tag."""
 
-    def __init__(self, operator: Optional[DuplexOperator] = None) -> None:
-        TransmitBeamformer.__init__(self, operator=operator)
-        ReceiveBeamformer.__init__(self, operator=operator)
+    def __init__(self) -> None:
+        # Initialize base classes
+        TransmitBeamformer.__init__(self)
+        ReceiveBeamformer.__init__(self)
 
-    @property
-    def num_receive_focus_points(self) -> int:
-        # The conventional beamformer focuses a single angle
+    def _num_transmit_input_streams(self, num_output_streams: int) -> int:
+        # The conventional beamformer distirbutes a single stream
+        # to an arbitrary number of antenna streams
         return 1
 
-    @property
-    def num_receive_input_streams(self) -> int:
-        # The conventional beamformer will allways consider all antennas streams
-        return self.operator.device.antennas.num_receive_ports
-
-    @property
-    def num_receive_output_streams(self) -> int:
+    def num_receive_output_streams(self, num_input_streams: int) -> int:
         # The convetional beamformer will always return a single stream,
         # combining all antenna signals into one
         return 1
@@ -86,19 +79,13 @@ class ConventionalBeamformer(Serializable, TransmitBeamformer, ReceiveBeamformer
         return 1
 
     @property
-    def num_transmit_output_streams(self) -> int:
-        # The conventional beamformer will allways consider all antennas streams
-        return self.operator.device.antennas.num_transmit_ports
-
-    @property
-    def num_transmit_input_streams(self) -> int:
-        # The convetional beamformer will always return a single stream,
-        # combining all antenna signals into one
+    def num_receive_focus_points(self) -> int:
+        # The conventional beamformer focuses a single angle
         return 1
 
     # @lru_cache(maxsize=2)
     def _codebook(
-        self, carrier_frequency: float, angles: np.ndarray, array: AntennaArray, mode: AntennaMode,
+        self, carrier_frequency: float, angles: np.ndarray, array: AntennaArrayState
     ) -> np.ndarray:
         """Compute the beamforming codebook for a given set of angles of interest.
 
@@ -115,46 +102,58 @@ class ConventionalBeamformer(Serializable, TransmitBeamformer, ReceiveBeamformer
             array (AntennaArray):
                 The antenna array to compute the codebook for.
 
-            mode (AntennaMode):
-                The antenna mode to compute the codebook for, i.e. TX or RX.
-
         Returns:
 
             The codebook represented by a two-dimensional numpy array,
             with the first dimension being the number of angles and the second dimension the number of antennas.
         """
 
-        # Query the antenna array's topology
-        ports = array.transmit_ports if mode == AntennaMode.TX else array.receive_ports
+        # Query topology of receiving antenna ports
         topology = (
-            np.array([p.global_position for p in ports], dtype=np.float_)
+            np.array([p.global_position for p in array.receive_ports], dtype=np.float64)
             - array.global_position
         )
 
         # Build receive beamforming codebook of steering vectors for each angle of interest
-        book = np.empty((angles.shape[0], len(ports)), dtype=complex)
+        book = np.empty((angles.shape[0], array.num_receive_ports), dtype=complex)
         for n, (azimuth, zenith) in enumerate(angles):
             direction = Direction.From_Spherical(azimuth, zenith)
-            weights = np.exp(
-                1j * 2 * pi * carrier_frequency / speed_of_light * (topology @ direction)
-            )
+            weights = np.exp(-2j * pi * carrier_frequency / speed_of_light * (topology @ direction))
             book[n, :] = weights
-        return book
+
+        return book / array.num_receive_ports
 
     def _encode(
         self,
         samples: np.ndarray,
         carrier_frequency: float,
         focus_angles: np.ndarray,
-        array: AntennaArray,
+        array: AntennaArrayState,
     ) -> np.ndarray:
-        codebook = self._codebook(carrier_frequency, focus_angles[[0], :], array, AntennaMode.TX)
-        beamformed_samples = codebook.T @ samples
-        return beamformed_samples
+        azimuth, zenith = focus_angles[0, :]
+
+        # Compute conventional beamformer weights
+        topology = (
+            np.array([p.global_position for p in array.transmit_ports], dtype=np.float64)
+            - array.global_position
+        )
+        direction = Direction.From_Spherical(azimuth, zenith)
+        # Conventional steering vector
+        weights = np.exp(2j * pi * carrier_frequency / speed_of_light * (topology @ direction))
+
+        # Weight the streams accordingly
+        samples = weights[:, np.newaxis] @ samples
+
+        # That's it
+        return samples
 
     def _decode(
-        self, samples: np.ndarray, carrier_frequency: float, angles: np.ndarray, array: AntennaArray
+        self,
+        samples: np.ndarray,
+        carrier_frequency: float,
+        angles: np.ndarray,
+        array: AntennaArrayState,
     ) -> np.ndarray:
-        codebook = self._codebook(carrier_frequency, angles[:, 0, :], array, AntennaMode.RX)
-        beamformed_samples = (codebook @ samples) / array.num_receive_ports
+        codebook = self._codebook(carrier_frequency, angles[:, 0, :], array)
+        beamformed_samples = codebook @ samples
         return beamformed_samples[:, np.newaxis, :]

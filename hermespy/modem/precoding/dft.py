@@ -7,7 +7,7 @@ import numpy as np
 
 from hermespy.core import Serializable
 from ..symbols import StatedSymbols
-from .symbol_precoding import SymbolPrecoder
+from .symbol_precoding import TransmitSymbolEncoder, ReceiveSymbolDecoder
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -19,7 +19,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class DFT(SymbolPrecoder, Serializable):
+class DFT(TransmitSymbolEncoder, ReceiveSymbolDecoder, Serializable):
     """A precoder applying the Discrete Fourier Transform to each data stream."""
 
     yaml_tag = "DFT"
@@ -34,30 +34,44 @@ class DFT(SymbolPrecoder, Serializable):
                 See also numpy.fft.fft for details
         """
 
-        # Initialize base class
-        SymbolPrecoder.__init__(self)
+        # Initialize base classes
+        TransmitSymbolEncoder.__init__(self)
+        ReceiveSymbolDecoder.__init__(self)
+        Serializable.__init__(self)
 
         # Initialize attributes
         self.__fft_norm = fft_norm
 
-    def encode(self, symbols: StatedSymbols) -> StatedSymbols:
+    def encode_symbols(self, symbols: StatedSymbols, num_output_streams: int) -> StatedSymbols:
         encoded_symbols = symbols.copy()
         encoded_symbols.raw = np.fft.fft(symbols.raw, axis=1, norm=self.__fft_norm)
 
         return encoded_symbols
 
-    def decode(self, symbols: StatedSymbols) -> StatedSymbols:
+    def decode_symbols(self, symbols: StatedSymbols, num_output_streams: int) -> StatedSymbols:
         decoded_symbols = symbols.copy()
         decoded_symbols.raw = np.fft.ifft(symbols.raw, axis=1, norm=self.__fft_norm)
 
         return decoded_symbols
 
-    @property
-    def num_input_streams(self) -> int:
-        # DFT precoding does not alter the number of symbol streams
-        return self.precoding.required_outputs(self)
+    def _num_transmit_input_streams(self, num_output_streams: int) -> int:
+        return num_output_streams
+
+    def num_receive_output_streams(self, num_input_streams: int) -> int:
+        return num_input_streams
 
     @property
-    def num_output_streams(self) -> int:
-        # DFT precoding does not alter the number of symbol streams
-        return self.precoding.required_outputs(self)
+    def num_transmit_input_symbols(self) -> int:
+        return 1
+
+    @property
+    def num_transmit_output_symbols(self) -> int:
+        return 1
+
+    @property
+    def num_receive_input_symbols(self) -> int:
+        return 1
+
+    @property
+    def num_receive_output_symbols(self) -> int:
+        return 1

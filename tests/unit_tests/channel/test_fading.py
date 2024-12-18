@@ -729,7 +729,7 @@ class TestCost259(unittest.TestCase):
         unit_energy_signal = DenseSignal(np.ones((self.alpha_device.num_transmit_antennas, 100)) / 10, self.sampling_rate, self.carrier_frequency)
         num_attempts = 1000
         
-        cumulated_propagated_energy = np.zeros((self.beta_device.num_receive_antennas), dtype=np.float_)
+        cumulated_propagated_energy = np.zeros((self.beta_device.num_receive_antennas), dtype=np.float64)
         cumulated_expected_scale = 0.0
         for _ in range(num_attempts):
             realization = model.realize()
@@ -796,7 +796,7 @@ class Test5GTDL(unittest.TestCase):
         unit_energy_signal = DenseSignal(np.ones((self.alpha_device.num_transmit_antennas, 100)) / 10, self.sampling_rate, self.carrier_frequency)
         num_attempts = 1000
         
-        cumulated_propagated_energy = np.zeros((self.beta_device.num_receive_antennas), dtype=np.float_)
+        cumulated_propagated_energy = np.zeros((self.beta_device.num_receive_antennas), dtype=np.float64)
         cumulated_expected_scale = 0.0
         for _ in range(num_attempts):
             realization = model.realize()
@@ -849,7 +849,7 @@ class TestExponential(unittest.TestCase):
         unit_energy_signal = DenseSignal(np.ones((self.alpha_device.num_transmit_antennas, 100)) / 10, self.sampling_rate, self.carrier_frequency)
         num_attempts = 1000
         
-        cumulated_propagated_energy = np.zeros((self.beta_device.num_receive_antennas), dtype=np.float_)
+        cumulated_propagated_energy = np.zeros((self.beta_device.num_receive_antennas), dtype=np.float64)
         cumulated_expected_scale = 0.0
         for _ in range(num_attempts):
             realization = self.channel.realize()

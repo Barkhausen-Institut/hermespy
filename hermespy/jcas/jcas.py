@@ -6,7 +6,7 @@ from typing import Generic, Sequence, Type
 
 from h5py import Group
 
-from hermespy.core import Device, Signal
+from hermespy.core import ReceiveState, Signal, TransmitState
 from hermespy.modem.modem import TransmittingModemBase, ReceivingModemBase
 from hermespy.modem import CommunicationTransmission, CommunicationReception, CWT
 from hermespy.radar import RadarBase, RadarTransmission, RadarReception
@@ -70,50 +70,42 @@ class DuplexJCASOperator(
 
     def __init__(
         self,
-        device: Device | None = None,
         waveform: CWT | None = None,
         selected_transmit_ports: Sequence[int] | None = None,
         selected_receive_ports: Sequence[int] | None = None,
-        **kwargs,
+        carrier_frequency: float | None = None,
+        seed: int | None = None,
     ) -> None:
         """
         Args:
-
-            device (Device, optional):
-                Device this operator operating.
-                Operator is considered floating by default.
-
             waveform (CWT, optional):
                 Communication waveform emitted by this operator.
 
-            selected_transmit_ports (Sequence[int], optional):
-                Selected transmit ports of the device.
+            selected_transmit_ports (Sequence[int] | None):
+                Indices of antenna ports selected for transmission from the operated :class:`Device's<Device>` antenna array.
+                If not specified, all available ports will be considered.
 
-            selected_receive_ports (Sequence[int], optional):
-                Selected receive ports of the device.
+            selected_receive_ports (Sequence[int] | None):
+                Indices of antenna ports selected for reception from the operated :class:`Device's<Device>` antenna array.
+                If not specified, all available antenna ports will be considered.
+
+            carrier_frequency (float, optional):
+                Central frequency of the mixed signal in radio-frequency transmission band.
+                If not specified, the operated device's default carrier frequency will be assumed during signal processing.
+
+            seed (int, optional):
+                Random seed used to initialize the pseudo-random number generator.
         """
 
         # Initialize base classes
         TransmittingModemBase.__init__(self)
-        ReceivingModemBase.__init__(self, **kwargs)
+        ReceivingModemBase.__init__(self)
         RadarBase.__init__(
-            self,
-            device=device,
-            selected_transmit_ports=selected_transmit_ports,
-            selected_receive_ports=selected_receive_ports,
+            self, selected_transmit_ports, selected_receive_ports, carrier_frequency, seed
         )
 
         # Initialize class attributes
-        self.device = device
         self.waveform = waveform
-
-    @property
-    def transmitting_device(self) -> Device | None:
-        return self.device
-
-    @property
-    def receiving_device(self) -> Device | None:
-        return self.device
 
     @property
     def sampling_rate(self) -> float:
@@ -128,10 +120,14 @@ class DuplexJCASOperator(
         return self.waveform.frame_duration
 
     @abstractmethod
-    def _transmit(self, duration: float = -1.0) -> JCASTransmission: ...  # pragma: no cover
+    def _transmit(
+        self, device: TransmitState, duration: float
+    ) -> JCASTransmission: ...  # pragma: no cover
 
     @abstractmethod
-    def _receive(self, signal: Signal) -> JCASReception: ...  # pragma: no cover
+    def _receive(
+        self, signal: Signal, device: ReceiveState
+    ) -> JCASReception: ...  # pragma: no cover
 
     def _recall_transmission(self, group: Group) -> JCASTransmission:
         return JCASTransmission.from_HDF(group)

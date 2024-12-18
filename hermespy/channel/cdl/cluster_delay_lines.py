@@ -154,7 +154,7 @@ class _AngleVisualization(VisualizableAttribute[ScatterVisualization]):
         zenith_offset = -los_zenith if center_los else np.zeros(2)
 
         scatter_locations = np.empty(
-            (self.__sample.num_clusters, 2, self.__sample.num_rays, 2), dtype=np.float_
+            (self.__sample.num_clusters, 2, self.__sample.num_rays, 2), dtype=np.float64
         )
 
         for i, (azimuth_clusters, zenith_clusters) in enumerate(
@@ -234,8 +234,8 @@ class _AngleVisualization(VisualizableAttribute[ScatterVisualization]):
 
         # Hide additional clusters
         for c in range(c + 1, 25):
-            visualization.paths[0, 0, c].set_offsets(np.empty((0, 2), dtype=np.float_))
-            visualization.paths[0, 1, c].set_offsets(np.empty((0, 2), dtype=np.float_))
+            visualization.paths[0, 0, c].set_offsets(np.empty((0, 2), dtype=np.float64))
+            visualization.paths[0, 1, c].set_offsets(np.empty((0, 2), dtype=np.float64))
 
     @property
     def title(self) -> str:
@@ -518,14 +518,14 @@ class ClusterDelayLineSample(ChannelSample):
         max_delay_in_samples = ceil((self.max_delay) * self.bandwidth)
         propagated_samples = np.zeros(
             (self.num_receive_antennas, signal.num_samples + max_delay_in_samples),
-            dtype=np.complex_,
+            dtype=np.complex128,
         )
 
         # Prepare the optimal einsum path ahead of time for faster execution
         channel = np.zeros(
-            (self.num_receive_antennas, self.num_transmit_antennas), dtype=np.complex_
+            (self.num_receive_antennas, self.num_transmit_antennas), dtype=np.complex128
         )
-        impulse = np.zeros(signal.num_samples, dtype=np.complex_)
+        impulse = np.zeros(signal.num_samples, dtype=np.complex128)
         einsum_subscripts = "ij,jk,k->ik"
         einsum_path = np.einsum_path(
             einsum_subscripts, channel, signal, impulse, optimize="optimal"
@@ -556,7 +556,7 @@ class ClusterDelayLineSample(ChannelSample):
                 num_samples,
                 1 + max_delay_in_samples,
             ),
-            dtype=np.complex_,
+            dtype=np.complex128,
         )
 
         for channel, impulse, delay in self.__ray_impulse_generator(
@@ -921,7 +921,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
             [20, 1.289],
             [25, 1.358],
         ],
-        dtype=np.float_,
+        dtype=np.float64,
     )
 
     # Cluster scaling factors for zenith angles
@@ -937,7 +937,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
             [20, 1.178],
             [25, 1.282],
         ],
-        dtype=np.float_,
+        dtype=np.float64,
     )
 
     # Ray offset angles
@@ -965,7 +965,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
             2.1551,
             -2.1551,
         ],
-        dtype=np.float_,
+        dtype=np.float64,
     )
 
     # Oxygen absorption factors
@@ -992,7 +992,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
             [67.0, 1.0],
             [68.0, 0.0],
         ],
-        dtype=np.float_,
+        dtype=np.float64,
     )
 
     def __init__(
@@ -1380,7 +1380,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
                 self._rice_factor_mean(),
                 0.0,
             ],
-            dtype=np.float_,
+            dtype=np.float64,
         )
         std = np.array(
             [
@@ -1392,7 +1392,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
                 self._rice_factor_std(),
                 1.0,
             ],
-            dtype=np.float_,
+            dtype=np.float64,
         )
 
         # Enforce the proper cross-correlations between the large-scale parameters
@@ -2146,7 +2146,7 @@ class ClusterDelayLineBase(Channel[CDLRT, ClusterDelayLineSample], Generic[CDLRT
         Returns: Lower-triangular root of the cross-correlation matrix.
         """
 
-        C_MM = np.empty((3, 7, 7), dtype=np.float_)
+        C_MM = np.empty((3, 7, 7), dtype=np.float64)
         for c, C in enumerate(self._large_scale_correlations):
             C_MM_squared = np.array(
                 [
@@ -2159,7 +2159,7 @@ class ClusterDelayLineBase(Channel[CDLRT, ClusterDelayLineSample], Generic[CDLRT
                     [C[8], C[6], C[7], C[13], C[12], 1.0, C[9]],  # K
                     [C[4], C[3], C[2], C[11], C[10], C[9], 1.0],  # SF
                 ],
-                dtype=np.float_,
+                dtype=np.float64,
             )
 
             # Section 4 of ETSI TR 138.901 v17.0.0 hints at using the cholesky decomposition
@@ -2217,9 +2217,9 @@ class ClusterDelayLineBase(Channel[CDLRT, ClusterDelayLineSample], Generic[CDLRT
     def recall_realization(self, group: Group) -> CDLRT:
 
         # Recall the static random variables
-        LSPs = np.array(group["large_scale_parameters"], dtype=np.float_)
-        azimuth_spread_sign = np.array(group["azimuth_spread_sign"], dtype=np.float_)
-        zenith_spread_sign = np.array(group["zenith_spread_sign"], dtype=np.float_)
+        LSPs = np.array(group["large_scale_parameters"], dtype=np.float64)
+        azimuth_spread_sign = np.array(group["azimuth_spread_sign"], dtype=np.float64)
+        zenith_spread_sign = np.array(group["zenith_spread_sign"], dtype=np.float64)
         angle_coupling_indices = np.array(group["angle_coupling_indices"], dtype=np.int_)
 
         parameters = ClusterDelayLineRealizationParameters(

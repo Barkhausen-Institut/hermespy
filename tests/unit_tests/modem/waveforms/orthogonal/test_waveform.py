@@ -238,7 +238,7 @@ class TestSymbolSection(TestCase):
     def test_place_samples_validation(self) -> None:
         """Place samples should raise a RuntimeError on invalid prefix types"""
         
-        samples = np.empty((self.section.num_words, self.section.num_subcarriers), dtype=np.complex_)
+        samples = np.empty((self.section.num_words, self.section.num_subcarriers), dtype=np.complex128)
         with patch.object(self.resource_a, 'prefix_type', new_callable=PropertyMock) as type_mock:
             type_mock.return_value = Mock()
             with self.assertRaises(RuntimeError):
@@ -406,7 +406,7 @@ class TestOrthogonalWaveform(TestCase):
         self.assertEqual(0, empty_pilot_signal.num_samples)
         self.assertEqual(self.waveform.sampling_rate, empty_pilot_signal.sampling_rate)
 
-        expected_samples = np.arange(100, dtype=np.complex_)
+        expected_samples = np.arange(100, dtype=np.complex128)
         pilot_mock = Mock()
         pilot_mock.generate.return_value = expected_samples
         self.waveform.pilot_section = pilot_mock
@@ -507,7 +507,7 @@ class TestOrthogonalWaveform(TestCase):
         tx_signal = ofdm.modulate(ofdm.place(symbols))
         received_symbols = ofdm.demodulate(tx_signal)
 
-        expected_state = np.ones((1, 1, 1, self.num_subcarriers), dtype=np.complex_)
+        expected_state = np.ones((1, 1, 1, self.num_subcarriers), dtype=np.complex128)
         stated_symbols = ofdm.channel_estimation.estimate_channel(received_symbols)
 
         assert_array_almost_equal(expected_state, stated_symbols.states)
@@ -580,7 +580,7 @@ class TestPilotSection(TestCase):
 
     def setUp(self) -> None:
         self.rng = default_rng(42)
-        self.subsymbols = Symbols(np.array([1.0, -1.0, 1.0j, -1.0j], dtype=np.complex_))
+        self.subsymbols = Symbols(np.array([1.0, -1.0, 1.0j, -1.0j], dtype=np.complex128))
         self.wave = OrthogonalWaveformMock(128, [], [], oversampling_factor=4)
 
         self.pilot_section = PilotSection(pilot_elements=self.subsymbols, wave=self.wave)
@@ -667,7 +667,7 @@ class TestPilotSection(TestCase):
     def test_configured_pilot_sequence(self) -> None:
         """Specified subsymbols should result in the generation of a valid pilot sequence"""
 
-        self.pilot_section.pilot_elements = Symbols(np.array([[[1.0, -1.0, 1.0j, -1.0j]]], dtype=np.complex_))
+        self.pilot_section.pilot_elements = Symbols(np.array([[[1.0, -1.0, 1.0j, -1.0j]]], dtype=np.complex128))
         pilot_sequence = self.pilot_section._pilot_sequence()
 
         assert_array_equal(self.pilot_section.pilot_elements.raw.flatten(), pilot_sequence[:4])
@@ -684,7 +684,7 @@ class TestPilotSection(TestCase):
         
     def test_pick_place_symbols(self) -> None:
         
-        placed_symbols = self.pilot_section.place_symbols(np.empty(0, dtype=np.complex_), Mock())
+        placed_symbols = self.pilot_section.place_symbols(np.empty(0, dtype=np.complex128), Mock())
         picked_symbols = self.pilot_section.pick_symbols(placed_symbols)
         
         self.assertEqual(0, picked_symbols.size)
@@ -734,9 +734,9 @@ class TestCorrelationSynchronization(TestCase):
             symbols = np.exp(2j * pi * self.rng.uniform(0, 1, (n, self.wave.num_data_symbols)))
             frames = [np.outer(np.exp(2j * pi * self.rng.uniform(0, 1, self.num_streams)), self.wave.modulate(self.wave.place(Symbols(symbols[f, :])))) for f in range(n)]
 
-            signal = np.empty((self.num_streams, 0), dtype=np.complex_)
+            signal = np.empty((self.num_streams, 0), dtype=np.complex128)
             for frame in frames:
-                signal = np.concatenate((signal, np.zeros((self.num_streams, d), dtype=np.complex_), frame), axis=1)
+                signal = np.concatenate((signal, np.zeros((self.num_streams, d), dtype=np.complex128), frame), axis=1)
 
             frame_delays = self.synchronization.synchronize(signal)
 
@@ -783,7 +783,7 @@ class TestLeastSquaresChannelEstimation(TestCase):
         """Least squares channel estimation should raise a NotImplementedError on invalid arguments"""
 
         with self.assertRaises(NotImplementedError):
-            self.estimation.estimate_channel(Symbols(np.empty((2, 0, 10), dtype=np.complex_)))
+            self.estimation.estimate_channel(Symbols(np.empty((2, 0, 10), dtype=np.complex128)))
 
     def test_estimate_channel(self) -> None:
         """Least squares channel estimation should correctly compute the channel estimate"""

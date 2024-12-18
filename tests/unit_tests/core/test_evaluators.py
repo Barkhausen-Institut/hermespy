@@ -104,19 +104,18 @@ class TestReceivePowerEvaluator(TestCase):
         self.num_antennas = 2
 
         self.transmitted_signal = Signal.Create(self.rng.standard_normal((self.num_antennas, self.num_samples)) + 1j * self.rng.standard_normal((self.num_antennas, self.num_samples)), self.sampling_rate, 0, 0, 0)
-
-        self.device = SimulatedDevice(antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1.0, [self.num_antennas, 1, 1]))
+        
         self.transmitter = SignalTransmitter(self.transmitted_signal)
         self.receiver = SignalReceiver(self.num_samples, self.sampling_rate)
-        self.transmitter.device = self.device
-        self.receiver.device = self.device
-
         self.evaluator = ReceivePowerEvaluator(self.receiver)
+        
+        self.device = SimulatedDevice(antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1.0, [self.num_antennas, 1, 1]))
+        self.device.transmitters.add(self.transmitter)
+        self.device.receivers.add(self.receiver)
 
     def test_propeties(self) -> None:
         """Properties should be properly initialized"""
 
-        self.assertEqual(self.evaluator.target, self.receiver)
         self.assertEqual("RxPwr", self.evaluator.abbreviation)
         self.assertEqual("Receive Power", self.evaluator.title)
 
@@ -125,13 +124,6 @@ class TestReceivePowerEvaluator(TestCase):
 
         with self.assertRaises(RuntimeError):
             self.evaluator.evaluate()
-
-    def test_generate_result_validation(self) -> None:
-        """Generating a result should raise a RuntimeError if the receiver has no device"""
-
-        with self.assertRaises(RuntimeError), patch('hermespy.core.operators.SignalReceiver.device', new_callable=PropertyMock) as device_property:
-            device_property.return_value = None
-            self.evaluator.generate_result(Mock(), Mock())
 
     def test_evaluation(self) -> None:
         num_drops = 10
@@ -168,15 +160,15 @@ class TestTransmitPowerEvaluator(TestCase):
         self.transmitted_signal = Signal.Create(self.rng.standard_normal((self.num_antennas, self.num_samples)) + 1j * self.rng.standard_normal((self.num_antennas, self.num_samples)), self.sampling_rate, 0, 0, 0)
 
         self.device = SimulatedDevice(antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1.0, [self.num_antennas, 1, 1]))
+        
         self.transmitter = SignalTransmitter(self.transmitted_signal)
-        self.transmitter.device = self.device
+        self.device.transmitters.add(self.transmitter)
 
         self.evaluator = TransmitPowerEvaluator(self.transmitter)
 
     def test_propeties(self) -> None:
         """Properties should be properly initialized"""
 
-        self.assertEqual(self.evaluator.target, self.transmitter)
         self.assertEqual("TxPwr", self.evaluator.abbreviation)
         self.assertEqual("Transmit Power", self.evaluator.title)
 
@@ -185,13 +177,6 @@ class TestTransmitPowerEvaluator(TestCase):
 
         with self.assertRaises(RuntimeError):
             self.evaluator.evaluate()
-
-    def test_generate_result_validation(self) -> None:
-        """Generating a result should raise a RuntimeError if the receiver has no device"""
-
-        with self.assertRaises(RuntimeError), patch('hermespy.core.operators.SignalTransmitter.device', new_callable=PropertyMock) as device_property:
-            device_property.return_value = None
-            self.evaluator.generate_result(Mock(), Mock())
 
     def test_evaluation(self) -> None:
         num_drops = 10

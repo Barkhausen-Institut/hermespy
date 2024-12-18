@@ -45,7 +45,7 @@ class Direction(np.ndarray):
         cos = np.cos(angles)
         sin = np.sin(angles)
 
-        unit_vector = np.array([sin[1] * cos[0], sin[1] * sin[0], cos[1]], dtype=np.float_)
+        unit_vector = np.array([sin[1] * cos[0], sin[1] * sin[0], cos[1]], dtype=np.float64)
         return unit_vector
 
     @classmethod
@@ -87,7 +87,7 @@ class Direction(np.ndarray):
         # Only valid if the direction has been normalized!!!!
         zenith = np.arccos(unit_vector[2])
 
-        return np.array([azimuth, zenith], dtype=np.float_)
+        return np.array([azimuth, zenith], dtype=np.float64)
 
     def to_spherical(self) -> np.ndarray:
         """Represent the direction as spherical coordinates.
@@ -110,7 +110,7 @@ class Direction(np.ndarray):
         Returns: The initialized direction.
         """
 
-        vector = vector.flatten().astype(np.float_)
+        vector = vector.flatten().astype(np.float64)
         ndmin = vector.size
         if ndmin > 3:
             raise ValueError("Vector is not a valid cartesian vector")
@@ -123,7 +123,7 @@ class Direction(np.ndarray):
 
             vector /= norm
 
-        unit_vector = np.zeros(3, dtype=np.float_)
+        unit_vector = np.zeros(3, dtype=np.float64)
         unit_vector[:ndmin] = vector
 
         return unit_vector.view(Direction)
@@ -161,7 +161,7 @@ class Transformation(np.ndarray, Serializable):
             )
 
         else:
-            rpy = np.array([np.arctan2(self[0, 1], self[1, 1]), 0.5 * np.pi, 0], dtype=np.float_)
+            rpy = np.array([np.arctan2(self[0, 1], self[1, 1]), 0.5 * np.pi, 0], dtype=np.float64)
 
         return rpy.view(np.ndarray)
 
@@ -205,7 +205,7 @@ class Transformation(np.ndarray, Serializable):
                     1 - 2 * (q[1] ** 2 + q[2] ** 2),
                 ],
             ],
-            dtype=np.float_,
+            dtype=np.float64,
         )
 
     @property
@@ -226,7 +226,7 @@ class Transformation(np.ndarray, Serializable):
                     (self[0, 2] - self[2, 0]) / S,
                     (self[1, 0] - self[0, 1]) / S,
                 ],
-                dtype=np.float_,
+                dtype=np.float64,
             )
 
         if self[0, 0] > self[1, 1] and self[0, 0] > self[2, 2]:
@@ -238,7 +238,7 @@ class Transformation(np.ndarray, Serializable):
                     (self[0, 1] + self[1, 0]) / S,
                     (self[0, 2] + self[2, 0]) / S,
                 ],
-                dtype=np.float_,
+                dtype=np.float64,
             )
 
         if self[1, 1] > self[2, 2]:
@@ -250,7 +250,7 @@ class Transformation(np.ndarray, Serializable):
                     0.25 / S,
                     (self[1, 2] + self[2, 1]) / S,
                 ],
-                dtype=np.float_,
+                dtype=np.float64,
             )
 
         S = 2 * (1 + self[2, 2] - self[0, 0] - self[1, 1]) ** 0.5
@@ -261,7 +261,7 @@ class Transformation(np.ndarray, Serializable):
                 (self[1, 2] + self[2, 1]) / S,
                 0.25 / S,
             ],
-            dtype=np.float_,
+            dtype=np.float64,
         )
 
     @rotation_quaternion.setter
@@ -304,7 +304,7 @@ class Transformation(np.ndarray, Serializable):
                 ],
                 [-sin[1], cos[1] * sin[0], cos[1] * cos[0]],
             ],
-            dtype=np.float_,
+            dtype=np.float64,
         )
 
         return rotation

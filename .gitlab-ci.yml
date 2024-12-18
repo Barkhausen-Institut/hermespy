@@ -4,10 +4,10 @@ image: python:3.11
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   GIT_SUBMODULE_STRATEGY: recursive
+  HERMES_WHEEL_12: "hermespy-$HERMES_VERSION-cp312-cp312-linux_x86_64.whl"
   HERMES_VERSION: "1.3.0"
   HERMES_WHEEL_11: "hermespy-$HERMES_VERSION-cp311-cp311-linux_x86_64.whl"
   HERMES_WHEEL_10: "hermespy-$HERMES_VERSION-cp310-cp310-linux_x86_64.whl"
-  HERMES_WHEEL_09: "hermespy-$HERMES_VERSION-cp39-cp39-linux_x86_64.whl"
   PYDEVD_DISABLE_FILE_VALIDATION: 1
 
 
@@ -23,6 +23,19 @@ cache:
   paths:
     - dist/
 
+Build Python 3.12:
+  stage: build
+  image: python:3.12
+  before_script:
+    - apt -qq update && apt-get -qq install -y build-essential octave pandoc python-dev-is-python3
+    - pip install -qq --upgrade setuptools wheel pybind11 scikit-build cmake build
+  script:
+    - export MAKEFLAGS="-j $(grep -c ^processor /proc/cpuinfo)"
+    - python -m build
+  artifacts:
+    paths:
+      - dist/$HERMES_WHEEL_12
+  
 Build Python 3.11:
   stage: build
   image: python:3.11
@@ -50,19 +63,6 @@ Build Python 3.10:
   artifacts:
     paths:
       - dist/$HERMES_WHEEL_10
-
-Build Python 3.9:
-  stage: build
-  image: python:3.9
-  before_script:
-    - apt -qq update && apt-get -qq install -y build-essential octave pandoc python-dev-is-python3
-    - pip install -qq --upgrade setuptools wheel pybind11 scikit-build cmake build
-  script:
-    - export MAKEFLAGS="-j $(grep -c ^processor /proc/cpuinfo)"
-    - python -m build
-  artifacts:
-    paths:
-      - dist/$HERMES_WHEEL_09
 
 Unit Testing:
   stage: test
@@ -101,6 +101,20 @@ Integration Testing:
     paths:
       - ./scripts/performance/results/integration_tests/results.json
 
+Integrity Python 3.12:
+  stage: test
+  image: python:3.12
+  dependencies:
+    - Build Python 3.12
+  before_script:
+    - pip install -qq dist/$HERMES_WHEEL_12\[test,quadriga,audio\]
+    - pip install -qq memray
+  script:
+    - python ./tests/test_install.py ./tests/integrity_tests/ 
+  artifacts:
+    paths:
+      - ./scripts/performance/results/integration_tests/results.json
+
 Integrity Python 3.11:
   stage: test
   image: python:3.11
@@ -124,20 +138,6 @@ Integrity Python 3.10:
   before_script:
     - apt -qq update && apt-get -qq install -y octave portaudio19-dev python-dev-is-python3  # remove for docker
     - pip install -qq dist/$HERMES_WHEEL_10\[test,quadriga,audio\]
-    - pip install -qq memray
-  script:
-    - python ./tests/test_install.py ./tests/integrity_tests/ 
-  artifacts:
-    paths:
-      - ./scripts/performance/results/integration_tests/results.json
-
-Integrity Python 3.9:
-  stage: test
-  image: python:3.9
-  dependencies:
-    - Build Python 3.9
-  before_script:
-    - pip install -qq dist/$HERMES_WHEEL_09\[test,quadriga,audio\]
     - pip install -qq memray
   script:
     - python ./tests/test_install.py ./tests/integrity_tests/ 

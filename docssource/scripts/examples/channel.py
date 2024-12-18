@@ -18,7 +18,9 @@ beta_device = SimulatedDevice()
 channel = Channel()
 
 # Configure communication link between the two devices
-link = SimplexLink(alpha_device, beta_device)
+link = SimplexLink()
+alpha_device.transmitters.add(link)
+beta_device.receivers.add(link)
 
 # Specify the waveform and postprocessing to be used by the link
 link.waveform = RootRaisedCosineWaveform(symbol_rate=1e8, oversampling_factor=2,

@@ -62,7 +62,7 @@ CDL_Cluster_Parameters: Mapping[CDLType, np.ndarray] = {
             [5.3043, -19.9, +126.50, -151.8, +022.7, 150.7],
             [9.6586, -29.7, -56.200, +55.20, +144.9, 156.1],
         ],
-        dtype=np.float_,
+        dtype=np.float64,
     ),
     # Table 7.7.1-2: CDL-B
     CDLType.B: np.array(
@@ -91,7 +91,7 @@ CDL_Cluster_Parameters: Mapping[CDLType, np.ndarray] = {
             [4.2790, -9.20, +075.60, +088.7, +117.8, +60.1],
             [4.7834, -11.3, -077.60, -060.4, +115.7, +62.3],
         ],
-        dtype=np.float_,
+        dtype=np.float64,
     ),
     # Table 7.7.1-3: CDL-C
     CDLType.C: np.array(
@@ -121,7 +121,7 @@ CDL_Cluster_Parameters: Mapping[CDLType, np.ndarray] = {
             [7.0427, -21.6, +119.5, -021.9, +105.2, +058.0],
             [8.6523, -22.8, -123.8, +033.6, +107.8, +057.0],
         ],
-        dtype=np.float_,
+        dtype=np.float64,
     ),
     # Table 7.7.1-4: CDL-D
     CDLType.D: np.array(
@@ -141,7 +141,7 @@ CDL_Cluster_Parameters: Mapping[CDLType, np.ndarray] = {
             [09.708, -30.0, -132.1, -009.1, +080.3, +70.6],
             [12.525, -27.7, +077.2, -083.8, +086.5, +72.9],
         ],
-        dtype=np.float_,
+        dtype=np.float64,
     ),
     # Table 7.7.1-5: CDL-E
     CDLType.E: np.array(
@@ -162,7 +162,7 @@ CDL_Cluster_Parameters: Mapping[CDLType, np.ndarray] = {
             [12.0034, -29.80, +55.9, -036.2, +095.6, +88.6],
             [20.6419, -29.20, +57.6, -026.0, +104.6, +78.3],
         ],
-        dtype=np.float_,
+        dtype=np.float64,
     ),
 }
 

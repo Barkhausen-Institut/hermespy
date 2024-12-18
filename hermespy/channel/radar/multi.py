@@ -360,7 +360,7 @@ class MultiTargetRadarChannelRealization(RadarChannelRealization):
 
         # Return realized information wrapped in a target realization dataclass
         return RadarTargetPath(
-            target_forwards_transform.translation,
+            trajectory_sample.pose.translation,
             trajectory_sample.velocity,
             cross_section,
             reflection_phase,

@@ -405,12 +405,12 @@ class Factory:
         self.__tag_registry = {}
 
         # Add custom representers
-        self.__yaml.representer.add_representer(complex, Factory.__complex_representer)
+        self.__yaml.representer.add_representer(complex, Factory.__complex128representer)
         self.__yaml.representer.add_representer(np.ndarray, Factory.__array_representer)
-        self.__yaml.representer.add_representer(np.float_, Factory.__numpy_float_representer)
+        self.__yaml.representer.add_representer(np.float64, Factory.__numpy_float64representer)
 
         # Add custom constructors
-        self.__yaml.constructor.add_constructor("complex", Factory.__complex_constructor)
+        self.__yaml.constructor.add_constructor("complex", Factory.__complex128constructor)
         self.__yaml.constructor.add_constructor("array", Factory.__array_constructor)
         self.__yaml.constructor.add_constructor("dB", Factory.__logarithmic_constructor)
 
@@ -481,7 +481,7 @@ class Factory:
         return self.__tag_registry
 
     @staticmethod
-    def __complex_representer(representer: SafeRepresenter, value: complex) -> ScalarNode:
+    def __complex128representer(representer: SafeRepresenter, value: complex) -> ScalarNode:
         """Represent complex numbers as strings.
 
         Args:
@@ -492,11 +492,11 @@ class Factory:
         Returns: Scalar yaml node.
         """
 
-        complex_string = str(value)[1:-1]
-        return representer.represent_scalar("complex", complex_string)
+        complex128string = str(value)[1:-1]
+        return representer.represent_scalar("complex", complex128string)
 
     @staticmethod
-    def __complex_constructor(constructor: SafeConstructor, node: ScalarNode) -> complex:
+    def __complex128constructor(constructor: SafeConstructor, node: ScalarNode) -> complex:
         """Construct a complex number from YAML.
 
         Args:
@@ -508,8 +508,8 @@ class Factory:
         Returns: A complex number.
         """
 
-        complex_number = complex(constructor.construct_scalar(node))
-        return complex_number
+        complex128number = complex(constructor.construct_scalar(node))
+        return complex128number
 
     @staticmethod
     def __array_representer(representer: SafeRepresenter, array: np.ndarray) -> SequenceNode:
@@ -538,13 +538,13 @@ class Factory:
         return sequence
 
     @staticmethod
-    def __numpy_float_representer(representer: SafeRepresenter, value: np.float_) -> ScalarNode:
+    def __numpy_float64representer(representer: SafeRepresenter, value: np.float64) -> ScalarNode:
         """Represent numy floating point scalar numbers as strings.
 
         Args:
 
             representer (SafeRepresenter): YAML representer.
-            value (np.float_): The number to be transformed to a string.
+            value (np.float64): The number to be transformed to a string.
 
         Returns: Scalar yaml node.
         """
@@ -567,7 +567,7 @@ class Factory:
             return np.array([Factory.__array_constructor(constructor, n) for n in node.value])
 
         if "j" in node.value:
-            return Factory.__complex_constructor(constructor, node)
+            return Factory.__complex128constructor(constructor, node)
 
         else:
             return constructor.construct_object(node)

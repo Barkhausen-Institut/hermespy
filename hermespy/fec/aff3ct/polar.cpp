@@ -38,10 +38,12 @@ public:
         this->encoder = std::make_unique<Encoder_polar<int32_t>>(dataBlockSize, codeBlockSize, frozenBits);
     }
 
-    py::array_t<int32_t> encode(py::array_t<int32_t>& data)
+    py::array_t<int32_t> encode(py::array_t<int32_t, py::array::c_style>& data)
     {
         py::array_t<int32_t> code(this->codeBlockSize);
-        this->encoder->encode(static_cast<int32_t*>(data.mutable_data()), static_cast<int32_t*>(code.mutable_data()));
+        int32_t* dataPtr = static_cast<int32_t*>(data.request().ptr);
+        int32_t* codePtr = static_cast<int32_t*>(code.request().ptr);
+        this->encoder->encode(dataPtr, codePtr);
 
         return code;
     }

@@ -19,6 +19,7 @@ class TestRadarSionna(unittest.TestCase):
         carrier_frequency = 24e9
         device = simulation.new_device(carrier_frequency=carrier_frequency)
         device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, .5 * speed_of_light / carrier_frequency, [4, 4, 1])
+        device.transmit_coding[0] = ConventionalBeamformer()
 
         # Create a radar channel modeling a single target
         channel = SionnaRTChannel(rt.load_scene(rt.scene.simple_reflector), 1.0, 42)
@@ -29,13 +30,15 @@ class TestRadarSionna(unittest.TestCase):
         radar.waveform = FMCW()
         radar.receive_beamformer = ConventionalBeamformer()
         radar.detector = CFARDetector((2, 2), (0, 0), 0.001)
+        device.add_dsp(radar)
 
         positions = [
             np.asarray([0., 0., -100.]),
         ]
         for position in positions:
             device.trajectory = StaticTrajectory(Transformation.From_Translation(position))
-            simulation.scenario.drop()
-            self.assertEqual(1, radar.reception.cloud.num_points)
-            for coord_dist_act, coord_dist_exp in zip(np.abs(position), np.abs(radar.reception.cloud.points[0].position)):
+            drop = simulation.scenario.drop()
+            radar_reception = drop.device_receptions[0].operator_receptions[0]
+            self.assertEqual(1, radar_reception.cloud.num_points)
+            for coord_dist_act, coord_dist_exp in zip(np.abs(position), np.abs(radar_reception.cloud.points[0].position)):
                 self.assertAlmostEqual(coord_dist_act, coord_dist_exp, delta=radar.waveform.range_resolution)

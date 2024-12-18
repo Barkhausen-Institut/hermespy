@@ -45,7 +45,7 @@ class TestRocFromMeasurements(TestCase):
 
         radar = Radar()
         radar.waveform = FMCW(bandwidth=bandwidth, num_chirps=10, chirp_duration=chirp_duration, pulse_rep_interval=1.1 * chirp_duration)
-        radar.device = device
+        device.add_dsp(radar)
 
         channel = SingleTargetRadarChannel(target_range=(0.75, 1.25), radar_cross_section=1.0)
         system.set_channel(device, device, channel)

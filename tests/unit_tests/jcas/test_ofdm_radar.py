@@ -45,15 +45,14 @@ class TestOFDMRadar(TestCase):
     def test_transmit_receive(self) -> None:
         """Transmitting and subsequently receiving should return in a correct radar estimate"""
 
-        transmission = self.radar.transmit()
-        reception = self.radar.receive(transmission.signal)
+        transmission = self.radar.transmit(self.device.state())
+        reception = self.radar.receive(transmission.signal, self.device.state())
 
         self.assertEqual(0, np.argmax(np.sum(reception.cube.data, (0, 1), keepdims=False)))
 
     def test_receive_validation(self) -> None:
         """Receive should raise RuntimeError if no cached transmission is available"""
 
-        transmission = self.radar.transmit(cache=False)
-
+        transmission = OFDMRadar(self.radar.waveform).transmit(self.device.state())
         with self.assertRaises(RuntimeError):
-            _ = self.radar.receive(transmission.signal)
+            _ = self.radar.receive(transmission.signal, self.device.state())

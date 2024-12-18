@@ -80,7 +80,7 @@ class DelayChannelSample(ChannelSample):
                     self.receiver_state.antennas.num_receive_antennas,
                     self.transmitter_state.antennas.num_transmit_antennas,
                 ),
-                dtype=np.complex_,
+                dtype=np.complex128,
             )
 
         transmit_response = self.transmitter_state.antennas.cartesian_array_response(
@@ -122,7 +122,7 @@ class DelayChannelSample(ChannelSample):
 
         propagated_samples = np.append(
             np.zeros(
-                (self.receiver_state.antennas.num_receive_antennas, delay_samples), np.complex_
+                (self.receiver_state.antennas.num_receive_antennas, delay_samples), np.complex128
             ),
             gain_factor * spatial_response @ signal,
             axis=1,
@@ -149,7 +149,7 @@ class DelayChannelSample(ChannelSample):
                 num_samples,
                 min(1 + delay_samples, max_num_taps),
             ),
-            dtype=np.complex_,
+            dtype=np.complex128,
         )
         if delay_samples < max_num_taps:
             cir[:, :, :, delay_samples] = gain_factor * spatial_response[:, :, np.newaxis]

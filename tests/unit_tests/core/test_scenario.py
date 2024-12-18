@@ -9,7 +9,7 @@ from unittest.mock import PropertyMock, MagicMock, Mock, patch
 import numpy.random as rnd
 from h5py import File, Group
 
-from hermespy.core import Device, Drop, Scenario, ScenarioMode, Signal, SignalReceiver, SilentTransmitter, ReplayScenario
+from hermespy.core import Device, DeviceState, Drop, Scenario, ScenarioMode, Signal, SignalReceiver, SilentTransmitter, ReplayScenario
 from hermespy.simulation import SimulatedDevice
 
 __author__ = "Tobias Kronauer"
@@ -22,7 +22,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class MockScenario(Scenario[Device, Drop]):
+class MockScenario(Scenario[Device, DeviceState, Drop]):
     """Implementation of abstract scenario base for testing purpuses"""
 
     def _drop(self) -> Drop:
@@ -311,7 +311,9 @@ class TestScenario(TestCase):
         """Transmit operators should return the correct list of operators"""
 
         mock_alpha = MagicMock()
+        mock_alpha.sampling_rate = 1.0
         mock_beta = MagicMock()
+        mock_beta.sampling_rate = 1.0
         self.device_alpha.transmitters.add(mock_alpha)
         self.device_beta.transmitters.add(mock_beta)
 
@@ -338,7 +340,9 @@ class TestScenario(TestCase):
         mock_device = MagicMock()
         self.scenario.add_device(mock_device)
 
-        outputs = self.scenario.generate_outputs()
+        states = [d.state() for d in self.scenario.devices]
+        transmissions = self.scenario.transmit_operators(states)
+        outputs = self.scenario.generate_outputs(transmissions, states)
 
         self.assertEqual(3, len(outputs))
         mock_device.generate_output.assert_called_once()

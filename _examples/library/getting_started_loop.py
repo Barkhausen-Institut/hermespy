@@ -17,7 +17,9 @@ rx_device = hardware_loop.new_device(carrier_frequency=1e9)
 hardware_scenario.set_channel(tx_device, rx_device, TDL())
 
 # Define a simplex communication link between the two devices
-link = SimplexLink(tx_device, rx_device)
+link = SimplexLink()
+tx_device.transmitters.add(link)
+rx_device.receivers.add(link)
 
 # Configure the waveform to be transmitted over the link
 link.waveform = RootRaisedCosineWaveform(symbol_rate=1e6, oversampling_factor=8,

@@ -190,7 +190,7 @@ class LinearTrajectory(Trajectory):
         if timestamp >= self.__start and timestamp < self.__start + self.__duration:
             return self.__velocity
         else:
-            return np.zeros(3, np.float_)
+            return np.zeros(3, np.float64)
 
     def sample_translation(self, timestamp: float) -> np.ndarray:
         t = np.clip(timestamp, self.__start, self.__start + self.__duration) - self.__start
@@ -215,7 +215,7 @@ class StaticTrajectory(Serializable, Trajectory):
 
         # Initialize class attributes
         self.__pose = Transformation.No() if pose is None else pose
-        self.__velocity = np.zeros(3, dtype=np.float_) if velocity is None else velocity
+        self.__velocity = np.zeros(3, dtype=np.float64) if velocity is None else velocity
 
     @property
     def pose(self) -> Transformation:
@@ -305,26 +305,26 @@ class BITrajectoryB(Trajectory):
     def __start_end_point_time(self, timestamp: float) -> tuple:
         """Returns start start_point, end_point, start_time and end_time of the straight path section."""
         if timestamp > self.__duration * 4 / 5:
-            start_point = self.__height * np.array([0.5, 0.5, 0], dtype=np.float_)
-            end_point = self.__height * np.array([0, 0.5, 0], dtype=np.float_)
+            start_point = self.__height * np.array([0.5, 0.5, 0], dtype=np.float64)
+            end_point = self.__height * np.array([0, 0.5, 0], dtype=np.float64)
             start_time = self.__duration * 4 / 5
             end_time = self.__duration
 
         elif timestamp > self.__duration * 3 / 5:
-            start_point = self.__height * np.array([0.5, 0, 0], dtype=np.float_)
-            end_point = self.__height * np.array([0.5, 0.5, 0], dtype=np.float_)
+            start_point = self.__height * np.array([0.5, 0, 0], dtype=np.float64)
+            end_point = self.__height * np.array([0.5, 0.5, 0], dtype=np.float64)
             start_time = self.__duration * 3 / 5
             end_time = self.__duration * 4 / 5
 
         elif timestamp > self.__duration * 2 / 5:
-            start_point = np.array([0, 0, 0], dtype=np.float_)
-            end_point = self.__height * np.array([0.5, 0, 0], dtype=np.float_)
+            start_point = np.array([0, 0, 0], dtype=np.float64)
+            end_point = self.__height * np.array([0.5, 0, 0], dtype=np.float64)
             start_time = self.__duration * 2 / 5
             end_time = self.__duration * 3 / 5
 
         else:
-            start_point = np.array([0, self.__height, 0], dtype=np.float_)
-            end_point = np.array([0, 0, 0], dtype=np.float_)
+            start_point = np.array([0, self.__height, 0], dtype=np.float64)
+            end_point = np.array([0, 0, 0], dtype=np.float64)
             start_time = 0
             end_time = self.__duration * 2 / 5
 
@@ -333,13 +333,13 @@ class BITrajectoryB(Trajectory):
     def sample_velocity(self, timestamp: float) -> np.ndarray:
         start_point, end_point, start_time, end_time = self.__start_end_point_time(timestamp)
         if timestamp <= start_time or timestamp >= end_time:
-            return np.zeros(3, np.float_)
+            return np.zeros(3, np.float64)
         return (end_point - start_point) / end_time - start_time
 
     def sample_translation(self, timestamp: float) -> np.ndarray:
         start_point, _, start_time, end_time = self.__start_end_point_time(timestamp)
         if timestamp <= start_time or timestamp >= end_time:
-            return np.array([0, 0.5 * self.__height, 0], np.float_)
+            return np.array([0, 0.5 * self.__height, 0], np.float64)
         return start_point + self.sample_velocity(timestamp) * (timestamp - start_time)
 
     def sample_orientation(self, timestamp: float) -> np.ndarray:
