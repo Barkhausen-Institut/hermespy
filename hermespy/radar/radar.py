@@ -2,20 +2,22 @@
 
 from __future__ import annotations
 from abc import abstractmethod
-from typing import Generic, Tuple, Type, TypeVar
+from typing import Generic, Sequence, Tuple, Type, TypeVar
 
 import numpy as np
 from h5py import Group
 from scipy.constants import speed_of_light
 
-from hermespy.beamforming import ReceiveBeamformer, TransmitBeamformer
+from hermespy.beamforming import ReceiveBeamformer
 from hermespy.core import (
-    Device,
-    DuplexOperator,
     FloatingError,
     Signal,
     Serializable,
     Transmission,
+    TransmitState,
+    Transmitter,
+    Receiver,
+    ReceiveState,
     Reception,
 )
 from .cube import RadarCube
@@ -300,41 +302,45 @@ RRT = TypeVar("RRT", bound=RadarReception)
 """Type of radar reception."""
 
 
-class RadarBase(Generic[RTT, RRT], DuplexOperator[RTT, RRT]):
+class RadarBase(Generic[RTT, RRT], Transmitter[RTT], Receiver[RRT]):
     """Base class class for radar sensing signal processing pipelines."""
 
-    __transmit_beamformer: TransmitBeamformer | None
     __receive_beamformer: ReceiveBeamformer | None
     __detector: RadarDetector | None
 
-    def __init__(self, *args, **kwargs) -> None:
-        # Initialize base class
-        DuplexOperator.__init__(self, *args, **kwargs)
+    def __init__(
+        self,
+        selected_transmit_ports: Sequence[int] | None = None,
+        selected_receive_ports: Sequence[int] | None = None,
+        carrier_frequency: float | None = None,
+        seed: int | None = None,
+    ) -> None:
+        """
+        Args:
+
+            selected_transmit_ports (Sequence[int] | None):
+                Indices of antenna ports selected for transmission from the operated :class:`Device's<Device>` antenna array.
+                If not specified, all available ports will be considered.
+
+            selected_receive_ports (Sequence[int] | None):
+                Indices of antenna ports selected for reception from the operated :class:`Device's<Device>` antenna array.
+                If not specified, all available antenna ports will be considered.
+
+            carrier_frequency (float, optional):
+                Central frequency of the mixed signal in radio-frequency transmission band.
+                If not specified, the operated device's default carrier frequency will be assumed during signal processing.
+
+            seed (int, optional):
+                Random seed used to initialize the pseudo-random number generator.
+        """
+
+        # Initialize base classes
+        Transmitter.__init__(self, seed, selected_transmit_ports, carrier_frequency)
+        Receiver.__init__(self, seed, None, selected_receive_ports, carrier_frequency)
 
         # Initialize class attributes
         self.receive_beamformer = None
-        self.transmit_beamformer = None
         self.detector = None
-
-    @property
-    def transmit_beamformer(self) -> TransmitBeamformer | None:
-        """Beamforming applied during signal transmission.
-
-        The :class:`TransmitBeamformer<hermespy.beamforming.beamformer.TransmitBeamformer>`'s :meth:`transmit<hermespy.beamforming.beamformer.TransmitBeamformer.transmit>`
-        method is called as a subroutine of :meth:`Transmitter.transmit()<hermespy.core.device.Transmitter.transmit>`.
-        Configuration is required for if the assigned :class:`Device<hermespy.core.device.Device>` features multiple :meth:`antennas<hermespy.core.device.Device.antennas>`.
-        """
-
-        return self.__transmit_beamformer
-
-    @transmit_beamformer.setter
-    def transmit_beamformer(self, value: TransmitBeamformer | None) -> None:
-        if value is None:
-            self.__transmit_beamformer = None
-
-        else:
-            value.operator = self
-            self.__transmit_beamformer = value
 
     @property
     def receive_beamformer(self) -> ReceiveBeamformer | None:
@@ -349,12 +355,7 @@ class RadarBase(Generic[RTT, RRT], DuplexOperator[RTT, RRT]):
 
     @receive_beamformer.setter
     def receive_beamformer(self, value: ReceiveBeamformer | None) -> None:
-        if value is None:
-            self.__receive_beamformer = None
-
-        else:
-            value.operator = self
-            self.__receive_beamformer = value
+        self.__receive_beamformer = value
 
     @property
     def detector(self) -> RadarDetector | None:
@@ -371,7 +372,9 @@ class RadarBase(Generic[RTT, RRT], DuplexOperator[RTT, RRT]):
     def detector(self, value: RadarDetector | None) -> None:
         self.__detector = value
 
-    def _receive_beamform(self, signal: Signal) -> Tuple[np.ndarray, np.ndarray]:
+    def _receive_beamform(
+        self, signal: Signal, device: ReceiveState
+    ) -> Tuple[np.ndarray, np.ndarray]:
         """Apply digital beamforming to the received signal.
 
         Subroutine of :meth:`_receive<Radar._receive>`.
@@ -379,6 +382,7 @@ class RadarBase(Generic[RTT, RRT], DuplexOperator[RTT, RRT]):
         Args:
 
             signal (Signal): Received radar waveform.
+            device (DeviceState): State of the device the radar is assigned to.
 
         Returns:
             Tuple of the angles of interest and the beamformed samples.
@@ -389,26 +393,25 @@ class RadarBase(Generic[RTT, RRT], DuplexOperator[RTT, RRT]):
             RuntimeError: If the beamforming configuration does not result in a single output stream.
         """
 
-        if self.num_receive_ports > 1:
+        if signal.num_streams > 1:
             if self.receive_beamformer is None:
                 raise RuntimeError(
                     "Receiving over a device with more than one RF port requires a beamforming configuration"
                 )
 
-            if self.receive_beamformer.num_receive_output_streams != 1:
+            num_receveive_output_streams = self.receive_beamformer.num_receive_output_streams(
+                signal.num_streams
+            )
+            if num_receveive_output_streams < 0:
+                raise RuntimeError(
+                    f"Configured radar receive beamformer does not support {signal.num_streams} input streams"
+                )
+            elif num_receveive_output_streams != 1:
                 raise RuntimeError(
                     "Only receive beamformers generating a single output stream are supported by radar operators"
                 )
 
-            if (
-                self.receive_beamformer.num_receive_input_streams
-                != self.device.antennas.num_receive_ports
-            ):
-                raise RuntimeError(
-                    "Radar operator receive beamformers are required to consider the full number of antenna streams"
-                )
-
-            beamformed_samples = self.receive_beamformer.probe(signal)[:, 0, :]
+            beamformed_samples = self.receive_beamformer.probe(signal, device)[:, 0, :]
 
         else:
             beamformed_samples = signal.getitem()
@@ -436,9 +439,6 @@ class Radar(RadarBase[RadarTransmission, RadarReception], Serializable):
 
        * - :meth:`waveform<.waveform>`
          - :class:`RadarWaveform`
-
-       * - :meth:`transmit_beamformer<.transmit_beamformer>`
-         - :class:`TransmitBeamformer<hermespy.beamforming.beamformer.TransmitBeamformer>`
 
        * - :meth:`receive_beamformer<.receive_beamformer>`
          - :class:`ReceiveBeamformer<hermespy.beamforming.beamformer.ReceiveBeamformer>`
@@ -519,25 +519,49 @@ class Radar(RadarBase[RadarTransmission, RadarReception], Serializable):
 
     __waveform: RadarWaveform | None
 
-    def __init__(self, device: Device | None = None, seed: int | None = None) -> None:
+    def __init__(
+        self,
+        waveform: RadarWaveform | None = None,
+        selected_transmit_ports: Sequence[int] | None = None,
+        selected_receive_ports: Sequence[int] | None = None,
+        carrier_frequency: float | None = None,
+        seed: int | None = None,
+    ) -> None:
         """
         Args:
 
-            device (Device, optional):
-                The device the radar is assigned to.
+            waveform (RadarWaveform, optional):
+                Description of the waveform to be transmitted and received by this radar.
+                :py:obj:`None` if no waveform is configured.
+
+            selected_transmit_ports (Sequence[int], otional):
+                Indices of antenna ports selected for transmission from the operated :class:`Device's<Device>` antenna array.
+                If not specified, all available ports will be considered.
+
+            selected_receive_ports (Sequence[int], optional):
+                Indices of antenna ports selected for reception from the operated :class:`Device's<Device>` antenna array.
+                If not specified, all available antenna ports will be considered.
+
+            carrier_frequency (float, optional):
+                Central frequency of the mixed signal in radio-frequency transmission band.
+                If not specified, the operated device's default carrier frequency will be assumed during signal processing.
 
             seed (int, optional):
-                Random seed used to generate the radar's internal state.
+                Random seed used to initialize the pseudo-random number generator.
         """
 
-        self.waveform = None
-        self.__waveform = None
+        # Initialize base classes
+        RadarBase.__init__(
+            self, selected_transmit_ports, selected_receive_ports, carrier_frequency, seed
+        )
 
-        RadarBase.__init__(self, device, device, seed)
+        # Initialize class attributes
+        self.__waveform = None
+        self.waveform = waveform
 
     @property
     def sampling_rate(self) -> float:
-        return self.waveform.sampling_rate
+        return 0.0 if self.waveform is None else self.waveform.sampling_rate
 
     @property
     def frame_duration(self) -> float:
@@ -583,8 +607,7 @@ class Radar(RadarBase[RadarTransmission, RadarReception], Serializable):
 
         return 0.0 if self.waveform is None else self.waveform.max_range
 
-    @property
-    def velocity_resolution(self) -> float:
+    def velocity_resolution(self, carrier_frequency: float) -> float:
         """The radar's velocity resolution in meters per second.
 
         Denoted by :math:`\\Delta v` of unit :math:`\\left[ \\Delta v \\right] = \\frac{\\mathrm{m}}{\\mathrm{s}}` in literature.
@@ -600,75 +623,39 @@ class Radar(RadarBase[RadarTransmission, RadarReception], Serializable):
         if self.waveform is None:
             raise FloatingError("Cannot compute velocity resolution without a waveform")
 
-        if self.carrier_frequency == 0.0:
+        if carrier_frequency == 0.0:
             raise RuntimeError("Cannot compute velocity resolution in base-band carrier frequency")
 
-        return (
-            0.5
-            * self.waveform.relative_doppler_resolution
-            * speed_of_light
-            / self.carrier_frequency
-        )
+        return 0.5 * self.waveform.relative_doppler_resolution * speed_of_light / carrier_frequency
 
-    def _transmit(self, duration: float = 0.0) -> RadarTransmission:
+    def _transmit(self, device: TransmitState, duration: float) -> RadarTransmission:
         if not self.__waveform:
             raise RuntimeError("Radar waveform not specified")
-
-        if not self.device:
-            raise RuntimeError("Error attempting to transmit over a floating radar operator")
 
         # Generate the radar waveform
         signal = self.waveform.ping()
 
-        # If the device has more than one antenna, a beamforming strategy is required
-        if self.device.antennas.num_antennas > 1:
-            # If no beamformer is configured, only the first antenna will transmit the ping
-            if self.transmit_beamformer is None:
-                additional_streams = signal.from_ndarray(
-                    np.zeros(
-                        (
-                            self.device.antennas.num_antennas - signal.num_streams,
-                            signal.num_samples,
-                        ),
-                        dtype=complex,
-                    )
-                )
-                signal.append_streams(additional_streams)
-
-            elif self.transmit_beamformer.num_transmit_input_streams != 1:
-                raise RuntimeError(
-                    "Only transmit beamformers requiring a single input stream are supported by radar operators"
-                )
-
-            elif (
-                self.transmit_beamformer.num_transmit_output_streams
-                != self.device.antennas.num_antennas
-            ):
-                raise RuntimeError(
-                    "Radar operator transmit beamformers are required to consider the full number of antennas"
-                )
-
-            else:
-                signal = self.transmit_beamformer.transmit(signal)
+        # Radar only supports a single output stream
+        if device.num_digital_transmit_ports > 1:
+            raise RuntimeError(
+                "Radars only provide a single output stream. Configure a transmit beamformer at the assigned device."
+            )
 
         # Prepare transmission
-        signal.carrier_frequency = self.carrier_frequency
+        signal.carrier_frequency = device.carrier_frequency
         transmission = RadarTransmission(signal)
 
         return transmission
 
-    def _receive(self, signal: Signal) -> RadarReception:
+    def _receive(self, signal: Signal, device: ReceiveState) -> RadarReception:
         if not self.waveform:
             raise RuntimeError("Radar waveform not specified")
-
-        if not self.device:
-            raise RuntimeError("Error attempting to receive over a floating radar operator")
 
         # Resample signal properly
         signal = signal.resample(self.__waveform.sampling_rate)
 
         # If the device has more than one antenna, a beamforming strategy is required
-        angles_of_interest, beamformed_samples = self._receive_beamform(signal)
+        angles_of_interest, beamformed_samples = self._receive_beamform(signal, device)
         range_bins = self.waveform.range_bins
         doppler_bins = self.waveform.relative_doppler_bins
 
@@ -685,7 +672,7 @@ class Radar(RadarBase[RadarTransmission, RadarReception], Serializable):
 
         # Create radar cube object
         cube = RadarCube(
-            cube_data, angles_of_interest, doppler_bins, range_bins, self.carrier_frequency
+            cube_data, angles_of_interest, doppler_bins, range_bins, device.carrier_frequency
         )
 
         # Infer the point cloud, if a detector has been configured

@@ -96,14 +96,16 @@ class TestEyePlot(_HardwareLoopPlotTest, TestCase):
         super().setUp()
 
         self.modem = DuplexModem()
-        self.modem.device = self.device
         self.modem.waveform = RRCWaveform(oversampling_factor=4, symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=50)
 
+        self.device.transmitters.add(self.modem)
+        self.device.receivers.add(self.modem)
+
         self._prepare_plot(EyePlot, self.modem)
-        
+
     def test_initial_plot_validation(self) -> None:
         """Initial plot should raise a RuntimeError if no synchronized frame is available"""
-        
+
         plot = EyePlot(DuplexModem())
         self.loop.add_plot(plot)
         with self.assertRaises(RuntimeError):
@@ -118,8 +120,10 @@ class TestReceivedConstellationPlot(_HardwareLoopPlotTest, TestCase):
         super().setUp()
 
         self.modem = DuplexModem()
-        self.modem.device = self.device
         self.modem.waveform = RRCWaveform(oversampling_factor=4, symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=10)
+
+        self.device.transmitters.add(self.modem)
+        self.device.receivers.add(self.modem)
 
         self._prepare_plot(ReceivedConstellationPlot, self.modem)
 
@@ -131,17 +135,16 @@ class TestRadarRangePlot(_HardwareLoopPlotTest, TestCase):
         super().setUp()
 
         self.radar = Radar()
-        self.radar.device = self.device
         self.radar.waveform = FMCW()
 
+        self.device.transmitters.add(self.radar)
+        self.device.receivers.add(self.radar)
+
         self._prepare_plot(RadarRangePlot, self.radar)
-        
+
     def test_update_plot_validation(self) -> None:
         """Updating the plot should raise a RuntimeError if no cube is available"""
-        
-        radar = MagicMock(spec=Radar)
-        radar.reception = None
-        
+
         with SimulationTestContext():
             with self.assertRaises(RuntimeError):
                 self.plot.update_plot(MagicMock(spec=HardwareLoopSample))
@@ -154,8 +157,10 @@ class TestEvaluationPlot(_HardwareLoopPlotTest, TestCase):
         super().setUp()
 
         self.modem = DuplexModem()
-        self.modem.device = self.device
         self.modem.waveform = RRCWaveform(oversampling_factor=4, symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=10)
+
+        self.device.transmitters.add(self.modem)
+        self.device.receivers.add(self.modem)
 
         self.evaluator = BitErrorEvaluator(self.modem, self.modem)
         self.loop.add_evaluator(self.evaluator)
@@ -170,8 +175,10 @@ class TestArtifactPlot(_HardwareLoopPlotTest, TestCase):
         super().setUp()
 
         self.modem = DuplexModem()
-        self.modem.device = self.device
         self.modem.waveform = RRCWaveform(oversampling_factor=4, symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=10)
+
+        self.device.transmitters.add(self.modem)
+        self.device.receivers.add(self.modem)
 
         self.evaluator = BitErrorEvaluator(self.modem, self.modem)
         self.loop.add_evaluator(self.evaluator)

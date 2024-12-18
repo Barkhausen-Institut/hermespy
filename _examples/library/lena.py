@@ -46,12 +46,15 @@ leena_num_bits = 512 * 512 * 8
 image_buffer = np.zeros((512, 512), dtype=np.uint8)
 
 # Add a modem at the simulated device
-link = SimplexLink(tx_device, rx_device, waveform=waveform)
+link = SimplexLink()
+link.waveform = waveform
 link.encoder_manager.add_encoder(Scrambler3GPP())
 link.bits_source = StreamBitsSource(os.path.join(os.path.dirname(__file__), '../resources/leena.raw'))
+tx_device.transmitters.add(link)
+rx_device.receivers.add(link)
 
 # Compute number of required frames
-bits_per_frame = link.num_data_bits_per_frame
+bits_per_frame = waveform.bits_per_symbol * waveform.num_data_symbols
 byte_per_frame = int(bits_per_frame / 8)
 num_frames = int(leena_num_bits / bits_per_frame)
 
@@ -61,8 +64,9 @@ image = axes.imshow(image_buffer, cmap='gray', vmin=0, vmax=255)
 
 for f in range(num_frames):
     drop = scenario.drop()
-    if link.reception.bits.size > 0:
-        image_buffer.flat[f*byte_per_frame:(f+1)*byte_per_frame] = np.packbits(link.reception.bits)
+    reception = drop.device_receptions[1].operator_receptions[0]
+    if reception.bits.size > 0:
+        image_buffer.flat[f*byte_per_frame:(f+1)*byte_per_frame] = np.packbits(reception.bits)
     image.set_data(image_buffer)
     fig.canvas.flush_events()
 

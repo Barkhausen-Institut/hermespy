@@ -21,7 +21,7 @@ from hermespy.core import (
 
 if TYPE_CHECKING:
     from hermespy.simulation import (
-        DeviceState,
+        SimulatedDeviceState,
         SimulatedDevice,
         SimulationScenario,
     )  # pragma: no cover
@@ -123,14 +123,24 @@ class ChannelSampleHook(Generic[CST]):
         self.__receiver = receiver
 
     def __call__(
-        self, sample: CST, transmitter: SimulatedDevice, receiver: SimulatedDevice
+        self, sample: CST, transmitter: SimulatedDevice | int, receiver: SimulatedDevice | int
     ) -> None:
-        """Call the hook with the given sample."""
+        """Call the hook with the given sample.
+
+        Args:
+
+            sample (CST): The channel sample to be processed.
+            transmitter (SimulatedDevice | int): The transmitter device the sample is associated with.
+            receiver (SimulatedDevice | int): The receiver device the sample is associated with.
+        """
+
+        _transmitter = transmitter if isinstance(transmitter, int) else id(transmitter)
+        _receiver = receiver if isinstance(receiver, int) else id(receiver)
 
         # Abort if the hook is associated with a specific device and the sample does not match
-        if self.__transmitter is not None and transmitter is not self.__transmitter:
+        if self.__transmitter is not None and _transmitter != id(self.__transmitter):
             return
-        if self.__receiver is not None and receiver is not self.__receiver:
+        if self.__receiver is not None and _receiver != id(self.__receiver):
             return
 
         # Call the hook
@@ -140,16 +150,16 @@ class ChannelSampleHook(Generic[CST]):
 class LinkState(object):
     """Physical paramters of wireless channel link in time and space."""
 
-    __transmitter: DeviceState
-    __receiver: DeviceState
+    __transmitter: SimulatedDeviceState
+    __receiver: SimulatedDeviceState
     __carrier_frequency: float
     __bandwidth: float
     __time: float
 
     def __init__(
         self,
-        transmitter: DeviceState,
-        receiver: DeviceState,
+        transmitter: SimulatedDeviceState,
+        receiver: SimulatedDeviceState,
         carrier_frequency: float,
         bandwidth: float,
         time: float,
@@ -181,13 +191,13 @@ class LinkState(object):
         self.__time = time
 
     @property
-    def transmitter(self) -> DeviceState:
+    def transmitter(self) -> SimulatedDeviceState:
         """State of the transmitting device at the time of sampling."""
 
         return self.__transmitter
 
     @property
-    def receiver(self) -> DeviceState:
+    def receiver(self) -> SimulatedDeviceState:
         """State of the receiving device at the time of sampling."""
 
         return self.__receiver
@@ -232,13 +242,13 @@ class ChannelSample(object):
         self.__state = state
 
     @property
-    def transmitter_state(self) -> DeviceState:
+    def transmitter_state(self) -> SimulatedDeviceState:
         """State of the transmitting device at the time of sampling."""
 
         return self.__state.transmitter
 
     @property
-    def receiver_state(self) -> DeviceState:
+    def receiver_state(self) -> SimulatedDeviceState:
         """State of the receiving device at the time of sampling."""
 
         return self.__state.receiver
@@ -474,8 +484,8 @@ class ChannelRealization(ABC, Generic[CST]):
     @overload
     def sample(
         self,
-        transmitter: DeviceState,
-        receiver: DeviceState,
+        transmitter: SimulatedDeviceState,
+        receiver: SimulatedDeviceState,
         carrier_frequency: float | None = None,
         bandwidth: float | None = None,
     ) -> CST:
@@ -541,30 +551,32 @@ class ChannelRealization(ABC, Generic[CST]):
 
     def sample(
         self,
-        transmitter: SimulatedDevice | DeviceState,
-        receiver: SimulatedDevice | DeviceState,
+        transmitter: SimulatedDevice | SimulatedDeviceState,
+        receiver: SimulatedDevice | SimulatedDeviceState,
         *args,
         **kwargs,
     ) -> CST:
-        from hermespy.simulation import SimulatedDevice, DeviceState
+        from hermespy.simulation import SimulatedDevice, SimulatedDeviceState
 
         if isinstance(transmitter, SimulatedDevice) and isinstance(receiver, SimulatedDevice):
             timestamp = float(args[0]) if len(args) > 0 else 0.0
             carrier_frequency = float(args[1]) if len(args) > 1 else None
             bandwidth = float(args[2]) if len(args) > 2 else None
 
-            transmitter_device = transmitter
-            receiver_device = receiver
+            transmitter_device = id(transmitter)
+            receiver_device = id(receiver)
             transmitter_state = transmitter.state(timestamp)
             receiver_state = receiver.state(timestamp)
 
-        elif isinstance(transmitter, DeviceState) and isinstance(receiver, DeviceState):
+        elif isinstance(transmitter, SimulatedDeviceState) and isinstance(
+            receiver, SimulatedDeviceState
+        ):
             timestamp = 0.0
             carrier_frequency = float(args[0]) if len(args) > 0 else None
             bandwidth = float(args[1]) if len(args) > 1 else None
 
-            transmitter_device = transmitter.device
-            receiver_device = receiver.device
+            transmitter_device = transmitter.device_id
+            receiver_device = receiver.device_id
             transmitter_state = transmitter
             receiver_state = receiver
 
@@ -609,8 +621,8 @@ class ChannelRealization(ABC, Generic[CST]):
     def reciprocal_sample(
         self,
         sample: CST,
-        transmitter: DeviceState,
-        receiver: DeviceState,
+        transmitter: SimulatedDeviceState,
+        receiver: SimulatedDeviceState,
         carrier_frequency: float | None = None,
         bandwidth: float | None = None,
     ) -> CST: ...  # pragma: no cover
@@ -659,12 +671,16 @@ class ChannelRealization(ABC, Generic[CST]):
     def reciprocal_sample(
         self,
         sample: CST,
-        transmitter: SimulatedDevice | DeviceState,
-        receiver: SimulatedDevice | DeviceState,
+        transmitter: SimulatedDevice | SimulatedDeviceState,
+        receiver: SimulatedDevice | SimulatedDeviceState,
         *args,
         **kwargs,
     ) -> CST:
-        from hermespy.simulation import SimulatedDevice, DeviceState
+        from hermespy.simulation import SimulatedDevice, SimulatedDeviceState
+
+        # Type hinting, required for proper type checking
+        transmitter_device: SimulatedDevice | int
+        receiver_device: SimulatedDevice | int
 
         if isinstance(transmitter, SimulatedDevice) and isinstance(receiver, SimulatedDevice):
             timestamp = float(args[0]) if len(args) > 0 else 0.0
@@ -676,13 +692,15 @@ class ChannelRealization(ABC, Generic[CST]):
             transmitter_state = transmitter.state(timestamp)
             receiver_state = receiver.state(timestamp)
 
-        elif isinstance(transmitter, DeviceState) and isinstance(receiver, DeviceState):
+        elif isinstance(transmitter, SimulatedDeviceState) and isinstance(
+            receiver, SimulatedDeviceState
+        ):
             timestamp = 0.0
             carrier_frequency = float(args[0]) if len(args) > 0 else None
             bandwidth = float(args[1]) if len(args) > 1 else None
 
-            transmitter_device = transmitter.device
-            receiver_device = receiver.device
+            transmitter_device = transmitter.device_id
+            receiver_device = receiver.device_id
             transmitter_state = transmitter
             receiver_state = receiver
 

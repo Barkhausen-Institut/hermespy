@@ -349,7 +349,7 @@ class EvaluationResult(Visualizable[PlotVisualization], ABC):
         # y_points = np.asarray([s.value for s in self.grid[1].sample_points])
         # y, x = np.meshgrid(y_points, x_points)
 
-        # ax.plot_surface(x.astype(float), y.astype(float), np.zeros_like(y, dtype=np.float_))
+        # ax.plot_surface(x.astype(float), y.astype(float), np.zeros_like(y, dtype=np.float64))
         return []  # 3D plotting returns a poly3d collection that is not supported
 
     def _update_surface_visualization(
@@ -403,7 +403,7 @@ class EvaluationResult(Visualizable[PlotVisualization], ABC):
 
             # Plot the graph line
             lines.extend(
-                ax.plot(x_points, np.zeros_like(x_points, dtype=np.float_), label=line_label)
+                ax.plot(x_points, np.zeros_like(x_points, dtype=np.float64), label=line_label)
             )
 
         return lines

@@ -21,7 +21,9 @@ channel = RuralMacrocells()
 simulation.set_channel(alpha_device, beta_device, channel)
 
 # Configure communication link between the two devices
-link = SimplexLink(alpha_device, beta_device)
+link = SimplexLink()
+alpha_device.transmitters.add(link)
+beta_device.receivers.add(link)
 
 # Specify the waveform and postprocessing to be used by the link
 link.waveform = RRCWaveform(

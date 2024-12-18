@@ -13,8 +13,10 @@ device_alpha = simulation.new_device()
 device_beta = simulation.new_device()
 
 # Create a transmitting and receiving modem for each device, respectively
-modem_alpha = TransmittingModem(device=device_alpha)
-modem_beta = ReceivingModem(device=device_beta)
+modem_alpha = TransmittingModem()
+device_alpha.transmitters.add(modem_alpha)
+modem_beta = ReceivingModem()
+device_beta.receivers.add(modem_beta)
 
 # Configure the modem's waveform
 waveform_configuration = {

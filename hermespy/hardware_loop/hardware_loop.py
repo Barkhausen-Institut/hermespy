@@ -705,16 +705,10 @@ class HardwareLoop(
                             carrier_frequency=device.carrier_frequency,
                             sampling_rate=device.sampling_rate,
                         )
-
-                    # Patch operators for recording
-                    operator_devices = [
-                        (operator.device, self.scenario.device_index(operator.device))
-                        for operator in self.scenario.operators
-                    ]
-
-                    for (_, device_idx), operator in zip(operator_devices, self.scenario.operators):
-                        operator.device = state.devices[device_idx]  # type: ignore
-
+                        for transmitter in device.transmitters:
+                            device.transmitters.add(transmitter)
+                        for receiver in device.receivers:
+                            device.receivers.add(receiver)
                     self.scenario.record(
                         file_location,
                         overwrite=overwrite,
@@ -722,10 +716,6 @@ class HardwareLoop(
                         state=state,
                         serialize_state=serialize_state,
                     )
-
-                    for (_, device_idx), operator in zip(operator_devices, state.operators):
-                        operator.device = self.scenario.devices[device_idx]  # type: ignore
-
                 else:
                     self.scenario.record(
                         file_location,

@@ -117,7 +117,7 @@ class OFDMWaveform(OrthogonalWaveform, Serializable):
         # Zero-pad the grid to account for oversampling
         padded_symbol_grid = np.zeros(
             (normalized_symbols.shape[0], self.oversampling_factor * self.num_subcarriers),
-            dtype=np.complex_,
+            dtype=np.complex128,
         )
         padding_start_idx = (
             self.oversampling_factor * self.num_subcarriers

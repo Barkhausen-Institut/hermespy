@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from time import time
-from typing import Sequence, Tuple, overload
+from typing import Sequence, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -31,11 +31,11 @@ from hermespy.core import (
 from .drop import SimulatedDrop
 from .noise import NoiseLevel, NoiseModel
 from .simulated_device import (
-    DeviceState,
     ProcessedSimulatedDeviceInput,
     SimulatedDevice,
     SimulatedDeviceOutput,
     SimulatedDeviceReception,
+    SimulatedDeviceState,
     SimulatedDeviceTransmission,
     TriggerModel,
     TriggerRealization,
@@ -138,16 +138,16 @@ class _ScenarioVisualizer(VisualizableAttribute[ScenarioVisualization]):
             frame_collection = Line3DCollection(
                 [
                     [
-                        np.zeros(3, dtype=np.float_),
-                        np.array([device_frame_scale, 0, 0], dtype=np.float_),
+                        np.zeros(3, dtype=np.float64),
+                        np.array([device_frame_scale, 0, 0], dtype=np.float64),
                     ],
                     [
-                        np.zeros(3, dtype=np.float_),
-                        np.array([0, device_frame_scale, 0], dtype=np.float_),
+                        np.zeros(3, dtype=np.float64),
+                        np.array([0, device_frame_scale, 0], dtype=np.float64),
                     ],
                     [
-                        np.zeros(3, dtype=np.float_),
-                        np.array([0, 0, device_frame_scale], dtype=np.float_),
+                        np.zeros(3, dtype=np.float64),
+                        np.array([0, 0, device_frame_scale], dtype=np.float64),
                     ],
                 ],
                 colors=["r", "g", "b"],
@@ -181,7 +181,7 @@ class _ScenarioVisualizer(VisualizableAttribute[ScenarioVisualization]):
             )
 
 
-class SimulationScenario(Scenario[SimulatedDevice, SimulatedDrop]):
+class SimulationScenario(Scenario[SimulatedDevice, SimulatedDeviceState, SimulatedDrop]):
     """Description of a physical layer wireless communication scenario."""
 
     yaml_tag = "SimulationScenario"
@@ -438,17 +438,31 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDrop]):
 
     def generate_outputs(
         self,
-        transmissions: list[list[Transmission]] | None = None,
+        transmissions: Sequence[Sequence[Transmission]],
+        states: Sequence[SimulatedDeviceState | None] | None = None,
         trigger_realizations: Sequence[TriggerRealization] | None = None,
     ) -> Sequence[SimulatedDeviceOutput]:
-        # Assume cached operator transmissions if none were provided
-        _transmissions: list[None] | list[list[Transmission]] = (
-            [None] * self.num_devices if not transmissions else transmissions
-        )
+        """Generate signals emitted by devices.
 
-        if len(_transmissions) != self.num_devices:
+        Args:
+
+            transmissions (Sequence[Sequence[Transmission]]):
+                Results of all transmitting DSP algorithms.
+
+            states (Sequence[SimulatedDeviceState | None], optional):
+                States of the transmitting devices.
+                If not specified, the current device states will be queried by calling :meth:`Device.state`.
+
+            trigger_realizations (Sequence[TriggerRealization], optional):
+                Realizations of the device's trigger models.
+
+        Returns: List of device outputs.
+        """
+        _states = [None] * self.num_devices if states is None else states
+
+        if len(transmissions) != self.num_devices:
             raise ValueError(
-                f"Number of device transmissions ({len(_transmissions)}) does not match number of registered devices ({self.num_devices}"
+                f"Number of device transmissions ({len(transmissions)}) does not match number of registered devices ({self.num_devices}"
             )
 
         _trigger_realizations = (
@@ -461,40 +475,54 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDrop]):
             )
 
         outputs = [
-            d.generate_output(t, True, tr)
-            for d, t, tr in zip(self.devices, _transmissions, _trigger_realizations)
+            d.generate_output(t, s, True, tr)
+            for d, t, s, tr in zip(self.devices, transmissions, _states, _trigger_realizations)
         ]
         return outputs
 
-    def transmit_devices(self, cache: bool = True) -> Sequence[SimulatedDeviceTransmission]:
-        """Generate simulated device transmissions of all registered devices.
-
-        Devices sharing trigger models will be triggered simultaneously.
+    def transmit_devices(
+        self,
+        states: Sequence[SimulatedDeviceState | None] | None = None,
+        notify: bool = True,
+        trigger_realizations: Sequence[TriggerRealization] | None = None,
+    ) -> Sequence[SimulatedDeviceTransmission]:
+        """Generated information transmitted by all registered devices.
 
         Args:
 
-            cache (bool, optional):
-                Cache the generated transmissions at the respective devices.
+            states (Sequence[SimulatedDeviceState | None], optional):
+                States of the transmitting devices.
+                If not specified, the current device states will be queried by calling :meth:`Device.state`.
+
+            notify (bool, optional):
+                Notify the transmit DSP layer's callbacks about the transmission results.
                 Enabled by default.
 
-        Returns:
-            Sequence of simulated simulated device transmissions.
+            trigger_realizations (Sequence[TriggerRealization], optional):
+                Realizations of the device's trigger models.
+                If not spcified, new trigger realizations will be generated from all devices.
+
+        Returns: List of generated information transmitted by each device.
         """
 
+        _states = [None] * self.num_devices if states is None else states
+
         # Realize triggers
-        trigger_realizations = self.realize_triggers()
+        _trigger_realizations = (
+            self.realize_triggers() if trigger_realizations is None else trigger_realizations
+        )
 
         # Transmit devices
         transmissions: list[SimulatedDeviceTransmission] = [
-            d.transmit(cache=cache, trigger_realization=t)
-            for d, t in zip(self.devices, trigger_realizations)
+            d.transmit(s, notify, t)
+            for d, s, t in zip(self.devices, _states, _trigger_realizations)
         ]
         return transmissions
 
     def propagate(
         self,
         transmissions: Sequence[DeviceOutput],
-        device_states: Sequence[DeviceState] | None = None,
+        device_states: Sequence[SimulatedDeviceState] | None = None,
         channel_realizations: Sequence[ChannelRealization] | None = None,
         interpolation_mode: InterpolationMode = InterpolationMode.NEAREST,
     ) -> Tuple[list[list[Signal]], Sequence[ChannelRealization]]:
@@ -504,6 +532,13 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDrop]):
 
             transmissions (Sequence[DeviceOutput])
                 Sequence of device transmissisons.
+
+            device_states (Sequence[SimulatedDeviceState], optional):
+                Sequence of device states at the time of signal propagation.
+                If not specified, the device states are assumed to be at the initial state.
+
+            channel_realizations (Sequence[ChannelRealization], optional):
+                Sequence of channel realizations representing the scenario's channel random states.
 
             interpolation_mode (InterpolationMode, optional):
                 Interpolation mode for the channel samples.
@@ -573,37 +608,10 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDrop]):
 
         return propagation_matrix.tolist(), _channel_realizations
 
-    @overload
-    def process_inputs(
-        self,
-        impinging_signals: Sequence[DeviceInput],
-        cache: bool = True,
-        trigger_realizations: Sequence[TriggerRealization] | None = None,
-        leaking_signals: Sequence[Signal] | Sequence[Sequence[Signal]] | None = None,
-    ) -> list[ProcessedSimulatedDeviceInput]: ...  # pragma: no cover
-
-    @overload
-    def process_inputs(
-        self,
-        impinging_signals: Sequence[Signal],
-        cache: bool = True,
-        trigger_realizations: Sequence[TriggerRealization] | None = None,
-        leaking_signals: Sequence[Signal] | Sequence[Sequence[Signal]] | None = None,
-    ) -> list[ProcessedSimulatedDeviceInput]: ...  # pragma: no cover
-
-    @overload
-    def process_inputs(
-        self,
-        impinging_signals: Sequence[Sequence[Signal]],
-        cache: bool = True,
-        trigger_realizations: Sequence[TriggerRealization] | None = None,
-        leaking_signals: Sequence[Signal] | Sequence[Sequence[Signal]] | None = None,
-    ) -> list[ProcessedSimulatedDeviceInput]: ...  # pragma: no cover
-
     def process_inputs(
         self,
         impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]],
-        cache: bool = True,
+        states: Sequence[SimulatedDeviceState | None] | None = None,
         trigger_realizations: Sequence[TriggerRealization] | None = None,
         leaking_signals: Sequence[Signal] | Sequence[Sequence[Signal]] | None = None,
     ) -> list[ProcessedSimulatedDeviceInput]:
@@ -614,9 +622,9 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDrop]):
             impinging_signals (Sequence[DeviceInput | Signal | Sequence[Signal]] | Sequence[Sequence[Signal]]):
                 list of signals impinging onto the devices.
 
-            cache (bool, optional):
-                Cache the operator inputs at the registered receive operators for further processing.
-                Enabled by default.
+            states (Sequence[SimulatedDeviceState], optional):
+                Sequence of simulated device states at the time of signal impingement.
+                If not specified, the device states are assumed to be at the initial state.
 
             trigger_realizations (Sequence[TriggerRealization], optional):
                 Sequence of trigger realizations.
@@ -632,6 +640,8 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDrop]):
 
             ValueError: If the number of `impinging_signals` does not match the number of registered devices.
         """
+
+        _states = [d.state(0.0) for d in self.devices] if states is None else states
 
         if trigger_realizations is None:
             # ToDo: Currently trigger realizations are not shared when directly running process_inputs
@@ -656,41 +666,15 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDrop]):
             )
 
         # Call the process input method for each device
-        processed_inputs = [d.process_input(i, cache, t, self.noise_level, self.noise_model, l) for d, i, t, l in zip(self.devices, impinging_signals, trigger_realizations, _leaking_signals)]  # type: ignore
+        processed_inputs = [d.process_input(i, s, t, self.noise_level, self.noise_model, l) for d, i, s, t, l in zip(self.devices, impinging_signals, _states, trigger_realizations, _leaking_signals)]  # type: ignore
 
         return processed_inputs
-
-    @overload
-    def receive_devices(
-        self,
-        impinging_signals: Sequence[DeviceInput],
-        cache: bool = True,
-        trigger_realizations: Sequence[TriggerRealization] | None = None,
-        leaking_signals: Sequence[Signal] | Sequence[Sequence[Signal]] | None = None,
-    ) -> Sequence[SimulatedDeviceReception]: ...  # pragma: no cover
-
-    @overload
-    def receive_devices(
-        self,
-        impinging_signals: Sequence[Signal],
-        cache: bool = True,
-        trigger_realizations: Sequence[TriggerRealization] | None = None,
-        leaking_signals: Sequence[Signal] | Sequence[Sequence[Signal]] | None = None,
-    ) -> Sequence[SimulatedDeviceReception]: ...  # pragma: no cover
-
-    @overload
-    def receive_devices(
-        self,
-        impinging_signals: Sequence[Sequence[Signal]],
-        cache: bool = True,
-        trigger_realizations: Sequence[TriggerRealization] | None = None,
-        leaking_signals: Sequence[Signal] | Sequence[Sequence[Signal]] | None = None,
-    ) -> Sequence[SimulatedDeviceReception]: ...  # pragma: no cover
 
     def receive_devices(
         self,
         impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]],
-        cache: bool = True,
+        states: Sequence[SimulatedDeviceState | None] | None = None,
+        notify: bool = True,
         trigger_realizations: Sequence[TriggerRealization] | None = None,
         leaking_signals: Sequence[Signal] | Sequence[Sequence[Signal]] | None = None,
     ) -> Sequence[SimulatedDeviceReception]:
@@ -701,10 +685,14 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDrop]):
         Args:
 
             impinging_signals (list[Union[DeviceInput, Signal, Iterable[Signal]]]):
-                list of signals impinging onto the devices.
+                List of signals impinging onto the devices.
 
-            cache (bool, optional):
-                Cache the operator inputs at the registered receive operators for further processing.
+            states (Sequence[SimulatedDeviceState | None], optional):
+                Sequence of simulated device states at the time of signal impingement.
+                If not specified, the device states are assumed to be at the initial state.
+
+            notify (bool, optional):
+                Notify the receiving DSP layer's callbacks about the reception results.
                 Enabled by default.
 
             trigger_realizations (Sequence[TriggerRealization], optional):
@@ -722,14 +710,16 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDrop]):
             ValueError: If the number of `impinging_signals` does not match the number of registered devices.
         """
 
+        _states = [d.state(0.0) for d in self.devices] if states is None else states
+
         # Generate inputs
         processed_inputs = self.process_inputs(
-            impinging_signals, cache, trigger_realizations, leaking_signals
+            impinging_signals, _states, trigger_realizations, leaking_signals
         )
 
         # Generate operator receptions
         operator_receptions = self.receive_operators(
-            [i.operator_inputs for i in processed_inputs], cache=cache
+            [i.operator_inputs for i in processed_inputs], _states, notify
         )
 
         # Generate device receptions
@@ -738,24 +728,28 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDrop]):
 
     def _drop(self) -> SimulatedDrop:
         # Generate drop timestamp
-        timestamp = time()
+        drop_timestamp = time()
+
+        # Query all device states
+        simulation_timestamp = 0.0
+        states = [d.state(simulation_timestamp) for d in self.devices]
 
         # Generate device transmissions
-        device_transmissions = self.transmit_devices()
+        device_transmissions = self.transmit_devices(states)
 
         # Simulate channel propagation
-        channel_propagations, channel_realizations = self.propagate(device_transmissions)
+        channel_propagations, channel_realizations = self.propagate(device_transmissions, states)
 
         # Process receptions
         trigger_realizations = [t.trigger_realization for t in device_transmissions]
         leaking_signals = [t.leaking_signals for t in device_transmissions]
         device_receptions = self.receive_devices(
-            channel_propagations, True, trigger_realizations, leaking_signals
+            channel_propagations, states, True, trigger_realizations, leaking_signals
         )
 
         # Return finished drop
         return SimulatedDrop(
-            timestamp, device_transmissions, channel_realizations, device_receptions
+            drop_timestamp, device_transmissions, channel_realizations, device_receptions
         )
 
     def _recall_drop(self, group: Group) -> SimulatedDrop:

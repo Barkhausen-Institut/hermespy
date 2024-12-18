@@ -27,16 +27,16 @@ class TestUsrpAntennas(TestCase):
 
     def setUp(self) -> None:
         self.device = MagicMock(spec=UsrpDevice)
-        self.device.num_transmit_ports = 3
-        self.device.num_receive_ports = 4
+        self.device.num_digital_transmit_ports = 3
+        self.device.num_digital_receive_ports = 4
         self.antennas = UsrpAntennas(self.device)
 
     def test_init(self) -> None:
         """Test initialization routine"""
 
         self.assertEqual(self.device, self.antennas.device)
-        self.assertEqual(self.device.num_transmit_ports, self.antennas.num_transmit_ports)
-        self.assertEqual(self.device.num_receive_ports, self.antennas.num_receive_ports)
+        self.assertEqual(self.device.num_digital_transmit_ports, self.antennas.num_transmit_ports)
+        self.assertEqual(self.device.num_digital_receive_ports, self.antennas.num_receive_ports)
 
     def test_receive_ports(self) -> None:
         """Receive ports property should return the correct number of ports"""
@@ -123,7 +123,7 @@ class TestUsrpDevice(TestCase):
         # Enable transmission scaling for increased coverage
         self.usrp.scale_transmission = True
 
-        transmitted_signal = Signal.Create(self.rng.normal(size=(self.usrp.num_transmit_ports, 11)), sampling_rate=self.usrp.sampling_rate, carrier_frequency=self.usrp.carrier_frequency)
+        transmitted_signal = Signal.Create(self.rng.normal(size=(self.usrp.num_digital_transmit_ports, 11)), sampling_rate=self.usrp.sampling_rate, carrier_frequency=self.usrp.carrier_frequency)
 
         self.usrp._upload(transmitted_signal)
 
@@ -133,7 +133,7 @@ class TestUsrpDevice(TestCase):
     def test_transmit(self) -> None:
         """Test transmitting operator behaviour"""
 
-        transmitted_signal = Signal.Create(self.rng.normal(size=(self.usrp.num_transmit_ports, 11)), sampling_rate=self.usrp.sampling_rate, carrier_frequency=self.usrp.carrier_frequency)
+        transmitted_signal = Signal.Create(self.rng.normal(size=(self.usrp.num_digital_transmit_ports, 11)), sampling_rate=self.usrp.sampling_rate, carrier_frequency=self.usrp.carrier_frequency)
         transmitter = SignalTransmitter(transmitted_signal)
         self.usrp.transmitters.add(transmitter)
 
@@ -161,7 +161,7 @@ class TestUsrpDevice(TestCase):
     def test_download(self) -> None:
         """Test the device download subroutine"""
 
-        received_signal = Signal.Create(self.rng.normal(size=(self.usrp.num_receive_ports, 11)), sampling_rate=self.usrp.sampling_rate, carrier_frequency=self.usrp.carrier_frequency)
+        received_signal = Signal.Create(self.rng.normal(size=(self.usrp.num_digital_receive_ports, 11)), sampling_rate=self.usrp.sampling_rate, carrier_frequency=self.usrp.carrier_frequency)
 
         self.usrp._UsrpDevice__collection_enabled = True
         self.client_mock.collect.return_value = [MimoSignal([s for s in received_signal.getitem()])]

@@ -7,7 +7,7 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 
 from hermespy.modem import StatedSymbols, DuplexModem
-from hermespy.modem.precoding import SymbolPrecoding, SingleCarrier
+from hermespy.modem.precoding import SingleCarrier
 from hermespy.simulation import SimulatedDevice, SimulatedUniformArray, SimulatedIdealAntenna
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
@@ -21,45 +21,18 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class TestMaximumRatioCombinging(TestCase):
-    """Test maximum ratio combining precoder"""
+class TestSingleCarrier(TestCase):
+    """Test the single carrier precoder"""
 
     def setUp(self) -> None:
         self.rng = np.random.default_rng(42)
-
-        self.device = SimulatedDevice(antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1e-3, (2, 1, 1)))
-        self.modem = DuplexModem()
-        self.modem.device = self.device
-        self.precoding = SymbolPrecoding(self.modem)
-
         self.precoder = SingleCarrier()
-        self.precoding[0] = self.precoder
 
     def test_properties(self) -> None:
         """Properties should return the expected values"""
 
-        self.assertEqual(1, self.precoder.num_input_streams)
-        self.assertEqual(2, self.precoder.num_output_streams)
-
-    def test_encode_validation(self) -> None:
-        """Encoding should raise a RuntimeError if the number of output streams is not 1"""
-
-        raw_symbols = self.rng.standard_normal((2, 2, 100)) + 1j * self.rng.standard_normal((2, 2, 100))
-        states = self.rng.standard_normal((2, 1, 2, 100)) + 1j * self.rng.standard_normal((2, 1, 2, 100))
-
-        with self.assertRaises(RuntimeError):
-            self.precoder.encode(StatedSymbols(raw_symbols, states))
-
-    def test_encode(self) -> None:
-        """Encoding should raise a NotImplementedError"""
-
-        raw_symbols = self.rng.standard_normal((1, 2, 100)) + 1j * self.rng.standard_normal((1, 2, 100))
-        states = self.rng.standard_normal((1, 2, 2, 100)) + 1j * self.rng.standard_normal((1, 2, 2, 100))
-        stated_symbols = StatedSymbols(raw_symbols, states)
-
-        encoded_symbols = self.precoder.encode(stated_symbols)
-
-        self.assertEqual(2, encoded_symbols.num_streams)
+        self.assertEqual(1, self.precoder.num_receive_input_symbols)
+        self.assertEqual(1, self.precoder.num_receive_output_symbols)
 
     def test_decode(self) -> None:
         """Decoding should return the expected values"""
@@ -70,10 +43,15 @@ class TestMaximumRatioCombinging(TestCase):
         propagated_raw_symbols = states * raw_symbols
         propaged_stated_symbols = StatedSymbols(propagated_raw_symbols, states[:, None, :, :])
 
-        decoded_symbols = self.precoder.decode(propaged_stated_symbols)
+        decoded_symbols = self.precoder.decode_symbols(propaged_stated_symbols, 1)
 
         equalized_decoded_symbols = decoded_symbols.raw / decoded_symbols.states[:, 0, :, :]
         assert_array_almost_equal(raw_symbols, equalized_decoded_symbols)
+        
+    def test_num_receive_output_streams(self) -> None:
+        """Number of output streams should always be 1"""
+
+        self.assertEqual(1, self.precoder.num_receive_output_streams(13))
 
     def test_yaml_roundtrip_serialization(self) -> None:
         """Test YAML roundtrip serialization"""

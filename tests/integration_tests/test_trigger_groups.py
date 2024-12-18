@@ -100,13 +100,15 @@ class TestTriggerGroups(TestCase):
 
         # Set up the operations
         self.alpha_link = SimplexLink(
-            self.alpha_transmitter, self.alpha_receiver,
             waveform=self.__ofdm_waveform(),
         )
+        self.alpha_receiver.receivers.add(self.alpha_link)
+        self.alpha_transmitter.transmitters.add(self.alpha_link)
         self.beta_link = SimplexLink(
-            self.beta_transmitter, self.beta_receiver,
             waveform=self.__ofdm_waveform(),
         )
+        self.beta_transmitter.transmitters.add(self.beta_link)
+        self.beta_receiver.receivers.add(self.beta_link)
 
         # Set up evaluators
         self.alpha_error = BitErrorEvaluator(self.alpha_link, self.alpha_link)

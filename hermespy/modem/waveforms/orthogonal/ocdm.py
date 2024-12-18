@@ -57,7 +57,7 @@ class OCDMWaveform(OrthogonalWaveform):
         correction = 0.0 if N % 2 == 0 else 0.5
 
         # Discrete Fresnel Transform
-        transform = np.zeros((N, N * self.oversampling_factor), dtype=np.complex_)
+        transform = np.zeros((N, N * self.oversampling_factor), dtype=np.complex128)
         for m, n in np.ndindex(N, N * self.oversampling_factor):
             transform[m, n] = N**-0.5 * np.exp(
                 1j * np.pi * ((m + correction - n / self.oversampling_factor) ** 2 / N - 0.25)

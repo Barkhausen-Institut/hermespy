@@ -456,7 +456,7 @@ class TestSimulatedDevice(TestCase):
         """The realize reception routine should properly realize the reception of a signal"""
 
         realization = self.device.realize_reception()
-        self.assertIs(realization, self.device.realization)
+        self.assertEqual(0.0, realization.noise_realization.power)
 
     def test_process_from_realization_validation(self) -> None:
         """The process from realization routine should raise a ValueError on invalid arguments"""
@@ -471,8 +471,7 @@ class TestSimulatedDevice(TestCase):
         device_realization = self.device.realize_reception()
 
         processed_input = self.device.process_from_realization(device_transmission, device_realization)
-
-        self.assertIs(processed_input, self.device.input)
+        self.assertIs(device_transmission.emerging_signals, processed_input.impinging_signals)
 
     def test_process_device_input_from_realization(self) -> None:
         """The process from realization routine should properly process a device input"""
@@ -482,8 +481,7 @@ class TestSimulatedDevice(TestCase):
         device_realization = self.device.realize_reception()
 
         processed_input = self.device.process_from_realization(input, device_realization)
-
-        self.assertIs(processed_input, self.device.input)
+        self.assertIs(impinging_signals, processed_input.impinging_signals)
 
     def test_process_signal_from_realization(self) -> None:
         """The process from realization routine should properly process a signal"""
@@ -492,8 +490,7 @@ class TestSimulatedDevice(TestCase):
         device_realization = self.device.realize_reception()
 
         processed_input = self.device.process_from_realization(signal, device_realization)
-
-        self.assertIs(processed_input, self.device.input)
+        self.assertSequenceEqual([signal], processed_input.impinging_signals)
 
     def test_process_impinging_signals_from_realization(self) -> None:
         """The process from realization routine should properly process impinging signals"""
@@ -502,17 +499,16 @@ class TestSimulatedDevice(TestCase):
         device_realization = self.device.realize_reception()
 
         processed_input = self.device.process_from_realization(impinging_signals, device_realization)
-
-        self.assertIs(processed_input, self.device.input)
+        self.assertIs(impinging_signals, processed_input.impinging_signals)
 
     def test_process_input(self) -> None:
         """The process input routine should properly process a device input"""
 
         impinging_signals = [Signal.Create(np.zeros((1, 10)), 1.0, 0.0)]
         input = DeviceInput(impinging_signals=impinging_signals)
-        processed_input = self.device.process_input(input)
 
-        self.assertIs(processed_input, self.device.input)
+        processed_input = self.device.process_input(input)
+        self.assertIs(impinging_signals, processed_input.impinging_signals)
 
     def test_receive(self) -> None:
         """Test the device reception routine"""
@@ -567,6 +563,10 @@ class TestSimulatedDevice(TestCase):
         default_blacklist = self.device.property_blacklist
         default_blacklist.add("scenario")
         default_blacklist.add("antennas")
+
+        # Hack because the signal transmitter is not serializable
+        self.device.transmitters.remove(self.transmitter_alpha)
+        self.device.transmitters.remove(self.transmitter_beta)
 
         with patch("hermespy.simulation.simulated_device.SimulatedDevice.property_blacklist", new_callable=PropertyMock) as blacklist:
             blacklist.return_value = default_blacklist

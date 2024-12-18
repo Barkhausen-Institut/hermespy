@@ -2,32 +2,36 @@ import matplotlib.pyplot as plt
 
 from hermespy.channel import SingleTargetRadarChannel
 from hermespy.jcas import OFDMRadar
-from hermespy.modem import FrameResource, FrameSymbolSection, FrameElement, ElementType
+from hermespy.modem import ElementType, GridResource, PrefixType, GridElement, SymbolSection, OFDMWaveform
 from hermespy.radar import MaxDetector
 from hermespy.simulation import SimulatedDevice
 
-
-carrier_frequency = 24e9
-oversampling_factor = 4
-subcarrier_spacing = 90.909e3
-num_subcarriers = 1024
-prefix_ratio = 1.375 / 12.375
-modulation_order = 16
-
-device = SimulatedDevice(carrier_frequency=carrier_frequency)
-resources = [FrameResource(64, prefix_ratio=prefix_ratio, elements=[FrameElement(ElementType.DATA, 15), FrameElement(ElementType.REFERENCE, 1)])]
-structure = [FrameSymbolSection(11, [0])]
-radar = OFDMRadar(oversampling_factor=oversampling_factor, modulation_order=modulation_order, subcarrier_spacing=subcarrier_spacing, resources=resources, structure=structure, device=device)
+# Configure a OFDM radar
+device = SimulatedDevice(carrier_frequency=24e9)
+radar = OFDMRadar(OFDMWaveform(
+    grid_resources=[
+        GridResource(16, PrefixType.CYCLIC, .1, [GridElement(ElementType.DATA, 7), GridElement(ElementType.REFERENCE, 1)]),
+        GridResource(128, PrefixType.CYCLIC, .1, [GridElement(ElementType.DATA, 1)]),
+    ],
+    grid_structure=[
+        SymbolSection(64, [0, 1])
+    ],
+    num_subcarriers=1024,
+    subcarrier_spacing=90.909e3,
+    oversampling_factor=4,
+))
 radar.detector = MaxDetector()
+device.add_dsp(radar)
 
-radar_channel = SingleTargetRadarChannel(.75 * radar.waveform.max_range, 1., velocity=4 * radar.velocity_resolution, attenuate=False, alpha_device=device, beta_device=device)
-
+# Generate a single target
+radar_channel = SingleTargetRadarChannel(.75 * radar.max_range, 1., velocity=10, attenuate=False)
 transmission = device.transmit()
 propagation = radar_channel.propagate(transmission, device, device)
 reception = device.receive(propagation)
 
-radar.reception.cube.plot_range()
-radar.reception.cube.plot_range_velocity(scale='velocity')
-radar.reception.cloud.plot()
+# Visualize radar image
+reception.operator_receptions[0].cube.plot_range()
+reception.operator_receptions[0].cube.plot_range_velocity(scale='velocity')
+reception.operator_receptions[0].cloud.visualize()
 
 plt.show()

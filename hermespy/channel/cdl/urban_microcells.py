@@ -498,7 +498,7 @@ class UrbanMicrocells(ClusterDelayLineBase[UrbanMicrocellsRealization, O2IState]
                 [+0.0, +0.2, +0.5],  # 19: ZSA vs ASA
                 [+0.0, +0.0, +0.5],  # 20: ZSD vs ZSA
             ],
-            dtype=np.float_,
+            dtype=np.float64,
         ).T
 
     def _initialize_realization(

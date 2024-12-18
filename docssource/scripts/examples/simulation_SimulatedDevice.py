@@ -3,7 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-from hermespy.core import dB, Signal, SignalTransmitter, SignalReceiver
+from hermespy.core import dB, Signal, SignalTransmitter, SignalReceiver, Transformation
 from hermespy.simulation import (
     PerfectCoupling,
     RandomTrigger,
@@ -12,7 +12,10 @@ from hermespy.simulation import (
     SimulatedDevice,
     SimulatedIdealAntenna,
     SimulatedUniformArray,
-    SpecificIsolation, AWGN, N0
+    SpecificIsolation,
+    AWGN,
+    N0,
+    StaticTrajectory
 )
 
 # Create a new stand-alone simulated device
@@ -49,35 +52,35 @@ device.sampling_rate = 100e6
 device.noise_model = AWGN()
 device.noise_level = N0(dB(-20))
 
-# Specify the device's postion and orientation in space
-device.position = np.array([10., 10., 0.], dtype=np.float_)
-device.orientation = np.array([0, .125 * np.pi, 0], dtype=np.float_)
-
-# Specify the device's velocity
-device.velocity = np.array([1., 1., 0.], dtype=np.float_)
+# Specify the device's postion, orientation and velocity in space
+device.trajectory = StaticTrajectory(
+    Transformation.From_RPY(
+        np.array([0, .125 * np.pi, 0], dtype=np.float64),
+        np.array([10., 10., 0.], dtype=np.float64)
+    ),
+    np.array([1., 1., 0.], dtype=np.float64)
+)
 
 # Transmit random white noise from the device
 transmitter = SignalTransmitter(Signal.Create(
-    np.random.normal(size=(device.num_transmit_ports, 100)) +
-    1j * np.random.normal(size=(device.num_transmit_ports, 100)),
+    np.random.normal(size=(device.num_digital_transmit_ports, 100)) +
+    1j * np.random.normal(size=(device.num_digital_transmit_ports, 100)),
     device.sampling_rate,
     device.carrier_frequency
 ))
 device.transmitters.add(transmitter)
-transmitter.device = device  # Equivalent to the previous line
 
 # Receive a signal without additional processing at the device
 receiver = SignalReceiver(100, device.sampling_rate, expected_power=1.)
 device.receivers.add(receiver)
-receiver.device = device  # Equivalent to the previous line
 
 # Generate a transmission from the device
 transmission = device.transmit()
 
 # Receive a signal at the device
 impinging_signal = Signal.Create(
-    np.random.normal(size=(device.num_transmit_ports, 100)) +
-    1j * np.random.normal(size=(device.num_transmit_ports, 100)),
+    np.random.normal(size=(device.num_digital_transmit_ports, 100)) +
+    1j * np.random.normal(size=(device.num_digital_transmit_ports, 100)),
     device.sampling_rate,
     device.carrier_frequency
 )

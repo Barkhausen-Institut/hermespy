@@ -360,7 +360,7 @@ class GridSection(Generic[OWT], ABC):
         # Collect resource masks
         mask = self.resource_mask
 
-        grid = np.zeros((self.num_words, self.num_subcarriers), dtype=np.complex_)
+        grid = np.zeros((self.num_words, self.num_subcarriers), dtype=np.complex128)
         grid[mask[ElementType.REFERENCE.value, ::]] = reference_symbols
         grid[mask[ElementType.DATA.value, ::]] = data_symbols
 
@@ -483,7 +483,7 @@ class SymbolSection(GridSection["OrthogonalWaveform"], Serializable):
         return self.wave.num_subcarriers * self.wave.oversampling_factor
 
     def place_samples(self, samples: np.ndarray) -> np.ndarray:
-        placed_samples = np.empty(self.num_samples, dtype=np.complex_)
+        placed_samples = np.empty(self.num_samples, dtype=np.complex128)
         sample_idx = 0
         resource_idx: int
         resource_samples: np.ndarray
@@ -508,7 +508,7 @@ class SymbolSection(GridSection["OrthogonalWaveform"], Serializable):
                 # Zero padding
                 elif prefix_type == PrefixType.ZEROPAD:
                     placed_samples[sample_idx : sample_idx + num_prefix_samples] = np.zeros(
-                        num_prefix_samples, dtype=np.complex_
+                        num_prefix_samples, dtype=np.complex128
                     )
 
                 # Raise exception for unsupproted prefix types
@@ -629,11 +629,11 @@ class GuardSection(GridSection["OrthogonalWaveform"], Serializable):
         return int(self.num_repetitions * self.__duration * self.wave.sampling_rate)
 
     def place_samples(self, signal: np.ndarray) -> np.ndarray:
-        return np.zeros(self.num_samples, dtype=np.complex_)
+        return np.zeros(self.num_samples, dtype=np.complex128)
 
     def pick_samples(self, signal: np.ndarray) -> np.ndarray:
         return np.empty(
-            (0, self.wave.num_subcarriers * self.wave.oversampling_factor), dtype=np.complex_
+            (0, self.wave.num_subcarriers * self.wave.oversampling_factor), dtype=np.complex128
         )
 
 
@@ -1176,7 +1176,7 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
         num_words = 0
         for section in self.grid_structure:
             num_words += section.num_words
-        placed_symbols = np.zeros((1, num_words, self.num_subcarriers), dtype=np.complex_)
+        placed_symbols = np.zeros((1, num_words, self.num_subcarriers), dtype=np.complex128)
 
         data_idx = 0
         reference_idx = 0
@@ -1203,7 +1203,7 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
         raw_symbols = placed_symbols.raw
         raw_states = placed_symbols.dense_states()
         raw_picked_symbols = np.empty(
-            (placed_symbols.num_streams, self.num_data_symbols, 1), dtype=np.complex_
+            (placed_symbols.num_streams, self.num_data_symbols, 1), dtype=np.complex128
         )
         raw_picked_states = np.empty(
             (
@@ -1212,7 +1212,7 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
                 self.num_data_symbols,
                 1,
             ),
-            dtype=np.complex_,
+            dtype=np.complex128,
         )
 
         block_idx = 0
@@ -1231,7 +1231,7 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
         return StatedSymbols(raw_picked_symbols, raw_picked_states)
 
     def modulate(self, symbols: Symbols) -> np.ndarray:
-        frame_samples = np.empty(self.samples_per_frame, dtype=np.complex_)
+        frame_samples = np.empty(self.samples_per_frame, dtype=np.complex128)
         sample_idx = 0
 
         # Start the frame with a pilot section, if configured
@@ -1265,7 +1265,7 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
 
         signal_grid = np.empty(
             (self.words_per_frame, self.num_subcarriers * self.oversampling_factor),
-            dtype=np.complex_,
+            dtype=np.complex128,
         )
 
         # Pick the time-domain samples of each section from the frame

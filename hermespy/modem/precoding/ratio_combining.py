@@ -6,7 +6,7 @@ import numpy as np
 
 from hermespy.core import Serializable
 from ..symbols import StatedSymbols
-from .symbol_precoding import SymbolPrecoder
+from .symbol_precoding import ReceiveSymbolDecoder
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -18,7 +18,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class MaximumRatioCombining(SymbolPrecoder, Serializable):
+class MaximumRatioCombining(ReceiveSymbolDecoder, Serializable):
     """Maximum ratio combining symbol decoding step.
 
     Refer to :footcite:t:`1954:kahn` for further information.
@@ -26,14 +26,9 @@ class MaximumRatioCombining(SymbolPrecoder, Serializable):
 
     yaml_tag: str = "MRC"
 
-    def encode(self, symbols: StatedSymbols) -> StatedSymbols:
-        if symbols.num_transmit_streams != 1:
-            raise RuntimeError("Maximum ratio combining only supports a single transmit stream")
-
-        return symbols
-
-    def decode(self, symbols: StatedSymbols) -> StatedSymbols:
-        # Decode data using MRC receive diversity with N_rx received antennas.
+    def decode_symbols(
+        self, symbols: StatedSymbols, num_output_streams: int
+    ) -> StatedSymbols:  # Decode data using MRC receive diversity with N_rx received antennas.
         #
         # Received signal with equal noise power is assumed, the decoded signal has same noise
         # level as input. It is assumed that all data have equal noise levels.
@@ -59,10 +54,13 @@ class MaximumRatioCombining(SymbolPrecoder, Serializable):
         state_estimates = state_estimates.reshape((1, 1, symbols.num_blocks, symbols.num_symbols))
         return StatedSymbols(symbol_estimates, state_estimates)
 
-    @property
-    def num_input_streams(self) -> int:
+    def num_receive_output_streams(self, num_input_streams: int) -> int:
         return 1
 
     @property
-    def num_output_streams(self) -> int:
-        return self.required_num_output_streams
+    def num_receive_input_symbols(self) -> int:
+        return 1
+
+    @property
+    def num_receive_output_symbols(self) -> int:
+        return 1

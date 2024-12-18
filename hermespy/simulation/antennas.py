@@ -23,8 +23,10 @@ from hermespy.core import (
     IdealAntenna,
     LinearAntenna,
     PatchAntenna,
+    ReceiveState,
     Signal,
     Transformation,
+    TransmitState,
     UniformArray,
 )
 from .coupling import Coupling
@@ -472,7 +474,7 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
 
         # Recombine the propagated signals into a single signal model
         combined_signal = Signal.Create(
-            np.zeros((num_streams, max_num_samples), dtype=np.complex_),
+            np.zeros((num_streams, max_num_samples), dtype=np.complex128),
             sampling_rate,
             carrier_frequency,
         )
@@ -537,7 +539,7 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
             leaking_signal = isolation_model.leak(combined_rf_signal)
         else:
             leaking_signal = combined_rf_signal.from_ndarray(
-                np.empty((combined_rf_signal.num_streams, 0), dtype=np.complex_)
+                np.empty((combined_rf_signal.num_streams, 0), dtype=np.complex128)
             )
 
         # Simulate antenna transmission for all antennas
@@ -817,12 +819,12 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
                 self.spherical_phase_response(carrier_frequency, angles[0], angles[1], antenna_mode)
                 for angles in aoi
             ],
-            dtype=np.complex_,
+            dtype=np.complex128,
         )
-        antenna_responses *= np.array([[a.weight for a in antennas]], dtype=np.complex_)
+        antenna_responses *= np.array([[a.weight for a in antennas]], dtype=np.complex128)
 
         # Collect port responses for each angle candidate
-        port_responses = np.zeros((antenna_responses.shape[0], num_ports), dtype=np.complex_)
+        port_responses = np.zeros((antenna_responses.shape[0], num_ports), dtype=np.complex128)
         antenna_idx = 0
         for port_idx, port in enumerate(ports):
             num_antennas = getattr(port, num_antenna_attr)
@@ -837,7 +839,7 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
             antenna_idx += num_antennas
 
         if arg_0 == AntennaMode.TX or arg_0 == AntennaMode.RX:
-            beamforming_weights = np.ones(num_ports, dtype=np.complex_) if arg_1 is None else arg_1
+            beamforming_weights = np.ones(num_ports, dtype=np.complex128) if arg_1 is None else arg_1
 
             if beamforming_weights.shape != (num_ports,):
                 raise ValueError(
@@ -849,16 +851,29 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
             )
 
         elif isinstance(arg_0, TransmitBeamformer):
-            port_responses = arg_0.transmit(
+            base_transform = Transformation.From_Translation(np.zeros(3))
+            port_responses = arg_0.encode_streams(
                 Signal.Create(
-                    np.ones((arg_0.num_transmit_input_streams, 1), dtype=np.complex_),
+                    np.ones(
+                        (arg_0._num_transmit_input_streams(self.num_transmit_ports), 1),
+                        dtype=np.complex128,
+                    ),
                     1.0,
                     carrier_frequency,
                 ),
-                array=self,
+                self.num_transmit_ports,
+                TransmitState(
+                    0.0,
+                    base_transform,
+                    np.zeros(3),
+                    carrier_frequency,
+                    1.0,
+                    self.state(base_transform),
+                    self.num_transmit_ports,
+                ),
             ).getitem()
 
-            antenna_weights = np.empty(self.num_transmit_antennas, dtype=np.complex_)
+            antenna_weights = np.empty(self.num_transmit_antennas, dtype=np.complex128)
             antenna_idx = 0
             for response, port in zip(port_responses, self.transmit_ports):
                 antenna_weights[antenna_idx : antenna_idx + port.num_transmit_antennas] = response
@@ -867,10 +882,23 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
             power = np.abs(antenna_responses @ antenna_weights) ** 2
 
         elif isinstance(arg_0, ReceiveBeamformer):
-            power = np.empty(port_responses.shape[0], dtype=np.float_)
+            base_transform = Transformation.From_Translation(np.zeros(3))
+            power = np.empty(port_responses.shape[0], dtype=np.float64)
             for p, port_response in enumerate(port_responses):
                 s = Signal.Create(port_response[:, None], 1.0, carrier_frequency)
-                s = arg_0.receive(s, array=self)
+                s = arg_0.decode_streams(
+                    s,
+                    arg_0.num_receive_output_streams(self.num_receive_ports),
+                    ReceiveState(
+                        0.0,
+                        base_transform,
+                        np.zeros(3),
+                        carrier_frequency,
+                        1.0,
+                        self.state(base_transform),
+                        self.num_receive_ports,
+                    ),
+                )
                 power[p] = np.abs(s.getitem()) ** 2
 
         axes: Axes3D
@@ -895,7 +923,7 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
                 power * np.sin(aoi[:, 0]) * np.sin(aoi[:, 1]),
                 power * np.cos(aoi[:, 1]),
             ],
-            dtype=np.float_,
+            dtype=np.float64,
         )
 
         triangles = tri.Triangulation(aoi[:, 0], aoi[:, 1])

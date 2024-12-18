@@ -7,7 +7,7 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 from scipy.constants import pi
 
-from hermespy.beamforming import CaponBeamformer, SphericalFocus
+from hermespy.beamforming import CaponBeamformer
 from hermespy.simulation import SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
@@ -28,25 +28,21 @@ class TestCaponBeamformer(TestCase):
         self.rng = np.random.default_rng(42)
 
         self.device = SimulatedDevice(carrier_frequency=1e9, antennas=SimulatedUniformArray(SimulatedIdealAntenna, 0.01, (5, 5, 1)))
-        self.operator = Mock()
-        self.operator.device = self.device
 
         self.loading = 1e-4
-        self.beamformer = CaponBeamformer(loading=self.loading, operator=self.operator)
+        self.beamformer = CaponBeamformer(loading=self.loading)
         self.beamformer.loading = 1e-4
 
     def test_init(self) -> None:
         """Initialization parameters should be properly stored as class attributes"""
 
-        self.assertIs(self.operator, self.beamformer.operator)
         self.assertEqual(self.loading, self.beamformer.loading)
 
     def test_static_properties(self) -> None:
-        """Static properties should report the correct values."""
+        """Static properties should report the correct values"""
 
         self.assertEqual(1, self.beamformer.num_receive_focus_points)
-        self.assertEqual(25, self.beamformer.num_receive_input_streams)
-        self.assertEqual(1, self.beamformer.num_receive_output_streams)
+        self.assertEqual(1, self.beamformer.num_receive_output_streams(15))
 
     def test_loading_validation(self) -> None:
         """Loading property setter should raise ValueError on negative arguments"""
@@ -72,7 +68,7 @@ class TestCaponBeamformer(TestCase):
         carrier_frequency = 1e9
 
         for f, focus_angle in enumerate(focus_angles):
-            response = self.operator.device.antennas.spherical_phase_response(carrier_frequency, focus_angle[0], focus_angle[1])
+            response = self.device.antennas.spherical_phase_response(carrier_frequency, focus_angle[0], focus_angle[1])
             noiseless_spatial_samples = response[:, np.newaxis] @ expected_samples[np.newaxis, :]
             noisy_spatial_samples = noiseless_spatial_samples + noise
 
@@ -87,11 +83,4 @@ class TestCaponBeamformer(TestCase):
     def test_serialization(self) -> None:
         """Test YAML serialization"""
 
-        blacklist = self.beamformer.property_blacklist
-        blacklist.add("operator")
-
-        with patch("hermespy.beamforming.capon.CaponBeamformer.property_blacklist", new_callable=PropertyMock) as blacklist_mock, patch("hermespy.beamforming.capon.CaponBeamformer.operator", new_callable=PropertyMock) as operator_mock:
-            blacklist_mock.return_value = blacklist
-            operator_mock.return_value = self.operator
-
-            test_yaml_roundtrip_serialization(self, self.beamformer, {"operator", "required_num_output_streams", "required_num_input_streams"})
+        test_yaml_roundtrip_serialization(self, self.beamformer)

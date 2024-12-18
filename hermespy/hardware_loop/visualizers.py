@@ -15,6 +15,7 @@ import numpy as np
 
 from hermespy.core import (
     Evaluator,
+    Hook,
     Signal,
     VAT,
     VT,
@@ -22,8 +23,8 @@ from hermespy.core import (
     ScatterVisualization,
     ValueType,
 )
-from hermespy.modem import ReceivingModem
-from hermespy.radar import Radar, RadarCube
+from hermespy.modem import CommunicationReception, ReceivingModem
+from hermespy.radar import Radar, RadarCube, RadarReception
 from hermespy.tools import lin2db
 from .hardware_loop import HardwareLoopPlot, HardwareLoopSample
 from .physical_device import PhysicalDevice
@@ -157,7 +158,7 @@ class DeviceTransmissionPlot(HardwareLoopDevicePlot[PlotVisualization], SignalPl
         return "Device Transmission"
 
     def _prepare_plot(self) -> Tuple[plt.Figure, VAT]:
-        figure, axes = self._initialize_subplots(self.device.antennas.num_transmit_ports)
+        figure, axes = self._initialize_subplots(self.device.num_transmit_antennas)
         return figure, axes
 
     def _initial_plot(self, sample: HardwareLoopSample, axes: VAT) -> PlotVisualization:
@@ -210,7 +211,7 @@ class DeviceReceptionPlot(HardwareLoopDevicePlot[PlotVisualization], SignalPlot)
         return "Device Reception"
 
     def _prepare_plot(self) -> Tuple[plt.Figure, VAT]:
-        figure, axes = self._initialize_subplots(self.device.antennas.num_receive_ports)
+        figure, axes = self._initialize_subplots(self.device.num_receive_antenna_ports)
         return figure, axes
 
     def _initial_plot(self, sample: HardwareLoopSample, axes: VAT) -> PlotVisualization:
@@ -233,7 +234,8 @@ class DeviceReceptionPlot(HardwareLoopDevicePlot[PlotVisualization], SignalPlot)
 class EyePlot(HardwareLoopPlot[PlotVisualization]):
     """Plot eye diagrams of a received signal."""
 
-    __modem: ReceivingModem
+    __hook: Hook[CommunicationReception]
+    __reception: CommunicationReception
 
     def __init__(self, modem: ReceivingModem, title: str | None = None) -> None:
         """
@@ -251,7 +253,19 @@ class EyePlot(HardwareLoopPlot[PlotVisualization]):
         HardwareLoopPlot.__init__(self, title)
 
         # Initialize class attributes
-        self.__modem = modem
+        self.__hook = modem.add_receive_callback(self.__update_reception)
+        self.__reception = CommunicationReception(Signal.Empty(1.0, 1), [])
+
+    def __update_reception(self, reception: CommunicationReception) -> None:
+        """Callback envoked by receiving modem to notify the plot about new receptions.
+
+        Args:
+
+            reception (CommunicationReception):
+                The most recent reception.
+        """
+
+        self.__reception = reception
 
     @property
     def _default_title(self) -> str:
@@ -262,23 +276,36 @@ class EyePlot(HardwareLoopPlot[PlotVisualization]):
         return figure, axes
 
     def _initial_plot(self, sample: HardwareLoopSample, axes: VAT) -> PlotVisualization:
-        if self.__modem.reception is None or self.__modem.reception.num_frames < 1:
+        if self.__reception.num_frames < 1:
             raise RuntimeError("No frames received yet")
 
-        return self.__modem.reception.frames[0].signal.eye.visualize(
-            ymbol_duration=self.__modem.symbol_duration, axes=axes
+        symbol_duration = (
+            self.__reception.frames[0].signal.duration / self.__reception.frames[0].symbols.raw.size
+        )
+        return self.__reception.frames[0].signal.eye.visualize(
+            ymbol_duration=symbol_duration, axes=axes
         )
 
     def _update_plot(self, sample: HardwareLoopSample, visualization: PlotVisualization) -> None:
-        self.__modem.reception.frames[0].signal.eye.update_visualization(
-            symbol_duration=self.__modem.symbol_duration, visualization=visualization
+        if self.__reception.num_frames < 1:
+            raise RuntimeError("No frames received yet")
+
+        symbol_duration = (
+            self.__reception.frames[0].signal.duration / self.__reception.frames[0].symbols.raw.size
         )
+        self.__reception.frames[0].signal.eye.update_visualization(
+            symbol_duration=symbol_duration, visualization=visualization
+        )
+
+    def __del__(self) -> None:
+        self.__hook.remove()
 
 
 class ReceivedConstellationPlot(HardwareLoopPlot[ScatterVisualization]):
     """Plot the constellation diagram of a received signal."""
 
-    __modem: ReceivingModem
+    __reception: CommunicationReception
+    __hook: Hook[CommunicationReception]
 
     def __init__(self, modem: ReceivingModem, title: str | None = None) -> None:
         """
@@ -296,7 +323,19 @@ class ReceivedConstellationPlot(HardwareLoopPlot[ScatterVisualization]):
         HardwareLoopPlot.__init__(self, title)
 
         # Initialize class attributes
-        self.__modem = modem
+        self.__reception = CommunicationReception(Signal.Empty(1.0, 1), [])
+        self.__hook = modem.add_receive_callback(self.__update_reception)
+
+    def __update_reception(self, reception: CommunicationReception) -> None:
+        """Callback invoked by receiving modem to notify the plot about new receptions.
+
+        Args:
+
+            reception (CommunicationReception):
+                The most recent reception.
+        """
+
+        self.__reception = reception
 
     @property
     def _default_title(self) -> str:
@@ -307,19 +346,21 @@ class ReceivedConstellationPlot(HardwareLoopPlot[ScatterVisualization]):
         return figure, axes
 
     def _initial_plot(self, sample: HardwareLoopSample, axes: VAT) -> ScatterVisualization:
-        return self.__modem.reception.equalized_symbols.plot_constellation.visualize(axes=axes)
+        return self.__reception.equalized_symbols.plot_constellation.visualize(axes=axes)
 
     def _update_plot(self, sample: HardwareLoopSample, visualization: ScatterVisualization) -> None:
-        self.__modem.reception.equalized_symbols.plot_constellation.update_visualization(
-            visualization
-        )
+        self.__reception.equalized_symbols.plot_constellation.update_visualization(visualization)
+
+    def __del__(self) -> None:
+        self.__hook.remove()
 
 
 class RadarRangePlot(HardwareLoopPlot[PlotVisualization]):
     """Plot of a radar's range-power profile.""" ""
 
+    __reception: RadarReception
+    __hook: Hook[RadarReception]
     __radar: Radar
-    __scale: Literal["log", "line"]
 
     def __init__(self, radar: Radar, title: str | None = None) -> None:
         """
@@ -337,7 +378,20 @@ class RadarRangePlot(HardwareLoopPlot[PlotVisualization]):
         HardwareLoopPlot.__init__(self, title)
 
         # Initialize class attributes
+        self.__reception = None
+        self.__hook = radar.add_receive_callback(self.__update_reception)
         self.__radar = radar
+
+    def __update_reception(self, reception: RadarReception) -> None:
+        """Callback invoked by radar to notify the plot about new receptions.
+
+        Args:
+
+            reception (RadarReception):
+                The most recent reception.
+        """
+
+        self.__reception = reception
 
     @property
     def radar(self) -> Radar:
@@ -359,13 +413,13 @@ class RadarRangePlot(HardwareLoopPlot[PlotVisualization]):
         Returns: The cube.
         """
 
-        if not self.__radar.reception:
+        if not self.__reception:
             raise RuntimeError("Radar reception is not available")
 
-        cube = self.__radar.reception.cube
+        cube = self.__reception.cube
         cube.normalize_power()  # This might be a problem since the normalization is in-place
 
-        return self.__radar.reception.cube
+        return self.__reception.cube
 
     def _initial_plot(self, sample: HardwareLoopSample, axes: VAT) -> PlotVisualization:
         cube = self.__get_cube()
@@ -375,6 +429,9 @@ class RadarRangePlot(HardwareLoopPlot[PlotVisualization]):
 
     def _update_plot(self, sample: HardwareLoopSample, visualization: PlotVisualization) -> None:
         self.__get_cube().plot_range.update_visualization(visualization)
+
+    def __del__(self) -> None:
+        self.__hook.remove()
 
 
 class HardwareLoopEvaluatorPlot(Generic[VT], HardwareLoopPlot[VT], ABC):

@@ -49,15 +49,14 @@ overlapping frequency bands.
 .. literalinclude:: ../scripts/examples/simulation_synchronization.py
    :language: python
    :linenos:
-   :lines: 10-33
+   :lines: 10-17
 
-The exchanged waveforms are identical, however, devices are considered to be only synchronized to their
-linked partners.
+The exchanged waveforms are identical, however, devices are considered to be only synchronized to their linked partners.
 
 .. literalinclude:: ../scripts/examples/simulation_synchronization.py
    :language: python
    :linenos:
-   :lines: 35-42
+   :lines: 31-46
 
 Of course, the abstract *TriggerModel* in the above snippet must be replaced by the desired implementation from the list above.
 By generating a single drop of the simulation and plotting the bit error rates of the two devices,
@@ -67,7 +66,7 @@ in between the two links.
 .. literalinclude:: ../scripts/examples/simulation_synchronization.py
    :language: python
    :linenos:
-   :lines: 44-53
+   :lines: 48-57
 
 .. toctree::
    :hidden:

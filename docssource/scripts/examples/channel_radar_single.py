@@ -17,11 +17,11 @@ channel = SingleTargetRadarChannel(10, 1, attenuate=False)
 simulation.set_channel(device, device, channel)
 
 # Configure an FMCW radar with 5 GHz bandwidth illuminating the target
-radar = Radar(device)
-radar.waveform = FMCW(10, 5e9, 90 / 5e9, 100 / 5e9)
+radar = Radar(FMCW(10, 5e9, 90 / 5e9, 100 / 5e9))
+device.add_dsp(radar)
 
 # Configure a simulation evluating the radar's operating characteristics
-simulation.add_evaluator(ReceiverOperatingCharacteristic(radar, channel))
+simulation.add_evaluator(ReceiverOperatingCharacteristic(radar, device, device, channel))
 simulation.new_dimension('noise_level', dB(np.arange(0, -22, -2).tolist()), device)
 simulation.num_samples = 1000
 

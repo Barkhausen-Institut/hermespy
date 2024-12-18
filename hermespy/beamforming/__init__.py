@@ -11,7 +11,6 @@ __status__ = "Prototype"
 
 from .beamformer import (
     BeamFocus,
-    BeamformerBase,
     CoordinateFocus,
     TransmitBeamformer,
     ReceiveBeamformer,
@@ -24,7 +23,6 @@ from .operators import BeamformingReceiver, BeamformingTransmitter
 
 __all__ = [
     "BeamFocus",
-    "BeamformerBase",
     "CoordinateFocus",
     "BeamformingReceiver",
     "BeamformingTransmitter",

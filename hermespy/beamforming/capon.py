@@ -7,7 +7,7 @@ Capon Beamformer
 
 import numpy as np
 
-from hermespy.core import AntennaMode, AntennaArray, Serializable
+from hermespy.core import AntennaMode, AntennaArrayState, Serializable
 from .beamformer import ReceiveBeamformer
 
 __author__ = "Jan Adler"
@@ -55,7 +55,7 @@ class CaponBeamformer(Serializable, ReceiveBeamformer):
 
     yaml_tag = "Capon"
 
-    def __init__(self, loading: float = 0.0, **kwargs) -> None:
+    def __init__(self, loading: float = 0.0) -> None:
         """
         Args:
 
@@ -65,14 +65,10 @@ class CaponBeamformer(Serializable, ReceiveBeamformer):
         """
 
         self.loading = loading
-        ReceiveBeamformer.__init__(self, **kwargs)
+        ReceiveBeamformer.__init__(self)
 
-    @property
-    def num_receive_input_streams(self) -> int:
-        return self.operator.device.antennas.num_receive_ports
-
-    @property
-    def num_receive_output_streams(self) -> int:
+    def num_receive_output_streams(self, num_input_streams: int) -> int:
+        # The capon beaformer combies all input streams into a single output stream
         return 1
 
     @property
@@ -104,7 +100,11 @@ class CaponBeamformer(Serializable, ReceiveBeamformer):
         self.__loading = value
 
     def _decode(
-        self, samples: np.ndarray, carrier_frequency: float, angles: np.ndarray, array: AntennaArray
+        self,
+        samples: np.ndarray,
+        carrier_frequency: float,
+        angles: np.ndarray,
+        array: AntennaArrayState,
     ) -> np.ndarray:
         # Compute the inverse sample covariance matrix R
         # In order to avoid algebra exceptions on decodings without noise, we will resort to the pseudo-inverse,
@@ -114,7 +114,7 @@ class CaponBeamformer(Serializable, ReceiveBeamformer):
         )
 
         # Query the sensor array response vectors for the angles of interest and create a dictionary from it
-        dictionary = np.empty((self.num_receive_input_streams, angles.shape[0]), dtype=complex)
+        dictionary = np.empty((samples.shape[0], angles.shape[0]), dtype=complex)
         for d, focus in enumerate(angles):
             array_response = array.spherical_phase_response(
                 carrier_frequency, focus[0, 0], focus[0, 1], AntennaMode.RX

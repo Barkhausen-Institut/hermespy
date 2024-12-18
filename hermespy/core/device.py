@@ -119,17 +119,20 @@ from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from itertools import chain
 from math import ceil
-from typing import Generic, Iterator, List, Optional, overload, Type, TypeVar
+from typing import Callable, Generic, Iterator, overload, Type, TypeVar
 
 from h5py import Group
+from ruamel.yaml import MappingNode, Node, SafeConstructor, SafeRepresenter, ScalarNode
 from scipy.constants import speed_of_light
 
 from .antennas import AntennaArray
 from .factory import HDFSerializable, Serializable
+from .hooks import Hook, Hookable
+from .precoding import TransmitSignalCoding, ReceiveSignalCoding
 from .random_node import RandomNode
 from .signal_model import Signal
+from .state import DeviceState, DST, ReceiveState, TransmitState
 from .transformation import Transformable, Transformation
-
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -144,10 +147,10 @@ __status__ = "Prototype"
 class FloatingError(RuntimeError):
     """Exception raised if an operation fails due to a currently being considered floating."""
 
-    pass
+    ...  # pragma: no cover
 
 
-OperationResultType = TypeVar("OperationResultType", bound="OperationResult")
+ORT = TypeVar("ORT", bound="OperationResult")
 """Type of OperationResult"""
 
 
@@ -176,7 +179,7 @@ class OperationResult(HDFSerializable):
         self.signal = signal
 
     @classmethod
-    def from_HDF(cls: Type[OperationResultType], group: Group) -> OperationResultType:
+    def from_HDF(cls: Type[ORT], group: Group) -> ORT:
         signal = Signal.from_HDF(group["signal"])
         return cls(signal=signal)
 
@@ -204,106 +207,12 @@ SlotType = TypeVar("SlotType", bound="OperatorSlot")
 """Type of slot."""
 
 
-class Operator(Generic[SlotType], Serializable):
+class Operator(ABC):
     """Base class for operators of devices.
 
     In HermesPy, operators may configure devices, broadcast signals over them or capture signals from them.
     Each operator is attached to a single device instance it operates on.
     """
-
-    property_blacklist = {"slot"}
-
-    __slot: Optional[SlotType]  # Slot within a device this operator 'operates'
-
-    def __init__(self, slot: Optional[SlotType] = None) -> None:
-        """
-        Args:
-            slot (OperatorSlot, optional):
-                Device slot this operator is attached to.
-                By default, the operator is not attached and considered floating.
-        """
-
-        self.slot = slot
-
-    @property
-    def slot(self) -> Optional[OperatorSlot]:
-        """Device slot this operator operates.
-
-        Returns:
-            Handle to the device slot.
-            `None` if the operator is currently considered floating.
-
-        :meta private:
-        """
-
-        return self.__slot
-
-    @slot.setter
-    def slot(self, value: Optional[SlotType]) -> None:
-        # A None argument indicates the slot should be unbound
-        if value is None:
-            if hasattr(self, "_Operator__slot") and self.__slot is not None:
-                # This is necessary to prevent event-loops. Just ignore it.
-                slot = self.__slot
-                self.__slot = None
-
-                if slot.registered(self):
-                    slot.remove(self)
-
-            else:
-                self.__slot = None
-
-        elif not hasattr(self, "_Operator__slot"):
-            self.__slot = value
-
-            if not self.__slot.registered(self):
-                self.__slot.add(self)
-
-        elif self.__slot is not value:
-            # if self.__slot is not None and self.__slot.registered(self):
-            #    self.__slot.remove(self)
-
-            self.__slot = value
-
-            if not self.__slot.registered(self):
-                self.__slot.add(self)
-
-    @property
-    def slot_index(self) -> int | None:
-        """Index of the operator within its slot.
-
-        Returns:
-            Index of the operator.
-            `None` if the operator is currently considered floating.
-
-        :meta private:
-        """
-
-        if self.__slot is None:
-            return None
-
-        return self.__slot.operator_index(self)
-
-    @property
-    def device(self) -> Device | None:
-        """Device this object is assigned to.
-
-        :obj:`None` if this object is currently considered floating / unassigned.
-        """
-
-        if self.__slot is None:
-            return None
-
-        return self.__slot.device
-
-    @property
-    def attached(self) -> bool:
-        """Attachment state of the operator.
-
-        Indicates whether this object is currently assigned a :class:`.Device` instance.
-        """
-
-        return self.__slot is not None
 
     @property
     @abstractmethod
@@ -447,7 +356,7 @@ class DeviceTransmission(DeviceOutput):
             output (DeviceOutput):
                 Device output object.
 
-            operator_transmissions (List[Transmission]):
+            operator_transmissions (Sequence[Transmission]):
                 List of information generated by transmit operators.
         """
 
@@ -542,7 +451,7 @@ class DeviceInput(HDFSerializable):
         """
         Args:
 
-            impinging_signals (Union[Signal, List[Signal]]): Signals to be processed by the device.
+            impinging_signals (Union[Signal, Sequence[Signal]]): Signals to be processed by the device.
         """
 
         impinging_signals = (
@@ -604,7 +513,7 @@ class ProcessedDeviceInput(DeviceInput):
                 Numpy vector containing lists of signals impinging onto the device.
 
             operator_inputs (Sequence[Signal]):
-                Information cached by the device operators.
+                Signal models to be processed by receive DSP algorithms.
         """
 
         if isinstance(impinging_signals, DeviceInput):
@@ -676,7 +585,7 @@ class DeviceReception(ProcessedDeviceInput):
                 Numpy vector containing lists of signals impinging onto the device.
 
             operator_inputs (Sequence[Signal]):
-                Information cached by the device operators.
+                Signal models to be processed by receive DSP algorithms.
 
             operator_separation (bool):
                 Is the operator separation flag enabled?
@@ -702,7 +611,7 @@ class DeviceReception(ProcessedDeviceInput):
             device_input (ProcessedDeviceInput):
                 The processed device output.
 
-            operator_receptions (List[OperatorReceptions]):
+            operator_receptions (Sequence[OperatorReceptions]):
                 List of operator receptions.
 
         Returns: The initialized object.
@@ -781,50 +690,41 @@ class DeviceReception(ProcessedDeviceInput):
         group.attrs["num_operator_receptions"] = self.num_operator_receptions
 
 
-class MixingOperator(ABC, Generic[SlotType], Operator[SlotType]):
+class MixingOperator(Operator):
     """Base class for operators performing mixing operations."""
 
-    __carrier_frequency: Optional[float]  # Carrier frequency
+    __carrier_frequency: float | None  # Carrier frequency
 
-    def __init__(
-        self, carrier_frequency: Optional[float] = None, slot: Optional[SlotType] = None
-    ) -> None:
+    def __init__(self, carrier_frequency: float | None = None) -> None:
         """
         Args:
 
             carrier_frequency (float, optional):
                 Central frequency of the mixed signal in radio-frequency transmission band.
-
-            slot (SlotType, optional):
-                Device slot this operator operators.
         """
 
+        # Initialize base class
+        Operator.__init__(self)
+
+        # Initialize class attributes
         self.carrier_frequency = carrier_frequency
-        Operator.__init__(self, slot)
 
     @property
-    def carrier_frequency(self) -> float:
+    def carrier_frequency(self) -> float | None:
         """Central frequency of the mixed signal in radio-frequency transmission band in Hz.
 
         Denoted by :math:`f_c` with unit :math:`\\left[ f_c \\right] = \\mathrm{Hz} = \\tfrac{1}{\\mathrm{s}}` in the literature.
-        By default, the carrier frequency of the assigned :class:`.Device` is returned.
-        If no device is assigned, we assume a base band, i.e. :math:`f_c = 0`.
+        If not specified, i.e. :py:obj:`None`, the operated device's default carrier frequency will be assumed
+        during signal processing.
 
         Raises:
             ValueError: If the carrier frequency is smaller than zero.
         """
 
-        if self.__carrier_frequency is None:
-            if self.device is None:
-                return 0.0
-
-            else:
-                return self.device.carrier_frequency
-
         return self.__carrier_frequency
 
     @carrier_frequency.setter
-    def carrier_frequency(self, value: Optional[float]) -> None:
+    def carrier_frequency(self, value: float | None) -> None:
         if value is None:
             self.__carrier_frequency = None
             return
@@ -835,21 +735,19 @@ class MixingOperator(ABC, Generic[SlotType], Operator[SlotType]):
         self.__carrier_frequency = value
 
 
-class Receiver(MixingOperator["ReceiverSlot"], Generic[ReceptionType], RandomNode):
+class Receiver(Generic[ReceptionType], MixingOperator, RandomNode):
     """Operator receiving from a device."""
 
     __reference: Device | None
-    __signal: Signal | None
-    __reception: ReceptionType | None
     __selected_receive_ports: Sequence[int]
+    __receive_callbacks: Hookable[ReceptionType]
 
     def __init__(
         self,
         seed: int | None = None,
         reference: Device | None = None,
         selected_receive_ports: Sequence[int] | None = None,
-        *args,
-        **kwargs,
+        carrier_frequency: float | None = None,
     ) -> None:
         """
         Args:
@@ -864,45 +762,49 @@ class Receiver(MixingOperator["ReceiverSlot"], Generic[ReceptionType], RandomNod
                 Indices of antenna ports selected for reception from the operated :class:`Device's<Device>` antenna array.
                 If not specified, all available antenna ports will be considered.
 
-            *args:
-                Operator base class initialization parameters.
-
-            \**kwargs:
-                Operator base class initialization parameters.
+            carrier_frequency (float, optional):
+                Central frequency of the mixed signal in radio-frequency transmission band.
+                If not specified, the operated device's default carrier frequency will be assumed during signal processing.
         """
 
         # Initialize base classes
         RandomNode.__init__(self, seed=seed)
-        MixingOperator.__init__(self, *args, **kwargs)
+        MixingOperator.__init__(self, carrier_frequency)
 
         # Initialize class attributes
+        self.__receive_callbacks = Hookable()
         self.reference = reference
         self.selected_receive_ports = selected_receive_ports
-        self.__signal = None
-        self.__reception = None
 
-    @Operator.device.setter  # type: ignore
-    def device(self, value: Device | None) -> None:  # type: ignore
-        value.receivers.add(self)
+    def add_receive_callback(
+        self, callback: Callable[[ReceptionType], None]
+    ) -> Hook[ReceptionType]:
+        """Add a callback to be called after processing the receive DSP algorithm.
 
-    @Operator.slot.setter  # type: ignore
-    def slot(self, value: Optional[ReceiverSlot]) -> None:
-        Operator.slot.fset(self, value)  # type: ignore
-        self.random_mother = None if value is None else value.device
+        Args:
+
+            callback (Callable[[ReceptionType], None]):
+                Function to be called after processing the receive DSP algorithm.
+                The receive output is passed as the only argument.
+
+        Returns: Hook to be used for removal.
+        """
+
+        return self.__receive_callbacks.add_callback(callback)
 
     @property
-    def reference(self) -> Optional[Device]:
+    def reference(self) -> Device | None:
         """Reference transmitter for this receiver.
 
         Returns:
             A handle to the referenced device.
-            `None` if the device was not specified.
+            :py:obj:`None` if the device was not specified.
         """
 
         return self.__reference
 
     @reference.setter
-    def reference(self, value: Optional[Device]) -> None:
+    def reference(self, value: Device | None) -> None:
         self.__reference = value
 
     @property
@@ -910,105 +812,59 @@ class Receiver(MixingOperator["ReceiverSlot"], Generic[ReceptionType], RandomNod
         """Indices of antenna ports selected for reception from the operated :class:`Device's<Device>` antenna array.
 
         If :py:obj:`None`, all available antenna ports will be considered.
-
-        Raises:
-
-            ValueError: If the selected ports don't match the configured device's receive antenna array configuration.
         """
 
         return self.__selected_receive_ports
 
     @selected_receive_ports.setter
     def selected_receive_ports(self, value: Sequence[int] | None) -> None:
-        if value is None:
-            self.__selected_receive_ports = None
-            return
-
-        # Make sure the provided indices match the underlying device's antenna array configuration
-        if self.device is not None:
-            if max(value) > (self.device.antennas.num_receive_ports - 1):
-                raise ValueError(
-                    "Receive antenna selection indices don't match the device's receive antenna configuration"
-                )
-
         self.__selected_receive_ports = value
 
-    @property
-    def num_receive_ports(self) -> int:
-        """Number of considered receiving ports."""
-
-        if self.selected_receive_ports is None:
-            if self.device is None:
-                return 0
-
-            return self.device.antennas.num_receive_ports
-
-        return len(self.selected_receive_ports)
-
-    @property
-    def num_receive_antennas(self) -> int:
-        """Number of considered receiving antennas."""
-
-        if self.device is None:
-            return 0
-
-        if self.selected_receive_ports is None:
-            return self.device.antennas.num_receive_antennas
-
-        return self.device.antennas.count_receive_antennas(self.selected_receive_ports)
-
-    @property
-    def reception(self) -> ReceptionType | None:
-        """Information inferred from the most recent reception.
-
-        Updated during the :meth:`receive<receive>` routine.
-        :py:obj:`None` if the cache has been cleared or :meth:`receive<receive>`
-        has not been called yet.
-        """
-
-        return self.__reception
-
-    def receive(self, signal: Signal | None = None, cache: bool = True) -> ReceptionType:
+    def receive(self, signal: Signal, state: DeviceState, notify: bool = True) -> ReceptionType:
         """Process a received signal by the receiver.
 
         Wrapper around the abstract :meth:`_receive<Receiver._receive>` method.
 
         Args:
 
-            signal (Signal, optional): Signal model to be processed.
-            cache (bool, optional): Cache the received information
+            signal (Signal):
+                Model of the signal samples to be processed by the DSP algorithm.
 
-        Returns: Information rceived by this operator.
+            state (DeviceState):
+                State of the receiving device to be conmsidered by the DSP algorithm.
+
+            notify (bool, optional):
+                Notify the receiver's callbacks.
+                Enabled by default.
+
+        Returns: Information received by this operator.
 
         Raises:
 
-            RuntimeError: If signal model was not provided and no signal is cached.
             ValueError: If the number of signal streams does not match the number of receive ports.
         """
 
-        if signal is None:
-            if self.signal is None:
-                raise RuntimeError("Error attempting to fetch a cached receiver signal")
+        # Generate the state for this DSP algorithm's assigned ports
+        receive_state = state.receive_state(self.selected_receive_ports)
 
-            signal = self.signal
-
-        if signal.num_streams != self.num_receive_ports and self.num_receive_ports > 0:
+        # Assert the number of signal streams
+        if signal.num_streams != receive_state.num_digital_receive_ports:
             raise ValueError(
-                f"Number of signal streams does not match the number of receive ports ({signal.num_streams} != {self.num_receive_ports})"
+                f"Number of signal streams does not match the number of receive ports ({signal.num_streams} != {receive_state.num_digital_receive_ports})"
             )
 
-        # Generate received information
-        reception = self._receive(signal)
+        # Run the receive DSP routine
+        reception = self._receive(signal, receive_state)
 
-        # Cache the reception if the respective flag is enabled
-        if cache:
-            self.__reception = reception
+        # Notify the receiver's callbacks
+        if notify:
+            self.__receive_callbacks.notify(reception)
 
         # Return received information
         return reception
 
     @abstractmethod
-    def _receive(self, signal: Signal) -> ReceptionType:
+    def _receive(self, signal: Signal, state: ReceiveState) -> ReceptionType:
         """Process a received signal by the receiver.
 
         Subroutine of the public :meth:`receive<hermespy.core.device.Receiver.receive>`
@@ -1018,38 +874,14 @@ class Receiver(MixingOperator["ReceiverSlot"], Generic[ReceptionType], RandomNod
 
         Args:
             signal (Signal): Multi-stream signal model to be processed.
+            state (ReceiveState): Device state to be considered during reception.
 
         Returns:
             Information inferred from the received signal.
         """
         ...  # pragma: no cover
 
-    @property
-    def signal(self) -> Signal | None:
-        """Cached signal model to be received.
-
-        Signal model assumed by :meth:`receive` if no signal model is provided.
-        Updated with :meth:`cache_reception`.
-        :obj:`None` if cache has been cleared or :meth:`receive` has not been called yet.
-        """
-
-        return self.__signal
-
-    def cache_reception(self, signal: Signal | None) -> None:
-        """Cache recent reception at this receiver.
-
-        Args:
-
-            signal (Signal | None):
-                Signal model to be cached for the next reception.
-
-            channel_realization (ChannelRealizationBase | None):
-                Recently received channel state.
-        """
-
-        self.__signal = signal
-
-    def recall_reception(self, group: Group, cache: bool = True) -> ReceptionType:
+    def recall_reception(self, group: Group, notify: bool = True) -> ReceptionType:
         """Recall a specific reception from a serialization.
 
         Internally calls the abstract method
@@ -1061,8 +893,8 @@ class Receiver(MixingOperator["ReceiverSlot"], Generic[ReceptionType], RandomNod
             group (Group):
                 HDF group containing the reception.
 
-            cache (bool, optional):
-                Cache the reception.
+            notify (bool, optional):
+                Notify the receiver's callbacks.
                 Enabled by default.
 
         Returns: The recalled reception.
@@ -1070,10 +902,12 @@ class Receiver(MixingOperator["ReceiverSlot"], Generic[ReceptionType], RandomNod
         :meta private:
         """
 
+        # Recall the reception
         recalled_reception = self._recall_reception(group)
 
-        if cache:
-            self.__reception = recalled_reception
+        # Notify the receiver's callbacks
+        if notify:
+            self.__receive_callbacks.notify(recalled_reception)
 
         return recalled_reception
 
@@ -1106,7 +940,7 @@ class OperatorSlot(Generic[OperatorType], Sequence[OperatorType]):
     """Slot list for operators of a single device."""
 
     __device: Device  # Device this operator belongs to
-    __operators: List[OperatorType]  # List of registered operators
+    __operators: list[OperatorType]  # List of registered operators
 
     def __init__(self, device: Device) -> None:
         """
@@ -1157,7 +991,6 @@ class OperatorSlot(Generic[OperatorType], Sequence[OperatorType]):
             return
 
         self.__operators.append(operator)
-        operator.slot = self
 
     def remove(self, operator: OperatorType) -> None:
         """Remove an operator from this slot.
@@ -1169,11 +1002,6 @@ class OperatorSlot(Generic[OperatorType], Sequence[OperatorType]):
 
         if operator in self.__operators:
             self.__operators.remove(operator)
-
-        # Only detach from the operator's slot if it matches to this signal
-        # This is required to prevent duplex operators from accidentally detaching themselves
-        if isinstance(operator.slot, type(self)):
-            operator.slot = None
 
     def registered(self, operator: OperatorType) -> bool:
         """Check if an operator is registered at this slot.
@@ -1270,18 +1098,17 @@ TransmissionType = TypeVar("TransmissionType", bound="Transmission")
 """Type variable of a :class:`Transmission`."""
 
 
-class Transmitter(MixingOperator["TransmitterSlot"], Generic[TransmissionType], RandomNode):
+class Transmitter(Generic[TransmissionType], MixingOperator, RandomNode):
     """Operator transmitting over a device."""
 
-    __transmission: TransmissionType | None
+    __transmit_callbacks: Hookable[TransmissionType]
     __selected_transmit_ports: Sequence[int] | None
 
     def __init__(
         self,
         seed: int | None = None,
         selected_transmit_ports: Sequence[int] | None = None,
-        *args,
-        **kwargs,
+        carrier_frequency: float | None = None,
     ) -> None:
         """
         Args:
@@ -1293,22 +1120,38 @@ class Transmitter(MixingOperator["TransmitterSlot"], Generic[TransmissionType], 
                 Indices of antenna ports selected for transmission from the operated :class:`Device's<Device>` antenna array.
                 If not specified, all available ports will be considered.
 
-            *args:
-                Operator base class initialization parameters.
-
-            \**kwargs:
-                Operator base class initialization parameters.
+            carrier_frequency (float, optional):
+                Central frequency of the mixed signal in radio-frequency transmission band.
+                If not specified, the operated device's default carrier frequency will be assumed during signal processing.
         """
 
         # Initialize operator base class
         RandomNode.__init__(self, seed=seed)
-        MixingOperator.__init__(self, *args, **kwargs)
+        MixingOperator.__init__(self, carrier_frequency)
 
         # Initialize class attributes
+        self.__transmit_callbacks = Hookable()
         self.__selected_transmit_ports = selected_transmit_ports
-        self.__transmission = None
 
-    def transmit(self, duration: float = 0.0, cache: bool = True) -> TransmissionType:
+    def add_transmit_callback(
+        self, callback: Callable[[TransmissionType], None]
+    ) -> Hook[TransmissionType]:
+        """Add a callback to be called after processing the transmit DSP algorithm.
+
+        Args:
+
+            callback (Callable[[TransmissionType], None]):
+                Function to be called after processing the transmit DSP algorithm.
+                The transmit output is passed as the only argument.
+
+        Returns: Hook to be used for removal.
+        """
+
+        return self.__transmit_callbacks.add_callback(callback)
+
+    def transmit(
+        self, state: DeviceState, duration: float = 0.0, notify: bool = True
+    ) -> TransmissionType:
         """Transmit a signal.
 
         Registers the signal samples to be transmitted by the underlying device.
@@ -1317,13 +1160,16 @@ class Transmitter(MixingOperator["TransmitterSlot"], Generic[TransmissionType], 
 
         Args:
 
+            state (DeviceState, optional):
+                State of the device at the time of transmission.
+                If not specified, the device's current state will be queried by calling :meth:`hermespy.core.device.Device.state`.
+
             duration (float, optional):
                 Duration of the transmitted signal.
-                If not specified, the duration will be inferred by the transmitter.
+                If not specified, i.e. zero, the duration will be inferred by the transmitter.
 
-            cache (bool, optional):
-                Cache the transmission by the transmitter.
-                Enabled by default.
+            notify (bool, optional):
+                Notify the transmitter's callbacks about the generated transmission.
 
         Returns:
 
@@ -1334,21 +1180,27 @@ class Transmitter(MixingOperator["TransmitterSlot"], Generic[TransmissionType], 
             FloatingError: If the transmitter is currently considered floating.
         """
 
-        transmission = self._transmit(duration)
+        # Generate the state for this DSP algorithm's assigned ports
+        # Run the transmit DSP routine
+        transmission = self._transmit(state.transmit_state(self.selected_transmit_ports), duration)
 
-        if cache:
-            self.__transmission = transmission
+        # Notify the registered callbacks if the respective flag is enabled
+        if notify:
+            self.__transmit_callbacks.notify(transmission)
 
         return transmission
 
     @abstractmethod
-    def _transmit(self, duration: float = -1.0) -> TransmissionType:
+    def _transmit(self, state: TransmitState, duration: float) -> TransmissionType:
         """Generate information to be transmitted.
 
         Subroutine of the public :meth:`transmit<Transmitter.transmit>` method that performs the pipeline-specific transmit-processing
         and consolidates the generated information into a single :class:`Transmission` object.
 
         Args:
+
+            state (TransmitState):
+                State of the device at the time of transmission.
 
             duration (float, optional):
                 Duration of the transmitted signal in seconds.
@@ -1358,31 +1210,7 @@ class Transmitter(MixingOperator["TransmitterSlot"], Generic[TransmissionType], 
         """
         ...  # pragma: no cover
 
-    @property
-    def transmission(self) -> TransmissionType | None:
-        """Recent transmission of the transmitter.
-
-        Updated during the :meth:`transmit<Transmitter.transmit>` routine.
-        :py:obj:`None` if the cache has been cleared or :meth:`transmit<Transmitter.transmit>`
-        has not been called yet.
-        """
-
-        return self.__transmission
-
-    def cache_transmission(self, transmission: TransmissionType) -> None:
-        """Update the information resulting from the latest transmission.
-
-        Called by the :meth:`transmit<Transmitter.transmit>` routine.
-
-        Args:
-
-            transmission (TransmissionType):
-                The transmission to be cached.
-        """
-
-        self.__transmission = transmission
-
-    def recall_transmission(self, group: Group, cache: bool = True) -> TransmissionType:
+    def recall_transmission(self, group: Group, notify: bool = True) -> TransmissionType:
         """Recall a specific transmission from a serialization.
 
         Internally calls the abstract method :meth:`Transmitter._recall_transmission`.
@@ -1393,8 +1221,8 @@ class Transmitter(MixingOperator["TransmitterSlot"], Generic[TransmissionType], 
             group (Group):
                 HDF group containing the transmission.
 
-            cache (bool, optional):
-                Cache the transmission.
+            notify (bool, optional):
+                Notify the transmitter's callbacks about the generated transmission.
                 Enabled by default.
 
         Returns: The recalled transmission
@@ -1402,10 +1230,12 @@ class Transmitter(MixingOperator["TransmitterSlot"], Generic[TransmissionType], 
         :meta private:
         """
 
+        # Recall the transmission from HDF
         recalled_transmission = self._recall_transmission(group)
 
-        if cache:
-            self.cache_transmission(recalled_transmission)
+        # Notify the registered callbacks if the respective flag is enabled
+        if notify:
+            self.__transmit_callbacks.notify(recalled_transmission)
 
         return recalled_transmission
 
@@ -1437,149 +1267,26 @@ class Transmitter(MixingOperator["TransmitterSlot"], Generic[TransmissionType], 
     def selected_transmit_ports(self) -> Sequence[int] | None:
         """Indices of antenna ports selected for transmission from the operated :class:`Device's<Device>` antenna array.
 
-        If `None`, all available transmit ports will be considered.
-
-        Raises:
-
-            ValueError: If the selected ports don't match the configured device's transmit antenna array configuration.
+        If :py:obj:`None`, all available transmit ports will be considered.
         """
 
         return self.__selected_transmit_ports
 
     @selected_transmit_ports.setter
     def selected_transmit_ports(self, value: Sequence[int] | None) -> None:
-        if value is None:
-            self.__selected_transmit_ports = None
-            return
-
-        # Make sure the provided indices match the underlying device's antenna array configuration
-        if self.device is not None:
-            if max(value) > (self.device.antennas.num_transmit_ports - 1):
-                raise ValueError(
-                    "Transmit antenna selection indices don't match the device's receive antenna configuration"
-                )
-
         self.__selected_transmit_ports = value
-
-    @property
-    def num_transmit_ports(self) -> int:
-        """Number of considered transmitting ports."""
-
-        if self.selected_transmit_ports is None:
-            if self.device is None:
-                return 0
-
-            return self.device.antennas.num_transmit_ports
-
-        return len(self.selected_transmit_ports)
-
-    @property
-    def num_transmit_antennas(self) -> int:
-        """Number of considered receiving antennas."""
-
-        if self.device is None:
-            return 0
-
-        if self.selected_transmit_ports is None:
-            return self.device.antennas.num_receive_antennas
-
-        return self.device.antennas.count_transmit_antennas(self.selected_transmit_ports)
-
-    @Operator.device.setter  # type: ignore
-    def device(self, value: Device) -> None:  # type: ignore
-        value.transmitters.add(self)
-
-    @Operator.slot.setter  # type: ignore
-    def slot(self, value: Optional[TransmitterSlot]) -> None:
-        Operator.slot.fset(self, value)  # type: ignore
-        self.random_mother = None if value is None else value.device
 
 
 class TransmitterSlot(OperatorSlot[Transmitter]):
     """Slot for transmitting operators within devices."""
 
-    # Next signals to be transmitted
-    __transmissions: List[Optional[Transmission]]
-
-    def __init__(self, *args, **kwargs) -> None:
-        """
-        Args:
-            *args:
-                OperatorSlot base class initialization parameters.
-
-            **kwargs:
-                OperatorSlot base class initialization parameters.
-        """
-
-        self.__transmissions = []
-
-        # Init base class
-        OperatorSlot.__init__(self, *args, **kwargs)
-
-    def add(self, operator: Transmitter) -> None:
-        OperatorSlot.add(self, operator)
-        self.__transmissions.append(None)
-
-    def add_transmission(self, transmitter: Transmitter, transmission: Transmission) -> None:
-        """Add a transmitter's most recent transmission.
-
-        Args:
-
-            transmitter(Transmitter):
-                The transmitter emitting the signal.
-
-            transmission (OperatorTransmission):
-                The information to be transmitted.
-
-        Raises:
-            ValueError: If the transmitter is not registered at this slot.
-        """
-
-        if not self.registered(transmitter):
-            raise ValueError("Transmitter not registered at this slot")
-
-        if transmission.signal.num_streams != transmitter.num_transmit_ports:
-            raise ValueError(
-                f"Transmitted signal has invalid number of streams ({transmission.signal.num_streams} instead of {transmitter.num_transmit_ports})"
-            )
-
-        self.__transmissions[transmitter.slot_index] = transmission
-
-    def get_transmissions(self, clear_cache: bool = True) -> List[Transmission]:
-        """Get recent transmissions.
-
-        Returns: A list of recent operator transmissions.
-        """
-
-        transmissions: List[Transmission] = self.__transmissions.copy()
-
-        # Clear the cache if the respective flag is enabled
-        if clear_cache:
-            self.clear_cache()
-
-        return transmissions
-
-    def clear_cache(self) -> None:
-        """Clear the cached transmission of all registered transmit operators."""
-
-        self.__transmissions = [None] * self.num_operators
+    ...  # pragma: no cover
 
 
 class ReceiverSlot(OperatorSlot[Receiver]):
     """Slot for receiving operators within devices."""
 
-    def __init__(self, *args, **kwargs) -> None:
-        """
-        Args:
-            *args:
-                OperatorSlot base class initialization parameters.
-
-            **kwargs:
-                OperatorSlot base class initialization parameters.
-        """
-
-        # Init base class
-        OperatorSlot.__init__(self, *args, **kwargs)
+    ...  # pragma: no cover
 
 
 class UnsupportedSlot(OperatorSlot):
@@ -1589,7 +1296,7 @@ class UnsupportedSlot(OperatorSlot):
         raise RuntimeError("Slot not supported by this device")
 
 
-class Device(ABC, Transformable, RandomNode, Serializable):
+class Device(ABC, Generic[DST], Transformable, RandomNode, Serializable):
     """Physical device representation within HermesPy.
 
     It acts as the basis for all transmissions and receptions of sampled electromagnetic signals.
@@ -1601,10 +1308,16 @@ class Device(ABC, Transformable, RandomNode, Serializable):
     receivers: ReceiverSlot
     """Receivers capturing signals from this device"""
 
+    __transmit_coding: TransmitSignalCoding  # Codings applied to transmitted samples before upload
+    __receive_coding: (
+        ReceiveSignalCoding  # Codings applied to received samples directly after download
+    )
     __power: float  # Average power of the transmitted signals
+    __output_callbacks: Hookable[DeviceOutput]  # Callbacks notified about generated outputs
+    __input_callbacks: Hookable[ProcessedDeviceInput]  # Callbacks notified about processed inputs
 
     def __init__(
-        self, power: float = 1.0, pose: Transformation | None = None, seed: Optional[int] = None
+        self, power: float = 1.0, pose: Transformation | None = None, seed: int | None = None
     ) -> None:
         """
         Args:
@@ -1627,7 +1340,19 @@ class Device(ABC, Transformable, RandomNode, Serializable):
         # Initalize device attributes and properties
         self.transmitters = TransmitterSlot(self)
         self.receivers = ReceiverSlot(self)
+        self.__transmit_coding = TransmitSignalCoding()
+        self.__receive_coding = ReceiveSignalCoding()
+        self.__input_callbacks = Hookable()
+        self.__output_callbacks = Hookable()
         self.power = power
+
+    @abstractmethod
+    def state(self) -> DST:
+        """Query the immutable physical state of the device.
+
+        Returns: The physical device state.
+        """
+        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -1636,7 +1361,49 @@ class Device(ABC, Transformable, RandomNode, Serializable):
         ...  # pragma: no cover
 
     @property
-    def num_transmit_ports(self) -> int:
+    def transmit_coding(self) -> TransmitSignalCoding:
+        """Digital coding applied to transmitted samples before digital-to-analog conversion."""
+
+        return self.__transmit_coding
+
+    @property
+    def receive_coding(self) -> ReceiveSignalCoding:
+        """Digital coding applied to received samples after analog-to-digital conversion."""
+
+        return self.__receive_coding
+
+    @property
+    def output_callbacks(self) -> Hookable[DeviceOutput]:
+        """Callbacks notified about generated outputs."""
+
+        return self.__output_callbacks
+
+    @property
+    def input_callbacks(self) -> Hookable[ProcessedDeviceInput]:
+        """Callbacks notified about processed inputs."""
+
+        return self.__input_callbacks
+
+    @property
+    def num_digital_transmit_ports(self) -> int:
+        """Number of available digital signal stream ports for transmission.
+
+        If no transmit coding was configured, this value is equal to the number of transmit antenna ports.
+        """
+
+        return self.__transmit_coding.num_transmit_input_streams(self.num_transmit_antenna_ports)
+
+    @property
+    def num_digital_receive_ports(self) -> int:
+        """Number of available digital signal stream ports for reception.
+
+        If no receive coding was configured, this value is equal to the number of receive antenna ports.
+        """
+
+        return self.__receive_coding.num_receive_output_streams(self.num_receive_antenna_ports)
+
+    @property
+    def num_transmit_antenna_ports(self) -> int:
         """Number of available transmit antenna ports.
 
         Shorthand to :attr:`antennas'<.antennas>` :attr:`num_transmit_ports<AntennaArray.num_transmit_ports>`.
@@ -1645,7 +1412,7 @@ class Device(ABC, Transformable, RandomNode, Serializable):
         return self.antennas.num_transmit_ports
 
     @property
-    def num_receive_ports(self) -> int:
+    def num_receive_antenna_ports(self) -> int:
         """Number of available receive antenna ports.
 
         Short hand to :attr:`antennas'<.antennas>` :attr:`num_receive_ports<AntennaArray.num_receive_ports>`.
@@ -1772,47 +1539,91 @@ class Device(ABC, Transformable, RandomNode, Serializable):
         """
         ...  # pragma: no cover
 
-    def transmit_operators(self) -> List[Transmission]:
+    def add_dsp(self, dsp: Transmitter | Receiver) -> None:
+        """Add a DSP algorithm to this device.
+
+        Args:
+
+            dsp (Transmitter | Receiver):
+                DSP algorithm to be added to the device.
+                If the DSP algorithm is a transmitter, it will be added to the transmit layer.
+                If the DSP algorithm is a receiver, it will be added to the receive layer.
+                If the DSP is both, it will be added to both layers.
+        """
+
+        if isinstance(dsp, Transmitter):
+            self.transmitters.add(dsp)
+
+        if isinstance(dsp, Receiver):
+            self.receivers.add(dsp)
+
+    def transmit_operators(
+        self, state: DST | None = None, notify: bool = True
+    ) -> list[Transmission]:
         """Generate transmitted information for all registered operators.
 
         Calls :meth:`Transmitter.transmit` for each transmit operator.
 
+        Args:
+
+            state (DST, optional):
+                Device state to be used for the transmission.
+                If not provided, query the current device state by calling :meth:`state`.
+
+            notify (bool, optional):
+                Notify the transmitter's callbacks about the generated transmission.
+                Enabled by default.
+
         Returns: List of operator transmisisons.
         """
 
-        return [transmitter.transmit() for transmitter in self.transmitters]
+        _state = self.state() if state is None else state
+        return [transmitter.transmit(_state, 0.0, notify) for transmitter in self.transmitters]
 
     def generate_output(
-        self, operator_transmissions: List[Transmission] | None = None, resample: bool = True
+        self,
+        operator_transmissions: Sequence[Transmission],
+        state: DST | None = None,
+        resample: bool = True,
     ) -> DeviceOutput:
         """Generate the device's output.
 
         Args:
 
-            operator_transmissions (List[Transmissions], optional):
+            operator_transmissions (Sequence[Transmissions]):
                 List of operator transmissions from which to generate the output.
-                If the `operator_transmissions` are not provided, the transmitter's caches will be queried.
+
+            state (DST, optional):
+                Device state to be used for the output generation.
+                If not provided, query the current device state
+
+            resample (bool, optional):
+                Resample the output signal to the device's sampling rate.
+                Enabled by default.
 
         Returns: The device's output.
 
         Raises:
 
-            RuntimeError: If no `operator_transmissions` were provided and an operator has no cached transmission.
+            RuntimeError: If the transmit coding is incompatible with the number of transmit antenna ports.
         """
 
-        # Generate operator transmissions if None were provided:
-        operator_transmissions = (
-            [o.transmission for o in self.transmitters]
-            if operator_transmissions is None
-            else operator_transmissions
-        )
+        _state = self.state() if state is None else state
+
+        # Ensure that the precoded signal will match the number of antenna ports
+        if self.num_digital_transmit_ports != self.num_transmit_antenna_ports:
+            raise RuntimeError(
+                f"Number of streams after transmit coding does not match the number of transmit antenna ports ({self.num_digital_transmit_ports} != {self.num_transmit_antenna_ports})"
+            )
 
         # Query the intended transmission ports of each operator
         operator_streams = [o.selected_transmit_ports for o in self.transmitters]
 
         # Superimpose the operator transmissions to the device's RF configuration
         superimposed_signal = Signal.Empty(
-            self.sampling_rate, self.num_transmit_ports, carrier_frequency=self.carrier_frequency
+            _state.sampling_rate,
+            self.num_digital_transmit_ports,
+            carrier_frequency=_state.carrier_frequency,
         )
 
         for transmission, indices in zip(operator_transmissions, operator_streams):
@@ -1821,22 +1632,38 @@ class Device(ABC, Transformable, RandomNode, Serializable):
                     transmission.signal, resample=resample, stream_indices=indices
                 )
 
-        return DeviceOutput(superimposed_signal)
+        # Apply the transmit coding
+        encoded_signal = self.transmit_coding.encode_streams(
+            superimposed_signal, _state.transmit_state(list(range(self.num_transmit_antennas)))
+        )
 
-    def transmit(self, clear_cache: bool = True) -> DeviceTransmission:
+        # Generate the output
+        output = DeviceOutput(encoded_signal)
+
+        # Notify the output callbacks
+        self.__output_callbacks.notify(output)
+
+        return output
+
+    def transmit(self, state: DST | None = None, notify: bool = True) -> DeviceTransmission:
         """Transmit over this device.
 
         Args:
 
-            clear_cache (bool, optional):
-                Clear the cache of operator signals to be transmitted.
+            state (DST, optional):
+                Device state to be used for the transmission.
+                If not provided, query the current device state by calling :meth:`state`.
+
+            notify (bool, optional):
+                Notify the transmitter's callbacks about the generated transmission.
                 Enabled by default.
 
         Returns: Information transmitted by this device.
         """
 
-        operator_transmissions = self.transmit_operators()
-        device_output = self.generate_output(operator_transmissions)
+        _state = self.state() if state is None else state
+        operator_transmissions = self.transmit_operators(_state, notify)
+        device_output = self.generate_output(operator_transmissions, _state)
 
         return DeviceTransmission.From_Output(device_output, operator_transmissions)
 
@@ -1855,14 +1682,8 @@ class Device(ABC, Transformable, RandomNode, Serializable):
 
         return DeviceTransmission.from_HDF(group, list(self.transmitters))
 
-    def cache_transmission(self, transmission: DeviceTransmission) -> None:
-        for transmitter, operator_transmission in zip(
-            self.transmitters, transmission.operator_transmissions
-        ):
-            transmitter.cache_transmission(operator_transmission)
-
     def process_input(
-        self, impinging_signals: DeviceInput | Signal | Sequence[Signal], cache: bool = True
+        self, impinging_signals: DeviceInput | Signal | Sequence[Signal], state: DST | None = None
     ) -> ProcessedDeviceInput:
         """Process input signals impinging onto this device.
 
@@ -1871,9 +1692,9 @@ class Device(ABC, Transformable, RandomNode, Serializable):
             impinging_signals (Union[DeviceInput, Signal, Sequence[Signal]]):
                 The samples to be processed by the device.
 
-            cache (bool, optional):
-                Cache the operator inputs at the registered receive operators for further processing.
-                Enabled by default.
+            state (DST, optional):
+                Device state to be used for the processing.
+                If not provided, query the current device state.
 
         Returns: The processed device input information.
 
@@ -1881,6 +1702,9 @@ class Device(ABC, Transformable, RandomNode, Serializable):
 
             ValueError: If the number of signal streams does not match the device configuration expectations.
         """
+
+        # Query the current device state if none was provided
+        _state = self.state() if state is None else state
 
         # Convert argument
         impinging_signals = (
@@ -1905,37 +1729,60 @@ class Device(ABC, Transformable, RandomNode, Serializable):
         else:
             superimposed_signal = impinging_signals[0]
 
-        # Each operator is fed the superimposed signal by default
-        operator_inputs: List[Signal] = []
+        # Ensure that the number of antenna streams to be decoded matches the number of receive antenna ports
+        if superimposed_signal.num_streams != self.num_receive_antenna_ports:
+            raise RuntimeError(
+                f"Number of antenna streams does not match the required number of receive coding streams ({superimposed_signal.num_streams} != {self.num_digital_receive_ports})"
+            )
+
+        # Apply the receive coding
+        decoded_signal = (
+            self.receive_coding.decode_streams(
+                superimposed_signal,
+                _state.receive_state(list(range(_state.antennas.num_receive_ports))),
+            )
+            if _state.antennas.num_receive_ports > 0
+            else superimposed_signal
+        )
+
+        # Each operator is fed the decoded signal by default
+        operator_inputs: list[Signal] = []
         for receiver in self.receivers:
             selected_receive_antennas = receiver.selected_receive_ports
             stream_selector = (
                 slice(None) if selected_receive_antennas is None else selected_receive_antennas
             )  # type: slice | Sequence[int]
-            operator_inputs.append(superimposed_signal.getstreams(stream_selector))
+            operator_inputs.append(decoded_signal.getstreams(stream_selector))
 
-        # Cache the operator inputs if the respective flag is enabled
-        if cache:
-            for receiver, input in zip(self.receivers, operator_inputs):
-                receiver.cache_reception(input)
+        # Generate the input
+        input = ProcessedDeviceInput(impinging_signals, operator_inputs)
 
-        return ProcessedDeviceInput(impinging_signals, operator_inputs)
+        # Notify the input callbacks
+        self.__input_callbacks.notify(input)
+
+        return input
 
     def receive_operators(
         self,
-        operator_inputs: ProcessedDeviceInput | Sequence[Signal | None] | None = None,
-        cache: bool = True,
-    ) -> List[Reception]:
+        operator_inputs: ProcessedDeviceInput | Sequence[Signal],
+        state: DST | None = None,
+        notify: bool = True,
+    ) -> list[Reception]:
         """Receive over the registered operators.
 
         Args:
 
-            operator_inputs (ProcessedDeviceInput | Sequence[Signal | None], optional):
-                Signal models fed to the receive operators.
-                If not provided, the operatores are expected to have inputs cached
+            operator_inputs (ProcessedDeviceInput | Sequence[Signal]):
+                The signal samples to be processed by the device's operators.
+                If a :class:`ProcessedDeviceInput` is provided, the operator inputs will be extracted from it.
+                Otherwise, the operator inputs are assumed to be provided directly.
 
-            cache (bool, optional):
-                Cache the generated received information at the device's receive operators.
+            state (DST, optional):
+                Assumed state of the device during reception.
+                If not provided, the current device state will be queried by calling :meth:`state`.
+
+            notfiy (bool, optional):
+                Notify all registered callbacks within the involved DSP algorithms.
                 Enabled by default.
 
         Returns: List of information generated by receiving over the device's operators.
@@ -1943,21 +1790,14 @@ class Device(ABC, Transformable, RandomNode, Serializable):
         Raises:
 
             ValueError: If the number of operator inputs does not match the number of receive operators.
-            RuntimeError: If no operator inputs were specified and an operator has no cached inputs.
         """
 
-        _operator_inputs: Sequence[Signal | None]
-
-        # Refer to the operator caches if no inputs were specified
-        if operator_inputs is None:
-            _operator_inputs = [o.signal for o in self.receivers]
-
-        # Convert object oriented input
-        elif isinstance(operator_inputs, ProcessedDeviceInput):
-            _operator_inputs = operator_inputs.operator_inputs
-
-        else:
-            _operator_inputs = operator_inputs
+        _operator_inputs = (
+            operator_inputs.operator_inputs
+            if isinstance(operator_inputs, ProcessedDeviceInput)
+            else operator_inputs
+        )
+        _state = self.state() if state is None else state
 
         if len(_operator_inputs) != self.receivers.num_operators:
             raise ValueError(
@@ -1965,15 +1805,17 @@ class Device(ABC, Transformable, RandomNode, Serializable):
             )
 
         # Generate receive information
-        receptions: List[Reception] = []
+        receptions: list[Reception] = []
         for operator, signal in zip(self.receivers, _operator_inputs):
-            reception = operator.receive(signal, cache)
-            receptions.append(reception)
+            receptions.append(operator.receive(signal, _state, notify))
 
         return receptions
 
     def receive(
-        self, impinging_signals: DeviceInput | Signal | Sequence[Signal], cache: bool = True
+        self,
+        impinging_signals: DeviceInput | Signal | Sequence[Signal],
+        state: DST | None = None,
+        notify: bool = True,
     ) -> DeviceReception:
         """Receive over this device.
 
@@ -1981,21 +1823,27 @@ class Device(ABC, Transformable, RandomNode, Serializable):
 
         Args:
 
-            impinging_signals (Union[DeviceInput, Signal, Sequence[Signal]]):
+            impinging_signals (DeviceInput | Signal | Sequence[Signal]):
                 The samples to be processed by the device.
 
-            cache (bool, optional):
-                Cache the received information.
+            state (DST, optional):
+                Device state to be used for the processing.
+                If not provided, query the current device state by calling :meth:`state`.
+
+            notify (bool, optional):
+                Notify all registered callbacks within the involved DSP algorithms.
                 Enabled by default.
 
         Returns: The received device information.
         """
 
+        _state = self.state() if state is None else state
+
         # Process input
-        processed_input = self.process_input(impinging_signals)
+        processed_input = self.process_input(impinging_signals, _state)
 
         # Generate receptions
-        receptions = self.receive_operators(processed_input.operator_inputs, cache)
+        receptions = self.receive_operators(processed_input.operator_inputs, _state, notify)
 
         # Generate device reception
         return DeviceReception.From_ProcessedDeviceInput(processed_input, receptions)
@@ -2012,3 +1860,34 @@ class Device(ABC, Transformable, RandomNode, Serializable):
         """
 
         return DeviceReception.Recall(group, self)
+
+    @classmethod
+    def to_yaml(cls: Type[Device], representer: SafeRepresenter, node: Device) -> MappingNode:
+        return node._mapping_serialization_wrapper(
+            representer,
+            None,
+            {"transmitters": list(node.transmitters), "receivers": list(node.receivers)},
+        )
+
+    @classmethod
+    def from_yaml(cls: Type[Device], constructor: SafeConstructor, node: Node) -> Device:
+        # Abort if the node is scalar
+        if isinstance(node, ScalarNode):
+            return cls()
+
+        device_mapping: dict = constructor.construct_mapping(node, deep=True)
+
+        # Pop transmitter and receiver lists
+        transmitters = device_mapping.pop("transmitters", list())
+        receivers = device_mapping.pop("receivers", list())
+
+        # Construct the device
+        device = cls.InitializationWrapper(device_mapping)
+
+        # Add transmitters and receivers
+        for transmitter in transmitters:
+            device.transmitters.add(transmitter)
+        for receiver in receivers:
+            device.receivers.add(receiver)
+
+        return device

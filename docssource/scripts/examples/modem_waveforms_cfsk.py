@@ -26,16 +26,16 @@ simulation = Simulation()
 tx_device = simulation.new_device(carrier_frequency=1e10)
 rx_device = simulation.new_device(carrier_frequency=1e10)
 
-# Configure the link modeling the devices' transmit DSP
-link = SimplexLink(tx_device, rx_device)
-link.waveform = waveform
+# Configure the link to connect both devices
+link = SimplexLink(waveform=waveform)
+link.connect(tx_device, rx_device)
 
 # Generate a transmission to be received by the modem
 transmission = tx_device.transmit()
 rx_signal = transmission.mixed_signal
 
 # Generate a single reception of the modem
-modem_reception = link.receive(rx_signal)
+modem_reception = rx_device.receive(transmission).operator_receptions[0]
 modem_reception.signal.plot(title='Modem Base-Band Waveform')
 modem_reception.symbols.plot_constellation(title='Modem Constellation Diagram')
 

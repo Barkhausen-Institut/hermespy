@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
+from typing import Sequence
 
 import numpy as np
 from scipy.constants import speed_of_light
 from scipy.fft import ifft, fft, ifftshift
 
-from hermespy.core import Serializable, Signal
+from hermespy.core import Serializable, ReceiveState, Signal, TransmitState
 from hermespy.jcas.jcas import JCASReception, JCASTransmission
 from hermespy.modem import OFDMWaveform, ReceivingModemBase, TransmittingModemBase, Symbols
 from hermespy.radar import RadarCube, RadarReception
@@ -29,6 +30,45 @@ class OFDMRadar(DuplexJCASOperator[OFDMWaveform], Serializable):
     """
 
     yaml_tag = "OFDMRadar"
+
+    __last_transmission: JCASTransmission | None = None
+
+    def __init__(
+        self,
+        waveform: OFDMWaveform | None = None,
+        selected_transmit_ports: Sequence[int] | None = None,
+        selected_receive_ports: Sequence[int] | None = None,
+        carrier_frequency: float | None = None,
+        seed: int | None = None,
+    ) -> None:
+        """
+        Args:
+            waveform (CWT, optional):
+                Communication waveform emitted by this operator.
+
+            selected_transmit_ports (Sequence[int] | None):
+                Indices of antenna ports selected for transmission from the operated :class:`Device's<Device>` antenna array.
+                If not specified, all available ports will be considered.
+
+            selected_receive_ports (Sequence[int] | None):
+                Indices of antenna ports selected for reception from the operated :class:`Device's<Device>` antenna array.
+                If not specified, all available antenna ports will be considered.
+
+            carrier_frequency (float, optional):
+                Central frequency of the mixed signal in radio-frequency transmission band.
+                If not specified, the operated device's default carrier frequency will be assumed during signal processing.
+
+            seed (int, optional):
+                Random seed used to initialize the pseudo-random number generator.
+        """
+
+        # Initalize base class
+        DuplexJCASOperator.__init__(
+            self, waveform, selected_transmit_ports, selected_receive_ports, carrier_frequency, seed
+        )
+
+        # Initialize class attributes
+        self.__last_transmission = None
 
     @property
     def max_range(self) -> float:
@@ -84,10 +124,10 @@ class OFDMRadar(DuplexJCASOperator[OFDMWaveform], Serializable):
     def power(self) -> float:
         return 0.0 if self.waveform is None else self.waveform.power
 
-    def _transmit(self, duration: float = -1) -> JCASTransmission:
-        communication_transmission = TransmittingModemBase._transmit(self, duration=duration)
-        jcas_transmission = JCASTransmission(communication_transmission)
-        return jcas_transmission
+    def _transmit(self, device: TransmitState, duration: float) -> JCASTransmission:
+        communication_transmission = TransmittingModemBase._transmit(self, device, duration)
+        self.__last_transmission = JCASTransmission(communication_transmission)
+        return self.__last_transmission
 
     def __estimate_range(self, transmitted_symbols: Symbols, received_signal: Signal) -> np.ndarray:
         """Estiamte the range-power profile of the received signal.
@@ -115,21 +155,18 @@ class OFDMRadar(DuplexJCASOperator[OFDMWaveform], Serializable):
         power_profile = ifftshift(fft(ifft(normalized_symbols[0, ::], axis=1), axis=0), axes=0)
         return np.abs(power_profile)
 
-    def _receive(self, signal: Signal) -> JCASReception:
-        # Retrieve previous transmission
-        transmission: JCASTransmission | None = self.transmission
-
-        if transmission is None:
+    def _receive(self, signal: Signal, device: ReceiveState) -> JCASReception:
+        if self.__last_transmission is None:
             raise RuntimeError("Unable to receive ")
 
         # Retrieve the transmitted symbols
-        transmitted_symbols = self.waveform.place(transmission.symbols)
+        transmitted_symbols = self.waveform.place(self.__last_transmission.symbols)
 
         # Run the normal communication reception processing
-        communication_reception = ReceivingModemBase._receive(self, signal)
+        communication_reception = ReceivingModemBase._receive(self, signal, device)
 
         # Build a radar cube
-        angles_of_interest, beamformed_samples = self._receive_beamform(signal)
+        angles_of_interest, beamformed_samples = self._receive_beamform(signal, device)
         range_bins = np.arange(self.waveform.num_subcarriers) * self.range_resolution
         doppler_bins = (
             np.arange(self.waveform.words_per_frame) * self.relative_doppler_resolution
@@ -149,7 +186,7 @@ class OFDMRadar(DuplexJCASOperator[OFDMWaveform], Serializable):
 
         # Create radar cube object
         cube = RadarCube(
-            cube_data, angles_of_interest, doppler_bins, range_bins, self.carrier_frequency
+            cube_data, angles_of_interest, doppler_bins, range_bins, device.carrier_frequency
         )
 
         # Infer the point cloud, if a detector has been configured

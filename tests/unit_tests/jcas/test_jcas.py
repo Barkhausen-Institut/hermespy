@@ -53,7 +53,7 @@ class TestJCASReception(TestCase):
     """Test JCAS reception"""
 
     def setUp(self) -> None:
-        self.signal = Signal.Create(np.zeros((1, 10), dtype=np.complex_), 1.0)
+        self.signal = Signal.Create(np.zeros((1, 10), dtype=np.complex128), 1.0)
         self.communication_reception = CommunicationReception(self.signal)
         self.cube = RadarCube(np.zeros((1, 1, 10)))
         self.radar_reception = RadarReception(self.signal, self.cube)

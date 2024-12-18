@@ -2,7 +2,6 @@
 
 import matplotlib.pyplot as plt
 
-from hermespy.core import dB
 from hermespy.modem import (
     TransmittingModem as BaseModem,
     DFT,
@@ -21,7 +20,8 @@ device = simulation.new_device()
 
 # Create a new modem
 # This should be replaced by a BaseModem implementation such as DuplexLink
-modem = BaseModem(device=device)
+modem = BaseModem()
+device.add_dsp(modem)
 
 # Configure an OFDM waveform
 modem.waveform = OFDMWaveform(
@@ -39,7 +39,7 @@ modem.waveform = OFDMWaveform(
 )
 
 # Configure the precoding
-modem.precoding[0] = DFT()
+modem.transmit_symbol_coding[0] = DFT()
 
 # Generate and plot a transmission
 transmission = device.transmit()

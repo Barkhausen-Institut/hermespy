@@ -20,31 +20,34 @@ rx_device.noise_level = SNR(dB(20), tx_device)
 simulation.set_channel(tx_device, rx_device, TDL())
 
 # Define a simplex communication link between the two devices
-link = SimplexLink(tx_device, rx_device)
+link = SimplexLink()
+tx_device.transmitters.add(link)
+rx_device.receivers.add(link)
 
 # Configure the waveform to be transmitted over the link
-link.waveform = RootRaisedCosineWaveform(symbol_rate=1e6, oversampling_factor=8,
-                                         num_preamble_symbols=10, num_data_symbols=100,
-                                         roll_off=.9)
+link.waveform = RootRaisedCosineWaveform(
+    symbol_rate=1e6, oversampling_factor=8,
+    num_preamble_symbols=10, num_data_symbols=100,
+    roll_off=.9,
+)
 link.waveform.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
 link.waveform.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
 
 # Generate and visualize a communication waveform transmitted over the link
-transmission = link.transmit()
-transmission.signal.plot()
+transmission = tx_device.transmit()
+transmission.mixed_signal.plot(title='Tx Signal')
 
 # Receive the transmission at rx_device
-reception = link.receive(transmission.signal)
-reception.symbols.plot_constellation()
+reception = rx_device.receive(transmission)
+reception.operator_receptions[0].equalized_symbols.plot_constellation(title='Rx Constellation')
 
 # Generate and plot a single simulation drop
 drop = simulation.scenario.drop()
-drop.device_transmissions[0].operator_transmissions[0].signal.plot()
-drop.device_receptions[1].operator_receptions[0].equalized_symbols.plot_constellation()
+drop.device_transmissions[0].mixed_signal.plot(title='Tx Signal')
+drop.device_receptions[1].operator_receptions[0].equalized_symbols.plot_constellation(title='Rx Constellation')
 
 # Add a bit error rate evaluation to the simulation
 ber = BitErrorEvaluator(link, link)
-ber.evaluate().visualize()
 
 # Iterate over the receiving device's SNR and estimate the respective bit error rates
 simulation.new_dimension('noise_level', dB(20, 16, 12, 8, 4, 0), rx_device)

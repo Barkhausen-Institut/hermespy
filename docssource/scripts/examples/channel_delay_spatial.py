@@ -24,11 +24,13 @@ channel = SpatialDelayChannel()
 simulation.set_channel(alpha_device, beta_device, channel)
 
 # Configure communication link between the two devices
-link = SimplexLink(alpha_device, beta_device)
+link = SimplexLink()
+alpha_device.transmitters.add(link)
+beta_device.receivers.add(link)
 
 # Specify the waveform and postprocessing to be used by the link
 link.waveform = RRCWaveform(
-    symbol_rate=1e8, oversampling_factor=2, num_data_symbols=1000, 
+    symbol_rate=1e8, oversampling_factor=2, num_data_symbols=1000,
     num_preamble_symbols=10, pilot_rate=10)
 link.waveform.channel_estimation = SCLeastSquaresChannelEstimation()
 link.waveform.channel_equalization = SCZeroForcingChannelEqualization()
