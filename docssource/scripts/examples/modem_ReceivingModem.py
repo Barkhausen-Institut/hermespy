@@ -21,7 +21,8 @@ simulation = Simulation()
 device = simulation.new_device(carrier_frequency=1e10)
 
 # Configure the modem modeling the device's transmit DSP
-rx_modem = ReceivingModem(device=device)
+rx_modem = ReceivingModem()
+device.receivers.add(rx_modem)
 
 # Configure the modem's waveform
 waveform = RootRaisedCosineWaveform(
@@ -37,16 +38,13 @@ rx_modem.waveform = waveform
 rx_modem.waveform.synchronization = SingleCarrierCorrelationSynchronization()
 
 # Add a custom stream precoding to the modem
-rx_modem.receive_stream_coding[0] = ConventionalBeamformer()
+rx_modem.receive_signal_coding[0] = ConventionalBeamformer()
 
 # Add a custom symbol precoding to the modem
-rx_modem.precoding[0] = DFT()
+rx_modem.receive_symbol_coding[0] = DFT()
 
 # Configure the waveform's channel estimation routine
 rx_modem.waveform.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
-
-# Add a custom symbol precoding to the modem
-rx_modem.precoding[0] = DFT()
 
 # Configure the waveform's channel equalization routine
 rx_modem.waveform.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
@@ -56,16 +54,16 @@ rx_modem.encoder_manager.add_encoder(RepetitionEncoder(32, 3))
 rx_modem.encoder_manager.add_encoder(BlockInterleaver(192, 32))
 
 # Generate a transmission to be received by the modem
-tx_modem = TransmittingModem(device=device)
+tx_modem = TransmittingModem()
 tx_modem.waveform = waveform
 tx_modem.encoder_manager.add_encoder(RepetitionEncoder(32, 3))
 tx_modem.encoder_manager.add_encoder(BlockInterleaver(192, 32))
-rx_modem.precoding[0] = DFT()
+tx_modem.transmit_symbol_coding[0] = DFT()
+device.transmitters.add(tx_modem)
 transmission = device.transmit()
-rx_signal = transmission.mixed_signal
 
 # Generate a single reception of the modem
-modem_reception = rx_modem.receive(rx_signal)
+modem_reception = rx_modem.receive(transmission.mixed_signal, device.state())
 modem_reception.signal.plot(title='Modem Base-Band Waveform')
 modem_reception.symbols.plot_constellation(title='Modem Constellation Diagram')
 

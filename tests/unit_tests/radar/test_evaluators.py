@@ -47,39 +47,49 @@ class TestRadarEvaluator(TestCase):
     """Test radar evaluator"""
 
     def setUp(self) -> None:
-        device = SimulatedDevice()
+        self.device = SimulatedDevice()
         radar = Radar()
-        radar.device = device
+        self.device.transmitters.add(radar)
+        self.device.receivers.add(radar)
 
-        channel = SingleTargetRadarChannel(1.0, 1.0)
-
-        self.evaluator = RadarEvaluatorMock(radar, radar, channel)
+        self.channel = SingleTargetRadarChannel(1.0, 1.0)
+        self.evaluator = RadarEvaluatorMock(radar, self.device, self.device, self.channel)
 
     def test_init_validation(self) -> None:
-        """Initialization parameters should be properly validated"""
-
-        channel = SingleTargetRadarChannel(1.0, 1.0)
-        transmitting_radar = Radar()
-        receiving_radar = Radar()
-
-        with self.assertRaises(ValueError):
-            RadarEvaluatorMock(transmitting_radar, receiving_radar, channel)
-
-        transmitting_radar.device = Mock()
-
-        with self.assertRaises(ValueError):
-            RadarEvaluatorMock(transmitting_radar, receiving_radar, channel)
-
-    def test_device_inference(self) -> None:
-        
-        expected_device = SimulatedDevice()
-        channel = SingleTargetRadarChannel(1.0, 1.0)
+        """Radar evelauator should raise ValuError if receiving radar is not registered at receiving device"""
 
         radar = Radar()
-        radar.device = expected_device
-        evaluator = RadarEvaluatorMock(radar, radar, channel)
-        self.assertIs(expected_device, evaluator.receiving_device)
-        self.assertIs(expected_device, evaluator.transmitting_device)
+        with self.assertRaises(ValueError):
+            RadarEvaluatorMock(radar, self.device, self.device, self.channel)
+
+    def test_properties(self) -> None:
+        """Properties should be properly initialized"""
+
+        self.assertIs(self.device, self.evaluator.transmitting_device)
+        self.assertIs(self.device, self.evaluator.receiving_device)
+
+    def test_fetch_reception_validation(self) -> None:
+        """Reception fetching should raise RuntimeError if no reception is available"""
+
+        with self.assertRaises(RuntimeError):
+            self.evaluator._fetch_reception()
+
+    def test_fetch_pcl_validation(self) -> None:
+        """Point cloud fetching should raise RuntimeError if no point cloud is available"""
+
+        with patch("hermespy.radar.evaluators.RadarEvaluator._fetch_reception") as fetch_reception_mock:
+            reception = Mock()
+            reception.cloud = None
+            fetch_reception_mock.return_value = reception
+
+            with self.assertRaises(RuntimeError):
+                self.evaluator._fetch_pcl()
+
+    def test_fetch_channel_validation(self) -> None:
+        """Channel fetching should raise RuntimeError if no channel is available"""
+
+        with self.assertRaises(RuntimeError):
+            self.evaluator._fetch_channel()
 
     def test_generate_result(self) -> None:
         """Result generation should be properly handled"""
@@ -90,7 +100,7 @@ class TestRadarEvaluator(TestCase):
         result = self.evaluator.generate_result(grid, artifacts)
 
         self.assertIsInstance(result, ScalarEvaluationResult)
-        
+
 
 class TestDetectionProbEvaluator(TestCase):
     """Test detection probability evaluation"""
@@ -144,13 +154,14 @@ class TestDetectionProbEvaluator(TestCase):
     def test_evaluate(self) -> None:
         """Evaluator should compute the proper detection evaluation"""
 
-        self.radar.reception.cloud.num_points = 0
-        evaluation = self.evaluator.evaluate()
-        self.assertEqual(0.0, evaluation.artifact().to_scalar())
+        with patch.object(self.evaluator, "_DetectionProbEvaluator__cloud") as cloud_mock:
+            cloud_mock.num_points = 0
+            evaluation = self.evaluator.evaluate()
+            self.assertEqual(0.0, evaluation.artifact().to_scalar())
 
-        self.radar.reception.cloud.num_points = 1
-        evaluation = self.evaluator.evaluate()
-        self.assertEqual(1.0, evaluation.artifact().to_scalar())
+            cloud_mock.num_points = 5
+            evaluation = self.evaluator.evaluate()
+            self.assertEqual(1.0, evaluation.artifact().to_scalar())
 
 
 class TestRocArtifact(TestCase):
@@ -221,9 +232,10 @@ class TestReciverOperatingCharacteristics(TestCase):
 
         self.radar = Radar()
         self.radar.waveform = FMCW()
-        self.radar.device = self.device
+        self.device.transmitters.add(self.radar)
+        self.device.receivers.add(self.radar)
 
-        self.evaluator = ReceiverOperatingCharacteristic(self.radar, self.channel)
+        self.evaluator = ReceiverOperatingCharacteristic(self.radar, self.device, self.device, self.channel)
 
     def _generate_evaluation(self) -> RocEvaluation:
         """Helper class to generate an evaluation.
@@ -237,19 +249,21 @@ class TestReciverOperatingCharacteristics(TestCase):
         return self.evaluator.evaluate()
 
     def test_evaluate_validation(self) -> None:
-        """Evaluation routine should raise RuntimeError if radar channel is not specified"""
+        """Evalzuate should raise runtime errors if cached information is not available"""
 
-        evaluator = ReceiverOperatingCharacteristic(self.radar, self.channel)
+        with (
+            patch("hermespy.radar.evaluators.RadarEvaluator._fetch_reception") as fetch_reception_mock,
+            patch("hermespy.radar.evaluators.RadarEvaluator._fetch_channel") as fetch_channel_mock
+        ):
+            # No device output
+            self.evaluator._ReceiverOperatingCharacteristic__output = Mock()
+            self.evaluator._ReceiverOperatingCharacteristic__input = None
+            with self.assertRaises(RuntimeError):
+                self.evaluator.evaluate()
 
-        with self.assertRaises(RuntimeError):
-            evaluator.evaluate()
-
-        # Prepare channel states
-        propagation = self.channel.propagate(self.device.transmit(), self.device, self.device)
-        self.device.receive(propagation)
-
-        with patch("hermespy.simulation.simulated_device.SimulatedDevice.output", new_callable=PropertyMock) as output_mock:
-            output_mock.return_value = None
+            # No device input
+            self.evaluator._ReceiverOperatingCharacteristic__output = None
+            self.evaluator._ReceiverOperatingCharacteristic__input = Mock()
             with self.assertRaises(RuntimeError):
                 self.evaluator.evaluate()
 
@@ -298,13 +312,13 @@ class TestReciverOperatingCharacteristics(TestCase):
         mock_h1_scenario.mode = ScenarioMode.REPLAY
 
         with self.assertRaises(ValueError):
-            ReceiverOperatingCharacteristic.From_Scenarios(mock_h0_scenario, mock_h1_scenario)
+            ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario)
 
         mock_h0_scenario.mode = ScenarioMode.REPLAY
         mock_h1_scenario.mode = ScenarioMode.RECORD
 
         with self.assertRaises(ValueError):
-            ReceiverOperatingCharacteristic.From_Scenarios(mock_h0_scenario, mock_h1_scenario)
+            ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario)
 
         mock_h0_scenario.mode = ScenarioMode.REPLAY
         mock_h1_scenario.mode = ScenarioMode.REPLAY
@@ -313,69 +327,59 @@ class TestReciverOperatingCharacteristics(TestCase):
         mock_h1_scenario.num_drops = 1
 
         with self.assertRaises(ValueError):
-            ReceiverOperatingCharacteristic.From_Scenarios(mock_h0_scenario, mock_h1_scenario)
+            ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario)
 
         mock_h0_scenario.num_drops = 1
         mock_h1_scenario.num_drops = 0
 
         with self.assertRaises(ValueError):
-            ReceiverOperatingCharacteristic.From_Scenarios(mock_h0_scenario, mock_h1_scenario)
+            ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario)
 
         mock_h0_scenario.num_drops = 1
         mock_h1_scenario.num_drops = 1
 
         with self.assertRaises(ValueError):
-            ReceiverOperatingCharacteristic.From_Scenarios(mock_h0_scenario, mock_h1_scenario, h0_operator=Mock())
+            ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario, h0_operator=Mock())
 
         mock_h0_scenario.num_operators = 0
 
         with self.assertRaises(ValueError):
-            ReceiverOperatingCharacteristic.From_Scenarios(mock_h0_scenario, mock_h1_scenario)
+            ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario)
 
         mock_h0_scenario.num_operators = 1
         mock_h0_scenario.operators = [Mock()]
 
         with self.assertRaises(ValueError):
-            ReceiverOperatingCharacteristic.From_Scenarios(mock_h0_scenario, mock_h1_scenario)
+            ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario)
 
         mock_h0_scenario.operators = [Mock(spec=Radar)]
 
         with self.assertRaises(ValueError):
-            ReceiverOperatingCharacteristic.From_Scenarios(mock_h0_scenario, mock_h1_scenario, h1_operator=Mock())
+            ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario, h1_operator=Mock())
 
         mock_h1_scenario.num_operators = 0
 
         with self.assertRaises(ValueError):
-            ReceiverOperatingCharacteristic.From_Scenarios(mock_h0_scenario, mock_h1_scenario)
+            ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario)
 
         mock_h1_scenario.num_operators = 1
         mock_h1_scenario.operators = [Mock()]
 
         with self.assertRaises(ValueError):
-            ReceiverOperatingCharacteristic.From_Scenarios(mock_h0_scenario, mock_h1_scenario)
+            ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario)
 
+    @patch('hermespy.simulation.scenario.SimulationScenario.mode', ScenarioMode.REPLAY)
+    @patch('hermespy.simulation.scenario.SimulationScenario.num_drops', 2)
     def test_from_scenarios(self) -> None:
         """Recall ROC from scenarios should be properly handled"""
 
-        mock_h0_scenario = Mock(spec=Scenario)
-        mock_h1_scenario = Mock(spec=Scenario)
-        mock_h0_scenario.operators = [Mock(spec=Radar)]
-        mock_h1_scenario.operators = [Mock(spec=Radar)]
-        mock_h0_scenario.num_operators = 1
-        mock_h1_scenario.num_operators = 1
-        mock_h0_scenario.mode = ScenarioMode.REPLAY
-        mock_h1_scenario.mode = ScenarioMode.REPLAY
-        mock_h0_scenario.num_drops = 1
-        mock_h1_scenario.num_drops = 1
+        mock_h0_scenario = self.scenario
+        mock_h1_scenario = self.scenario
 
-        forwards_propagation = self.channel.propagate(self.device.transmit(), self.device, self.device)
-        self.device.process_input(forwards_propagation)
-        reception = self.radar.receive()
-
-        mock_h0_scenario.operators[0].reception = reception
-        mock_h1_scenario.operators[0].reception = reception
-
-        result = ReceiverOperatingCharacteristic.From_Scenarios(mock_h0_scenario, mock_h1_scenario)
+        with patch.object(self.scenario, 'drop') as drop_mock:
+            drop_mock.side_effect = self.scenario._drop
+            result = ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario)
+    
         self.assertIsInstance(result, RocEvaluationResult)
 
     def test_from_hdf(self) -> None:
@@ -395,12 +399,12 @@ class TestReciverOperatingCharacteristics(TestCase):
             result = ReceiverOperatingCharacteristic.From_HDF(file_path, "h0_measurements", "h1_measurements")
 
         self.assertIsInstance(result, RocEvaluationResult)
-        
+
     def test_evaluation_plotting(self) -> None:
         """Test plotting of an ROC evaluation"""
-        
+
         evaluation = self._generate_evaluation()
-        
+
         with SimulationTestContext():
             evaluation.visualize()
 
@@ -435,7 +439,7 @@ class TestRootMeanSquareEvaluation(TestCase):
     """Test root mean square evaluation"""
 
     def setUp(self) -> None:
-        self.ground_truth = np.array([[1, 2, 3]], dtype=np.float_)
+        self.ground_truth = np.array([[1, 2, 3]], dtype=np.float64)
         self.pcl = RadarPointCloud(3)
         for point in self.ground_truth:
             self.pcl.add_point(PointDetection(point, np.zeros(3), 1.0))
@@ -447,7 +451,7 @@ class TestRootMeanSquareEvaluation(TestCase):
 
         artifact = self.evaluation.artifact()
         self.assertEqual(0, artifact.to_scalar())
-        
+
     def test_visualize(self) -> None:
         """Visualize should not raise any exceptions"""
 
@@ -466,36 +470,17 @@ class TestRootMeanSquareError(TestCase):
 
         self.radar = Radar()
         self.radar.waveform = FMCW()
-        self.radar.device = self.device
         self.radar.detector = ThresholdDetector(0.1)
+        self.device.transmitters.add(self.radar)
+        self.device.receivers.add(self.radar)
 
-        self.evaluator = RootMeanSquareError(self.radar, self.radar, self.channel)
+        self.evaluator = RootMeanSquareError(self.radar, self.device, self.device, self.channel)
 
     def test_properties(self) -> None:
         """Properties should be properly handled"""
 
         self.assertEqual("RMSE", self.evaluator.abbreviation)
         self.assertEqual("Root Mean Square Error", self.evaluator.title)
-
-    def test_evaluate_validation(self) -> None:
-        """Evaluation routine should raise RuntimeError for invalid internal states"""
-
-        with patch("hermespy.core.device.Receiver.reception", new_callable=PropertyMock) as reception_mock:
-            reception_mock.return_value = None
-            with self.assertRaises(RuntimeError):
-                self.evaluator.evaluate()
-
-            reception = Mock()
-            reception.cloud = None
-            reception_mock.return_value = reception
-
-            with self.assertRaises(RuntimeError):
-                self.evaluator.evaluate()
-
-            reception.cloud = Mock()
-
-            with self.assertRaises(RuntimeError):
-                self.evaluator.evaluate()
 
     def test_evaluate(self) -> None:
         """Evaluate routine should generate the corret evaluation"""

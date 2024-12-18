@@ -39,7 +39,7 @@ class TestDelayCalibration(TestCase):
     def test_correct_transmit_delay(self) -> None:
         """Delays should be correctly corrected during transmission"""
 
-        test_samples = np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 0]], dtype=np.complex_)
+        test_samples = np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 0]], dtype=np.complex128)
         test_signal = Signal.Create(test_samples, 5 / abs(self.delay))
 
         self.calibration.delay = abs(self.delay)
@@ -52,7 +52,7 @@ class TestDelayCalibration(TestCase):
     def test_correct_receive_delay(self) -> None:
         """Delays should be correctly corrected during reception"""
 
-        test_samples = np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 0]], dtype=np.complex_)
+        test_samples = np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 0]], dtype=np.complex128)
         test_signal = Signal.Create(test_samples, 1 / abs(self.delay))
 
         self.calibration.delay = -abs(self.delay)

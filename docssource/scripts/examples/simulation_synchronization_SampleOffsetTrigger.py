@@ -4,7 +4,7 @@ from copy import deepcopy
 
 import matplotlib.pyplot as plt
 
-from hermespy.modem import SimplexLink, RootRaisedCosineWaveform, BitErrorEvaluator, SingleCarrierLeastSquaresChannelEstimation, SingleCarrierMinimumMeanSquareChannelEqualization
+from hermespy.modem import SimplexLink, RootRaisedCosineWaveform, BitErrorEvaluator, SingleCarrierLeastSquaresChannelEstimation, SingleCarrierZeroForcingChannelEqualization
 from hermespy.simulation import Simulation, SampleOffsetTrigger
 
 # Create a new simulation featuring two sets of two linked, synchronized devices
@@ -26,11 +26,15 @@ waveform = RootRaisedCosineWaveform(
     pilot_rate=7,
 )
 waveform.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
-waveform.channel_equalization = SingleCarrierMinimumMeanSquareChannelEqualization()
+waveform.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
 
 # Link devices
-link_A = SimplexLink(device_A_Tx, device_A_Rx, waveform=deepcopy(waveform))
-link_B = SimplexLink(device_B_Tx, device_B_Rx, waveform=deepcopy(waveform))
+link_A = SimplexLink(waveform=deepcopy(waveform))
+link_B = SimplexLink(waveform=deepcopy(waveform))
+device_A_Tx.transmitters.add(link_A)
+device_A_Rx.receivers.add(link_A)
+device_B_Tx.transmitters.add(link_B)
+device_B_Rx.receivers.add(link_B)
 
 # Specify trigger models
 trigger_model_A = SampleOffsetTrigger(0)

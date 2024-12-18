@@ -18,7 +18,7 @@ resource_block_0 = [GridElement(ElementType.REFERENCE), GridElement(ElementType.
 ofdm_symbol_0 = GridResource(prefix_ratio=160/2048, repetitions=100, elements=resource_block_0, prefix_type=PrefixType.CYCLIC)
 
 ofdm_symbol_1 = GridResource(prefix_ratio=144/2048, repetitions=1, elements=[GridElement(ElementType.DATA, 1200)],
-                              prefix_type=PrefixType.CYCLIC)
+                             prefix_type=PrefixType.CYCLIC)
 
 resource_block_2 = [GridElement(ElementType.DATA, 3),
                     GridElement(ElementType.REFERENCE), GridElement(ElementType.DATA, 5),
@@ -35,13 +35,18 @@ tx_device = SimulatedDevice()
 rx_device = SimulatedDevice()
 
 # Set up a unidirectional link between both simulated devices
-link = SimplexLink(tx_device, rx_device)
+link = SimplexLink()
 link.waveform = OFDMWaveform(subcarrier_spacing=subcarrier_spacing, modulation_order=modulation_order,
                              num_subcarriers=num_subcarriers, oversampling_factor=oversampling_factor,
                              dc_suppression=dc_suppression, grid_resources=resources, grid_structure=structure)
+tx_device.transmitters.add(link)
+rx_device.receivers.add(link)
 
 # Plot the time-frequency grid of the OFDM waveform
 link.waveform.plot_grid()
+
+# Evaluate bit errors during transmission and visualize the received symbol constellation
+evaluator = BitErrorEvaluator(link, link)
 
 # Simulate a channel between the two devices
 channel = IdealChannel()
@@ -51,9 +56,8 @@ transmission = tx_device.transmit()
 propagation = channel.propagate(transmission, tx_device, rx_device)
 reception = rx_device.receive(propagation)
 
-# Evaluate bit errors during transmission and visualize the received symbol constellation
-evaluator = BitErrorEvaluator(link, link)
+# Visualize communication performance
 evaluator.evaluate().visualize()
-link.reception.symbols.plot_constellation()
-link.reception.signal.plot()
+reception.operator_receptions[0].equalized_symbols.plot_constellation()
+reception.baseband_signal.plot()
 plt.show()

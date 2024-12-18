@@ -236,7 +236,8 @@ class TestHardwareLoop(TestCase):
 
         waveform = RRCWaveform(symbol_rate=1e8, oversampling_factor=4, num_preamble_symbols=0, num_data_symbols=20)
         modem = DuplexModem(waveform=waveform)
-        modem.device = device
+        device.transmitters.add(modem)
+        device.receivers.add(modem)
 
         # Add evaluators of all plot modes
         self.hardware_loop.add_evaluator(BitErrorEvaluator(modem, modem))
@@ -320,7 +321,8 @@ class TestHardwareLoop(TestCase):
 
         waveform = RRCWaveform(symbol_rate=1e8, oversampling_factor=4, num_preamble_symbols=0, num_data_symbols=20)
         modem = DuplexModem(waveform=waveform)
-        modem.device = device
+        device.transmitters.add(modem)
+        device.receivers.add(modem)
 
         with ExitStack() as stack:
             isinstance_mock = stack.enter_context(patch("hermespy.hardware_loop.hardware_loop.isinstance"))
@@ -333,7 +335,6 @@ class TestHardwareLoop(TestCase):
 
         temp.cleanup()
 
-        self.assertIs(device, modem.device)
         self.assertSequenceEqual([device], self.hardware_loop.scenario.devices)
         self.assertCountEqual([modem], self.hardware_loop.scenario.operators)
 
@@ -342,10 +343,10 @@ class TestHardwareLoop(TestCase):
 
         # Add devices of all plot modes
         device = self.hardware_loop.new_device()
-
         waveform = RRCWaveform(symbol_rate=1e8, oversampling_factor=4, num_preamble_symbols=0, num_data_symbols=20)
         modem = DuplexModem(waveform=waveform)
-        modem.device = device
+        device.transmitters.add(modem)
+        device.receivers.add(modem)
 
         # Add evaluators of all plot modes
         self.hardware_loop.add_evaluator(BitErrorEvaluator(modem, modem))

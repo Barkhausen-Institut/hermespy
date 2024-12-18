@@ -26,28 +26,17 @@ class TestConventionalBeamformer(TestCase):
 
     def setUp(self) -> None:
         self.rng = np.random.default_rng(42)
-
         self.device = SimulatedDevice(carrier_frequency=1e9)
-        self.device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 0.01, (5, 1, 1))
-        self.operator = Mock()
-        self.operator.device = self.device
-
-        self.beamformer = ConventionalBeamformer(operator=self.operator)
-
-    def test_init(self) -> None:
-        """Initialization parameters should be properly stored as class attributes"""
-
-        self.assertIs(self.operator, self.beamformer.operator)
+        self.device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 0.01, (5, 5, 1))
+        self.beamformer = ConventionalBeamformer()
 
     def test_static_properties(self) -> None:
         """Static properties should report the correct values."""
 
         self.assertEqual(1, self.beamformer.num_receive_focus_points)
-        self.assertEqual(5, self.beamformer.num_receive_input_streams)
-        self.assertEqual(1, self.beamformer.num_receive_output_streams)
+        self.assertEqual(1, self.beamformer.num_receive_output_streams(10))
         self.assertEqual(1, self.beamformer.num_transmit_focus_points)
-        self.assertEqual(5, self.beamformer.num_transmit_output_streams)
-        self.assertEqual(1, self.beamformer.num_transmit_input_streams)
+        self.assertEqual(1, self.beamformer._num_transmit_input_streams(10))
 
     def test_encode_decode(self) -> None:
         """Encoding and decoding towards identical angles should recover the signal"""
@@ -65,11 +54,4 @@ class TestConventionalBeamformer(TestCase):
     def test_serialization(self) -> None:
         """Test YAML serialization"""
 
-        blacklist = self.beamformer.property_blacklist
-        blacklist.add("operator")
-
-        with patch("hermespy.beamforming.conventional.ConventionalBeamformer.property_blacklist", new_callable=PropertyMock) as blacklist_mock, patch("hermespy.beamforming.conventional.ConventionalBeamformer.operator", new_callable=PropertyMock) as operator_mock:
-            blacklist_mock.return_value = blacklist
-            operator_mock.return_value = self.operator
-
-            test_yaml_roundtrip_serialization(self, self.beamformer, {"operator", "required_num_output_streams", "required_num_input_streams"})
+        test_yaml_roundtrip_serialization(self, self.beamformer)

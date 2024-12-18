@@ -123,7 +123,7 @@ class SionnaRTChannelSample(ChannelSample):
                 num_samples,
                 1 + max_delay_in_samples,
             ),
-            dtype=np.complex_,
+            dtype=np.complex128,
         )
         # If no paths hit the target, then return an empty state
         if a.size == 0 or tau.size == 0:

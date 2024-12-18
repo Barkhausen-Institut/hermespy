@@ -341,7 +341,7 @@ class MultipathFadingSample(ChannelSample):
         interpolation_mode: InterpolationMode = InterpolationMode.NEAREST,
     ) -> ChannelStateInformation:
         num_taps = min(1 + round(self.__max_delay * self.bandwidth), max_num_taps)
-        siso_csi = np.zeros((num_samples, num_taps), dtype=np.complex_)
+        siso_csi = np.zeros((num_samples, num_taps), dtype=np.complex128)
         for path_impulse, path_delay_samples in self.__path_impulse_generator(num_samples):
             # Skip paths with delays larger than the maximum delay required by the CSI request
             if path_delay_samples > num_taps:
@@ -366,7 +366,7 @@ class MultipathFadingSample(ChannelSample):
 
         # Propagate the transmitted samples
         propagated_samples = np.zeros(
-            (self.spatial_response.shape[0], num_propagated_samples), dtype=np.complex_
+            (self.spatial_response.shape[0], num_propagated_samples), dtype=np.complex128
         )
         for path_impulse, path_num_delay_samples in self.__path_impulse_generator(
             signal.num_samples
@@ -520,10 +520,10 @@ class MultipathFadingRealization(ChannelRealization[MultipathFadingSample]):
 
         # Deserialize base class
         random_realization = ConsistentRealization.from_HDF(group["random_realization"])
-        power_profile = np.array(group["power_profile"], dtype=np.float_)
-        delay_profile = np.array(group["delay_profile"], dtype=np.float_)
-        los_gains = np.array(group["los_gains"], dtype=np.float_)
-        nlos_gains = np.array(group["nlos_gains"], dtype=np.float_)
+        power_profile = np.array(group["power_profile"], dtype=np.float64)
+        delay_profile = np.array(group["delay_profile"], dtype=np.float64)
+        los_gains = np.array(group["los_gains"], dtype=np.float64)
+        nlos_gains = np.array(group["nlos_gains"], dtype=np.float64)
         los_doppler = group.attrs["los_doppler"]
         nlos_doppler = group.attrs["nlos_doppler"]
         gain = group.attrs["gain"]

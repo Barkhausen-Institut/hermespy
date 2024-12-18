@@ -8,7 +8,7 @@ Physical Devices
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
-from typing import Type, TypeVar
+from typing import Generic, Type, TypeVar
 
 import numpy as np
 from h5py import File, Group
@@ -18,6 +18,7 @@ from hermespy.core import (
     Device,
     DeviceInput,
     DeviceReception,
+    DeviceState,
     DeviceTransmission,
     Factory,
     HDFSerializable,
@@ -45,7 +46,17 @@ CT = TypeVar("CT", bound="Calibration")
 """Type variable for :class:`Calibration` and its subclasses."""
 
 
-class PhysicalDevice(Device, ABC):
+class PhysicalDeviceState(DeviceState):
+    """State of a physical device."""
+
+    ...  # pragma: no cover
+
+
+PDST = TypeVar("PDST", bound=PhysicalDeviceState)
+"""Type variable for :class:`PhysicalDeviceState` and its subclasses."""
+
+
+class PhysicalDevice(Generic[PDST], Device[PDST]):
     """Base representing any device controlling real hardware."""
 
     __max_receive_delay: float
@@ -90,10 +101,10 @@ class PhysicalDevice(Device, ABC):
                 The antenna calibration routine to apply to transmitted and received signals.
                 If not provided, defaults to the :class:`NoAntennaCalibration` stub routine.
 
-            *args:
+            \*args:
                 :class:`Device` base class initialization parameters.
 
-            \**kwargs:
+            \*\*kwargs:
                 :class:`Device` base class initialization parameters.
         """
 
@@ -341,12 +352,13 @@ class PhysicalDevice(Device, ABC):
 
         Returns: The samplin rate in Hz.
         """
-
         ...  # pragma no cover
 
     @property
     def velocity(self) -> np.ndarray:
-        raise NotImplementedError("The velocity of physical devices is undefined by default")
+        # In the future, physical devices may estimate their velocity.
+        # For now, we assume that the device is stationary.
+        return np.zeros(3, dtype=np.float64)
 
     @property
     def noise_power(self) -> np.ndarray | None:
@@ -423,16 +435,19 @@ class PhysicalDevice(Device, ABC):
         # The default routine is a stub
         return signal
 
-    def transmit(self, clear_cache: bool = True) -> DeviceTransmission:
+    def transmit(self, state: PDST | None = None, notify: bool = True) -> DeviceTransmission:
+        _state = self.state() if state is None else state
+
         # If adaptive sampling is disabled, resort to the default transmission routine
         if not self.adaptive_sampling or self.transmitters.num_operators < 1:
-            device_transmission = Device.transmit(self, clear_cache)
+            device_transmission = Device.transmit(self, _state, notify)
 
         else:
-            operator_transmissions = self.transmit_operators()
+
+            operator_transmissions = self.transmit_operators(_state, notify)
 
             try:
-                output = self.generate_output(operator_transmissions, False)
+                output = self.generate_output(operator_transmissions, _state, False)
 
             except RuntimeError:
                 raise RuntimeError("Resampling is required for adaptive sampling but not allowed")
@@ -446,8 +461,7 @@ class PhysicalDevice(Device, ABC):
             device_transmission = DeviceTransmission(operator_transmissions, mixed_signal)
 
         # Upload the samples
-        uploaded_samples = self._upload(device_transmission.mixed_signal)
-        self.__recent_upload = uploaded_samples
+        self.__recent_upload = self._upload(device_transmission.mixed_signal)
 
         # Return transmission
         return device_transmission
@@ -513,9 +527,7 @@ class PhysicalDevice(Device, ABC):
         corrected_signal = (
             received_signal
             if not calibrate or self.leakage_calibration is None
-            else self.leakage_calibration.remove_leakage(
-                uploaded_samples, received_signal,
-            )
+            else self.leakage_calibration.remove_leakage(uploaded_samples, received_signal)
         )
 
         return corrected_signal
@@ -523,9 +535,9 @@ class PhysicalDevice(Device, ABC):
     def process_input(
         self,
         impinging_signals: DeviceInput | Signal | Sequence[Signal] | None = None,
-        cache: bool = True,
+        state: PDST | None = None,
     ) -> ProcessedDeviceInput:
-        # Physical devices are able to infer their impinging signals by downloading them directly
+        # Physical devices are able to download imiging signals directly from the represented hardware buffers
         if impinging_signals is None:
             # Download signal samples
             filtered_signal = self._download().copy()
@@ -552,7 +564,7 @@ class PhysicalDevice(Device, ABC):
         else:
             _impinging_signals = impinging_signals
 
-        if _impinging_signals.num_streams != self.num_receive_ports:
+        if _impinging_signals.num_streams != self.num_receive_antenna_ports:
             raise ValueError(
                 "Number of received signal streams does not match number of configured antennas"
             )
@@ -572,24 +584,41 @@ class PhysicalDevice(Device, ABC):
                 carrier_frequency=_impinging_signals.carrier_frequency,
             )
         )
-        corrected_signal = self.leakage_calibration.remove_leakage(transmitted_signal, _impinging_signals)
+        corrected_signal = self.leakage_calibration.remove_leakage(
+            transmitted_signal, _impinging_signals
+        )
 
         # Defer to the default device input processing routine
-        return Device.process_input(self, corrected_signal, cache)
+        return Device.process_input(self, corrected_signal, state)
 
     def receive(
         self,
         impinging_signals: DeviceInput | Signal | Sequence[Signal] | None = None,
-        cache: bool = True,
+        state: PDST | None = None,
+        notify: bool = True,
     ) -> DeviceReception:
-        # Process input
-        processed_input = self.process_input(impinging_signals)
+        """Receive over this physical device.
 
-        # Generate receptions
-        operator_receptions = self.receive_operators(processed_input.operator_inputs, cache=cache)
+        Internally calls :meth:`PhysicalDevice.process_input` and :meth:`Device.receive_operators`.
 
-        # Return reception
-        return DeviceReception.From_ProcessedDeviceInput(processed_input, operator_receptions)
+        Args:
+
+            impinging_signals (DeviceInput | Signal | Sequence[Signal], optional):
+                The samples to be processed by the device.
+                If not specified, the device will download the samples directly from the represented hardware.
+
+            state (PDST, optional):
+                Device state to be used for the processing.
+                If not provided, query the current device state by calling :meth:`state`.
+
+            notify (bool, optional):
+                Notify all registered callbacks within the involved DSP algorithms.
+                Enabled by default.
+
+        Returns: The received device information.
+        """
+        _impinging_signals = self._download() if impinging_signals is None else impinging_signals
+        return Device.receive(self, _impinging_signals, state, notify)
 
 
 class Calibration(ABC, HDFSerializable, Serializable):
@@ -712,7 +741,7 @@ class DelayCalibrationBase(Calibration, ABC):
         signal.set_samples(
             np.concatenate(
                 (
-                    np.zeros((signal.num_streams, delay_in_samples), dtype=np.complex_),
+                    np.zeros((signal.num_streams, delay_in_samples), dtype=np.complex128),
                     signal.getitem(),
                 ),
                 axis=1,
@@ -819,7 +848,9 @@ class NoLeakageCalibration(LeakageCalibrationBase, Serializable):
     yaml_tag = "NoLeakageCalibration"
 
     def predict_leakage(self, transmitted_signal: Signal) -> Signal:
-        return Signal.Empty(transmitted_signal.sampling_rate, self.device.num_receive_ports, 0)
+        return Signal.Empty(
+            transmitted_signal.sampling_rate, self.device.num_digital_receive_ports, 0
+        )
 
     def remove_leakage(self, transmitted_signal: Signal, received_signal: Signal) -> Signal:
         return received_signal
@@ -867,7 +898,7 @@ class AntennaCalibration(Calibration):
 class NoAntennaCalibration(AntennaCalibration):
     """No calibration for antenna arrays."""
 
-    yaml_tag = 'NoAntennaCalibration'
+    yaml_tag = "NoAntennaCalibration"
 
     yaml_tag = "NoAntennaCalibration"
 

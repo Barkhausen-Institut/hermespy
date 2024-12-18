@@ -44,10 +44,10 @@ from .device import (
     DeviceInput,
     DeviceOutput,
 )
-from .duplex import DuplexOperator
 from .executable import Executable, Verbosity
 from .pipeline import Pipeline
 from .factory import Factory, Serializable, SerializableEnum, HDFSerializable
+from .hooks import Hook, Hookable
 from .monte_carlo import (
     Artifact,
     ArtifactTemplate,
@@ -65,6 +65,19 @@ from .monte_carlo import (
     MonteCarloSample,
     register,
 )
+from .precoding import (
+    Precoder,
+    Precoding,
+    TransmitEncoder,
+    TransmitPrecoding,
+    TransmitSignalCoding,
+    TransmitStreamEncoder,
+    ReceiveDecoder,
+    ReceivePrecoding,
+    ReceiveSignalCoding,
+    ReceiveStreamDecoder,
+)
+from .state import State, DeviceState, DST, TransmitState, ReceiveState
 from .random_node import RandomRealization, RandomNode
 from .drop import Drop
 from .scenario import Scenario, ScenarioMode, ScenarioType, ReplayScenario
@@ -142,10 +155,11 @@ __all__ = [
     "DeviceOutput",
     "DeviceReception",
     "DeviceTransmission",
-    "DuplexOperator",
     "Executable",
     "Verbosity",
     "Pipeline",
+    "Hook",
+    "Hookable",
     "Artifact",
     "ArtifactTemplate",
     "ConsoleMode",
@@ -167,6 +181,21 @@ __all__ = [
     "Serializable",
     "SerializableEnum",
     "HDFSerializable",
+    "Precoder",
+    "Precoding",
+    "TransmitEncoder",
+    "TransmitPrecoding",
+    "TransmitSignalCoding",
+    "TransmitStreamEncoder",
+    "ReceiveDecoder",
+    "ReceivePrecoding",
+    "ReceiveSignalCoding",
+    "ReceiveStreamDecoder",
+    "State",
+    "DeviceState",
+    "DST",
+    "TransmitState",
+    "ReceiveState",
     "RandomRealization",
     "RandomNode",
     "Drop",

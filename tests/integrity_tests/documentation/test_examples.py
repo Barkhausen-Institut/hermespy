@@ -101,6 +101,11 @@ class TestDocumentationExamples(TestCase):
 
         self.__run_example("channel_fading_exponential.py")
 
+    def test_jcas_ofdm_radar(self) -> None:
+        """Test example snippet for OFDM radar"""
+
+        self.__run_example("jcas_ofdm_radar.py")
+
     def test_channel_radar_multi(self) -> None:
         """Test example snippet for multi-target radar channel"""
 
@@ -185,11 +190,6 @@ class TestDocumentationExamples(TestCase):
         """Test example snippet for SC precoding"""
 
         self.__run_example('modem_precoding_sc.py')
-
-    def test_modem_precoding_sm(self) -> None:
-        """Test example snippet for spatial multiplexing precoding"""
-
-        self.__run_example('modem_precoding_sm.py')
 
     def test_modem_ReceivingModem(self) -> None:
         """Test example snippet for receiving modem"""

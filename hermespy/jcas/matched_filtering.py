@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
+from typing import Sequence
 
 import numpy as np
 from scipy.constants import speed_of_light
 from scipy.signal import correlate, correlation_lags
 
-from hermespy.core import AntennaMode, Device, Signal, Serializable
+from hermespy.core import AntennaMode, ReceiveState, Signal, Serializable, TransmitState
 from hermespy.modem import TransmittingModemBase, ReceivingModemBase, CommunicationWaveform
 from hermespy.radar import RadarReception, RadarCube
 from .jcas import DuplexJCASOperator, JCASTransmission, JCASReception
@@ -32,43 +33,69 @@ class MatchedFilterJcas(DuplexJCASOperator[CommunicationWaveform], Serializable)
     property_blacklist = {"slot"}
 
     # The specific required sampling rate
+    __last_transmission: JCASTransmission | None = None
     __sampling_rate: float | None
     __max_range: float  # Maximally detectable range
 
-    def __init__(self, max_range: float, device: Device | None = None, **kwargs) -> None:
+    def __init__(
+        self,
+        max_range: float,
+        waveform: CommunicationWaveform | None = None,
+        selected_transmit_ports: Sequence[int] | None = None,
+        selected_receive_ports: Sequence[int] | None = None,
+        carrier_frequency: float | None = None,
+        seed: int | None = None,
+    ) -> None:
         """
         Args:
 
             max_range (float):
                 Maximally detectable range in m.
+
+            selected_transmit_ports (Sequence[int] | None):
+                Indices of antenna ports selected for transmission from the operated :class:`Device's<Device>` antenna array.
+                If not specified, all available ports will be considered.
+
+            selected_receive_ports (Sequence[int] | None):
+                Indices of antenna ports selected for reception from the operated :class:`Device's<Device>` antenna array.
+                If not specified, all available antenna ports will be considered.
+
+            carrier_frequency (float, optional):
+                Central frequency of the mixed signal in radio-frequency transmission band.
+                If not specified, the operated device's default carrier frequency will be assumed during signal processing.
+
+            seed (int, optional):
+                Random seed used to initialize the pseudo-random number generator.
         """
 
         # Initialize base class
-        DuplexJCASOperator.__init__(self, device, **kwargs)
+        DuplexJCASOperator.__init__(
+            self, waveform, selected_transmit_ports, selected_receive_ports, carrier_frequency, seed
+        )
 
         # Initialize class attributes
+        self.__last_transmission = None
         self.__sampling_rate = None
         self.max_range = max_range
-        self.device = device
 
     @property
     def power(self) -> float:
         return 0.0 if self.waveform is None else self.waveform.power
 
-    def _transmit(self, duration: float = -1.0) -> JCASTransmission:
-        communication_transmission = TransmittingModemBase._transmit(self, duration)
-        jcas_transmission = JCASTransmission(communication_transmission)
-        return jcas_transmission
+    def _transmit(self, device: TransmitState, duration: float) -> JCASTransmission:
+        communication_transmission = TransmittingModemBase._transmit(self, device, duration)
+        self.__last_transmission = JCASTransmission(communication_transmission)
+        return self.__last_transmission
 
-    def _receive(self, signal: Signal) -> JCASReception:
+    def _receive(self, signal: Signal, device: ReceiveState) -> JCASReception:
         # There must be a recent transmission being cached in order to correlate
-        if self.transmission is None:
+        if self.__last_transmission is None:
             raise RuntimeError(
                 "Receiving from a matched filter joint must be preceeded by a transmission"
             )
 
         # Receive information
-        communication_reception = ReceivingModemBase._receive(self, signal)
+        communication_reception = ReceivingModemBase._receive(self, signal, device)
 
         # Re-sample communication waveform
         signal = signal.resample(self.sampling_rate)
@@ -78,7 +105,7 @@ class MatchedFilterJcas(DuplexJCASOperator[CommunicationWaveform], Serializable)
 
         # Append additional samples if the signal is too short
         required_num_received_samples = (
-            self.transmission.signal.num_samples + num_propagated_samples
+            self.__last_transmission.signal.num_samples + num_propagated_samples
         )
         if signal.num_samples < required_num_received_samples:
             signal.append_samples(
@@ -95,24 +122,27 @@ class MatchedFilterJcas(DuplexJCASOperator[CommunicationWaveform], Serializable)
             )
 
         # Digital receive beamformer
-        angle_bins, beamformed_samples = self._receive_beamform(signal)
+        angle_bins, beamformed_samples = self._receive_beamform(signal, device)
 
         # Predict the signal transmitted towards the angles of interest
         transmitted_samples = np.empty(
-            (angle_bins.shape[0], self.transmission.signal.num_samples), dtype=np.complex_
+            (angle_bins.shape[0], self.__last_transmission.signal.num_samples), dtype=np.complex128
         )
         for t, angle in enumerate(angle_bins):
-            phase_response = self.device.antennas.horizontal_phase_response(
-                self.transmission.signal.carrier_frequency, angle[0], angle[1], AntennaMode.TX
+            phase_response = device.antennas.horizontal_phase_response(
+                self.__last_transmission.signal.carrier_frequency,
+                angle[0],
+                angle[1],
+                AntennaMode.TX,
             )
-            transmitted_samples[t, :] = phase_response.conj() @ self.transmission.signal.getitem(
-                unflatten=True
+            transmitted_samples[t, :] = (
+                phase_response.conj() @ self.__last_transmission.signal.getitem(unflatten=True)
             )
 
         # Transmit-receive correlation for range estimation
         correlation = (
             abs(correlate(beamformed_samples, transmitted_samples, mode="valid", method="fft"))
-            / self.transmission.signal.num_samples
+            / self.__last_transmission.signal.num_samples
         )
 
         lags = correlation_lags(
@@ -127,7 +157,7 @@ class MatchedFilterJcas(DuplexJCASOperator[CommunicationWaveform], Serializable)
         velocity_bins = np.array([0.0])
         range_bins = 0.5 * lags[:num_propagated_samples] * resolution
         cube_data = correlation[:, None, :num_propagated_samples]
-        cube = RadarCube(cube_data, angle_bins, velocity_bins, range_bins, self.carrier_frequency)
+        cube = RadarCube(cube_data, angle_bins, velocity_bins, range_bins, device.carrier_frequency)
 
         # Infer the point cloud, if a detector has been configured
         cloud = None if self.detector is None else self.detector.detect(cube)

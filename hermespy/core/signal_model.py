@@ -24,7 +24,7 @@ from .factory import HDFSerializable
 from .visualize import PlotVisualization, VAT, VisualizableAttribute
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2022, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.3.0"
@@ -81,7 +81,7 @@ class _SamplesVisualization(_SignalVisualization):
     ) -> PlotVisualization:
         # Prepare axes and lines
         lines = np.empty_like(axes, dtype=np.object_)
-        zeros = np.zeros(self.signal.num_samples, dtype=np.float_)
+        zeros = np.zeros(self.signal.num_samples, dtype=np.float64)
         timestamps = self.signal.timestamps
         for stream_idx in range(self.signal.num_streams):
             ax_y_idx = 0
@@ -285,7 +285,7 @@ class _EyeVisualization(_SignalVisualization):
                 np.arange(-symbol_num_samples - 1, 1 + symbol_num_samples, 1) / symbol_num_samples
             )
             times = np.hstack([timestamps] * num_visualized_symbols)
-            values = np.zeros_like(times, dtype=np.float_)
+            values = np.zeros_like(times, dtype=np.float64)
             values[::values_per_symbol] = float("nan")
 
             lines.extend(_ax.plot(times, values, color=colors[0], linewidth=linewidth))
@@ -335,7 +335,7 @@ class _EyeVisualization(_SignalVisualization):
 
         samples = self.signal.getitem()
         if domain == "time":
-            values = np.empty(num_visualized_symbols * values_per_symbol, dtype=np.complex_)
+            values = np.empty(num_visualized_symbols * values_per_symbol, dtype=np.complex128)
             for n in range(num_symbols - 2 * num_cutoff_symbols):
                 sample_offset = (n + num_cutoff_symbols) * symbol_num_samples
                 values[n * values_per_symbol : (n + 1) * values_per_symbol - 1] = samples[
@@ -382,7 +382,7 @@ class SignalBlock(np.ndarray):
         """
 
         # Create a ndarray
-        obj = np.asarray(samples, dtype=np.complex_)
+        obj = np.asarray(samples, dtype=np.complex128)
 
         # Add streams dim if only one stream was passed
         if obj.ndim == 1:
@@ -974,7 +974,7 @@ class Signal(ABC, HDFSerializable):
                 Select streams 0, 1 and samples 50-99.
                 Same as samples_matrix[:2, 50:100]
 
-        Returns: np.ndarray with ndim 2 or less and  dtype dtype np.complex_"""
+        Returns: np.ndarray with ndim 2 or less and  dtype dtype np.complex128"""
 
         s00, s01, s02, s10, s11, s12, isboolmask, should_flatten_streams, should_flatten_samples = (
             self._parse_validate_itemkey(key)
@@ -982,7 +982,7 @@ class Signal(ABC, HDFSerializable):
         num_streams = -((s01 - s00) // -s02)
         num_samples = -((s11 - s10) // -s12)
         if self.num_samples == 0 or self.num_streams == 0:  # if this signal is empty
-            return np.zeros((num_streams, num_samples), np.complex_)
+            return np.zeros((num_streams, num_samples), np.complex128)
 
         # If key is a boolean mask
         if isboolmask:
@@ -995,7 +995,7 @@ class Signal(ABC, HDFSerializable):
         # Slicing is done inside one or no blocks
         if b_start == b_stop:
             b = self._blocks[b_stop]
-            res = np.zeros((num_streams, num_samples), dtype=np.complex_)
+            res = np.zeros((num_streams, num_samples), dtype=np.complex128)
             # if slicing is done inside only one block entirely
             if s10 >= b.offset:
                 b_sliced = b[s00:s01:s02, s10 - b.offset : s11 - b.offset : s12]
@@ -1012,7 +1012,7 @@ class Signal(ABC, HDFSerializable):
             return res
 
         # assemble the result
-        res = np.zeros((self.num_streams, s11 - s10), dtype=np.complex_)
+        res = np.zeros((self.num_streams, s11 - s10), dtype=np.complex128)
         # the first block
         b = self._blocks[b_start]
         if s10 < b.end:
@@ -1115,13 +1115,13 @@ class Signal(ABC, HDFSerializable):
         if isinstance(samples, np.ndarray):
             if samples.ndim == 1:  # vector or np.ndarray or objects
                 if samples.dtype != object:  # vector
-                    samples = [samples.reshape((1, samples.size)).astype(np.complex_)]
+                    samples = [samples.reshape((1, samples.size)).astype(np.complex128)]
                 else:
                     samples = samples.tolist()  # pragma: no cover
             elif samples.ndim == 2:  # 2D matrix
-                samples = [samples.astype(np.complex_)]
+                samples = [samples.astype(np.complex128)]
             elif samples.ndim == 3:  # Tensor of 2D matrices
-                samples = [np.asarray(s, np.complex_) for s in samples]
+                samples = [np.asarray(s, np.complex128) for s in samples]
             else:  # Higher dim tensor
                 raise ValueError(
                     f"ndarrays of more then 3 dims are not acceptable ({samples.ndim} were given)"
@@ -1131,14 +1131,14 @@ class Signal(ABC, HDFSerializable):
 
         # Check if samples list is empty
         if len(samples) == 0:
-            return ([np.ndarray((0, 0), dtype=np.complex_)], [0])
+            return ([np.ndarray((0, 0), dtype=np.complex128)], [0])
 
         # Validate and adjust samples
         num_streams = samples[0].shape[0] if samples[0].ndim == 2 else 1
         for i in range(len(samples)):
             # dtype
             if not np.iscomplexobj(samples[i]):
-                samples[i] = samples[i].astype(np.complex_)  # type: ignore
+                samples[i] = samples[i].astype(np.complex128)  # type: ignore
             # ndim
             if samples[i].ndim == 1:
                 samples[i] = samples[i].reshape((1, samples[i].size))  # type: ignore
@@ -1505,7 +1505,7 @@ class Signal(ABC, HDFSerializable):
             self.append_samples(
                 np.zeros(
                     (self.num_streams, added_signal_resampled.num_samples - self.num_samples),
-                    np.complex_,
+                    np.complex128,
                 )
             )
 
@@ -1521,14 +1521,14 @@ class Signal(ABC, HDFSerializable):
             if w_self.shape[1] < w_stop - w_off:
                 w_self = np.append(
                     w_self,
-                    np.zeros((num_streams, w_stop - w_off - w_self.shape[1]), np.complex_),
+                    np.zeros((num_streams, w_stop - w_off - w_self.shape[1]), np.complex128),
                     axis=1,
                 )  # pragma: no cover
             w_them = added_signal_resampled.getitem((slice(None, None), slice(w_off, w_stop)))
             if w_them.shape[1] < w_stop - w_off:
                 w_them = np.append(
                     w_them,
-                    np.zeros((num_streams, w_stop - w_off - w_them.shape[1]), np.complex_),
+                    np.zeros((num_streams, w_stop - w_off - w_them.shape[1]), np.complex128),
                     axis=1,
                 )  # pragma: no cover
             mix_sin = np.exp(2.0j * pi * np.arange(w_off, w_stop) * fd_sr_ratio)
@@ -1604,14 +1604,14 @@ class Signal(ABC, HDFSerializable):
                 Additional class initialization arguments.
         """
 
-        complex_samples = (
-            interleaved_samples.astype(np.float64).view(np.complex128).view(np.complex_)
+        complex128samples = (
+            interleaved_samples.astype(np.float64).view(np.complex128).view(np.complex128)
         )
 
         if scale:
-            complex_samples /= np.iinfo(interleaved_samples.dtype).max
+            complex128samples /= np.iinfo(interleaved_samples.dtype).max
 
-        return cls.Create(samples=complex_samples, **kwargs)
+        return cls.Create(samples=complex128samples, **kwargs)
 
     def to_dense(self) -> DenseSignal:
         """Concatenate all the blocks in the signal into one block.
@@ -1620,7 +1620,7 @@ class Signal(ABC, HDFSerializable):
         Returns:
             signal (DenseSignal): Dense form for this signal"""
 
-        res_b = np.zeros(self.shape, dtype=np.complex_)
+        res_b = np.zeros(self.shape, dtype=np.complex128)
         for b in self:
             res_b[:, b.offset : b.offset + b.num_samples] = b
         return DenseSignal(res_b, **self.kwargs)
@@ -1638,7 +1638,7 @@ class Signal(ABC, HDFSerializable):
         num_blocks = group.attrs.get("num_blocks", 0)
         offsets = np.array(group["offsets"], int)
         blocks = [
-            SignalBlock(np.array(group[f"block{i}"], np.complex_), offsets[i])
+            SignalBlock(np.array(group[f"block{i}"], np.complex128), offsets[i])
             for i in range(num_blocks)
         ]
 
@@ -1780,7 +1780,7 @@ class DenseSignal(Signal):
         # De-sparsify the samples
         if len(self) < 2:
             return
-        res = np.zeros(self.shape, np.complex_)
+        res = np.zeros(self.shape, np.complex128)
         for b in self:
             res[:, b.offset : b.end] = b
         self._blocks = [SignalBlock(res, 0)]
@@ -1837,7 +1837,7 @@ class DenseSignal(Signal):
 
         if self.num_samples == 0:
             self._blocks = [
-                SignalBlock(np.zeros((self.num_streams, signal.shape[1]), np.complex_), 0)
+                SignalBlock(np.zeros((self.num_streams, signal.shape[1]), np.complex128), 0)
             ]
 
         # Check if all the signal attributes match
@@ -1977,7 +1977,7 @@ class SparseSignal(Signal):
         num_windows = win_stops.shape[0]
         res = []
         for i in range(num_windows):
-            res_samples = block[:, res_offsets[i] : win_stops[i]].astype(np.complex_)
+            res_samples = block[:, res_offsets[i] : win_stops[i]].astype(np.complex128)
             res_offset = offset + res_offsets[i]
             res.append(SignalBlock(res_samples, res_offset))
 
@@ -2007,10 +2007,10 @@ class SparseSignal(Signal):
         if s11 < self._blocks[0].offset:
             # then create new blocks and insert them into the model
             if not isinstance(value, np.ndarray):
-                value = np.complex_(value)
+                value = np.complex128(value)
                 if value == 0.0 + 0.0j:
                     return
-                bs_new = [SignalBlock(np.full((num_streams, num_samples), value, np.complex_), s10)]
+                bs_new = [SignalBlock(np.full((num_streams, num_samples), value, np.complex128), s10)]
             else:
                 value = value.reshape((num_streams, num_samples))
                 bs_new = self.__from_dense(SignalBlock(value, s10))
@@ -2025,11 +2025,11 @@ class SparseSignal(Signal):
 
         # parse and validate value samples
         if not isinstance(value, np.ndarray):  # If value is a scalar
-            value = np.complex_(value)
+            value = np.complex128(value)
             bs_new = (
                 []
                 if value == 0.0 + 0.0j
-                else [SignalBlock(np.full((num_streams, num_samples), value, np.complex_), s10)]
+                else [SignalBlock(np.full((num_streams, num_samples), value, np.complex128), s10)]
             )
         else:  # else value is a samples matrix
             if value.ndim == 1:
@@ -2185,7 +2185,7 @@ class SparseSignal(Signal):
         sampling_rate: float, num_streams: int = 0, num_samples: int = 0, **kwargs
     ) -> SparseSignal:
         res = SparseSignal(
-            np.empty((num_streams, num_samples), np.complex_), sampling_rate, **kwargs
+            np.empty((num_streams, num_samples), np.complex128), sampling_rate, **kwargs
         )
         res._num_streams = num_streams
         return res
@@ -2250,7 +2250,7 @@ class SparseSignal(Signal):
         is_signal_oftype_signal = issubclass(signal.__class__, Signal)
         blocks_new = []
         for i in range(b_offs.size):
-            b_new = np.zeros((num_streams, b_stops[i] - b_offs[i]), np.complex_)
+            b_new = np.zeros((num_streams, b_stops[i] - b_offs[i]), np.complex128)
             b1 = self.getitem((slice(None, None), slice(b_offs[i], b_stops[i])))
             if is_signal_oftype_signal:
                 b2 = signal.getitem((slice(None, None), slice(b_offs[i], b_stops[i])))  # type: ignore

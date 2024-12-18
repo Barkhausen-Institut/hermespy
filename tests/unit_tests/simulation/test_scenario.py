@@ -73,7 +73,7 @@ class TestSimulationScenario(TestCase):
 
         expected_channel = Mock()
         self.scenario.set_channel(device_alpha, device_beta, expected_channel)
-        
+
         self.assertIn(expected_channel, self.scenario.channels)
         self.assertIs(expected_channel, self.scenario.channel(device_alpha, device_beta))
         self.assertIs(self.scenario, expected_channel.scenario)
@@ -98,18 +98,18 @@ class TestSimulationScenario(TestCase):
 
         self.scenario.noise_model = None
         self.assertIsNone(self.scenario.noise_model)
-        
+
     def test_generate_outputs_validation(self) -> None:
         """Generate outputs should raise ValueErrors for invalid arguments"""
-        
+
         # Invalid number of operator transmissions
         with self.assertRaises(ValueError):
             self.scenario.generate_outputs([Mock() for _ in range(1 + self.scenario.num_devices)],)
-            
+
         # Empty list of trigger realizations
         with self.assertRaises(ValueError):
-            self.scenario.generate_outputs([Mock() for _ in range(self.scenario.num_devices)], [])
-        
+            self.scenario.generate_outputs([Mock() for _ in range(self.scenario.num_devices)], None, [])
+
     def test_transmit_devices(self) -> None:
         """Transmit devices should return the correct device transmissions"""
 

@@ -25,7 +25,6 @@ It is split into several interdependent sub-modules:
    core.device.OperationResult
    core.drop.Drop
    core.operators
-   core.duplex
    core.logarithmic
    core.pipeline
    core.random_node

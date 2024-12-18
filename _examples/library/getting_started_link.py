@@ -19,17 +19,18 @@ rx_operator = ReceivingModem()
 rx_operator.waveform = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=40, oversampling_factor=8, roll_off=.9)
 rx_device.receivers.add(rx_operator)
 
+# Evaluate bit errors during transmission and visualize the received symbol constellation
+evaluator = BitErrorEvaluator(tx_operator, rx_operator)
+
 # Simulate a channel between the two devices
 channel = IdealChannel()
 
 # Simulate the signal transmission over the channel
-transmission = tx_operator.transmit()
-propagation = channel.propagate(tx_device.transmit(), tx_device, rx_device)
-rx_device.process_input(propagation)
-reception = rx_operator.receive()
+transmission = tx_device.transmit()
+propagation = channel.propagate(transmission, tx_device, rx_device)
+reception = rx_device.receive(propagation)
 
-# Evaluate bit errors during transmission and visualize the received symbol constellation
-evaluator = BitErrorEvaluator(tx_operator, rx_operator)
+# Visualize communication performance
 evaluator.evaluate().visualize()
-reception.symbols.plot_constellation()
+reception.operator_receptions[0].equalized_symbols.plot_constellation()
 plt.show()

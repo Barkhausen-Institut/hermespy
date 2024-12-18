@@ -6,7 +6,7 @@ import numpy as np
 
 from hermespy.core import Serializable
 from ..symbols import StatedSymbols
-from .symbol_precoding import SymbolPrecoder
+from .symbol_precoding import ReceiveSymbolDecoder
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -18,7 +18,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class SingleCarrier(SymbolPrecoder, Serializable):
+class SingleCarrier(ReceiveSymbolDecoder, Serializable):
     """Single Carrier data symbol precoding step.
 
     Takes a on-dimensional input stream and distributes the symbols to multiple output streams.
@@ -26,26 +26,7 @@ class SingleCarrier(SymbolPrecoder, Serializable):
 
     yaml_tag = "SingleCarrier"
 
-    def __init__(self) -> None:
-        """Single Carrier object initialization."""
-
-        SymbolPrecoder.__init__(self)
-
-    def encode(self, symbols: StatedSymbols) -> StatedSymbols:
-        if symbols.num_streams != 1:
-            raise RuntimeError(
-                "Single-Carrier spatial multiplexing only supports one-dimensional input streams during encoding"
-            )
-
-        repeated_symbols = symbols.copy()
-        repeated_symbols.raw = np.repeat(repeated_symbols.raw, self.num_output_streams, axis=0)
-        repeated_symbols.states = np.repeat(
-            repeated_symbols.states, self.num_output_streams, axis=0
-        )
-
-        return repeated_symbols
-
-    def decode(self, symbols: StatedSymbols) -> StatedSymbols:
+    def decode_symbols(self, symbols: StatedSymbols, num_output_streams: int) -> StatedSymbols:
         # Decode data using SC receive diversity with N_rx received antennas.
         #
         # Received signal with equal noise power is assumed, the decoded signal has same noise
@@ -69,10 +50,13 @@ class SingleCarrier(SymbolPrecoder, Serializable):
         symbols.states = new_states
         return symbols
 
-    @property
-    def num_input_streams(self) -> int:
+    def num_receive_output_streams(self, num_input_streams: int) -> int:
         return 1
 
     @property
-    def num_output_streams(self) -> int:
-        return self.required_num_output_streams
+    def num_receive_input_symbols(self) -> int:
+        return 1
+
+    @property
+    def num_receive_output_symbols(self) -> int:
+        return 1

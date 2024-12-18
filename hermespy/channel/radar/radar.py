@@ -3,7 +3,7 @@
 from __future__ import annotations
 from abc import abstractmethod
 from math import ceil
-from typing import Any, Generic, Mapping, Set, Sequence, Tuple, Type, TYPE_CHECKING, TypeVar
+from typing import Any, Generic, Mapping, Set, Sequence, Tuple, Type, TypeVar
 
 import numpy as np
 from h5py import Group
@@ -14,6 +14,7 @@ from hermespy.core import (
     AntennaMode,
     ChannelStateInformation,
     ChannelStateFormat,
+    DeviceState,
     Direction,
     HDFSerializable,
     SignalBlock,
@@ -26,9 +27,6 @@ from ..channel import (
     ChannelRealization,
     InterpolationMode,
 )
-
-if TYPE_CHECKING:
-    from hermespy.simulation import DeviceState  # pragma: no cover
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -115,7 +113,7 @@ class RadarChannelSample(ChannelSample):
 
         propagated_samples = np.zeros(
             (self.num_receive_antennas, signal.num_samples + max_delay_in_samples),
-            dtype=np.complex_,
+            dtype=np.complex128,
         )
 
         # Compute the signal propagated along each respective path realization
@@ -149,7 +147,7 @@ class RadarChannelSample(ChannelSample):
                 num_samples,
                 max_num_taps,
             ),
-            dtype=np.complex_,
+            dtype=np.complex128,
         )
         for path in self.paths:
             path.add_state(
@@ -652,8 +650,8 @@ class RadarTargetPath(RadarPath):
         parameters = RadarPath._parameters_from_HDF(group)
 
         # Deserialize class attributes
-        position = np.array(group["position"], dtype=np.float_)
-        velocity = np.array(group["velocity"], dtype=np.float_)
+        position = np.array(group["position"], dtype=np.float64)
+        velocity = np.array(group["velocity"], dtype=np.float64)
         cross_section = group.attrs["cross_section"]
         reflection_phase = group.attrs["reflection_phase"]
 

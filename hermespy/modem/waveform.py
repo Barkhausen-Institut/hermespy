@@ -96,7 +96,10 @@ class Synchronization(Generic[CWT], ABC, Serializable):
         samples_per_frame = self.waveform.samples_per_frame
         num_frames = signal.shape[1] // samples_per_frame
 
-        return [] if num_frames < 1 else [0]
+        if num_frames < 1:
+            return []
+
+        return list(range(0, num_frames * samples_per_frame, samples_per_frame))
 
 
 class ChannelEstimation(Generic[CWT], Serializable):
@@ -239,7 +242,7 @@ class CommunicationWaveform(ABC, Serializable):
 
     property_blacklist = {"modem"}
 
-    symbol_type: type = np.complex_
+    symbol_type: type = np.complex128
     """Symbol type."""
 
     __modem: Optional[BaseModem]

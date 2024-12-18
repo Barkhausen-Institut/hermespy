@@ -9,28 +9,11 @@
 
 !<Simulation>
 
-# Physical device models within the simulated scenario
-Devices:
-
-  # First device
-  - &device_alpha !<SimulatedDevice>
-
-    carrier_frequency: 3.5e9
-    power: 10
-
-  # Second device
-  - &device_beta !<SimulatedDevice>
-
-    carrier_frequency: 3.501e9
-    power: 1
-
 # Operators transmitting or receiving signals over the devices
 Operators:
 
   # A single modem operating the device #0
   - &modem_alpha !<Modem>
-
-    device: *device_alpha         # Device the modem is operating on
 
     # Waveform configuration
     waveform: !<SC-RootRaisedCosine>
@@ -49,8 +32,6 @@ Operators:
   # A single modem operating the device #1
   - &modem_beta !<Modem>
 
-    device: *device_beta         # Device the modem is operating on
-
     # Spatial precoding with zero-forcing channel equalization
     # Precoding:
     #   - !<ZF-Time>
@@ -64,52 +45,52 @@ Operators:
       num_subcarriers: 2048
 
       # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
-      resources:
+      grid_resources:
 
-        - !<OFDM-Resource>
+        - !<Resource>
           repetitions: 200
           prefix_type: !<PrefixType> CYCLIC
           prefix_ratio: 0.078125
           elements:
-            - !<FrameElement>
+            - !<Element>
               type: !<ElementType> REFERENCE
               repetitions: 1
-            - !<FrameElement>
+            - !<Element>
               type: !<ElementType> DATA
               repetitions: 5
 
-        - !<OFDM-Resource>
+        - !<Resource>
           repetitions: 1200
           prefix_type: !<PrefixType> CYCLIC
           prefix_ratio: 0.0703125
           elements:
-            - !<FrameElement>
+            - !<Element>
               type: !<ElementType> DATA
               repetitions: 1
 
-        - !<OFDM-Resource>
+        - !<Resource>
           repetitions: 100
           prefix_type: !<PrefixType> CYCLIC
           prefix_ratio: 0.0703125
           elements:
-            - !<FrameElement>
+            - !<Element>
               type: !<ElementType> DATA
               repetitions: 3
-            - !<FrameElement>
+            - !<Element>
               type: !<ElementType> REFERENCE
               repetitions: 1
-            - !<FrameElement>
+            - !<Element>
               type: !<ElementType> DATA
               repetitions: 5
-            - !<FrameElement>
+            - !<Element>
               type: !<ElementType> REFERENCE
               repetitions: 1
-            - !<FrameElement>
+            - !<Element>
               type: !<ElementType> DATA
               repetitions: 2
 
       # Frame configuration in time domain, i.e. the x-axis in the OFDM time-frequency grid
-      structure:
+      grid_structure:
 
         - !<Symbol>
           num_repetitions: 16
@@ -118,6 +99,26 @@ Operators:
         - !<Guard>
           num_repetitions: 1
           duration: 2e-3
+
+
+# Physical device models within the simulated scenario
+Devices:
+
+  # First device
+  - !<SimulatedDevice>
+
+    carrier_frequency: 3.5e9
+    power: 10
+    transmitters: [*modem_alpha]  # Transmit DSP layers operating on the device
+    receivers: [*modem_alpha]     # Receive DSP layers operating on the device
+
+  # Second device
+  - !<SimulatedDevice>
+
+    carrier_frequency: 3.501e9
+    power: 1
+    transmitters: [*modem_beta]   # Transmit DSP layers operating on the device
+    receivers: [*modem_beta]      # Receive DSP layers operating on the device
 
 
 # Performance indication evaluation configuration
@@ -153,4 +154,4 @@ plot_results: True                 # Visualize the evaluations after the simulat
 # Scenario parameters over which the Monte-Carlo simulation sweeps
 Dimensions:
 
-  snr: [36, 32, ..., 0] dB
+  noise_level: [36, 32, ..., 0] dB

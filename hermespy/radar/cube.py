@@ -223,7 +223,7 @@ class RadarCube(HDFSerializable):
         # Infer angle bins
         if angle_bins is None:
             if data.shape[0] == 1:
-                angle_bins = np.array([[0, 0]], dtype=np.float_)
+                angle_bins = np.array([[0, 0]], dtype=np.float64)
 
             else:
                 raise ValueError("Can't infer angle bins from data cube")
@@ -231,13 +231,13 @@ class RadarCube(HDFSerializable):
         # Infer velocity bins
         if doppler_bins is None:
             if data.shape[1] == 1:
-                doppler_bins = np.array([0], dtype=np.float_)
+                doppler_bins = np.array([0], dtype=np.float64)
 
             else:
                 raise ValueError("Can't infer velocity bins from data cube")
 
         # Infer range bins
-        range_bins = np.arange(data.shape[2], dtype=np.float_) if range_bins is None else range_bins
+        range_bins = np.arange(data.shape[2], dtype=np.float64) if range_bins is None else range_bins
 
         if data.shape[0] != len(angle_bins):
             raise ValueError("Data cube angle dimension does not match angle bins")
@@ -387,9 +387,9 @@ class RadarCube(HDFSerializable):
     @classmethod
     def from_HDF(cls: Type[RadarCube], group: Group) -> RadarCube:
         data = np.array(group["data"])
-        angle_bins = np.array(group["angle_bins"], dtype=np.float_)
-        doppler_bins = np.array(group["doppler_bins"], dtype=np.float_)
-        range_bins = np.array(group["range_bins"], dtype=np.float_)
+        angle_bins = np.array(group["angle_bins"], dtype=np.float64)
+        doppler_bins = np.array(group["doppler_bins"], dtype=np.float64)
+        range_bins = np.array(group["range_bins"], dtype=np.float64)
         carrier_frequency = group.attrs.get("carrier_frequency", 0.0)
 
         return cls(

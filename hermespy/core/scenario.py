@@ -11,7 +11,7 @@ from collections.abc import Sequence
 from enum import IntEnum
 from itertools import chain
 from os import path, remove
-from typing import Generic, overload, Type, TypeVar, Union
+from typing import Generic, Type, TypeVar, Union
 
 from h5py import File, Group
 
@@ -20,8 +20,10 @@ from .device import (
     DeviceInput,
     DeviceOutput,
     DeviceReception,
+    DeviceState,
     DeviceTransmission,
     DeviceType,
+    DST,
     ProcessedDeviceInput,
     Reception,
     Transmission,
@@ -67,7 +69,7 @@ class ScenarioMode(IntEnum):
     """
 
 
-class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType, DropType]):
+class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType, DST, DropType]):
     """A wireless scenario.
 
     Scenarios consist of several devices transmitting and receiving electromagnetic signals.
@@ -647,71 +649,85 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType, DropType]
         # Reset the mode
         self.__mode = ScenarioMode.DEFAULT
 
-    def transmit_operators(self) -> Sequence[Sequence[Transmission]]:
+    def transmit_operators(
+        self, states: Sequence[DST] = None, notify: bool = True
+    ) -> Sequence[Sequence[Transmission]]:
         """Generate information transmitted by all registered device operators.
+
+        Args:
+
+            states (Sequence[DST], optional):
+                States of the transmitting devices.
+                If not specified, the current device states will be queried by calling :meth:`Device.state`.
+
+            notify (bool, optional):
+                Notify the DSP layer's callbacks about the transmission results.
+                Enabled by default.
 
         Returns:
             The generated information sorted into devices and their respective operators.
         """
 
-        transmissions = [[o.transmit() for o in d.transmitters] for d in self.devices]
+        _states = [d.state() for d in self.devices] if states is None else states
+        transmissions = [
+            [o.transmit(s, 0.0, notify) for o in d.transmitters]
+            for d, s in zip(self.devices, _states)
+        ]
         return transmissions
 
     def generate_outputs(
-        self, transmissions: list[list[Transmission]] | None = None
+        self, transmissions: list[list[Transmission]], states: Sequence[DST | None] | None = None
     ) -> Sequence[DeviceOutput]:
         """Generate signals emitted by devices.
 
         Args:
 
-            transmissions (list[list[Transmission]], optional):
-                Transmissions by operators.
-                If none were provided, cached operator transmissions are assumed.
+            transmissions (list[list[Transmission]]):
+                Results of all transmitting DSP algorithms.
 
-        Returns: list of device outputs.
+            states (Sequence[DST | None], optional):
+                States of the transmitting devices.
+                If not specified, the current device states will be queried by calling :meth:`Device.state`.
+
+        Returns: List of device outputs.
         """
 
-        # Assume cached operator transmissions if none were provided
-        _transmissions: list[None] | list[list[Transmission]] = (
-            [None] * self.num_devices if not transmissions else transmissions
-        )
+        _states = [None] * self.num_devices if states is None else states
 
-        if len(_transmissions) != self.num_devices:
+        if len(transmissions) != self.num_devices:
             raise ValueError(
-                f"Number of device transmissions ({len(_transmissions)}) does not match number of registered devices ({self.num_devices}"
+                f"Number of device transmissions ({len(transmissions)}) does not match number of registered devices ({self.num_devices}"
             )
 
-        outputs = [d.generate_output(t) for d, t in zip(self.devices, _transmissions)]
+        outputs = [d.generate_output(t, s) for d, s, t in zip(self.devices, _states, transmissions)]
         return outputs
 
-    def transmit_devices(self) -> Sequence[DeviceTransmission]:
+    def transmit_devices(
+        self, states: Sequence[DST | None] | None = None, notify: bool = True
+    ) -> Sequence[DeviceTransmission]:
         """Generated information transmitted by all registered devices.
 
-        Returns: list of generated information transmitted by each device.
+        Args:
+
+            states (Sequence[DST | None], optional):
+                States of the transmitting devices.
+                If not specified, the current device states will be queried by calling :meth:`Device.state`.
+
+            notify (bool, optional):
+                Notify the transmit DSP layer's callbacks about the transmission results.
+                Enabled by default.
+
+        Returns: List of generated information transmitted by each device.
         """
 
-        transmissions = [device.transmit() for device in self.devices]
+        _states = [None] * self.num_devices if states is None else states
+        transmissions = [d.transmit(s, notify) for d, s in zip(self.devices, _states)]
         return transmissions
-
-    @overload
-    def process_inputs(
-        self, impinging_signals: Sequence[DeviceInput], cache: bool = True
-    ) -> Sequence[ProcessedDeviceInput]: ...  # pragma: no cover
-
-    @overload
-    def process_inputs(
-        self, impinging_signals: Sequence[Signal], cache: bool = True
-    ) -> Sequence[ProcessedDeviceInput]: ...  # pragma: no cover
-
-    @overload
-    def process_inputs(
-        self, impinging_signals: Sequence[Sequence[Signal]], cache: bool = True
-    ) -> Sequence[ProcessedDeviceInput]: ...  # pragma: no cover
 
     def process_inputs(
         self,
         impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]],
-        cache: bool = True,
+        states: Sequence[DST | None] | None = None,
     ) -> Sequence[ProcessedDeviceInput]:
         """Process input signals impinging onto the scenario's devices.
 
@@ -720,9 +736,9 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType, DropType]
             impinging_signals (Sequence[DeviceInput | Signal | Sequence[Signal]]):
                 list of signals impinging onto the devices.
 
-            cache (bool, optional):
-                Cache the operator inputs at the registered receive operators for further processing.
-                Enabled by default.
+            states (Sequence[DST | None], optional):
+                States of the transmitting devices.
+                If not specified, the current device states will be queried by calling :meth:`Device.state`.
 
         Returns: list of the processed device input information.
 
@@ -730,6 +746,8 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType, DropType]
 
             ValueError: If the number of `impinging_signals` does not match the number of registered devices.
         """
+
+        _states = [None] * self.num_devices if states is None else states
 
         if len(impinging_signals) != self.num_devices:
             raise ValueError(
@@ -737,38 +755,30 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType, DropType]
             )
 
         # Call the process input method for each device
-        processed_inputs = [d.process_input(i, cache) for d, i in zip(self.devices, impinging_signals)]  # type: ignore
+        processed_inputs = [d.process_input(i, s) for d, i, s in zip(self.devices, impinging_signals, _states)]  # type: ignore
 
         return processed_inputs
 
-    @overload
-    def receive_operators(
-        self, operator_inputs: Sequence[ProcessedDeviceInput], cache: bool = True
-    ) -> Sequence[Sequence[Reception]]: ...  # pragma: no cover
-
-    @overload
-    def receive_operators(
-        self, operator_inputs: Sequence[Sequence[Signal]], cache: bool = True
-    ) -> Sequence[Sequence[Reception]]: ...  # pragma: no cover
-
-    @overload
-    def receive_operators(self) -> Sequence[Sequence[Reception]]: ...  # pragma: no cover
-
     def receive_operators(
         self,
-        operator_inputs: Sequence[ProcessedDeviceInput] | Sequence[Sequence[Signal]] | None = None,
-        cache: bool = True,
+        operator_inputs: Sequence[ProcessedDeviceInput] | Sequence[Sequence[Signal]],
+        states: Sequence[DST | None] | None = None,
+        notify: bool = True,
     ) -> Sequence[Sequence[Reception]]:
         """Receive over the registered operators.
 
         Args:
 
-            operator_inputs (Sequence[Sequence[Signal]] | ProcessedDeviceInput, optional):
-                Signal models fed to the receive operators of each device.
-                If not provided, the operatores are expected to have inputs cached
+            operator_inputs (Sequence[Sequence[Signal]] | ProcessedDeviceInput):
+                Signal models to be processed by the receive DSP algorithms.
+                Two-dimensional sequence where the first dimension corresponds to the devices and the second to the operators.
 
-            cache (bool, optional):
-                Cache the generated received information at the device's receive operators.
+            states (Sequence[DST | None], optional):
+                States of the transmitting devices.
+                If not specified, the current device states will be queried by calling :meth:`Device.state`.
+
+            notify (bool, optional):
+                Notify the receive DSP layer's callbacks about the reception results.
                 Enabled by default.
 
         Returns: list of information generated by receiving over the device's operators.
@@ -776,41 +786,24 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType, DropType]
         Raises:
 
             ValueError: If the number of operator inputs does not match the number of receive devices.
-            RuntimeError: If no operator inputs were specified and an operator has no cached inputs.
         """
 
-        _operator_inputs = (
-            [None for _ in range(self.num_devices)] if operator_inputs is None else operator_inputs
-        )
+        _states = [None] * self.num_devices if states is None else states
 
-        if len(_operator_inputs) != self.num_devices:
+        if len(operator_inputs) != self.num_devices:
             raise ValueError(
-                f"Number of operator inputs ({len(_operator_inputs)}) does not match the number of registered scenario devices ({self.num_devices})"
+                f"Number of operator inputs ({len(operator_inputs)}) does not match the number of registered scenario devices ({self.num_devices})"
             )
 
         # Generate receptions
-        receptions = [d.receive_operators(i, cache) for d, i in zip(self.devices, _operator_inputs)]  # type: ignore
+        receptions = [d.receive_operators(i, s, notify) for d, i, s in zip(self.devices, operator_inputs, _states)]  # type: ignore
         return receptions
-
-    @overload
-    def receive_devices(
-        self, impinging_signals: Sequence[DeviceInput], cache: bool = True
-    ) -> Sequence[DeviceReception]: ...  # pragma: no cover
-
-    @overload
-    def receive_devices(
-        self, impinging_signals: Sequence[Signal], cache: bool = True
-    ) -> Sequence[DeviceReception]: ...  # pragma: no cover
-
-    @overload
-    def receive_devices(
-        self, impinging_signals: Sequence[Sequence[Signal]], cache: bool = True
-    ) -> Sequence[DeviceReception]: ...  # pragma: no cover
 
     def receive_devices(
         self,
         impinging_signals: Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]],
-        cache: bool = True,
+        states: Sequence[DST | None] | None = None,
+        notify: bool = True,
     ) -> Sequence[DeviceReception]:
         """Receive over all scenario devices.
 
@@ -818,11 +811,15 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType, DropType]
 
         Args:
 
-            impinging_signals (list[Union[DeviceInput, Signal, Iterable[Signal]]]):
+            impinging_signals (Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]):
                 list of signals impinging onto the devices.
 
-            cache (bool, optional):
-                Cache the operator inputs at the registered receive operators for further processing.
+            states (Sequence[DST | None], optional):
+                States of the transmitting devices.
+                If not specified, the current device states will be queried by calling :meth:`Device.state
+
+            notify (bool, optional):
+                Notify the receiving DSP layer's callbacks about the reception results.
                 Enabled by default.
 
         Returns: list of the processed device input information.
@@ -832,11 +829,15 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType, DropType]
             ValueError: If the number of `impinging_signals` does not match the number of registered devices.
         """
 
+        _states = [d.state() for d in self.devices] if states is None else states
+
         # Generate inputs
-        processed_inputs = self.process_inputs(impinging_signals, cache)
+        processed_inputs = self.process_inputs(impinging_signals, _states)
 
         # Generate operator receptions
-        operator_receptions = self.receive_operators([i.operator_inputs for i in processed_inputs])
+        operator_receptions = self.receive_operators(
+            [i.operator_inputs for i in processed_inputs], _states, notify
+        )
 
         # Generate device receptions
         device_receptions = [
@@ -906,12 +907,11 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType, DropType]
                     drop = self._recall_drop(self.__file[drop_path])
                     break
 
-            # Replay device operator transmissions
-            for device, device_transmission in zip(self.devices, drop.device_transmissions):
-                device.cache_transmission(device_transmission)
+            # ToDo: Notify the transmit callbacks about the replayed results
 
             # Replay device operator receptions
-            _ = self.receive_operators(drop.operator_inputs, cache=True)
+            # This will simulatenously notify the receive operator callbacks
+            _ = self.receive_operators(drop.operator_inputs)
 
         else:
             # Generate a new drop
@@ -933,11 +933,11 @@ ScenarioType = TypeVar("ScenarioType", bound="Scenario")
 """Type of scenario."""
 
 
-class ReplayScenario(Scenario[Device, Drop]):
+class ReplayScenario(Scenario[Device, DeviceState, Drop]):
     """Scenario which is unable to generate drops."""
 
     def _drop(self) -> Drop:
         raise RuntimeError("Replay scenario may not generate data drops.")
 
     def _recall_drop(self, group: Group) -> Drop:
-        return Drop.from_HDF(group)
+        return Drop.from_HDF(group, self.devices)

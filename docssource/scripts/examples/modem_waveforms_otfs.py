@@ -17,9 +17,6 @@ rx_device = simulation.new_device(carrier_frequency=carrier_frequency)
 channel = TDL(TDLType.A, 1e-7, doppler_frequency=10)
 simulation.set_channel(tx_device, rx_device, channel)
 
-# Link the devices
-link = SimplexLink(tx_device, rx_device)
-
 # Configure an orthogonal waveform featuring 128 subcarriers
 grid_resources = [
     GridResource(16, PrefixType.CYCLIC, .1, [GridElement(ElementType.DATA, 7), GridElement(ElementType.REFERENCE, 1)]),
@@ -34,7 +31,10 @@ waveform = OTFSWaveform(
     num_subcarriers=128,
     subcarrier_spacing=1e3,
 )
-link.waveform = waveform
+
+# Configure the link to connect both devices
+link = SimplexLink(waveform=waveform)
+link.connect(tx_device, rx_device)
 
 # Configure channel estimation and equalization
 waveform.channel_estimation = OrthogonalLeastSquaresChannelEstimation()

@@ -14,40 +14,13 @@
 
 !<Simulation>
 
-# Physical device models within the simulated scenario
-Devices:
-
-  # Representation of a single (virtual) device
-  - &device_alpha !<SimulatedDevice>
-
-    carrier_frequency: 3e9               # Center frequency of Rf-band emitted signal
-    
-    antennas: !<SimulatedUniformArray>   # Uniform antenna array
-      
-      element: !<SimulatedIdealAntenna>  # Assume ideal isotropic antennas
-      spacing: 10e-2                     # Elements spaced 10cm apart
-      dimensions: [2, 1, 1]              # 2 elements within the array
-
-
-# Specify channel models interconnecting devices 
-Channels:
-
-  - # 5G TDL model at the self-interference channel of device_alpha
-    - *device_alpha
-    - *device_alpha
-    - &channel !<5GTDL>
-      model_type: !<TDLType> E           # Type of the TDL model. A-E are available
-      rms_delay: 100e-9                  # Root mean square delay in seconds    
-
-
 # Operators transmitting or receiving signals over the devices
 Operators:
 
   # A single modem operating the device #0
   - &modem_alpha !<Modem>
 
-    device: *device_alpha          # Device the modem is operating on
-    reference: *device_alpha       # Reference device to which the channel is estimated
+    # reference: *device_alpha       # Reference device to which the channel is estimated
 
     # Bit encoding configuration before mapping to modulation symbols
     #Encoding:
@@ -57,9 +30,9 @@ Operators:
     #    rate: [1, 2]
 
     # MIMO configuration on the symbol level
-    precoding: !<SymbolCoding>
-
-      - !<SingleCarrier>       # Spatial Multiplexing
+#   receive_symbol_coding: !<ReceiveSymbolCoding>
+#
+#      - !<SingleCarrier>       # Spatial Multiplexing
 
     # Configuration of the waveform emitted by this transmitter
     waveform: &ofdm !<OFDM>
@@ -69,10 +42,10 @@ Operators:
       subcarrier_spacing: 30e3          # Spacing between the individual subcarrier center frequencies in Hz
       dc_suppression: False             # Do not ignore the DC component during the DFT
       num_subcarriers: 4096             # Number of subcarriers per communiction frame
-      channel_estimation: !<OFDM-Ideal> # Assume ideal channel state information at the receiver
-        channel: *channel
-        transmitter: *device_alpha
-        receiver: *device_alpha
+#      channel_estimation: !<OFDM-Ideal> # Assume ideal channel state information at the receiver
+#        channel: *channel
+#        transmitter: *device_alpha
+#        receiver: *device_alpha
       channel_equalization: !<ZF>       # Least-squares channel equalization
 
       # OFDM symbol resources, each resource represents one symbol's subcarrier configuration
@@ -131,6 +104,34 @@ Operators:
           num_repetitions: 3
           duration: 35.677083e-6
 
+
+# Physical device models within the simulated scenario
+Devices:
+
+  # Representation of a single (virtual) device
+  - &device_alpha !<SimulatedDevice>
+
+    carrier_frequency: 3e9               # Center frequency of Rf-band emitted signal
+    
+#    antennas: !<SimulatedUniformArray>   # Uniform antenna array
+#      
+#      element: !<SimulatedIdealAntenna>  # Assume ideal isotropic antennas
+#      spacing: 10e-2                     # Elements spaced 10cm apart
+#      dimensions: [2, 1, 1]              # 2 elements within the array
+
+    transmitters: [*modem_alpha]         # Transmit DSP layers operating on the device
+    receivers: [*modem_alpha]            # Receive DSP layers operating on the device
+
+
+# Specify channel models interconnecting devices 
+Channels:
+
+  - # 5G TDL model at the self-interference channel of device_alpha
+    - *device_alpha
+    - *device_alpha
+    - &channel !<5GTDL>
+      model_type: !<TDLType> E           # Type of the TDL model. A-E are available
+      rms_delay: 100e-9                  # Root mean square delay in seconds  
 
 # Performance indication evaluation configuration
 Evaluators:

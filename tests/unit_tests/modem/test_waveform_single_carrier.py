@@ -28,12 +28,12 @@ class MockSingleCarrierWaveform(FilteredSingleCarrierWaveform):
     """Implementation of the abstract single carrier waveform base class for testing"""
 
     def _transmit_filter(self) -> np.ndarray:
-        filter = np.zeros(self.oversampling_factor, dtype=np.complex_)
+        filter = np.zeros(self.oversampling_factor, dtype=np.complex128)
         filter[0] = 1.0
         return filter
 
     def _receive_filter(self) -> np.ndarray:
-        filter = np.zeros(self.oversampling_factor, dtype=np.complex_)
+        filter = np.zeros(self.oversampling_factor, dtype=np.complex128)
         filter[0] = 1.0
         return filter
 
@@ -50,7 +50,7 @@ class MockRolledOfSingleCarrierWaveform(RolledOffSingleCarrierWaveform):
     """Implementation of the abstract single carrier waveform base class for testing"""
 
     def _base_filter(self) -> np.ndarray:
-        filter = np.zeros(self.oversampling_factor, dtype=np.complex_)
+        filter = np.zeros(self.oversampling_factor, dtype=np.complex128)
         filter[0] = 1.0
         return filter
 

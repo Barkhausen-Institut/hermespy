@@ -9,9 +9,9 @@ simulation = Simulation()
 device = simulation.new_device(carrier_frequency=60e9)
 
 # Configure the device to transmit and reveive radar waveforms
-radar = Radar(device=device)
-radar.waveform = FMCW()
+radar = Radar(waveform=FMCW())
 radar.detector = ThresholdDetector(.02, normalize=False)
+device.add_dsp(radar)
 
 # Create a new radar channel with a single illuminated target
 target = SingleTargetRadarChannel(1, 1., attenuate=True)

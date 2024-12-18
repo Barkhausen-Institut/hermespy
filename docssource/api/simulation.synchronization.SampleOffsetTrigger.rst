@@ -13,7 +13,7 @@ property of multiple simulated devices:
 
 .. literalinclude:: ../scripts/examples/simulation_synchronization_SampleOffsetTrigger.py
    :language: python
-   :lines: 10-18, 35-42
+   :lines: 10-18, 39-46
 
 .. autoclass:: hermespy.simulation.simulated_device.SampleOffsetTrigger
 

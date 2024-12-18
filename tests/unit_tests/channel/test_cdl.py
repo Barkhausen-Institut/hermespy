@@ -10,7 +10,7 @@ from h5py import File
 from scipy.constants import speed_of_light
 
 from hermespy.core import DenseSignal, Transformation
-from hermespy.simulation import DeviceState, SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
+from hermespy.simulation import SimulatedDeviceState, SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
 from hermespy.simulation.animation import StaticTrajectory, TrajectorySample
 from hermespy.channel.channel import LinkState
 from hermespy.channel.cdl import CDL, CDLType, LOSState, O2IState, FactoryType, IndoorFactory, IndoorOffice, OfficeType, RuralMacrocells, UrbanMacrocells, UrbanMicrocells
@@ -48,7 +48,8 @@ class TestClusterDelayLineSample(TestCase):
         self.cluster_powers = self.rng.rayleigh(size=6)
         self.polarization_transformations = self.rng.normal(size=(2, 2, 6, 20)) + 1j * self.rng.normal(size=(2, 2, 6, 20))
         
-        self.transmitter_state = DeviceState(
+        self.transmitter_state = SimulatedDeviceState(
+            0,
             TrajectorySample(
                 0.0,
                 Transformation.From_Translation(np.array([2, 3, 4])),
@@ -56,10 +57,12 @@ class TestClusterDelayLineSample(TestCase):
             ),
             self.carrier_frequency,
             self.bandwidth,
+            2,
+            2,
             SimulatedUniformArray(SimulatedIdealAntenna, 1e-3, (2, 1, 1)).state(Transformation.From_Translation(np.array([2, 3, 4]))),
-            Mock(),
         )
-        self.receiver_state = DeviceState(
+        self.receiver_state = SimulatedDeviceState(
+            1,
             TrajectorySample(
                 0.0,
                 Transformation.From_Translation(np.array([5, 6, 7])),
@@ -67,8 +70,9 @@ class TestClusterDelayLineSample(TestCase):
             ),
             self.carrier_frequency,
             self.bandwidth,
+            2,
+            2,
             SimulatedUniformArray(SimulatedIdealAntenna, 1e-3, (2, 1, 1)).state(Transformation.From_Translation(np.array([2, 3, 4]))),
-            Mock(),
         )
         
         self.sample = ClusterDelayLineSample(
@@ -292,7 +296,7 @@ class TestClusterDelayLine(TestCase):
         unit_energy_signal = DenseSignal(np.ones((self.alpha_device.num_transmit_antennas, 100)) / 10, self.bandwidth, self.carrier_frequency)
         num_attempts = 100
         
-        cumulated_propagated_energy = np.zeros((self.beta_device.num_receive_antennas), dtype=np.float_)
+        cumulated_propagated_energy = np.zeros((self.beta_device.num_receive_antennas), dtype=np.float64)
         cumulated_expected_scale = 0.0
         for _ in range(num_attempts):
             realization = self.model.realize()

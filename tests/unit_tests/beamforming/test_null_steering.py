@@ -1,16 +1,23 @@
 # -*- coding: utf-8 -*-
 
 from unittest import TestCase
-from unittest.mock import Mock, patch, PropertyMock
 
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 from scipy.constants import pi
 
+from hermespy.core import Signal
 from hermespy.simulation import SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
-from hermespy.beamforming.nullsteeringbeamformer import NullSteeringBeamformer
-from hermespy.core import AntennaArray
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from hermespy.beamforming import BeamformingReceiver, BeamformingTransmitter, NullSteeringBeamformer, SphericalFocus
+
+__author__ = "Alan Thomas"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__credits__ = ["Alan Thomas", "Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "1.3.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
 
 
 class TestNullSteeringBeamformer(TestCase):
@@ -19,79 +26,53 @@ class TestNullSteeringBeamformer(TestCase):
     def setUp(self) -> None:
         self.rng = np.random.default_rng(42)
 
+        self.carrier_frequency = 1e9
         self.device = SimulatedDevice(
-            carrier_frequency=1e9,
+            carrier_frequency=self.carrier_frequency,
             antennas=SimulatedUniformArray(SimulatedIdealAntenna, 0.01, (5, 5, 1)),
         )
-        self.operator = Mock()
-        self.operator.device = self.device
 
-        self.loading = 1e-4
-        self.beamformer = NullSteeringBeamformer(operator=self.operator)
-        self.beamformer.loading = 1e-4
+        self.beamformer = NullSteeringBeamformer()
+    
+        self.expected_samples = Signal.Create(np.exp(2j * pi * self.rng.uniform(0, 1, (1, 5))), self.device.sampling_rate, self.device.carrier_frequency)
+        self.transmitter = BeamformingTransmitter(self.expected_samples, self.beamformer)
+        self.receiver = BeamformingReceiver(self.beamformer, self.expected_samples.num_samples, self.device.sampling_rate)
 
-    def test_init(self) -> None:
-        """Initialization parameters should be properly stored as class attributes"""
-
-        self.assertIs(self.operator, self.beamformer.operator)
-
+        self.device.add_dsp(self.transmitter)
+        self.device.add_dsp(self.receiver)
 
     def test_static_properties(self) -> None:
-        """Static properties should report the correct values."""
+        """Static properties should report the correct values"""
 
+        self.assertEqual(3, self.beamformer.num_transmit_focus_points)
         self.assertEqual(3, self.beamformer.num_receive_focus_points)
-        self.assertEqual(25, self.beamformer.num_receive_input_streams)
-        self.assertEqual(1, self.beamformer.num_receive_output_streams)
-    
+        self.assertEqual(1, self.beamformer._num_transmit_input_streams(5))
+        self.assertEqual(1, self.beamformer.num_receive_output_streams(10))
 
     def test_null_steering_effectiveness(self) -> None:
-        """Test whether the NullSteeringBeamformer significantly nulls a1 and a2 directions."""
+        """Test whether the NullSteeringBeamformer significantly nulls a1 and a2 directions"""
 
         # Define the focus angles: a0 (maximum power direction), a1, and a2 (null directions)
-        a0_angle = np.array([0.0, 0.0])  # Target direction
-        a1_angle = np.array([1.0, 1.0])  # First null direction
-        a2_angle = np.array([1.0, -1.0])  # Second null direction
-        focus_angles = np.array([a0_angle, a1_angle, a2_angle])
-
-        expected_samples = np.exp(2j * pi * self.rng.uniform(0, 1, (1, 5)))
-
-        # Set carrier frequency
-        carrier_frequency = 1e9
-
-        # Compute the null steering beamformer weights
-        Weights = self.beamformer._weights(
-            carrier_frequency, focus_angles, self.device.antennas
-        )
-
+        focus_angles = np.array([
+            [1.5, 0.75],  # Target direction
+            [-1.5, 0.75],  # First null direction
+            [0.0, -1.0],  # Second null direction
+        ])
+        # Configure the beamformer to focus the respective angles
+        self.beamformer.transmit_focus = [SphericalFocus(a) for a in focus_angles]
+        self.beamformer.receive_focus = [SphericalFocus(a) for a in focus_angles]
+    
+        # Compute thet array responses for the focus angles
         # Compute spherical phase responses for a0, a1, and a2
-        a0_response = self.operator.device.antennas.spherical_phase_response(
-            carrier_frequency, a0_angle[0], a0_angle[1]
-        )
-        a1_response = self.operator.device.antennas.spherical_phase_response(
-            carrier_frequency, a1_angle[0], a1_angle[1]
-        )
-        a2_response = self.operator.device.antennas.spherical_phase_response(
-            carrier_frequency, a2_angle[0], a2_angle[1]
-        )
+        focus_responses = np.array([self.device.antennas.spherical_phase_response(self.carrier_frequency, a[0], a[1]) for a in focus_angles])
 
-        # Applying weights to the array resposnes of the angles
-        a0_beamformed = Weights.T.conj() @ a0_response
-        a1_beamformed = Weights.T.conj() @ a1_response
-        a2_beamformed = Weights.T.conj() @ a2_response
+        # Test transmission
+        transmission = self.device.transmit().mixed_signal.getitem()
+        beamformed_powers = np.array([np.linalg.norm(focus_response @ transmission) ** 2 for focus_response in focus_responses])
+        self.assertGreater(beamformed_powers[0], beamformed_powers[1] * 10, "a0 power should be at least 10x greater than a1 power (nulling issue).")
+        self.assertGreater(beamformed_powers[0], beamformed_powers[2] * 10, "a0 power should be at least 10x greater than a2 power (nulling issue).")
 
-        # calculating the powers from each directions
-        a0_power = np.linalg.norm(a0_beamformed)
-        a1_power = np.linalg.norm(a1_beamformed)
-        a2_power = np.linalg.norm(a2_beamformed)
-
-        # Check that a0 power is much greater than a1 and a2 (nulling effectiveness)
-        self.assertGreater(
-            a0_power,
-            a1_power * 10,
-            "a0 power should be at least 10x greater than a1 power (nulling issue).",
-        )
-        self.assertGreater(
-            a0_power,
-            a2_power * 10,
-            "a0 power should be at least 10x greater than a2 power (nulling issue).",
-        )
+        # Test reception
+        received_powers = np.array([self.device.receive(Signal.Create(focus_response[:, None], self.device.sampling_rate, self.device.carrier_frequency)).operator_receptions[0].signal.power[0] for focus_response in focus_responses])
+        self.assertGreater(received_powers[0], received_powers[1] * 10, "a0 power should be at least 10x greater than a1 power (nulling issue).")
+        self.assertGreater(received_powers[0], received_powers[2] * 10, "a0 power should be at least 10x greater than a2 power (nulling issue).")

@@ -13,42 +13,11 @@
 
 !<Simulation>
 
-# Physical device models within the simulated scenario
-Devices:
-
-   # Representation of a single (virtual) device
-  - &transmitting_device !<SimulatedDevice>
-
-    carrier_frequency: 865e6      # Center frequency of Rf-band emitted signal
-
-  - &receiving_device !<SimulatedDevice>
-
-    carrier_frequency: 865e6      # Center frequency of Rf-band received signal
-
-
-# Channel models between devices
-Channels:
-  - # Rayleigh fading between on the device self-interfernce channel
-    - *transmitting_device
-    - *receiving_device
-    - !<MultipathFading>
-      delays: [ 0 ]           # Delay of the channel in seconds
-      power_profile: [ 0 ] dB # Tap gains
-      rice_factors: [ .inf ]
-
-      # Configure 3GPP standard antenna correlation models at both linked devices
-      antenna_correlation: !<StandardCorrelation>
-          correlation: MEDIUM
-
-
 # Operators transmitting or receiving signals over the devices
 Operators:
 
   # Establish a simplex link between both devices
   - &link !<SimplexLink>
-
-    transmitting_device: *transmitting_device
-    receiving_device: *receiving_device
 
     # Bit encoding configuration before mapping to modulation symbols
     encoding: !<Encoding>
@@ -69,6 +38,31 @@ Operators:
 
       guard_interval: 0.          # Pause between frame transmissions in seconds
 
+# Physical device models within the simulated scenario
+Devices:
+
+   # Representation of a single (virtual) device
+  - &transmitting_device !<SimulatedDevice>
+    carrier_frequency: 865e6      # Center frequency of Rf-band emitted signal
+    transmitters: [ *link ]       # Transmit DSP layers on this device
+
+  - &receiving_device !<SimulatedDevice>
+    carrier_frequency: 865e6      # Center frequency of Rf-band received signal
+    receivers: [ *link ]          # Receive DSP layers on this device
+
+# Channel models between devices
+Channels:
+  - # Rayleigh fading between on the device self-interfernce channel
+    - *transmitting_device
+    - *receiving_device
+    - !<MultipathFading>
+      delays: [ 0 ]           # Delay of the channel in seconds
+      power_profile: [ 0 ] dB # Tap gains
+      rice_factors: [ .inf ]
+
+      # Configure 3GPP standard antenna correlation models at both linked devices
+      antenna_correlation: !<StandardCorrelation>
+          correlation: MEDIUM
 
 # Performance indication evaluation configuration
 Evaluators:

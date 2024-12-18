@@ -11,8 +11,8 @@ from h5py import File
 from numpy.random import default_rng
 from numpy.testing import assert_array_equal
 
-from hermespy.core import DeviceInput, DeviceReception, ProcessedDeviceInput, Signal, SignalTransmitter
-from hermespy.hardware_loop import DelayCalibration, NoDelayCalibration, NoLeakageCalibration, PhysicalDevice, SelectiveLeakageCalibration
+from hermespy.core import DeviceInput, ProcessedDeviceInput, Signal, SignalTransmitter
+from hermespy.hardware_loop import DelayCalibration, NoDelayCalibration, NoLeakageCalibration, PhysicalDevice, PhysicalDeviceState, SelectiveLeakageCalibration
 from hermespy.simulation import SimulatedUniformArray, SimulatedIdealAntenna
 from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
 
@@ -35,6 +35,19 @@ class PhysicalDeviceMock(PhysicalDevice):
         PhysicalDevice.__init__(self, *args, **kwargs)
         self.__sampling_rate = sampling_rate
         self.__antennas = SimulatedUniformArray(SimulatedIdealAntenna, 1.0, (1, 1, 1))
+
+    def state(self):
+        return PhysicalDeviceState(
+            id(self),
+            0.0,
+            self.pose,
+            self.velocity,
+            self.carrier_frequency,
+            self.sampling_rate,
+            self.num_digital_transmit_ports,
+            self.num_digital_receive_ports,
+            self.antennas.state(self.pose),
+        )
 
     @property
     def antennas(self) -> SimulatedUniformArray:
@@ -145,10 +158,9 @@ class TestPhysicalDevice(TestCase):
             self.device.max_receive_delay = -1.0
 
     def test_velocity(self) -> None:
-        """Accessing the velocity property should raise a NotImplementedError"""
+        """Velocity property should report zero by default"""
 
-        with self.assertRaises(NotImplementedError):
-            _ = self.device.velocity
+        assert_array_equal(np.zeros(3), self.device.velocity)
 
     @patch.object(PhysicalDeviceMock, "_download")
     def test_estimate_noise_power(self, patch_download) -> None:
@@ -235,20 +247,20 @@ class TestPhysicalDevice(TestCase):
 
         receiver = Mock()
         receiver.sampling_rate = self.device.sampling_rate
-        receiver.selected_receive_ports = [i for i in range(self.device.num_receive_ports)]
+        receiver.selected_receive_ports = [i for i in range(self.device.num_digital_receive_ports)]
 
-        _download.return_value = Signal.Create(np.zeros((self.device.num_receive_ports, 10)), self.device.sampling_rate, self.device.carrier_frequency)
+        _download.return_value = Signal.Create(np.zeros((self.device.num_digital_receive_ports, 10)), self.device.sampling_rate, self.device.carrier_frequency)
         self.device.lowpass_filter = True
         self.device.receivers.add(receiver)
 
-        _ = self.device.process_input()
-        receiver.cache_reception.assert_called_once()
+        _ = self.device.receive()
+        receiver.receive.assert_called_once()
 
         receiver.reset_mock()
         self.device.lowpass_bandwidth = 1.0
 
-        _ = self.device.process_input()
-        receiver.cache_reception.assert_called_once()
+        _ = self.device.receive()
+        receiver.receive.assert_called_once()
 
     @patch("hermespy.hardware_loop.physical_device.PhysicalDevice._download")
     def test_receive_validation(self, _download: MagicMock) -> None:
@@ -259,7 +271,7 @@ class TestPhysicalDevice(TestCase):
             _ = self.device.process_input()
 
         with self.assertRaises(ValueError):
-            _download.return_value = Signal.Create(np.zeros((self.device.num_receive_ports, 10)), self.device.sampling_rate + 1, self.device.carrier_frequency)
+            _download.return_value = Signal.Create(np.zeros((self.device.num_digital_receive_ports, 10)), self.device.sampling_rate + 1, self.device.carrier_frequency)
             _ = self.device.process_input()
 
     def test_download(self) -> None:
@@ -361,7 +373,7 @@ class TestPhysicalDevice(TestCase):
     def test_save_load(self) -> None:
         """Test save and subsequential load functionality from HDF"""
 
-        expected_leakage_response = np.array([[[0, 0, 1, 0, 1j]]], dtype=np.complex_)
+        expected_leakage_response = np.array([[[0, 0, 1, 0, 1j]]], dtype=np.complex128)
         expected_leakage_calibration = SelectiveLeakageCalibration(expected_leakage_response, 1.0, 0.0)
         self.device.leakage_calibration = expected_leakage_calibration
 
@@ -439,7 +451,7 @@ class TestNoDelayCalibration(TestCase):
     def test_correct_transmit_delay(self) -> None:
         """Delays should be correctly corrected during transmission"""
 
-        test_samples = np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 0]], dtype=np.complex_)
+        test_samples = np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 0]], dtype=np.complex128)
         test_signal = Signal.Create(test_samples, 1.0)
 
         assert_array_equal(test_signal.getitem(), self.calibration.correct_transmit_delay(test_signal).getitem())
@@ -447,7 +459,7 @@ class TestNoDelayCalibration(TestCase):
     def test_correct_receive_delay(self) -> None:
         """Delays should be correctly corrected during reception"""
 
-        test_samples = np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 0]], dtype=np.complex_)
+        test_samples = np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 0]], dtype=np.complex128)
         test_signal = Signal.Create(test_samples, 1.0)
 
         assert_array_equal(test_signal.getitem(), self.calibration.correct_receive_delay(test_signal).getitem())
@@ -467,8 +479,8 @@ class TestNoLeakageCalibration(TestCase):
     def test_remove_leakage(self) -> None:
         """Nothing should be done to the signal during leakage removal"""
 
-        transmitted_signal = Signal.Create(np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 0]], dtype=np.complex_), 1.0)
-        received_signal = Signal.Create(np.array([[1, 2, 3, 4, 2], [6, 7, 8, 1, 0]], dtype=np.complex_), 1.0)
+        transmitted_signal = Signal.Create(np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 0]], dtype=np.complex128), 1.0)
+        received_signal = Signal.Create(np.array([[1, 2, 3, 4, 2], [6, 7, 8, 1, 0]], dtype=np.complex128), 1.0)
 
         assert_array_equal(received_signal.getitem(), self.leakage_calibration.remove_leakage(transmitted_signal, received_signal).getitem())
 

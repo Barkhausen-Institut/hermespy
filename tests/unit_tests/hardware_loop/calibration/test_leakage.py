@@ -26,23 +26,23 @@ class TestSelectiveLeakageCalibration(TestCase):
     """Test leakage calibration base class."""
 
     def setUp(self) -> None:
-        self.leakage_response = np.array([[[0, 0, 1, 0, 1j]]], dtype=np.complex_)
+        self.leakage_response = np.array([[[0, 0, 1, 0, 1j]]], dtype=np.complex128)
         self.calibration = SelectiveLeakageCalibration(self.leakage_response, 1.0, 0.0)
 
     def test_init_validation(self) -> None:
         """Initialization should raise exceptions for invalid arguments"""
 
         with self.assertRaises(ValueError):
-            SelectiveLeakageCalibration(np.array([[[0, 0, 1, 0, 1j]]], dtype=np.complex_), 0.0, 0.0)
+            SelectiveLeakageCalibration(np.array([[[0, 0, 1, 0, 1j]]], dtype=np.complex128), 0.0, 0.0)
 
         with self.assertRaises(ValueError):
-            SelectiveLeakageCalibration(np.array([[[0, 0, 1, 0, 1j]]], dtype=np.complex_), -1.0, 0.0)
+            SelectiveLeakageCalibration(np.array([[[0, 0, 1, 0, 1j]]], dtype=np.complex128), -1.0, 0.0)
 
         with self.assertRaises(ValueError):
-            SelectiveLeakageCalibration(np.array([[[0, 0, 1, 0, 1j]]], dtype=np.complex_), 0.5, -1.0)
+            SelectiveLeakageCalibration(np.array([[[0, 0, 1, 0, 1j]]], dtype=np.complex128), 0.5, -1.0)
 
         with self.assertRaises(ValueError):
-            SelectiveLeakageCalibration(np.array([[[[0, 0, 1, 0, 1j]]]], dtype=np.complex_), 1.0, 0.0)
+            SelectiveLeakageCalibration(np.array([[[[0, 0, 1, 0, 1j]]]], dtype=np.complex128), 1.0, 0.0)
 
     def test_leakage_response_get(self) -> None:
         """Leakage response should be correctly retrieved"""
@@ -62,8 +62,8 @@ class TestSelectiveLeakageCalibration(TestCase):
     def test_remove_leakage_validation(self) -> None:
         """Leakage removal should raise exceptions for invalid arguments"""
 
-        transmitted_signal = Signal.Create(np.array([[1, 2, 3, 4, 5]], dtype=np.complex_), 1.0)
-        received_signal = Signal.Create(np.array([[1, 2, 3, 4, 5]], dtype=np.complex_), 1.0)
+        transmitted_signal = Signal.Create(np.array([[1, 2, 3, 4, 5]], dtype=np.complex128), 1.0)
+        received_signal = Signal.Create(np.array([[1, 2, 3, 4, 5]], dtype=np.complex128), 1.0)
 
         with self.assertRaises(ValueError):
             _ = self.calibration.remove_leakage(Signal.Create(np.repeat(transmitted_signal.getitem(), 2, axis=0), transmitted_signal.sampling_rate), received_signal)

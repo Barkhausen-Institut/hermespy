@@ -81,7 +81,6 @@ class TestRecordReplay(TestCase):
             self.assertEqual(expected_drop.timestamp, replayed_drop.timestamp)
             self.assertEqual(expected_drop.num_device_receptions, replayed_drop.num_device_transmissions)
             assert_array_almost_equal(expected_drop.device_receptions[1].operator_receptions[0].equalized_symbols.raw, replayed_drop.device_receptions[1].operator_receptions[0].equalized_symbols.raw)
-            assert_array_almost_equal(expected_drop.device_receptions[1].operator_receptions[0].equalized_symbols.raw, self.scenario.devices[1].receivers[0].reception.equalized_symbols.raw)
 
         self.scenario.stop()
 
@@ -106,11 +105,9 @@ class TestRecordReplay(TestCase):
 
                 # Assert that operators have identical input signals
                 assert_array_almost_equal(expected_drop.device_receptions[1].operator_receptions[0].signal.getitem(), replayed_drop.device_receptions[1].operator_receptions[0].signal.getitem())
-                assert_array_almost_equal(expected_drop.device_receptions[1].operator_receptions[0].signal.getitem(), replay_scenario.devices[1].receivers[0].reception.signal.getitem())
 
                 # Assert that operators have identical equalized symbols
                 assert_array_almost_equal(expected_drop.device_receptions[1].operator_receptions[0].equalized_symbols.raw, replayed_drop.device_receptions[1].operator_receptions[0].equalized_symbols.raw)
-                assert_array_almost_equal(expected_drop.device_receptions[1].operator_receptions[0].equalized_symbols.raw, replay_scenario.devices[1].receivers[0].reception.equalized_symbols.raw)
 
             except AssertionError:
                 replay_scenario.stop()

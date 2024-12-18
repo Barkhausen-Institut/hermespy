@@ -18,8 +18,10 @@ from .physical_device import (
     NoDelayCalibration,
     NoLeakageCalibration,
     PhysicalDevice,
+    PhysicalDeviceState,
     PDT,
 )
+from .precoding import IQCombiner, IQSplitter
 from .physical_device_dummy import PhysicalDeviceDummy, PhysicalScenarioDummy
 from .scenario import PhysicalScenario, PhysicalScenarioType
 from .audio import AudioDevice, AudioScenario
@@ -65,7 +67,10 @@ __all__ = [
     "NoDelayCalibration",
     "NoLeakageCalibration",
     "PhysicalDevice",
+    "PhysicalDeviceState",
     "PDT",
+    "IQCombiner",
+    "IQSplitter",
     "PhysicalDeviceDummy",
     "PhysicalScenarioDummy",
     "PhysicalScenario",

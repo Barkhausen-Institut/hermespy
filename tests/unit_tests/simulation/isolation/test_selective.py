@@ -46,7 +46,7 @@ class TestSelectiveLeakage(TestCase):
     def test_leak(self) -> None:
         """Leaking a signal should result in the expected leak"""
 
-        test_signal = Signal.Create(np.zeros((self.device.antennas.num_transmit_antennas, 100), dtype=np.complex_), self.device.sampling_rate, self.device.carrier_frequency)
+        test_signal = Signal.Create(np.zeros((self.device.antennas.num_transmit_antennas, 100), dtype=np.complex128), self.device.sampling_rate, self.device.carrier_frequency)
         test_signal[:, 0] = 1.0
 
         leaked_signal = self.leakage.leak(test_signal)

@@ -112,7 +112,7 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Serializable):
                 self.leakage_response.shape[0],
                 transmitted_signal.num_samples + self.leakage_response.shape[2] - 1,
             ),
-            dtype=np.complex_,
+            dtype=np.complex128,
         )
         for m, n in np.ndindex(self.leakage_response.shape[0], transmitted_signal.num_streams):
             # The leaked signal is the convolution of the transmitted signal with the leakage response
@@ -228,7 +228,7 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Serializable):
     def from_HDF(
         cls: Type[SelectiveLeakageCalibration], group: Group
     ) -> SelectiveLeakageCalibration:
-        leakage_response = np.asarray(group.get("leakage_response"), dtype=np.complex_)
+        leakage_response = np.asarray(group.get("leakage_response"), dtype=np.complex128)
         sampling_rate = group.attrs.get("sampling_rate")
         delay = group.attrs.get("delay")
 
@@ -287,11 +287,11 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Serializable):
                 device.antennas.num_transmit_ports,
                 num_wavelet_samples,
             ),
-            dtype=np.complex_,
+            dtype=np.complex128,
         )
         for p, n in np.ndindex(num_probes, device.antennas.num_transmit_ports):
             tx_samples = np.zeros(
-                (device.antennas.num_transmit_ports, num_samples), dtype=np.complex_
+                (device.antennas.num_transmit_ports, num_samples), dtype=np.complex128
             )
             tx_samples[n, :] = probing_waveforms[p, :]
             tx_signal = Signal.Create(
@@ -364,7 +364,7 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Serializable):
 
         estimated_frequency_response = np.zeros(
             (device.antennas.num_receive_ports, device.antennas.num_transmit_ports, num_samples),
-            dtype=np.complex_,
+            dtype=np.complex128,
         )
         for m, n in np.ndindex(
             device.antennas.num_receive_ports, device.antennas.num_transmit_ports
@@ -482,7 +482,7 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Serializable):
         # https://nowak.ece.wisc.edu/ece830/ece830_fall11_lecture20.pdf
         # Page 2 Example 1
 
-        h = np.zeros((num_samples * num_probes, num_samples), dtype=np.complex_)
+        h = np.zeros((num_samples * num_probes, num_samples), dtype=np.complex128)
         for p, probe in enumerate(probing_frequencies):
             h[p * num_samples : (1 + p) * num_samples, :] = np.diag(probe)
 
@@ -505,7 +505,7 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Serializable):
         # Estimate the frequency spectra for each antenna probing independently
         mmse_frequency_selectivity_estimation = np.zeros(
             (device.antennas.num_receive_ports, device.antennas.num_transmit_ports, num_samples),
-            dtype=np.complex_,
+            dtype=np.complex128,
         )
         for m, n in np.ndindex(
             device.antennas.num_receive_ports, device.antennas.num_transmit_ports

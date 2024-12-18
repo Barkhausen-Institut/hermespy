@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from hermespy.core import (
+    ReceiveState,
     Reception,
     Serializable,
     Signal,
     SignalTransmitter,
     SignalReceiver,
     Transmission,
+    TransmitState,
 )
 from .beamformer import TransmitBeamformer, ReceiveBeamformer
 
@@ -56,14 +58,15 @@ class BeamformingTransmitter(SignalTransmitter):
     @beamformer.setter
     def beamformer(self, value: TransmitBeamformer) -> None:
         self.__beamformer = value
-        self.__beamformer.operator = self
 
-    def _transmit(self, duration: float = 0) -> Transmission:
+    def _transmit(self, device: TransmitState, duration: float) -> Transmission:
         # Generate base transmission
-        base_transmission = SignalTransmitter._transmit(self, duration)
+        base_transmission = SignalTransmitter._transmit(self, device, duration)
 
         # Apply beamforming to the resulting port streams
-        beamformed_signal = self.beamformer.transmit(base_transmission.signal)
+        beamformed_signal = self.beamformer.encode_streams(
+            base_transmission.signal, device.antennas.num_transmit_antennas, device
+        )
 
         # Return transmission
         return Transmission(beamformed_signal)
@@ -116,14 +119,17 @@ class BeamformingReceiver(SignalReceiver, Serializable):
     @beamformer.setter
     def beamformer(self, value: ReceiveBeamformer) -> None:
         self.__beamformer = value
-        self.__beamformer.operator = self
 
-    def _receive(self, *args) -> Reception:
+    def _receive(self, signal: Signal, device: ReceiveState) -> Reception:
         # Receive base reception
-        base_reception = SignalReceiver._receive(self, *args)
+        base_reception = SignalReceiver._receive(self, signal, device)
 
         # Apply beamforming to the resulting port streams
-        beamformed_signal = self.beamformer.receive(base_reception.signal)
+        beamformed_signal = self.beamformer.decode_streams(
+            base_reception.signal,
+            self.beamformer.num_receive_output_streams(signal.num_streams),
+            device,
+        )
 
         # Return reception
         return Reception(beamformed_signal)

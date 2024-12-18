@@ -49,7 +49,7 @@ class TestBeamformingTransmitter(TestCase):
     def test_transmit(self) -> None:
         """Transmitting should generate a valid transmission"""
 
-        transmission = self.transmitter.transmit()
+        transmission = self.transmitter.transmit(self.device.state())
         self.assertEqual(100, transmission.signal.num_samples)
 
 
@@ -81,7 +81,7 @@ class TestBeamformingReceiver(TestCase):
         """Receiving should generate a valid reception"""
 
         signal = Signal.Create(self.rng.normal(size=(1, 100)) + 1j * self.rng.normal(size=(1, 100)), 1e6, 1e9)
-        reception = self.receiver.receive(signal)
+        reception = self.receiver.receive(signal, self.device.state())
         self.assertEqual(100, reception.signal.num_samples)
 
     def test_yaml_roundtrip_serialization(self) -> None:

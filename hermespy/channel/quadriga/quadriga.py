@@ -92,7 +92,7 @@ class QuadrigaChannelSample(ChannelSample):
                 self.transmitter_state.antennas.num_receive_antennas,
                 signal.num_samples + max_delay_in_samples,
             ),
-            dtype=np.complex_,
+            dtype=np.complex128,
         )
 
         for channel, delay in zip(
@@ -120,7 +120,7 @@ class QuadrigaChannelSample(ChannelSample):
                 num_samples,
                 num_taps,
             ),
-            dtype=np.complex_,
+            dtype=np.complex128,
         )
 
         for channel, delay in zip(

@@ -14,7 +14,6 @@ import numpy as np
 from matplotlib.container import StemContainer
 from matplotlib.image import AxesImage
 from matplotlib.collections import QuadMesh
-from nptyping import NDArray, Shape
 
 from .executable import Executable
 
@@ -28,10 +27,10 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-VAT = NDArray[Shape["*, *"], Any]
+VAT = np.ndarray[Tuple[int, int], np.dtype[Any]]
 """Type alias for a numpy array of matplotlib axes."""
 
-VLT = NDArray[Shape["*, *"], Any]
+VLT = np.ndarray[Tuple[int, int], np.dtype[Any]]
 """Type alias for a numpy array of matplotlib lines."""
 
 
