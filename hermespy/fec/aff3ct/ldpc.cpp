@@ -29,16 +29,15 @@ public:
         syndromeChecking(syndromeChecking)
     {
         // Read the H matrix
-        this->infoBitPos = std::vector<uint32_t>(dataBlockSize);
-        this->H = std::make_unique<Sparse_matrix>(LDPC_matrix_handler::read(hSourcePath, &infoBitPos));
-        
-        // Infer parameters
+        this->H = std::make_unique<Sparse_matrix>(LDPC_matrix_handler::read(hSourcePath));
+        this->codeBlockSize = this->H->get_n_rows();  // N
+        this->dataBlockSize = this->codeBlockSize - this->H->get_n_cols();  // K
+
+        // Create the encoder and decoder
         this->updateRule = std::make_unique<Update_rule_SPA<float>>((unsigned int)this->H->get_cols_max_degree());
-        this->dataBlockSize = this->H->get_n_cols();
-        this->codeBlockSize = this->H->get_n_rows();
 
         this->encoder = std::make_unique<Encoder_LDPC_from_H<int>>(this->dataBlockSize, this->codeBlockSize, *this->H, "IDENTITY", gSavePath, false);   
-        if (this->infoBitPos.size() < 1) this->infoBitPos = this->encoder->get_info_bits_pos();
+        this->infoBitPos = this->encoder->get_info_bits_pos();
 
         this->decoder = std::make_unique<Decoder_LDPC_BP_flooding<int, float>>(this->dataBlockSize, this->codeBlockSize, numIterations, *this->H, infoBitPos, *this->updateRule, syndromeChecking, minNumIterations);
     }
@@ -67,6 +66,11 @@ public:
     int getCodeBlockSize() const
     {
         return this->codeBlockSize;
+    }
+
+    float getRate() const
+    {
+        return (float)this->dataBlockSize / (float)this->codeBlockSize;
     }
 
     int getNumIterations() const
@@ -174,6 +178,10 @@ PYBIND11_MODULE(ldpc, m)
             Number of bits within a code block to be decoded.
         )pbdoc")
 
+        .def_property_readonly("rate", &LDPC::getRate, R"pbdoc(
+            Coding rate of the LDPC code.
+        )pbdoc")
+
         .def_property("num_iterations", &LDPC::getNumIterations, &LDPC::setNumIterations, R"pbdoc(
             Number of iterations during decoding.
         )pbdoc")
@@ -182,12 +190,11 @@ PYBIND11_MODULE(ldpc, m)
             C++ bindings are always enabled.
         )pbdoc")
 
-        .def(py::pickle(
-            [](const LDPC& ldpc) {
-                return py::make_tuple(ldpc.getNumIterations(), ldpc.getHSourcePath(), ldpc.getGSavePath(), ldpc.getSyndromeChecking(), ldpc.getMinNumIterations());
-            },
-            [](py::tuple t) {
-                return LDPC(t[0].cast<int>(), t[1].cast<std::string>(), t[2].cast<std::string>(), t[3].cast<bool>(), t[4].cast<int>());
-            }
-        ));
+        .def("__getstate__", [](const LDPC& ldpc) {
+            return py::make_tuple(ldpc.getNumIterations(), ldpc.getHSourcePath(), ldpc.getGSavePath(), ldpc.getSyndromeChecking(), ldpc.getMinNumIterations());
+        })
+
+        .def("__setstate__", [](LDPC& ldpc, py::tuple t) {
+            new (&ldpc) LDPC{t[0].cast<int>(), t[1].cast<std::string>(), t[2].cast<std::string>(), t[3].cast<bool>(), t[4].cast<int>()};
+        });
 }
