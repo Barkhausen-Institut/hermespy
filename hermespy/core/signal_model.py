@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-===============
-Signal Modeling
-===============
-"""
 
 from __future__ import annotations
 from copy import deepcopy
@@ -27,7 +22,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -179,13 +174,16 @@ class _EyeVisualization(_SignalVisualization):
 
         import matplotlib.pyplot as plt
 
+        from hermespy.simulation import SimulatedDevice
         from hermespy.modem import TransmittingModem, RaisedCosineWaveform
 
+        device = SimulatedDevice()
         transmitter = TransmittingModem()
         waveform = RaisedCosineWaveform(modulation_order=16, oversampling_factor=16, num_preamble_symbols=0, symbol_rate=1e8, num_data_symbols=1000, roll_off=.9)
         transmitter.waveform = waveform
+        device.add_dsp(transmitter)
 
-        transmitter.transmit().signal.plot_eye(1 / waveform.symbol_rate, domain='complex')
+        device.transmit().mixed_signal.eye(symbol_duration=1/waveform.symbol_rate, domain='time')
         plt.show()
 
 
@@ -195,15 +193,17 @@ class _EyeVisualization(_SignalVisualization):
 
         import matplotlib.pyplot as plt
 
+        from hermespy.simulation import SimulatedDevice
         from hermespy.modem import TransmittingModem, RaisedCosineWaveform
 
+        device = SimulatedDevice()
         transmitter = TransmittingModem()
         waveform = RaisedCosineWaveform(modulation_order=16, oversampling_factor=16, num_preamble_symbols=0, symbol_rate=1e8, num_data_symbols=1000, roll_off=.9)
         transmitter.waveform = waveform
+        device.add_dsp(transmitter)
 
-        transmitter.transmit().signal.plot_eye(1 / waveform.symbol_rate, domain='time')
+        device.transmit().mixed_signal.eye(symbol_duration=1/waveform.symbol_rate, domain='complex')
         plt.show()
-
 
     Args:
 
@@ -561,10 +561,10 @@ class SignalBlock(np.ndarray):
         """Internal subroutine to mix two sets of signal model samples.
 
         Args:
-            target_samples (np.ndarray):
+            target_samples (numpy.ndarray):
                 Target samples onto which `added_samples` will be mixed.
 
-            added_samples (np.ndarray):
+            added_samples (numpy.ndarray):
                 Samples to be mixed onto `target_samples`.
 
             sampling_rate (float):
@@ -588,7 +588,7 @@ class SignalBlock(np.ndarray):
         """Internal subroutine for resampled method. Applies Butterworth filter to the given samples.
 
         Args:
-            samples (np.ndarray):
+            samples (numpy.ndarray):
                 Samples to apply AA to.
 
             N (Any) and Wn (Any):
@@ -608,7 +608,7 @@ class SignalBlock(np.ndarray):
 
         Arguments:
 
-            signal (np.ndarray):
+            signal (numpy.ndarray):
                 TxM matrix of T signal-streams to be resampled, each containing M time-discrete samples.
 
             input_sampling_rate (float):
@@ -676,13 +676,13 @@ class Signal(ABC, HDFSerializable):
         offsets: List[int] = None,
     ) -> Signal:
         """Creates a signal model instance given signal samples.
+
         Subclasses of Signal should reroute the given arguments to init and return the result.
 
         Args:
-            samples (np.ndarray | Sequence[np.ndarray]):
-                Single or a sequence of 2D matricies with shapes MxT_i, where
-                    M - number of streams,
-                    T_i - number of samples in the matrix i.
+
+            samples (numpy.ndarray | Sequence[np.ndarray]):
+                Single or a sequence of 2D matricies with shapes MxT_i, where M - number of streams, T_i - number of samples in the matrix i.
                 Note that M for each entry of the sequence must be the same.
                 SignalBlock and Sequence[SignalBlock] can also be passed here.
 
@@ -695,9 +695,7 @@ class Signal(ABC, HDFSerializable):
                 len(offsets) must be equal to len(samples).
                 Offset number i must be greater then offset i-1 + samples[i-1].shape[1].
 
-        Returns
-            signal (Signal):
-                SparseSignal if samples argument is a list of np.ndarrays. DenseSignal otherwise.
+        Returns: SparseSignal if samples argument is a list of np.ndarrays. DenseSignal otherwise.
         """
 
         if isinstance(samples, list) and len(samples) != 1:
@@ -721,8 +719,8 @@ class Signal(ABC, HDFSerializable):
         """Calculate new blocks offsets and ends for a union of 2 different signals.
 
         Returns:
-            b_offs (np.ndarray): a list of new blocks offsets
-            b_ends (np.ndarray): a list of new blocks ends"""
+            b_offs (numpy.ndarray): a list of new blocks offsets
+            b_ends (numpy.ndarray): a list of new blocks ends"""
 
         # Get nonzero column indices for both signals
         nonzero_bs1 = (
@@ -1571,7 +1569,7 @@ class Signal(ABC, HDFSerializable):
                 Scale the floating point values to stretch over the whole range of integers.
 
         Returns:
-            samples (np.ndarray):
+            samples (numpy.ndarray):
                 Numpy array of interleaved samples.
                 Will contain double the samples in time-domain.
         """
@@ -1594,7 +1592,7 @@ class Signal(ABC, HDFSerializable):
 
         Args:
 
-            interleaved_samples (np.ndarray):
+            interleaved_samples (numpy.ndarray):
                 Numpy array of interleaved samples.
 
             scale (bool, optional):
@@ -1685,7 +1683,7 @@ class DenseSignal(Signal):
         """Signal model initialization.
 
         Args:
-            samples (np.ndarray | Sequence[np.ndarray] | Sequence[SignalBlock]):
+            samples (numpy.ndarray | Sequence[np.ndarray] | Sequence[SignalBlock]):
                 A MxT matrix containing uniformly sampled base-band samples of the modeled signal.
                 M is the number of individual streams, T the number of available samples.
                 Note that you can pass here a 2D ndarray, a SignalBlock, a Sequence[np.ndarray] or a Sequence[SignalBlock].
@@ -1888,7 +1886,7 @@ class SparseSignal(Signal):
         """Signal model initialization.
 
         Args:
-            samples (np.ndarray | Sequence[SignalBlock]):
+            samples (numpy.ndarray | Sequence[SignalBlock]):
                 A MxT matrix containing uniformly sampled base-band samples of the modeled signal.
                 M is the number of individual streams, T the number of available samples.
                 Note that you can pass here a 2D ndarray, a SignalBlock, a Sequence[np.ndarray] or a Sequence[SignalBlock].
@@ -2139,7 +2137,7 @@ class SparseSignal(Signal):
         """Sets given samples into this sparse signal model.
 
         Usage:
-            samples (np.ndarray):
+            samples (numpy.ndarray):
                 In this case samples array (a 2D complex matrix) will be divided onto several non-zero blocks.
 
             samples (Sequence[np.ndarray]):

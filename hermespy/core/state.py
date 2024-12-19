@@ -12,7 +12,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -50,7 +50,7 @@ class State(object):
             pose (Transformation):
                 Pose of the device with respect to the global coordinate system.
 
-            velocity (np.ndarray):
+            velocity (numpy.ndarray):
                 Velocity of the device in m/s.
 
             carrier_frequency (float):
@@ -144,7 +144,7 @@ class TransmitState(State):
             pose (Transformation):
                 Pose of the device with respect to the global coordinate system.
 
-            velocity (np.ndarray):
+            velocity (numpy.ndarray):
                 Velocity of the device in m/s.
 
             carrier_frequency (float):
@@ -200,7 +200,7 @@ class ReceiveState(State):
             pose (Transformation):
                 Pose of the device with respect to the global coordinate system.
 
-            velocity (np.ndarray):
+            velocity (numpy.ndarray):
                 Velocity of the device in m/s.
 
             carrier_frequency (float):
@@ -265,7 +265,7 @@ class DeviceState(State):
             pose (Transformation):
                 Pose of the device with respect to the global coordinate system.
 
-            velocity (np.ndarray):
+            velocity (numpy.ndarray):
                 Velocity of the device in m/s.
 
             carrier_frequency (float):

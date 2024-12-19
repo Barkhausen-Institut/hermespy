@@ -16,7 +16,7 @@ The subpackages may have interdependencies, but in general, the root of dependen
    channel/channel
    simulation
    hardware_loop
-   core
+   core/core
    fec
    jcas
    beamforming

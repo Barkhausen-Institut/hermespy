@@ -38,7 +38,7 @@ Both the NLOS and LOS components
       \right)
    \end{split}
 
-are functions of the two :doc:`Antennas'</api/core.antennas>` polarization :meth:`characteristics<hermespy.core.antennas.Antenna.local_characteristics>`
+are functions of the two :doc:`Antennas'</api/core/antennas>` polarization :meth:`characteristics<hermespy.core.antennas.Antenna.local_characteristics>`
 :math:`\mathbf{F}^{(a)}(\theta, \phi)`
 towards angle-of-arrival :math:`\theta_{\mathrm{ZOA}}, \phi_{\mathrm{AOA}}`
 and angle-of-departure :math:`\theta_{\mathrm{ZOD}}, \phi_{\mathrm{AOD}}`.

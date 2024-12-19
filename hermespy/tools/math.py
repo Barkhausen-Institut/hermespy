@@ -20,7 +20,7 @@ __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -94,7 +94,7 @@ def marcum_q(a: float, b: np.ndarray, m: Optional[float] = 1):
         m (float):
 
     Returns:
-        (np.ndarray): the approximated Marcum-Q function for the desired parameters
+        (numpy.ndarray): the approximated Marcum-Q function for the desired parameters
     """
 
     q = stats.ncx2.sf(b**2, 2 * m, a**2)

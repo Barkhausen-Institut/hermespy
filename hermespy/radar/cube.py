@@ -28,7 +28,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -185,23 +185,23 @@ class RadarCube(HDFSerializable):
         """
         Args:
 
-            data (np.ndarray):
+            data (numpy.ndarray):
                 Raw radar cube data.
                 Three-dimensional real-valued numpy tensor :math:`\\mathbb{R}^{A \\times B \\times C}`, where
                 :math:`A` denotes the number of discrete angle of arrival bins,
                 :math:`B` denotes the number of discrete doppler frequency bins,
                 and :math:`C` denotes the number of discrete range bins.
 
-            angle_bins (np.ndarray):
+            angle_bins (numpy.ndarray):
                 Numpy matrix specifying the represented discrete angle of arrival bins.
                 Must be of dimension :math:`\\mathbb{R}^{A \\times 2}`,
                 the second dimension denoting azimuth and zenith of arrival in radians, respectively.
 
-            doppler_bins (np.ndarray):
+            doppler_bins (numpy.ndarray):
                 Numpy vector specifying the represented discrete doppler frequency shift bins in Hz.
                 Must be of dimension :math:`\\mathbb{R}^{B}`.
 
-            range_bins (np.ndarray):
+            range_bins (numpy.ndarray):
                 Numpy vector specifying the represented discrete range bins in :math:`\\mathrm{m}`.
                 Must be of dimension :math:`\\mathbb{R}^{C}`.
 

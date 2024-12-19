@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-=====================
-Antenna Configuration
-=====================
-"""
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
@@ -29,7 +24,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -55,13 +50,9 @@ APT = TypeVar("APT", bound="AntennaPort")
 """Type of antenna port."""
 
 
-class Antenna(ABC, Generic[APT], Transformable, Serializable):
-    """Model of a single antenna.
+class Antenna(ABC, Generic[APT], Transformable):
+    """Base class for the model of a single antenna element within an antenna array."""
 
-    A set of antenna models defines an antenna array model.
-    """
-
-    yaml_tag = "Antenna"
     property_blacklist = {"port"}.union(Transformable.property_blacklist)
     __mode: AntennaMode  # The mode this antenna is operating in, i.e. DUPLEX, TX or RX
     __port: APT | None  # Antenna port this antenna belongs to
@@ -578,7 +569,7 @@ class PatchAntenna(Generic[APT], Antenna[APT], Serializable):
         return np.array([max(0.1, vertical_azimuth * vertical_elevation), 0.0], dtype=float)
 
 
-class Dipole(Generic[APT], Antenna[APT]):
+class Dipole(Generic[APT], Antenna[APT], Serializable):
     """Model of vertically polarized half-wavelength dipole antenna.
 
     .. figure:: /images/api_antenna_dipole_gain.png
@@ -991,7 +982,7 @@ class AntennaArrayBase(ABC, Generic[APT], Transformable):
 
         Args:
 
-            location (np.ndarray):
+            location (numpy.ndarray):
                 Cartesian position of the target of interest.
 
             mode (AntennaMode):
@@ -1154,7 +1145,7 @@ class AntennaArrayBase(ABC, Generic[APT], Transformable):
             carrier_frequency (float):
                 Center frequency :math:`f_\\mathrm{c}` of the assumed transmitted signal in Hz.
 
-            position (np.ndarray):
+            position (numpy.ndarray):
                 Cartesian location :math:`\\mathbf{t}` of the impinging target.
 
             frame (Literal['local', 'global']):
@@ -1211,7 +1202,7 @@ class AntennaArrayBase(ABC, Generic[APT], Transformable):
             carrier_frequency (float):
                 Center frequency :math:`f_\\mathrm{c}` of the assumed transmitted signal in Hz.
 
-            position (np.ndarray):
+            position (numpy.ndarray):
                 Cartesian location :math:`\\mathbf{t}` of the impinging target.
 
             frame(Literal['local', 'global']):

@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-=================================
-Coordinate System Transformations
-=================================
-"""
+
 
 from __future__ import annotations
 from abc import ABCMeta, abstractmethod
@@ -20,7 +16,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -36,7 +32,7 @@ class Direction(np.ndarray):
 
         Args:
 
-            angles (np.ndarray):
+            angles (numpy.ndarray):
                 Azimuth and zenith in radians.
 
         Returns: The unit vector.
@@ -73,7 +69,7 @@ class Direction(np.ndarray):
 
         Args:
 
-            unit_vector (np.ndarray):
+            unit_vector (numpy.ndarray):
                 Cartesian numpy vector.
 
         Returns: An array representing azimuth and zenith angles in radians.
@@ -176,7 +172,7 @@ class Transformation(np.ndarray, Serializable):
 
         Args:
 
-            q (np.ndarray):
+            q (numpy.ndarray):
                 Quaternion in w, x, y, z representation.
 
             normalize (bool):
@@ -279,7 +275,7 @@ class Transformation(np.ndarray, Serializable):
 
         Args:
 
-            rpy (np.ndarray):
+            rpy (numpy.ndarray):
                 Numpy vector of length 3 representing roll pitch and yaw in radians.
 
         Returns:
@@ -320,10 +316,10 @@ class Transformation(np.ndarray, Serializable):
 
         Args:
 
-            quaternion (np.ndarray):
+            quaternion (numpy.ndarray):
                 Quaternion in w, x, y, z representation.
 
-            pos (np.ndarray):
+            pos (numpy.ndarray):
                 Cartesian position in m.
 
             normalize (bool, optional):
@@ -356,10 +352,10 @@ class Transformation(np.ndarray, Serializable):
 
         Args:
 
-            rpy (np.ndarray):
+            rpy (numpy.ndarray):
                 Roll, pitch and yaw angles in radians.
 
-            pos (np.ndarray):
+            pos (numpy.ndarray):
                 Cartesian position in m.
 
         Returns: The initialized transformation.
@@ -402,7 +398,7 @@ class Transformation(np.ndarray, Serializable):
 
         Args:
 
-            position (np.ndarray):
+            position (numpy.ndarray):
                 Numpy array representing the cartesian position.
 
         Returns: The transformed position.
@@ -429,7 +425,7 @@ class Transformation(np.ndarray, Serializable):
 
         Args:
 
-            direction (np.ndarray):
+            direction (numpy.ndarray):
                 A directional vector.
 
         Returns: The transformed direction.
@@ -452,7 +448,7 @@ class Transformation(np.ndarray, Serializable):
 
         Args:
 
-            direction (np.ndarray):
+            direction (numpy.ndarray):
                 Direction to be transformed.
 
             normalize (bool, optional):
@@ -480,10 +476,10 @@ class Transformation(np.ndarray, Serializable):
         """Rotate and loook at the given coordinates. Modifies `orientation` property.
 
         Args:
-            target (np.ndarray):
+            target (numpy.ndarray):
                 Cartesean coordinates to look at.
                 Defaults to np.array([0., 0., 0.], float)
-            up (np.ndarray):
+            up (numpy.ndarray):
                 Global catesean sky vector.
                 Defines the upward direction of the local viewport.
                 Defaults to np.array([0., 1., 0.], float)
@@ -822,7 +818,7 @@ class Transformable(Serializable, TransformableLink):
         """Rotate and loook at the given coordinates. Modifies `orientation` property.
 
         Args:
-            target (np.ndarray):
+            target (numpy.ndarray):
                 Cartesean coordinates to look at.
                 Defaults to np.ndarray([0., 0., 0.], float).
             up (array of 3 numbers):

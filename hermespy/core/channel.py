@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-===============================
-Channel State Information Model
-===============================
-"""
 
 from __future__ import annotations
 from itertools import product
@@ -23,7 +18,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -46,7 +41,7 @@ class ChannelStateDimension(Enum):
 
 
 class ChannelStateInformation(HDFSerializable):
-    """State of a single wireless link between a transmitting and receiving modem.
+    """State of a single wireless link between a transmitting and receiving device.
 
     Attributes:
 
@@ -54,7 +49,7 @@ class ChannelStateInformation(HDFSerializable):
             The current format of the channel state information.
             The format may change depending on the most recent format requests.
 
-        __state (np.ndarray):
+        __state (numpy.ndarray):
             The current channel state.
             A numpy tensor of dimension `num_receive_streams`x`num_transmit_streams`x`num_samples`x`state_information`.
 
@@ -92,7 +87,7 @@ class ChannelStateInformation(HDFSerializable):
             state_format (ChannelStateFormat):
                 Format of the `state` from which to initialize the channel state information.
 
-            state (np.ndarray | SparseArray, optional):
+            state (numpy.ndarray | sparse.SparseArray, optional):
                 Channel state matrix.
                 A numpy tensor of dimension
                 `num_receive_streams`x`num_transmit_streams`x`num_samples`x`state_information`.
@@ -135,7 +130,7 @@ class ChannelStateInformation(HDFSerializable):
         """Modify the channel state tensor.
 
         Args:
-            new_state (np.ndarray | SparseArray): The new channel state.
+            new_state (numpy.ndarray | SparseArray): The new channel state.
 
         Raises:
             ValueError: On invalid state dimensions.
@@ -167,7 +162,7 @@ class ChannelStateInformation(HDFSerializable):
             state_format (ChannelStateFormat):
                 Format of the `state` from which to initialize the channel state information.
 
-            state (np.ndarray | SparseArray, optional):
+            state (numpy.ndarray | SparseArray, optional):
                 Channel state matrix.
                 A numpy tensor of dimension
                 `num_receive_streams`x`num_transmit_streams`x`num_samples`x`state_information`.

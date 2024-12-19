@@ -76,7 +76,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -155,7 +155,7 @@ class Encoder(ABC, Serializable):
 
         Args:
 
-            bits (np.ndarray):
+            bits (numpy.ndarray):
                 A numpy vector of :math:`K_n` bits, representing a single bit block to be encoded.
 
         Returns:
@@ -179,7 +179,7 @@ class Encoder(ABC, Serializable):
 
         Args:
 
-            encoded_bits (np.ndarray):
+            encoded_bits (numpy.ndarray):
                 A numpy vector of :math:`L_n` code bits, representing a single code block to be decoded.
 
         Returns:
@@ -399,7 +399,7 @@ class EncoderManager(RandomNode, Serializable):
 
         Args:
 
-            data_bits (np.ndarray):
+            data_bits (numpy.ndarray):
                 Numpy vector of data bits to be encoded.
 
             num_code_bits (int, optional):
@@ -483,7 +483,7 @@ class EncoderManager(RandomNode, Serializable):
         The resulting data might be cut to match the requested `num_data_bits`.
 
         Args:
-            encoded_bits (np.ndarray):
+            encoded_bits (numpy.ndarray):
                 Numpy vector of code bits to be decoded to data bits.
 
             num_data_bits (int, optional):

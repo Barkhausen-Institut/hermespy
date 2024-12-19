@@ -24,7 +24,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -49,8 +49,8 @@ class TestSignalBlock(TestCase):
         """Test the constraints that SignalBlock puts on the provided samples."""
 
         # Validate the correctly-constructed block
-        self.assertEquals(self.block.ndim, 2)
-        self.assertEquals(self.block.shape, self.shape)
+        self.assertEqual(self.block.ndim, 2)
+        self.assertEqual(self.block.shape, self.shape)
         self.assertTrue(np.iscomplexobj(self.block))
 
         # "Samples must have ndim <= 2"
@@ -61,14 +61,14 @@ class TestSignalBlock(TestCase):
         """off property must be non-negative."""
 
         # __new__ must set the value given
-        self.assertEquals(self.block.offset, self.offset)
+        self.assertEqual(self.block.offset, self.offset)
 
         # "Offset must be non-zero"
         with self.assertRaises(ValueError):
             self.block.offset = -1
 
         # Attemts to set an incorrect value should not change the previous value
-        self.assertEquals(self.block.offset, self.offset)
+        self.assertEqual(self.block.offset, self.offset)
 
     def test_validate_copy(self) -> None:
         """As it is inherited from numpy ndarray, copy must contain the \"order\" argument.
@@ -158,7 +158,7 @@ class TestSignal():
         """Initialization arguments should be properly stored as object attributes"""
 
         # assert blocks
-        self.assert_(len(self.signal) == len(self.blocks))
+        self.assertEqual(len(self.signal), len(self.blocks))
         for b_exp, b_act in zip(self.blocks, self.signal):
             assert_array_equal(b_exp, b_act)
             self.assertEqual(b_exp.offset, b_act.offset)
@@ -384,14 +384,14 @@ class TestSignal():
         # Try setting a vector, intending for a single stream signal
         signal_new = self.signal.copy()
         signal_new.set_samples(self.samples_dense[0])
-        self.assertEquals(signal_new.num_streams, 1)
+        self.assertEqual(signal_new.num_streams, 1)
         assert_array_equal(signal_new.shape, (1, self.samples_dense.shape[1]))
 
         # Try setting a sparse array of one stream signals as vectors
         signal_new = self.signal.copy()
         samples_new = [s[0] for s in self.samples_sparse]
         signal_new.set_samples(samples_new, self.offsets)
-        self.assertEquals(signal_new.num_streams, 1)
+        self.assertEqual(signal_new.num_streams, 1)
         for s, o in zip(samples_new, self.offsets):
             assert_array_equal(signal_new.getitem((slice(None, None), slice(o, o+s.shape[1]))), s)
 
@@ -505,7 +505,7 @@ class TestSignal():
 
         # Warning: copy-paste from test_init incoming
         # assert blocks
-        self.assert_(len(signal_copy) == len(self.blocks))
+        self.assertEqual(len(signal_copy), len(self.blocks))
         for b_exp, b_act in zip(self.blocks, signal_copy):
             assert_array_equal(b_exp, b_act)
             self.assertEqual(b_exp.offset, b_act.offset)
