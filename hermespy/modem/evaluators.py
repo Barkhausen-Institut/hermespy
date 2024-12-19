@@ -31,7 +31,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -471,7 +471,7 @@ class ThroughputEvaluation(EvaluationTemplate[float, PlotVisualization]):
             frame_duration (float):
                 Duration of a single communication frame in seconds
 
-            frame_errors (np.ndarray):
+            frame_errors (numpy.ndarray):
                 Frame error indicators
         """
 
@@ -567,8 +567,8 @@ class EVMEvaluation(EvaluationTemplate[float, PlotVisualization]):
         """
         Args:
 
-            transmitted_symbols (np.ndarray): Originally transmitted communication symbols.
-            received_symbols (np.ndarray): Received communication symbols.
+            transmitted_symbols (numpy.ndarray): Originally transmitted communication symbols.
+            received_symbols (numpy.ndarray): Received communication symbols.
         """
 
         _transmitted_symbols = transmitted_symbols.flatten()

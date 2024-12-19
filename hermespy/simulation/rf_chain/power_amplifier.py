@@ -7,13 +7,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.constants import pi
 
-from hermespy.core import Serializable
+from hermespy.core import Serializable, VAT
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -84,7 +84,7 @@ class PowerAmplifier(Serializable):
         Internally calls the model subroutine of power-amplifier models implementing this prototype-class.
 
         Args:
-            input_signal(np.ndarray):
+            input_signal(numpy.ndarray):
                 Sample vector of the signal feeding into the power amplifier.
 
         Returns:
@@ -105,7 +105,7 @@ class PowerAmplifier(Serializable):
         """Model signal amplification characteristics.
 
         Args:
-            input_signal(np.ndarray):
+            input_signal(numpy.ndarray):
                 Sample vector of the signal feeding into the power amplifier.
 
         Returns:
@@ -122,7 +122,7 @@ class PowerAmplifier(Serializable):
 
     def plot_characteristics(
         self,
-        axes: plt.Axes | None = None,
+        axes: VAT | None = None,
         *,
         title: str | None = None,
         samples: np.ndarray | None = None,
@@ -140,15 +140,15 @@ class PowerAmplifier(Serializable):
             title (str, optional):
                 Title of the generated plot.
 
-            samples (np.ndarray, optional):
+            samples (numpy.ndarray, optional):
                 Sample points at which to evaluate the characteristics.
                 In other words, the x-axis of the resulting characteristics plot.
         """
 
         fig: plt.Figure
         if axes:
-            _axes = axes
-            fig = axes.get_figure()  # type: ignore
+            _axes = axes.flatten()[0]
+            fig = _axes.get_figure()  # type: ignore
         else:
             fig, _axes = plt.subplots(1, 1, squeeze=True)
             fig.suptitle(title if title else self.title)
@@ -169,8 +169,8 @@ class PowerAmplifier(Serializable):
         phase_axes.set_ylabel("Output Phase")
         phase_axes.set_ylim((-pi, pi))
 
-        amplitude_axes.plot(samples, amplitude)
-        phase_axes.plot(samples, phase)
+        amplitude_axes.plot(samples, amplitude, '-')
+        phase_axes.plot(samples, phase, '--')
 
         return fig
 
@@ -379,9 +379,9 @@ class CustomPowerAmplifier(PowerAmplifier):
         """
         Args:
 
-            input (np.ndarray):
-            gain (np.ndarray):
-            phase (np.ndarray):
+            input (numpy.ndarray):
+            gain (numpy.ndarray):
+            phase (numpy.ndarray):
 
             \**kwargs (Any):
                 PowerAmplifier base class initialization arguments.

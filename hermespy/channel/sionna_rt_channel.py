@@ -18,7 +18,7 @@ __author__ = "Egor Achkasov"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Egor Achkasov"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -82,8 +82,8 @@ class SionnaRTChannelSample(ChannelSample):
         This workflow allows reusing of the same Paths object for different propagations.
 
         Returns:
-            a (np.ndarray): gains. Shape (num_rx_ants, num_tx_ants, num_paths, num_samples)
-            tau (np.ndarray): delays. Shape (num_rx_ants, num_tx_ants, num_paths)
+            a (numpy.ndarray): gains. Shape (num_rx_ants, num_tx_ants, num_paths, num_samples)
+            tau (numpy.ndarray): delays. Shape (num_rx_ants, num_tx_ants, num_paths)
         """
         # Apply doppler
         self.paths.apply_doppler(

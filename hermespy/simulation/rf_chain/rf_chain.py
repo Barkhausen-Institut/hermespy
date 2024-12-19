@@ -14,7 +14,7 @@ __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["André Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -136,7 +136,7 @@ class RfChain(Serializable):
         Notation taken from https://en.wikipedia.org/wiki/IQ_imbalance.
 
         Args:
-            input_signal (np.ndarray):
+            input_signal (numpy.ndarray):
                 Signal to be deteriorated as a matrix in shape `#no_antennas x #no_samples`.
                 `#no_antennas` depends if on receiver or transmitter side.
 

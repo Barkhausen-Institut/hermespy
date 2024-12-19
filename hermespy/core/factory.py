@@ -1,34 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-=====================
-Serialization Factory
-=====================
-
-This module implements the main interface for loading / dumping HermesPy configurations from / to `YAML`_ files.
-Every mutable object that is expected to have its state represented as a text-section within configuration files
-must inherit from the :class:`.Serializable` base class.
-
-All :class:`.Serializable` classes within the `hermespy` namespace are detected automatically by the :class:`.Factory`
-managing the serialization process.
-As a result, dumping any :class:`.Serializable` object state to a `.yml` text file is as easy as
-
-.. code-block:: python
-
-   factory = Factory()
-   factory.to_file("dump.yml", serializable)
-
-and can be loaded again just as easily via
-
-.. code-block::  python
-
-        factory = Factory()
-        serializable = factory.from_file("dump.yml")
-
-from any context.
-
-
-.. _YAML: https://yaml.org/
-"""
 
 from __future__ import annotations
 
@@ -78,7 +48,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -518,7 +488,7 @@ class Factory:
         Args:
 
             representer (SafeRepresenter): YAML representer.
-            array (np.ndarray): The array to be transformed to a sequence.
+            array (numpy.ndarray): The array to be transformed to a sequence.
 
         Returns: Sequence yaml node.
         """

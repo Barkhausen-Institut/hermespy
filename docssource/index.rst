@@ -6,7 +6,7 @@ Welcome to the official documentation of HermesPy, the **Heterogeneous Radio Mob
 
 HermesPy is a semi-static link-level simulator based on time-driven mechanisms.
 It aims to enable the simulation and evaluation of transmission protocols deployed by
-multi-RAT wireless electromagnetic devices for both communication and sensing.
+multi-RAT wireless electromagnetic devices for both communication and sensing applications.
 It specifically targets researchers, engineers and students interested in wireless communication and sensing.
 
 Users of HermesPy may formulate their own wireless research questions and investigate

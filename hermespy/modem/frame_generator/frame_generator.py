@@ -5,6 +5,15 @@ import numpy as np
 from hermespy.core import Serializable
 from ..bits_source import BitsSource
 
+__author__ = "Egor Achkasov"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__credits__ = ["Egor Achkasov", "Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "1.4.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
+
 
 class FrameGenerator(ABC, Serializable):
     """Base class for frame generators."""
@@ -18,7 +27,7 @@ class FrameGenerator(ABC, Serializable):
             num_bits (int): number of bits in the whole resulting frame.
 
         Return:
-            frame (np.ndarray): array of ints with each element beeing an individual bit.
+            frame (numpy.ndarray): array of ints with each element beeing an individual bit.
         """
         ...
 
@@ -27,10 +36,10 @@ class FrameGenerator(ABC, Serializable):
         """Extract the original payload from the frame generated with pack_frame.
 
         Args:
-            frame (np.ndarray): array of bits of a frame, generated with pack_frame.
+            frame (numpy.ndarray): array of bits of a frame, generated with pack_frame.
 
         Return:
-            payload (np.ndarray): array of payload bits."""
+            payload (numpy.ndarray): array of payload bits."""
         ...
 
 

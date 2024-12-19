@@ -42,7 +42,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -1073,7 +1073,7 @@ class SimulatedDevice(Device[SimulatedDeviceState], Moveable, Serializable):
                 If a `Transformation` is provided, the device is assumed to be static.
                 If not specified, the device is assumed to be at the origin with zero velocity.
 
-            velocity (np.ndarray, optional):
+            velocity (numpy.ndarray, optional):
                 Initial velocity of the moveable in local coordinates.
                 By default, the moveable is assumed to be resting.
                 Only considered if `pose` is a `Transformation`, otherwise the velocity is assumed from the `Trajectory`.

@@ -23,7 +23,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -48,7 +48,7 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Serializable):
         """
         Args:
 
-            leakage_response (np.ndarray):
+            leakage_response (numpy.ndarray):
                 The leakage impulse response matrix.
 
             sampling_rate (float):
@@ -441,7 +441,7 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Serializable):
                 Number of samples transmitted per probing to estimate the covariance matrix.
                 :math:`127` by default.
 
-            noise_power (np.ndarray, optional):
+            noise_power (numpy.ndarray, optional):
                 Noise power at the receiving antennas.
                 If not specified, the device's noise power configuration will be assumed or estimated on-the-fly.
 

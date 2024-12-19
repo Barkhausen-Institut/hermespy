@@ -12,7 +12,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -27,7 +27,7 @@ class TrajectorySample(object):
 
             timestamp (float): Time at which the trajectory was sampled in seconds.
             pose (Timestamp): Pose of the object at the given time.
-            velocity (np.ndarray): Velocity of the object at the given time.
+            velocity (numpy.ndarray): Velocity of the object at the given time.
         """
 
         # Initialize class attributes
@@ -67,7 +67,7 @@ class Trajectory(ABC):
 
         Args:
             target (Trajectory): Target trajectory.
-            up (np.ndarray): Up/sky/head/ceiling global unit vector. Defaults to [0., 1., 0.].
+            up (numpy.ndarray): Up/sky/head/ceiling global unit vector. Defaults to [0., 1., 0.].
         """
 
         self._lookat_flag = True

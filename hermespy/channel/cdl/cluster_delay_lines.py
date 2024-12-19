@@ -49,7 +49,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -643,10 +643,10 @@ class ClusterDelayLineSample(ChannelSample):
 
         Args:
 
-            angles (np.ndarray):
+            angles (numpy.ndarray):
                 Numpy array of angles in radians for all paths of propagation.
 
-            powers (np.ndarray):
+            powers (numpy.ndarray):
                 Numpy angles of power for all paths of propagation.
 
         Returns: The angluar spread in radians.
@@ -1496,7 +1496,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
                 Delay spread in seconds.
                 Denoted by :math:`\\mathrm{DS}` in the standard.
 
-            delays (np.ndarray):
+            delays (numpy.ndarray):
                 Vector of cluster delays.
                 Denoted by :math:`\\tau` in the standard.
 
@@ -1558,7 +1558,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
             state (LSST):
                 Large scale state of the channel.
 
-            cluster_powers (np.ndarray):
+            cluster_powers (numpy.ndarray):
                 Vector of cluster powers. The length determines the number of clusters.
 
             spread (float):
@@ -1642,7 +1642,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
             state (LSST):
                 Large scale state of the channel.
 
-            cluster_powers (np.ndarray):
+            cluster_powers (numpy.ndarray):
                 Vector of cluster powers. The length determines the number of clusters.
 
             spread (float):
@@ -1722,7 +1722,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
             state (LSST):
                 Large scale state of the channel.
 
-            cluster_powers (np.ndarray):
+            cluster_powers (numpy.ndarray):
                 Vector of cluster powers. The length determines the number of clusters.
 
             spread (float):

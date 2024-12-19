@@ -13,7 +13,7 @@ from .antennas import (
     CustomAntennaArray,
     UniformArray,
 )
-from .definitions import ConsoleMode
+from .definitions import ConsoleMode, Verbosity
 from .evaluators import (
     ReceivePowerEvaluator,
     PowerResult,
@@ -44,7 +44,7 @@ from .device import (
     DeviceInput,
     DeviceOutput,
 )
-from .executable import Executable, Verbosity
+from .executable import Executable
 from .pipeline import Pipeline
 from .factory import Factory, Serializable, SerializableEnum, HDFSerializable
 from .hooks import Hook, Hookable
@@ -100,7 +100,7 @@ __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["André Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"

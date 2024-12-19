@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-============
-Logarithmics
-============
-"""
 
 from __future__ import annotations
 from collections.abc import Sequence
@@ -19,7 +14,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -34,37 +29,7 @@ class ValueType(Enum):
 
 
 class Logarithmic(float):
-    """Representation of a logarithmic number.
-
-    Logarithmic numbers represent Decibel (dB) parameters within Hermes' API.
-    However, they will always act as their linear value when being interacted with,
-    in order to preserve compatibility with any internal equation,
-    since equations internally assume all parameters to be linear.
-
-    Note that therefore,
-
-    .. code-block::
-
-       a = Logarithmic(10)
-       b = Logarithmic(20)
-
-       c = a + b
-       print(c)
-       >>> 20dB
-
-    will return in the output :math:`20.41392685158225` instead of :math:`30`,
-    since internally the linear representations will be summed.
-    Instead, use the multiplication operator to sum Logarithmics, i.e.
-
-    .. code-block::
-
-       a = Logarithmic(10)
-       b = Logarithmic(20)
-
-       c = a * b
-       print(c)
-       >>> 30dB
-    """
+    """Representation of a logarithmic number."""
 
     __value_db: float  # Logarithmic value in dB
     __conversion: DbConversionType  # Conversion type of the logarithmic scale
