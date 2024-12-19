@@ -1,0 +1,8 @@
+<map id="inheritancead0d96f775" name="inheritancead0d96f775">
+<area shape="rect" id="node1" href="modem.waveform.html#hermespy.modem.waveform.CommunicationWaveform" target="_top" title="Abstract base class for all communication waveform descriptions." alt="" coords="21,5,213,31"/>
+<area shape="rect" id="node3" href="modem.waveform.html#hermespy.modem.waveform.PilotCommunicationWaveform" target="_top" title="Abstract base class of communication waveform generators generating a pilot signal." alt="" coords="6,79,227,104"/>
+<area shape="rect" id="node2" href="modem.waveform.html#hermespy.modem.waveform.ConfigurablePilotWaveform" target="_top" title="ConfigurablePilotWaveform" alt="" coords="17,152,217,177"/>
+<area shape="rect" id="node4" href="modem.waveform.single_carrier.html#hermespy.modem.waveform_single_carrier.FilteredSingleCarrierWaveform" target="_top" title="This method provides a class for a generic PSK/QAM modem." alt="" coords="5,225,228,251"/>
+<area shape="rect" id="node5" href="#hermespy.modem.waveform_single_carrier.RectangularWaveform" target="_top" title="Rectangular filtered single carrier modulation." alt="" coords="125,299,292,324"/>
+<area shape="rect" id="node6" href="core/factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="253,225,351,251"/>
+</map>

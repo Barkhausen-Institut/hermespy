@@ -1,7 +1,0 @@
-<map id="inheritance0b685f831a" name="inheritance0b685f831a">
-<area shape="rect" id="node1" href="#hermespy.simulation.noise.model.AWGN" target="_top" title="Additive White Gaussian Noise." alt="" coords="80,152,152,177"/>
-<area shape="rect" id="node2" href="core.factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="5,79,104,104"/>
-<area shape="rect" id="node3" href="simulation.noise.html#hermespy.simulation.noise.model.NoiseModel" target="_top" title="Noise modeling base class." alt="" coords="128,79,227,104"/>
-<area shape="rect" id="node4" href="https://docs.python.org/3/library/typing.html#typing.Generic" target="_top" title="Abstract base class for generic types." alt="" coords="83,5,155,31"/>
-<area shape="rect" id="node5" href="core.random_node.html#hermespy.core.random_node.RandomNode" target="_top" title="Random Node within a random dependency graph." alt="" coords="179,5,290,31"/>
-</map>

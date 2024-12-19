@@ -1,0 +1,4 @@
+<map id="inheritance7869247112" name="inheritance7869247112">
+<area shape="rect" id="node1" href="#hermespy.core.channel.ChannelStateInformation" target="_top" title="State of a single wireless link between a transmitting and receiving device." alt="" coords="5,79,191,104"/>
+<area shape="rect" id="node2" href="factory.html#hermespy.core.factory.HDFSerializable" target="_top" title="Base class for object serializable to the HDF5 format." alt="" coords="35,5,161,31"/>
+</map>

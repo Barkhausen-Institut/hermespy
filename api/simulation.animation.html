@@ -5,16 +5,15 @@
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Antennas" href="simulation.antennas.html" /><link rel="prev" title="Device Transmission" href="simulation.simulated_device.SimulatedDeviceTransmission.html" />
 
-    <!-- Generated with Sphinx 7.3.7 and Furo 2024.05.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Animation - HermesPy</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=387cc868" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
     <link rel="stylesheet" type="text/css" href="../_static/tweaks.css?v=c2f9d16b" />
-    <link rel="stylesheet" type="text/css" href="../_static/tabs.css?v=a5c4661c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     
     
 
@@ -95,19 +94,6 @@
       <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
     </svg>
   </symbol>
-  <symbol id="svg-sun-half" viewBox="0 0 24 24">
-    <title>Auto light/dark mode</title>
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
-      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M13 12h5" />
-      <path d="M13 15h4" />
-      <path d="M13 18h1" />
-      <path d="M13 9h4" />
-      <path d="M13 6h1" />
-    </svg>
-  </symbol>
   <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
     <title>Auto light/dark, in light mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -148,7 +134,7 @@
       <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
       <path d="M13.5 6.5l4 4" />
       <path d="M20 21l2 -2l-2 -2" />
-      <path d="M17 17l-2 2l2 2" /
+      <path d="M17 17l-2 2l2 2" />
     </svg>
   </symbol>
   <symbol id="svg-eye" viewBox="0 0 24 24">
@@ -292,8 +278,6 @@
 <li class="toctree-l4"><a class="reference internal" href="modem.precoding.ratio_combining.html">Maximal Ratio Combining</a></li>
 <li class="toctree-l4"><a class="reference internal" href="modem.precoding.single_carrier.html">Single Carrier Decoding</a></li>
 <li class="toctree-l4"><a class="reference internal" href="modem.precoding.space_time_block_coding.html">Space-Time Block Codes</a></li>
-<li class="toctree-l4"><a class="reference internal" href="modem.precoding.spatial_multiplexing.html">Spatial Multiplexing</a></li>
-<li class="toctree-l4"><a class="reference internal" href="modem.precoding.symbol_precoding.SymbolPrecoder.html">Symbol Precoder</a></li>
 <li class="toctree-l4"><a class="reference internal" href="modem.precoding.symbol_precoding.SymbolPrecoding.html">Symbol Precoding</a></li>
 </ul>
 </li>
@@ -369,6 +353,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="channel/quadriga.html">Quadriga</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel/sionna-rt.html">SionnaRT Channel</a></li>
 <li class="toctree-l3"><a class="reference internal" href="channel/consistent.html">Spatial Consistency</a></li>
 </ul>
 </li>
@@ -473,36 +458,38 @@
 <li class="toctree-l3"><a class="reference internal" href="hardware_loop.calibration.leakage.html">Leakage Calibration</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="core.html">Core</a><input class="toctree-checkbox" id="toctree-checkbox-34" name="toctree-checkbox-34" role="switch" type="checkbox"/><label for="toctree-checkbox-34"><div class="visually-hidden">Toggle navigation of Core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html">PyMonte</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.executable.html">Executable</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.factory.html">Serialization Factory</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.definitions.html">General Definitions</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="core.device.Device.html">Device</a><input class="toctree-checkbox" id="toctree-checkbox-35" name="toctree-checkbox-35" role="switch" type="checkbox"/><label for="toctree-checkbox-35"><div class="visually-hidden">Toggle navigation of Device</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="core.device.DeviceInput.html">Device Input</a></li>
-<li class="toctree-l4"><a class="reference internal" href="core.device.DeviceOutput.html">Device Output</a></li>
-<li class="toctree-l4"><a class="reference internal" href="core.device.DeviceReception.html">Device Reception</a></li>
-<li class="toctree-l4"><a class="reference internal" href="core.device.DeviceTransmission.html">Device Transmission</a></li>
-<li class="toctree-l4"><a class="reference internal" href="core.device.ProcessedDeviceInput.html">Processed Device Input</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="core/core.html">Core</a><input class="toctree-checkbox" id="toctree-checkbox-34" name="toctree-checkbox-34" role="switch" type="checkbox"/><label for="toctree-checkbox-34"><div class="visually-hidden">Toggle navigation of Core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="core/device.html">Device Model</a><input class="toctree-checkbox" id="toctree-checkbox-35" name="toctree-checkbox-35" role="switch" type="checkbox"/><label for="toctree-checkbox-35"><div class="visually-hidden">Toggle navigation of Device Model</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="core/device.DeviceInput.html">Device Input</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.DeviceOutput.html">Device Output</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.DeviceReception.html">Device Reception</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.DeviceTransmission.html">Device Transmission</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.OperationResult.html">Operation Result</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.ProcessedDeviceInput.html">Processed Device Input</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.Receiver.html">Receiver</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.Reception.html">Reception</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.Transmission.html">Transmission</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.Transmitter.html">Transmitter</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.Transmitter.html">Transmitter</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.Receiver.html">Receiver</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.Transmission.html">Transmission</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.Reception.html">Reception</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.OperationResult.html">Operation Result</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.drop.Drop.html">Drop</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.operators.html">Extra Operators</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.duplex.html">Duplex Operation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.logarithmic.html">Logarithmics</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.pipeline.html">Pipeline</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.random_node.html">Random Graph</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.scenario.html">Wireless Scenario</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.signal_model.Signal.html">Signal</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.channel_state_information.html">Channel State Information</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.antennas.html">Antenna Descriptions</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.transformation.html">Coordinate System Transformations</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.visualize.html">Visualization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/scenario.html">Wireless Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/monte_carlo.html">PyMonte</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/signal.html">Signal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/antennas.html">Antenna Descriptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/channel.html">Channel State Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/drop.html">Drop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/factory.html">Serialization Factory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/hooks.html">Hooks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/operators.html">Extra Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/precoding.html">Precoding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/random_node.html">Random Graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/state.html">State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/transformation.html">Coordinate System</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/visualize.html">Visualization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/executable.html">Executable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/pipeline.html">Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/logarithmic.html">Logarithmics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/definitions.html">General Definitions</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="fec.html">Error Correction</a><input class="toctree-checkbox" id="toctree-checkbox-36" name="toctree-checkbox-36" role="switch" type="checkbox"/><label for="toctree-checkbox-36"><div class="visually-hidden">Toggle navigation of Error Correction</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -525,22 +512,18 @@
 <li class="toctree-l3"><a class="reference internal" href="jcas.jcas.html">Duplex JCAS Operator</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="precoding.html">Precoding</a><input class="toctree-checkbox" id="toctree-checkbox-38" name="toctree-checkbox-38" role="switch" type="checkbox"/><label for="toctree-checkbox-38"><div class="visually-hidden">Toggle navigation of Precoding</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="precoding.precoding.html">Precoding Configuration</a></li>
-<li class="toctree-l3"><a class="reference internal" href="precoding.stream_precoding.html">Stream Precoding</a></li>
-</ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="beamforming.html">Beamforming</a><input class="toctree-checkbox" id="toctree-checkbox-39" name="toctree-checkbox-39" role="switch" type="checkbox"/><label for="toctree-checkbox-39"><div class="visually-hidden">Toggle navigation of Beamforming</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="beamforming.html">Beamforming</a><input class="toctree-checkbox" id="toctree-checkbox-38" name="toctree-checkbox-38" role="switch" type="checkbox"/><label for="toctree-checkbox-38"><div class="visually-hidden">Toggle navigation of Beamforming</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="beamforming.beamformer.html">Beamformer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="beamforming.conventional.html">Conventional Beamformer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="beamforming.capon.html">Capon Beamformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="beamforming.nullsteeringbeamformer.html">Null Steering Beamformer</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="bin.html">Entry Points</a><input class="toctree-checkbox" id="toctree-checkbox-40" name="toctree-checkbox-40" role="switch" type="checkbox"/><label for="toctree-checkbox-40"><div class="visually-hidden">Toggle navigation of Entry Points</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="bin.html">Entry Points</a><input class="toctree-checkbox" id="toctree-checkbox-39" name="toctree-checkbox-39" role="switch" type="checkbox"/><label for="toctree-checkbox-39"><div class="visually-hidden">Toggle navigation of Entry Points</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="bin.hermes.html">Hermes Command Line Interface</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="tools.html">Tools</a><input class="toctree-checkbox" id="toctree-checkbox-41" name="toctree-checkbox-41" role="switch" type="checkbox"/><label for="toctree-checkbox-41"><div class="visually-hidden">Toggle navigation of Tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tools.html">Tools</a><input class="toctree-checkbox" id="toctree-checkbox-40" name="toctree-checkbox-40" role="switch" type="checkbox"/><label for="toctree-checkbox-40"><div class="visually-hidden">Toggle navigation of Tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="tools.math.html">Math Tools</a></li>
 <li class="toctree-l3"><a class="reference internal" href="tools.resampling.html">Resampling Routines</a></li>
 <li class="toctree-l3"><a class="reference internal" href="tools.tile.html">Tile Figures</a></li>
@@ -550,7 +533,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a><input class="toctree-checkbox" id="toctree-checkbox-42" name="toctree-checkbox-42" role="switch" type="checkbox"/><label for="toctree-checkbox-42"><div class="visually-hidden">Toggle navigation of Configuration Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a><input class="toctree-checkbox" id="toctree-checkbox-41" name="toctree-checkbox-41" role="switch" type="checkbox"/><label for="toctree-checkbox-41"><div class="visually-hidden">Toggle navigation of Configuration Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../examples/chirp_fsk_lora.html">Chirp FSK LORA</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../examples/chirp_qam.html">Chirp QAM</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../examples/hardware_model.html">Hardware Modeling</a></li>
@@ -607,13 +590,13 @@
         <article role="main" id="furo-main-content">
           <section id="animation">
 <h1>Animation<a class="headerlink" href="#animation" title="Link to this heading">¶</a></h1>
-<div class="graphviz"><img src="../_images/inheritance-1f68eec6b52864535824524a601e377f3a7e252f.png" alt="Inheritance diagram of hermespy.simulation.animation.Trajectory, hermespy.simulation.animation.StaticTrajectory, hermespy.simulation.animation.LinearTrajectory" usemap="#inheritance2bdf387ef1" class="inheritance graphviz" /></div>
+<div class="graphviz"><img src="../_images/inheritance-caff1387d57b00fe46a8bace6e89b33d87f0c60d.png" alt="Inheritance diagram of hermespy.simulation.animation.Trajectory, hermespy.simulation.animation.StaticTrajectory, hermespy.simulation.animation.LinearTrajectory" usemap="#inheritance2bdf387ef1" class="inheritance graphviz" /></div>
 <map id="inheritance2bdf387ef1" name="inheritance2bdf387ef1">
 <area shape="rect" id="node1" href="https://docs.python.org/3/library/abc.html#abc.ABC" target="_top" title="Helper class that provides a standard way to create an ABC using" alt="" coords="49,5,121,31"/>
 <area shape="rect" id="node3" href="#hermespy.simulation.animation.Trajectory" target="_top" title="Base class for motion trajectories of moveable objects within simulation scenarios." alt="" coords="41,79,128,104"/>
 <area shape="rect" id="node2" href="#hermespy.simulation.animation.LinearTrajectory" target="_top" title="A helper class generating a linear trajectory between two poses." alt="" coords="5,152,132,177"/>
 <area shape="rect" id="node5" href="#hermespy.simulation.animation.StaticTrajectory" target="_top" title="A helper class generating a static trajectory." alt="" coords="157,152,279,177"/>
-<area shape="rect" id="node4" href="core.factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="169,79,267,104"/>
+<area shape="rect" id="node4" href="core/factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="169,79,267,104"/>
 </map><p>Movements of devices and other objects within simulations may be described by <a class="reference internal" href="#hermespy.simulation.animation.Trajectory" title="hermespy.simulation.animation.Trajectory"><code class="xref py py-class docutils literal notranslate"><span class="pre">Trajectories</span></code></a>,
 which model the veloctiy, position and orientation of the object as a function of time.
 Generally, objects that may be animated within a simulation should inherit from the <a class="reference internal" href="#hermespy.simulation.animation.Moveable" title="hermespy.simulation.animation.Moveable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Moveable</span></code></a> class,
@@ -664,15 +647,52 @@ within a simulation and plot the scenario:</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.simulation.animation.Trajectory">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Trajectory</span></span><a class="reference internal" href="../_modules/hermespy/simulation/animation.html#Trajectory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.simulation.animation.Trajectory" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
 <p>Base class for motion trajectories of moveable objects within simulation scenarios.</p>
 <dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulation.animation.Trajectory.lookat">
+<span class="sig-name descname"><span class="pre">lookat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">up</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([0.,</span> <span class="pre">1.,</span> <span class="pre">0.])</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/simulation/animation.html#Trajectory.lookat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.simulation.animation.Trajectory.lookat" title="Link to this definition">¶</a></dt>
+<dd><p>Set a target to look at and track.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>target</strong> (<a class="reference internal" href="#hermespy.simulation.animation.Trajectory" title="hermespy.simulation.animation.Trajectory"><em>Trajectory</em></a>) – Target trajectory.</p></li>
+<li><p><strong>up</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><em>numpy.ndarray</em></a>) – Up/sky/head/ceiling global unit vector. Defaults to [0., 1., 0.].</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulation.animation.Trajectory.lookat_disable">
+<span class="sig-name descname"><span class="pre">lookat_disable</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/simulation/animation.html#Trajectory.lookat_disable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.simulation.animation.Trajectory.lookat_disable" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulation.animation.Trajectory.lookat_enable">
+<span class="sig-name descname"><span class="pre">lookat_enable</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/simulation/animation.html#Trajectory.lookat_enable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.simulation.animation.Trajectory.lookat_enable" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="hermespy.simulation.animation.Trajectory.sample">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/simulation/animation.html#Trajectory.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.simulation.animation.Trajectory.sample" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/simulation/animation.html#Trajectory.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.simulation.animation.Trajectory.sample" title="Link to this definition">¶</a></dt>
 <dd><p>Sample the trajectory at a given point in time.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>timestamp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Time at which to sample the trajectory in seconds.</p>
+<dd class="field-odd"><p><strong>timestamp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Time at which to sample the trajectory in seconds.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#hermespy.simulation.animation.TrajectorySample" title="hermespy.simulation.animation.TrajectorySample"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrajectorySample</span></code></a></span></p>
@@ -681,9 +701,54 @@ within a simulation and plot the scenario:</p>
 <p>Returns: A sample of the trajectory.</p>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulation.animation.Trajectory.sample_orientation">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sample_orientation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/simulation/animation.html#Trajectory.sample_orientation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.simulation.animation.Trajectory.sample_orientation" title="Link to this definition">¶</a></dt>
+<dd><p>Sample the trajectory’s orientation. Does not consider lookat.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>timestamp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Time at which to sample the trajectory in seconds.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a></span></p>
+</dd>
+</dl>
+<p>Returns: A sample of the trajectory’s orientation matrix (matrix (3, 3) of float).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulation.animation.Trajectory.sample_translation">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sample_translation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/simulation/animation.html#Trajectory.sample_translation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.simulation.animation.Trajectory.sample_translation" title="Link to this definition">¶</a></dt>
+<dd><p>Sample the trajectory’s translation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>timestamp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Time at which to sample the trajectory in seconds.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a></span></p>
+</dd>
+</dl>
+<p>Returns: A sample of the trajectory’s translation (vector (3,) of floats).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulation.animation.Trajectory.sample_velocity">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sample_velocity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/simulation/animation.html#Trajectory.sample_velocity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.simulation.animation.Trajectory.sample_velocity" title="Link to this definition">¶</a></dt>
+<dd><p>Sample the trajectory’s velocity.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>timestamp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Time at which to sample the trajectory in seconds.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a></span></p>
+</dd>
+</dl>
+<p>Returns: A sample of the trajectory’s velocity (vector (3,) of floats).</p>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.simulation.animation.Trajectory.max_timestamp">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_timestamp</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a></em><a class="headerlink" href="#hermespy.simulation.animation.Trajectory.max_timestamp" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_timestamp</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></em><a class="headerlink" href="#hermespy.simulation.animation.Trajectory.max_timestamp" title="Link to this definition">¶</a></dt>
 <dd><p>Maximum timestamp of the trajectory in seconds.</p>
 <p>For times greater than this value the represented object’s pose is assumed
 to be constant.</p>
@@ -694,7 +759,7 @@ to be constant.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.simulation.animation.StaticTrajectory">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">StaticTrajectory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">velocity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/simulation/animation.html#StaticTrajectory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.simulation.animation.StaticTrajectory" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a>, <a class="reference internal" href="#hermespy.simulation.animation.Trajectory" title="hermespy.simulation.animation.Trajectory"><code class="xref py py-class docutils literal notranslate"><span class="pre">Trajectory</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="core/factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a>, <a class="reference internal" href="#hermespy.simulation.animation.Trajectory" title="hermespy.simulation.animation.Trajectory"><code class="xref py py-class docutils literal notranslate"><span class="pre">Trajectory</span></code></a></p>
 <p>A helper class generating a static trajectory.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.simulation.animation.StaticTrajectory.sample">
@@ -702,7 +767,7 @@ to be constant.</p>
 <dd><p>Sample the trajectory at a given point in time.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>timestamp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Time at which to sample the trajectory in seconds.</p>
+<dd class="field-odd"><p><strong>timestamp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Time at which to sample the trajectory in seconds.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#hermespy.simulation.animation.TrajectorySample" title="hermespy.simulation.animation.TrajectorySample"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrajectorySample</span></code></a></span></p>
@@ -711,9 +776,54 @@ to be constant.</p>
 <p>Returns: A sample of the trajectory.</p>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulation.animation.StaticTrajectory.sample_orientation">
+<span class="sig-name descname"><span class="pre">sample_orientation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/simulation/animation.html#StaticTrajectory.sample_orientation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.simulation.animation.StaticTrajectory.sample_orientation" title="Link to this definition">¶</a></dt>
+<dd><p>Sample the trajectory’s orientation. Does not consider lookat.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>timestamp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Time at which to sample the trajectory in seconds.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a></span></p>
+</dd>
+</dl>
+<p>Returns: A sample of the trajectory’s orientation matrix (matrix (3, 3) of float).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulation.animation.StaticTrajectory.sample_translation">
+<span class="sig-name descname"><span class="pre">sample_translation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/simulation/animation.html#StaticTrajectory.sample_translation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.simulation.animation.StaticTrajectory.sample_translation" title="Link to this definition">¶</a></dt>
+<dd><p>Sample the trajectory’s translation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>timestamp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Time at which to sample the trajectory in seconds.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a></span></p>
+</dd>
+</dl>
+<p>Returns: A sample of the trajectory’s translation (vector (3,) of floats).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulation.animation.StaticTrajectory.sample_velocity">
+<span class="sig-name descname"><span class="pre">sample_velocity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/simulation/animation.html#StaticTrajectory.sample_velocity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.simulation.animation.StaticTrajectory.sample_velocity" title="Link to this definition">¶</a></dt>
+<dd><p>Sample the trajectory’s velocity.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>timestamp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Time at which to sample the trajectory in seconds.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a></span></p>
+</dd>
+</dl>
+<p>Returns: A sample of the trajectory’s velocity (vector (3,) of floats).</p>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.simulation.animation.StaticTrajectory.max_timestamp">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_timestamp</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a></em><a class="headerlink" href="#hermespy.simulation.animation.StaticTrajectory.max_timestamp" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_timestamp</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></em><a class="headerlink" href="#hermespy.simulation.animation.StaticTrajectory.max_timestamp" title="Link to this definition">¶</a></dt>
 <dd><p>Maximum timestamp of the trajectory in seconds.</p>
 <p>For times greater than this value the represented object’s pose is assumed
 to be constant.</p>
@@ -721,13 +831,13 @@ to be constant.</p>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.simulation.animation.StaticTrajectory.pose">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pose</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="core.transformation.html#hermespy.core.transformation.Transformation" title="hermespy.core.transformation.Transformation"><span class="pre">Transformation</span></a></em><a class="headerlink" href="#hermespy.simulation.animation.StaticTrajectory.pose" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pose</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="core/transformation.html#hermespy.core.transformation.Transformation" title="hermespy.core.transformation.Transformation"><span class="pre">Transformation</span></a></em><a class="headerlink" href="#hermespy.simulation.animation.StaticTrajectory.pose" title="Link to this definition">¶</a></dt>
 <dd><p>Static pose of the object.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.simulation.animation.StaticTrajectory.velocity">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">velocity</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#hermespy.simulation.animation.StaticTrajectory.velocity" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">velocity</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#hermespy.simulation.animation.StaticTrajectory.velocity" title="Link to this definition">¶</a></dt>
 <dd><p>Static velocity of the object.</p>
 </dd></dl>
 
@@ -739,23 +849,53 @@ to be constant.</p>
 <dd><p>Bases: <a class="reference internal" href="#hermespy.simulation.animation.Trajectory" title="hermespy.simulation.animation.Trajectory"><code class="xref py py-class docutils literal notranslate"><span class="pre">Trajectory</span></code></a></p>
 <p>A helper class generating a linear trajectory between two poses.</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="hermespy.simulation.animation.LinearTrajectory.sample">
-<span class="sig-name descname"><span class="pre">sample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/simulation/animation.html#LinearTrajectory.sample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.simulation.animation.LinearTrajectory.sample" title="Link to this definition">¶</a></dt>
-<dd><p>Sample the trajectory at a given point in time.</p>
+<dt class="sig sig-object py" id="hermespy.simulation.animation.LinearTrajectory.sample_orientation">
+<span class="sig-name descname"><span class="pre">sample_orientation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/simulation/animation.html#LinearTrajectory.sample_orientation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.simulation.animation.LinearTrajectory.sample_orientation" title="Link to this definition">¶</a></dt>
+<dd><p>Sample the trajectory’s orientation. Does not consider lookat.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>timestamp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Time at which to sample the trajectory in seconds.</p>
+<dd class="field-odd"><p><strong>timestamp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Time at which to sample the trajectory in seconds.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#hermespy.simulation.animation.TrajectorySample" title="hermespy.simulation.animation.TrajectorySample"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrajectorySample</span></code></a></span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a></span></p>
 </dd>
 </dl>
-<p>Returns: A sample of the trajectory.</p>
+<p>Returns: A sample of the trajectory’s orientation matrix (matrix (3, 3) of float).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulation.animation.LinearTrajectory.sample_translation">
+<span class="sig-name descname"><span class="pre">sample_translation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/simulation/animation.html#LinearTrajectory.sample_translation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.simulation.animation.LinearTrajectory.sample_translation" title="Link to this definition">¶</a></dt>
+<dd><p>Sample the trajectory’s translation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>timestamp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Time at which to sample the trajectory in seconds.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a></span></p>
+</dd>
+</dl>
+<p>Returns: A sample of the trajectory’s translation (vector (3,) of floats).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.simulation.animation.LinearTrajectory.sample_velocity">
+<span class="sig-name descname"><span class="pre">sample_velocity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/simulation/animation.html#LinearTrajectory.sample_velocity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.simulation.animation.LinearTrajectory.sample_velocity" title="Link to this definition">¶</a></dt>
+<dd><p>Sample the trajectory’s velocity.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>timestamp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Time at which to sample the trajectory in seconds.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a></span></p>
+</dd>
+</dl>
+<p>Returns: A sample of the trajectory’s velocity (vector (3,) of floats).</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.simulation.animation.LinearTrajectory.max_timestamp">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_timestamp</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a></em><a class="headerlink" href="#hermespy.simulation.animation.LinearTrajectory.max_timestamp" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_timestamp</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></em><a class="headerlink" href="#hermespy.simulation.animation.LinearTrajectory.max_timestamp" title="Link to this definition">¶</a></dt>
 <dd><p>Maximum timestamp of the trajectory in seconds.</p>
 <p>For times greater than this value the represented object’s pose is assumed
 to be constant.</p>
@@ -766,7 +906,7 @@ to be constant.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.simulation.animation.Moveable">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Moveable</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">trajectory</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/simulation/animation.html#Moveable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.simulation.animation.Moveable" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Base class of moveable objects within simulation scenarios.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -776,7 +916,7 @@ If not provided, the object is assumed to be static.</p>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.simulation.animation.Moveable.max_trajectory_timestamp">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_trajectory_timestamp</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a></em><a class="headerlink" href="#hermespy.simulation.animation.Moveable.max_trajectory_timestamp" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">max_trajectory_timestamp</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></em><a class="headerlink" href="#hermespy.simulation.animation.Moveable.max_trajectory_timestamp" title="Link to this definition">¶</a></dt>
 <dd><p>Maximum timestamp of this object’s motion trajectory.</p>
 </dd></dl>
 
@@ -791,32 +931,32 @@ If not provided, the object is assumed to be static.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.simulation.animation.TrajectorySample">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TrajectorySample</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pose</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">velocity</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/simulation/animation.html#TrajectorySample"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.simulation.animation.TrajectorySample" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Dataclass for a single pose sample within a trajectory.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>timestamp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – Time at which the trajectory was sampled in seconds.</p></li>
+<li><p><strong>timestamp</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – Time at which the trajectory was sampled in seconds.</p></li>
 <li><p><strong>pose</strong> (<em>Timestamp</em>) – Pose of the object at the given time.</p></li>
-<li><p><strong>velocity</strong> (<em>np.ndarray</em>) – Velocity of the object at the given time.</p></li>
+<li><p><strong>velocity</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><em>numpy.ndarray</em></a>) – Velocity of the object at the given time.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.simulation.animation.TrajectorySample.pose">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pose</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="core.transformation.html#hermespy.core.transformation.Transformation" title="hermespy.core.transformation.Transformation"><span class="pre">Transformation</span></a></em><a class="headerlink" href="#hermespy.simulation.animation.TrajectorySample.pose" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">pose</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="core/transformation.html#hermespy.core.transformation.Transformation" title="hermespy.core.transformation.Transformation"><span class="pre">Transformation</span></a></em><a class="headerlink" href="#hermespy.simulation.animation.TrajectorySample.pose" title="Link to this definition">¶</a></dt>
 <dd><p>Pose of the object at the given time.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.simulation.animation.TrajectorySample.timestamp">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">timestamp</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a></em><a class="headerlink" href="#hermespy.simulation.animation.TrajectorySample.timestamp" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">timestamp</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></em><a class="headerlink" href="#hermespy.simulation.animation.TrajectorySample.timestamp" title="Link to this definition">¶</a></dt>
 <dd><p>Time at which the trajectory was sampled in seconds.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.simulation.animation.TrajectorySample.velocity">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">velocity</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#hermespy.simulation.animation.TrajectorySample.velocity" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">velocity</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#hermespy.simulation.animation.TrajectorySample.velocity" title="Link to this definition">¶</a></dt>
 <dd><p>Velocity of the object at the given time.</p>
 </dd></dl>
 
@@ -874,9 +1014,9 @@ If not provided, the object is assumed to be static.</p>
     </aside>
   </div>
 </div><script src="../_static/documentation_options.js?v=5929fcd5"></script>
-    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/scripts/furo.js?v=4e2eecee"></script>
+    <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>

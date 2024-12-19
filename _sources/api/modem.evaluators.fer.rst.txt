@@ -40,7 +40,7 @@ The following minimal examples outlines how to configure this evaluator within t
 .. literalinclude:: ../scripts/examples/modem_evaluators_fer.py
    :language: python
    :linenos:
-   :lines: 10-31
+   :lines: 10-33
 
 .. autoclass:: hermespy.modem.evaluators.FrameErrorEvaluator
 

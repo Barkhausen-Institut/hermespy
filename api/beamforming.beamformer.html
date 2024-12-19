@@ -5,16 +5,15 @@
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Conventional Beamformer" href="beamforming.conventional.html" /><link rel="prev" title="Beamforming" href="beamforming.html" />
 
-    <!-- Generated with Sphinx 7.3.7 and Furo 2024.05.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Beamformer - HermesPy</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=387cc868" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
     <link rel="stylesheet" type="text/css" href="../_static/tweaks.css?v=c2f9d16b" />
-    <link rel="stylesheet" type="text/css" href="../_static/tabs.css?v=a5c4661c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     
     
 
@@ -95,19 +94,6 @@
       <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
     </svg>
   </symbol>
-  <symbol id="svg-sun-half" viewBox="0 0 24 24">
-    <title>Auto light/dark mode</title>
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
-      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M13 12h5" />
-      <path d="M13 15h4" />
-      <path d="M13 18h1" />
-      <path d="M13 9h4" />
-      <path d="M13 6h1" />
-    </svg>
-  </symbol>
   <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
     <title>Auto light/dark, in light mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -148,7 +134,7 @@
       <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
       <path d="M13.5 6.5l4 4" />
       <path d="M20 21l2 -2l-2 -2" />
-      <path d="M17 17l-2 2l2 2" /
+      <path d="M17 17l-2 2l2 2" />
     </svg>
   </symbol>
   <symbol id="svg-eye" viewBox="0 0 24 24">
@@ -292,8 +278,6 @@
 <li class="toctree-l4"><a class="reference internal" href="modem.precoding.ratio_combining.html">Maximal Ratio Combining</a></li>
 <li class="toctree-l4"><a class="reference internal" href="modem.precoding.single_carrier.html">Single Carrier Decoding</a></li>
 <li class="toctree-l4"><a class="reference internal" href="modem.precoding.space_time_block_coding.html">Space-Time Block Codes</a></li>
-<li class="toctree-l4"><a class="reference internal" href="modem.precoding.spatial_multiplexing.html">Spatial Multiplexing</a></li>
-<li class="toctree-l4"><a class="reference internal" href="modem.precoding.symbol_precoding.SymbolPrecoder.html">Symbol Precoder</a></li>
 <li class="toctree-l4"><a class="reference internal" href="modem.precoding.symbol_precoding.SymbolPrecoding.html">Symbol Precoding</a></li>
 </ul>
 </li>
@@ -369,6 +353,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="channel/quadriga.html">Quadriga</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel/sionna-rt.html">SionnaRT Channel</a></li>
 <li class="toctree-l3"><a class="reference internal" href="channel/consistent.html">Spatial Consistency</a></li>
 </ul>
 </li>
@@ -473,36 +458,38 @@
 <li class="toctree-l3"><a class="reference internal" href="hardware_loop.calibration.leakage.html">Leakage Calibration</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="core.html">Core</a><input class="toctree-checkbox" id="toctree-checkbox-34" name="toctree-checkbox-34" role="switch" type="checkbox"/><label for="toctree-checkbox-34"><div class="visually-hidden">Toggle navigation of Core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html">PyMonte</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.executable.html">Executable</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.factory.html">Serialization Factory</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.definitions.html">General Definitions</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="core.device.Device.html">Device</a><input class="toctree-checkbox" id="toctree-checkbox-35" name="toctree-checkbox-35" role="switch" type="checkbox"/><label for="toctree-checkbox-35"><div class="visually-hidden">Toggle navigation of Device</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="core.device.DeviceInput.html">Device Input</a></li>
-<li class="toctree-l4"><a class="reference internal" href="core.device.DeviceOutput.html">Device Output</a></li>
-<li class="toctree-l4"><a class="reference internal" href="core.device.DeviceReception.html">Device Reception</a></li>
-<li class="toctree-l4"><a class="reference internal" href="core.device.DeviceTransmission.html">Device Transmission</a></li>
-<li class="toctree-l4"><a class="reference internal" href="core.device.ProcessedDeviceInput.html">Processed Device Input</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="core/core.html">Core</a><input class="toctree-checkbox" id="toctree-checkbox-34" name="toctree-checkbox-34" role="switch" type="checkbox"/><label for="toctree-checkbox-34"><div class="visually-hidden">Toggle navigation of Core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="core/device.html">Device Model</a><input class="toctree-checkbox" id="toctree-checkbox-35" name="toctree-checkbox-35" role="switch" type="checkbox"/><label for="toctree-checkbox-35"><div class="visually-hidden">Toggle navigation of Device Model</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="core/device.DeviceInput.html">Device Input</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.DeviceOutput.html">Device Output</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.DeviceReception.html">Device Reception</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.DeviceTransmission.html">Device Transmission</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.OperationResult.html">Operation Result</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.ProcessedDeviceInput.html">Processed Device Input</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.Receiver.html">Receiver</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.Reception.html">Reception</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.Transmission.html">Transmission</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.Transmitter.html">Transmitter</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.Transmitter.html">Transmitter</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.Receiver.html">Receiver</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.Transmission.html">Transmission</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.Reception.html">Reception</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.OperationResult.html">Operation Result</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.drop.Drop.html">Drop</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.operators.html">Extra Operators</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.duplex.html">Duplex Operation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.logarithmic.html">Logarithmics</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.pipeline.html">Pipeline</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.random_node.html">Random Graph</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.scenario.html">Wireless Scenario</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.signal_model.Signal.html">Signal</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.channel_state_information.html">Channel State Information</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.antennas.html">Antenna Descriptions</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.transformation.html">Coordinate System Transformations</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.visualize.html">Visualization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/scenario.html">Wireless Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/monte_carlo.html">PyMonte</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/signal.html">Signal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/antennas.html">Antenna Descriptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/channel.html">Channel State Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/drop.html">Drop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/factory.html">Serialization Factory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/hooks.html">Hooks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/operators.html">Extra Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/precoding.html">Precoding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/random_node.html">Random Graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/state.html">State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/transformation.html">Coordinate System</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/visualize.html">Visualization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/executable.html">Executable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/pipeline.html">Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/logarithmic.html">Logarithmics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/definitions.html">General Definitions</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="fec.html">Error Correction</a><input class="toctree-checkbox" id="toctree-checkbox-36" name="toctree-checkbox-36" role="switch" type="checkbox"/><label for="toctree-checkbox-36"><div class="visually-hidden">Toggle navigation of Error Correction</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -525,22 +512,18 @@
 <li class="toctree-l3"><a class="reference internal" href="jcas.jcas.html">Duplex JCAS Operator</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="precoding.html">Precoding</a><input class="toctree-checkbox" id="toctree-checkbox-38" name="toctree-checkbox-38" role="switch" type="checkbox"/><label for="toctree-checkbox-38"><div class="visually-hidden">Toggle navigation of Precoding</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="precoding.precoding.html">Precoding Configuration</a></li>
-<li class="toctree-l3"><a class="reference internal" href="precoding.stream_precoding.html">Stream Precoding</a></li>
-</ul>
-</li>
-<li class="toctree-l2 current has-children"><a class="reference internal" href="beamforming.html">Beamforming</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-39" name="toctree-checkbox-39" role="switch" type="checkbox"/><label for="toctree-checkbox-39"><div class="visually-hidden">Toggle navigation of Beamforming</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
+<li class="toctree-l2 current has-children"><a class="reference internal" href="beamforming.html">Beamforming</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-38" name="toctree-checkbox-38" role="switch" type="checkbox"/><label for="toctree-checkbox-38"><div class="visually-hidden">Toggle navigation of Beamforming</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
 <li class="toctree-l3 current current-page"><a class="current reference internal" href="#">Beamformer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="beamforming.conventional.html">Conventional Beamformer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="beamforming.capon.html">Capon Beamformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="beamforming.nullsteeringbeamformer.html">Null Steering Beamformer</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="bin.html">Entry Points</a><input class="toctree-checkbox" id="toctree-checkbox-40" name="toctree-checkbox-40" role="switch" type="checkbox"/><label for="toctree-checkbox-40"><div class="visually-hidden">Toggle navigation of Entry Points</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="bin.html">Entry Points</a><input class="toctree-checkbox" id="toctree-checkbox-39" name="toctree-checkbox-39" role="switch" type="checkbox"/><label for="toctree-checkbox-39"><div class="visually-hidden">Toggle navigation of Entry Points</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="bin.hermes.html">Hermes Command Line Interface</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="tools.html">Tools</a><input class="toctree-checkbox" id="toctree-checkbox-41" name="toctree-checkbox-41" role="switch" type="checkbox"/><label for="toctree-checkbox-41"><div class="visually-hidden">Toggle navigation of Tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tools.html">Tools</a><input class="toctree-checkbox" id="toctree-checkbox-40" name="toctree-checkbox-40" role="switch" type="checkbox"/><label for="toctree-checkbox-40"><div class="visually-hidden">Toggle navigation of Tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="tools.math.html">Math Tools</a></li>
 <li class="toctree-l3"><a class="reference internal" href="tools.resampling.html">Resampling Routines</a></li>
 <li class="toctree-l3"><a class="reference internal" href="tools.tile.html">Tile Figures</a></li>
@@ -550,7 +533,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a><input class="toctree-checkbox" id="toctree-checkbox-42" name="toctree-checkbox-42" role="switch" type="checkbox"/><label for="toctree-checkbox-42"><div class="visually-hidden">Toggle navigation of Configuration Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a><input class="toctree-checkbox" id="toctree-checkbox-41" name="toctree-checkbox-41" role="switch" type="checkbox"/><label for="toctree-checkbox-41"><div class="visually-hidden">Toggle navigation of Configuration Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../examples/chirp_fsk_lora.html">Chirp FSK LORA</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../examples/chirp_qam.html">Chirp QAM</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../examples/hardware_model.html">Hardware Modeling</a></li>
@@ -609,7 +592,7 @@
 <span id="module-hermespy.beamforming.beamformer"></span><h1>Beamformer<a class="headerlink" href="#beamformer" title="Link to this heading">¶</a></h1>
 <p>Beamforming is split into the prototype classes <a class="reference internal" href="#hermespy.beamforming.beamformer.TransmitBeamformer" title="hermespy.beamforming.beamformer.TransmitBeamformer"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransmitBeamformer</span></code></a> and <a class="reference internal" href="#hermespy.beamforming.beamformer.ReceiveBeamformer" title="hermespy.beamforming.beamformer.ReceiveBeamformer"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReceiveBeamformer</span></code></a>
 for beamforming operations during signal transmission and reception, respectively.
-They are both derived from the base <a class="reference internal" href="#hermespy.beamforming.beamformer.BeamformerBase" title="hermespy.beamforming.beamformer.BeamformerBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamformerBase</span></code></a>.
+They are both derived from the base <code class="xref py py-class docutils literal notranslate"><span class="pre">BeamformerBase</span></code>.
 This is due to the fact that some beamforming algorithms may be exclusive to transmission or reception use-cases.
 Should a beamformer be applicable during both transmission and reception both prototypes can be inherited.
 An example for such an implementation is the <a class="reference internal" href="beamforming.conventional.html#hermespy.beamforming.conventional.ConventionalBeamformer" title="hermespy.beamforming.conventional.ConventionalBeamformer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Conventional</span></code></a> beamformer.</p>
@@ -617,7 +600,7 @@ An example for such an implementation is the <a class="reference internal" href=
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.beamforming.beamformer.BeamFocus">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BeamFocus</span></span><a class="reference internal" href="../_modules/hermespy/beamforming/beamformer.html#BeamFocus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.beamforming.beamformer.BeamFocus" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a>, <a class="reference internal" href="core/factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
 <p>Single focus point of a beamformer.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.beamforming.beamformer.BeamFocus.copy">
@@ -625,7 +608,7 @@ An example for such an implementation is the <a class="reference internal" href=
 <dd><p>Create a copy of this focus point.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">FT</span></code>, bound= BeamFocus)</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.TypeVar" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">TypeVar</span></code></a>(<code class="docutils literal notranslate"><span class="pre">FT</span></code>, bound= BeamFocus)</span></p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A copy of this focus point.</p>
@@ -633,39 +616,19 @@ An example for such an implementation is the <a class="reference internal" href=
 </dl>
 </dd></dl>
 
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.beamforming.beamformer.BeamFocus.beamformer">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">beamformer</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.beamforming.beamformer.BeamformerBase" title="hermespy.beamforming.beamformer.BeamformerBase"><span class="pre">BeamformerBase</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></em><a class="headerlink" href="#hermespy.beamforming.beamformer.BeamFocus.beamformer" title="Link to this definition">¶</a></dt>
-<dd><p>Beamformer this focus point is assigned to.</p>
-</dd></dl>
-
-<dl class="py property">
+<dl class="py method">
 <dt class="sig sig-object py" id="hermespy.beamforming.beamformer.BeamFocus.spherical_angles">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">spherical_angles</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#hermespy.beamforming.beamformer.BeamFocus.spherical_angles" title="Link to this definition">¶</a></dt>
-<dd><p>Azimuth and zenith angles in radians, towards which the beam is focused in spherical coordinates.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="hermespy.beamforming.beamformer.BeamformerBase">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">BeamformerBase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/beamforming/beamformer.html#BeamformerBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.beamforming.beamformer.BeamformerBase" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generic" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Generic</span></code></a>[<a class="reference internal" href="#hermespy.beamforming.beamformer.OT" title="hermespy.beamforming.beamformer.OT"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OT</span></code></a>]</p>
-<p>Base class for all beam steering precodings.</p>
-<p>Args:</p>
-<dl class="simple">
-<dt>operator (OT, optional):</dt><dd><p>The operator this beamformer is attached to.
-By default, the beamformer is considered floating.</p>
-</dd>
-</dl>
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.beamforming.beamformer.BeamformerBase.operator">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">operator</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.beamforming.beamformer.OT" title="hermespy.beamforming.beamformer.OT"><span class="pre">OT</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></em><a class="headerlink" href="#hermespy.beamforming.beamformer.BeamformerBase.operator" title="Link to this definition">¶</a></dt>
-<dd><p>The operator this beamformer is assigned to.</p>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">spherical_angles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/beamforming/beamformer.html#BeamFocus.spherical_angles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.beamforming.beamformer.BeamFocus.spherical_angles" title="Link to this definition">¶</a></dt>
+<dd><p>Compute azimuth and zenith angles in radians, towards a beam is focused.</p>
 <dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>device</strong> (<a class="reference internal" href="core/state.html#hermespy.core.state.State" title="hermespy.core.state.State"><em>State</em></a>) – State of the device the beamformer is operating on.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a></span></p>
+</dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Handle to the operator.
-<cite>None</cite> if the beamformer is considered floating.</p>
+<dd class="field-odd"><p>Numpy vector with the azimuth and zenith angles in radians from the device’s point of view.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -680,8 +643,8 @@ By default, the beamformer is considered floating.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coordinates</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><em>numpy.ndarray</em></a>) – Cartesian coordinates in m.</p></li>
-<li><p><strong>reference</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.12)"><em>str</em></a><em>, </em><em>optional</em>) – Reference frame of the coordinates.</p></li>
+<li><p><strong>coordinates</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><em>numpy.ndarray</em></a>) – Cartesian coordinates in m.</p></li>
+<li><p><strong>reference</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><em>optional</em>) – Reference frame of the coordinates.</p></li>
 </ul>
 </dd>
 </dl>
@@ -699,60 +662,33 @@ By default, the beamformer is considered floating.</p>
 </dl>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.beamforming.beamformer.CoordinateFocus.spherical_angles">
+<span class="sig-name descname"><span class="pre">spherical_angles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/beamforming/beamformer.html#CoordinateFocus.spherical_angles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.beamforming.beamformer.CoordinateFocus.spherical_angles" title="Link to this definition">¶</a></dt>
+<dd><p>Compute azimuth and zenith angles in radians, towards a beam is focused.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>device</strong> (<a class="reference internal" href="core/state.html#hermespy.core.state.State" title="hermespy.core.state.State"><em>State</em></a>) – State of the device the beamformer is operating on.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Numpy vector with the azimuth and zenith angles in radians from the device’s point of view.</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.beamforming.beamformer.CoordinateFocus.coordinates">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">coordinates</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#hermespy.beamforming.beamformer.CoordinateFocus.coordinates" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">coordinates</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#hermespy.beamforming.beamformer.CoordinateFocus.coordinates" title="Link to this definition">¶</a></dt>
 <dd><p>Cartesian coordinates in m.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.beamforming.beamformer.CoordinateFocus.reference">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">reference</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.12)"><span class="pre">Literal</span></a><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'global'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'local'</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.beamforming.beamformer.CoordinateFocus.reference" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">reference</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Literal" title="(in Python v3.13)"><span class="pre">Literal</span></a><span class="p"><span class="pre">[</span></span><span class="s"><span class="pre">'global'</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="s"><span class="pre">'local'</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.beamforming.beamformer.CoordinateFocus.reference" title="Link to this definition">¶</a></dt>
 <dd><p>Reference frame of the coordinates.</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.beamforming.beamformer.CoordinateFocus.spherical_angles">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">spherical_angles</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#hermespy.beamforming.beamformer.CoordinateFocus.spherical_angles" title="Link to this definition">¶</a></dt>
-<dd><p>Azimuth and zenith angles in radians, towards which the beam is focused in spherical coordinates.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="hermespy.beamforming.beamformer.DeviceFocus">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">DeviceFocus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/beamforming/beamformer.html#DeviceFocus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.beamforming.beamformer.DeviceFocus" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#hermespy.beamforming.beamformer.BeamFocus" title="hermespy.beamforming.beamformer.BeamFocus"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamFocus</span></code></a></p>
-<p>Focus point targeting a device.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>device</strong> (<a class="reference internal" href="core.device.Device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><em>Device</em></a>) – Device focused by the beamformer.</p>
-</dd>
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="hermespy.beamforming.beamformer.DeviceFocus.copy">
-<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/beamforming/beamformer.html#DeviceFocus.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.beamforming.beamformer.DeviceFocus.copy" title="Link to this definition">¶</a></dt>
-<dd><p>Create a copy of this focus point.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="#hermespy.beamforming.beamformer.DeviceFocus" title="hermespy.beamforming.beamformer.DeviceFocus"><code class="xref py py-class docutils literal notranslate"><span class="pre">DeviceFocus</span></code></a></span></p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>A copy of this focus point.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.beamforming.beamformer.DeviceFocus.device">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">device</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="core.device.Device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><span class="pre">Device</span></a></em><a class="headerlink" href="#hermespy.beamforming.beamformer.DeviceFocus.device" title="Link to this definition">¶</a></dt>
-<dd><p>Device focused by the beamformer.</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.beamforming.beamformer.DeviceFocus.spherical_angles">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">spherical_angles</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#hermespy.beamforming.beamformer.DeviceFocus.spherical_angles" title="Link to this definition">¶</a></dt>
-<dd><p>Azimuth and zenith angles in radians, towards which the beam is focused in spherical coordinates.</p>
 </dd></dl>
 
 </dd></dl>
@@ -773,8 +709,8 @@ By default, the beamformer is considered floating.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.beamforming.beamformer.ReceiveBeamformer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ReceiveBeamformer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/beamforming/beamformer.html#ReceiveBeamformer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.beamforming.beamformer.ReceiveBeamformer" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#hermespy.beamforming.beamformer.BeamformerBase" title="hermespy.beamforming.beamformer.BeamformerBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamformerBase</span></code></a>[<a class="reference internal" href="core.device.Receiver.html#hermespy.core.device.Receiver" title="hermespy.core.device.Receiver"><code class="xref py py-class docutils literal notranslate"><span class="pre">Receiver</span></code></a>], <a class="reference internal" href="precoding.stream_precoding.html#hermespy.precoding.stream_precoding.ReceiveStreamDecoder" title="hermespy.precoding.stream_precoding.ReceiveStreamDecoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReceiveStreamDecoder</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ReceiveBeamformer</span></span><a class="reference internal" href="../_modules/hermespy/beamforming/beamformer.html#ReceiveBeamformer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.beamforming.beamformer.ReceiveBeamformer" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="core/precoding.html#hermespy.core.precoding.ReceiveStreamDecoder" title="hermespy.core.precoding.ReceiveStreamDecoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReceiveStreamDecoder</span></code></a></p>
 <p>Base class for beam steering precodings during signal receptions.</p>
 <p>The beamformer is characterised by its required number of input streams <span class="math notranslate nohighlight">\(N\)</span>,
 the resulting number of output streams <span class="math notranslate nohighlight">\(M\)</span> and the supported number of focus points <span class="math notranslate nohighlight">\(F\)</span>.
@@ -786,31 +722,25 @@ Considering a beamformer is provided with a matrix of <span class="math notransl
 </div>
 <p>can generally be described as a function compressing the number of streams while focusing the power towards
 the angles of interest <span class="math notranslate nohighlight">\(F\)</span>.</p>
-<p>Args:</p>
-<dl class="simple">
-<dt>operator (Receiver, optional):</dt><dd><p>The operator this beamformer is attached to.
-By default, the beamformer is considered floating.</p>
-</dd>
-</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.beamforming.beamformer.ReceiveBeamformer._decode">
 <em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">_decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">carrier_frequency</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angles</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/beamforming/beamformer.html#ReceiveBeamformer._decode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.beamforming.beamformer.ReceiveBeamformer._decode" title="Link to this definition">¶</a></dt>
 <dd><p>Decode signal streams for receive beamforming.</p>
-<p>This method is called as a subroutine during <a class="reference internal" href="#hermespy.beamforming.beamformer.ReceiveBeamformer.receive" title="hermespy.beamforming.beamformer.ReceiveBeamformer.receive"><code class="xref py py-meth docutils literal notranslate"><span class="pre">receive()</span></code></a> and <a class="reference internal" href="#hermespy.beamforming.beamformer.ReceiveBeamformer.probe" title="hermespy.beamforming.beamformer.ReceiveBeamformer.probe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">probe()</span></code></a>.</p>
+<p>This method is called as a subroutine during <a class="reference internal" href="#hermespy.beamforming.beamformer.ReceiveBeamformer.decode_streams" title="hermespy.beamforming.beamformer.ReceiveBeamformer.decode_streams"><code class="xref py py-meth docutils literal notranslate"><span class="pre">decode_streams()</span></code></a> and <a class="reference internal" href="#hermespy.beamforming.beamformer.ReceiveBeamformer.probe" title="hermespy.beamforming.beamformer.ReceiveBeamformer.probe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">probe()</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>samples</strong> (<em>np.ndarray</em>) – Signal samples, first dimension being the number of signal streams <span class="math notranslate nohighlight">\(N\)</span>, second the number of samples <span class="math notranslate nohighlight">\(T\)</span>.</p></li>
-<li><p><strong>carrier_frequency</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><em>float</em></a>) – The assumed carrier central frequency of the samples <span class="math notranslate nohighlight">\(f_\mathrm{c}\)</span>.</p></li>
-<li><p><strong>angles</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><em>numpy.ndarray</em></a>) – Spherical coordinate system angles of arrival in radians.
+<li><p><strong>samples</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><em>numpy.ndarray</em></a>) – Signal samples, first dimension being the number of signal streams <span class="math notranslate nohighlight">\(N\)</span>, second the number of samples <span class="math notranslate nohighlight">\(T\)</span>.</p></li>
+<li><p><strong>carrier_frequency</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><em>float</em></a>) – The assumed carrier central frequency of the samples <span class="math notranslate nohighlight">\(f_\mathrm{c}\)</span>.</p></li>
+<li><p><strong>angles</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><em>numpy.ndarray</em></a>) – Spherical coordinate system angles of arrival in radians.
 A three-dimensional numpy array with the first dimension representing the number of angles,
 the second dimension of magnitude number of focus points <span class="math notranslate nohighlight">\(F\)</span>,
 and the third dimension containing the azimuth and zenith angle in radians, respectively.</p></li>
-<li><p><strong>array</strong> (<a class="reference internal" href="core.antennas.html#hermespy.core.antennas.AntennaArray" title="hermespy.core.antennas.AntennaArray"><em>AntennaArray</em></a>) – The assumed antenna array.</p></li>
+<li><p><strong>array</strong> (<a class="reference internal" href="core/antennas.html#hermespy.core.antennas.AntennaArrayState" title="hermespy.core.antennas.AntennaArrayState"><em>AntennaArrayState</em></a>) – The assumed antenna array.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a></span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a></span></p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Stream samples of the focused signal towards all focus points.
@@ -822,35 +752,52 @@ the second dimension the number of returned streams and the third dimension the 
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.beamforming.beamformer.ReceiveBeamformer.decode_streams">
-<span class="sig-name descname"><span class="pre">decode_streams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">streams</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/beamforming/beamformer.html#ReceiveBeamformer.decode_streams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.beamforming.beamformer.ReceiveBeamformer.decode_streams" title="Link to this definition">¶</a></dt>
-<dd><p>Encode a signal MIMO stream during signal recepeption.</p>
-<p>This operation may modify the number of streams.</p>
+<span class="sig-name descname"><span class="pre">decode_streams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">streams</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_streams</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/beamforming/beamformer.html#ReceiveBeamformer.decode_streams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.beamforming.beamformer.ReceiveBeamformer.decode_streams" title="Link to this definition">¶</a></dt>
+<dd><p>Decode a MIMO signal for receive beamforming.</p>
+<p>Wrapper around <a class="reference internal" href="#hermespy.beamforming.beamformer.ReceiveBeamformer._decode" title="hermespy.beamforming.beamformer.ReceiveBeamformer._decode"><code class="xref py py-meth docutils literal notranslate"><span class="pre">_decode()</span></code></a> to decode a signal for receive beamforming.
+Compliant with the <code class="xref py py-class docutils literal notranslate"><span class="pre">ReceiveStreamDecoder</span></code> interface.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>streams</strong> (<a class="reference internal" href="core.signal_model.Signal.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a>) – The signal stream to be decoded.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>streams</strong> (<a class="reference internal" href="core/signal.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a>) – The signal to be decoded.</p></li>
+<li><p><strong>num_output_streams</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – The number of desired output streams.
+Must match <a class="reference internal" href="beamforming.capon.html#hermespy.beamforming.capon.CaponBeamformer.num_receive_output_streams" title="hermespy.beamforming.capon.CaponBeamformer.num_receive_output_streams"><code class="xref py py-attr docutils literal notranslate"><span class="pre">num_receive_output_streams</span></code></a>.</p></li>
+<li><p><strong>device</strong> (<a class="reference internal" href="core/state.html#hermespy.core.state.ReceiveState" title="hermespy.core.state.ReceiveState"><em>ReceiveState</em></a>) – State of the device this beamformer is operating on.</p></li>
+<li><p><strong>focus</strong> (<a class="reference internal" href="#hermespy.beamforming.beamformer.BeamFocus" title="hermespy.beamforming.beamformer.BeamFocus"><em>BeamFocus</em></a><em> | </em><em>Sequence</em><em>[</em><a class="reference internal" href="#hermespy.beamforming.beamformer.BeamFocus" title="hermespy.beamforming.beamformer.BeamFocus"><em>BeamFocus</em></a><em>]</em><em>, </em><em>optional</em>) – Focus points of the steered signal power.
+Must either be a single focus point or a sequence of focus points,
+depending on <a class="reference internal" href="#hermespy.beamforming.beamformer.ReceiveBeamformer.num_receive_focus_points" title="hermespy.beamforming.beamformer.ReceiveBeamformer.num_receive_focus_points"><code class="xref py py-attr docutils literal notranslate"><span class="pre">num_receive_focus_points</span></code></a>.
+If not provided, the beamformer’s default <a class="reference internal" href="#hermespy.beamforming.beamformer.ReceiveBeamformer.receive_focus" title="hermespy.beamforming.beamformer.ReceiveBeamformer.receive_focus"><code class="xref py py-attr docutils literal notranslate"><span class="pre">receive_focus</span></code></a> is assumed.</p></li>
+</ul>
 </dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="core.signal_model.Signal.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><code class="xref py py-class docutils literal notranslate"><span class="pre">Signal</span></code></a></span></p>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – <ul class="simple">
+<li><p>If the number of provided focus points does not match the beamformer requirements.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="core/signal.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><code class="xref py py-class docutils literal notranslate"><span class="pre">Signal</span></code></a></span></p>
 </dd>
 </dl>
-<p>Returns: The decoded signal stream.</p>
+<p>Returns: The decoded signal.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.beamforming.beamformer.ReceiveBeamformer.probe">
-<span class="sig-name descname"><span class="pre">probe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focus_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/beamforming/beamformer.html#ReceiveBeamformer.probe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.beamforming.beamformer.ReceiveBeamformer.probe" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">probe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focus_points</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/beamforming/beamformer.html#ReceiveBeamformer.probe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.beamforming.beamformer.ReceiveBeamformer.probe" title="Link to this definition">¶</a></dt>
 <dd><p>Focus a signal model towards certain directions of interest.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>signal</strong> (<a class="reference internal" href="core.signal_model.Signal.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a>) – The signal to be steered.</p></li>
-<li><p><strong>focus_points</strong> (<em>np.ndarray</em><em>, </em><em>optional</em>) – Focus point of the steered signal power.
+<li><p><strong>signal</strong> (<a class="reference internal" href="core/signal.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a>) – The signal to be steered.</p></li>
+<li><p><strong>device</strong> (<a class="reference internal" href="core/state.html#hermespy.core.state.ReceiveState" title="hermespy.core.state.ReceiveState"><em>ReceiveState</em></a>) – State of the device this beamformer is operating on.</p></li>
+<li><p><strong>focus_points</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><em>numpy.ndarray</em></a><em>, </em><em>optional</em>) – Focus point of the steered signal power.
 Two-dimensional numpy array with the first dimension representing the number of points
 and the second dimension representing the point values.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a></span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a></span></p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Stream samples of the focused signal towards all focus points.
@@ -860,39 +807,9 @@ the second dimension the number of returned streams and the third dimension the 
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="hermespy.beamforming.beamformer.ReceiveBeamformer.receive">
-<span class="sig-name descname"><span class="pre">receive</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/beamforming/beamformer.html#ReceiveBeamformer.receive"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.beamforming.beamformer.ReceiveBeamformer.receive" title="Link to this definition">¶</a></dt>
-<dd><p>Focus a signal model towards a certain target.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>signal</strong> (<a class="reference internal" href="core.signal_model.Signal.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a>) – The signal to be steered.</p></li>
-<li><p><strong>focus</strong> (<a class="reference internal" href="#hermespy.beamforming.beamformer.BeamFocus" title="hermespy.beamforming.beamformer.BeamFocus"><em>BeamFocus</em></a><em> | </em><em>Sequence</em><em>[</em><a class="reference internal" href="#hermespy.beamforming.beamformer.BeamFocus" title="hermespy.beamforming.beamformer.BeamFocus"><em>BeamFocus</em></a><em>]</em><em>, </em><em>optional</em>) – Focus of the steered signal power.
-If not provided, the beamformer’s default <a class="reference internal" href="#hermespy.beamforming.beamformer.ReceiveBeamformer.receive_focus" title="hermespy.beamforming.beamformer.ReceiveBeamformer.receive_focus"><code class="xref py py-attr docutils literal notranslate"><span class="pre">receive_focus</span></code></a> is used.</p></li>
-<li><p><strong>array</strong> (<a class="reference internal" href="core.antennas.html#hermespy.core.antennas.AntennaArray" title="hermespy.core.antennas.AntennaArray"><em>AntennaArray</em></a><em>, </em><em>optional</em>) – Antenna array assumed used for steering.
-If not specified, the operator’s antenna array is used.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="core.signal_model.Signal.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><code class="xref py py-class docutils literal notranslate"><span class="pre">Signal</span></code></a></span></p>
-</dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Signal focused towards the requested focus points.</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><ul class="simple">
-<li><p><strong>FloatingError</strong> – If the operator or operator device are not yet specified.</p></li>
-<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.12)"><strong>RuntimeError</strong></a> – If the number of signal streams does not match the number of required input streams.</p></li>
-<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.12)"><strong>ValueError</strong></a> – If the number of focus points does not match the number of required focus points.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.beamforming.beamformer.ReceiveBeamformer.num_receive_focus_points">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_receive_focus_points</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><span class="pre">int</span></a></em><a class="headerlink" href="#hermespy.beamforming.beamformer.ReceiveBeamformer.num_receive_focus_points" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_receive_focus_points</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></em><a class="headerlink" href="#hermespy.beamforming.beamformer.ReceiveBeamformer.num_receive_focus_points" title="Link to this definition">¶</a></dt>
 <dd><p>Number of required receive focus points.</p>
 <p>If this is <span class="math notranslate nohighlight">\(1\)</span>,
 the beamformer is considered to be a single focus point beamformer and
@@ -903,49 +820,8 @@ Otherwise, the beamformer is considered a multi focus point beamformer and
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.beamforming.beamformer.ReceiveBeamformer.num_receive_input_streams">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_receive_input_streams</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><span class="pre">int</span></a></em><a class="headerlink" href="#hermespy.beamforming.beamformer.ReceiveBeamformer.num_receive_input_streams" title="Link to this definition">¶</a></dt>
-<dd><p>Number of input streams required by this beamformer.</p>
-<p>Dimension <span class="math notranslate nohighlight">\(N\)</span> of the input sample matrix
-<span class="math notranslate nohighlight">\(\mathbf{X} \in \mathbb{C}^{N \times T}\)</span>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Number of input streams <span class="math notranslate nohighlight">\(N\)</span>.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.beamforming.beamformer.ReceiveBeamformer.num_receive_output_streams">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_receive_output_streams</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><span class="pre">int</span></a></em><a class="headerlink" href="#hermespy.beamforming.beamformer.ReceiveBeamformer.num_receive_output_streams" title="Link to this definition">¶</a></dt>
-<dd><p>Number of output streams generated by this beamformer.</p>
-<p>Dimension <span class="math notranslate nohighlight">\(M\)</span> of the output sample matrix
-<span class="math notranslate nohighlight">\(\mathbf{Y} \in \mathbb{C}^{M \times T}\)</span>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Number of output streams <span class="math notranslate nohighlight">\(M\)</span>.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.beamforming.beamformer.ReceiveBeamformer.precoding">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">precoding</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="precoding.precoding.html#hermespy.precoding.precoding.Precoding" title="hermespy.precoding.precoding.Precoding"><span class="pre">Precoding</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></em><a class="headerlink" href="#hermespy.beamforming.beamformer.ReceiveBeamformer.precoding" title="Link to this definition">¶</a></dt>
-<dd><p>Access the precoding configuration this precoder is attached to.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Handle to the precoding.
-<cite>None</cite> if the precoder is considered floating.</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.12)"><strong>RuntimeError</strong></a> – If this precoder is currently floating.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
 <dt class="sig sig-object py" id="hermespy.beamforming.beamformer.ReceiveBeamformer.probe_focus_points">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">probe_focus_points</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#hermespy.beamforming.beamformer.ReceiveBeamformer.probe_focus_points" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">probe_focus_points</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#hermespy.beamforming.beamformer.ReceiveBeamformer.probe_focus_points" title="Link to this definition">¶</a></dt>
 <dd><p>Default beamformer focus points during probing.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -954,20 +830,20 @@ representing the probe index, the second dimension the point and the third dimen
 two the point azimuth and zenith, respectively.</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.12)"><strong>ValueError</strong></a> – On invalid arguments.</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – On invalid arguments.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.beamforming.beamformer.ReceiveBeamformer.receive_focus">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">receive_focus</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.beamforming.beamformer.BeamFocus" title="hermespy.beamforming.beamformer.BeamFocus"><span class="pre">BeamFocus</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.12)"><span class="pre">Sequence</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.beamforming.beamformer.BeamFocus" title="hermespy.beamforming.beamformer.BeamFocus"><span class="pre">BeamFocus</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.beamforming.beamformer.ReceiveBeamformer.receive_focus" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">receive_focus</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.beamforming.beamformer.BeamFocus" title="hermespy.beamforming.beamformer.BeamFocus"><span class="pre">BeamFocus</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.13)"><span class="pre">Sequence</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.beamforming.beamformer.BeamFocus" title="hermespy.beamforming.beamformer.BeamFocus"><span class="pre">BeamFocus</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.beamforming.beamformer.ReceiveBeamformer.receive_focus" title="Link to this definition">¶</a></dt>
 <dd><p>Focus points of the beamformer during reception.</p>
 <p>Depending on <a class="reference internal" href="#hermespy.beamforming.beamformer.ReceiveBeamformer.num_receive_focus_points" title="hermespy.beamforming.beamformer.ReceiveBeamformer.num_receive_focus_points"><code class="xref py py-attr docutils literal notranslate"><span class="pre">num_receive_focus_points</span></code></a>
 this is either a single focus point or a <code class="xref py py-obj docutils literal notranslate"><span class="pre">Sequence</span></code> of points.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.12)"><strong>ValueError</strong></a> – If the provided number of focus points does not match the number of required focus points.</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If the provided number of focus points does not match the number of required focus points.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -976,9 +852,9 @@ this is either a single focus point or a <code class="xref py py-obj docutils li
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.beamforming.beamformer.SphericalFocus">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SphericalFocus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">angles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><span class="pre">ndarray</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/beamforming/beamformer.html#SphericalFocus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.beamforming.beamformer.SphericalFocus" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SphericalFocus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">angles</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/beamforming/beamformer.html#SphericalFocus"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.beamforming.beamformer.SphericalFocus" title="Link to this definition">¶</a></dt>
 <dt class="sig sig-object py">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SphericalFocus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">azimuth</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">zenith</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a></span></em><span class="sig-paren">)</span></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SphericalFocus</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">azimuth</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">zenith</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></span></em><span class="sig-paren">)</span></dt>
 <dd><p>Bases: <a class="reference internal" href="#hermespy.beamforming.beamformer.BeamFocus" title="hermespy.beamforming.beamformer.BeamFocus"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamFocus</span></code></a></p>
 <p>Focus point in spherical coordinates.</p>
 <dl class="py method">
@@ -995,135 +871,88 @@ this is either a single focus point or a <code class="xref py py-obj docutils li
 </dl>
 </dd></dl>
 
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.beamforming.beamformer.SphericalFocus.angles">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">angles</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#hermespy.beamforming.beamformer.SphericalFocus.angles" title="Link to this definition">¶</a></dt>
-<dd><p>Spherical azimuth and zenith angles in radians.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="hermespy.beamforming.beamformer.SphericalFocus.spherical_angles">
+<span class="sig-name descname"><span class="pre">spherical_angles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/beamforming/beamformer.html#SphericalFocus.spherical_angles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.beamforming.beamformer.SphericalFocus.spherical_angles" title="Link to this definition">¶</a></dt>
+<dd><p>Compute azimuth and zenith angles in radians, towards a beam is focused.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>device</strong> (<a class="reference internal" href="core/state.html#hermespy.core.state.State" title="hermespy.core.state.State"><em>State</em></a>) – State of the device the beamformer is operating on.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ndarray</span></code></a></span></p>
+</dd>
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Numpy vector with the azimuth and zenith angles in radians from the device’s point of view.</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py property">
-<dt class="sig sig-object py" id="hermespy.beamforming.beamformer.SphericalFocus.spherical_angles">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">spherical_angles</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.26)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#hermespy.beamforming.beamformer.SphericalFocus.spherical_angles" title="Link to this definition">¶</a></dt>
-<dd><p>Azimuth and zenith angles in radians, towards which the beam is focused in spherical coordinates.</p>
+<dt class="sig sig-object py" id="hermespy.beamforming.beamformer.SphericalFocus.angles">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">angles</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><span class="pre">ndarray</span></a></em><a class="headerlink" href="#hermespy.beamforming.beamformer.SphericalFocus.angles" title="Link to this definition">¶</a></dt>
+<dd><p>Spherical azimuth and zenith angles in radians.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.beamforming.beamformer.TransmitBeamformer">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TransmitBeamformer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">operator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/beamforming/beamformer.html#TransmitBeamformer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.beamforming.beamformer.TransmitBeamformer" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#hermespy.beamforming.beamformer.BeamformerBase" title="hermespy.beamforming.beamformer.BeamformerBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamformerBase</span></code></a>[<a class="reference internal" href="core.device.Transmitter.html#hermespy.core.device.Transmitter" title="hermespy.core.device.Transmitter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Transmitter</span></code></a>], <a class="reference internal" href="precoding.stream_precoding.html#hermespy.precoding.stream_precoding.TransmitStreamEncoder" title="hermespy.precoding.stream_precoding.TransmitStreamEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransmitStreamEncoder</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a></p>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">TransmitBeamformer</span></span><a class="reference internal" href="../_modules/hermespy/beamforming/beamformer.html#TransmitBeamformer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.beamforming.beamformer.TransmitBeamformer" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="core/precoding.html#hermespy.core.precoding.TransmitStreamEncoder" title="hermespy.core.precoding.TransmitStreamEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">TransmitStreamEncoder</span></code></a></p>
 <p>Base class for beam steering precodings during signal transmissions.</p>
-<p>Args:</p>
-<dl class="simple">
-<dt>operator (Transmitter, optional):</dt><dd><p>The operator this beamformer is attached to.
-By default, the beamformer is considered floating.</p>
-</dd>
-</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.beamforming.beamformer.TransmitBeamformer.encode_streams">
-<span class="sig-name descname"><span class="pre">encode_streams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">streams</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/beamforming/beamformer.html#TransmitBeamformer.encode_streams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.beamforming.beamformer.TransmitBeamformer.encode_streams" title="Link to this definition">¶</a></dt>
-<dd><p>Encode a signal MIMO stream during transmission.</p>
-<p>This operation may modify the number of streams.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>streams</strong> (<a class="reference internal" href="core.signal_model.Signal.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a>) – The signal stream to be encoded.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="core.signal_model.Signal.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><code class="xref py py-class docutils literal notranslate"><span class="pre">Signal</span></code></a></span></p>
-</dd>
-</dl>
-<p>Returns: The encoded signal stream.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="hermespy.beamforming.beamformer.TransmitBeamformer.transmit">
-<span class="sig-name descname"><span class="pre">transmit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">signal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">array</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/beamforming/beamformer.html#TransmitBeamformer.transmit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.beamforming.beamformer.TransmitBeamformer.transmit" title="Link to this definition">¶</a></dt>
-<dd><p>Focus a signal model towards a certain target.</p>
+<span class="sig-name descname"><span class="pre">encode_streams</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">streams</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_streams</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focus</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/beamforming/beamformer.html#TransmitBeamformer.encode_streams"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.beamforming.beamformer.TransmitBeamformer.encode_streams" title="Link to this definition">¶</a></dt>
+<dd><p>Encode a MIMO signal for transmit beamforming.</p>
+<p>Wrapper around <code class="xref py py-meth docutils literal notranslate"><span class="pre">_encode()</span></code> to encode a signal for transmit beamforming.
+Compliant with the <code class="xref py py-class docutils literal notranslate"><span class="pre">TransmitStreamEncoder</span></code> interface.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>signal</strong> (<a class="reference internal" href="core.signal_model.Signal.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a>) – The signal to be steered.</p></li>
+<li><p><strong>streams</strong> (<a class="reference internal" href="core/signal.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a>) – The signal to be encoded.</p></li>
+<li><p><strong>num_output_streams</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – The number of desired output streams.
+Must match <code class="xref py py-attr docutils literal notranslate"><span class="pre">num_transmit_output_streams</span></code>.</p></li>
+<li><p><strong>device</strong> (<a class="reference internal" href="core/state.html#hermespy.core.state.TransmitState" title="hermespy.core.state.TransmitState"><em>TransmitState</em></a>) – State of the device this beamformer is operating on.</p></li>
 <li><p><strong>focus</strong> (<a class="reference internal" href="#hermespy.beamforming.beamformer.BeamFocus" title="hermespy.beamforming.beamformer.BeamFocus"><em>BeamFocus</em></a><em> | </em><em>Sequence</em><em>[</em><a class="reference internal" href="#hermespy.beamforming.beamformer.BeamFocus" title="hermespy.beamforming.beamformer.BeamFocus"><em>BeamFocus</em></a><em>]</em><em>, </em><em>optional</em>) – Focus points of the steered signal power.
-If <cite>None</cite>, the beamformer’s default <a class="reference internal" href="#hermespy.beamforming.beamformer.TransmitBeamformer.transmit_focus" title="hermespy.beamforming.beamformer.TransmitBeamformer.transmit_focus"><code class="xref py py-attr docutils literal notranslate"><span class="pre">transmit_focus</span></code></a> is used.</p></li>
-<li><p><strong>array</strong> (<a class="reference internal" href="core.antennas.html#hermespy.core.antennas.AntennaArray" title="hermespy.core.antennas.AntennaArray"><em>AntennaArray</em></a><em>, </em><em>optional</em>) – Antenna array assumed used for steering.
-If <cite>None</cite>, the operator’s antenna array is used.</p></li>
+Must either be a single focus point or a sequence of focus points,
+depending on <a class="reference internal" href="#hermespy.beamforming.beamformer.TransmitBeamformer.num_transmit_focus_points" title="hermespy.beamforming.beamformer.TransmitBeamformer.num_transmit_focus_points"><code class="xref py py-attr docutils literal notranslate"><span class="pre">num_transmit_focus_points</span></code></a>.
+If not provided, the beamformer’s default <a class="reference internal" href="#hermespy.beamforming.beamformer.TransmitBeamformer.transmit_focus" title="hermespy.beamforming.beamformer.TransmitBeamformer.transmit_focus"><code class="xref py py-attr docutils literal notranslate"><span class="pre">transmit_focus</span></code></a> is assumed.</p></li>
 </ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="core.signal_model.Signal.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><code class="xref py py-class docutils literal notranslate"><span class="pre">Signal</span></code></a></span></p>
-</dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Samples of the focused signal.</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.12)"><strong>RuntimeError</strong></a> – If the operator or operator device are not yet specified.</p></li>
-<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.12)"><strong>RuntimeError</strong></a> – If the number of signal streams does not match the number of required input streams.</p></li>
-<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.12)"><strong>ValueError</strong></a> – If the number of focus points does not match the number of required focus points.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If the number of provided signal streams does not match the beamformer requirements.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If the number of provided focus points does not match the beamformer requirements.</p></li>
 </ul>
 </dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference internal" href="core/signal.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><code class="xref py py-class docutils literal notranslate"><span class="pre">Signal</span></code></a></span></p>
+</dd>
 </dl>
+<p>Returns: The encoded signal.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.beamforming.beamformer.TransmitBeamformer.num_transmit_focus_points">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_transmit_focus_points</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><span class="pre">int</span></a></em><a class="headerlink" href="#hermespy.beamforming.beamformer.TransmitBeamformer.num_transmit_focus_points" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_transmit_focus_points</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></em><a class="headerlink" href="#hermespy.beamforming.beamformer.TransmitBeamformer.num_transmit_focus_points" title="Link to this definition">¶</a></dt>
 <dd><p>Number of required transmit focus points.</p>
 <p>If this is <span class="math notranslate nohighlight">\(1\)</span>,
 the beamformer is considered to be a single focus point beamformer and
 <a class="reference internal" href="#hermespy.beamforming.beamformer.TransmitBeamformer.transmit_focus" title="hermespy.beamforming.beamformer.TransmitBeamformer.transmit_focus"><code class="xref py py-attr docutils literal notranslate"><span class="pre">transmit_focus</span></code></a> will return a single focus point.
 Otherwise, the beamformer is considered a multi focus point beamformer and
 <a class="reference internal" href="#hermespy.beamforming.beamformer.TransmitBeamformer.transmit_focus" title="hermespy.beamforming.beamformer.TransmitBeamformer.transmit_focus"><code class="xref py py-attr docutils literal notranslate"><span class="pre">transmit_focus</span></code></a> will return a <code class="xref py py-obj docutils literal notranslate"><span class="pre">Sequence</span></code> of focus points.</p>
-<p>Returns: Number of focus points.</p>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.beamforming.beamformer.TransmitBeamformer.num_transmit_input_streams">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_transmit_input_streams</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><span class="pre">int</span></a></em><a class="headerlink" href="#hermespy.beamforming.beamformer.TransmitBeamformer.num_transmit_input_streams" title="Link to this definition">¶</a></dt>
-<dd><p>Number of input streams required by this beamformer.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Number of input streams.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.beamforming.beamformer.TransmitBeamformer.num_transmit_output_streams">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_transmit_output_streams</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><span class="pre">int</span></a></em><a class="headerlink" href="#hermespy.beamforming.beamformer.TransmitBeamformer.num_transmit_output_streams" title="Link to this definition">¶</a></dt>
-<dd><p>Number of output streams generated by this beamformer.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Number of output streams.</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="hermespy.beamforming.beamformer.TransmitBeamformer.precoding">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">precoding</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="precoding.precoding.html#hermespy.precoding.precoding.Precoding" title="hermespy.precoding.precoding.Precoding"><span class="pre">Precoding</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></em><a class="headerlink" href="#hermespy.beamforming.beamformer.TransmitBeamformer.precoding" title="Link to this definition">¶</a></dt>
-<dd><p>Access the precoding configuration this precoder is attached to.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Handle to the precoding.
-<cite>None</cite> if the precoder is considered floating.</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.12)"><strong>RuntimeError</strong></a> – If this precoder is currently floating.</p>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.beamforming.beamformer.TransmitBeamformer.transmit_focus">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transmit_focus</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.beamforming.beamformer.BeamFocus" title="hermespy.beamforming.beamformer.BeamFocus"><span class="pre">BeamFocus</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.12)"><span class="pre">Sequence</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.beamforming.beamformer.BeamFocus" title="hermespy.beamforming.beamformer.BeamFocus"><span class="pre">BeamFocus</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.beamforming.beamformer.TransmitBeamformer.transmit_focus" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">transmit_focus</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.beamforming.beamformer.BeamFocus" title="hermespy.beamforming.beamformer.BeamFocus"><span class="pre">BeamFocus</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.13)"><span class="pre">Sequence</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.beamforming.beamformer.BeamFocus" title="hermespy.beamforming.beamformer.BeamFocus"><span class="pre">BeamFocus</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.beamforming.beamformer.TransmitBeamformer.transmit_focus" title="Link to this definition">¶</a></dt>
 <dd><p>Focus points of the beamformer during transmission.</p>
 <p>Depending on <a class="reference internal" href="#hermespy.beamforming.beamformer.TransmitBeamformer.num_transmit_focus_points" title="hermespy.beamforming.beamformer.TransmitBeamformer.num_transmit_focus_points"><code class="xref py py-attr docutils literal notranslate"><span class="pre">num_transmit_focus_points</span></code></a>
 this is either a single focus point or a <code class="xref py py-obj docutils literal notranslate"><span class="pre">Sequence</span></code> of points.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.12)"><strong>ValueError</strong></a> – If the provided number of focus points does not match the number of required focus points.</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If the provided number of focus points does not match the number of required focus points.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1181,9 +1010,9 @@ this is either a single focus point or a <code class="xref py py-obj docutils li
     </aside>
   </div>
 </div><script src="../_static/documentation_options.js?v=5929fcd5"></script>
-    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/scripts/furo.js?v=4e2eecee"></script>
+    <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>

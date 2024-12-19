@@ -201,7 +201,7 @@ followed by a propagation over a joint channel realization and finally the recep
 .. literalinclude:: ../../scripts/examples/channel.py
    :language: python
    :linenos:
-   :lines: 29-40
+   :lines: 31-42
 
 This snippet is essentially a summary of what is happening within the drop generation of :class:`Simulations<hermespy.simulation.simulation.Simulation>`.
 However, by default devices won't generate any waveforms to be transmitted.
@@ -210,7 +210,7 @@ For example, a :class:`SimplexLink<hermespy.modem.modem.SimplexLink>` transmitti
 .. literalinclude:: ../../scripts/examples/channel.py
    :language: python
    :linenos:
-   :lines: 20-27
+   :lines: 20-29
 
 Investigating the performance of the configured waveform over the specific :class:`Channel<hermespy.channel.channel.Channel>` within a :class:`Simulation<hermespy.simulation.simulation.Simulation>`
 requires the instantiation of a new :class:`Simulation<hermespy.simulation.simulation.Simulation>` and adding the already existing :class:`Channel<hermespy.channel.channel.Channel>` and :class:`Simulated Devices<hermespy.simulation.simulated_device.SimulatedDevice>`.
@@ -218,7 +218,7 @@ requires the instantiation of a new :class:`Simulation<hermespy.simulation.simul
 .. literalinclude:: ../../scripts/examples/channel.py
    :language: python
    :linenos:
-   :lines: 43-52
+   :lines: 45-51
 
 Now, evaluators such as :class:`BER<hermespy.modem.evaluators.BitErrorEvaluator>` can be added to the simulation pipeline and
 the :class:`Simulation<hermespy.simulation.simulation.Simulation>` can be executed and the results can be analyzed.
@@ -226,7 +226,7 @@ the :class:`Simulation<hermespy.simulation.simulation.Simulation>` can be execut
 .. literalinclude:: ../../scripts/examples/channel.py
    :language: python
    :linenos:
-   :lines: 54-59
+   :lines: 56-60
 
 The channel module consists of the base classes
 
@@ -259,6 +259,7 @@ Note that these models might require specifying the linked devices :meth:`positi
    delay/delay
    radar/radar
    quadriga
+   sionna-rt
 
 .. toctree::
    :hidden:

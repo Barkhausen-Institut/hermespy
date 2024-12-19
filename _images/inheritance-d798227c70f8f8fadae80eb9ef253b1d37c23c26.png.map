@@ -1,5 +1,0 @@
-<map id="inheritance327652a2de" name="inheritance327652a2de">
-<area shape="rect" id="node1" href="precoding.precoding.html#hermespy.precoding.precoding.Precoding" target="_top" title="Channel Precoding configuration for wireless transmission of modulated data symbols." alt="" coords="5,5,92,31"/>
-<area shape="rect" id="node3" href="#hermespy.modem.precoding.symbol_precoding.SymbolPrecoding" target="_top" title="Channel SymbolPrecoding configuration for wireless transmission of modulated data symbols." alt="" coords="45,79,180,104"/>
-<area shape="rect" id="node2" href="core.factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="117,5,215,31"/>
-</map>

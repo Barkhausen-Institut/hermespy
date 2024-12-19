@@ -1,0 +1,10 @@
+<map id="inheritancef4743fa8b0" name="inheritancef4743fa8b0">
+<area shape="rect" id="node1" href="https://docs.python.org/3/library/abc.html#abc.ABC" target="_top" title="Helper class that provides a standard way to create an ABC using" alt="" coords="5,5,77,31"/>
+<area shape="rect" id="node2" href="#hermespy.core.antennas.Antenna" target="_top" title="Base class for the model of a single antenna element within an antenna array." alt="" coords="99,79,175,104"/>
+<area shape="rect" id="node5" href="#hermespy.core.antennas.Dipole" target="_top" title="Model of vertically polarized half&#45;wavelength dipole antenna." alt="" coords="43,152,115,177"/>
+<area shape="rect" id="node7" href="#hermespy.core.antennas.IdealAntenna" target="_top" title="Theoretic model of an ideal antenna." alt="" coords="139,152,247,177"/>
+<area shape="rect" id="node8" href="#hermespy.core.antennas.PatchAntenna" target="_top" title="Realistic model of a vertically polarized patch antenna." alt="" coords="271,152,382,177"/>
+<area shape="rect" id="node3" href="https://docs.python.org/3/library/typing.html#typing.Generic" target="_top" title="Abstract base class for generic types." alt="" coords="101,5,173,31"/>
+<area shape="rect" id="node4" href="transformation.html#hermespy.core.transformation.Transformable" target="_top" title="Representation of a Coordinate Frame within a Kinematic Chain." alt="" coords="197,5,312,31"/>
+<area shape="rect" id="node6" href="factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="200,79,299,104"/>
+</map>

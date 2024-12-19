@@ -5,16 +5,15 @@
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="BCH Coding" href="fec.bch.html" /><link rel="prev" title="Error Correction" href="fec.html" />
 
-    <!-- Generated with Sphinx 7.3.7 and Furo 2024.05.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Coding Pipeline - HermesPy</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=387cc868" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
     <link rel="stylesheet" type="text/css" href="../_static/tweaks.css?v=c2f9d16b" />
-    <link rel="stylesheet" type="text/css" href="../_static/tabs.css?v=a5c4661c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     
     
 
@@ -95,19 +94,6 @@
       <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
     </svg>
   </symbol>
-  <symbol id="svg-sun-half" viewBox="0 0 24 24">
-    <title>Auto light/dark mode</title>
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
-      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M13 12h5" />
-      <path d="M13 15h4" />
-      <path d="M13 18h1" />
-      <path d="M13 9h4" />
-      <path d="M13 6h1" />
-    </svg>
-  </symbol>
   <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
     <title>Auto light/dark, in light mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -148,7 +134,7 @@
       <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
       <path d="M13.5 6.5l4 4" />
       <path d="M20 21l2 -2l-2 -2" />
-      <path d="M17 17l-2 2l2 2" /
+      <path d="M17 17l-2 2l2 2" />
     </svg>
   </symbol>
   <symbol id="svg-eye" viewBox="0 0 24 24">
@@ -292,8 +278,6 @@
 <li class="toctree-l4"><a class="reference internal" href="modem.precoding.ratio_combining.html">Maximal Ratio Combining</a></li>
 <li class="toctree-l4"><a class="reference internal" href="modem.precoding.single_carrier.html">Single Carrier Decoding</a></li>
 <li class="toctree-l4"><a class="reference internal" href="modem.precoding.space_time_block_coding.html">Space-Time Block Codes</a></li>
-<li class="toctree-l4"><a class="reference internal" href="modem.precoding.spatial_multiplexing.html">Spatial Multiplexing</a></li>
-<li class="toctree-l4"><a class="reference internal" href="modem.precoding.symbol_precoding.SymbolPrecoder.html">Symbol Precoder</a></li>
 <li class="toctree-l4"><a class="reference internal" href="modem.precoding.symbol_precoding.SymbolPrecoding.html">Symbol Precoding</a></li>
 </ul>
 </li>
@@ -369,6 +353,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="channel/quadriga.html">Quadriga</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel/sionna-rt.html">SionnaRT Channel</a></li>
 <li class="toctree-l3"><a class="reference internal" href="channel/consistent.html">Spatial Consistency</a></li>
 </ul>
 </li>
@@ -473,36 +458,38 @@
 <li class="toctree-l3"><a class="reference internal" href="hardware_loop.calibration.leakage.html">Leakage Calibration</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="core.html">Core</a><input class="toctree-checkbox" id="toctree-checkbox-34" name="toctree-checkbox-34" role="switch" type="checkbox"/><label for="toctree-checkbox-34"><div class="visually-hidden">Toggle navigation of Core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html">PyMonte</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.executable.html">Executable</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.factory.html">Serialization Factory</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.definitions.html">General Definitions</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="core.device.Device.html">Device</a><input class="toctree-checkbox" id="toctree-checkbox-35" name="toctree-checkbox-35" role="switch" type="checkbox"/><label for="toctree-checkbox-35"><div class="visually-hidden">Toggle navigation of Device</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="core.device.DeviceInput.html">Device Input</a></li>
-<li class="toctree-l4"><a class="reference internal" href="core.device.DeviceOutput.html">Device Output</a></li>
-<li class="toctree-l4"><a class="reference internal" href="core.device.DeviceReception.html">Device Reception</a></li>
-<li class="toctree-l4"><a class="reference internal" href="core.device.DeviceTransmission.html">Device Transmission</a></li>
-<li class="toctree-l4"><a class="reference internal" href="core.device.ProcessedDeviceInput.html">Processed Device Input</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="core/core.html">Core</a><input class="toctree-checkbox" id="toctree-checkbox-34" name="toctree-checkbox-34" role="switch" type="checkbox"/><label for="toctree-checkbox-34"><div class="visually-hidden">Toggle navigation of Core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="core/device.html">Device Model</a><input class="toctree-checkbox" id="toctree-checkbox-35" name="toctree-checkbox-35" role="switch" type="checkbox"/><label for="toctree-checkbox-35"><div class="visually-hidden">Toggle navigation of Device Model</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="core/device.DeviceInput.html">Device Input</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.DeviceOutput.html">Device Output</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.DeviceReception.html">Device Reception</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.DeviceTransmission.html">Device Transmission</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.OperationResult.html">Operation Result</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.ProcessedDeviceInput.html">Processed Device Input</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.Receiver.html">Receiver</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.Reception.html">Reception</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.Transmission.html">Transmission</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.Transmitter.html">Transmitter</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.Transmitter.html">Transmitter</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.Receiver.html">Receiver</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.Transmission.html">Transmission</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.Reception.html">Reception</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.OperationResult.html">Operation Result</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.drop.Drop.html">Drop</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.operators.html">Extra Operators</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.duplex.html">Duplex Operation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.logarithmic.html">Logarithmics</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.pipeline.html">Pipeline</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.random_node.html">Random Graph</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.scenario.html">Wireless Scenario</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.signal_model.Signal.html">Signal</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.channel_state_information.html">Channel State Information</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.antennas.html">Antenna Descriptions</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.transformation.html">Coordinate System Transformations</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.visualize.html">Visualization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/scenario.html">Wireless Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/monte_carlo.html">PyMonte</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/signal.html">Signal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/antennas.html">Antenna Descriptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/channel.html">Channel State Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/drop.html">Drop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/factory.html">Serialization Factory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/hooks.html">Hooks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/operators.html">Extra Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/precoding.html">Precoding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/random_node.html">Random Graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/state.html">State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/transformation.html">Coordinate System</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/visualize.html">Visualization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/executable.html">Executable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/pipeline.html">Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/logarithmic.html">Logarithmics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/definitions.html">General Definitions</a></li>
 </ul>
 </li>
 <li class="toctree-l2 current has-children"><a class="reference internal" href="fec.html">Error Correction</a><input checked="" class="toctree-checkbox" id="toctree-checkbox-36" name="toctree-checkbox-36" role="switch" type="checkbox"/><label for="toctree-checkbox-36"><div class="visually-hidden">Toggle navigation of Error Correction</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul class="current">
@@ -525,22 +512,18 @@
 <li class="toctree-l3"><a class="reference internal" href="jcas.jcas.html">Duplex JCAS Operator</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="precoding.html">Precoding</a><input class="toctree-checkbox" id="toctree-checkbox-38" name="toctree-checkbox-38" role="switch" type="checkbox"/><label for="toctree-checkbox-38"><div class="visually-hidden">Toggle navigation of Precoding</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="precoding.precoding.html">Precoding Configuration</a></li>
-<li class="toctree-l3"><a class="reference internal" href="precoding.stream_precoding.html">Stream Precoding</a></li>
-</ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="beamforming.html">Beamforming</a><input class="toctree-checkbox" id="toctree-checkbox-39" name="toctree-checkbox-39" role="switch" type="checkbox"/><label for="toctree-checkbox-39"><div class="visually-hidden">Toggle navigation of Beamforming</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="beamforming.html">Beamforming</a><input class="toctree-checkbox" id="toctree-checkbox-38" name="toctree-checkbox-38" role="switch" type="checkbox"/><label for="toctree-checkbox-38"><div class="visually-hidden">Toggle navigation of Beamforming</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="beamforming.beamformer.html">Beamformer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="beamforming.conventional.html">Conventional Beamformer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="beamforming.capon.html">Capon Beamformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="beamforming.nullsteeringbeamformer.html">Null Steering Beamformer</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="bin.html">Entry Points</a><input class="toctree-checkbox" id="toctree-checkbox-40" name="toctree-checkbox-40" role="switch" type="checkbox"/><label for="toctree-checkbox-40"><div class="visually-hidden">Toggle navigation of Entry Points</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="bin.html">Entry Points</a><input class="toctree-checkbox" id="toctree-checkbox-39" name="toctree-checkbox-39" role="switch" type="checkbox"/><label for="toctree-checkbox-39"><div class="visually-hidden">Toggle navigation of Entry Points</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="bin.hermes.html">Hermes Command Line Interface</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="tools.html">Tools</a><input class="toctree-checkbox" id="toctree-checkbox-41" name="toctree-checkbox-41" role="switch" type="checkbox"/><label for="toctree-checkbox-41"><div class="visually-hidden">Toggle navigation of Tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tools.html">Tools</a><input class="toctree-checkbox" id="toctree-checkbox-40" name="toctree-checkbox-40" role="switch" type="checkbox"/><label for="toctree-checkbox-40"><div class="visually-hidden">Toggle navigation of Tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="tools.math.html">Math Tools</a></li>
 <li class="toctree-l3"><a class="reference internal" href="tools.resampling.html">Resampling Routines</a></li>
 <li class="toctree-l3"><a class="reference internal" href="tools.tile.html">Tile Figures</a></li>
@@ -550,7 +533,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a><input class="toctree-checkbox" id="toctree-checkbox-42" name="toctree-checkbox-42" role="switch" type="checkbox"/><label for="toctree-checkbox-42"><div class="visually-hidden">Toggle navigation of Configuration Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a><input class="toctree-checkbox" id="toctree-checkbox-41" name="toctree-checkbox-41" role="switch" type="checkbox"/><label for="toctree-checkbox-41"><div class="visually-hidden">Toggle navigation of Configuration Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../examples/chirp_fsk_lora.html">Chirp FSK LORA</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../examples/chirp_qam.html">Chirp QAM</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../examples/hardware_model.html">Hardware Modeling</a></li>
@@ -612,14 +595,14 @@ which form single chain link within a channel coding processing chain.</p>
 <p>Considering an arbitrary coding scheme consisting of multiple steps,
 the process of encoding bit streams during transmission and decoding them during
 subsequent reception is modeled by a chain of <a class="reference internal" href="#hermespy.fec.coding.Encoder" title="hermespy.fec.coding.Encoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">Encoder</span></code></a> instances:</p>
-<div class="mermaid">
-            %%{init: {'theme': 'dark'}}%%
+<pre  class="mermaid">
+        %%{init: {'theme': 'dark'}}%%
 flowchart LR
 
    input([Input Bits]) --&gt; n_i[...]
    n_i --&gt; n_a[Encoder N-1] --&gt; n_b[Encoder N] --&gt; n_c[Encoder N+1]  --&gt; n_o[...]
    n_o --&gt; output([Coded Bits])
-        </div><p>During transmission encoding the processing chain is sequentially executed from left to right,
+    </pre><p>During transmission encoding the processing chain is sequentially executed from left to right,
 during reception decoding in reverse order.</p>
 <p>Within bit streams, <a class="reference internal" href="#hermespy.fec.coding.Encoder" title="hermespy.fec.coding.Encoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">Encoder</span></code></a> instances sequentially encode block sections of <span class="math notranslate nohighlight">\(K_n\)</span> bits into
 code sections of <span class="math notranslate nohighlight">\(L_n\)</span> bits.
@@ -653,7 +636,7 @@ encoder with in the pipeline, respectively.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.fec.coding.Encoder">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Encoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">manager</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/fec/coding.html#Encoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.fec.coding.Encoder" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></a>, <a class="reference internal" href="core/factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
 <p>Base class of a single coding step within a channel coding pipeline.</p>
 <p>Instances of this class represent the <span class="math notranslate nohighlight">\(n\)</span>-th coding step within an <a class="reference internal" href="#hermespy.fec.coding.EncoderManager" title="hermespy.fec.coding.EncoderManager"><code class="xref py py-class docutils literal notranslate"><span class="pre">EncoderManager</span></code></a> configuration,
 encoding blocks of <span class="math notranslate nohighlight">\(K_n\)</span> bits into blocks of <span class="math notranslate nohighlight">\(L_n\)</span> bits, respectively, therefore achieving a rate of</p>
@@ -683,7 +666,7 @@ encoding blocks of <span class="math notranslate nohighlight">\(K_n\)</span> bit
 decoding a block of <span class="math notranslate nohighlight">\(L_n\)</span> code bits into a block of <span class="math notranslate nohighlight">\(K_n\)</span> data bits.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>encoded_bits</strong> (<em>np.ndarray</em>) – A numpy vector of <span class="math notranslate nohighlight">\(L_n\)</span> code bits, representing a single code block to be decoded.</p>
+<dd class="field-odd"><p><strong>encoded_bits</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><em>numpy.ndarray</em></a>) – A numpy vector of <span class="math notranslate nohighlight">\(L_n\)</span> code bits, representing a single code block to be decoded.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A numpy vector of <span class="math notranslate nohighlight">\(K_n\)</span> bits, representing a single data block.</p>
@@ -692,7 +675,7 @@ decoding a block of <span class="math notranslate nohighlight">\(L_n\)</span> co
 <dd class="field-odd"><p>np.ndarray</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.12)"><strong>ValueError</strong></a> – If the length of <code class="docutils literal notranslate"><span class="pre">encoded_bits</span></code> does not equal <a class="reference internal" href="#hermespy.fec.coding.Encoder.code_block_size" title="hermespy.fec.coding.Encoder.code_block_size"><code class="xref py py-meth docutils literal notranslate"><span class="pre">code_block_size()</span></code></a>.</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If the length of <code class="docutils literal notranslate"><span class="pre">encoded_bits</span></code> does not equal <a class="reference internal" href="#hermespy.fec.coding.Encoder.code_block_size" title="hermespy.fec.coding.Encoder.code_block_size"><code class="xref py py-meth docutils literal notranslate"><span class="pre">code_block_size()</span></code></a>.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -705,7 +688,7 @@ decoding a block of <span class="math notranslate nohighlight">\(L_n\)</span> co
 encoding a block of <span class="math notranslate nohighlight">\(K_n\)</span> input bits into a block of <span class="math notranslate nohighlight">\(L_n\)</span> code bits.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>bits</strong> (<em>np.ndarray</em>) – A numpy vector of <span class="math notranslate nohighlight">\(K_n\)</span> bits, representing a single bit block to be encoded.</p>
+<dd class="field-odd"><p><strong>bits</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><em>numpy.ndarray</em></a>) – A numpy vector of <span class="math notranslate nohighlight">\(K_n\)</span> bits, representing a single bit block to be encoded.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A numpy vector of <span class="math notranslate nohighlight">\(L_n\)</span> bits, representing a single code block.</p>
@@ -714,14 +697,14 @@ encoding a block of <span class="math notranslate nohighlight">\(K_n\)</span> in
 <dd class="field-odd"><p>np.ndarray</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.12)"><strong>ValueError</strong></a> – If the length of <code class="docutils literal notranslate"><span class="pre">bits</span></code> does not equal <a class="reference internal" href="#hermespy.fec.coding.Encoder.bit_block_size" title="hermespy.fec.coding.Encoder.bit_block_size"><code class="xref py py-meth docutils literal notranslate"><span class="pre">bit_block_size()</span></code></a>.</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If the length of <code class="docutils literal notranslate"><span class="pre">bits</span></code> does not equal <a class="reference internal" href="#hermespy.fec.coding.Encoder.bit_block_size" title="hermespy.fec.coding.Encoder.bit_block_size"><code class="xref py py-meth docutils literal notranslate"><span class="pre">bit_block_size()</span></code></a>.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.fec.coding.Encoder.bit_block_size">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bit_block_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><span class="pre">int</span></a></em><a class="headerlink" href="#hermespy.fec.coding.Encoder.bit_block_size" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bit_block_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></em><a class="headerlink" href="#hermespy.fec.coding.Encoder.bit_block_size" title="Link to this definition">¶</a></dt>
 <dd><p>Data bit block size of a single coding operation.</p>
 <p>In other words, the number of input bits within a single code block during transmit encoding,
 or the number of output bits during receive decoding.
@@ -731,7 +714,7 @@ Referred to as <span class="math notranslate nohighlight">\(K_n\)</span> within 
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.fec.coding.Encoder.code_block_size">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">code_block_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><span class="pre">int</span></a></em><a class="headerlink" href="#hermespy.fec.coding.Encoder.code_block_size" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">code_block_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></em><a class="headerlink" href="#hermespy.fec.coding.Encoder.code_block_size" title="Link to this definition">¶</a></dt>
 <dd><p>Code bit block size of a single coding operation.</p>
 <p>In other words, the number of input bits within a single code block during receive decoding,
 or the number of output bits during transmit encoding.
@@ -741,20 +724,20 @@ Referred to as <span class="math notranslate nohighlight">\(L_n\)</span> within 
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.fec.coding.Encoder.enabled">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><span class="pre">bool</span></a></em><a class="headerlink" href="#hermespy.fec.coding.Encoder.enabled" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">enabled</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><span class="pre">bool</span></a></em><a class="headerlink" href="#hermespy.fec.coding.Encoder.enabled" title="Link to this definition">¶</a></dt>
 <dd><p>Is the encoding currently enabled within its chain?</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.fec.coding.Encoder.manager">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">manager</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.fec.coding.EncoderManager" title="hermespy.fec.coding.EncoderManager"><span class="pre">EncoderManager</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></em><a class="headerlink" href="#hermespy.fec.coding.Encoder.manager" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">manager</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="#hermespy.fec.coding.EncoderManager" title="hermespy.fec.coding.EncoderManager"><span class="pre">EncoderManager</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#hermespy.fec.coding.Encoder.manager" title="Link to this definition">¶</a></dt>
 <dd><p>Coding pipeline configuration this encoder is registered in.</p>
 <p>Returns: Handle to the coding pipeline.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.fec.coding.Encoder.rate">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a></em><a class="headerlink" href="#hermespy.fec.coding.Encoder.rate" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></em><a class="headerlink" href="#hermespy.fec.coding.Encoder.rate" title="Link to this definition">¶</a></dt>
 <dd><p>Code rate achieved by this coding step.</p>
 <p>Defined as the relation</p>
 <div class="math-wrapper docutils container">
@@ -767,7 +750,7 @@ Referred to as <span class="math notranslate nohighlight">\(L_n\)</span> within 
 <dd class="field-odd"><p>The code rate <span class="math notranslate nohighlight">\(R_n\)</span></p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)">float</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)">float</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -783,16 +766,16 @@ Referred to as <span class="math notranslate nohighlight">\(L_n\)</span> within 
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.fec.coding.EncoderManager">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">EncoderManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modem</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_padding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_truncating</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/fec/coding.html#EncoderManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.fec.coding.EncoderManager" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="core.random_node.html#hermespy.core.random_node.RandomNode" title="hermespy.core.random_node.RandomNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">RandomNode</span></code></a>, <a class="reference internal" href="core.factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="core/random_node.html#hermespy.core.random_node.RandomNode" title="hermespy.core.random_node.RandomNode"><code class="xref py py-class docutils literal notranslate"><span class="pre">RandomNode</span></code></a>, <a class="reference internal" href="core/factory.html#hermespy.core.factory.Serializable" title="hermespy.core.factory.Serializable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Serializable</span></code></a></p>
 <p>Configuration managing a channel coding pipeline.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>modem</strong> (<a class="reference internal" href="modem.modem.BaseModem.html#hermespy.modem.modem.BaseModem" title="hermespy.modem.modem.BaseModem"><em>BaseModem</em></a><em>, </em><em>optional</em>) – Communication modem instance this coding pipeline configuration is attached to.
 By default, the coding pipeline is considered to be floating.</p></li>
-<li><p><strong>allow_padding</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – Tolerate padding of data bit blocks during encoding.
+<li><p><strong>allow_padding</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – Tolerate padding of data bit blocks during encoding.
 Enabled by default.</p></li>
-<li><p><strong>allow_truncating</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – Tolerate truncating of data code blocks during decoding.
+<li><p><strong>allow_truncating</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – Tolerate truncating of data code blocks during decoding.
 Enabled by default.</p></li>
 </ul>
 </dd>
@@ -806,7 +789,7 @@ Enabled by default.</p></li>
 <dd class="field-odd"><p><strong>encoder</strong> (<a class="reference internal" href="#hermespy.fec.coding.Encoder" title="hermespy.fec.coding.Encoder"><em>Encoder</em></a>) – The new encoder to be added.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -821,8 +804,8 @@ to match the next integer multiple of the expected <cite>code_block_size</cite>.
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>encoded_bits</strong> (<em>np.ndarray</em>) – Numpy vector of code bits to be decoded to data bits.</p></li>
-<li><p><strong>num_data_bits</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><em>optional</em>) – The expected number of resulting data bits.</p></li>
+<li><p><strong>encoded_bits</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><em>numpy.ndarray</em></a>) – Numpy vector of code bits to be decoded to data bits.</p></li>
+<li><p><strong>num_data_bits</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – The expected number of resulting data bits.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -833,8 +816,8 @@ to match the next integer multiple of the expected <cite>code_block_size</cite>.
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.12)"><strong>RuntimeError</strong></a> – If <cite>num_data_bits</cite> is bigger than the resulting data bits after decoding.</p></li>
-<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.12)"><strong>RuntimeError</strong></a> – If truncating is required but disabled by <code class="xref py py-meth docutils literal notranslate"><span class="pre">allow_truncating()</span></code>.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.13)"><strong>RuntimeError</strong></a> – If <cite>num_data_bits</cite> is bigger than the resulting data bits after decoding.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.13)"><strong>RuntimeError</strong></a> – If truncating is required but disabled by <code class="xref py py-meth docutils literal notranslate"><span class="pre">allow_truncating()</span></code>.</p></li>
 </ul>
 </dd>
 </dl>
@@ -850,8 +833,8 @@ to match the next integer multiple of the expected <a class="reference internal"
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>data_bits</strong> (<em>np.ndarray</em>) – Numpy vector of data bits to be encoded.</p></li>
-<li><p><strong>num_code_bits</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a><em>, </em><em>optional</em>) – The expected resulting number of code bits.</p></li>
+<li><p><strong>data_bits</strong> (<a class="reference external" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v2.2)"><em>numpy.ndarray</em></a>) – Numpy vector of data bits to be encoded.</p></li>
+<li><p><strong>num_code_bits</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – The expected resulting number of code bits.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -861,7 +844,7 @@ to match the next integer multiple of the expected <a class="reference internal"
 <dd class="field-odd"><p>np.ndarray</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.12)"><strong>ValueError</strong></a> – If <cite>num_code_bits</cite> is smaller than the resulting code bits after encoding.</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If <cite>num_code_bits</cite> is smaller than the resulting code bits after encoding.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -872,13 +855,13 @@ to match the next integer multiple of the expected <a class="reference internal"
 <dd><p>Compute the number of input bits required to produce a certain number of output bits.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>num_code_bits</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><em>int</em></a>) – The expected number of output bits.</p>
+<dd class="field-odd"><p><strong>num_code_bits</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a>) – The expected number of output bits.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The required number of input bits.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)">int</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)">int</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -897,7 +880,7 @@ to match the next integer multiple of the expected <a class="reference internal"
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.fec.coding.EncoderManager.bit_block_size">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bit_block_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><span class="pre">int</span></a></em><a class="headerlink" href="#hermespy.fec.coding.EncoderManager.bit_block_size" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bit_block_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></em><a class="headerlink" href="#hermespy.fec.coding.EncoderManager.bit_block_size" title="Link to this definition">¶</a></dt>
 <dd><p>Data bit block size of a single coding operation.</p>
 <p>In other words, the number of input bits within a single code block during transmit encoding,
 or the number of output bits during receive decoding.
@@ -907,14 +890,14 @@ Referred to as <span class="math notranslate nohighlight">\(K\)</span> within th
 <dd class="field-odd"><p>Number of bits <span class="math notranslate nohighlight">\(K\)</span>.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)">int</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)">int</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.fec.coding.EncoderManager.code_block_size">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">code_block_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)"><span class="pre">int</span></a></em><a class="headerlink" href="#hermespy.fec.coding.EncoderManager.code_block_size" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">code_block_size</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></em><a class="headerlink" href="#hermespy.fec.coding.EncoderManager.code_block_size" title="Link to this definition">¶</a></dt>
 <dd><p>Code bit block size of a single coding operation.</p>
 <p>In other words, the number of input bits within a single code block during receive decoding,
 or the number of output bits during transmit encoding.
@@ -924,14 +907,14 @@ Referred to as <span class="math notranslate nohighlight">\(L\)</span> within th
 <dd class="field-odd"><p>Number of bits <span class="math notranslate nohighlight">\(L\)</span>.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.12)">int</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)">int</a></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.fec.coding.EncoderManager.encoders">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">encoders</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.12)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.fec.coding.Encoder" title="hermespy.fec.coding.Encoder"><span class="pre">Encoder</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.fec.coding.EncoderManager.encoders" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">encoders</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.13)"><span class="pre">List</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="#hermespy.fec.coding.Encoder" title="hermespy.fec.coding.Encoder"><span class="pre">Encoder</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.fec.coding.EncoderManager.encoders" title="Link to this definition">¶</a></dt>
 <dd><p>List of encoders registered within  this pipeline.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -957,14 +940,14 @@ the <span class="math notranslate nohighlight">\(1 + N - n\)</span>-th coding op
 <dd class="field-even"><p>Modem</p>
 </dd>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.12)"><strong>RuntimeError</strong></a> – If the encoding configuration is floating, i.e. not attached to a modem.</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.13)"><strong>RuntimeError</strong></a> – If the encoding configuration is floating, i.e. not attached to a modem.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.fec.coding.EncoderManager.rate">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)"><span class="pre">float</span></a></em><a class="headerlink" href="#hermespy.fec.coding.EncoderManager.rate" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">rate</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)"><span class="pre">float</span></a></em><a class="headerlink" href="#hermespy.fec.coding.EncoderManager.rate" title="Link to this definition">¶</a></dt>
 <dd><p>Code rate achieved by this coding pipeline configuration.</p>
 <p>Defined as the relation</p>
 <div class="math-wrapper docutils container">
@@ -977,7 +960,7 @@ the <span class="math notranslate nohighlight">\(1 + N - n\)</span>-th coding op
 <dd class="field-odd"><p>The code rate <span class="math notranslate nohighlight">\(R\)</span>.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.12)">float</a></p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.13)">float</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1035,14 +1018,20 @@ the <span class="math notranslate nohighlight">\(1 + N - n\)</span>-th coding op
     </aside>
   </div>
 </div><script src="../_static/documentation_options.js?v=5929fcd5"></script>
-    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/scripts/furo.js?v=4e2eecee"></script>
+    <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
     <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    <script src="https://unpkg.com/mermaid@10.6.1/dist/mermaid.min.js"></script>
-    <script>mermaid.initialize({startOnLoad:true});</script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+    <script type="module">
+import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.esm.min.mjs";
+window.addEventListener("load", () => mermaid.run());
+</script>
     </body>
 </html>

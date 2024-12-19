@@ -1,0 +1,6 @@
+<map id="inheritancef13be66886" name="inheritancef13be66886">
+<area shape="rect" id="node1" href="https://docs.python.org/3/library/abc.html#abc.ABC" target="_top" title="Helper class that provides a standard way to create an ABC using" alt="" coords="9,5,81,31"/>
+<area shape="rect" id="node2" href="simulation.coupling.coupling.html#hermespy.simulation.coupling.coupling.Coupling" target="_top" title="Base class for mutual coupling model implementations." alt="" coords="5,79,84,104"/>
+<area shape="rect" id="node3" href="#hermespy.simulation.coupling.perfect.PerfectCoupling" target="_top" title="Ideal mutual coupling between two antenna arrays." alt="" coords="45,152,170,177"/>
+<area shape="rect" id="node4" href="core/factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="109,79,207,104"/>
+</map>

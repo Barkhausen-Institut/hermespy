@@ -1,0 +1,6 @@
+<map id="inheritance71f2b4e135" name="inheritance71f2b4e135">
+<area shape="rect" id="node1" href="https://docs.python.org/3/library/enum.html#enum.Enum" target="_top" title="Create a collection of name/value pairs." alt="" coords="5,5,77,31"/>
+<area shape="rect" id="node3" href="core/factory.html#hermespy.core.factory.SerializableEnum" target="_top" title="Base class for serializable enumerations." alt="" coords="37,79,171,104"/>
+<area shape="rect" id="node2" href="#hermespy.simulation.rf_chain.analog_digital_converter.QuantizerType" target="_top" title="Type of quantizer" alt="" coords="47,152,161,177"/>
+<area shape="rect" id="node4" href="core/factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="101,5,200,31"/>
+</map>

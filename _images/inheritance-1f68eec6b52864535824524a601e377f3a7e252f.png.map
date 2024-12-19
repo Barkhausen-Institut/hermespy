@@ -1,7 +1,0 @@
-<map id="inheritance2bdf387ef1" name="inheritance2bdf387ef1">
-<area shape="rect" id="node1" href="https://docs.python.org/3/library/abc.html#abc.ABC" target="_top" title="Helper class that provides a standard way to create an ABC using" alt="" coords="49,5,121,31"/>
-<area shape="rect" id="node3" href="#hermespy.simulation.animation.Trajectory" target="_top" title="Base class for motion trajectories of moveable objects within simulation scenarios." alt="" coords="41,79,128,104"/>
-<area shape="rect" id="node2" href="#hermespy.simulation.animation.LinearTrajectory" target="_top" title="A helper class generating a linear trajectory between two poses." alt="" coords="5,152,132,177"/>
-<area shape="rect" id="node5" href="#hermespy.simulation.animation.StaticTrajectory" target="_top" title="A helper class generating a static trajectory." alt="" coords="157,152,279,177"/>
-<area shape="rect" id="node4" href="core.factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="169,79,267,104"/>
-</map>

@@ -1,0 +1,6 @@
+<map id="inheritance9b8f43f83c" name="inheritance9b8f43f83c">
+<area shape="rect" id="node1" href="#hermespy.core.state.DeviceState" target="_top" title="Data container representing the immutable physical state of a device." alt="" coords="5,79,107,104"/>
+<area shape="rect" id="node2" href="#hermespy.core.state.State" target="_top" title="Base of all state data containers." alt="" coords="149,5,221,31"/>
+<area shape="rect" id="node3" href="#hermespy.core.state.ReceiveState" target="_top" title="State of a device during receive signal processing." alt="" coords="131,79,239,104"/>
+<area shape="rect" id="node4" href="#hermespy.core.state.TransmitState" target="_top" title="State of a during transmit signal processing." alt="" coords="264,79,376,104"/>
+</map>

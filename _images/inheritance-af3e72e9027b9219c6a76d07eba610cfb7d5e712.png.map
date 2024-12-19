@@ -1,0 +1,9 @@
+<map id="inheritance191da474c2" name="inheritance191da474c2">
+<area shape="rect" id="node1" href="https://docs.python.org/3/library/abc.html#abc.ABC" target="_top" title="Helper class that provides a standard way to create an ABC using" alt="" coords="5,5,77,31"/>
+<area shape="rect" id="node2" href="../channel.Channel.html#hermespy.channel.channel.Channel" target="_top" title="Abstract base class of all channel models." alt="" coords="236,79,311,104"/>
+<area shape="rect" id="node7" href="fading.MultipathFadingChannel.html#hermespy.channel.fading.fading.MultipathFadingChannel" target="_top" title="Base class for the implementation of stochastic multipath fading channels." alt="" coords="221,152,400,177"/>
+<area shape="rect" id="node3" href="../../core/random_node.html#hermespy.core.random_node.RandomNode" target="_top" title="Random Node within a random dependency graph." alt="" coords="102,5,213,31"/>
+<area shape="rect" id="node4" href="../../core/factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="333,5,432,31"/>
+<area shape="rect" id="node5" href="https://docs.python.org/3/library/typing.html#typing.Generic" target="_top" title="Abstract base class for generic types." alt="" coords="237,5,309,31"/>
+<area shape="rect" id="node6" href="#hermespy.channel.fading.exponential.Exponential" target="_top" title="Exponential multipath fading channel model." alt="" coords="261,225,360,251"/>
+</map>

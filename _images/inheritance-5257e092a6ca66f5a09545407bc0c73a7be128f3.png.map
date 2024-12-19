@@ -1,0 +1,5 @@
+<map id="inheritance77ec02091c" name="inheritance77ec02091c">
+<area shape="rect" id="node1" href="simulation.rf_chain.amplifier.PowerAmplifier.html#hermespy.simulation.rf_chain.power_amplifier.PowerAmplifier" target="_top" title="Base class of a distorionless power&#45;amplifier model." alt="" coords="22,79,143,104"/>
+<area shape="rect" id="node3" href="#hermespy.simulation.rf_chain.power_amplifier.RappPowerAmplifier" target="_top" title="Model of a power amplifier according to Rapp&#39;s model." alt="" coords="5,152,160,177"/>
+<area shape="rect" id="node2" href="core/factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="33,5,132,31"/>
+</map>

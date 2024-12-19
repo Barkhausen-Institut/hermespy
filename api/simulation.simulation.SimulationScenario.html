@@ -5,16 +5,15 @@
     <meta name="color-scheme" content="light dark"><meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="Simulated Drop" href="simulation.simulation.SimulatedDrop.html" /><link rel="prev" title="Specific Isolation" href="simulation.isolation.specific.html" />
 
-    <!-- Generated with Sphinx 7.3.7 and Furo 2024.05.06 -->
+    <!-- Generated with Sphinx 8.1.3 and Furo 2024.08.06 -->
         <title>Simulation Scenario - HermesPy</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=387cc868" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo.css?v=354aac6f" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
     <link rel="stylesheet" type="text/css" href="../_static/plot_directive.css" />
-    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=fd3f3429" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
     <link rel="stylesheet" type="text/css" href="../_static/tweaks.css?v=c2f9d16b" />
-    <link rel="stylesheet" type="text/css" href="../_static/tabs.css?v=a5c4661c" />
-    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=36a5483c" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/furo-extensions.css?v=302659d7" />
     
     
 
@@ -95,19 +94,6 @@
       <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z" />
     </svg>
   </symbol>
-  <symbol id="svg-sun-half" viewBox="0 0 24 24">
-    <title>Auto light/dark mode</title>
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="icon-tabler-shadow">
-      <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M13 12h5" />
-      <path d="M13 15h4" />
-      <path d="M13 18h1" />
-      <path d="M13 9h4" />
-      <path d="M13 6h1" />
-    </svg>
-  </symbol>
   <symbol id="svg-sun-with-moon" viewBox="0 0 24 24">
     <title>Auto light/dark, in light mode</title>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -148,7 +134,7 @@
       <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4" />
       <path d="M13.5 6.5l4 4" />
       <path d="M20 21l2 -2l-2 -2" />
-      <path d="M17 17l-2 2l2 2" /
+      <path d="M17 17l-2 2l2 2" />
     </svg>
   </symbol>
   <symbol id="svg-eye" viewBox="0 0 24 24">
@@ -292,8 +278,6 @@
 <li class="toctree-l4"><a class="reference internal" href="modem.precoding.ratio_combining.html">Maximal Ratio Combining</a></li>
 <li class="toctree-l4"><a class="reference internal" href="modem.precoding.single_carrier.html">Single Carrier Decoding</a></li>
 <li class="toctree-l4"><a class="reference internal" href="modem.precoding.space_time_block_coding.html">Space-Time Block Codes</a></li>
-<li class="toctree-l4"><a class="reference internal" href="modem.precoding.spatial_multiplexing.html">Spatial Multiplexing</a></li>
-<li class="toctree-l4"><a class="reference internal" href="modem.precoding.symbol_precoding.SymbolPrecoder.html">Symbol Precoder</a></li>
 <li class="toctree-l4"><a class="reference internal" href="modem.precoding.symbol_precoding.SymbolPrecoding.html">Symbol Precoding</a></li>
 </ul>
 </li>
@@ -369,6 +353,7 @@
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="channel/quadriga.html">Quadriga</a></li>
+<li class="toctree-l3"><a class="reference internal" href="channel/sionna-rt.html">SionnaRT Channel</a></li>
 <li class="toctree-l3"><a class="reference internal" href="channel/consistent.html">Spatial Consistency</a></li>
 </ul>
 </li>
@@ -473,36 +458,38 @@
 <li class="toctree-l3"><a class="reference internal" href="hardware_loop.calibration.leakage.html">Leakage Calibration</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="core.html">Core</a><input class="toctree-checkbox" id="toctree-checkbox-34" name="toctree-checkbox-34" role="switch" type="checkbox"/><label for="toctree-checkbox-34"><div class="visually-hidden">Toggle navigation of Core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="core.monte_carlo.html">PyMonte</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.executable.html">Executable</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.factory.html">Serialization Factory</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.definitions.html">General Definitions</a></li>
-<li class="toctree-l3 has-children"><a class="reference internal" href="core.device.Device.html">Device</a><input class="toctree-checkbox" id="toctree-checkbox-35" name="toctree-checkbox-35" role="switch" type="checkbox"/><label for="toctree-checkbox-35"><div class="visually-hidden">Toggle navigation of Device</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l4"><a class="reference internal" href="core.device.DeviceInput.html">Device Input</a></li>
-<li class="toctree-l4"><a class="reference internal" href="core.device.DeviceOutput.html">Device Output</a></li>
-<li class="toctree-l4"><a class="reference internal" href="core.device.DeviceReception.html">Device Reception</a></li>
-<li class="toctree-l4"><a class="reference internal" href="core.device.DeviceTransmission.html">Device Transmission</a></li>
-<li class="toctree-l4"><a class="reference internal" href="core.device.ProcessedDeviceInput.html">Processed Device Input</a></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="core/core.html">Core</a><input class="toctree-checkbox" id="toctree-checkbox-34" name="toctree-checkbox-34" role="switch" type="checkbox"/><label for="toctree-checkbox-34"><div class="visually-hidden">Toggle navigation of Core</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l3 has-children"><a class="reference internal" href="core/device.html">Device Model</a><input class="toctree-checkbox" id="toctree-checkbox-35" name="toctree-checkbox-35" role="switch" type="checkbox"/><label for="toctree-checkbox-35"><div class="visually-hidden">Toggle navigation of Device Model</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l4"><a class="reference internal" href="core/device.DeviceInput.html">Device Input</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.DeviceOutput.html">Device Output</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.DeviceReception.html">Device Reception</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.DeviceTransmission.html">Device Transmission</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.OperationResult.html">Operation Result</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.ProcessedDeviceInput.html">Processed Device Input</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.Receiver.html">Receiver</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.Reception.html">Reception</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.Transmission.html">Transmission</a></li>
+<li class="toctree-l4"><a class="reference internal" href="core/device.Transmitter.html">Transmitter</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.Transmitter.html">Transmitter</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.Receiver.html">Receiver</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.Transmission.html">Transmission</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.Reception.html">Reception</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.device.OperationResult.html">Operation Result</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.drop.Drop.html">Drop</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.operators.html">Extra Operators</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.duplex.html">Duplex Operation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.logarithmic.html">Logarithmics</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.pipeline.html">Pipeline</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.random_node.html">Random Graph</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.scenario.html">Wireless Scenario</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.signal_model.Signal.html">Signal</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.channel_state_information.html">Channel State Information</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.antennas.html">Antenna Descriptions</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.transformation.html">Coordinate System Transformations</a></li>
-<li class="toctree-l3"><a class="reference internal" href="core.visualize.html">Visualization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/scenario.html">Wireless Scenario</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/monte_carlo.html">PyMonte</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/signal.html">Signal</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/antennas.html">Antenna Descriptions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/channel.html">Channel State Information</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/drop.html">Drop</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/factory.html">Serialization Factory</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/hooks.html">Hooks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/operators.html">Extra Operators</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/precoding.html">Precoding</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/random_node.html">Random Graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/state.html">State</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/transformation.html">Coordinate System</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/visualize.html">Visualization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/executable.html">Executable</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/pipeline.html">Pipeline</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/logarithmic.html">Logarithmics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="core/definitions.html">General Definitions</a></li>
 </ul>
 </li>
 <li class="toctree-l2 has-children"><a class="reference internal" href="fec.html">Error Correction</a><input class="toctree-checkbox" id="toctree-checkbox-36" name="toctree-checkbox-36" role="switch" type="checkbox"/><label for="toctree-checkbox-36"><div class="visually-hidden">Toggle navigation of Error Correction</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
@@ -525,22 +512,18 @@
 <li class="toctree-l3"><a class="reference internal" href="jcas.jcas.html">Duplex JCAS Operator</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="precoding.html">Precoding</a><input class="toctree-checkbox" id="toctree-checkbox-38" name="toctree-checkbox-38" role="switch" type="checkbox"/><label for="toctree-checkbox-38"><div class="visually-hidden">Toggle navigation of Precoding</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
-<li class="toctree-l3"><a class="reference internal" href="precoding.precoding.html">Precoding Configuration</a></li>
-<li class="toctree-l3"><a class="reference internal" href="precoding.stream_precoding.html">Stream Precoding</a></li>
-</ul>
-</li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="beamforming.html">Beamforming</a><input class="toctree-checkbox" id="toctree-checkbox-39" name="toctree-checkbox-39" role="switch" type="checkbox"/><label for="toctree-checkbox-39"><div class="visually-hidden">Toggle navigation of Beamforming</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="beamforming.html">Beamforming</a><input class="toctree-checkbox" id="toctree-checkbox-38" name="toctree-checkbox-38" role="switch" type="checkbox"/><label for="toctree-checkbox-38"><div class="visually-hidden">Toggle navigation of Beamforming</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="beamforming.beamformer.html">Beamformer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="beamforming.conventional.html">Conventional Beamformer</a></li>
 <li class="toctree-l3"><a class="reference internal" href="beamforming.capon.html">Capon Beamformer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="beamforming.nullsteeringbeamformer.html">Null Steering Beamformer</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="bin.html">Entry Points</a><input class="toctree-checkbox" id="toctree-checkbox-40" name="toctree-checkbox-40" role="switch" type="checkbox"/><label for="toctree-checkbox-40"><div class="visually-hidden">Toggle navigation of Entry Points</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="bin.html">Entry Points</a><input class="toctree-checkbox" id="toctree-checkbox-39" name="toctree-checkbox-39" role="switch" type="checkbox"/><label for="toctree-checkbox-39"><div class="visually-hidden">Toggle navigation of Entry Points</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="bin.hermes.html">Hermes Command Line Interface</a></li>
 </ul>
 </li>
-<li class="toctree-l2 has-children"><a class="reference internal" href="tools.html">Tools</a><input class="toctree-checkbox" id="toctree-checkbox-41" name="toctree-checkbox-41" role="switch" type="checkbox"/><label for="toctree-checkbox-41"><div class="visually-hidden">Toggle navigation of Tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="tools.html">Tools</a><input class="toctree-checkbox" id="toctree-checkbox-40" name="toctree-checkbox-40" role="switch" type="checkbox"/><label for="toctree-checkbox-40"><div class="visually-hidden">Toggle navigation of Tools</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l3"><a class="reference internal" href="tools.math.html">Math Tools</a></li>
 <li class="toctree-l3"><a class="reference internal" href="tools.resampling.html">Resampling Routines</a></li>
 <li class="toctree-l3"><a class="reference internal" href="tools.tile.html">Tile Figures</a></li>
@@ -550,7 +533,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../matlab.html">Matlab</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../references.html">References</a></li>
-<li class="toctree-l1 has-children"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a><input class="toctree-checkbox" id="toctree-checkbox-42" name="toctree-checkbox-42" role="switch" type="checkbox"/><label for="toctree-checkbox-42"><div class="visually-hidden">Toggle navigation of Configuration Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../examples/examples.html">Configuration Examples</a><input class="toctree-checkbox" id="toctree-checkbox-41" name="toctree-checkbox-41" role="switch" type="checkbox"/><label for="toctree-checkbox-41"><div class="visually-hidden">Toggle navigation of Configuration Examples</div><i class="icon"><svg><use href="#svg-arrow-right"></use></svg></i></label><ul>
 <li class="toctree-l2"><a class="reference internal" href="../examples/chirp_fsk_lora.html">Chirp FSK LORA</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../examples/chirp_qam.html">Chirp QAM</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../examples/hardware_model.html">Hardware Modeling</a></li>
@@ -607,23 +590,23 @@
         <article role="main" id="furo-main-content">
           <section id="simulation-scenario">
 <h1>Simulation Scenario<a class="headerlink" href="#simulation-scenario" title="Link to this heading">¶</a></h1>
-<div class="graphviz"><img src="../_images/inheritance-9b70cb32f4cf360f83c743bbd31f259f77a0b7f1.png" alt="Inheritance diagram of hermespy.simulation.simulation.SimulationScenario" usemap="#inheritancec69b31a7e1" class="inheritance graphviz" /></div>
+<div class="graphviz"><img src="../_images/inheritance-c816501d46b8a7499229a6a31cce5dab2ab2eafc.png" alt="Inheritance diagram of hermespy.simulation.simulation.SimulationScenario" usemap="#inheritancec69b31a7e1" class="inheritance graphviz" /></div>
 <map id="inheritancec69b31a7e1" name="inheritancec69b31a7e1">
 <area shape="rect" id="node1" href="https://docs.python.org/3/library/abc.html#abc.ABC" target="_top" title="Helper class that provides a standard way to create an ABC using" alt="" coords="5,79,77,104"/>
-<area shape="rect" id="node4" href="core.scenario.html#hermespy.core.scenario.Scenario" target="_top" title="A wireless scenario." alt="" coords="155,152,234,177"/>
+<area shape="rect" id="node4" href="core/scenario.html#hermespy.core.scenario.Scenario" target="_top" title="A wireless scenario." alt="" coords="155,152,234,177"/>
 <area shape="rect" id="node2" href="https://docs.python.org/3/library/typing.html#typing.Generic" target="_top" title="Abstract base class for generic types." alt="" coords="101,79,173,104"/>
-<area shape="rect" id="node3" href="core.random_node.html#hermespy.core.random_node.RandomNode" target="_top" title="Random Node within a random dependency graph." alt="" coords="198,79,309,104"/>
+<area shape="rect" id="node3" href="core/random_node.html#hermespy.core.random_node.RandomNode" target="_top" title="Random Node within a random dependency graph." alt="" coords="198,79,309,104"/>
 <area shape="rect" id="node6" href="#hermespy.simulation.simulation.SimulationScenario" target="_top" title="Description of a physical layer wireless communication scenario." alt="" coords="121,225,269,251"/>
-<area shape="rect" id="node5" href="core.transformation.html#hermespy.core.transformation.TransformableBase" target="_top" title="Base of kinematic chains." alt="" coords="333,79,480,104"/>
-<area shape="rect" id="node7" href="core.transformation.html#hermespy.core.transformation.TransformableLink" target="_top" title="Abstract base class of kinetmatic chain links." alt="" coords="335,5,478,31"/>
+<area shape="rect" id="node5" href="core/transformation.html#hermespy.core.transformation.TransformableBase" target="_top" title="Base of kinematic chains." alt="" coords="333,79,480,104"/>
+<area shape="rect" id="node7" href="core/transformation.html#hermespy.core.transformation.TransformableLink" target="_top" title="Abstract base class of kinetmatic chain links." alt="" coords="335,5,478,31"/>
 </map><p>Simulation scenarios contain the complete description of a physical layer scenario to be simulated.
 This includes primarily the set of physical devices and their linking channel models.
 In the case of Monte Carlo simulations, they are managed by the <a class="reference internal" href="simulation.simulation.Simulation.html#hermespy.simulation.simulation.Simulation" title="hermespy.simulation.simulation.Simulation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Simulation</span></code></a> class
-and acessible through the <a class="reference internal" href="core.pipeline.html#hermespy.core.pipeline.Pipeline.scenario" title="hermespy.core.pipeline.Pipeline.scenario"><code class="xref py py-attr docutils literal notranslate"><span class="pre">scenario</span></code></a> property.</p>
+and acessible through the <a class="reference internal" href="core/pipeline.html#hermespy.core.pipeline.Pipeline.scenario" title="hermespy.core.pipeline.Pipeline.scenario"><code class="xref py py-attr docutils literal notranslate"><span class="pre">scenario</span></code></a> property.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="hermespy.simulation.simulation.SimulationScenario">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">SimulationScenario</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_channel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/simulation/scenario.html#SimulationScenario"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.simulation.simulation.SimulationScenario" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="core.scenario.html#hermespy.core.scenario.Scenario" title="hermespy.core.scenario.Scenario"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scenario</span></code></a>[<a class="reference internal" href="simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice" title="hermespy.simulation.simulated_device.SimulatedDevice"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulatedDevice</span></code></a>]</p>
+<dd><p>Bases: <a class="reference internal" href="core/scenario.html#hermespy.core.scenario.Scenario" title="hermespy.core.scenario.Scenario"><code class="xref py py-class docutils literal notranslate"><span class="pre">Scenario</span></code></a>[<a class="reference internal" href="simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice" title="hermespy.simulation.simulated_device.SimulatedDevice"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulatedDevice</span></code></a>, <code class="xref py py-class docutils literal notranslate"><span class="pre">SimulatedDeviceState</span></code>, <a class="reference internal" href="simulation.simulation.SimulatedDrop.html#hermespy.simulation.drop.SimulatedDrop" title="hermespy.simulation.drop.SimulatedDrop"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulatedDrop</span></code></a>]</p>
 <p>Description of a physical layer wireless communication scenario.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -643,16 +626,16 @@ If not specified, the noise configuration is device-specific.</p></li>
 <dd><p>Add a new device to the scenario.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>device</strong> (<a class="reference internal" href="core.device.Device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><em>Device</em></a>) – New device to be added to the scenario.</p>
+<dd class="field-odd"><p><strong>device</strong> (<a class="reference internal" href="core/device.html#hermespy.core.device.Device" title="hermespy.core.device.Device"><em>Device</em></a>) – New device to be added to the scenario.</p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><ul class="simple">
-<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.12)"><strong>ValueError</strong></a> – If the device already exists.</p></li>
-<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.12)"><strong>RuntimeError</strong></a> – If the scenario is not in default mode.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If the device already exists.</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#RuntimeError" title="(in Python v3.13)"><strong>RuntimeError</strong></a> – If the scenario is not in default mode.</p></li>
 </ul>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
@@ -675,7 +658,7 @@ If not specified, the noise configuration is device-specific.</p></li>
 <dd class="field-odd"><p><a class="reference internal" href="channel/channel.Channel.html#hermespy.channel.channel.Channel" title="hermespy.channel.channel.Channel">Channel</a></p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.12)"><strong>ValueError</strong></a> – Should <cite>alpha_device</cite> or <cite>beta_device</cite> not be registered with this scenario.</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – Should <cite>alpha_device</cite> or <cite>beta_device</cite> not be registered with this scenario.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -688,37 +671,41 @@ If not specified, the noise configuration is device-specific.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>device</strong> (<a class="reference internal" href="simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice" title="hermespy.simulation.simulated_device.SimulatedDevice"><em>SimulatedDevice</em></a>) – The device in question.</p></li>
-<li><p><strong>active_only</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – Consider only active channels.
+<li><p><strong>active_only</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – Consider only active channels.
 A channel is considered active if its gain is greater than zero.
 Disabled by default, so all channels are considered.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#set" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">set</span></code></a>[<a class="reference internal" href="channel/channel.Channel.html#hermespy.channel.channel.Channel" title="hermespy.channel.channel.Channel"><code class="xref py py-class docutils literal notranslate"><span class="pre">Channel</span></code></a>]</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#set" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">set</span></code></a>[<a class="reference internal" href="channel/channel.Channel.html#hermespy.channel.channel.Channel" title="hermespy.channel.channel.Channel"><code class="xref py py-class docutils literal notranslate"><span class="pre">Channel</span></code></a>]</span></p>
 </dd>
 </dl>
 <p>Returns: A set of unique channel instances.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.12)"><strong>ValueError</strong></a> – Should <cite>device</cite> is not registered within this scenario.</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – Should <cite>device</cite> is not registered within this scenario.</p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.simulation.simulation.SimulationScenario.generate_outputs">
-<span class="sig-name descname"><span class="pre">generate_outputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transmissions</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trigger_realizations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/simulation/scenario.html#SimulationScenario.generate_outputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.simulation.simulation.SimulationScenario.generate_outputs" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">generate_outputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">transmissions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trigger_realizations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/simulation/scenario.html#SimulationScenario.generate_outputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.simulation.simulation.SimulationScenario.generate_outputs" title="Link to this definition">¶</a></dt>
 <dd><p>Generate signals emitted by devices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>transmissions</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>[</em><a class="reference internal" href="core.device.Transmission.html#hermespy.core.device.Transmission" title="hermespy.core.device.Transmission"><em>Transmission</em></a><em>]</em><em>]</em><em>, </em><em>optional</em>) – Transmissions by operators.
-If none were provided, cached operator transmissions are assumed.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>transmissions</strong> (<em>Sequence</em><em>[</em><em>Sequence</em><em>[</em><a class="reference internal" href="core/device.Transmission.html#hermespy.core.device.Transmission" title="hermespy.core.device.Transmission"><em>Transmission</em></a><em>]</em><em>]</em>) – Results of all transmitting DSP algorithms.</p></li>
+<li><p><strong>states</strong> (<em>Sequence</em><em>[</em><em>SimulatedDeviceState</em><em> | </em><em>None</em><em>]</em><em>, </em><em>optional</em>) – States of the transmitting devices.
+If not specified, the current device states will be queried by calling <code class="xref py py-meth docutils literal notranslate"><span class="pre">Device.state()</span></code>.</p></li>
+<li><p><strong>trigger_realizations</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="simulation.synchronization.TriggerRealization.html#hermespy.simulation.simulated_device.TriggerRealization" title="hermespy.simulation.simulated_device.TriggerRealization"><em>TriggerRealization</em></a><em>]</em><em>, </em><em>optional</em>) – Realizations of the device’s trigger models.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference internal" href="simulation.simulated_device.SimulatedDeviceOutput.html#hermespy.simulation.simulated_device.SimulatedDeviceOutput" title="hermespy.simulation.simulated_device.SimulatedDeviceOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulatedDeviceOutput</span></code></a>]</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference internal" href="simulation.simulated_device.SimulatedDeviceOutput.html#hermespy.simulation.simulated_device.SimulatedDeviceOutput" title="hermespy.simulation.simulated_device.SimulatedDeviceOutput"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulatedDeviceOutput</span></code></a>]</span></p>
 </dd>
 </dl>
-<p>Returns: list of device outputs.</p>
+<p>Returns: List of device outputs.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -737,26 +724,28 @@ If none were provided, cached operator transmissions are assumed.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.simulation.simulation.SimulationScenario.process_inputs">
-<span class="sig-name descname"><span class="pre">process_inputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">impinging_signals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trigger_realizations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/simulation/scenario.html#SimulationScenario.process_inputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.simulation.simulation.SimulationScenario.process_inputs" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">process_inputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">impinging_signals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trigger_realizations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">leaking_signals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/simulation/scenario.html#SimulationScenario.process_inputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.simulation.simulation.SimulationScenario.process_inputs" title="Link to this definition">¶</a></dt>
 <dd><p>Process input signals impinging onto the scenario’s devices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>impinging_signals</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="core.device.DeviceInput.html#hermespy.core.device.DeviceInput" title="hermespy.core.device.DeviceInput"><em>DeviceInput</em></a><em> | </em><a class="reference internal" href="core.signal_model.Signal.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a><em> | </em><em>Sequence</em><em>[</em><a class="reference internal" href="core.signal_model.Signal.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a><em>]</em><em>] </em><em>| </em><em>Sequence</em><em>[</em><em>Sequence</em><em>[</em><a class="reference internal" href="core.signal_model.Signal.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a><em>]</em><em>]</em>) – list of signals impinging onto the devices.</p></li>
-<li><p><strong>cache</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – Cache the operator inputs at the registered receive operators for further processing.
-Enabled by default.</p></li>
+<li><p><strong>impinging_signals</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="core/device.DeviceInput.html#hermespy.core.device.DeviceInput" title="hermespy.core.device.DeviceInput"><em>DeviceInput</em></a><em> | </em><a class="reference internal" href="core/signal.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a><em> | </em><em>Sequence</em><em>[</em><a class="reference internal" href="core/signal.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a><em>]</em><em>] </em><em>| </em><em>Sequence</em><em>[</em><em>Sequence</em><em>[</em><a class="reference internal" href="core/signal.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a><em>]</em><em>]</em>) – list of signals impinging onto the devices.</p></li>
+<li><p><strong>states</strong> (<em>Sequence</em><em>[</em><em>SimulatedDeviceState</em><em>]</em><em>, </em><em>optional</em>) – Sequence of simulated device states at the time of signal impingement.
+If not specified, the device states are assumed to be at the initial state.</p></li>
 <li><p><strong>trigger_realizations</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="simulation.synchronization.TriggerRealization.html#hermespy.simulation.simulated_device.TriggerRealization" title="hermespy.simulation.simulated_device.TriggerRealization"><em>TriggerRealization</em></a><em>]</em><em>, </em><em>optional</em>) – Sequence of trigger realizations.
 If not specified, ideal triggerings are assumed for all devices.</p></li>
+<li><p><strong>leaking_signals</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="core/signal.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a><em>] </em><em>| </em><em>Sequence</em><em>[</em><em>Sequence</em><em>[</em><a class="reference internal" href="core/signal.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a><em>]</em><em>]</em><em>, </em><em>optional</em>) – Signals leaking from transmit to receive chains within the individual devices.
+If not specified, no leakage is assumed.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference internal" href="simulation.simulated_device.ProcessedSimulatedDeviceInput.html#hermespy.simulation.simulated_device.ProcessedSimulatedDeviceInput" title="hermespy.simulation.simulated_device.ProcessedSimulatedDeviceInput"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProcessedSimulatedDeviceInput</span></code></a>]</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference internal" href="simulation.simulated_device.ProcessedSimulatedDeviceInput.html#hermespy.simulation.simulated_device.ProcessedSimulatedDeviceInput" title="hermespy.simulation.simulated_device.ProcessedSimulatedDeviceInput"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProcessedSimulatedDeviceInput</span></code></a>]</span></p>
 </dd>
 </dl>
 <p>Returns: list of the processed device input information.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.12)"><strong>ValueError</strong></a> – If the number of <cite>impinging_signals</cite> does not match the number of registered devices.</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If the number of <cite>impinging_signals</cite> does not match the number of registered devices.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -768,13 +757,16 @@ If not specified, ideal triggerings are assumed for all devices.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>transmissions</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="core.device.DeviceOutput.html#hermespy.core.device.DeviceOutput" title="hermespy.core.device.DeviceOutput"><em>DeviceOutput</em></a><em>]</em>) – Sequence of device transmissisons.</p></li>
+<li><p><strong>transmissions</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="core/device.DeviceOutput.html#hermespy.core.device.DeviceOutput" title="hermespy.core.device.DeviceOutput"><em>DeviceOutput</em></a><em>]</em>) – Sequence of device transmissisons.</p></li>
+<li><p><strong>device_states</strong> (<em>Sequence</em><em>[</em><em>SimulatedDeviceState</em><em>]</em><em>, </em><em>optional</em>) – Sequence of device states at the time of signal propagation.
+If not specified, the device states are assumed to be at the initial state.</p></li>
+<li><p><strong>channel_realizations</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="channel/channel.ChannelRealization.html#hermespy.channel.channel.ChannelRealization" title="hermespy.channel.channel.ChannelRealization"><em>ChannelRealization</em></a><em>]</em><em>, </em><em>optional</em>) – Sequence of channel realizations representing the scenario’s channel random states.</p></li>
 <li><p><strong>interpolation_mode</strong> (<a class="reference internal" href="channel/channel.Channel.html#hermespy.channel.channel.InterpolationMode" title="hermespy.channel.channel.InterpolationMode"><em>InterpolationMode</em></a><em>, </em><em>optional</em>) – Interpolation mode for the channel samples.
 Defaults to <cite>InterpolationMode.NEAREST</cite>.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.12)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference internal" href="core.signal_model.Signal.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><code class="xref py py-class docutils literal notranslate"><span class="pre">Signal</span></code></a>]], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference internal" href="channel/channel.ChannelRealization.html#hermespy.channel.channel.ChannelRealization" title="hermespy.channel.channel.ChannelRealization"><code class="xref py py-class docutils literal notranslate"><span class="pre">ChannelRealization</span></code></a>]]</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.13)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>[<a class="reference internal" href="core/signal.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><code class="xref py py-class docutils literal notranslate"><span class="pre">Signal</span></code></a>]], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference internal" href="channel/channel.ChannelRealization.html#hermespy.channel.channel.ChannelRealization" title="hermespy.channel.channel.ChannelRealization"><code class="xref py py-class docutils literal notranslate"><span class="pre">ChannelRealization</span></code></a>]]</span></p>
 </dd>
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><ul class="simple">
@@ -784,7 +776,7 @@ Defaults to <cite>InterpolationMode.NEAREST</cite>.</p></li>
 </p>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.12)"><strong>ValueError</strong></a> – If the length of <cite>transmissions</cite> does not match the number of registered devices.</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If the length of <cite>transmissions</cite> does not match the number of registered devices.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -796,47 +788,55 @@ Defaults to <cite>InterpolationMode.NEAREST</cite>.</p></li>
 <p>Returns: A sequence of channel realizations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference internal" href="channel/channel.ChannelRealization.html#hermespy.channel.channel.ChannelRealization" title="hermespy.channel.channel.ChannelRealization"><code class="xref py py-class docutils literal notranslate"><span class="pre">ChannelRealization</span></code></a>]</span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference internal" href="channel/channel.ChannelRealization.html#hermespy.channel.channel.ChannelRealization" title="hermespy.channel.channel.ChannelRealization"><code class="xref py py-class docutils literal notranslate"><span class="pre">ChannelRealization</span></code></a>]</span></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.simulation.simulation.SimulationScenario.realize_triggers">
-<span class="sig-name descname"><span class="pre">realize_triggers</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/simulation/scenario.html#SimulationScenario.realize_triggers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.simulation.simulation.SimulationScenario.realize_triggers" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">realize_triggers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">devices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/simulation/scenario.html#SimulationScenario.realize_triggers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.simulation.simulation.SimulationScenario.realize_triggers" title="Link to this definition">¶</a></dt>
 <dd><p>Realize the trigger models of all registered devices.</p>
 <p>Devices sharing trigger models will be triggered simulatenously.</p>
-<p>Returns: A sequence of trigger model realizations.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference internal" href="simulation.synchronization.TriggerRealization.html#hermespy.simulation.simulated_device.TriggerRealization" title="hermespy.simulation.simulated_device.TriggerRealization"><code class="xref py py-class docutils literal notranslate"><span class="pre">TriggerRealization</span></code></a>]</span></p>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>devices</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="simulation.simulated_device.html#hermespy.simulation.simulated_device.SimulatedDevice" title="hermespy.simulation.simulated_device.SimulatedDevice"><em>SimulatedDevice</em></a><em>]</em><em>, </em><em>optional</em>) – The devices for which to realize the trigger models.
+If not specified, all registered devices are considered.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference internal" href="simulation.synchronization.TriggerRealization.html#hermespy.simulation.simulated_device.TriggerRealization" title="hermespy.simulation.simulated_device.TriggerRealization"><code class="xref py py-class docutils literal notranslate"><span class="pre">TriggerRealization</span></code></a>]</span></p>
 </dd>
 </dl>
+<p>Returns: A sequence of trigger model realizations.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.simulation.simulation.SimulationScenario.receive_devices">
-<span class="sig-name descname"><span class="pre">receive_devices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">impinging_signals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trigger_realizations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/simulation/scenario.html#SimulationScenario.receive_devices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.simulation.simulation.SimulationScenario.receive_devices" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">receive_devices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">impinging_signals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notify</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trigger_realizations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">leaking_signals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/simulation/scenario.html#SimulationScenario.receive_devices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.simulation.simulation.SimulationScenario.receive_devices" title="Link to this definition">¶</a></dt>
 <dd><p>Receive over all simulated scenario devices.</p>
 <p>Internally calls <a class="reference internal" href="#hermespy.simulation.simulation.SimulationScenario.process_inputs" title="hermespy.simulation.simulation.SimulationScenario.process_inputs"><code class="xref py py-meth docutils literal notranslate"><span class="pre">SimulationScenario.process_inputs()</span></code></a> and <code class="xref py py-meth docutils literal notranslate"><span class="pre">Scenario.receive_operators()</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>impinging_signals</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><em>list</em></a><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="core.device.DeviceInput.html#hermespy.core.device.DeviceInput" title="hermespy.core.device.DeviceInput"><em>DeviceInput</em></a><em>, </em><a class="reference internal" href="core.signal_model.Signal.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a><em>, </em><em>Iterable</em><em>[</em><a class="reference internal" href="core.signal_model.Signal.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a><em>]</em><em>]</em><em>]</em>) – list of signals impinging onto the devices.</p></li>
-<li><p><strong>cache</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – Cache the operator inputs at the registered receive operators for further processing.
+<li><p><strong>impinging_signals</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><em>list</em></a><em>[</em><em>Union</em><em>[</em><a class="reference internal" href="core/device.DeviceInput.html#hermespy.core.device.DeviceInput" title="hermespy.core.device.DeviceInput"><em>DeviceInput</em></a><em>, </em><a class="reference internal" href="core/signal.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a><em>, </em><em>Iterable</em><em>[</em><a class="reference internal" href="core/signal.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a><em>]</em><em>]</em><em>]</em>) – List of signals impinging onto the devices.</p></li>
+<li><p><strong>states</strong> (<em>Sequence</em><em>[</em><em>SimulatedDeviceState</em><em> | </em><em>None</em><em>]</em><em>, </em><em>optional</em>) – Sequence of simulated device states at the time of signal impingement.
+If not specified, the device states are assumed to be at the initial state.</p></li>
+<li><p><strong>notify</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – Notify the receiving DSP layer’s callbacks about the reception results.
 Enabled by default.</p></li>
 <li><p><strong>trigger_realizations</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="simulation.synchronization.TriggerRealization.html#hermespy.simulation.simulated_device.TriggerRealization" title="hermespy.simulation.simulated_device.TriggerRealization"><em>TriggerRealization</em></a><em>]</em><em>, </em><em>optional</em>) – Sequence of trigger realizations.
 If not specified, ideal triggerings are assumed for all devices.</p></li>
+<li><p><strong>leaking_signals</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="core/signal.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a><em>] </em><em>| </em><em>Sequence</em><em>[</em><em>Sequence</em><em>[</em><a class="reference internal" href="core/signal.html#hermespy.core.signal_model.Signal" title="hermespy.core.signal_model.Signal"><em>Signal</em></a><em>]</em><em>]</em><em>, </em><em>optional</em>) – Signals leaking from transmit to receive chains within the individual devices.
+If not specified, no leakage is assumed.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference internal" href="simulation.simulated_device.SimulatedDeviceReception.html#hermespy.simulation.simulated_device.SimulatedDeviceReception" title="hermespy.simulation.simulated_device.SimulatedDeviceReception"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulatedDeviceReception</span></code></a>]</span></p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference internal" href="simulation.simulated_device.SimulatedDeviceReception.html#hermespy.simulation.simulated_device.SimulatedDeviceReception" title="hermespy.simulation.simulated_device.SimulatedDeviceReception"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulatedDeviceReception</span></code></a>]</span></p>
 </dd>
 </dl>
 <p>Returns: list of the processed device input information.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.12)"><strong>ValueError</strong></a> – If the number of <cite>impinging_signals</cite> does not match the number of registered devices.</p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If the number of <cite>impinging_signals</cite> does not match the number of registered devices.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -854,49 +854,52 @@ If not specified, ideal triggerings are assumed for all devices.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.12)"><strong>ValueError</strong></a> – If <cite>alpha_device</cite> or <cite>beta_device</cite> are not registered with this scenario.</p>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If <cite>alpha_device</cite> or <cite>beta_device</cite> are not registered with this scenario.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
+<dd class="field-odd"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a></span></p>
 </dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="hermespy.simulation.simulation.SimulationScenario.transmit_devices">
-<span class="sig-name descname"><span class="pre">transmit_devices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cache</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/simulation/scenario.html#SimulationScenario.transmit_devices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.simulation.simulation.SimulationScenario.transmit_devices" title="Link to this definition">¶</a></dt>
-<dd><p>Generate simulated device transmissions of all registered devices.</p>
-<p>Devices sharing trigger models will be triggered simultaneously.</p>
+<span class="sig-name descname"><span class="pre">transmit_devices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">states</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notify</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trigger_realizations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/hermespy/simulation/scenario.html#SimulationScenario.transmit_devices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#hermespy.simulation.simulation.SimulationScenario.transmit_devices" title="Link to this definition">¶</a></dt>
+<dd><p>Generated information transmitted by all registered devices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>cache</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.12)"><em>bool</em></a><em>, </em><em>optional</em>) – Cache the generated transmissions at the respective devices.
-Enabled by default.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>states</strong> (<em>Sequence</em><em>[</em><em>SimulatedDeviceState</em><em> | </em><em>None</em><em>]</em><em>, </em><em>optional</em>) – States of the transmitting devices.
+If not specified, the current device states will be queried by calling <code class="xref py py-meth docutils literal notranslate"><span class="pre">Device.state()</span></code>.</p></li>
+<li><p><strong>notify</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a><em>, </em><em>optional</em>) – Notify the transmit DSP layer’s callbacks about the transmission results.
+Enabled by default.</p></li>
+<li><p><strong>trigger_realizations</strong> (<em>Sequence</em><em>[</em><a class="reference internal" href="simulation.synchronization.TriggerRealization.html#hermespy.simulation.simulated_device.TriggerRealization" title="hermespy.simulation.simulated_device.TriggerRealization"><em>TriggerRealization</em></a><em>]</em><em>, </em><em>optional</em>) – Realizations of the device’s trigger models.
+If not spcified, new trigger realizations will be generated from all devices.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.12)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference internal" href="simulation.simulated_device.SimulatedDeviceTransmission.html#hermespy.simulation.simulated_device.SimulatedDeviceTransmission" title="hermespy.simulation.simulated_device.SimulatedDeviceTransmission"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulatedDeviceTransmission</span></code></a>]</span></p>
-</dd>
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Sequence of simulated simulated device transmissions.</p>
+<dd class="field-even"><p><span class="sphinx_autodoc_typehints-type"><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference internal" href="simulation.simulated_device.SimulatedDeviceTransmission.html#hermespy.simulation.simulated_device.SimulatedDeviceTransmission" title="hermespy.simulation.simulated_device.SimulatedDeviceTransmission"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimulatedDeviceTransmission</span></code></a>]</span></p>
 </dd>
 </dl>
+<p>Returns: List of generated information transmitted by each device.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.simulation.simulation.SimulationScenario.channels">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">channels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.12)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="channel/channel.Channel.html#hermespy.channel.channel.Channel" title="hermespy.channel.channel.Channel"><span class="pre">Channel</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.simulation.simulation.SimulationScenario.channels" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">channels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)"><span class="pre">list</span></a><span class="p"><span class="pre">[</span></span><a class="reference internal" href="channel/channel.Channel.html#hermespy.channel.channel.Channel" title="hermespy.channel.channel.Channel"><span class="pre">Channel</span></a><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#hermespy.simulation.simulation.SimulationScenario.channels" title="Link to this definition">¶</a></dt>
 <dd><p>Unique channel model instances interconnecting devices within this scenario.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.simulation.simulation.SimulationScenario.noise_level">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">noise_level</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="simulation.noise.html#hermespy.simulation.noise.level.NoiseLevel" title="hermespy.simulation.noise.level.NoiseLevel"><span class="pre">NoiseLevel</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></em><a class="headerlink" href="#hermespy.simulation.simulation.SimulationScenario.noise_level" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">noise_level</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="simulation.noise.html#hermespy.simulation.noise.level.NoiseLevel" title="hermespy.simulation.noise.level.NoiseLevel"><span class="pre">NoiseLevel</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#hermespy.simulation.simulation.SimulationScenario.noise_level" title="Link to this definition">¶</a></dt>
 <dd><p>Global noise level of the scenario.</p>
 <p>If not set, i.e. <cite>None</cite>, the noise level is device-specific.</p>
 </dd></dl>
 
 <dl class="py property">
 <dt class="sig sig-object py" id="hermespy.simulation.simulation.SimulationScenario.noise_model">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">noise_model</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="simulation.noise.html#hermespy.simulation.noise.model.NoiseModel" title="hermespy.simulation.noise.model.NoiseModel"><span class="pre">NoiseModel</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.12)"><span class="pre">None</span></a></em><a class="headerlink" href="#hermespy.simulation.simulation.SimulationScenario.noise_model" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">noise_model</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="simulation.noise.html#hermespy.simulation.noise.model.NoiseModel" title="hermespy.simulation.noise.model.NoiseModel"><span class="pre">NoiseModel</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><span class="pre">None</span></a></em><a class="headerlink" href="#hermespy.simulation.simulation.SimulationScenario.noise_model" title="Link to this definition">¶</a></dt>
 <dd><p>Global noise model of the scenario.</p>
 <p>If not set, i.e. <cite>None</cite>, the noise model is device-specific.</p>
 </dd></dl>
@@ -965,9 +968,9 @@ Enabled by default.</p>
     </aside>
   </div>
 </div><script src="../_static/documentation_options.js?v=5929fcd5"></script>
-    <script src="../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script src="../_static/scripts/furo.js?v=4e2eecee"></script>
+    <script src="../_static/scripts/furo.js?v=5fa4622c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
     <script src="../_static/copybutton.js?v=f281be69"></script>
     </body>

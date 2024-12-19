@@ -1,0 +1,12 @@
+<map id="inheritance0a9e294bac" name="inheritance0a9e294bac">
+<area shape="rect" id="node1" href="https://docs.python.org/3/library/abc.html#abc.ABC" target="_top" title="Helper class that provides a standard way to create an ABC using" alt="" coords="173,79,245,104"/>
+<area shape="rect" id="node9" href="core/precoding.html#hermespy.core.precoding.ReceiveDecoder" target="_top" title="Base class of precoding steps within receive precoding configurations." alt="" coords="212,152,340,177"/>
+<area shape="rect" id="node10" href="core/precoding.html#hermespy.core.precoding.TransmitEncoder" target="_top" title="Base class of precoding steps within transmit precoding configurations." alt="" coords="35,152,165,177"/>
+<area shape="rect" id="node2" href="#hermespy.modem.precoding.space_time_block_coding.Alamouti" target="_top" title="Alamouti precoder distributing symbols in space and time." alt="" coords="205,299,286,324"/>
+<area shape="rect" id="node3" href="modem.precoding.symbol_precoding.SymbolPrecoding.html#hermespy.modem.precoding.symbol_precoding.TransmitSymbolEncoder" target="_top" title="TransmitSymbolEncoder" alt="" coords="5,225,184,251"/>
+<area shape="rect" id="node6" href="#hermespy.modem.precoding.space_time_block_coding.Ganesan" target="_top" title="Girish Ganesan and Petre Stoica general precoder distributing symbols in space and time." alt="" coords="310,299,389,324"/>
+<area shape="rect" id="node4" href="modem.precoding.symbol_precoding.SymbolPrecoding.html#hermespy.modem.precoding.symbol_precoding.ReceiveSymbolDecoder" target="_top" title="ReceiveSymbolDecoder" alt="" coords="209,225,386,251"/>
+<area shape="rect" id="node5" href="core/factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="411,225,509,251"/>
+<area shape="rect" id="node7" href="https://docs.python.org/3/library/typing.html#typing.Generic" target="_top" title="Abstract base class for generic types." alt="" coords="73,5,145,31"/>
+<area shape="rect" id="node8" href="core/precoding.html#hermespy.core.precoding.Precoder" target="_top" title="Base class for signal processing algorithms operating on parallel complex data streams." alt="" coords="70,79,149,104"/>
+</map>

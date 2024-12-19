@@ -1,6 +1,0 @@
-<map id="inheritance1da170be78" name="inheritance1da170be78">
-<area shape="rect" id="node1" href="core.antennas.html#hermespy.core.antennas.Antenna" target="_top" title="Model of a single antenna." alt="" coords="55,5,131,31"/>
-<area shape="rect" id="node2" href="core.antennas.html#hermespy.core.antennas.Dipole" target="_top" title="Model of vertically polarized half&#45;wavelength dipole antenna." alt="" coords="5,79,77,104"/>
-<area shape="rect" id="node3" href="#hermespy.simulation.antennas.SimulatedAntenna" target="_top" title="Model of single antenna within an antenna array." alt="" coords="102,79,245,104"/>
-<area shape="rect" id="node4" title="Model of single dipole antenna within an antenna array." alt="" coords="49,152,180,177"/>
-</map>

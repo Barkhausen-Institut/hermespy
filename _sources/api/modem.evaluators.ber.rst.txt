@@ -34,7 +34,7 @@ within the context of a simulation campaign:
 .. literalinclude:: ../scripts/examples/modem_evaluators_ber.py
    :language: python
    :linenos:
-   :lines: 10-31
+   :lines: 10-33
 
 .. autoclass:: hermespy.modem.evaluators.BitErrorEvaluator
 

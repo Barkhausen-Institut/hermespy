@@ -37,7 +37,7 @@ with Executable.style_context():
     ]
 
     for amplifier in amplifiers:
-        amplifier.plot(axes=axes)
+        amplifier.plot_characteristics(axes=axes)
 
     axes.flat[0].legend(['Linear', 'Rapp', 'Clipping', 'Saleh'])
     axes.flat[0].twinx().set_visible(False)

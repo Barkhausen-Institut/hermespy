@@ -1,5 +1,0 @@
-<map id="inheritancef9589e4227" name="inheritancef9589e4227">
-<area shape="rect" id="node1" href="core.factory.html#hermespy.core.factory.HDFSerializable" target="_top" title="Base class for object serializable to the HDF5 format." alt="" coords="5,5,131,31"/>
-<area shape="rect" id="node3" href="#hermespy.modem.symbols.Symbols" target="_top" title="A time&#45;series of communication symbols located somewhere on the complex plane." alt="" coords="29,79,107,104"/>
-<area shape="rect" id="node2" href="#hermespy.modem.symbols.StatedSymbols" target="_top" title="A time&#45;series of communication symbols and channel states located somewhere on the complex plane." alt="" coords="8,152,128,177"/>
-</map>

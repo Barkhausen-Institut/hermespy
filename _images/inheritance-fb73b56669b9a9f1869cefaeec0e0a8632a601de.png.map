@@ -1,0 +1,5 @@
+<map id="inheritancef6079d8660" name="inheritancef6079d8660">
+<area shape="rect" id="node1" href="https://docs.python.org/3/library/typing.html#typing.Generic" target="_top" title="Abstract base class for generic types." alt="" coords="56,5,128,31"/>
+<area shape="rect" id="node2" href="#hermespy.core.hooks.Hook" target="_top" title="Hook for a callback to be called after a specific DSP layer was called." alt="" coords="5,79,77,104"/>
+<area shape="rect" id="node3" href="#hermespy.core.hooks.Hookable" target="_top" title="Base class of DSP layers that can be hooked into by callbacks." alt="" coords="101,79,184,104"/>
+</map>

@@ -9,6 +9,7 @@
             },
             "outputs": [],
             "source": [
+                "%%capture\n",
                 "# Install HermesPy and its dependencies in the current kernel\n",
                 "# When running on Colabs, a restart of the runtime is required afterwards\n",
                 "\n",
@@ -80,8 +81,8 @@
                 "        interpolation: InterpolationMode,\n",
                 "     ) -> Signal:\n",
                 "\n",
-                "        shifted_samples = signal[:, :] * np.exp(1j * self.__phase_shift)\n",
-                "        return signal.from_ndarray(shifted_samples)\n",
+                "        shifted_signal_blocks = [b * np.exp(1j * self.__phase_shift) for b in signal]\n",
+                "        return signal.Create(shifted_signal_blocks, **signal.kwargs)\n",
                 "\n",
                 "    def state(\n",
                 "        self,\n",
@@ -277,7 +278,7 @@
             "name": "python",
             "nbconvert_exporter": "python",
             "pygments_lexer": "ipython3",
-            "version": "3.11.1"
+            "version": "3.9.12"
         },
         "orig_nbformat": 4,
         "vscode": {

@@ -1,7 +1,0 @@
-<map id="inheritance1f8101762f" name="inheritance1f8101762f">
-<area shape="rect" id="node1" href="modem.modem.BaseModem.html#hermespy.modem.modem.BaseModem" target="_top" title="Base class for wireless modems transmitting or receiving information over devices." alt="" coords="37,5,140,31"/>
-<area shape="rect" id="node4" href="#hermespy.modem.modem.ReceivingModemBase" target="_top" title="Base class of signal processing algorithms receiving information." alt="" coords="5,79,172,104"/>
-<area shape="rect" id="node2" href="core.device.Receiver.html#hermespy.core.device.Receiver" target="_top" title="Operator receiving from a device." alt="" coords="196,79,275,104"/>
-<area shape="rect" id="node3" href="#hermespy.modem.modem.ReceivingModem" target="_top" title="Representation of a wireless modem exclusively receiving." alt="" coords="168,152,303,177"/>
-<area shape="rect" id="node5" href="core.factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="299,79,398,104"/>
-</map>

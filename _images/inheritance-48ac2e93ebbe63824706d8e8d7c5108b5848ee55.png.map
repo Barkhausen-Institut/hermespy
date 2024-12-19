@@ -1,5 +1,0 @@
-<map id="inheritancec9f0eacaf3" name="inheritancec9f0eacaf3">
-<area shape="rect" id="node1" href="https://docs.python.org/3/library/abc.html#abc.ABC" target="_top" title="Helper class that provides a standard way to create an ABC using" alt="" coords="8,5,80,31"/>
-<area shape="rect" id="node2" href="#hermespy.modem.evaluators.CommunicationEvaluator" target="_top" title="Base class for evaluating communication processes between two modems." alt="" coords="5,152,192,177"/>
-<area shape="rect" id="node3" href="core.monte_carlo.html#hermespy.core.monte_carlo.Evaluator" target="_top" title="Evaluation routine for investigated object states, extracting performance indicators of interest." alt="" coords="69,79,153,104"/>
-</map>

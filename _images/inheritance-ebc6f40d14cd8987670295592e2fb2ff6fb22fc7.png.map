@@ -1,5 +1,0 @@
-<map id="inheritance44cacffad8" name="inheritance44cacffad8">
-<area shape="rect" id="node1" href="#hermespy.modem.precoding.dft.DFT" target="_top" title="A precoder applying the Discrete Fourier Transform to each data stream." alt="" coords="101,79,173,104"/>
-<area shape="rect" id="node2" href="modem.precoding.symbol_precoding.SymbolPrecoder.html#hermespy.modem.precoding.symbol_precoding.SymbolPrecoder" target="_top" title="Abstract base class for signal processing algorithms operating on complex data symbols streams." alt="" coords="5,5,133,31"/>
-<area shape="rect" id="node3" href="core.factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="157,5,256,31"/>
-</map>

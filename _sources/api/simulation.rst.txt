@@ -99,7 +99,7 @@ specify the device class:
 .. literalinclude:: ../scripts/examples/simulation.py
    :language: python
    :linenos:
-   :lines: 21-35
+   :lines: 31-35
 
 Now, by default, devices won't transmit or receive any signals.
 For the sake of simplicity in this example, we will configure the devices to transmit and receive

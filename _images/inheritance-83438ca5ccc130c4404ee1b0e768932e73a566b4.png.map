@@ -1,0 +1,9 @@
+<map id="inheritancefce9253b53" name="inheritancefce9253b53">
+<area shape="rect" id="node1" href="#hermespy.core.transformation.Direction" target="_top" title="A cartesian unit norm vector pointing towards a direction." alt="" coords="5,79,87,104"/>
+<area shape="rect" id="node2" href="https://numpy.org/doc/stable/reference/generated/numpy.ndarray.html#numpy.ndarray" target="_top" title="ndarray(shape, dtype=float, buffer=None, offset=0," alt="" coords="18,5,90,31"/>
+<area shape="rect" id="node7" href="#hermespy.core.transformation.Transformation" target="_top" title="Coordinate system transformation." alt="" coords="111,79,231,104"/>
+<area shape="rect" id="node3" href="factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="159,5,258,31"/>
+<area shape="rect" id="node4" href="#hermespy.core.transformation.Transformable" target="_top" title="Representation of a Coordinate Frame within a Kinematic Chain." alt="" coords="255,79,370,104"/>
+<area shape="rect" id="node5" href="#hermespy.core.transformation.TransformableLink" target="_top" title="Abstract base class of kinetmatic chain links." alt="" coords="357,5,500,31"/>
+<area shape="rect" id="node6" href="#hermespy.core.transformation.TransformableBase" target="_top" title="Base of kinematic chains." alt="" coords="394,79,541,104"/>
+</map>

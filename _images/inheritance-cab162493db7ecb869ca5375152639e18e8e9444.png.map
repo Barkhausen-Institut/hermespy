@@ -1,0 +1,7 @@
+<map id="inheritancee1aecfef1e" name="inheritancee1aecfef1e">
+<area shape="rect" id="node1" href="core/antennas.html#hermespy.core.antennas.Antenna" target="_top" title="Base class for the model of a single antenna element within an antenna array." alt="" coords="157,5,233,31"/>
+<area shape="rect" id="node2" href="core/antennas.html#hermespy.core.antennas.LinearAntenna" target="_top" title="Model of a linearly polarized ideal antenna." alt="" coords="5,79,121,104"/>
+<area shape="rect" id="node4" href="simulation.antennas.SimulatedDipole.html#hermespy.simulation.antennas.SimulatedAntenna" target="_top" title="Model of single antenna within an antenna array." alt="" coords="145,79,288,104"/>
+<area shape="rect" id="node5" href="#hermespy.simulation.antennas.SimulatedLinearAntenna" target="_top" title="Model of single linear antenna within an antenna array." alt="" coords="57,152,240,177"/>
+<area shape="rect" id="node3" href="core/factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="14,5,113,31"/>
+</map>

@@ -1,0 +1,4 @@
+<map id="inheritance049d09c5be" name="inheritance049d09c5be">
+<area shape="rect" id="node1" href="core/antennas.html#hermespy.core.antennas.AntennaArray" target="_top" title="Base class of a model of a set of antennas." alt="" coords="39,5,149,31"/>
+<area shape="rect" id="node2" href="#hermespy.simulation.antennas.SimulatedAntennaArray" target="_top" title="Array of simulated antennas." alt="" coords="5,79,183,104"/>
+</map>
