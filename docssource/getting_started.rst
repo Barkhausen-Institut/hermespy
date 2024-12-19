@@ -25,18 +25,17 @@ within a strictly object-oriented class structure.
 Each processing step is represented by a dedicated class and can be adapted and customized by the software user.
 
 Consider a typically heterogeneous wireless scenario featuring multiple entities transmitting and receiving electromagnetic waveforms.
-The physical description of said entities is referred to as a :doc:`Device<api/core.device.Device>` in Hermes.
-:doc:`Devices<api/core.device.Device>` provide general information required for the modeling of electromagnetic propagation,
+The physical description of said entities is referred to as a :doc:`Device<api/core/device.Device>` in Hermes.
+:doc:`Devices<api/core/device.Device>` provide general information required for the modeling of electromagnetic propagation,
 such as carrier frequency, spatial position, orientation, number of available antennas and the respective antenna array topology.
-Now, while :doc:`Devices<api/core.device.Device>` describe the physical properties,
-the digital signal processing required for generating waveform transmissions and receptions is modeled by :doc:`Transmitters<api/core.device.Transmitter>`
-and :doc:`Receivers<api/core.device.Receiver>`, respectively.
+Now, while :doc:`Devices<api/core/device.Device>` describe the physical properties,
+the digital signal processing required for generating waveform transmissions and receptions is modeled by :doc:`Transmitters<api/core/device.Transmitter>`
+and :doc:`Receivers<api/core/device.Receiver>`, respectively.
 They form HermesPy's general abstraction for digital signal processing applied before digital-to-analog conversion and after analog-to-digital conversion, respectively:
 
 .. mermaid::
    :align: center
 
-   %%{init: {"flowchart":{"useMaxWidth": false}}}%%
    graph LR
 
    subgraph dspi [DSP Transmit Layer]
@@ -70,22 +69,22 @@ They form HermesPy's general abstraction for digital signal processing applied b
    dao --> oao
    dbo --> obo
 
-   click oai "api/core.device.Transmitter.html" "Transmitter"
-   click obi "api/core.device.Transmitter.html" "Transmitter"
-   click dai "api/core.device.Device.html" "Device"
-   click dbi "api/core.device.Device.html" "Device"
-   click dao "api/core.device.Device.html" "Device"
-   click dbo "api/core.device.Device.html" "Device"
-   click oao "api/core.device.Receiver.html" "Receiver"
-   click obo "api/core.device.Receiver.html" "Receiver"
+   click oai "api/core/device.Transmitter.html" "Transmitter"
+   click obi "api/core/device.Transmitter.html" "Transmitter"
+   click dai "api/core/device.Device.html" "Device"
+   click dbi "api/core/device.Device.html" "Device"
+   click dao "api/core/device.Device.html" "Device"
+   click dbo "api/core/device.Device.html" "Device"
+   click oao "api/core/device.Receiver.html" "Receiver"
+   click obo "api/core/device.Receiver.html" "Receiver"
 
-A typical information flow consists of a :doc:`Transmitter<api/core.device.Transmitter>` generating a base-band waveform,
-submitting it to its assigned :doc:`Device<api/core.device.Device>`,
-followed by the :doc:`Device<api/core.device.Device>` emitting the submitted transmission in RF-band, while simultaneously recording impinging broadcasts.
-The recorded broadcasts are submitted to the assigend :doc:`Receivers<api/core.device.Receiver>` to be processed.
+A typical information flow consists of a :doc:`Transmitter<api/core/device.Transmitter>` generating a base-band waveform,
+submitting it to its assigned :doc:`Device<api/core/device.Device>`,
+followed by the :doc:`Device<api/core/device.Device>` emitting the submitted transmission in RF-band, while simultaneously recording impinging broadcasts.
+The recorded broadcasts are submitted to the assigend :doc:`Receivers<api/core/device.Receiver>` to be processed.
 
 There are two types of devices, namely :doc:`Simulated<api/simulation.simulated_device>` and :doc:`Physical<api/hardware_loop.physical_device.PhysicalDevice>`,
-which both inherit from the abstract :doc:`Device<api/core.device.Device>` base:
+which both inherit from the abstract :doc:`Device<api/core/device.Device>` base:
 
 .. mermaid::
    :align: center
@@ -124,16 +123,16 @@ which both inherit from the abstract :doc:`Device<api/core.device.Device>` base:
    Device *--* Transmitter
    Device *--* Receiver
 
-   link Device "api/core.device.Device.html" "Device"
+   link Device "api/core/device.Device.html" "Device"
    link PhysicalDevice "api/hardware_loop.physical_device.PhysicalDevice.html" "Physical Device"
    link SimulatedDevice "api/simulation.simulated_device.html" "Simulated Device"
-   link Transmitter "api/core.device.Transmitter.html"
-   link Receiver "api/core.device.Receiver.html"
+   link Transmitter "api/core/device.Transmitter.html"
+   link Receiver "api/core/device.Receiver.html"
 
-Depending on which :doc:`Device<api/core.device.Device>` realization is selected,
+Depending on which :doc:`Device<api/core/device.Device>` realization is selected,
 Hermes acts as  either a physical layer simulation platform or a hardware testbed,
 with the advantage that implemented signal processing algorithms, which are simply classes inheriting from
-either :doc:`Transmitter<api/core.device.Transmitter>`, :doc:`Receiver<api/core.device.Receiver>`, or both,
+either :doc:`Transmitter<api/core/device.Transmitter>`, :doc:`Receiver<api/core/device.Receiver>`, or both,
 integrate seamlessly into both simulation and hardware testbed setups over a unifying API without the need for any code modifications.
 Three types of signal processing pipelines are currently provided by Hermes out of the box and shipped in individual namespace packages:
 
@@ -208,8 +207,8 @@ Refering back to the intial architecture graph, we patched the transmit layer di
 
 During simulations, however, the full physical layer is considered.
 HermesPy is drop-based, meaning with each call of the :doc:`Simulation<api/simulation.simulation.Simulation>`'s drop method,
-new realizations of the configured channel models are generated, the transmit routines of all :doc:`Transmitters<api/core.device.Transmitter>` are called,
-the generated waveforms are propagated over the configured channels and the receive routines of all :doc:`Receivers<api/core.device.Receiver>`.
+new realizations of the configured channel models are generated, the transmit routines of all :doc:`Transmitters<api/core/device.Transmitter>` are called,
+the generated waveforms are propagated over the configured channels and the receive routines of all :doc:`Receivers<api/core/device.Receiver>`.
 The generated information is collected in :doc:`SimulatedDrops<api/simulation.simulation.SimulatedDrop>` to be accessed by the user:
 
 .. literalinclude:: ../_examples/library/getting_started_simulation.py
@@ -218,7 +217,7 @@ The generated information is collected in :doc:`SimulatedDrops<api/simulation.si
    :lines: 44-47
 
 After the generation of a new :doc:`SimulatedDrop<api/simulation.simulation.SimulatedDrop>`,
-:doc:`Evaluators<api/core.monte_carlo.Evaluator>` may be used to conveniently extract performance information.
+:doc:`Evaluators<api/core/monte_carlo.Evaluator>` may be used to conveniently extract performance information.
 For instance, the bit error rate of the generated drop may be extracted by a :doc:`BitErrorEvaluator<api/modem.evaluators.ber>`:
 
 .. literalinclude:: ../_examples/library/getting_started_simulation.py
@@ -258,7 +257,6 @@ which represents the physical layer description of the hardware loop.
 .. mermaid::
    :align: center
 
-   %%{init: {"flowchart":{"useMaxWidth": false}}}%%
    graph LR
     
    subgraph phys [Hardware Loop Physical Layer]
@@ -329,8 +327,8 @@ Just like the simulation pipeline, the hardware loop runtime will generate drops
 However, instead of multiple drops being generated in parallel, the hardware loop's drop generation is performed sequentially by triggering
 the configured :doc:`PhysicalDevices<api/hardware_loop.physical_device.PhysicalDevice>`.
 
-After the generation of a new :doc:`Drop<api/core.drop.Drop>`,
-:doc:`Evaluators<api/core.monte_carlo.Evaluator>` may be used to conveniently extract performance information.
+After the generation of a new :doc:`Drop<api/core/drop.Drop>`,
+:doc:`Evaluators<api/core/monte_carlo.Evaluator>` may be used to conveniently extract performance information.
 For instance, the bit error rate of the generated drop may be extracted by a :doc:`BitErrorEvaluator<api/modem.evaluators.ber>`:
 
 .. literalinclude:: ../_examples/library/getting_started_loop.py
@@ -347,7 +345,7 @@ interface which will render plots of required information in real-time:
    :linenos:
    :lines: 35-38
 
-The plots will be updated with each new :doc:`Drop<api/core.drop.Drop>`.
+The plots will be updated with each new :doc:`Drop<api/core/drop.Drop>`.
 An overview of existing visualization routines can be found in :doc:`Visualizers<api/hardware_loop.visualizers>`.
 
 Identically to the simulation pipeline, the :doc:`HardwareLoop<api/hardware_loop.hardware_loop.HardwareLoop>`

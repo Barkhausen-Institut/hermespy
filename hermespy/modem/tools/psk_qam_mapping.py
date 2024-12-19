@@ -25,7 +25,7 @@ __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["André Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "André Noll Barreto"
 __email__ = "andre.nollbarreto@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -120,7 +120,7 @@ class PskQamMapping(object):
             The constellation is normalized, such that the mean symbol energy is unitary.
 
         Args:
-            bits (np.ndarray):
+            bits (numpy.ndarray):
                 Vector with N elements,
                 corresponding to the bits to be modulated.
 
@@ -186,7 +186,7 @@ class PskQamMapping(object):
 
         Args:
 
-            rx_symbols(np.ndarray):
+            rx_symbols(numpy.ndarray):
                 Vector of N received symbols, for which the bits/LLR will be estimated
 
             noise_variance (float or np.ndarray, optional):
@@ -195,7 +195,7 @@ class PskQamMapping(object):
                 This is only relevant if 'self.soft_output' is true.
 
         Returns:
-            bits(np.ndarray):
+            bits(numpy.ndarray):
                 Vector of N * self.bits_per_symbol elements containing either the estimated
                 bits or the LLR values of each bit, depending on the value of 'self.soft_output'
         """
@@ -281,10 +281,10 @@ class PskQamMapping(object):
 
         Args:
             modulation_order(int): modulation order M. M=2, 4, 8, 16 are supported
-            bits(np.ndarray): N x K array, with K the number of symbols
+            bits(numpy.ndarray): N x K array, with K the number of symbols
 
         Returns:
-            symbols(np.ndarray):
+            symbols(numpy.ndarray):
                 Vector of K real-valued symbols. Note that the symbols are not normalized,
                 and range from -(M-1) to (M+1) with step 2, e..g., for M=8,
                 values can be -7, -5, -3, -1, 1, 3, 5, 7.
@@ -327,14 +327,14 @@ class PskQamMapping(object):
 
         Args:
             modulation_order(int): modulation order M. M=2, 4, 8, 16 are supported
-            rx_symbols(np.ndarray): array with K received symbols
-            noise_variance(np.ndarray): float or array with noise varaiance of K symbols
+            rx_symbols(numpy.ndarray): array with K received symbols
+            noise_variance(numpy.ndarray): float or array with noise varaiance of K symbols
             is_complex(bool):
                 if True, then complex modulation is considered (PSK/QAM),
                 If False, then real-valued modulation is considered (PAM)
 
         Returns:
-            llr(np.ndarray): Vector of N x K elements with the LLR values.
+            llr(numpy.ndarray): Vector of N x K elements with the LLR values.
         """
 
         if is_complex:
@@ -509,7 +509,7 @@ class PskQamMapping(object):
         """Returns current mapping table
 
         Returns:
-            mapping(np.ndarray):
+            mapping(numpy.ndarray):
                 array with M (modulation_order) elements containing all possible modulation symbols.
                 See specifications in "PskQamMapping.__init__"
         """

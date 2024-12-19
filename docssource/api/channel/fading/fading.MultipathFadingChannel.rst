@@ -19,7 +19,7 @@ directly.
 The following minimal example outlines how to configure the channel model
 within the context of a :class:`Simulation<hermespy.simulation.simulation.Simulation>`:
 
-.. literalinclude:: ../../../scripts/examples/channel_MultipathFadingChannel.py
+.. literalinclude:: ../../../scripts/examples/channel_fading_fading.py
    :language: python
    :linenos:
    :lines: 12-40

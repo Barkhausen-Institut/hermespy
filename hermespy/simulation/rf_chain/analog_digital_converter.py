@@ -15,7 +15,7 @@ __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["André Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -445,7 +445,7 @@ class AnalogDigitalConverter(Serializable):
         """Quantizes the input signal
 
         Args:
-            input_signal(np.ndarray):
+            input_signal(numpy.ndarray):
                 Sample vector of the signal feeding into the quantizer.
 
         Returns:
@@ -491,7 +491,7 @@ class AnalogDigitalConverter(Serializable):
 
         Args:
 
-            input_samples (np.ndarray, optional):
+            input_samples (numpy.ndarray, optional):
                 Sample points at which to evaluate the characteristics, i.e., the x-axis of the resulting
                 characteristics plot. It should be a sorted number sequence.
 

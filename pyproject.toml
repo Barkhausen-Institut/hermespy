@@ -10,7 +10,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "hermespy"
-version = "1.3.0"
+version = "1.4.0"
 authors = [
     {name = "Jan Adler", email ="jan.adler@barkhauseninstitut.org"},
 ]
@@ -108,7 +108,7 @@ scapy = [
 cmake.verbose = true
 cmake.build-type = "Release"  # "Debug" or "Release"
 editable.mode = "redirect"
-ninja.make-fallback = false
+ninja.make-fallback = true
 logging.level = "INFO"
 sdist.include = []
 sdist.exclude = [
@@ -129,10 +129,14 @@ sdist.cmake = true
 wheel.packages = ["hermespy", "hermespy/*"]
 wheel.license-files = ["LICENSE"]
 wheel.cmake = true
+wheel.exclude = [
+    "*.cpp",
+    "CMakeLists.txt",
+]
 experimental = false
 build-dir = "build/{wheel_tag}"
 strict-config = true
-install.components = ["library", "PythonModule"]
+install.components = ["PythonModule"]
 install.strip = false
 
 [tool.black]
@@ -158,7 +162,7 @@ module = "numpy.*,scipy.*,oct2py.*,matlab.*,matplotlib.*,ruamel.*,numba.*,h5py.*
 ignore_missing_imports = true
 
 [bumpver]
-current_version = "1.3.0"
+current_version = "1.4.0"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message = "Bump to version {new_version}"
 commit = false
@@ -170,6 +174,7 @@ push = false
 "README.md" = [ "{version}" ]
 "pyproject.toml" = [ 'current_version = "{version}"', 'version = "{version}"' ]
 ".gitlab-ci.yml" = [ 'HERMES_VERSION: "{version}"' ]
+"scripts/docker/build_manylinux.sh" = [ 'version={version}' ]
 
 # Source files
 "hermespy/beamforming/*.py" = [ '__version__ = "{version}"' ]
@@ -188,11 +193,11 @@ push = false
 "hermespy/hardware_loop/uhd/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/jcas/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/modem/*.py" = [ '__version__ = "{version}"' ]
+"hermespy/modem/frame_generator/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/modem/precoding/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/modem/tools/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/modem/waveforms/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/modem/waveforms/orthogonal/*.py" = [ '__version__ = "{version}"' ]
-"hermespy/precoding/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/radar/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/simulation/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/simulation/coupling/*.py" = [ '__version__ = "{version}"' ]
@@ -221,7 +226,6 @@ push = false
 "tests/unit_tests/modem/tools/*.py" = [ '__version__ = "{version}"' ]
 "tests/unit_tests/modem/waveforms/*.py" = [ '__version__ = "{version}"' ]
 "tests/unit_tests/modem/waveforms/orthogonal/*.py" = [ '__version__ = "{version}"' ]
-"tests/unit_tests/precoding/*.py" = [ '__version__ = "{version}"' ]
 "tests/unit_tests/radar/*.py" = [ '__version__ = "{version}"' ]
 "tests/unit_tests/simulation/*.py" = [ '__version__ = "{version}"' ]
 "tests/unit_tests/simulation/coupling/*.py" = [ '__version__ = "{version}"' ]

@@ -24,7 +24,7 @@ __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -411,7 +411,7 @@ class ChirpFSKWaveform(PilotCommunicationWaveform, Serializable):
         """Calculates the frequency offsets on frame creation.
 
         Args:
-            data_bits (np.ndarray): Data bits to calculate the offsets for.
+            data_bits (numpy.ndarray): Data bits to calculate the offsets for.
 
         Returns:
             np.array: Array of length `number_data_chirps`.
@@ -492,7 +492,7 @@ class ChirpFSKWaveform(PilotCommunicationWaveform, Serializable):
         """Samples of the frame's pilot section.
 
         Returns:
-            samples (np.ndarray): Pilot samples.
+            samples (numpy.ndarray): Pilot samples.
         """
 
         # Generate single pilot chirp prototype

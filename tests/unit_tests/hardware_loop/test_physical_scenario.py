@@ -3,15 +3,14 @@
 from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
 
-from core import Signal
-
+from hermespy.core import Signal
 from hermespy.hardware_loop import PhysicalScenario
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"

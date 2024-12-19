@@ -15,7 +15,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -47,23 +47,23 @@ class ImpedanceCoupling(Serializable, Coupling):
             device (SimulatedDevice, optional)
                 Device the model is configured to.
 
-            transmit_correlation (np.ndarray, optional):
+            transmit_correlation (numpy.ndarray, optional):
                 Correlation matrix of the transmit antenna array.
                 Defaults to the identity matrix.
 
-            receive_correlation (np.ndarray, optional):
+            receive_correlation (numpy.ndarray, optional):
                 Correlation matrix of the receive antenna array.
                 Defaults to the identity matrix.
 
-            transmit_impedance (np.ndarray, optional):
+            transmit_impedance (numpy.ndarray, optional):
                 Impedance matrix of the transmit antenna array.
                 Defaults to the identity matrix.
 
-            receive_impedance (np.ndarray, optional):
+            receive_impedance (numpy.ndarray, optional):
                 Impedance matrix of the receive antenna array.
                 Defaults to the identity matrix.
 
-            matching_impedance (np.ndarray, optional):
+            matching_impedance (numpy.ndarray, optional):
                 Impedance matrix of the matching network.
                 Defaults to the identity matrix.
         """

@@ -33,7 +33,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -87,13 +87,13 @@ class CommunicationTransmissionFrame(Transmission):
             signal (Signal):
                 Transmitted communication base-band waveform.
 
-            bits (np.ndarray):
+            bits (numpy.ndarray):
                 Transmitted communication data bits.
 
             bit_block_size (int):
                 Block size of the forward error correction input.
 
-            encoded_bits (np.ndarray):
+            encoded_bits (numpy.ndarray):
                 Transmitted communication bits after FEC encoding.
 
             code_block_size (int):
@@ -325,13 +325,13 @@ class CommunicationReceptionFrame(HDFSerializable):
             equalized_symbols (Symbols):
                 Equalized communication symbols.
 
-            encoded_bits (np.ndarray):
+            encoded_bits (numpy.ndarray):
                 Received encoded data bits before error correction.
 
             code_block_size (int):
                 Block size of the forward error correction input.
 
-            decoded_bits (np.ndarray):
+            decoded_bits (numpy.ndarray):
                 Received decoded data bits after error correction.
 
             bit_block_size (int):
@@ -702,7 +702,7 @@ class TransmittingModemBase(Generic[CWT], BaseModem[CWT]):
 
         Args:
 
-             bits (np.ndarray):
+             bits (numpy.ndarray):
                 The information bits to be mapped.
 
         Returns:

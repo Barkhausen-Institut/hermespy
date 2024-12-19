@@ -32,7 +32,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -86,7 +86,7 @@ class PhysicalDevice(Generic[PDST], Device[PDST]):
                 Maximum expected delay during siganl reception in seconds.
                 Zero by default.
 
-            noise_power (np.ndarray, optional):
+            noise_power (numpy.ndarray, optional):
                 Assumed power of the hardware noise at the device's receive chains.
 
             leakage_calibration (LeakageCalibrationBase, optional):

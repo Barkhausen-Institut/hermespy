@@ -23,7 +23,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Egor Achkasov"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -40,10 +40,10 @@ class PointDetection(object):
         """
         Args:
 
-            position (np.ndarray):
+            position (numpy.ndarray):
                 Cartesian position of the detection in cartesian coordinates.
 
-            velocity (np.ndarray):
+            velocity (numpy.ndarray):
                 Velocity vector of the detection in m/s
 
             power (float):

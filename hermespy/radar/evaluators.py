@@ -97,7 +97,7 @@ __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "André Noll Barreto"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -513,10 +513,10 @@ class RocEvaluationResult(EvaluationResult):
         """
         Args:
 
-            detection_probabilities (np.ndarray):
+            detection_probabilities (numpy.ndarray):
                 Detection probabilities for each grid point.
 
-            false_alarm_probabilities (np.ndarray):
+            false_alarm_probabilities (numpy.ndarray):
                 False alarm probabilities for each grid point.
 
             grid (Sequence[GridDimension]):

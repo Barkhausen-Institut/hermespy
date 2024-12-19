@@ -14,7 +14,7 @@ __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -104,7 +104,7 @@ class TestPowerAmplifier(unittest.TestCase):
             self.pa.plot_characteristics()
             subplots_patch.assert_called_once()
 
-            self.pa.plot_characteristics(axes=axes)
+            self.pa.plot_characteristics(axes=np.array([[axes]]))
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""

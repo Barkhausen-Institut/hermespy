@@ -1,11 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-===========
-Executable
-===========
 
-HermesPy base for executable configurations.
-"""
 
 from __future__ import annotations
 import os.path as path
@@ -21,36 +15,16 @@ import matplotlib.pyplot as plt
 from rich.console import Console
 from rich.prompt import Confirm
 
-from .definitions import ConsoleMode
-from .factory import SerializableEnum
+from .definitions import ConsoleMode, Verbosity
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
-
-
-class Verbosity(SerializableEnum):
-    """Information output behaviour configuration of an executable"""
-
-    ALL = 0
-    """Print absolutely everything"""
-
-    INFO = 1
-    """Print general information"""
-
-    WARNING = 2
-    """Print only warnings and errors"""
-
-    ERROR = 3
-    """Print only errors"""
-
-    NONE = 4
-    """Print absolutely nothing"""
 
 
 class Executable(ABC):
