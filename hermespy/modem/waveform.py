@@ -19,7 +19,7 @@ __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -78,7 +78,7 @@ class Synchronization(Generic[CWT], ABC, Serializable):
 
         Args:
 
-            signal (np.ndarray):
+            signal (numpy.ndarray):
                 Vector of complex base-band samples of with `num_streams`x`num_samples` entries.
 
         Returns:
@@ -448,7 +448,7 @@ class CommunicationWaveform(ABC, Serializable):
         """Map a stream of bits to data symbols.
 
         Args:
-            data_bits (np.ndarray):
+            data_bits (numpy.ndarray):
                 Vector containing a sequence of L hard data bits to be mapped onto data symbols.
 
         Returns:
@@ -520,7 +520,7 @@ class CommunicationWaveform(ABC, Serializable):
 
         Args:
 
-            signal (np.ndarray):
+            signal (numpy.ndarray):
                 Vector of complex-valued base-band samples of a single communication frame.
 
         Returns:
@@ -737,7 +737,7 @@ class CustomPilotSymbolSequence(PilotSymbolSequence):
         """
         Args:
 
-            pilot_symbols (np.ndarray):
+            pilot_symbols (numpy.ndarray):
                 The configured pilot symbols
         """
 

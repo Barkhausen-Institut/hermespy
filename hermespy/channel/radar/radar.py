@@ -32,7 +32,7 @@ __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -374,7 +374,7 @@ class RadarPath(HDFSerializable):
             receiver (DeviceState):
                 Receiving device.
 
-            signal (np.ndarray):
+            signal (numpy.ndarray):
                 Signal samples to be propagated.
 
             bandwidth (float):
@@ -383,7 +383,7 @@ class RadarPath(HDFSerializable):
             carrier_frequency (float):
                 Central carrier frequency of the propagated signal in Hz.
 
-            propagated_samples (np.ndarray):
+            propagated_samples (numpy.ndarray):
                 Sample buffer to be written to.
 
             propagation_delay (float, optional):
@@ -450,7 +450,7 @@ class RadarPath(HDFSerializable):
             delay (float):
                 Delay of the channel state information in seconds.
 
-            state (np.ndarray):
+            state (numpy.ndarray):
                 Sample buffer to be written to.
         """
 
@@ -505,10 +505,10 @@ class RadarTargetPath(RadarPath):
         """
         Args:
 
-            position (np.ndarray):
+            position (numpy.ndarray):
                 Global position of the path's target.
 
-            velocity (np.ndarray):
+            velocity (numpy.ndarray):
                 Global velocity of the path's target.
 
             cross_section (float):

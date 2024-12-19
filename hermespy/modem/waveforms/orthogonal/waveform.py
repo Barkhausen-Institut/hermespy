@@ -23,7 +23,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -351,8 +351,8 @@ class GridSection(Generic[OWT], ABC):
 
         Args:
 
-            data_symbols (np.ndarray): Data symbols to be placed. Numpy vector of size `num_symbols`.
-            reference_symbols (np.ndarray): Reference symbols to be placed. Numpy vector of size `num_references`.
+            data_symbols (numpy.ndarray): Data symbols to be placed. Numpy vector of size `num_symbols`.
+            reference_symbols (numpy.ndarray): Reference symbols to be placed. Numpy vector of size `num_references`.
 
         Returns: Two dimensional numpy array of size `num_words`x`num_subcarriers`.
         """
@@ -371,7 +371,7 @@ class GridSection(Generic[OWT], ABC):
 
         Args:
 
-            grid (np.ndarray): Resource grid. Two dimensional numpy array of size `num_words`x`num_subcarriers`.
+            grid (numpy.ndarray): Resource grid. Two dimensional numpy array of size `num_words`x`num_subcarriers`.
 
         Returns: Data symbols. Numpy vector of size `num_symbols`.
         """
@@ -399,7 +399,7 @@ class GridSection(Generic[OWT], ABC):
 
         Args:
 
-            signal (np.ndarray): Time-domain signal to be placed. Numpy vector of size `num_samples`.
+            signal (numpy.ndarray): Time-domain signal to be placed. Numpy vector of size `num_samples`.
 
         Returns: Time-domain signal with the section's samples placed.
         """
@@ -411,7 +411,7 @@ class GridSection(Generic[OWT], ABC):
 
         Args:
 
-            signal (np.ndarray): Time-domain signal to be picked from. Numpy vector of size `num_samples`.
+            signal (numpy.ndarray): Time-domain signal to be picked from. Numpy vector of size `num_samples`.
 
         Returns: Time-domain signal with the section's samples picked.
         """
@@ -959,7 +959,7 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
 
         Args:
 
-            symbol_grid (np.ndarray): The grid of modulated symbols to be transformed.
+            symbol_grid (numpy.ndarray): The grid of modulated symbols to be transformed.
 
         Returns: The time-domain signal grid.
         """
@@ -971,7 +971,7 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
 
         Args:
 
-            signal_grid (np.ndarray): The time-domain signal grid to be transformed.
+            signal_grid (numpy.ndarray): The time-domain signal grid to be transformed.
 
         Returns: The grid of modulated symbols.
         """
@@ -983,7 +983,7 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
 
         Args:
 
-            symbol_subgrid (np.ndarray): The symbol subgrid to be corrected.
+            symbol_subgrid (numpy.ndarray): The symbol subgrid to be corrected.
             sample_offset (int): The sample offset to be corrected.
 
         Returns: The corrected symbol subgrid.

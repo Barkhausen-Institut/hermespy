@@ -1,4 +1,4 @@
-FROM python:3.11
+FROM python:3.12
 
 ENV VIRTUAL_ENV=/venv/
 
@@ -19,6 +19,6 @@ ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 # Pre-install the requirements for faster execution times
 RUN pip install --upgrade --no-cache-dir setuptools sphinx wheel pybind11 scikit-build cmake build && \
-    pip install --no-cache-dir -U -e install\[test,quadriga,documentation,uhd,audio,develop\] && \
+    pip install --no-cache-dir -U -e install\[test,quadriga,documentation,uhd,audio,develop,scapy\] && \
     pip uninstall -y hermespy && \
     rm -rf install/ /var/lib/apt/lists/*

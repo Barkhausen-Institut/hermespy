@@ -37,7 +37,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -730,7 +730,7 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
             mode (AntennaMode.TX | AntennaMode.RX):
                 The antenna mode to be plotted.
 
-            beamforming_weights (np.ndarray, optional):
+            beamforming_weights (numpy.ndarray, optional):
                 The beamforming weights to be used for beamforming.
                 If not specified, the weights are assumed to be :math:`1+0\\mathrm{j}`.
 

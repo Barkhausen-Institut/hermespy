@@ -6,6 +6,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 project(${SKBUILD_PROJECT_NAME} VERSION ${SKBUILD_PROJECT_VERSION} LANGUAGES CXX)
 
+
 # Workaround for building shared libraries on Windows
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
@@ -25,5 +26,8 @@ set(CLI_COMPILE_SHARED_LIB ON CACHE INTERNAL "Disable CLI" FORCE)
 add_subdirectory(submodules/affect)
 add_subdirectory(hermespy/fec/aff3ct)
 
-install(TARGETS aff3ct-shared-lib LIBRARY DESTINATION ${SKBUILD_PROJECT_NAME}/fec/aff3ct/ COMPONENT PythonModule)
+if (WIN32)
+    install(TARGETS aff3ct-shared-lib LIBRARY DESTINATION ${SKBUILD_PROJECT_NAME}/fec/aff3ct/ COMPONENT PythonModule)
+endif()
+
 install(TARGETS ldpc polar rs rsc turbo bch LIBRARY DESTINATION ${SKBUILD_PROJECT_NAME}/fec/aff3ct/ COMPONENT PythonModule)

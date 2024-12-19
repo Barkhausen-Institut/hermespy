@@ -24,7 +24,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -46,7 +46,7 @@ class PseudoRandomGenerator:
         """
         Args:
 
-            init_sequence(np.ndarray):
+            init_sequence(numpy.ndarray):
                 A sequence of 31 bits initializing the generator.
 
             offset(int):
@@ -142,7 +142,7 @@ class Scrambler3GPP(Encoder, Serializable):
         """
         Args:
 
-            seed (np.ndarray, optional):
+            seed (numpy.ndarray, optional):
                 Seed used to initialize the scrambling sequence generation.
                 Must contain a sequence of bits.
         """
@@ -193,7 +193,7 @@ class Scrambler80211a(Encoder, Serializable):
         """
         Args:
 
-            seed (np.ndarray, optional):
+            seed (numpy.ndarray, optional):
                 Seed used to initialize the scrambling sequence generation.
                 Must contain a sequence of 7 bits.
         """

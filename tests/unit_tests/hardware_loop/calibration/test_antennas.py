@@ -11,6 +11,15 @@ from hermespy.core import AntennaMode, Transformation
 from hermespy.simulation import SimulatedUniformArray, SimulatedIdealAntenna, StaticTrajectory
 from hermespy.hardware_loop import ScalarAntennaCalibration, PhysicalDeviceDummy, PhysicalScenarioDummy
 
+__author__ = "Jan Adler"
+__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__credits__ = ["Jan Adler"]
+__license__ = "AGPLv3"
+__version__ = "1.4.0"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
+__status__ = "Prototype"
+
 
 class TestScalarAntennaCalibration(TestCase):
     """Test the scalar antenna calibration"""

@@ -56,8 +56,12 @@ within the context of a :class:`Simulation<hermespy.simulation.simulation.Simula
 .. literalinclude:: ../../scripts/examples/channel_SionnaRT.py
    :language: python
    :linenos:
-   :lines: 11-36
+   :lines: 12-36
 
-.. autoclass::  hermespy.channel.fading.exponential.Exponential
+.. autoclass:: hermespy.channel.sionna_rt_channel.SionnaRTChannel
+   
+.. autoclass:: hermespy.channel.sionna_rt_channel.SionnaRTChannelRealization
+   
+.. autoclass:: hermespy.channel.sionna_rt_channel.SionnaRTChannelSample
 
 .. footbibliography::

@@ -15,7 +15,7 @@ __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.3.0"
+__version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -107,8 +107,8 @@ class ConsistentRealization(ABC, HDFSerializable):
 
         Args:
 
-            position_a (np.ndarray): First position in euclidean space.
-            position_b (np.ndarray): Second position in euclidean space.
+            position_a (numpy.ndarray): First position in euclidean space.
+            position_b (numpy.ndarray): Second position in euclidean space.
 
         Returns: Sample of the realization.
         """
@@ -150,8 +150,8 @@ class DualConsistentRealization(ConsistentRealization):
     def __init__(self, frequencies: np.ndarray, phases: np.ndarray) -> None:
         """
         Args:
-            frequencies (np.ndarray): Frequencies of the spatially consistent process.
-            phases (np.ndarray): Phases of the spatially consistent process.
+            frequencies (numpy.ndarray): Frequencies of the spatially consistent process.
+            phases (numpy.ndarray): Phases of the spatially consistent process.
         """
 
         self.__frequencies = frequencies
@@ -204,7 +204,7 @@ class StaticConsistentSample(ConsistentSample):
         """
         Args:
 
-            scalar_samples (np.ndarray):
+            scalar_samples (numpy.ndarray):
                 Scalar samples of the realization.
         """
 
@@ -222,7 +222,7 @@ class StaticConsistentRealization(ConsistentRealization):
     def __init__(self, scalar_samples: np.ndarray) -> None:
         """
         Args:
-            scalar_samples (np.ndarray): Scalar samples of the realization.
+            scalar_samples (numpy.ndarray): Scalar samples of the realization.
         """
 
         self.__scalar_samples = scalar_samples.flatten()
