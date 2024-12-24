@@ -94,6 +94,11 @@ public:
         return this->polyB;
     }
 
+    float getRate() const 
+    {
+        return (float)this->dataBlockSize / (float)this->codeBlockSize;
+    }
+
 protected:
 
     int dataBlockSize;
@@ -195,6 +200,10 @@ PYBIND11_MODULE(turbo, m)
 
         .def_property_readonly_static("enabled", [](py::object){return true;}, R"pbdoc(
             C++ bindings are always enabled.
+        )pbdoc")
+
+        .def_property_readonly("rate", &Turbo::getRate, R"pbdoc(
+            The coding rate.
         )pbdoc")
 
         .def(py::pickle(
