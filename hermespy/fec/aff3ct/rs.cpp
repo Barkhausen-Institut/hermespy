@@ -77,6 +77,11 @@ public:
         this->rebuild();
     }
 
+    float getRate() const
+    {
+        return (float)this->dataBlockSize / (float)this->getCodeBlockSize();
+    }
+
 protected:
 
     int dataBlockSize;
@@ -155,6 +160,10 @@ PYBIND11_MODULE(rs, m)
 
         .def_property_readonly_static("enabled", [](py::object){return true;}, R"pbdoc(
             C++ bindings are always enabled.
+        )pbdoc")
+
+        .def_property_readonly("rate", &ReedSolomon::getRate, R"pbdoc(
+            The coding rate.
         )pbdoc")
 
         .def(py::pickle(
