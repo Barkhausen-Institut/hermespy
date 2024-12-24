@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
+
+from itertools import chain, product
 from os import path
 from unittest import TestCase
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 from tempfile import TemporaryDirectory
 
 import ray
 import numpy as np
 from numpy.testing import assert_array_equal
 
-from hermespy.simulation import Simulation
-from hermespy.fec import LDPCCoding, RepetitionEncoder, Scrambler3GPP, BlockInterleaver
-from hermespy.modem import DuplexModem, RootRaisedCosineWaveform
+from hermespy.simulation import SimulatedDevice, Simulation
+from hermespy.fec import EncoderManager, LDPCCoding, TurboCoding, RepetitionEncoder, Scrambler3GPP, BlockInterleaver, Scrambler80211a, CyclicRedundancyCheck, PolarSCCoding, PolarSCLCoding, ReedSolomonCoding, RSCCoding, BCHCoding
+from hermespy.modem import RootRaisedCosineWaveform, SimplexLink
 from hermespy.tools import db2lin
 
 __author__ = "Jan Adler"
@@ -24,70 +26,63 @@ __status__ = "Prototype"
 
 
 class TestFEC(TestCase):
+    """Test the forward error correction (FECT) integration with communication dsp layers."""
+
     def setUp(self) -> None:
-        self.rng = np.random.default_rng(42)
-        self.modem = DuplexModem(seed=42)
-        self.modem.waveform = RootRaisedCosineWaveform(oversampling_factor=1, symbol_rate=100e6, num_data_symbols=200, modulation_order=64, num_preamble_symbols=0)
+        self.tx_device = SimulatedDevice(seed=42)
+        self.rx_device = SimulatedDevice(seed=42)
+        self.link = SimplexLink()
+        self.tx_device.transmitters.add(self.link)
+        self.rx_device.receivers.add(self.link)
 
-    def __test_coding(self) -> None:
-        num_data_bits = self.modem.encoder_manager.required_num_data_bits(self.modem.waveform.bits_per_frame())
-
-        transmitted_bits = self.rng.integers(0, 2, size=num_data_bits)
-        transmitted_encoded_bits = self.modem.encoder_manager.encode(transmitted_bits, self.modem.waveform.bits_per_frame())
-        transmitted_symbols = self.modem.waveform.map(transmitted_encoded_bits)
-        received_encoded_bits = self.modem.waveform.unmap(transmitted_symbols)
-        received_decoded_bits = self.modem.encoder_manager.decode(received_encoded_bits, num_data_bits)
-
-        assert_array_equal(transmitted_bits, received_decoded_bits)
-
-    def test_repeat_interleave(self) -> None:
-        """Test repetition and interleaving"""
-
-        self.modem.encoder_manager.add_encoder(RepetitionEncoder(bit_block_size=64, repetitions=3))
-        self.modem.encoder_manager.add_encoder(BlockInterleaver(block_size=self.modem.waveform.bits_per_frame(), interleave_blocks=8))
-
-        self.__test_coding()
-
-    def test_repeate_scramble(self) -> None:
-        """Test repetition and scrambling"""
-
-        self.modem.encoder_manager.add_encoder(RepetitionEncoder(bit_block_size=64, repetitions=3))
-        self.modem.encoder_manager.add_encoder(Scrambler3GPP())
-
-        self.__test_coding()
+        self.link.waveform = RootRaisedCosineWaveform(oversampling_factor=1, symbol_rate=100e6, num_data_symbols=1024, modulation_order=64, num_preamble_symbols=0)
 
 
-class TestMonteCarloFEC(TestCase):
-    def setUp(self) -> None:
-        self.simulation = Simulation()
-        self.simulation.new_dimension("snr", [db2lin(x) for x in np.arange(-10, 10, 0.5)])
-        self.simulation.num_samples = 2
-        device = self.simulation.scenario.new_device()
-        self.modem = DuplexModem()
-        self.modem.device = device
-        self.modem.waveform = RootRaisedCosineWaveform(oversampling_factor=1, symbol_rate=100e6, num_data_symbols=200, modulation_order=64, num_preamble_symbols=0)
+        self.alpha_candidates = [
+            Scrambler3GPP(),
+#            Scrambler80211a(),  The scrambler80211a decsrambling is incorrect
+            BlockInterleaver(block_size=self.link.waveform.bits_per_frame(),interleave_blocks=8),
+        ]
 
-    @classmethod
-    def setUpClass(cls) -> None:
-        ray.init(local_mode=True, num_cpus=2, ignore_reinit_error=True)
+        self.beta_candidates = [
+            CyclicRedundancyCheck(bit_block_size=60, check_block_size=4),
+            RepetitionEncoder(bit_block_size=64, repetitions=3),
+            LDPCCoding(100, path.join(path.dirname(path.realpath(__file__)), "..", "..", "submodules", "affect", "conf", "dec", "LDPC", "CCSDS_64_128.alist"), "", False, 10),
+            TurboCoding(40, 13, 15, 100),
+            PolarSCCoding(256, 512, 0.5),
+            PolarSCLCoding(256, 512, 0.1, 256),
+#            ReedSolomonCoding(107, 10),  The reed solomon coding is not working and will crash
+            RSCCoding(20, 46, False, 13, 15),
+            BCHCoding(99, 127, 4),
+        ]
 
-    @classmethod
-    def tearDownClass(cls) -> None:
-        # Shut down ray
-        ray.shutdown()
+    def __test_frame(self) -> None:
+        """Validate the transmission of a single frame"""
 
-    def __run_simulation(self) -> None:
-        """Run a simulation and test for proper execution."""
+        transmission = self.tx_device.transmit()
+        reception = self.rx_device.receive(transmission)
+        transmitted_bits = transmission.operator_transmissions[0].bits
+        received_bits = reception.operator_receptions[0].bits
 
-        with patch("sys.stdout"), patch("matplotlib.pyplot.figure"):
-            self.simulation.run()
+        assert_array_equal(transmitted_bits, received_bits)
+    
+    def test_individual_codings(self) -> None:
+        """Test integration of individual coding schemes"""
 
-    def _test_ldpc(self) -> None:
-        ldpc_matrix = path.join(path.dirname(path.realpath(__file__)), "..", "..", "submodules", "affect", "conf", "dec", "LDPC", "CCSDS_64_128.alist")
+        for coding in chain(self.alpha_candidates, self.beta_candidates):
+            self.link.encoder_manager = EncoderManager()
+            self.link.encoder_manager.add_encoder(coding)
 
-        with TemporaryDirectory() as g_dir:
-            g_path = path.join(g_dir, "g_save.alist")
-            coding = LDPCCoding(100, ldpc_matrix, "", False, 10)
-            self.modem.encoder_manager.add_encoder(coding)
+            with self.subTest(msg="Test " + coding.__class__.__name__):
+                self.__test_frame()
 
-            self.__run_simulation()
+    def test_coding_combinations(self) -> None:
+        """Test integration of combinations of coding schemes"""
+
+        for alpha_coding, beta_coding in product(self.alpha_candidates, self.beta_candidates):
+            self.link.encoder_manager = EncoderManager()
+            self.link.encoder_manager.add_encoder(beta_coding)
+            self.link.encoder_manager.add_encoder(alpha_coding)
+
+            with self.subTest(msg="Testing combination " + beta_coding.__class__.__name__ + " -> " + alpha_coding.__class__.__name__):
+                self.__test_frame()

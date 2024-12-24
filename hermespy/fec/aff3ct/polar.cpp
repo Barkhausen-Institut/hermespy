@@ -35,23 +35,23 @@ public:
         frozenBitsGenerator.generate(frozenBits);
 
         // Initialize encoder
-        this->encoder = std::make_unique<Encoder_polar<int32_t>>(dataBlockSize, codeBlockSize, frozenBits);
+        this->encoder = std::make_unique<Encoder_polar<int>>(dataBlockSize, codeBlockSize, frozenBits);
     }
 
-    py::array_t<int32_t> encode(py::array_t<int32_t, py::array::c_style>& data)
+    py::array_t<int> encode(py::array_t<int>& data)
     {
-        py::array_t<int32_t> code(this->codeBlockSize);
-        int32_t* dataPtr = static_cast<int32_t*>(data.request().ptr);
-        int32_t* codePtr = static_cast<int32_t*>(code.request().ptr);
+        py::array_t<int> code(this->codeBlockSize);
+        int* dataPtr = static_cast<int*>(data.request().ptr);
+        int* codePtr = static_cast<int*>(code.request().ptr);
         this->encoder->encode(dataPtr, codePtr);
 
         return code;
     }
 
-    py::array_t<int32_t> decode(py::array_t<int32_t>& code)
+    py::array_t<int> decode(py::array_t<int>& code)
     {
-        py::array_t<int32_t> data(this->dataBlockSize);
-        this->decoder->decode_hiho(static_cast<int32_t*>(code.mutable_data()), static_cast<int32_t*>(data.mutable_data()));
+        py::array_t<int> data(this->dataBlockSize);
+        this->decoder->decode_hiho(static_cast<int*>(code.mutable_data()), static_cast<int*>(data.mutable_data()));
     
         return data;
     }
@@ -71,6 +71,11 @@ public:
         return this->ber;
     }
 
+    float getRate() const
+    {
+        return (float)this->dataBlockSize / (float) this->codeBlockSize;
+    }
+
 protected:
 
     const int dataBlockSize;
@@ -79,11 +84,11 @@ protected:
     std::vector<bool> frozenBits;
 
     std::unique_ptr<Event_probability<float>> noise;
-    std::unique_ptr<Encoder_polar<int32_t>> encoder;
+    std::unique_ptr<Encoder_polar<int>> encoder;
     std::unique_ptr<D> decoder;
 };
 
-class PolarSCLCoding : public PolarCoding<Decoder_polar_SCL_naive<int32_t, int32_t>>
+class PolarSCLCoding : public PolarCoding<Decoder_polar_SCL_naive<int, int>>
 {
 public:
 
@@ -91,7 +96,7 @@ public:
         PolarCoding(dataBlockSize, codeBlockSize, ber),
         numPaths(numPaths)
     {
-        this->decoder = std::make_unique<Decoder_polar_SCL_naive<int32_t, int32_t>>(dataBlockSize, codeBlockSize, numPaths, this->frozenBits);
+        this->decoder = std::make_unique<Decoder_polar_SCL_naive<int, int>>(dataBlockSize, codeBlockSize, numPaths, this->frozenBits);
     }
 
     int getNumPaths() const
@@ -105,14 +110,14 @@ protected:
 };
 
 
-class PolarSCCoding : public PolarCoding<Decoder_polar_SC_naive<int32_t, int32_t>>
+class PolarSCCoding : public PolarCoding<Decoder_polar_SC_naive<int, int>>
 {
 public:
 
     PolarSCCoding(const int dataBlockSize, const int codeBlockSize, const float ber) :
         PolarCoding(dataBlockSize, codeBlockSize, ber)
     {
-        this->decoder = std::make_unique<Decoder_polar_SC_naive<int32_t, int32_t>>(dataBlockSize, codeBlockSize, this->frozenBits);
+        this->decoder = std::make_unique<Decoder_polar_SC_naive<int, int>>(dataBlockSize, codeBlockSize, this->frozenBits);
     }
 };
 
@@ -171,6 +176,10 @@ PYBIND11_MODULE(polar, m)
         
         .def_property_readonly_static("enabled", [](py::object){return true;}, R"pbdoc(
             C++ bindings are always enabled.
+        )pbdoc")
+
+        .def_property_readonly("rate", &PolarSCCoding::getRate, R"pbdoc(
+            Coding rate of the polar code.
         )pbdoc")
 
         .def(py::pickle(
@@ -237,6 +246,10 @@ PYBIND11_MODULE(polar, m)
 
         .def_property_readonly_static("enabled", [](py::object){return true;}, R"pbdoc(
             C++ bindings are always enabled.
+        )pbdoc")
+
+        .def_property_readonly("rate", &PolarSCLCoding::getRate, R"pbdoc(
+            Coding rate of the polar code.
         )pbdoc")
 
         .def(py::pickle(

@@ -4,7 +4,6 @@ requires = [
     "wheel>=0.45.1",
     "pybind11>=2.13.6",
     "scikit-build-core>=0.10.7",
-    "cmake>=3.31.2",
 ]
 build-backend = "scikit_build_core.build"
 
@@ -105,24 +104,23 @@ scapy = [
 ]
 
 [tool.scikit-build]
-cmake.verbose = true
 cmake.build-type = "Release"  # "Debug" or "Release"
 editable.mode = "redirect"
 ninja.make-fallback = true
 logging.level = "INFO"
 sdist.include = []
 sdist.exclude = [
-    "_examples/",
-    "docssource/",
-    "scripts/",
-    "submodules/quadriga",
-    "submodules/affect/ci/",
-    "submodules/affect/conf/",
-    "submodules/affect/doc/",
-    "submodules/affect/refs/",
+    "/_examples/",
+    "/docssource/",
+    "/scripts/",
+    "/submodules/quadriga",
+    "/submodules/affect/ci/",
+    "/submodules/affect/conf/",
+    "/submodules/affect/doc/",
+    "/submodules/affect/refs/",
     ".flake8",
-    ".git*",
-    "tests/",
+    "/.git*",
+    "/tests/",
 ]
 sdist.reproducible = true
 sdist.cmake = true
