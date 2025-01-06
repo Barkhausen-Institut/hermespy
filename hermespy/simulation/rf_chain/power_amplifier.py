@@ -169,8 +169,8 @@ class PowerAmplifier(Serializable):
         phase_axes.set_ylabel("Output Phase")
         phase_axes.set_ylim((-pi, pi))
 
-        amplitude_axes.plot(samples, amplitude, '-')
-        phase_axes.plot(samples, phase, '--')
+        amplitude_axes.plot(samples, amplitude, "-")
+        phase_axes.plot(samples, phase, "--")
 
         return fig
 

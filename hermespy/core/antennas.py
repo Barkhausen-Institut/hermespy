@@ -196,7 +196,9 @@ class Antenna(ABC, Generic[APT], Transformable):
         azimuth_global_unit = np.array(
             [-sin(azimuth_global), cos(azimuth_global), 0], dtype=np.float64
         )
-        azimuth_local_unit = np.array([-sin(azimuth_local), cos(azimuth_local), 0], dtype=np.float64)
+        azimuth_local_unit = np.array(
+            [-sin(azimuth_local), cos(azimuth_local), 0], dtype=np.float64
+        )
 
         # Theta unit vector implemention of equation (7.1-13) of ETSI TR 138901 version 17.0
         zenith_global_unit = np.array(
@@ -1436,41 +1438,67 @@ class AntennaArrayState(Sequence, AntennaArrayBase):
 
         return [antenna for antenna in self.antennas if antenna.mode != AntennaMode.TX]
 
-    def __getitem__(self, index: int | slice | Sequence[int]) -> AntennaArrayState:
-        """Return a subset of the antenna array state.
+    def select_subarray(
+        self, indices: int | slice | Sequence[int], mode: AntennaMode = AntennaMode.DUPLEX
+    ) -> AntennaArrayState:
+        """Select a subset of the antenna array state, given a sequence of port indices.
+
+        Depending on the selected `AntennaMode`, the provided `indices` refer to ports only transmitting, receiving, or both.
 
         Args:
 
-            index (int | slice):
+            indices (int | slice | Sequence[int]):
                 Index or slice of the antenna ports to be considered.
+
+            mode (AntennaMode, optional):
+                The modes of the ports to be selected.
 
         Returns: The subset of the antenna array state.
         """
 
-        # Select a subset of antenna ports
-        ports: list[AntennaPort]
-        if isinstance(index, int):
-            ports = [self.__ports[index]]
-        elif isinstance(index, slice):
-            ports = list(self.__ports[index])
+        # Select the correct susbet of candidate ports depending on the AntennaMode
+        if mode == AntennaMode.DUPLEX:
+            considered_ports = self.ports
+        elif mode == AntennaMode.TX:
+            considered_ports = self.transmit_ports
+        elif mode == AntennaMode.RX:
+            considered_ports = self.receive_ports
         else:
-            ports = [self.__ports[i] for i in index]
+            raise ValueError("Invalid AntennaMode provided")
+
+        # Select a subset of antenna ports depending on the provided indices
+        subarray_ports: list[AntennaPort]
+        if isinstance(indices, int):
+            subarray_ports = [considered_ports[indices]]
+        elif isinstance(indices, slice):
+            subarray_ports = list(considered_ports[indices])
+        else:
+            subarray_ports = [considered_ports[i] for i in indices]
 
         # Collect all antenna elements within the selected ports
-        elements: list[Antenna] = []
-        for port in ports:
-            elements.extend(port.antennas)
+        subarray_antennas: list[Antenna] = []
+        for port in subarray_ports:
+            subarray_antennas.extend(port.antennas)
 
         # Create a new state object
+        # A little hacky, but does the trick
         state = AntennaArrayState([], self.pose)
-        state.__elements = elements
-        state.__ports = ports
+        state.__elements = subarray_antennas
+        state.__ports = subarray_ports
         return state
+
+    def __getitem__(self, indices: int | slice | Sequence[int]) -> AntennaArrayState:
+        """Return a subset of the antenna array state.
+
+        Shorthand to :meth:`.select_subarray`.
+        """
+
+        return self.select_subarray(indices)
 
     def __len__(self) -> int:
         """Number of antenna elements within this array."""
 
-        return len(self.__elements)
+        return self.num_ports
 
 
 class AntennaArray(AntennaArrayBase[APT], Generic[APT, AT]):

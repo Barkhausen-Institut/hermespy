@@ -237,7 +237,9 @@ class RadarCube(HDFSerializable):
                 raise ValueError("Can't infer velocity bins from data cube")
 
         # Infer range bins
-        range_bins = np.arange(data.shape[2], dtype=np.float64) if range_bins is None else range_bins
+        range_bins = (
+            np.arange(data.shape[2], dtype=np.float64) if range_bins is None else range_bins
+        )
 
         if data.shape[0] != len(angle_bins):
             raise ValueError("Data cube angle dimension does not match angle bins")
