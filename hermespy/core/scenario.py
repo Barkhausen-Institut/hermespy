@@ -902,7 +902,12 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType, DST, Drop
                     drop = self._recall_drop(self.__file[drop_path])
                     break
 
-            # ToDo: Notify the transmit callbacks about the replayed results
+            # Notify the transmit callbacks about the replayed transmissions
+            for device, replayed_transmission in zip(self.devices, drop.device_transmissions):
+                for operator, operator_transmission in zip(
+                    device.transmitters, replayed_transmission.operator_transmissions
+                ):
+                    operator.notify_transmit_callbacks(operator_transmission)
 
             # Replay device operator receptions
             # This will simulatenously notify the receive operator callbacks

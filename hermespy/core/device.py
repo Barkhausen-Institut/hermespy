@@ -1149,6 +1149,17 @@ class Transmitter(Generic[TransmissionType], MixingOperator, RandomNode):
 
         return self.__transmit_callbacks.add_callback(callback)
 
+    def notify_transmit_callbacks(self, transmission: TransmissionType) -> None:
+        """Notify the registered callbacks about the generated transmission.
+
+        Args:
+
+            transmission (TransmissionType):
+                Transmission to be passed to the callbacks.
+        """
+
+        self.__transmit_callbacks.notify(transmission)
+
     def transmit(
         self, state: DeviceState, duration: float = 0.0, notify: bool = True
     ) -> TransmissionType:

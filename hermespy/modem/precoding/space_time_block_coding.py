@@ -192,7 +192,9 @@ class Ganesan(TransmitSymbolEncoder, ReceiveSymbolDecoder, Serializable):
             raise ValueError("Number of blocks must be divisable by 3.")
 
         # Change symbol block amount because of the 3/4 symbol rate.
-        output = np.empty((4, symbols.num_blocks // 3 * 4, symbols.num_symbols), dtype=np.complex128)
+        output = np.empty(
+            (4, symbols.num_blocks // 3 * 4, symbols.num_symbols), dtype=np.complex128
+        )
         zero = np.zeros((symbols.num_blocks // 3, symbols.num_symbols), dtype=np.complex128)
         # Encode data explicitly element-wise.
         # Notice that matrix Z (Eq. 41) is m by N in the paper,

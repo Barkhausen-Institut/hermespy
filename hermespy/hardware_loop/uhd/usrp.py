@@ -18,6 +18,7 @@ from usrp_client import UsrpClient, MimoSignal, TxStreamingConfig, RxStreamingCo
 from hermespy.core import (
     Antenna,
     AntennaArray,
+    AntennaMode,
     AntennaPort,
     IdealAntenna,
     Serializable,
@@ -34,6 +35,24 @@ __version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
+
+
+class UsrpPort(AntennaPort):
+    """Antenna port representation of a USRP device."""
+
+    def __init__(self, array: UsrpAntennas, mode: AntennaMode) -> None:
+        """
+        Args:
+
+            array (UsrpAntennas):
+                Antenna array this port belongs to.
+
+            mode (AntennaMode):
+                Direction of the port.
+        """
+
+        # Init base class with a single ideal antenna
+        AntennaPort.__init__(self, array=array, antennas=[IdealAntenna(mode)])
 
 
 class UsrpAntennas(AntennaArray[AntennaPort, Antenna]):
@@ -59,8 +78,12 @@ class UsrpAntennas(AntennaArray[AntennaPort, Antenna]):
 
         # Initialize attributes
         self.__device = device
-        self.__transmit_ports = [self._new_port() for _ in range(device.num_digital_transmit_ports)]
-        self.__receive_ports = [self._new_port() for _ in range(device.num_digital_receive_ports)]
+        self.__transmit_ports = [
+            self._new_port(AntennaMode.TX) for _ in range(device.num_digital_transmit_ports)
+        ]
+        self.__receive_ports = [
+            self._new_port(AntennaMode.RX) for _ in range(device.num_digital_receive_ports)
+        ]
 
         # Configure kinematic chain
         self.set_base(device)
@@ -95,16 +118,8 @@ class UsrpAntennas(AntennaArray[AntennaPort, Antenna]):
     def num_ports(self) -> int:
         return self.num_transmit_ports + self.num_receive_ports
 
-    def _new_port(self) -> AntennaPort:
-        return AntennaPort(array=self)
-
-    @property
-    def transmit_antennas(self) -> Sequence[Antenna]:
-        return [IdealAntenna(pose=port.pose) for port in self.transmit_ports]
-
-    @property
-    def receive_antennas(self) -> Sequence[Antenna]:
-        return [IdealAntenna(pose=port.pose) for port in self.receive_ports]
+    def _new_port(self, mode: AntennaMode = AntennaMode.DUPLEX) -> AntennaPort:
+        return UsrpPort(self, mode)
 
     @property
     def num_transmit_antennas(self) -> int:
@@ -363,7 +378,8 @@ class UsrpDevice(PhysicalDevice[PhysicalDeviceState], Serializable):
             np.concatenate(
                 (
                     np.zeros(
-                        (uploaded_samples.num_streams, self.num_prepeneded_zeros), dtype=np.complex128
+                        (uploaded_samples.num_streams, self.num_prepeneded_zeros),
+                        dtype=np.complex128,
                     ),
                     uploaded_samples.getitem(),
                     np.zeros(
