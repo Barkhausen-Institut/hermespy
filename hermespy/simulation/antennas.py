@@ -839,7 +839,9 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
             antenna_idx += num_antennas
 
         if arg_0 == AntennaMode.TX or arg_0 == AntennaMode.RX:
-            beamforming_weights = np.ones(num_ports, dtype=np.complex128) if arg_1 is None else arg_1
+            beamforming_weights = (
+                np.ones(num_ports, dtype=np.complex128) if arg_1 is None else arg_1
+            )
 
             if beamforming_weights.shape != (num_ports,):
                 raise ValueError(

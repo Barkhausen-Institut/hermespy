@@ -2008,7 +2008,9 @@ class SparseSignal(Signal):
                 value = np.complex128(value)
                 if value == 0.0 + 0.0j:
                     return
-                bs_new = [SignalBlock(np.full((num_streams, num_samples), value, np.complex128), s10)]
+                bs_new = [
+                    SignalBlock(np.full((num_streams, num_samples), value, np.complex128), s10)
+                ]
             else:
                 value = value.reshape((num_streams, num_samples))
                 bs_new = self.__from_dense(SignalBlock(value, s10))

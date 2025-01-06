@@ -5,7 +5,7 @@ from typing import Sequence, TypeVar
 
 import numpy as np
 
-from .antennas import AntennaArrayState, AntennaPort, IdealAntenna
+from .antennas import AntennaArrayState, AntennaMode, AntennaPort, IdealAntenna
 from .transformation import Transformation
 
 __author__ = "Jan Adler"
@@ -355,7 +355,7 @@ class DeviceState(State):
             self.velocity,
             self.carrier_frequency,
             self.sampling_rate,
-            self.antennas[_selected_digital_transmit_ports],
+            self.antennas.select_subarray(_selected_digital_transmit_ports, AntennaMode.TX),
             _num_digital_transmit_ports,
         )
 
@@ -387,7 +387,7 @@ class DeviceState(State):
             self.velocity,
             self.carrier_frequency,
             self.sampling_rate,
-            self.antennas[_selected_digital_receive_ports],
+            self.antennas.select_subarray(_selected_digital_receive_ports, AntennaMode.RX),
             _num_digital_receive_ports,
         )
 
