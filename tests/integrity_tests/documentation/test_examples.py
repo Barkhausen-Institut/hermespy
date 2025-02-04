@@ -51,10 +51,30 @@ class TestDocumentationExamples(TestCase):
 
         self.__run_example("beamforming_nullsteeringbeamformer_radiation_pattern.py")
 
-    def test_beamforming_nullsteeringbeamformer(self) -> None:
-        """Test example snippet for nullsteeringbeamformer"""
+    def test_beamforming_nullsteeringbeamformer_Tx(self) -> None:
+        """Test example snippet for nullsteeringbeamformer as Transmitter"""
 
-        self.__run_example("beamforming_nullsteeringbeamformer.py")
+        self.__run_example("beamforming_nullsteeringbeamformer_Tx.py")
+
+    def test_beamforming_nullsteeringbeamformer_Rx(self) -> None:
+        """Test example snippet for nullsteeringbeamformer as Receiver"""
+
+        self.__run_example("beamforming_nullsteering_Rx.py")
+
+    def test_beamforming_Conventionalbeamformer_Tx(self) -> None:
+        """Test example snippet for conventional beamformer as Transmitter"""
+
+        self.__run_example("beamforming_conventional_Tx.py")
+
+    def test_beamforming_Conventionalbeamformer_Rx(self) -> None:
+        """Test example snippet for conventional beamformer as Receiver"""
+
+        self.__run_example("beamforming_conventional_Rx.py")
+
+    def test_beamforming_caponbeamformer(self) -> None:
+        """Test example snippet for caponbeamformer"""
+
+        self.__run_example("beamforming_capon.py")
 
     def test_channel_cdl_indoor_factory(self) -> None:
         """Test example snippet for indoor channel factory with LOS"""
