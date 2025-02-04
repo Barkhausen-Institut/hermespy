@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from unittest import TestCase
+from scipy.constants import pi
 
 import numpy as np
-from numpy.testing import assert_array_almost_equal
-from scipy.constants import pi
 
 from hermespy.core import Signal
 from hermespy.simulation import SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray

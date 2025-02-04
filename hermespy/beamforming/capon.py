@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-================
-Capon Beamformer
-================
-"""
 
 import numpy as np
 
@@ -21,37 +16,6 @@ __status__ = "Prototype"
 
 
 class CaponBeamformer(Serializable, ReceiveBeamformer):
-    """Implementation of the Capon beamformer, also referred to as Minimum Variance Distortionless Response (MVDR).
-
-    The Capon\ :footcite:`1969:capon` beamformer estimates the power :math:`\\hat{P}` received from a direction :math:`(\\theta, \\phi)`, where :math:`\\theta` is the zenith and :math:`\\phi`  is the azimuth angle of interest in spherical coordinates, respectively.
-    Let :math:`\\mathbf{X} \in \mathbb{C}^{N \\times T}` be the the matrix of :math:`T` time-discrete samples acquired by an antenna arrary featuring :math:`N` antennas and
-
-    .. math::
-
-       \\mathbf{R}^{-1} = \\left( \\mathbf{X}\\mathbf{X}^{\\mathsf{H}} + \\lambda \\mathbb{I} \\right)^{-1}
-
-    be the respective inverse sample correlation matrix loaded by a factor :math:`\\lambda \\in \\mathbb{R}_{+}`.
-    The antenna array's response towards a source within its far field emitting a signal of small relative bandwidth is :math:`\\mathbf{a}(\\theta, \\phi) \\in \\mathbb{C}^{N}`.
-    Then, the Capon beamformer's spatial power response is defined as
-
-    .. math::
-
-       \\hat{P}_{\\mathrm{Capon}}(\\theta, \\phi) = \\frac{1}{\\mathbf{a}^{\\mathsf{H}}(\\theta, \\phi) \mathbf{R}^{-1} \\mathbf{a}(\\theta, \\phi)}
-
-    with
-
-    .. math::
-
-       \\mathbf{w}(\\theta, \\phi) = \\frac{\\mathbf{R}^{-1} \\mathbf{a}(\\theta, \\phi)}{\\mathbf{a}^{\\mathsf{H}}(\\theta, \\phi) \mathbf{R}^{-1} \\mathbf{a}(\\theta, \\phi)} \\in \\mathbb{C}^{N}
-
-    being the beamforming weights to steer the sensor array's receive characteristics towards direction :math:`(\\theta, \\phi)`, so that
-
-    .. math::
-
-       \\mathcal{B}\\lbrace \\mathbf{X} \\rbrace = \\mathbf{w}^\\mathsf{H}(\\theta, \\phi) \\mathbf{X}
-
-    is the implemented beamforming equation.
-    """
 
     yaml_tag = "Capon"
 
