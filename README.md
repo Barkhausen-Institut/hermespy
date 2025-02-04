@@ -26,6 +26,7 @@ tutorials and a full API documentation, please consult the official
 * [Jan Adler](https://github.com/adlerjan)
 * [Maximilian Matthé](https://github.com/mmatthebi)
 * [Egor Achkasov](https://github.com/egor-achkasov)
+* Alan Thomas
 
 ## Copyright
-Copyright (C) 2022 Barkhausen Institut gGmbH
+Copyright (C) 2025 Barkhausen Institut gGmbH
