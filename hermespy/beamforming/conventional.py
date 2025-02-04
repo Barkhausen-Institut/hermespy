@@ -1,11 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-=======================
-Conventional Beamformer
-=======================
-
-Also refererd to as Delay and Sum Beamformer.
-"""
 
 import numpy as np
 from scipy.constants import pi, speed_of_light
@@ -25,35 +18,6 @@ __status__ = "Prototype"
 
 
 class ConventionalBeamformer(Serializable, TransmitBeamformer, ReceiveBeamformer):
-    """Conventional delay and sum beamforming.
-
-    The Bartlett\\ :footcite:`1950:bartlett` beamformer,
-    also known as conventional or delay and sum beamformer,
-    maximizes the power transmitted or received towards a single direction of interest
-    :math:`(\\theta, \\phi)`, where :math:`\\theta` is the zenith and :math:`\\phi`  is the azimuth angle of interest in spherical coordinates, respectively.
-
-    Let :math:`\\mathbf{X} \in \mathbb{C}^{N \\times T}` be the the matrix of :math:`T` time-discrete samples acquired by an antenna arrary featuring :math:`N` antennas.
-    The antenna array's response towards a source within its far field emitting a signal of small relative bandwidth is :math:`\\mathbf{a}(\\theta, \\phi) \\in \\mathbb{C}^{N}`.
-    Then
-
-    .. math::
-
-        \\hat{P}_{\\mathrm{Capon}}(\\theta, \\phi) = \\mathbf{a}^\\mathsf{H}(\\theta, \\phi)  \\mathbf{X} \\mathbf{X}^\\mathsf{H} \\mathbf{a}(\\theta, \\phi)
-
-    is the Conventional beamformer's power estimate     with
-
-    .. math::
-
-       \\mathbf{w}(\\theta, \\phi) = \\mathbf{a}(\\theta, \\phi)
-
-    being the beamforming weights to steer the sensor array's receive characteristics towards direction :math:`(\\theta, \\phi)`, so that
-
-    .. math::
-
-       \\mathcal{B}\\lbrace \\mathbf{X} \\rbrace = \\mathbf{w}^\\mathsf{H}(\\theta, \\phi) \\mathbf{X}
-
-    is the implemented beamforming equation.
-    """
 
     yaml_tag = "ConventionalBeamformer"
     """YAML serialization tag."""
@@ -139,7 +103,7 @@ class ConventionalBeamformer(Serializable, TransmitBeamformer, ReceiveBeamformer
         )
         direction = Direction.From_Spherical(azimuth, zenith)
         # Conventional steering vector
-        weights = np.exp(2j * pi * carrier_frequency / speed_of_light * (topology @ direction))
+        weights = np.exp(-2j * pi * carrier_frequency / speed_of_light * (topology @ direction))
 
         # Weight the streams accordingly
         samples = weights[:, np.newaxis] @ samples
