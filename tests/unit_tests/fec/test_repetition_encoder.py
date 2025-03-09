@@ -7,7 +7,7 @@ import numpy as np
 from numpy.testing import assert_array_equal
 
 from hermespy.fec import RepetitionEncoder
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -151,6 +151,6 @@ class TestRepetitionEncoder(unittest.TestCase):
             self.encoder.repetitions = 10
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test repetition encoder serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.encoder)
+        test_roundtrip_serialization(self, self.encoder)

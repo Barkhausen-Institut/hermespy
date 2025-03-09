@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from typing import Type
+
 from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
 
@@ -24,6 +26,10 @@ class PhysicalScenarioMock(PhysicalScenario[Mock]):
     
     def _trigger_direct(self, transmissions: list[Signal], devices: list[Mock], calibrate: bool = True) -> list[Signal]:
         return []
+
+    @classmethod
+    def _device_type(cls) -> Type[Mock]:
+        return Mock
 
 
 class TestPhysicalScenario(TestCase):

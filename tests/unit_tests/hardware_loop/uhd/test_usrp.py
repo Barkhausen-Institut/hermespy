@@ -10,7 +10,7 @@ from zerorpc.exceptions import LostRemote, RemoteError
 
 from hermespy.core import Signal, SignalTransmitter, SignalReceiver
 from hermespy.hardware_loop.uhd import UsrpAntennas, UsrpDevice
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -236,6 +236,6 @@ class TestUsrpDevice(TestCase):
         self.assertEqual(4.0, self.usrp.max_sampling_rate)
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test USRP device serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.usrp, {"antenna_positions"})
+        test_roundtrip_serialization(self, self.usrp, {"antenna_positions"})

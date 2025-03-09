@@ -15,7 +15,7 @@ from hermespy.core import ConsoleMode, Factory, MonteCarloResult, SignalTransmit
 from hermespy.modem import DuplexModem, BitErrorEvaluator, RRCWaveform
 from hermespy.simulation import N0
 from hermespy.simulation.simulation import SimulatedDevice, Simulation, SimulationActor, SimulationRunner, SimulationScenario
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -242,50 +242,6 @@ class TestSimulation(TestCase):
         self.simulation.set_channel(self.device, self.device, expected_channel)
 
         self.assertIs(expected_channel, self.simulation.scenario.channel(self.device, self.device))
-
-    def test_serialization(self) -> None:
-        """Test YAML serialization"""
-
-        test_yaml_roundtrip_serialization(self, self.simulation)
-
-    def test_serialization_channel_device_inference(self) -> None:
-        """Test YAML serialization with channel device inference"""
-
-        serialization = """
-        !<Simulation>
-            Devices:
-                - &device !<SimulatedDevice>
-
-            Channels:
-                - [ *device, *device, !<Channel> ]
-        """
-
-        factory = Factory()
-        simulation: Simulation = factory.from_str(serialization)
-
-        self.assertEqual(1, len(simulation.scenario.devices))
-        device = simulation.scenario.devices[0]
-        channel = simulation.scenario.channel(device, device)
-        self.assertIsInstance(channel, IdealChannel)
-
-    def test_serialization_dimension_shorthand(self) -> None:
-        """Test YAML serialization with dimension shorthand"""
-
-        serialization = """
-        !<Simulation>
-            Devices:
-                - !<SimulatedDevice>
-
-            Dimensions:
-                noise_level: [1, 2, 3]
-        """
-
-        factory = Factory()
-        simulation = factory.from_str(serialization)
-
-        self.assertEqual(1, len(simulation.dimensions))
-        self.assertEqual("noise_level", simulation.dimensions[0].dimension)
-        self.assertSequenceEqual([1, 2, 3], [p.value for p in simulation.dimensions[0].sample_points])
 
     def test_pip_pacakges(self) -> None:
         """Test the pip packages property"""

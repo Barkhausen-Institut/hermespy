@@ -8,7 +8,7 @@ import numpy as np
 from hermespy.simulation.rf_chain.analog_digital_converter import AnalogDigitalConverter, Gain, AutomaticGainControl, QuantizerType, GainControlType
 from hermespy.tools.math import rms_value
 from hermespy.core.signal_model import Signal
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "André Noll-Barreto"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -234,6 +234,6 @@ class TestQuantization(unittest.TestCase):
         np.testing.assert_almost_equal(np.real(output_signal.getitem().flatten()), quantization_levels)
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.quantizer)
+        test_roundtrip_serialization(self, self.quantizer)

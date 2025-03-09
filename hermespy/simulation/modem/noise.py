@@ -92,8 +92,6 @@ class CommunicationNoiseLevel(NoiseLevel):
 class EBN0(CommunicationNoiseLevel):
     """Fixed noise power configuration."""
 
-    yaml_tag = "EBN0"
-
     def get_power(self) -> float:
         return self._get_reference_waveform().bit_energy / self.level
 
@@ -104,8 +102,6 @@ class EBN0(CommunicationNoiseLevel):
 
 class ESN0(CommunicationNoiseLevel):
     """Fixed noise power configuration."""
-
-    yaml_tag = "ESN0"
 
     def get_power(self) -> float:
         return self._get_reference_waveform().symbol_energy / self.level

@@ -12,11 +12,10 @@ import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D  # type: ignore
-from ruamel.yaml import Node, SafeRepresenter  # type: ignore
 from scipy.constants import pi, speed_of_light
 
 from .executable import Executable
-from .factory import Serializable, SerializableEnum
+from .factory import Serializable, SerializableEnum, SerializationProcess, DeserializationProcess
 from .transformation import Direction, Transformable, Transformation
 from .visualize import VAT
 
@@ -53,7 +52,6 @@ APT = TypeVar("APT", bound="AntennaPort")
 class Antenna(ABC, Generic[APT], Transformable):
     """Base class for the model of a single antenna element within an antenna array."""
 
-    property_blacklist = {"port"}.union(Transformable.property_blacklist)
     __mode: AntennaMode  # The mode this antenna is operating in, i.e. DUPLEX, TX or RX
     __port: APT | None  # Antenna port this antenna belongs to
 
@@ -404,6 +402,18 @@ class Antenna(ABC, Generic[APT], Transformable):
 
             return figure
 
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_integer(self.mode.value, "mode")
+        process.serialize_array(self.pose, "pose")
+
+    @classmethod
+    def Deserialize_Antenna(
+        cls, process: DeserializationProcess
+    ) -> tuple[AntennaMode, Transformation]:
+        mode = AntennaMode(process.deserialize_integer("mode"))
+        pose = process.deserialize_array("pose", np.float64).view(Transformation)
+        return mode, pose
+
 
 AT = TypeVar("AT", bound=Antenna)
 """Type of antenna."""
@@ -432,9 +442,6 @@ class IdealAntenna(Generic[APT], Antenna[APT], Serializable):
     resulting in unit gain in every direction.
     """
 
-    yaml_tag = "IdealAntenna"
-    """YAML serialization tag"""
-
     def __init__(
         self, mode: AntennaMode = AntennaMode.DUPLEX, pose: Transformation | None = None
     ) -> None:
@@ -458,6 +465,14 @@ class IdealAntenna(Generic[APT], Antenna[APT], Serializable):
     def local_characteristics(self, azimuth: float, elevation: float) -> np.ndarray:
         return np.array([2**-0.5, 2**-0.5], dtype=float)
 
+    def serialize(self, process: SerializationProcess) -> None:
+        Antenna.serialize(self, process)
+
+    @classmethod
+    def Deserialize(cls: Type[IdealAntenna], process: DeserializationProcess) -> IdealAntenna:
+        mode, pose = Antenna.Deserialize_Antenna(process)
+        return cls(mode, pose)
+
 
 class LinearAntenna(Generic[APT], Antenna[APT], Serializable):
     """Model of a linearly polarized ideal antenna.
@@ -474,8 +489,6 @@ class LinearAntenna(Generic[APT], Antenna[APT], Serializable):
 
     with :math:`zeta = 0` resulting in vertical polarization and :math:`zeta = \\pi / 2` resulting in horizontal polarization.
     """
-
-    yaml_tag = "LinearAntenna"
 
     __slant: float
 
@@ -506,7 +519,6 @@ class LinearAntenna(Generic[APT], Antenna[APT], Serializable):
 
         # Initialize base class
         Antenna.__init__(self, mode, pose)
-        Antenna.__init__(self, mode, pose)
 
         # Initialize class attributes
         self.__slant = slant
@@ -527,6 +539,16 @@ class LinearAntenna(Generic[APT], Antenna[APT], Serializable):
     def local_characteristics(self, azimuth: float, zenith: float) -> np.ndarray:
         return np.array([cos(self.slant), sin(self.slant)], dtype=np.float64)
 
+    def serialize(self, process: SerializationProcess) -> None:
+        Antenna.serialize(self, process)
+        process.serialize_floating(self.slant, "slant")
+
+    @classmethod
+    def Deserialize(cls: Type[LinearAntenna], process: DeserializationProcess) -> LinearAntenna:
+        mode, pose = Antenna.Deserialize_Antenna(process)
+        slant = process.deserialize_floating("slant")
+        return cls(mode, slant, pose)
+
 
 class PatchAntenna(Generic[APT], Antenna[APT], Serializable):
     """Realistic model of a vertically polarized patch antenna.
@@ -540,9 +562,6 @@ class PatchAntenna(Generic[APT], Antenna[APT], Serializable):
 
     Refer to :footcite:t:`2012:jaeckel` for further information.
     """
-
-    yaml_tag = "PatchAntenna"
-    """YAML serialization tag"""
 
     def __init__(
         self, mode: AntennaMode = AntennaMode.DUPLEX, pose: Transformation | None = None
@@ -570,6 +589,14 @@ class PatchAntenna(Generic[APT], Antenna[APT], Serializable):
 
         return np.array([max(0.1, vertical_azimuth * vertical_elevation), 0.0], dtype=float)
 
+    def serialize(self, process: SerializationProcess) -> None:
+        Antenna.serialize(self, process)
+
+    @classmethod
+    def Deserialize(cls: Type[PatchAntenna], process: DeserializationProcess) -> PatchAntenna:
+        mode, pose = Antenna.Deserialize_Antenna(process)
+        return cls(mode, pose)
+
 
 class Dipole(Generic[APT], Antenna[APT], Serializable):
     """Model of vertically polarized half-wavelength dipole antenna.
@@ -589,9 +616,6 @@ class Dipole(Generic[APT], Antenna[APT], Serializable):
        F_\\mathrm{H}(\\phi, \\theta) &= 0
 
     """
-
-    yaml_tag = "DipoleAntenna"
-    """YAML serialization tag"""
 
     def __init__(
         self, mode: AntennaMode = AntennaMode.DUPLEX, pose: Transformation | None = None
@@ -619,11 +643,18 @@ class Dipole(Generic[APT], Antenna[APT], Serializable):
         )
         return np.array([vertical_polarization, 0.0], dtype=float)
 
+    def serialize(self, process: SerializationProcess) -> None:
+        Antenna.serialize(self, process)
+
+    @classmethod
+    def Deserialize(cls: Type[Dipole], process: DeserializationProcess) -> Dipole:
+        mode, pose = Antenna.Deserialize_Antenna(process)
+        return cls(mode, pose)
+
 
 class AntennaPort(Generic[AT, AAT], Transformable, Serializable):
     """A single antenna port linking a set of antennas to an antenna array."""
 
-    yaml_tag = "AntennaPort"
     __antennas: List[AT]  # Antennas connected to this port
     __transmit_antennas: List[AT]  # Transmitting antennas connected to this port
     __receive_antennas: List[AT]  # Receiving antennas connected to this port
@@ -800,6 +831,16 @@ class AntennaPort(Generic[AT, AAT], Transformable, Serializable):
         """
 
         return AntennaPort([antenna.copy() for antenna in self.antennas], deepcopy(self.pose), None)
+
+    def serialize(self, process: SerializationProcess) -> None:
+        Transformable.serialize(self, process)
+        process.serialize_object_sequence(self.antennas, "antennas")
+
+    @classmethod
+    def Deserialize(cls: Type[AntennaPort], process: DeserializationProcess) -> AntennaPort:
+        pose = process.deserialize_array("pose", np.float64).view(Transformation)
+        antennas = process.deserialize_object_sequence("antennas", Antenna)
+        return cls(antennas, pose)
 
 
 class AntennaArrayBase(ABC, Generic[APT], Transformable):
@@ -1654,8 +1695,8 @@ class AntennaArray(AntennaArrayBase[APT], Generic[APT, AT]):
 class UniformArray(Generic[APT, AT], AntennaArray[APT, AT], Serializable):
     """Model of a Uniform Antenna Array."""
 
-    yaml_tag = "UniformArray"
     property_blacklist = {"topology"}
+    __element: AT | APT
     __base_port: APT
     __ports: List[APT]  # List of individual antenna ports within this array
     __spacing: float  # Spacing betwene the antenna ports in m
@@ -1690,13 +1731,13 @@ class UniformArray(Generic[APT, AT], AntennaArray[APT, AT], Serializable):
 
         _base_port: APT
         if isinstance(element, AntennaPort):
-            _base_port = element  # type: ignore
+            _base_port = element  # type: ignore[assignment]
+            self.__element = element  # type: ignore[assignment]
         else:
             _base_port = self._new_port()
-            if isinstance(element, Antenna):
-                _base_port.add_antenna(element)
-            else:
-                _base_port.add_antenna(element())
+            element_instance = element if isinstance(element, Antenna) else element()
+            self.__element = element_instance  # type: ignore[assignment]
+            _base_port.add_antenna(element_instance)
 
         self.__base_port = _base_port
         self.__spacing = 0.0
@@ -1804,17 +1845,23 @@ class UniformArray(Generic[APT, AT], AntennaArray[APT, AT], Serializable):
 
         return self.__base_port
 
+    def serialize(self, process: SerializationProcess) -> None:
+        AntennaArray.serialize(self, process)
+        process.serialize_array(np.array(self.__dimensions, np.float64), "dimensions")
+        process.serialize_floating(self.__spacing, "spacing")
+        process.serialize_object(self.__element, "element")
+
     @classmethod
-    def to_yaml(cls: type[UniformArray], representer: SafeRepresenter, node: UniformArray) -> Node:
-        # Ensure the antenna property is an instance and not a type
-        additional_fields = {"element": node.base_port}
-        return node._mapping_serialization_wrapper(representer, {"base_port"}, additional_fields)
+    def Deserialize(cls, process: DeserializationProcess) -> UniformArray:
+        pose = process.deserialize_array("pose", np.float64).view(Transformation)
+        spacing = process.deserialize_floating("spacing")
+        dimensions = process.deserialize_array("dimensions", int).tolist()
+        element = process.deserialize_object("element", (Antenna, AntennaPort))
+        return cls(element, spacing, dimensions, pose)  # type: ignore[arg-type]
 
 
 class CustomAntennaArray(Generic[APT, AT], AntennaArray[APT, AT], Serializable):
     """Model of a set of arbitrary antennas."""
-
-    yaml_tag = "CustomAntennaArray"
 
     __ports: List[APT]  # List of antenna ports within this array
 
@@ -1920,3 +1967,14 @@ class CustomAntennaArray(Generic[APT, AT], AntennaArray[APT, AT], Serializable):
         self.add_port(port)
 
         return port
+
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_object_sequence(self.ports, "ports")
+        process.serialize_array(self.pose, "pose")
+
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> CustomAntennaArray:
+        return CustomAntennaArray(
+            process.deserialize_object_sequence("ports", AntennaPort),
+            process.deserialize_array("pose", np.float64).view(Transformation),
+        )

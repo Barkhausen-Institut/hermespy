@@ -6,7 +6,7 @@ import unittest
 import numpy as np
 
 from hermespy.fec import CyclicRedundancyCheck
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -88,6 +88,6 @@ class TestCrcEncoder(unittest.TestCase):
             self.fail()
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test CRC serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.encoder)
+        test_roundtrip_serialization(self, self.encoder)

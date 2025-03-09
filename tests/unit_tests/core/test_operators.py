@@ -108,22 +108,6 @@ class TestSignalTransmitter(TestCase):
 
         assert_array_equal(self.signal.getitem(), transmission.signal.getitem())
 
-    def test_recall_transmission(self) -> None:
-        """Recall transmission should recall the last transmission"""
-
-        transmission = self.transmitter.transmit(self.device.state())
-
-        with TemporaryDirectory() as temp:
-            file_location = join(temp, "test.h5")
-            with File(file_location, "w") as file:
-                transmission.to_HDF(file.create_group("transmission"))
-
-            with File(file_location, "r") as file:
-                recalled_transmission = self.transmitter.recall_transmission(file["transmission"])
-
-        assert_array_equal(transmission.signal.getitem(), recalled_transmission.signal.getitem())
-
-
 class TestSignalReceiver(TestCase):
     def setUp(self) -> None:
         self.device = SimulatedDevice(sampling_rate=1e3)

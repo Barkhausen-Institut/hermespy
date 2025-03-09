@@ -3,10 +3,11 @@
 from .multi import (
     FixedCrossSection,
     MultiTargetRadarChannel,
+    MultiTargetRadarChannelRealization,
     PhysicalRadarTarget,
     VirtualRadarTarget,
 )
-from .single import SingleTargetRadarChannel
+from .single import SingleTargetRadarChannel, SingleTargetRadarChannelRealization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -21,7 +22,9 @@ __status__ = "Prototype"
 __all__ = [
     "FixedCrossSection",
     "MultiTargetRadarChannel",
+    "MultiTargetRadarChannelRealization",
     "PhysicalRadarTarget",
     "VirtualRadarTarget",
     "SingleTargetRadarChannel",
+    "SingleTargetRadarChannelRealization",
 ]

@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from typing import Set
+from typing_extensions import override
 
 import numpy as np
-from h5py import Group
 from scipy.constants import speed_of_light
 
-from ..channel import ChannelSampleHook, LinkState
+from hermespy.core import DeserializationProcess
+from ..channel import LinkState
 from .delay import DelayChannelBase, DelayChannelRealization, DelayChannelSample
 
 __author__ = "Jan Adler"
@@ -32,24 +32,24 @@ class SpatialDelayChannelRealization(DelayChannelRealization):
         )
         return DelayChannelSample(delay, self.model_propagation_loss, self.gain, state)
 
-    @staticmethod
-    def From_HDF(
-        group: Group, sample_hooks: Set[ChannelSampleHook[DelayChannelSample]]
-    ) -> SpatialDelayChannelRealization:
+    @classmethod
+    @override
+    def Deserialize(cls, group: DeserializationProcess) -> SpatialDelayChannelRealization:
         return SpatialDelayChannelRealization(
-            group.attrs["model_propagation_loss"], sample_hooks, group.attrs["gain"]
+            sample_hooks=set(),
+            **DelayChannelRealization._DeserializeParameters(group),  # type: ignore[arg-type]
         )
 
 
 class SpatialDelayChannel(DelayChannelBase[SpatialDelayChannelRealization]):
     """Delay channel based on spatial relations between the linked devices."""
 
-    yaml_tag: str = "SpatialDelay"
-
     def _realize(self) -> SpatialDelayChannelRealization:
         return SpatialDelayChannelRealization(
             self.model_propagation_loss, self.sample_hooks, self.gain
         )
 
-    def recall_realization(self, group: Group) -> SpatialDelayChannelRealization:
-        return SpatialDelayChannelRealization.From_HDF(group, self.sample_hooks)
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> SpatialDelayChannel:
+        return SpatialDelayChannel(**DelayChannelBase._DeserializeParameters(process))  # type: ignore[arg-type]

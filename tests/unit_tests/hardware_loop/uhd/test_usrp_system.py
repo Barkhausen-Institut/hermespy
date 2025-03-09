@@ -4,7 +4,7 @@ from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
 
 from hermespy.hardware_loop.uhd import UsrpSystem
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -56,4 +56,4 @@ class TestUsrpSystem(TestCase):
     def test_serialization(self) -> None:
         """Test YAML serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.system)
+        test_roundtrip_serialization(self, self.system)

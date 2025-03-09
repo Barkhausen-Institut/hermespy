@@ -8,9 +8,8 @@ from typing import overload, Set, Type
 
 import numpy as np
 from numba import jit
-from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, Node
 
-from .factory import Serializable
+from .factory import Serializable, SerializationProcess, DeserializationProcess
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -127,8 +126,6 @@ class Direction(np.ndarray):
 
 class Transformation(np.ndarray, Serializable):
     """Coordinate system transformation."""
-
-    yaml_tag = "Transformation"
 
     @property
     def translation(self) -> np.ndarray:
@@ -519,20 +516,12 @@ class Transformation(np.ndarray, Serializable):
 
         return self
 
-    @classmethod
-    def to_yaml(
-        cls: Type[Transformation], representer: SafeRepresenter, node: Transformation
-    ) -> MappingNode:
-        state = {"translation": node.translation, "rotation": node.rotation_rpy}
-
-        return representer.represent_mapping(cls.yaml_tag, state)
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_array(self, "matrix")
 
     @classmethod
-    def from_yaml(
-        cls: Type[Transformation], constructor: SafeConstructor, node: Node
-    ) -> Transformation:
-        state = constructor.construct_mapping(node, deep=False)
-        return cls.From_RPY(state.get("rotation", None), state.get("translation", None))
+    def Deserialize(cls, process: DeserializationProcess) -> Transformation:
+        return process.deserialize_array("matrix", np.float64).view(Transformation)
 
 
 class TransformableLink(metaclass=ABCMeta):
@@ -839,3 +828,10 @@ class Transformable(Serializable, TransformableLink):
 
         for frame in self.linked_frames:
             frame._kinematics_updated()
+
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_array(self.pose, "pose")
+
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> Transformable:
+        return cls(process.deserialize_array("pose", np.float64).view(Transformation))

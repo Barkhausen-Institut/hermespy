@@ -1,11 +1,18 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from typing import Optional, Union, TYPE_CHECKING
+from typing import TYPE_CHECKING
+from typing_extensions import override
 
 import numpy as np
 
-from hermespy.core import register, ScalarDimension, Serializable, Signal
+from hermespy.core import (
+    register,
+    ScalarDimension,
+    Signal,
+    SerializationProcess,
+    DeserializationProcess,
+)
 from .isolation import Isolation
 
 if TYPE_CHECKING:
@@ -21,17 +28,13 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class SpecificIsolation(ScalarDimension, Serializable, Isolation):
+class SpecificIsolation(ScalarDimension, Isolation):
     """Specific leakage between RF chains."""
 
-    yaml_tag = "Specific"
-
-    __leakage_factors: Optional[np.ndarray]
+    __leakage_factors: np.ndarray | None
 
     def __init__(
-        self,
-        isolation: Union[None, np.ndarray, float, int] = None,
-        device: Optional[SimulatedDevice] = None,
+        self, isolation: np.ndarray | float | int = None, device: SimulatedDevice | None = None
     ) -> None:
         # Initialize base class
         Isolation.__init__(self, device=device)
@@ -51,7 +54,7 @@ class SpecificIsolation(ScalarDimension, Serializable, Isolation):
         return self.__isolation
 
     @isolation.setter
-    def isolation(self, value: Union[None, np.ndarray, float, int]) -> None:
+    def isolation(self, value: None | np.ndarray | float | int) -> None:
         if value is None:
             self.__isolation = None
             return
@@ -99,3 +102,13 @@ class SpecificIsolation(ScalarDimension, Serializable, Isolation):
 
         leaked_samples = self.__leakage_factors @ signal.getitem()
         return signal.from_ndarray(leaked_samples)
+
+    @override
+    def serialize(self, serialization_process: SerializationProcess) -> None:
+        if self.isolation is not None:  # type: ignore[operator]
+            serialization_process.serialize_array(self.__isolation, "isolation")
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> SpecificIsolation:
+        return cls(process.deserialize_array("isolation", np.float64, None))

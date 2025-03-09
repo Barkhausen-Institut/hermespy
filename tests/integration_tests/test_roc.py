@@ -70,7 +70,7 @@ class TestRocFromMeasurements(TestCase):
     def test_roc_from_measurements(self) -> None:
         """Test ROC computation from measured datasets"""
 
-        roc = ReceiverOperatingCharacteristic.From_HDF(path.join(self.tempdir.name, "drops.h5"))
+        roc = ReceiverOperatingCharacteristic.FromFile(path.join(self.tempdir.name, "drops.h5"))
 
         roc_data = roc.to_array()
         self.assertEqual(1, roc_data.shape[0])

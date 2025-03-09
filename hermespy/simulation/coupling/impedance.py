@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 from typing import TYPE_CHECKING
+from typing_extensions import override
 
 import numpy as np
 
-from hermespy.core import Serializable, Signal
+from hermespy.core import DeserializationProcess, SerializationProcess, Signal
 from .coupling import Coupling
 
 if TYPE_CHECKING:
@@ -21,10 +22,8 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class ImpedanceCoupling(Serializable, Coupling):
+class ImpedanceCoupling(Coupling):
     """Imedance based mutual coupling model"""
-
-    yaml_tag = "Impedance-Coupling"
 
     __transmit_correlation: np.ndarray | None
     __receive_correlation: np.ndarray | None
@@ -210,3 +209,37 @@ class ImpedanceCoupling(Serializable, Coupling):
         received_samples = receive_coupling @ signal.getitem()
 
         return signal.from_ndarray(received_samples)
+
+    @override
+    def serialize(self, serialization_process: SerializationProcess) -> None:
+        if self.transmit_correlation is not None:
+            serialization_process.serialize_array(self.transmit_correlation, "transmit_correlation")
+        if self.receive_correlation is not None:
+            serialization_process.serialize_array(self.receive_correlation, "receive_correlation")
+        if self.transmit_impedance is not None:
+            serialization_process.serialize_array(self.transmit_impedance, "transmit_impedance")
+        if self.receive_impedance is not None:
+            serialization_process.serialize_array(self.receive_impedance, "receive_impedance")
+        if self.matching_impedance is not None:
+            serialization_process.serialize_array(self.matching_impedance, "matching_impedance")
+
+    @override
+    @classmethod
+    def Deserialize(cls, deserialization_process: DeserializationProcess) -> ImpedanceCoupling:
+        return cls(
+            transmit_correlation=deserialization_process.deserialize_array(
+                "transmit_correlation", np.float64, None
+            ),
+            receive_correlation=deserialization_process.deserialize_array(
+                "receive_correlation", np.float64, None
+            ),
+            transmit_impedance=deserialization_process.deserialize_array(
+                "transmit_impedance", np.float64, None
+            ),
+            receive_impedance=deserialization_process.deserialize_array(
+                "receive_impedance", np.float64, None
+            ),
+            matching_impedance=deserialization_process.deserialize_array(
+                "matching_impedance", np.float64, None
+            ),
+        )

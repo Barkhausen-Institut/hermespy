@@ -9,9 +9,8 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Sequence
 from time import time
-from typing import Generic, Optional, TypeVar
-
-from h5py import Group
+from typing import Generic, TypeVar
+from typing_extensions import override
 
 from hermespy.core import DeviceInput, DeviceReception, DeviceState, Scenario, Signal, Drop
 from .physical_device import PDT
@@ -33,8 +32,13 @@ class PhysicalScenario(Generic[PDT], Scenario[PDT, DeviceState, Drop]):
     and shared random seed configuration.
     """
 
-    def __init__(self, seed: Optional[int] = None, devices: Optional[Sequence[PDT]] = None) -> None:
+    def __init__(self, seed: int | None = None, devices: Sequence[PDT] | None = None) -> None:
         Scenario.__init__(self, seed, devices)
+
+    @classmethod
+    @override
+    def _drop_type(cls) -> type[Drop]:
+        return Drop
 
     @abstractmethod
     def _trigger(self) -> None:
@@ -132,6 +136,7 @@ class PhysicalScenario(Generic[PDT], Scenario[PDT, DeviceState, Drop]):
             for i, r in zip(device_inputs, receptions)
         ]
 
+    @override
     def _drop(self) -> Drop:
         # Generate device transmissions
         device_transmissions = self.transmit_devices()
@@ -144,9 +149,6 @@ class PhysicalScenario(Generic[PDT], Scenario[PDT, DeviceState, Drop]):
         device_receptions = self.receive_devices()
 
         return Drop(timestamp, device_transmissions, device_receptions)
-
-    def _recall_drop(self, group: Group) -> Drop:
-        return Drop.from_HDF(group, self.devices)
 
     def add_device(self, device: PDT) -> None:
         Scenario.add_device(self, device)

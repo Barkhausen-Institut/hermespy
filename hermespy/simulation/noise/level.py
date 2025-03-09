@@ -2,8 +2,18 @@
 
 from __future__ import annotations
 from abc import abstractmethod
+from typing import Type
+from typing_extensions import override
 
-from hermespy.core import Device, ScalarDimension, Transmitter, Receiver, Serializable
+from hermespy.core import (
+    Device,
+    ScalarDimension,
+    Transmitter,
+    Receiver,
+    Serializable,
+    SerializationProcess,
+    DeserializationProcess,
+)
 from hermespy.channel import Channel, ChannelSample
 
 __author__ = "Jan Adler"
@@ -60,7 +70,6 @@ class NoiseLevel(ScalarDimension, Serializable):
 class N0(NoiseLevel):
     """Fixed noise power configuration."""
 
-    yaml_tag = "N0"
     __power: float
 
     def __init__(self, power: float) -> None:
@@ -126,11 +135,19 @@ class N0(NoiseLevel):
     def title(self) -> str:
         return "Noise Power"
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_floating(self.power, "power")
+
+    @override
+    @classmethod
+    def Deserialize(cls: Type[N0], process: DeserializationProcess) -> N0:
+        return cls(process.deserialize_floating("power"))
+
 
 class SNR(NoiseLevel):
     """Signal-to-noise ratio configuration."""
 
-    yaml_tag = "SNR"
     __snr: float
     __reference: Device | Transmitter | Receiver
     __expected_channel_scale: float
@@ -221,3 +238,15 @@ class SNR(NoiseLevel):
     @reference.setter
     def reference(self, value: Device | Transmitter | Receiver) -> None:
         self.__reference = value
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_floating(self.snr, "snr")
+        process.serialize_object(self.reference, "reference")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> SNR:
+        return cls(
+            process.deserialize_floating("snr"), process.deserialize_object("reference", Device)
+        )

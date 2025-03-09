@@ -1,20 +1,25 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from enum import Enum
-from typing import Mapping, Set, Tuple, Type
+from typing import Mapping, Set, Tuple
+from typing_extensions import override
 from math import exp, log10
 
 import numpy as np
-from h5py import Group
 
-from hermespy.core.factory import Serializable
+from hermespy.core import (
+    DeserializationProcess,
+    Serializable,
+    SerializableEnum,
+    SerializationProcess,
+)
 from .cluster_delay_lines import (
     ClusterDelayLineBase,
     ClusterDelayLineSample,
     ClusterDelayLineSampleParameters,
     ClusterDelayLineRealizationParameters,
     ClusterDelayLineRealization,
+    DelayNormalization,
     LOSState,
 )
 from ..channel import ChannelSampleHook
@@ -30,7 +35,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class OfficeType(Enum):
+class OfficeType(SerializableEnum):
     """Type of office."""
 
     MIXED = 0
@@ -348,69 +353,73 @@ class IndoorOfficeRealization(ClusterDelayLineRealization[LOSState]):
         # TR 138.901 v17.0.0 Table 7.5-10
         return 0.0
 
-    def to_HDF(self, group: Group) -> None:
-        ClusterDelayLineRealization.to_HDF(self, group)
-
-        self.__los_realization.to_HDF(group.create_group("los_realization"))
-        self.__nlos_realization.to_HDF(group.create_group("nlos_realization"))
-        group.attrs["office_type"] = self.__office_type.value
-
-        if self.expected_state is not None:
-            group.attrs["expected_state"] = self.expected_state.value
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        ClusterDelayLineRealization.serialize(self, process)
+        process.serialize_object(self.__los_realization, "los_realization")
+        process.serialize_object(self.__nlos_realization, "nlos_realization")
+        process.serialize_object(self.__office_type, "office_type")
 
     @classmethod
-    def From_HDF(
-        cls: Type[IndoorOfficeRealization],
-        group: Group,
-        parameters: ClusterDelayLineRealizationParameters,
-        sample_hooks: Set[ChannelSampleHook[ClusterDelayLineSample]],
-    ) -> IndoorOfficeRealization:
-
-        state_realization = ConsistentRealization.from_HDF(group["state_realization"])
-        los_realization = ConsistentRealization.from_HDF(group["los_realization"])
-        nlos_realization = ConsistentRealization.from_HDF(group["nlos_realization"])
-        gain = group.attrs["gain"] if "gain" in group.attrs else 1.0
-        if "expected_state" in group.attrs:
-            expected_state = LOSState(group.attrs["expected_state"])
-        else:
-            expected_state = None
-        office_type = OfficeType(group.attrs["office_type"])
-
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> IndoorOfficeRealization:
         return IndoorOfficeRealization(
-            expected_state,
-            state_realization,
-            los_realization,
-            nlos_realization,
-            parameters,
-            office_type,
-            sample_hooks,
-            gain,
+            expected_state=process.deserialize_object("expected_state", LOSState, None),
+            los_realization=process.deserialize_object("los_realization", ConsistentRealization),
+            nlos_realization=process.deserialize_object("nlos_realization", ConsistentRealization),
+            office_type=process.deserialize_object("office_type", OfficeType),
+            sample_hooks=set(),
+            **ClusterDelayLineRealization._DeserializeParameters(process),  # type: ignore[arg-type]
         )
 
 
 class IndoorOffice(ClusterDelayLineBase[IndoorOfficeRealization, LOSState], Serializable):
     """3GPP cluster delay line preset modeling an indoor office scenario."""
 
-    yaml_tag = "IndoorOffice"
-    """YAML serialization tag."""
+    __DEFAULT_OFFICE_TYPE = OfficeType.MIXED
 
     __office_type: OfficeType
 
-    def __init__(self, office_type: OfficeType = OfficeType.MIXED, **kwargs) -> None:
+    def __init__(
+        self,
+        office_type: OfficeType = __DEFAULT_OFFICE_TYPE,
+        delay_normalization: DelayNormalization = ClusterDelayLineBase._DEFAULT_DELAY_NORMALIZATION,
+        oxygen_absorption: bool = ClusterDelayLineBase._DEFAULT_OXYGEN_ABSORPTION,
+        expected_state: LOSState | None = None,
+        gain: float = ClusterDelayLineBase._DEFAULT_GAIN,
+        seed: int | None = None,
+    ) -> None:
         """
-
         Args:
 
             office_type (OfficeType, optional):
                 Type of the modeled office.
                 If not specified, a mixed office is assumed.
 
-            \**kwargs:
-                Additional arguments passed to the base class.
+            delay_normalization (DelayNormalization, optional):
+                The delay normalization routine applied during channel sampling.
+
+            oxygen_absorption (bool, optional):
+                Model oxygen absorption in the channel.
+                Enabled by default.
+
+            expected_state (LSST, optional):
+                Expected large-scale state of the channel.
+                If `None`, the state is randomly generated during each sample of the channel's realization.
+
+            gain (float, optional):
+                Linear channel energy gain factor.
+                Initializes the :meth:`gain<gain>` property.
+                :math:`1.0` by default.
+
+            seed (int, optional):
+                Seed used to initialize the pseudo-random number generator.
         """
 
         # Initialize base class
-        ClusterDelayLineBase.__init__(self, **kwargs)
+        ClusterDelayLineBase.__init__(
+            self, delay_normalization, oxygen_absorption, expected_state, gain, seed
+        )
 
         # Initialize class attributes
         self.__office_type = office_type
@@ -465,6 +474,19 @@ class IndoorOffice(ClusterDelayLineBase[IndoorOfficeRealization, LOSState], Seri
             dtype=np.float64,
         ).T
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        ClusterDelayLineBase.serialize(self, process)
+        process.serialize_object(self.__office_type, "office_type")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> IndoorOffice:
+        return IndoorOffice(
+            process.deserialize_object("office_type", OfficeType, cls.__DEFAULT_OFFICE_TYPE),
+            **ClusterDelayLineBase._DeserializeParameters(process),  # type: ignore[arg-type]
+        )
+
     def _initialize_realization(
         self,
         state_generator: ConsistentGenerator,
@@ -488,8 +510,3 @@ class IndoorOffice(ClusterDelayLineBase[IndoorOfficeRealization, LOSState], Seri
             self.sample_hooks,
             self.gain,
         )
-
-    def _recall_specific_realization(
-        self, group: Group, parameters: ClusterDelayLineRealizationParameters
-    ) -> IndoorOfficeRealization:
-        return IndoorOfficeRealization.From_HDF(group, parameters, self.sample_hooks)

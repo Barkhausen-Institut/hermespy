@@ -9,14 +9,31 @@ Implements a physical device dummy for testing and demonstration purposes.
 
 from __future__ import annotations
 from collections.abc import Sequence
+from typing_extensions import override
 
 import numpy as np
 
-from hermespy.core import DeviceInput, DeviceState, Serializable, Signal, Transmission
+from hermespy.core import (
+    DeviceInput,
+    DeviceState,
+    Receiver,
+    ReceiveSignalCoding,
+    ReceiveStreamDecoder,
+    Serializable,
+    Signal,
+    Transformation,
+    Transmission,
+    TransmitSignalCoding,
+    TransmitStreamEncoder,
+    Transmitter,
+)
 from hermespy.simulation import (
+    Coupling,
     NoiseLevel,
     NoiseModel,
     ProcessedSimulatedDeviceInput,
+    RfChain,
+    Isolation,
     SimulatedAntennaArray,
     SimulatedDevice,
     SimulatedDeviceOutput,
@@ -24,9 +41,17 @@ from hermespy.simulation import (
     SimulatedDeviceState,
     SimulatedDeviceTransmission,
     SimulationScenario,
+    Trajectory,
+    TriggerModel,
     TriggerRealization,
 )
-from .physical_device import PhysicalDevice, PhysicalDeviceState
+from .physical_device import (
+    AntennaCalibration,
+    DelayCalibrationBase,
+    LeakageCalibrationBase,
+    PhysicalDevice,
+    PhysicalDeviceState,
+)
 from .scenario import PhysicalScenario
 
 __author__ = "Jan Adler"
@@ -39,8 +64,9 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class PhysicalDeviceDummyState(SimulatedDeviceState, PhysicalDeviceState):
-    ...  # pragma: no cover
+class PhysicalDeviceDummyState(
+    SimulatedDeviceState, PhysicalDeviceState
+): ...  # pragma: no cover  # noqa: E701
 
 
 class PhysicalDeviceDummy(SimulatedDevice, PhysicalDevice, Serializable):
@@ -49,23 +75,82 @@ class PhysicalDeviceDummy(SimulatedDevice, PhysicalDevice, Serializable):
     The physical device dummy always receives back its most recent transmission.
     """
 
-    yaml_tag = "PhysicalDeviceDummy"
-
     __receive_transmission: bool
     __uploaded_signal: Signal
     __downloaded_signal: Signal
 
     def __init__(
         self,
-        max_receive_delay: float = 0.0,
-        antennas: SimulatedAntennaArray | None = None,
-        noise_power: np.ndarray | None = None,
         receive_transmission: bool = True,
-        **kwargs,
+        scenario: PhysicalScenarioDummy | None = None,
+        antennas: SimulatedAntennaArray | None = None,
+        rf_chain: RfChain | None = None,
+        isolation: Isolation | None = None,
+        coupling: Coupling | None = None,
+        trigger_model: TriggerModel | None = None,
+        sampling_rate: float = SimulatedDevice._DEFAULT_SAMPLING_RATE,
+        carrier_frequency: float = SimulatedDevice._DEFAULT_CARRIER_FREQUENCY,
+        operator_separation: bool = SimulatedDevice._DEFAULT_OPERATOR_SEPARATION,
+        noise_level: NoiseLevel | None = None,
+        noise_model: NoiseModel | None = None,
+        pose: Transformation | Trajectory | None = None,
+        velocity: np.ndarray | None = None,
+        max_receive_delay: float = PhysicalDevice._DEFAULT_MAX_RECEIVE_DELAY,
+        noise_power: np.ndarray | None = None,
+        leakage_calibration: LeakageCalibrationBase | None = None,
+        delay_calibration: DelayCalibrationBase | None = None,
+        antenna_calibration: AntennaCalibration | None = None,
+        adaptive_sampling: bool = False,
+        lowpass_filter: bool = False,
+        lowpass_bandwidth: float = PhysicalDevice._DEFAULT_LOWPASS_BANDWIDTH,
+        transmit_dsp: Transmitter | Sequence[Transmitter] | None = None,
+        receive_dsp: Receiver | Sequence[Receiver] | None = None,
+        transmit_encoding: TransmitSignalCoding | Sequence[TransmitStreamEncoder] | None = None,
+        receive_decoding: ReceiveSignalCoding | Sequence[ReceiveStreamDecoder] | None = None,
+        power: float = SimulatedDevice._DEFAULT_POWER,
+        seed: int | None = None,
     ) -> None:
         # Initialize base classes
-        SimulatedDevice.__init__(self, antennas=antennas, **kwargs)
-        PhysicalDevice.__init__(self, max_receive_delay=max_receive_delay, noise_power=noise_power)
+        SimulatedDevice.__init__(
+            self,
+            scenario,
+            antennas,
+            rf_chain,
+            isolation,
+            coupling,
+            trigger_model,
+            sampling_rate,
+            carrier_frequency,
+            operator_separation,
+            noise_level,
+            noise_model,
+            pose,
+            velocity,
+            transmit_dsp,
+            receive_dsp,
+            transmit_encoding,
+            receive_decoding,
+            power,
+            seed,
+        )
+        PhysicalDevice.__init__(
+            self,
+            max_receive_delay,
+            noise_power,
+            leakage_calibration,
+            delay_calibration,
+            antenna_calibration,
+            adaptive_sampling,
+            lowpass_filter,
+            lowpass_bandwidth,
+            transmit_dsp,
+            receive_dsp,
+            transmit_encoding,
+            receive_decoding,
+            power,
+            pose.sample(0).pose if isinstance(pose, Trajectory) else pose,
+            seed,
+        )
 
         # Initialize internal state
         self.receive_transmission = receive_transmission
@@ -199,8 +284,6 @@ class PhysicalScenarioDummy(
 ):
     """Physical scenario for testing and demonstration."""
 
-    yaml_tag = "PhysicalScenarioDummy"
-
     def __init__(
         self, seed: int | None = None, devices: Sequence[PhysicalDeviceDummy] | None = None
     ) -> None:
@@ -208,11 +291,10 @@ class PhysicalScenarioDummy(
         SimulationScenario.__init__(self, seed=seed, devices=devices)
         PhysicalScenario.__init__(self, seed=seed, devices=devices)
 
-    def new_device(self, *args, **kwargs) -> PhysicalDeviceDummy:
-        device = PhysicalDeviceDummy(*args, **kwargs)
-        self.add_device(device)
-
-        return device
+    @classmethod
+    @override
+    def _device_type(cls) -> type[PhysicalDeviceDummy]:
+        return PhysicalDeviceDummy
 
     def add_device(self, device: SimulatedDevice | PhysicalDeviceDummy) -> None:
         # Adding a device resolves to the simulation scenario's add device method

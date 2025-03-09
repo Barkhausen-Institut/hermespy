@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 from math import ceil
-from typing import List, Any, Set, Sequence
+from typing import List, Any, Sequence
+from typing_extensions import override
 
 import numpy as np
 from scipy.fft import fft, fftfreq, fftshift, ifft, ifftshift
 from scipy.signal import find_peaks
 
-from hermespy.core import Serializable
+from hermespy.core import Serializable, SerializationProcess
 from ...waveform import Synchronization
 from ...waveform_correlation_synchronization import CorrelationSynchronization
 from .waveform import (
@@ -32,21 +33,18 @@ __status__ = "Prototype"
 class OFDMWaveform(OrthogonalWaveform, Serializable):
     """Generic Orthogonal Frequency Division Multiplexing waveform description."""
 
-    yaml_tag: str = "OFDM"
+    __DEFAULT_NUM_SUBCARRIERS = 1024
+    __DEFAULT_SUBCARRIER_SPACING = 1e3
 
     __subcarrier_spacing: float
     dc_suppression: bool
-
-    @staticmethod
-    def _arg_signature() -> Set[str]:
-        return {"modulation_order"}  # pragma: no cover
 
     def __init__(
         self,
         grid_resources: Sequence[GridResource],
         grid_structure: Sequence[GridSection],
-        num_subcarriers: int = 1024,
-        subcarrier_spacing: float = 1e3,
+        num_subcarriers: int = __DEFAULT_NUM_SUBCARRIERS,
+        subcarrier_spacing: float = __DEFAULT_SUBCARRIER_SPACING,
         dc_suppression: bool = True,
         pilot_section: PilotSection | None = None,
         pilot_sequence: PilotSymbolSequence | None = None,
@@ -110,6 +108,7 @@ class OFDMWaveform(OrthogonalWaveform, Serializable):
         self.subcarrier_spacing = subcarrier_spacing
         self.dc_suppression = dc_suppression
 
+    @override
     def _forward_transformation(self, symbol_grid: np.ndarray) -> np.ndarray:
         # Normalize the frequency-domain data symbols for unit power transmission
         normalized_symbols = symbol_grid / np.sqrt(self.num_subcarriers)
@@ -142,6 +141,7 @@ class OFDMWaveform(OrthogonalWaveform, Serializable):
 
         return sample_grid
 
+    @override
     def _backward_transformation(
         self, sample_sections: np.ndarray, normalize: bool = True
     ) -> np.ndarray:
@@ -216,6 +216,7 @@ class OFDMWaveform(OrthogonalWaveform, Serializable):
         self.__subcarrier_spacing = spacing
 
     @property
+    @override
     def samples_per_frame(self) -> int:
         num = 0
         for section in self.grid_structure:
@@ -227,14 +228,20 @@ class OFDMWaveform(OrthogonalWaveform, Serializable):
         return num
 
     @property
+    @override
     def bandwidth(self) -> float:
         # OFDM bandwidth currently is identical to the number of subcarriers times the subcarrier spacing
         b = self.num_subcarriers * self.subcarrier_spacing
         return b
 
     @property
+    @override
     def sampling_rate(self) -> float:
         return self.oversampling_factor * self.subcarrier_spacing * self.num_subcarriers
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        OrthogonalWaveform.serialize(self, process)
 
 
 class SchmidlCoxPilotSection(PilotSection[OFDMWaveform]):
@@ -243,10 +250,7 @@ class SchmidlCoxPilotSection(PilotSection[OFDMWaveform]):
     Refer to :footcite:t:`1997:schmidl` for a detailed description.
     """
 
-    yaml_tag = "SchmidlCoxPilot"
-    """YAML serialization tag"""
-
-    def _pilot_sequence(self, num_symbols: int = None) -> np.ndarray:
+    def _pilot_sequence(self, num_symbols: int | None = None) -> np.ndarray:
         # The schmidl-cox pilot sequence is zero-stuffed in frequency domain
         stuffed_pilot_sequence = np.zeros(self.wave.num_subcarriers, dtype=complex)
         stuffed_pilot_sequence[::2] = PilotSection._pilot_sequence(
@@ -269,8 +273,6 @@ class OFDMSynchronization(Synchronization[OFDMWaveform]):
 class OFDMCorrelationSynchronization(CorrelationSynchronization[OFDMWaveform]):
     """Correlation-Based Pilot Detection and Synchronization for OFDM Waveforms."""
 
-    yaml_tag = "OFDM-PilotCorrelation"
-
 
 class SchmidlCoxSynchronization(OFDMSynchronization):
     """Schmidl-Cox Algorithm for OFDM Waveform Time Synchronization and Carrier Frequency Offset Equzalization.
@@ -280,9 +282,6 @@ class SchmidlCoxSynchronization(OFDMSynchronization):
 
     Refer to :footcite:t:`1997:schmidl` for a detailed description.
     """
-
-    yaml_tag = "SchmidlCox"
-    """YAML serialization tag"""
 
     def synchronize(self, signal: np.ndarray) -> List[int]:
         symbol_length = self.waveform.oversampling_factor * self.waveform.num_subcarriers

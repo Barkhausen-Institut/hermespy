@@ -20,5 +20,4 @@ The subpackages may have interdependencies, but in general, the root of dependen
    fec
    jcas
    beamforming
-   bin
    tools

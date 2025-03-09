@@ -2,29 +2,37 @@
 
 from __future__ import annotations
 from functools import cached_property
-from typing import Generic, List, Set, Sequence, Tuple, Type, TypeVar
+from typing import Generic, List, Sequence, Tuple, Type, TypeVar
+from typing_extensions import override
 
 import numpy as np
-from h5py import Group
 
-from hermespy.fec import EncoderManager
+from hermespy.fec import Encoder, EncoderManager
 from hermespy.core import (
     Device,
-    HDFSerializable,
+    DeserializationProcess,
     RandomNode,
+    Serializable,
+    SerializationProcess,
     Transmission,
     TransmitSignalCoding,
+    TransmitStreamEncoder,
     Reception,
-    Serializable,
     Signal,
     TransmitState,
     Transmitter,
     Receiver,
     ReceiveState,
     ReceiveSignalCoding,
+    ReceiveStreamDecoder,
 )
 from .bits_source import BitsSource, RandomBitsSource
-from .precoding import TransmitSymbolCoding, ReceiveSymbolCoding
+from .precoding import (
+    TransmitSymbolCoding,
+    TransmitSymbolEncoder,
+    ReceiveSymbolCoding,
+    ReceiveSymbolDecoder,
+)
 from .symbols import StatedSymbols, Symbols
 from .waveform import CommunicationWaveform, CWT
 from .frame_generator import FrameGenerator, FrameGeneratorStub
@@ -121,27 +129,27 @@ class CommunicationTransmissionFrame(Transmission):
         self.encoded_symbols = encoded_symbols
         self.timestamp = timestamp
 
+    def serialize(self, process: SerializationProcess) -> None:
+        Transmission.serialize(self, process)
+        process.serialize_array(self.bits, "bits")
+        process.serialize_array(self.encoded_bits, "encoded_bits")
+        process.serialize_integer(self.bit_block_size, "bit_block_size")
+        process.serialize_integer(self.code_block_size, "code_block_size")
+        process.serialize_object(self.symbols, "symbols")
+        process.serialize_object(self.encoded_symbols, "encoded_symbols")
+        process.serialize_floating(self.timestamp, "timestamp")
+
     @classmethod
-    def from_HDF(
-        cls: Type[CommunicationTransmissionFrame],
-        group: Group,
-        transmitter: Transmitter | None = None,
-    ) -> CommunicationTransmissionFrame:
-        # Recall groups
-        signal = Signal.from_HDF(group["signal"])
-        symbols = Symbols.from_HDF(group["symbols"])
-        encoded_symbols = Symbols.from_HDF(group["encoded_symbols"])
+    def Deserialize(cls, process: DeserializationProcess) -> CommunicationTransmissionFrame:
+        signal = process.deserialize_object("signal", Signal)
+        bits = process.deserialize_array("bits", np.int64)
+        encoded_bits = process.deserialize_array("encoded_bits", np.int64)
+        bit_block_size = process.deserialize_integer("bit_block_size")
+        code_block_size = process.deserialize_integer("code_block_size")
+        symbols = process.deserialize_object("symbols", Symbols)
+        encoded_symbols = process.deserialize_object("encoded_symbols", Symbols)
+        timestamp = process.deserialize_floating("timestamp")
 
-        # Recall datasets
-        bits = np.array(group["bits"], dtype=np.uint8)
-        encoded_bits = np.array(group["encoded_bits"], dtype=np.uint8)
-
-        # Recall attributes
-        bit_block_size = group.attrs.get("bit_block_size", 1)
-        code_block_size = group.attrs.get("code_block_size", 1)
-        timestamp = group.attrs.get("timestamp", 0)
-
-        # Initialize object from recalled state
         return cls(
             signal=signal,
             bits=bits,
@@ -152,23 +160,6 @@ class CommunicationTransmissionFrame(Transmission):
             encoded_symbols=encoded_symbols,
             timestamp=timestamp,
         )
-
-    def to_HDF(self, group: Group) -> None:
-        # Serialize base class
-        self.signal.to_HDF(group.create_group("signal"))
-
-        # Serialize groups
-        self.symbols.to_HDF(group.create_group("symbols"))
-        self.encoded_symbols.to_HDF(group.create_group("encoded_symbols"))
-
-        # Serialize datasets
-        group.create_dataset("bits", data=self.bits)
-        group.create_dataset("encoded_bits", data=self.encoded_bits)
-
-        # Serialize attributes
-        group.attrs["bit_block_size"] = self.bit_block_size
-        group.attrs["code_block_size"] = self.code_block_size
-        group.attrs["timestamp"] = self.timestamp
 
 
 class CommunicationTransmission(Transmission):
@@ -228,41 +219,26 @@ class CommunicationTransmission(Transmission):
 
         return symbols
 
+    def serialize(self, process: SerializationProcess) -> None:
+        Transmission.serialize(self, process)
+        process.serialize_object_sequence(self.frames, "frames")
+
     @classmethod
-    def from_HDF(cls: Type[CommunicationTransmission], group: Group) -> CommunicationTransmission:
-        # Recall base signal
-        signal = Signal.from_HDF(group["signal"])
-
-        # Recall individual detected frames
-        num_frames = group.attrs.get("num_frames", 0)
-        frames = [
-            CommunicationTransmissionFrame.from_HDF(group[f"frame_{f:02d}"])
-            for f in range(num_frames)
-        ]
-
-        return cls(signal=signal, frames=frames)
-
-    def to_HDF(self, group: Group) -> None:
-        # Serialize attributes
-        group.attrs["num_frames"] = self.num_frames
-
-        # Serialize base information
-        self.signal.to_HDF(group.create_group("signal"))
-
-        # Serialize detected frames
-        for f, frame in enumerate(self.frames):
-            frame.to_HDF(group.create_group(f"frame_{f:02d}"))
+    def Deserialize(
+        cls: Type[CommunicationTransmission], process: DeserializationProcess
+    ) -> CommunicationTransmission:
+        return cls(
+            process.deserialize_object("signal", Signal),
+            list(process.deserialize_object_sequence("frames", CommunicationTransmissionFrame)),
+        )
 
 
-class CommunicationReceptionFrame(HDFSerializable):
+class CommunicationReceptionFrame(Reception):
     """A single synchronized frame of information generated by receiving over a modem.
 
     Returned when calling the :meth:`receive<hermespy.core.device.Receiver.receive>` method of a
     :class:`ReceivingModem<hermespy.modem.modem.ReceivingModem>` instance.
     """
-
-    signal: Signal
-    """Communication base-band waveform."""
 
     decoded_signal: Signal
     """Communication base-band waveform after MIMO stream decoding."""
@@ -338,6 +314,10 @@ class CommunicationReceptionFrame(HDFSerializable):
                 Block size of the forward error correction output.
         """
 
+        # Initialize base class
+        Reception.__init__(self, signal)
+
+        # Initialize class attributes
         self.signal = signal
         self.decoded_signal = decoded_signal
         self.symbols = symbols
@@ -349,27 +329,33 @@ class CommunicationReceptionFrame(HDFSerializable):
         self.decoded_bits = decoded_bits
         self.bit_block_size = bit_block_size
 
+    def serialize(self, process: SerializationProcess) -> None:
+        Reception.serialize(self, process)
+        process.serialize_object(self.decoded_signal, "decoded_signal")
+        process.serialize_object(self.symbols, "symbols")
+        process.serialize_object(self.decoded_symbols, "decoded_symbols")
+        process.serialize_object(self.equalized_symbols, "equalized_symbols")
+        process.serialize_array(self.encoded_bits, "encoded_bits")
+        process.serialize_array(self.decoded_bits, "decoded_bits")
+        process.serialize_integer(self.code_block_size, "code_block_size")
+        process.serialize_integer(self.bit_block_size, "bit_block_size")
+        process.serialize_floating(self.timestamp, "timestamp")
+
     @classmethod
-    def from_HDF(
-        cls: Type[CommunicationReceptionFrame], group: Group
+    def Deserialize(
+        cls: Type[CommunicationReceptionFrame], process: DeserializationProcess
     ) -> CommunicationReceptionFrame:
-        # Recall groups
-        signal = Signal.from_HDF(group["signal"])
-        decoded_signal = Signal.from_HDF(group["decoded_signal"])
-        symbols = Symbols.from_HDF(group["symbols"])
-        decoded_symbols = Symbols.from_HDF(group["decoded_symbols"])
-        equalized_symbols = Symbols.from_HDF(group["equalized_symbols"])
+        signal = process.deserialize_object("signal", Signal)
+        decoded_signal = process.deserialize_object("decoded_signal", Signal)
+        symbols = process.deserialize_object("symbols", Symbols)
+        decoded_symbols = process.deserialize_object("decoded_symbols", Symbols)
+        equalized_symbols = process.deserialize_object("equalized_symbols", Symbols)
+        encoded_bits = process.deserialize_array("encoded_bits", np.int64)
+        decoded_bits = process.deserialize_array("decoded_bits", np.int64)
+        code_block_size = process.deserialize_integer("code_block_size")
+        bit_block_size = process.deserialize_integer("bit_block_size")
+        timestamp = process.deserialize_floating("timestamp")
 
-        # Recall datasets
-        encoded_bits = np.array(group["encoded_bits"], dtype=np.uint8)
-        decoded_bits = np.array(group["decoded_bits"], dtype=np.uint8)
-
-        # Recall attributes
-        code_block_size = group.attrs.get("code_block_size", 1)
-        bit_block_size = group.attrs.get("bit_block_size", 1)
-        timestamp = group.attrs.get("timestamp", 0)
-
-        # Initialize object from recalled state
         return cls(
             signal=signal,
             decoded_signal=decoded_signal,
@@ -382,23 +368,6 @@ class CommunicationReceptionFrame(HDFSerializable):
             bit_block_size=bit_block_size,
             timestamp=timestamp,
         )
-
-    def to_HDF(self, group: Group) -> None:
-        # Serialize groups
-        self.signal.to_HDF(group.create_group("signal"))
-        self.decoded_signal.to_HDF(group.create_group("decoded_signal"))
-        self.symbols.to_HDF(group.create_group("symbols"))
-        self.decoded_symbols.to_HDF(group.create_group("decoded_symbols"))
-        self.equalized_symbols.to_HDF(group.create_group("equalized_symbols"))
-
-        # Serialize datasets
-        group.create_dataset("encoded_bits", data=self.encoded_bits)
-        group.create_dataset("decoded_bits", data=self.decoded_bits)
-
-        # Serialize attributes
-        group.attrs["code_block_size"] = self.code_block_size
-        group.attrs["bit_block_size"] = self.bit_block_size
-        group.attrs["timestamp"] = self.timestamp
 
 
 class CommunicationReception(Reception):
@@ -487,32 +456,25 @@ class CommunicationReception(Reception):
 
         return symbols
 
+    def serialize(self, process: SerializationProcess) -> None:
+        Reception.serialize(self, process)
+        process.serialize_object_sequence(self.frames, "frames")
+
     @classmethod
-    def from_HDF(cls: Type[CommunicationReception], group: Group) -> CommunicationReception:
-        # Recall base signal
-        signal = Signal.from_HDF(group["signal"])
-
-        # Recall individual detected frames
-        num_frames = group.attrs.get("num_frames", 0)
-        frames = [
-            CommunicationReceptionFrame.from_HDF(group[f"frame_{f:02d}"]) for f in range(num_frames)
-        ]
-
-        return cls(signal=signal, frames=frames)
-
-    def to_HDF(self, group: Group) -> None:
-        # Serialize attributes
-        group.attrs["num_frames"] = self.num_frames
-
-        # Serialize base information
-        self.signal.to_HDF(group.create_group("signal"))
-
-        # Serialize detected frames
-        for f, frame in enumerate(self.frames):
-            frame.to_HDF(group.create_group(f"frame_{f:02d}"))
+    def Deserialize(
+        cls: Type[CommunicationReception], process: DeserializationProcess
+    ) -> CommunicationReception:
+        return cls(
+            process.deserialize_object("signal", Signal),
+            list(process.deserialize_object_sequence("frames", CommunicationReceptionFrame)),
+        )
 
 
-class BaseModem(Generic[CWT], RandomNode):
+_BMT = TypeVar("_BMT", bound="BaseModem")
+"""Type of base modem."""
+
+
+class BaseModem(Generic[CWT], RandomNode, Serializable):
     """Base class for wireless modems transmitting or receiving information over devices.
 
     Configure a :class:`TransmittingModem`, :class:`ReceivingModem` or the convenience
@@ -523,13 +485,9 @@ class BaseModem(Generic[CWT], RandomNode):
     __waveform: CWT | None
     __frame_generator: FrameGenerator
 
-    @staticmethod
-    def _arg_signature() -> Set[str]:
-        return {"encoding", "waveform", "seed"}
-
     def __init__(
         self,
-        encoding: EncoderManager | None = None,
+        encoding: EncoderManager | Sequence[Encoder] | None = None,
         waveform: CWT | None = None,
         frame_generator: FrameGenerator | None = None,
         seed: int | None = None,
@@ -537,12 +495,16 @@ class BaseModem(Generic[CWT], RandomNode):
         """
         Args:
 
-            encoding (EncoderManager, optional):
+            encoding (EncoderManager | Sequence[Encoder], optional):
                 Bit coding configuration.
                 Encodes communication bit frames during transmission and decodes them during reception.
 
             waveform (CWT, optional):
                 The waveform to be transmitted by this modem.
+
+            frame_generator (FrameGenerator, optional):
+                Frame generator used to pack and unpack communication frames.
+                If not specified, a stub generator will be assumed.
 
             seed (int, optional):
                 Seed used to initialize the pseudo-random number generator.
@@ -551,7 +513,16 @@ class BaseModem(Generic[CWT], RandomNode):
         # Base class initialization
         RandomNode.__init__(self, seed=seed)
 
-        self.encoder_manager = EncoderManager() if encoding is None else encoding
+        # Initialize the bit encoding configuration
+        if isinstance(encoding, EncoderManager):
+            self.encoder_manager = encoding
+        else:
+            self.encoder_manager = EncoderManager()
+        if encoding is not None:
+            for encoder in encoding.encoders if isinstance(encoding, EncoderManager) else encoding:
+                self.encoder_manager.add_encoder(encoder)
+
+        # Initialize the remaining attributes
         self.waveform = waveform
         self.frame_generator = FrameGeneratorStub() if frame_generator is None else frame_generator
 
@@ -634,6 +605,27 @@ class BaseModem(Generic[CWT], RandomNode):
         """
         return self.waveform.sampling_rate
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_object_sequence(self.encoder_manager.encoders, "bit_coding")
+        if self.waveform is not None:
+            process.serialize_object(self.waveform, "waveform")
+        process.serialize_object(self.frame_generator, "frame_generator")
+
+    @classmethod
+    def _DeserializeParameters(cls, process: DeserializationProcess) -> dict[str, object]:
+        return {
+            "encoding": process.deserialize_object_sequence("bit_coding", Encoder),
+            "waveform": process.deserialize_object("waveform", CommunicationWaveform, None),
+            "frame_generator": process.deserialize_object("frame_generator", FrameGenerator, None),
+        }
+
+    @classmethod
+    @override
+    def Deserialize(cls: Type[_BMT], process: DeserializationProcess) -> _BMT:
+        parameters = cls._DeserializeParameters(process)
+        return cls(**parameters)  # type: ignore[arg-type]
+
 
 BMT = TypeVar("BMT", bound=BaseModem)
 """Type of base modem."""
@@ -646,22 +638,70 @@ class TransmittingModemBase(Generic[CWT], BaseModem[CWT]):
     __transmit_symbol_coding: TransmitSymbolCoding
     __transmit_signal_coding: TransmitSignalCoding
 
-    def __init__(self, bits_source: BitsSource | None = None, *args, **kwargs) -> None:
+    def __init__(
+        self,
+        bits_source: BitsSource | None = None,
+        transmit_symbol_coding: (
+            TransmitSymbolCoding | Sequence[TransmitSymbolEncoder] | None
+        ) = None,
+        transmit_signal_coding: (
+            TransmitSignalCoding | Sequence[TransmitStreamEncoder] | None
+        ) = None,
+        encoding: EncoderManager | Sequence[Encoder] | None = None,
+        waveform: CWT | None = None,
+        frame_generator: FrameGenerator | None = None,
+        seed: int | None = None,
+    ) -> None:
         """
         Args:
 
             bits_source (BitsSource, optional):
                 Source configuration of communication bits transmitted by this modem.
                 Bits are randomly generated by default.
+
+            transmit_symbol_coding (TransmitSymbolCoding, optional):
+                Complex communication symbol coding configuration during transmission.
+
+            transmit_signal_coding (TransmitSignalCoding, optional):
+                Stream MIMO coding configuration during signal transmission.
+
+            encoding (EncoderManager, optional):
+                Bit coding configuration.
+
+            waveform (CWT, optional):
+                The waveform to be transmitted by this modem.
+
+            frame_generator (FrameGenerator, optional):
+                Frame generator used to pack and unpack communication frames.
+                If not specified, a stub generator will be assumed.
+
+            seed (int, optional):
+                Seed used to initialize the pseudo-random number generator.
         """
 
-        # Initialize base classes
-        BaseModem.__init__(self, *args, **kwargs)
+        # Initialize base class
+        BaseModem.__init__(self, encoding, waveform, frame_generator, seed)
 
-        # Initialize clas attributes
+        # Initialize transmit symbol coding configuration
+        if isinstance(transmit_symbol_coding, TransmitSymbolCoding):
+            self.__transmit_symbol_coding = transmit_symbol_coding
+        else:
+            self.__transmit_symbol_coding = TransmitSymbolCoding()
+        if transmit_symbol_coding is not None:
+            for transmit_symbol_encoder in transmit_symbol_coding:
+                self.__transmit_symbol_coding[-1] = transmit_symbol_encoder
+
+        # Initialize transmit signal coding configuration
+        if isinstance(transmit_signal_coding, TransmitSignalCoding):
+            self.__transmit_signal_coding = transmit_signal_coding
+        else:
+            self.__transmit_signal_coding = TransmitSignalCoding()
+        if transmit_signal_coding is not None:
+            for transmit_signal_encoder in transmit_signal_coding:
+                self.__transmit_signal_coding[-1] = transmit_signal_encoder
+
+        # Initialize remaining attributes
         self.bits_source = RandomBitsSource() if bits_source is None else bits_source
-        self.__transmit_symbol_coding = TransmitSymbolCoding()
-        self.__transmit_signal_coding = TransmitSignalCoding()
 
     @property
     def bits_source(self) -> BitsSource:
@@ -836,18 +876,47 @@ class TransmittingModemBase(Generic[CWT], BaseModem[CWT]):
         transmission = CommunicationTransmission(signal, frames)
         return transmission
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        BaseModem.serialize(self, process)
+        process.serialize_object(self.bits_source, "bits_source")
+        process.serialize_object_sequence(self.transmit_symbol_coding, "transmit_symbol_coding")
+        process.serialize_object_sequence(self.transmit_signal_coding, "transmit_signal_coding")
+
+    @classmethod
+    @override
+    def _DeserializeParameters(cls, process: DeserializationProcess) -> dict[str, object]:
+        parameters = BaseModem._DeserializeParameters(process)
+        parameters["bits_source"] = process.deserialize_object("bits_source", BitsSource)
+        parameters["transmit_symbol_coding"] = process.deserialize_object_sequence(
+            "transmit_symbol_coding", TransmitSymbolEncoder
+        )
+        parameters["transmit_signal_coding"] = process.deserialize_object_sequence(
+            "transmit_signal_coding", TransmitStreamEncoder
+        )
+        return parameters
+
 
 class TransmittingModem(
-    TransmittingModemBase[CommunicationWaveform],
-    Transmitter[CommunicationTransmission],
-    Serializable,
+    TransmittingModemBase[CommunicationWaveform], Transmitter[CommunicationTransmission]
 ):
     """Representation of a wireless modem exclusively transmitting."""
 
-    yaml_tag = "TxModem"
-
     def __init__(
-        self, *args, selected_transmit_ports: Sequence[int] | None = None, **kwargs
+        self,
+        selected_transmit_ports: Sequence[int] | None = None,
+        carrier_frequency: float | None = None,
+        bits_source: BitsSource | None = None,
+        transmit_symbol_coding: (
+            TransmitSymbolCoding | Sequence[TransmitSymbolEncoder] | None
+        ) = None,
+        transmit_signal_coding: (
+            TransmitSignalCoding | Sequence[TransmitStreamEncoder] | None
+        ) = None,
+        encoding: EncoderManager | Sequence[Encoder] | None = None,
+        waveform: CommunicationWaveform | None = None,
+        frame_generator: FrameGenerator | None = None,
+        seed: int | None = None,
     ) -> None:
         """
         Args:
@@ -856,23 +925,63 @@ class TransmittingModem(
                 Indices of antenna ports selected for transmission from the operated :class:`Device's<Device>` antenna array.
                 If not specified, all available ports will be considered.
 
-            *args, \**kwargs:
-                Modem initialization parameters.
-                Refer to :class:`TransmittingModemBase` for further details.
+            carrier_frequency (float, optional):
+                Carrier frequency of the transmitted communication signal.
+
+            bits_source (BitsSource, optional):
+                Source configuration of communication bits transmitted by this modem.
+                Bits are randomly generated by default.
+
+            transmit_symbol_coding (TransmitSymbolCoding, optional):
+                Complex communication symbol coding configuration during transmission.
+
+            transmit_signal_coding (TransmitSignalCoding, optional):
+                Stream MIMO coding configuration during signal transmission.
+
+            encoding (EncoderManager, optional):
+                Bit coding configuration.
+
+            waveform (CommunicationWaveform, optional):
+                The waveform to be transmitted by this modem.
+
+            frame_generator (FrameGenerator, optional):
+                Frame generator used to pack and unpack communication frames.
+                If not specified, a stub generator will be assumed.
+
+            seed (int, optional):
+                Seed used to initialize the pseudo-random number generator.
         """
 
         # Initialize base classes
         # Note that the initialization order matters here
-        Transmitter.__init__(self, selected_transmit_ports=selected_transmit_ports)
-        TransmittingModemBase.__init__(self, *args, **kwargs)
+        Transmitter.__init__(self, seed, selected_transmit_ports, carrier_frequency)
+        TransmittingModemBase.__init__(
+            self,
+            bits_source,
+            transmit_symbol_coding,
+            transmit_signal_coding,
+            encoding,
+            waveform,
+            frame_generator,
+            seed,
+        )
         Serializable.__init__(self)
 
     @property
     def power(self) -> float:
         return self.waveform.power if self.waveform is not None else 0.0
 
-    def _recall_transmission(self, group: Group) -> CommunicationTransmission:
-        return CommunicationTransmission.from_HDF(group)
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        Transmitter.serialize(self, process)
+        TransmittingModemBase.serialize(self, process)
+
+    @classmethod
+    @override
+    def _DeserializeParameters(cls, process: DeserializationProcess) -> dict[str, object]:
+        parameters = Transmitter._DeserializeParameters(process)
+        parameters.update(TransmittingModemBase._DeserializeParameters(process))
+        return parameters
 
 
 class ReceivingModemBase(Generic[CWT], BaseModem[CWT]):
@@ -881,14 +990,58 @@ class ReceivingModemBase(Generic[CWT], BaseModem[CWT]):
     __receive_symbol_coding: ReceiveSymbolCoding
     __receive_signal_coding: ReceiveSignalCoding
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(
+        self,
+        receive_symbol_coding: ReceiveSymbolCoding | Sequence[ReceiveSymbolDecoder] | None = None,
+        receive_signal_coding: ReceiveSignalCoding | Sequence[ReceiveStreamDecoder] | None = None,
+        encoding: EncoderManager | Sequence[Encoder] | None = None,
+        waveform: CWT | None = None,
+        frame_generator: FrameGenerator | None = None,
+        seed: int | None = None,
+    ) -> None:
+        """
+        Args:
+
+            receive_symbol_coding (ReceiveSymbolCoding, optional):
+                Complex communication symbol coding configuration during reception.
+
+            receive_signal_coding (ReceiveSignalCoding, optional):
+                Stream MIMO coding configuration during signal reception.
+
+            encoding (EncoderManager, optional):
+                Bit coding configuration.
+
+            waveform (CWT, optional):
+                The waveform to be transmitted by this modem.
+
+            frame_generator (FrameGenerator, optional):
+                Frame generator used to pack and unpack communication frames.
+                If not specified, a stub generator will be assumed.
+
+            seed (int, optional):
+                Seed used to initialize the pseudo-random number generator.
+        """
 
         # Initialize base class
-        BaseModem.__init__(self, *args, **kwargs)
+        BaseModem.__init__(self, encoding, waveform, frame_generator, seed)
 
-        # Initialize class attributes
-        self.__receive_symbol_coding = ReceiveSymbolCoding()
-        self.__receive_signal_coding = ReceiveSignalCoding()
+        # Initialize receive symbol coding configuration
+        if isinstance(receive_symbol_coding, ReceiveSymbolCoding):
+            self.__receive_symbol_coding = receive_symbol_coding
+        else:
+            self.__receive_symbol_coding = ReceiveSymbolCoding()
+        if receive_symbol_coding is not None:
+            for receive_symbol_decoder in receive_symbol_coding:
+                self.__receive_symbol_coding[-1] = receive_symbol_decoder
+
+        # Initialize receive signal coding configuration
+        if isinstance(receive_signal_coding, ReceiveSignalCoding):
+            self.__receive_signal_coding = receive_signal_coding
+        else:
+            self.__receive_signal_coding = ReceiveSignalCoding()
+        if receive_signal_coding is not None:
+            for receive_signal_decoder in receive_signal_coding:
+                self.__receive_signal_coding[-1] = receive_signal_decoder
 
     @property
     def receive_signal_coding(self) -> ReceiveSignalCoding:
@@ -1062,17 +1215,40 @@ class ReceivingModemBase(Generic[CWT], BaseModem[CWT]):
         reception = CommunicationReception(signal=signal, frames=frames)
         return reception
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        BaseModem.serialize(self, process)
+        process.serialize_object_sequence(self.receive_symbol_coding, "receive_symbol_coding")
+        process.serialize_object_sequence(self.receive_signal_coding, "receive_signal_coding")
+
+    @classmethod
+    @override
+    def _DeserializeParameters(cls, process: DeserializationProcess) -> dict[str, object]:
+        parameters = BaseModem._DeserializeParameters(process)
+        parameters["receive_symbol_coding"] = process.deserialize_object_sequence(
+            "receive_symbol_coding", ReceiveSymbolDecoder
+        )
+        parameters["receive_signal_coding"] = process.deserialize_object_sequence(
+            "receive_signal_coding", ReceiveStreamDecoder
+        )
+        return parameters
+
 
 class ReceivingModem(
     ReceivingModemBase[CommunicationWaveform], Receiver[CommunicationReception], Serializable
 ):
     """Representation of a wireless modem exclusively receiving."""
 
-    yaml_tag = "RxModem"
-    """YAML serialization tag"""
-
     def __init__(
-        self, *args, selected_receive_ports: Sequence[int] | None = None, **kwargs
+        self,
+        selected_receive_ports: Sequence[int] | None = None,
+        carrier_frequency: float | None = None,
+        receive_symbol_coding: ReceiveSymbolCoding | Sequence[ReceiveSymbolDecoder] | None = None,
+        receive_signal_coding: ReceiveSignalCoding | Sequence[ReceiveStreamDecoder] | None = None,
+        encoding: EncoderManager | Sequence[Encoder] | None = None,
+        waveform: CommunicationWaveform | None = None,
+        frame_generator: FrameGenerator | None = None,
+        seed: int | None = None,
     ) -> None:
         """
         Args:
@@ -1081,44 +1257,84 @@ class ReceivingModem(
                 Indices of antenna ports selected for reception from the operated :class:`Device's<Device>` antenna array.
                 If not specified, all available antenna ports will be considered.
 
-            *args, \**kwargs:
-                Modem initialization parameters.
-                Refer to :class:`ReceivingModemBase` for further details.
+            carrier_frequency (float, optional):
+                Carrier frequency of the received communication signal.
+
+            receive_symbol_coding (ReceiveSymbolCoding, optional):
+                Complex communication symbol coding configuration during reception.
+
+            receive_signal_coding (ReceiveSignalCoding, optional):
+                Stream MIMO coding configuration during signal reception.
+
+            encoding (EncoderManager, optional):
+                Bit coding configuration.
+
+            waveform (CommunicationWaveform, optional):
+                The waveform to be received by this modem.
+
+            frame_generator (FrameGenerator, optional):
+                Frame generator used to pack and unpack communication frames.
+                If not specified, a stub generator will be assumed.
+
+            seed (int, optional):
+                Seed used to initialize the pseudo-random number generator.
         """
 
         # Initialize base classes
         # Note that the initialization order matters here
-        Receiver.__init__(self, selected_receive_ports=selected_receive_ports)
-        ReceivingModemBase.__init__(self, *args, **kwargs)
+        Receiver.__init__(self, seed, selected_receive_ports, carrier_frequency)
+        ReceivingModemBase.__init__(
+            self,
+            receive_symbol_coding,
+            receive_signal_coding,
+            encoding,
+            waveform,
+            frame_generator,
+            seed,
+        )
         Serializable.__init__(self)
 
     @property
     def power(self) -> float:
         return self.waveform.power if self.waveform is not None else 0.0
 
-    def _recall_reception(self, group: Group) -> CommunicationReception:
-        return CommunicationReception.from_HDF(group)
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        ReceivingModemBase.serialize(self, process)
+        Receiver.serialize(self, process)
+
+    @classmethod
+    @override
+    def _DeserializeParameters(cls, process: DeserializationProcess) -> dict[str, object]:
+        parameters = ReceivingModemBase._DeserializeParameters(process)
+        parameters.update(Receiver._DeserializeParameters(process))
+        return parameters
 
 
 class DuplexModem(TransmittingModem, ReceivingModem):
     """Representation of a wireless modem simultaneously transmitting and receiving."""
 
-    yaml_tag = "Modem"
-
     def __init__(
         self,
-        *args,
-        bits_source: BitsSource | None = None,
         selected_transmit_ports: Sequence[int] | None = None,
         selected_receive_ports: Sequence[int] | None = None,
-        **kwargs,
+        carrier_frequency: float | None = None,
+        bits_source: BitsSource | None = None,
+        transmit_symbol_coding: (
+            TransmitSymbolCoding | Sequence[TransmitSymbolEncoder] | None
+        ) = None,
+        receive_symbol_coding: ReceiveSymbolCoding | Sequence[ReceiveSymbolDecoder] | None = None,
+        transmit_signal_coding: (
+            TransmitSignalCoding | Sequence[TransmitStreamEncoder] | None
+        ) = None,
+        receive_signal_coding: ReceiveSignalCoding | Sequence[ReceiveStreamDecoder] | None = None,
+        encoding: EncoderManager | Sequence[Encoder] | None = None,
+        waveform: CommunicationWaveform | None = None,
+        frame_generator: FrameGenerator | None = None,
+        seed: int | None = None,
     ) -> None:
         """
         Args:
-
-            bits_source (BitsSource, optional):
-                Source configuration of communication bits transmitted by this modem.
-                Bits are randomly generated by default.
 
             selected_transmit_ports (Sequence[int] | None):
                 Indices of antenna ports selected for transmission from the operated :class:`Device's<Device>` antenna array.
@@ -1128,41 +1344,100 @@ class DuplexModem(TransmittingModem, ReceivingModem):
                 Indices of antenna ports selected for reception from the operated :class:`Device's<Device>` antenna array.
                 If not specified, all available ports will be considered.
 
-            *args, \**kwargs:
-                Modem initialization parameters.
-                Refer to :class:`TransmittingModem` and :class:`ReceivingModem` for further details.
+            carrier_frequency (float, optional):
+                Carrier frequency of the transmitted and received communication signals.
+
+            bits_source (BitsSource, optional):
+                Source configuration of communication bits transmitted by this modem.
+                Bits are randomly generated by default.
+
+            transmit_symbol_coding (TransmitSymbolCoding, optional):
+                Complex communication symbol coding configuration during transmission.
+
+            receive_symbol_coding (ReceiveSymbolCoding, optional):
+                Complex communication symbol coding configuration during reception.
+
+            transmit_signal_coding (TransmitSignalCoding, optional):
+                Stream MIMO coding configuration during signal transmission.
+
+            receive_signal_coding (ReceiveSignalCoding, optional):
+                Stream MIMO coding configuration during signal reception.
+
+            encoding (EncoderManager, optional):
+                Bit coding configuration.
+
+            waveform (CommunicationWaveform, optional):
+                The comminication waveform to be transmitted and received by this modem.
+
+            frame_generator (FrameGenerator, optional):
+                Frame generator used to pack and unpack communication frames.
+
+            seed (int, optional):
+                Seed used to initialize the pseudo-random number generator.
         """
 
         # Initialize base classes
-        ReceivingModem.__init__(self, selected_receive_ports=selected_receive_ports, **kwargs)
+        ReceivingModem.__init__(
+            self,
+            selected_receive_ports,
+            carrier_frequency,
+            receive_symbol_coding,
+            receive_signal_coding,
+            encoding,
+            waveform,
+            frame_generator,
+            seed,
+        )
         TransmittingModem.__init__(
             self,
-            *args,
-            bits_source=bits_source,
-            selected_transmit_ports=selected_transmit_ports,
-            **kwargs,
+            selected_transmit_ports,
+            carrier_frequency,
+            bits_source,
+            transmit_symbol_coding,
+            transmit_signal_coding,
+            encoding,
+            waveform,
+            frame_generator,
+            seed,
         )
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        TransmittingModem.serialize(self, process)
+        ReceivingModem.serialize(self, process)
+
+    @classmethod
+    @override
+    def _DeserializeParameters(cls, process: DeserializationProcess) -> dict[str, object]:
+        parameters = TransmittingModem._DeserializeParameters(process)
+        parameters.update(ReceivingModem._DeserializeParameters(process))
+        return parameters
 
 
 class SimplexLink(TransmittingModem, ReceivingModem):
     """Convenience class to manage a simplex communication link between two dedicated devices."""
 
-    yaml_tag = "SimplexLink"
-
     def __init__(
         self,
-        *args,
-        bits_source: BitsSource | None = None,
         selected_transmit_ports: Sequence[int] | None = None,
         selected_receive_ports: Sequence[int] | None = None,
-        **kwargs,
+        carrier_frequency: float | None = None,
+        bits_source: BitsSource | None = None,
+        transmit_symbol_coding: (
+            TransmitSymbolCoding | Sequence[TransmitSymbolEncoder] | None
+        ) = None,
+        receive_symbol_coding: ReceiveSymbolCoding | Sequence[ReceiveSymbolDecoder] | None = None,
+        transmit_signal_coding: (
+            TransmitSignalCoding | Sequence[TransmitStreamEncoder] | None
+        ) = None,
+        receive_signal_coding: ReceiveSignalCoding | Sequence[ReceiveStreamDecoder] | None = None,
+        encoding: EncoderManager | Sequence[Encoder] | None = None,
+        waveform: CommunicationWaveform | None = None,
+        frame_generator: FrameGenerator | None = None,
+        seed: int | None = None,
     ) -> None:
         """
         Args:
-
-            bits_source (BitsSource, optional):
-                Source configuration of communication bits transmitted by this modem.
-                Bits are randomly generated by default.
 
             selected_transmit_ports (Sequence[int] | None):
                 Indices of antenna ports selected for transmission from the operated :class:`Device's<Device>` antenna array.
@@ -1172,16 +1447,62 @@ class SimplexLink(TransmittingModem, ReceivingModem):
                 Indices of antenna ports selected for reception from the operated :class:`Device's<Device>` antenna array.
                 If not specified, all available ports will be considered.
 
-            *args, \**kwargs:
-                Modem initialization parameters.
-                Refer to :class:`TransmittingModem` and :class:`ReceivingModem` for further details.
+            carrier_frequency (float, optional):
+                Carrier frequency of the transmitted and received communication signals.
+
+            bits_source (BitsSource, optional):
+                Source configuration of communication bits transmitted by this modem.
+                Bits are randomly generated by default.
+
+            transmit_symbol_coding (TransmitSymbolCoding, optional):
+                Complex communication symbol coding configuration during transmission.
+
+            receive_symbol_coding (ReceiveSymbolCoding, optional):
+                Complex communication symbol coding configuration during reception.
+
+            transmit_signal_coding (TransmitSignalCoding, optional):
+                Stream MIMO coding configuration during signal transmission.
+
+            receive_signal_coding (ReceiveSignalCoding, optional):
+                Stream MIMO coding configuration during signal reception.
+
+            encoding (EncoderManager, optional):
+                Bit coding configuration.
+
+            waveform (CommunicationWaveform, optional):
+                The waveform to be transmitted by this modem.
+
+            frame_generator (FrameGenerator, optional):
+                Frame generator used to pack and unpack communication frames.
+                If not specified, a stub generator will be assumed.
+
+            seed (int, optional):
+                Seed used to initialize the pseudo-random number generator.
         """
 
-        TransmittingModem.__init__(
-            self, bits_source=bits_source, selected_transmit_ports=selected_transmit_ports, **kwargs
-        )
+        # Initialize base classes
         ReceivingModem.__init__(
-            self, *args, selected_receive_ports=selected_receive_ports, **kwargs
+            self,
+            selected_receive_ports,
+            carrier_frequency,
+            receive_symbol_coding,
+            receive_signal_coding,
+            encoding,
+            waveform,
+            frame_generator,
+            seed,
+        )
+        TransmittingModem.__init__(
+            self,
+            selected_transmit_ports,
+            carrier_frequency,
+            bits_source,
+            transmit_symbol_coding,
+            transmit_signal_coding,
+            encoding,
+            waveform,
+            frame_generator,
+            seed,
         )
 
     def connect(self, transmitting_device: Device, receiving_device: Device) -> None:
@@ -1200,3 +1521,15 @@ class SimplexLink(TransmittingModem, ReceivingModem):
 
         transmitting_device.transmitters.add(self)
         receiving_device.receivers.add(self)
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        TransmittingModem.serialize(self, process)
+        ReceivingModem.serialize(self, process)
+
+    @classmethod
+    @override
+    def _DeserializeParameters(cls, process: DeserializationProcess) -> dict[str, object]:
+        parameters = TransmittingModem._DeserializeParameters(process)
+        parameters.update(ReceivingModem._DeserializeParameters(process))
+        return parameters

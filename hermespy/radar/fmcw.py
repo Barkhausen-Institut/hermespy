@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 from fractions import Fraction
+from typing_extensions import override
 
 import numpy as np
 from scipy.constants import speed_of_light, pi
 from scipy.fft import fft2
 from scipy import signal
 
-from hermespy.core import Signal, Serializable
+from hermespy.core import Signal, SerializationProcess
 from .radar import RadarWaveform
 
 __author__ = "Jan Adler"
@@ -21,7 +22,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class FMCW(RadarWaveform, Serializable):
+class FMCW(RadarWaveform):
     """
     Frequency Modulated Continuous Waveform Radar Sensing with stretch processing.
 
@@ -38,8 +39,10 @@ class FMCW(RadarWaveform, Serializable):
         :lines: 03-23
     """
 
-    yaml_tag = "Radar-FMCW"
-
+    __DEFAULT_NUM_CHIRPS = 10
+    __DEFAULT_BANDWIDTH = 0.1e9
+    __DEFAULT_CHIRP_DURATION = 1.5e-6
+    __DEFAULT_PULSE_REP_INTERVAL = 1.5e-6
     __DERIVE_SAMPLING_RATE: float = 0.0
     """Magic number at which FMCW waveforms will automatically derive the sampling rates."""
 
@@ -52,10 +55,10 @@ class FMCW(RadarWaveform, Serializable):
 
     def __init__(
         self,
-        num_chirps: int = 10,
-        bandwidth: float = 0.1e9,
-        chirp_duration: float = 1.5e-6,
-        pulse_rep_interval: float = 1.5e-6,
+        num_chirps: int = __DEFAULT_NUM_CHIRPS,
+        bandwidth: float = __DEFAULT_BANDWIDTH,
+        chirp_duration: float = __DEFAULT_CHIRP_DURATION,
+        pulse_rep_interval: float = __DEFAULT_PULSE_REP_INTERVAL,
         sampling_rate: float | None = None,
         adc_sampling_rate: float | None = None,
     ) -> None:
@@ -141,27 +144,32 @@ class FMCW(RadarWaveform, Serializable):
         return np.abs(transform)
 
     @property
+    @override
     def max_range(self) -> float:
         max_range = self.adc_sampling_rate * speed_of_light / (2 * self.slope)
         return max_range
 
     @property
+    @override
     def range_resolution(self) -> float:
         return speed_of_light / (2 * self.bandwidth)
 
     @property
+    @override
     def max_relative_doppler(self) -> float:
         # The maximum velocity is the wavelength divided by four times the pulse repetition interval
         max_doppler = 1 / (4 * self.pulse_rep_interval)
         return max_doppler
 
     @property
+    @override
     def relative_doppler_resolution(self) -> float:
         # The doppler resolution is the inverse of twice the frame duration
         resolution = 1 / (2 * self.frame_duration)
         return resolution
 
     @property
+    @override
     def relative_doppler_bins(self) -> np.ndarray:
         return (
             np.arange(self.num_chirps) * self.relative_doppler_resolution
@@ -169,6 +177,7 @@ class FMCW(RadarWaveform, Serializable):
         )
 
     @property
+    @override
     def frame_duration(self) -> float:
         return self.pulse_rep_interval * self.num_chirps
 
@@ -366,3 +375,24 @@ class FMCW(RadarWaveform, Serializable):
 
         frame = np.tile(self.__pulse_prototype(), self.num_chirps)
         return frame
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_integer(self.num_chirps, "num_chirps")
+        process.serialize_floating(self.bandwidth, "bandwidth")
+        process.serialize_floating(self.chirp_duration, "chirp_duration")
+        process.serialize_floating(self.pulse_rep_interval, "pulse_rep_interval")
+        process.serialize_floating(self.sampling_rate, "sampling_rate")
+        process.serialize_floating(self.adc_sampling_rate, "adc_sampling_rate")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process):
+        return cls(
+            process.deserialize_integer("num_chirps", cls.__DEFAULT_NUM_CHIRPS),
+            process.deserialize_floating("bandwidth", cls.__DEFAULT_BANDWIDTH),
+            process.deserialize_floating("chirp_duration", cls.__DEFAULT_CHIRP_DURATION),
+            process.deserialize_floating("pulse_rep_interval", cls.__DEFAULT_PULSE_REP_INTERVAL),
+            process.deserialize_floating("sampling_rate", cls.__DERIVE_SAMPLING_RATE),
+            process.deserialize_floating("adc_sampling_rate", cls.__DERIVE_SAMPLING_RATE),
+        )

@@ -2,9 +2,18 @@
 
 from __future__ import annotations
 from abc import abstractmethod
-from typing import Generic, TypeVar
+from sys import maxsize
+from typing import Generic, Type, TypeVar
+from typing_extensions import override
 
-from hermespy.core import RandomNode, RandomRealization, Serializable, Signal
+from hermespy.core import (
+    RandomNode,
+    RandomRealization,
+    Serializable,
+    Signal,
+    SerializationProcess,
+    DeserializationProcess,
+)
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -21,20 +30,20 @@ class NoiseRealization(RandomRealization):
 
     __power: float
 
-    def __init__(self, noise: NoiseModel, power: float) -> None:
+    def __init__(self, power: float, seed: int) -> None:
         """
         Args:
 
-            noise (Noise): Noise model to be realized.
             power (float): Power indicator of the noise model.
+            seed (int): Seed for the random number generator.
         """
 
         # Validate attributes
-        if power < 0:
+        if power < 0.0:
             raise ValueError("Noise power of a noise realization must be non-negative.")
 
         # Initialize base class
-        RandomRealization.__init__(self, noise)
+        RandomRealization.__init__(self, seed)
 
         # Initialize attributes
         self.__power = power
@@ -59,12 +68,32 @@ class NoiseRealization(RandomRealization):
         """
         ...  # pragma: no cover
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        RandomRealization.serialize(self, process)
+        process.serialize_floating(self.power, "power")
+
+    @classmethod
+    @override
+    def _DeserializeParameters(cls, process: DeserializationProcess) -> dict[str, object]:
+        params = RandomRealization._DeserializeParameters(process)
+        params["power"] = process.deserialize_floating("power")
+        return params
+
+    @classmethod
+    @override
+    def Deserialize(
+        cls: Type[NoiseRealization], process: DeserializationProcess
+    ) -> NoiseRealization:
+        params = cls._DeserializeParameters(process)
+        return cls(**params)  # type: ignore[arg-type]
+
 
 NRT = TypeVar("NRT", bound=NoiseRealization)
 """Type of noise realization"""
 
 
-class NoiseModel(RandomNode, Generic[NRT]):
+class NoiseModel(Serializable, RandomNode, Generic[NRT]):
     """Noise modeling base class."""
 
     def __init__(self, seed: int | None = None) -> None:
@@ -127,11 +156,8 @@ class AWGNRealization(NoiseRealization):
         return noisy_signal
 
 
-class AWGN(Serializable, NoiseModel[AWGNRealization]):
+class AWGN(NoiseModel[AWGNRealization]):
     """Additive White Gaussian Noise."""
-
-    yaml_tag = "AWGN"
-    property_blacklist = {"random_mother"}
 
     def __init__(self, seed: int | None = None) -> None:
         """
@@ -141,7 +167,16 @@ class AWGN(Serializable, NoiseModel[AWGNRealization]):
                 Random seed for initializating the pseud-random number generator.
         """
 
-        NoiseModel.__init__(self, seed=seed)
+        NoiseModel.__init__(self, seed)
 
     def realize(self, power: float) -> AWGNRealization:
-        return AWGNRealization(self, power)
+        return AWGNRealization(power, self._rng.integers(0, maxsize))
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        return
+
+    @override
+    @classmethod
+    def Deserialize(cls: Type[AWGN], process: DeserializationProcess) -> AWGN:
+        return cls()

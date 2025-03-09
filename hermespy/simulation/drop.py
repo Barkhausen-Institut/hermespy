@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from typing import List, Sequence, Type
+from typing import Sequence, Type
 
-from h5py import Group
-
-from hermespy.channel import Channel, ChannelRealization
-from hermespy.core import Device, Drop
+from hermespy.channel import ChannelRealization
+from hermespy.core import DeserializationProcess, Drop, SerializationProcess
 from .simulated_device import SimulatedDeviceReception, SimulatedDeviceTransmission
 
 __author__ = "Jan Adler"
@@ -60,64 +58,16 @@ class SimulatedDrop(Drop[SimulatedDeviceTransmission, SimulatedDeviceReception])
 
         return self.__channel_realizations
 
-    def to_HDF(self, group: Group) -> None:
-        # Serialize attributes
-        group.attrs["timestamp"] = self.timestamp
-        group.attrs["num_transmissions"] = self.num_device_transmissions
-        group.attrs["num_receptions"] = self.num_device_receptions
-        group.attrs["num_devices"] = self.num_device_transmissions
-
-        # Serialize groups
-        for t, transmission in enumerate(self.device_transmissions):
-            transmission.to_HDF(self._create_group(group, f"transmission_{t:02d}"))
-
-        for r, reception in enumerate(self.device_receptions):
-            reception.to_HDF(self._create_group(group, f"reception_{r:02d}"))
-
-        for cr, channel_realization in enumerate(self.channel_realizations):
-            realization_group = self._create_group(group, f"channel_realization_{cr:02d}")
-            channel_realization.to_HDF(realization_group)
+    def serialize(self, process: SerializationProcess) -> None:
+        Drop.serialize(self, process)
+        process.serialize_object_sequence(self.__channel_realizations, "channel_realizations")
 
     @classmethod
-    def from_HDF(
-        cls: Type[SimulatedDrop],
-        group: Group,
-        devices: Sequence[Device] | None = None,
-        channels: Sequence[Channel] | None = None,
-    ) -> SimulatedDrop:
-        """Recall a simulated drop from a HDF5 group.
-
-        Args:
-
-            group (Group): The HDF5 group containing the serialized drop.
-            devices (Sequence[Device], optional): The devices participating in the scenario.
-            channels (Sequence[Channel], optional): The channels used in the scenario.
-        """
-
-        # Recall attributes
-        timestamp = group.attrs.get("timestamp", 0.0)
-        num_transmissions = group.attrs.get("num_transmissions", 0)
-        num_receptions = group.attrs.get("num_receptions", 0)
-        num_devices = group.attrs.get("num_devices", 1)
-        _devices = [None] * num_devices if devices is None else devices
-
-        # Recall groups
-        transmissions = [
-            SimulatedDeviceTransmission.from_HDF(
-                group[f"transmission_{t:02d}"], None if d is None else list(d.transmitters)
-            )
-            for t, d in zip(range(num_transmissions), _devices)
-        ]
-        receptions = [
-            SimulatedDeviceReception.from_HDF(
-                group[f"reception_{r:02d}"], None if d is None else list(d.receivers)
-            )
-            for r, d in zip(range(num_receptions), _devices)
-        ]
-
-        channel_realizations: List[ChannelRealization] = []
-        for c, channel in enumerate(channels):
-            realization = channel.recall_realization(group[f"channel_realization_{c:02d}"])
-            channel_realizations.append(realization)
-
-        return SimulatedDrop(timestamp, transmissions, channel_realizations, receptions)
+    def Deserialize(cls: Type[SimulatedDrop], process: DeserializationProcess) -> SimulatedDrop:
+        drop = Drop.Deserialize(process)
+        channel_realizations = process.deserialize_object_sequence(
+            "channel_realiations", ChannelRealization
+        )
+        return SimulatedDrop(
+            drop.timestamp, drop.device_transmissions, channel_realizations, drop.device_receptions
+        )

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from unittest import TestCase
-from unittest.mock import Mock
 
 import numpy as np
 from numpy.random import default_rng
@@ -9,6 +8,7 @@ from numpy.testing import assert_array_almost_equal
 
 from hermespy.core import Signal
 from hermespy.simulation import ImpedanceCoupling, SimulatedDevice
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -138,3 +138,8 @@ class TestImpedanceCoupling(TestCase):
         rx = self.coupling.receive(tx)
 
         assert_array_almost_equal(signal.getitem(), rx.getitem())
+
+    def test_serialization(self) -> None:
+        """Test serialization"""
+
+        test_roundtrip_serialization(self, self.coupling, {'device'})

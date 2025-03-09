@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
+from typing_extensions import override
 
 import numpy as np
 
 from hermespy.core.signal_model import Signal
-from hermespy.core.factory import Serializable
+from hermespy.core.factory import Serializable, SerializationProcess, DeserializationProcess
 from .analog_digital_converter import AnalogDigitalConverter
 from .phase_noise import PhaseNoise, NoPhaseNoise
 from .power_amplifier import PowerAmplifier
@@ -22,8 +23,6 @@ __status__ = "Prototype"
 
 class RfChain(Serializable):
     """Radio-frequency (RF) chain model."""
-
-    yaml_tag = "RfChain"
 
     __phase_offset: float
     __amplitude_imbalance: float
@@ -170,7 +169,7 @@ class RfChain(Serializable):
         return input_signal
 
     @property
-    def power_amplifier(self) -> PowerAmplifier:
+    def power_amplifier(self) -> PowerAmplifier | None:
         """Access the `PowerAmplifier` of the rf chain.
 
         Returns:
@@ -180,7 +179,7 @@ class RfChain(Serializable):
         return self.__power_amplifier
 
     @power_amplifier.setter
-    def power_amplifier(self, value: PowerAmplifier) -> None:
+    def power_amplifier(self, value: PowerAmplifier | None) -> None:
         self.__power_amplifier = value
 
     @property
@@ -192,3 +191,23 @@ class RfChain(Serializable):
     @phase_noise.setter
     def phase_noise(self, value: PhaseNoise) -> None:
         self.__phase_noise = value
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_floating(self.__phase_offset, "phase_offset")
+        process.serialize_floating(self.__amplitude_imbalance, "amplitude_imbalance")
+        process.serialize_object(self.__adc, "adc")
+        if self.__power_amplifier is not None:
+            process.serialize_object(self.__power_amplifier, "power_amplifier")
+        process.serialize_object(self.__phase_noise, "phase_noise")
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> RfChain:
+        return RfChain(
+            process.deserialize_floating("phase_offset", None),
+            process.deserialize_floating("amplitude_imbalance", None),
+            process.deserialize_object("adc", AnalogDigitalConverter, None),
+            process.deserialize_object("power_amplifier", PowerAmplifier, None),
+            process.deserialize_object("phase_noise", PhaseNoise, None),
+        )

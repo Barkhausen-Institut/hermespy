@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 from typing import Type, TYPE_CHECKING
+from typing_extensions import override
 
 import numpy as np
 from scipy.signal import convolve
 from scipy.fft import ifft
 
-from hermespy.core import Serializable, Signal
+from hermespy.core import Serializable, Signal, SerializationProcess, DeserializationProcess
 from .isolation import Isolation
 
 if TYPE_CHECKING:
@@ -24,10 +25,8 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class SelectiveLeakage(Serializable, Isolation):
+class SelectiveLeakage(Isolation):
     """Model of frequency-selective transmit-receive leakage."""
-
-    yaml_tag = "SelectiveLeakage"
 
     __leakage_response: np.ndarray  # Impulse response of the leakage model
 
@@ -126,3 +125,12 @@ class SelectiveLeakage(Serializable, Isolation):
             )[:num_leaked_samples]
 
         return signal.from_ndarray(leaking_samples)
+
+    @override
+    def serialize(self, serialization_process: SerializationProcess) -> None:
+        serialization_process.serialize_array(self.__leakage_response, "leakage_response")
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> SelectiveLeakage:
+        return cls(process.deserialize_array("leakage_response", np.complex128))

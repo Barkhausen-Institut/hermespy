@@ -91,7 +91,7 @@ class TestRecordReplay(TestCase):
         expected_drops = self._record()
 
         # Initialize scenario from recording and replay drops
-        replay_scenario = SimulationScenario.Replay(self.file)
+        replay_scenario, _ = SimulationScenario.Replay(self.file)
         for expected_drop in expected_drops:
 
             replayed_drop = replay_scenario.drop()

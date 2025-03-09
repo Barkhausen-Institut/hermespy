@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 from typing import Set, Tuple
+from typing_extensions import override
 
-from h5py import Group
-
-from hermespy.core import HDFSerializable
+from hermespy.core import DeserializationProcess, SerializationProcess
 from ..channel import ChannelSampleHook, LinkState
 from ..consistent import ConsistentGenerator, ConsistentRealization, ConsistentUniform
 from .delay import DelayChannelBase, DelayChannelRealization, DelayChannelSample
@@ -25,6 +24,10 @@ class RandomDelayChannelRealization(DelayChannelRealization):
 
     Generated from :class:`RandomDelayChannel's<RandomDelayChannel>` :meth:`_realize<RandomDelayChannel._realize>` routine.
     """
+
+    __consistent_realization: ConsistentRealization
+    __delay_variable: ConsistentUniform
+    __delay: float | Tuple[float, float]
 
     def __init__(
         self,
@@ -80,50 +83,39 @@ class RandomDelayChannelRealization(DelayChannelRealization):
         # Generate a sample
         return DelayChannelSample(delay, self.model_propagation_loss, self.gain, state)
 
-    def to_HDF(self, group: Group) -> None:
-        # Serialize base class
-        DelayChannelRealization.to_HDF(self, group)
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_object(self.__consistent_realization, "consistent_realization")
+        process.serialize_object(self.__delay_variable, "delay_variable")
+        process.serialize_range(self.__delay, "delay")
+        DelayChannelRealization.serialize(self, process)
 
-        # Serialize attributes
-        self.__consistent_realization.to_HDF(
-            HDFSerializable._create_group(group, "consistent_realization")
-        )
-        HDFSerializable._range_to_HDF(group, "delay", self.__delay)
-
-    @staticmethod
-    def From_HDF(
-        group: Group,
-        delay_variable: ConsistentUniform,
-        sample_hooks: Set[ChannelSampleHook[DelayChannelSample]],
-    ) -> RandomDelayChannelRealization:
-
-        # Deserialize attributes
-        consistent_realization = ConsistentRealization.from_HDF(group["consistent_realization"])
-        delay = HDFSerializable._range_from_HDF(group, "delay")
-
-        # Return the realization
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> RandomDelayChannelRealization:
         return RandomDelayChannelRealization(
-            consistent_realization,
-            delay_variable,
-            delay,
-            group.attrs["model_propagation_loss"],
-            sample_hooks,
-            group.attrs["gain"],
+            process.deserialize_object("consistent_realization", ConsistentRealization),
+            process.deserialize_object("delay_variable", ConsistentUniform),
+            process.deserialize_range("delay"),
+            sample_hooks=set(),
+            **DelayChannelRealization._DeserializeParameters(process),  # type: ignore[arg-type]
         )
 
 
 class RandomDelayChannel(DelayChannelBase[RandomDelayChannelRealization]):
     """Delay channel assuming random propagation delays."""
 
-    yaml_tag: str = "RandomDelay"
+    __DEFAULT_DECORRELATION_DISTANCE = float("inf")
 
     __delay: float | Tuple[float, float]
 
     def __init__(
         self,
         delay: float | Tuple[float, float],
-        decorrelation_distance: float = float("inf"),
-        **kwargs,
+        decorrelation_distance: float = __DEFAULT_DECORRELATION_DISTANCE,
+        model_propagation_loss: bool = True,
+        gain: float = DelayChannelBase._DEFAULT_GAIN,
+        seed: int | None = None,
     ) -> None:
         """
         Args:
@@ -137,12 +129,20 @@ class RandomDelayChannel(DelayChannelBase[RandomDelayChannelRealization]):
                 Distance in meters at which the channel decorrelates.
                 By default, the channel is assumed to be static in space.
 
-            **kwargs:
-                :class:`.Channel` base class initialization parameters.
+            model_propagation_loss (bool, optional):
+                Should free space propagation loss be modeled?
+                Enabled by default.
+
+            gain (float, optional):
+                Linear power gain factor a signal experiences when being propagated over this realization.
+                :math:`1.0` by default.
+
+            seed (int, optional):
+                Seed used to initialize the pseudo-random number generator.
         """
 
         # Initialize base class
-        DelayChannelBase.__init__(self, **kwargs)
+        DelayChannelBase.__init__(self, model_propagation_loss, gain, seed)
 
         # Store attributes
         self.delay = delay
@@ -223,7 +223,20 @@ class RandomDelayChannel(DelayChannelBase[RandomDelayChannelRealization]):
             self.gain,
         )
 
-    def recall_realization(self, group: Group) -> RandomDelayChannelRealization:
-        return RandomDelayChannelRealization.From_HDF(
-            group, self.__delay_variable, self.sample_hooks
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_object(self.__delay_variable, "delay_variable")
+        process.serialize_range(self.delay, "delay")
+        process.serialize_floating(self.__decorrelation_distance, "decorrelation_distance")
+        DelayChannelBase.serialize(self, process)
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> RandomDelayChannel:
+        return RandomDelayChannel(
+            process.deserialize_range("delay"),
+            process.deserialize_floating(
+                "decorrelation_distance", cls.__DEFAULT_DECORRELATION_DISTANCE
+            ),
+            **DelayChannelBase._DeserializeParameters(process),  # type: ignore[arg-type]
         )

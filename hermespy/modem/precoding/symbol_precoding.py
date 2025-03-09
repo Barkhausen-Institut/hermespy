@@ -114,8 +114,6 @@ class TransmitSymbolCoding(TransmitPrecoding[TransmitSymbolEncoder], Serializabl
     Transmit symbol precoding occurs as an intermediate step between bit-mapping and base-band symbol modulation.
     """
 
-    yaml_tag = "TransmitSymbolCoding"
-
     def encode_symbols(self, symbols: StatedSymbols, num_output_streams: int) -> StatedSymbols:
         """Encode a data stream before transmission.
 
@@ -172,8 +170,6 @@ class ReceiveSymbolCoding(ReceivePrecoding[ReceiveSymbolDecoder], Serializable):
 
     Receive symbol precoding occurs as an intermediate step between base-band demodulation and bit unmapping.
     """
-
-    yaml_tag = "ReceiveSymbolCoding"
 
     def decode_symbols(self, symbols: StatedSymbols) -> StatedSymbols:
         """Decode a data stream before reception.

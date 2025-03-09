@@ -5,9 +5,12 @@ UHD System
 ==========
 """
 
+from typing import Type
+from typing_extensions import override
+
 from usrp_client import System as _UsrpSystem
 
-from hermespy.core import Serializable, Signal
+from hermespy.core import Signal
 from .usrp import UsrpDevice
 from ..physical_device import PDT
 from ..scenario import PhysicalScenario
@@ -22,17 +25,19 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class UsrpSystem(Serializable, PhysicalScenario[UsrpDevice]):
+class UsrpSystem(PhysicalScenario[UsrpDevice]):
     """Scenario of USRPs running the UHD server application."""
-
-    yaml_tag = "UsrpSystem"
-    """YAML serialization tag"""
 
     def __init__(self, *args, **kwargs) -> None:
         PhysicalScenario.__init__(self, *args, **kwargs)
 
         # Hacked USRP system (hidden)
         self.__system = _UsrpSystem()
+
+    @classmethod
+    @override
+    def _device_type(cls) -> Type[UsrpDevice]:
+        return UsrpDevice
 
     def new_device(self, ip: str, port: int = 5555, *args, **kwargs) -> UsrpDevice:
         """Create a new UHD device managed by the system.

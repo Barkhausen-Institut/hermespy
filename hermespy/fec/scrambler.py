@@ -13,11 +13,11 @@ i.e. the code rate is usually :math:`R = 1`.
 
 from __future__ import annotations
 from collections import deque
-from typing import Optional
+from typing_extensions import override
 
 import numpy as np
 
-from hermespy.core import Serializable
+from hermespy.core import Serializable, SerializationProcess, DeserializationProcess
 from .coding import Encoder
 
 __author__ = "Jan Adler"
@@ -132,13 +132,11 @@ class Scrambler3GPP(Encoder, Serializable):
     See section 7.3.1.1 of the respective technical standard :footcite:t:`2018:ts138211` for details.
     """
 
-    yaml_tag: str = "SCRAMBLER_3GPP"
-
     __transmit_rng: PseudoRandomGenerator
     __receive_rng: PseudoRandomGenerator
     __default_seed = np.array([0, 1, 0, 1, 1, 0, 1], int)
 
-    def __init__(self, seed: Optional[np.ndarray] = None) -> None:
+    def __init__(self, seed: np.ndarray | None = None) -> None:
         """
         Args:
 
@@ -176,6 +174,15 @@ class Scrambler3GPP(Encoder, Serializable):
     def code_block_size(self) -> int:
         return 1
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        return
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> Scrambler3GPP:
+        return cls()
+
 
 class Scrambler80211a(Encoder, Serializable):
     """Scrambler channel coding in the the `802.11a` standard.
@@ -183,13 +190,11 @@ class Scrambler80211a(Encoder, Serializable):
     Refer to section 17.3.5.4 of :footcite:t:`80211a:1999` for further details.
     """
 
-    yaml_tag: str = "SCRAMBLER_80211A"
-
     __seed: np.ndarray
     __queue: deque
     __default_seed: np.ndarray = np.array([0, 1, 0, 1, 1, 0, 1], dtype=int)
 
-    def __init__(self, seed: Optional[np.ndarray] = None) -> None:
+    def __init__(self, seed: np.ndarray | None = None) -> None:
         """
         Args:
 
@@ -277,3 +282,12 @@ class Scrambler80211a(Encoder, Serializable):
     @property
     def code_block_size(self) -> int:
         return 1
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        return
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> Scrambler80211a:
+        return cls()

@@ -3,13 +3,13 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Tuple, List, Dict
+from typing_extensions import override
 
 import numpy as np
-from h5py import Group
 from scipy.optimize import bisect
 from scipy.stats import norm
 
-from hermespy.core import HDFSerializable, RandomNode
+from hermespy.core import DeserializationProcess, Serializable, SerializationProcess, RandomNode
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -21,26 +21,31 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class ConsistentVariable(ABC):
+class ConsistentVariable(ABC, Serializable):
     """Base class for spatially consistent random variables."""
+
+    _DEFAULT_OFFSET = 0
 
     __shape: Tuple[int, ...]
     __offset: int
     __size: int
 
-    def __init__(
-        self, generator: ConsistentGenerator, shape: Tuple[int, ...] | None = None
-    ) -> None:
+    def __init__(self, shape: Tuple[int, ...], offset: int = _DEFAULT_OFFSET) -> None:
         """
         Args:
-            generator (ConsistentGenerator): Generator to which this variable belongs.
-            shape (Tuple[int, ...] | None, optional): Shape of the output array. Scalar by default.
+            shape (Tuple[int, ...]):
+                Shape of the output array
+
+            offset (int, optional):
+                Offset of the variable within its generator.
+                Defaults to zero.
+                Adding a variable to a generator will change the offset.
         """
 
         # Initialize attributes
         self.__shape = (1,) if shape is None else shape
         self.__size = int(np.prod(self.shape))
-        self.__offset = generator.add_variable(self)
+        self.__offset = offset
 
     @property
     def shape(self) -> Tuple[int, ...]:
@@ -56,9 +61,16 @@ class ConsistentVariable(ABC):
 
     @property
     def offset(self) -> int:
-        """Offset of the variable in the generated samples."""
+        """Offset of the variable in the generated samples.
+
+        Adding a variable to a generator will change the offset.
+        """
 
         return self.__offset
+
+    @offset.setter
+    def offset(self, value: int) -> None:
+        self.__offset = value
 
     def sample(self, sample: ConsistentSample) -> np.ndarray:
         """Sample the variable given a sample of the realization.
@@ -76,6 +88,19 @@ class ConsistentVariable(ABC):
         # Reshape to match the variable size
         reshaped_samples = scalar_samples.reshape(self.shape)
         return reshaped_samples
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_array(np.array(self.__shape), "shape")
+        process.serialize_integer(self.__offset, "offset")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> ConsistentVariable:
+        return cls(
+            tuple(process.deserialize_array("shape", np.int64)),
+            process.deserialize_integer("offset", cls._DEFAULT_OFFSET),
+        )
 
 
 class ConsistentSample(object):
@@ -98,7 +123,7 @@ class ConsistentSample(object):
         ...  # pragma: no cover
 
 
-class ConsistentRealization(ABC, HDFSerializable):
+class ConsistentRealization(ABC, Serializable):
     """Base class for a realization of a consistent random generator."""
 
     @abstractmethod
@@ -114,17 +139,6 @@ class ConsistentRealization(ABC, HDFSerializable):
         """
         ...  # pragma: no cover
 
-    @classmethod
-    def from_HDF(cls, group: Group) -> ConsistentRealization:
-        # Check for the group tag to decide which realization to load
-        realization_type = group.attrs["type"]
-        if realization_type == "DualConsistentRealization":
-            return DualConsistentRealization.from_HDF(group)
-        elif realization_type == "StaticConsistentRealization":
-            return StaticConsistentRealization.from_HDF(group)
-        else:
-            raise ValueError(f"Unknown realization type: {realization_type}")
-
 
 class DualConsistentSample(ConsistentSample):
     """Sample of a dual consistent realization.
@@ -137,6 +151,7 @@ class DualConsistentSample(ConsistentSample):
 
         self.__scalar_samples = scalar_samples
 
+    @override
     def fetch_scalars(self, offset: int, num_scalars: int) -> np.ndarray:
         return self.__scalar_samples[offset : offset + num_scalars]
 
@@ -169,6 +184,7 @@ class DualConsistentRealization(ConsistentRealization):
 
         return self.__phases
 
+    @override
     def sample(self, position_a: np.ndarray, position_b: np.ndarray) -> DualConsistentSample:
         # Eq. 3
         scalar_samples: np.ndarray = (2 / self.__frequencies.shape[2]) ** 0.5 * np.sum(
@@ -183,16 +199,18 @@ class DualConsistentRealization(ConsistentRealization):
 
         return DualConsistentSample(scalar_samples)
 
-    def to_HDF(self, group: Group) -> None:
-        group.attrs["type"] = "DualConsistentRealization"
-        self._write_dataset(group, "frequencies", self.frequencies)
-        self._write_dataset(group, "phases", self.phases)
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_array(self.__frequencies, "frequencies")
+        process.serialize_array(self.__phases, "phases")
 
     @classmethod
-    def from_HDF(cls, group: Group) -> DualConsistentRealization:
-        frequencies = np.array(group["frequencies"], dtype=np.float64)
-        phases = np.array(group["phases"], dtype=np.float64)
-        return DualConsistentRealization(frequencies, phases)
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> DualConsistentRealization:
+        return DualConsistentRealization(
+            process.deserialize_array("frequencies", np.float64),
+            process.deserialize_array("phases", np.float64),
+        )
 
 
 class StaticConsistentSample(ConsistentSample):
@@ -210,6 +228,7 @@ class StaticConsistentSample(ConsistentSample):
 
         self.__scalar_samples = scalar_samples
 
+    @override
     def fetch_scalars(self, offset: int, num_scalars: int) -> np.ndarray:
         return self.__scalar_samples[offset : offset + num_scalars]
 
@@ -227,16 +246,18 @@ class StaticConsistentRealization(ConsistentRealization):
 
         self.__scalar_samples = scalar_samples.flatten()
 
+    @override
     def sample(self, position_a: np.ndarray, position_b: np.ndarray) -> DualConsistentSample:
         return DualConsistentSample(self.__scalar_samples)
 
-    def to_HDF(self, group: Group) -> None:
-        group.attrs["type"] = "StaticConsistentRealization"
-        self._write_dataset(group, "scalar_samples", self.__scalar_samples)
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_array(self.__scalar_samples, "scalar_samples")
 
     @classmethod
-    def from_HDF(cls, group: Group) -> StaticConsistentRealization:
-        return StaticConsistentRealization(np.array(group["scalar_samples"], dtype=np.float64))
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> StaticConsistentRealization:
+        return StaticConsistentRealization(process.deserialize_array("scalar_samples", np.float64))
 
 
 class ConsistentGenerator(object):
@@ -276,25 +297,55 @@ class ConsistentGenerator(object):
         self.__variables = []
 
     def gaussian(self, shape: Tuple[int, ...] | None = None) -> ConsistentGaussian:
-        """Create a dual consistent Gaussian random variable."""
+        """Create a dual consistent Gaussian random variable.
 
-        variable = ConsistentGaussian(self, shape)
+        Args:
+
+            shape (Tuple[int, ...], optional):
+                Shape of the output array.
+                If not specified, the variable will be scalar.
+
+        Returns: Dual consistent Gaussian random variable.
+        """
+
+        _shape = (1,) if shape is None else shape
+        variable = ConsistentGaussian(_shape)
         self.add_variable(variable)
 
         return variable
 
     def uniform(self, shape: Tuple[int, ...] | None = None) -> ConsistentUniform:
-        """Create a dual consistent uniform random variable."""
+        """Create a dual consistent uniform random variable.
 
-        variable = ConsistentUniform(self, shape)
+        Args:
+
+            shape (Tuple[int, ...], optional):
+                Shape of the output array.
+                If not specified, the variable will be scalar.
+
+        Returns: Dual consistent uniform random variable.
+        """
+
+        _shape = (1,) if shape is None else shape
+        variable = ConsistentUniform(_shape)
         self.add_variable(variable)
 
         return variable
 
     def boolean(self, shape: Tuple[int, ...] | None = None) -> ConsistentBoolean:
-        """Create a dual consistent boolean random variable."""
+        """Create a dual consistent boolean random variable.
 
-        variable = ConsistentBoolean(self, shape)
+        Args:
+
+            shape (Tuple[int, ...], optional):
+                Shape of the output array.
+                If not specified, the variable will be scalar.
+
+        Returns: Dual consistent boolean random variable.
+        """
+
+        _shape = (1,) if shape is None else shape
+        variable = ConsistentBoolean(_shape)
         self.add_variable(variable)
 
         return variable
@@ -302,7 +353,7 @@ class ConsistentGenerator(object):
     def add_variable(self, variable: ConsistentVariable) -> int:
         """Add a dual consistent random variable to the generator.
 
-        Return the variable's offset in the generated samples.
+        Returns: The variable's offset in the generated samples.
         """
 
         if variable in self.__variables:
@@ -310,6 +361,7 @@ class ConsistentGenerator(object):
 
         variable_offset = self.__offset
         self.__offset += variable.size
+        variable.offset = variable_offset
 
         self.__variables.append(variable)
         return variable_offset
@@ -410,6 +462,7 @@ class ConsistentGenerator(object):
 class ConsistentGaussian(ConsistentVariable):
     """Spatially consistent normally distributed Gaussian variable."""
 
+    @override
     def sample(self, sample: ConsistentSample, mean: float = 0.0, std: float = 1.0) -> np.ndarray:
 
         # Fetch the scalar samples
@@ -422,6 +475,7 @@ class ConsistentGaussian(ConsistentVariable):
 class ConsistentUniform(ConsistentVariable):
     """Spatially consistent uniformly distributed random variable."""
 
+    @override
     def sample(self, sample: ConsistentSample) -> np.ndarray:
 
         # Fetch the scalar samples
@@ -434,6 +488,7 @@ class ConsistentUniform(ConsistentVariable):
 class ConsistentBoolean(ConsistentVariable):
     """Spatially consistent boolean random variable."""
 
+    @override
     def sample(self, sample: ConsistentSample) -> np.ndarray:
 
         # Fetch the scalar samples

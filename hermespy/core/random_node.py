@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from sys import maxsize
-from typing import Optional
+from typing_extensions import override
 
 from numpy.random import default_rng, Generator
+
+from .factory import DeserializationProcess, Serializable, SerializationProcess
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -16,19 +17,21 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class RandomRealization(object):
+class RandomRealization(Serializable):
     """Realization of a random node."""
 
     __seed: int
 
-    def __init__(self, random_node: RandomNode) -> None:
+    def __init__(self, seed: int) -> None:
         """
         Args:
-            random_node (RandomNode): Random node from which to generate a realization.
+
+            seed (int):
+                Seed with which to initialize the random number generator.
         """
 
         # Draw a random signed integer from the node's random number generator
-        self.__seed = random_node._rng.integers(0, maxsize)
+        self.__seed = seed
 
     @property
     def seed(self) -> int:
@@ -47,17 +50,28 @@ class RandomRealization(object):
 
         return default_rng(self.__seed)
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_integer(self.seed, "seed")
+
+    @classmethod
+    def _DeserializeParameters(cls, process: DeserializationProcess) -> dict[str, object]:
+        return {"seed": process.deserialize_integer("seed")}
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> RandomRealization:
+        return RandomRealization(process.deserialize_integer("seed"))
+
 
 class RandomNode(object):
     """Random Node within a random dependency graph."""
 
-    __mother_node: Optional[RandomNode]  # Mother node of this node
-    __generator: Optional[Generator]  # Numpy generator object
-    __seed: Optional[int]
+    __mother_node: RandomNode | None  # Mother node of this node
+    __generator: Generator | None  # Numpy generator object
+    __seed: int | None
 
-    def __init__(
-        self, mother_node: Optional[RandomNode] = None, seed: Optional[int] = None
-    ) -> None:
+    def __init__(self, mother_node: RandomNode | None = None, seed: int | None = None) -> None:
         """
         Args:
 

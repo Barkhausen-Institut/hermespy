@@ -1,19 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from os import path
-from tempfile import TemporaryDirectory
 from unittest import TestCase
-from unittest.mock import patch, PropertyMock
 
 import numpy as np
-from h5py import File
 
 from hermespy.core import Signal
-from hermespy.modem import DuplexModem
-from hermespy.radar import Radar
 from hermespy.simulation import SimulatedDevice
 from hermespy.jcas import MatchedFilterJcas
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 from unit_tests.modem.test_waveform import MockCommunicationWaveform
 
 __author__ = "Jan Adler"
@@ -33,7 +27,7 @@ class TestMatchedFilterJoint(TestCase):
         self.rng = np.random.default_rng(42)
         self.carrier_frequency = 1e8
 
-        self.joint = MatchedFilterJcas(max_range=10)
+        self.joint = MatchedFilterJcas(max_range=10.0)
         self.waveform = MockCommunicationWaveform()
         self.joint.waveform = self.waveform
 
@@ -99,46 +93,8 @@ class TestMatchedFilterJoint(TestCase):
         with self.assertRaises(ValueError):
             self.joint.max_range = 0.0
 
-    def test_recall_transmission(self) -> None:
-        """Test joint transmission recall from HDF"""
-
-        transmission = self.joint.transmit(self.device.state())
-
-        with TemporaryDirectory() as tempdir:
-            file_location = path.join(tempdir, "testfile.hdf5")
-
-            with File(file_location, "w") as file:
-                group = file.create_group("testgroup")
-                transmission.to_HDF(group)
-
-            with File(file_location, "r") as file:
-                recalled_transmission = self.joint._recall_transmission(file["testgroup"])
-
-        self.assertEqual(transmission.signal.num_samples, recalled_transmission.signal.num_samples)
-
-    def test_recall_reception(self) -> None:
-        """Test joint reception recall from HDF"""
-
-        transmission = self.joint.transmit(self.device.state())
-        reception = self.joint.receive(transmission.signal, self.device.state())
-
-        with TemporaryDirectory() as tempdir:
-            file_location = path.join(tempdir, "testfile.hdf5")
-
-            with File(file_location, "w") as file:
-                group = file.create_group("testgroup")
-                reception.to_HDF(group)
-
-            with File(file_location, "r") as file:
-                recalled_reception = self.joint._recall_reception(file["testgroup"])
-
-        self.assertEqual(reception.signal.num_samples, recalled_reception.signal.num_samples)
-
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test matched filter JCAS serialization"""
 
-        with patch("hermespy.jcas.matched_filtering.MatchedFilterJcas.property_blacklist", new_callable=PropertyMock) as blacklist, patch("hermespy.jcas.matched_filtering.MatchedFilterJcas.waveform", new_callable=PropertyMock) as waveform:
-            blacklist.return_value = {"slot", "waveform"}
-            waveform.return_value = self.waveform
-
-            test_yaml_roundtrip_serialization(self, self.joint)
+        self.joint.waveform = None
+        test_roundtrip_serialization(self, self.joint, {'range_resolution', 'sampling_rate'})

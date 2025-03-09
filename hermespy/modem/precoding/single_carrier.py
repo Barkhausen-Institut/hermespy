@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
+from typing_extensions import override
 
 import numpy as np
 
-from hermespy.core import Serializable
+from hermespy.core import Serializable, SerializationProcess, DeserializationProcess
 from ..symbols import StatedSymbols
 from .symbol_precoding import ReceiveSymbolDecoder
 
@@ -23,8 +24,6 @@ class SingleCarrier(ReceiveSymbolDecoder, Serializable):
 
     Takes a on-dimensional input stream and distributes the symbols to multiple output streams.
     """
-
-    yaml_tag = "SingleCarrier"
 
     def decode_symbols(self, symbols: StatedSymbols, num_output_streams: int) -> StatedSymbols:
         # Decode data using SC receive diversity with N_rx received antennas.
@@ -60,3 +59,12 @@ class SingleCarrier(ReceiveSymbolDecoder, Serializable):
     @property
     def num_receive_output_symbols(self) -> int:
         return 1
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        pass
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> SingleCarrier:
+        return cls()

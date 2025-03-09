@@ -16,12 +16,22 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from datetime import datetime
 from types import ModuleType
-from typing import Optional, Sequence
+from typing import Sequence
+from typing_extensions import override
 
 import numpy as np
 from scipy.fft import fft, ifft
 
-from hermespy.core import AntennaMode, Serializable, Signal, Antenna, AntennaArray, AntennaPort
+from hermespy.core import (
+    AntennaMode,
+    Serializable,
+    Signal,
+    Antenna,
+    AntennaArray,
+    AntennaPort,
+    SerializationProcess,
+    DeserializationProcess,
+)
 from ..physical_device import PhysicalDevice, PhysicalDeviceState
 
 __author__ = "Jan Adler"
@@ -172,23 +182,14 @@ class AudioDeviceAntennas(AntennaArray[AudioPort, AudioAntenna]):
 class AudioDevice(PhysicalDevice[PhysicalDeviceState], Serializable):
     """HermesPy binding to an arbitrary audio device. Let's rock!"""
 
-    yaml_tag = "AudioDevice"
-    property_blacklist = {
-        "topology",
-        "wavelength",
-        "velocity",
-        "orientation",
-        "position",
-        "random_mother",
-        "antennas",
-    }
+    __DEFAULT_SAMPLING_RATE = 48000.0
 
     __playback_device: int  # Device over which audio streams are to be transmitted
     __record_device: int  # Device over which audio streams are to be received
     __playback_channels: Sequence[int]  # List of audio channel for signal transmission
     __record_channels: Sequence[int]  # List of audio channel for signal reception
     __sampling_rate: float  # Configured sampling rate
-    __transmission: Optional[np.ndarray]  # Configured transmission samples
+    __transmission: np.ndarray | None  # Configured transmission samples
     __antennas: AudioDeviceAntennas  # Antenna array information
 
     def __init__(
@@ -197,7 +198,7 @@ class AudioDevice(PhysicalDevice[PhysicalDeviceState], Serializable):
         record_device: int,
         playback_channels: Sequence[int] | None = None,
         record_channels: Sequence[int] | None = None,
-        sampling_rate: float = 48000,
+        sampling_rate: float = __DEFAULT_SAMPLING_RATE,
         **kwargs,
     ) -> None:
         """
@@ -409,3 +410,22 @@ class AudioDevice(PhysicalDevice[PhysicalDeviceState], Serializable):
         import sounddevice
 
         return sounddevice
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_integer(self.playback_device, "playback_device")
+        process.serialize_integer(self.record_device, "record_device")
+        process.serialize_array(np.asarray(self.playback_channels), "playback_channels")
+        process.serialize_array(np.asarray(self.record_channels), "record_channels")
+        process.serialize_floating(self.sampling_rate, "sampling_rate")
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> AudioDevice:
+        return cls(
+            process.deserialize_integer("playback_device"),
+            process.deserialize_integer("record_device"),
+            process.deserialize_array("playback_channels", np.int64).tolist(),
+            process.deserialize_array("record_channels", np.int64).tolist(),
+            process.deserialize_floating("sampling_rate", cls.__DEFAULT_SAMPLING_RATE),
+        )

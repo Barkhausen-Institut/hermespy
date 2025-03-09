@@ -16,7 +16,7 @@ from hermespy.channel.quadriga.octave  import QuadrigaOctaveInterface
 from hermespy.channel.channel import LinkState
 from hermespy.core import DenseSignal, Transformation
 from hermespy.simulation import SimulatedDevice
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 from unit_tests.utils import assert_signals_equal
 
 __author__ = "Jan Adler"
@@ -125,25 +125,11 @@ class TestQuadrigaChannel(TestCase):
         realization = self.channel.realize()
         self.assertEqual(1.0, realization.gain)
 
-    def test_recall_realization(self) -> None:
-        """Test the Quadriga channel realization recall"""
-
-        file = File("test.h5", "w", driver="core", backing_store=False)
-        group = file.create_group("g")
-
-        expected_realization = self.channel.realize()
-        expected_realization.to_HDF(group)
-        recalled_realization = self.channel.recall_realization(group)
-
-        file.close()
-
-        self.assertIsInstance(recalled_realization, type(expected_realization))
-
-    def test_yaml_serialization(self) -> None:
-        """Test the Quadriga Channel YAML serialization"""
+    def test_serialization(self) -> None:
+        """Test the Quadriga channel serialization"""
 
         environ["HERMES_QUADRIGA"] = path.abspath(path.join(path.dirname(__file__), "..", "..", "..", "submodules", "quadriga", "quadriga_src"))
-        test_yaml_roundtrip_serialization(self, self.channel)
+        test_roundtrip_serialization(self, self.channel, {'random_mother'})
 
 
 class TestQuadrigaInterface(TestCase):

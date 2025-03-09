@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from .animation import LinearTrajectory, StaticTrajectory
+from .animation import Trajectory, LinearTrajectory, StaticTrajectory
 from .antennas import (
     SimulatedAntenna,
     SimulatedAntennaPort,
@@ -47,7 +47,7 @@ from .rf_chain import (
     OscillatorPhaseNoise,
 )
 from .isolation import Isolation, SpecificIsolation, PerfectIsolation, SelectiveLeakage
-from .noise import NoiseLevel, N0, SNR, NoiseModel, AWGN
+from .noise import NoiseLevel, N0, SNR, NoiseModel, AWGN, AWGNRealization
 from .coupling import Coupling, ImpedanceCoupling, PerfectCoupling
 from .modem import (
     SCIdealChannelEstimation,
@@ -68,6 +68,7 @@ __status__ = "Prototype"
 
 
 __all__ = [
+    "Trajectory",
     "LinearTrajectory",
     "StaticTrajectory",
     "SimulatedAntenna",
@@ -125,6 +126,7 @@ __all__ = [
     "SNR",
     "NoiseModel",
     "AWGN",
+    "AWGNRealization",
     "Coupling",
     "ImpedanceCoupling",
     "PerfectCoupling",

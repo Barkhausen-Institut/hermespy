@@ -2,14 +2,15 @@
 
 from __future__ import annotations
 from abc import abstractmethod
-from typing import Generic, Sequence, Tuple, Type, TypeVar
+from typing import Generic, Sequence, Tuple, TypeVar
+from typing_extensions import override
 
 import numpy as np
-from h5py import Group
 from scipy.constants import speed_of_light
 
 from hermespy.beamforming import ReceiveBeamformer
 from hermespy.core import (
+    DeserializationProcess,
     FloatingError,
     Signal,
     Serializable,
@@ -19,6 +20,7 @@ from hermespy.core import (
     Receiver,
     ReceiveState,
     Reception,
+    SerializationProcess,
 )
 from .cube import RadarCube
 from .detection import RadarDetector, RadarPointCloud
@@ -33,7 +35,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class RadarWaveform(object):
+class RadarWaveform(Serializable):
     """Base class for :class:`.Radar` waveform descriptions.
 
     When assigned to a :class:`.Radar`'s :meth:`waveform<Radar.waveform>` property,
@@ -279,20 +281,20 @@ class RadarReception(Reception):
 
         return self.__cloud
 
-    def to_HDF(self, group: Group) -> None:
-        # Serialize base class
-        Reception.to_HDF(self, group)
-
-        # Serialize class attributes
-        self.cube.to_HDF(self._create_group(group, "cube"))
-        return
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        Reception.serialize(self, process)
+        process.serialize_object(self.__cube, "cube")
+        if self.cloud is not None:
+            process.serialize_object(self.cloud, "cloud")
 
     @classmethod
-    def from_HDF(cls: Type[RadarReception], group: Group) -> RadarReception:
-        signal = Signal.from_HDF(group["signal"])
-        cube = RadarCube.from_HDF(group["cube"])
-
-        return RadarReception(signal, cube)
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> RadarReception:
+        signal = process.deserialize_object("signal", Signal)
+        cube = process.deserialize_object("cube", RadarCube)
+        cloud = process.deserialize_object("cloud", RadarPointCloud, None)
+        return RadarReception(signal, cube, cloud)
 
 
 RTT = TypeVar("RTT", bound=RadarTransmission)
@@ -310,6 +312,8 @@ class RadarBase(Generic[RTT, RRT], Transmitter[RTT], Receiver[RRT]):
 
     def __init__(
         self,
+        receive_beamformer: ReceiveBeamformer | None = None,
+        detector: RadarDetector | None = None,
         selected_transmit_ports: Sequence[int] | None = None,
         selected_receive_ports: Sequence[int] | None = None,
         carrier_frequency: float | None = None,
@@ -317,6 +321,14 @@ class RadarBase(Generic[RTT, RRT], Transmitter[RTT], Receiver[RRT]):
     ) -> None:
         """
         Args:
+
+            receive_beamformer (ReceiveBeamformer, optional):
+                Beamforming applied during signal reception.
+                If not specified, no beamforming will be applied during reception.
+
+            detector (RadarDetector, optional):
+                Detector routine configured to generate point clouds from radar cubes.
+                If not specified, no point cloud will be generated during reception.
 
             selected_transmit_ports (Sequence[int] | None):
                 Indices of antenna ports selected for transmission from the operated :class:`Device's<Device>` antenna array.
@@ -336,11 +348,11 @@ class RadarBase(Generic[RTT, RRT], Transmitter[RTT], Receiver[RRT]):
 
         # Initialize base classes
         Transmitter.__init__(self, seed, selected_transmit_ports, carrier_frequency)
-        Receiver.__init__(self, seed, None, selected_receive_ports, carrier_frequency)
+        Receiver.__init__(self, seed, selected_receive_ports, carrier_frequency)
 
         # Initialize class attributes
-        self.receive_beamformer = None
-        self.detector = None
+        self.receive_beamformer = receive_beamformer
+        self.detector = detector
 
     @property
     def receive_beamformer(self) -> ReceiveBeamformer | None:
@@ -424,6 +436,30 @@ class RadarBase(Generic[RTT, RRT], Transmitter[RTT], Receiver[RRT]):
         )
 
         return angles_of_interest, beamformed_samples
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        Receiver.serialize(self, process)
+        Transmitter.serialize(self, process)
+        if self.receive_beamformer is not None:
+            process.serialize_object(self.receive_beamformer, "receive_beamformer")
+        if self.detector is not None:
+            process.serialize_object(self.detector, "detector")
+
+    @classmethod
+    @override
+    def _DeserializeParameters(cls, process: DeserializationProcess) -> dict[str, object]:
+        params = Receiver._DeserializeParameters(process)
+        params.update(Transmitter._DeserializeParameters(process))
+        params.update(
+            {
+                "receive_beamformer": process.deserialize_object(
+                    "receive_beamformer", ReceiveBeamformer, None
+                ),
+                "detector": process.deserialize_object("detector", RadarDetector, None),
+            }
+        )
+        return params
 
 
 class Radar(RadarBase[RadarTransmission, RadarReception], Serializable):
@@ -514,14 +550,13 @@ class Radar(RadarBase[RadarTransmission, RadarReception], Serializable):
     The resulting information is cached as a :class:`RadarReception` at the assigned :class:`Device<hermespy.core.device.Device>`.
     """
 
-    yaml_tag = "Radar"
-    property_blacklist = {"slot"}
-
     __waveform: RadarWaveform | None
 
     def __init__(
         self,
         waveform: RadarWaveform | None = None,
+        receive_beamformer: ReceiveBeamformer | None = None,
+        detector: RadarDetector | None = None,
         selected_transmit_ports: Sequence[int] | None = None,
         selected_receive_ports: Sequence[int] | None = None,
         carrier_frequency: float | None = None,
@@ -533,6 +568,15 @@ class Radar(RadarBase[RadarTransmission, RadarReception], Serializable):
             waveform (RadarWaveform, optional):
                 Description of the waveform to be transmitted and received by this radar.
                 :py:obj:`None` if no waveform is configured.
+
+
+            receive_beamformer (ReceiveBeamformer, optional):
+                Beamforming applied during signal reception.
+                If not specified, no beamforming will be applied during reception.
+
+            detector (RadarDetector, optional):
+                Detector routine configured to generate point clouds from radar cubes.
+                If not specified, no point cloud will be generated during reception.
 
             selected_transmit_ports (Sequence[int], otional):
                 Indices of antenna ports selected for transmission from the operated :class:`Device's<Device>` antenna array.
@@ -552,7 +596,13 @@ class Radar(RadarBase[RadarTransmission, RadarReception], Serializable):
 
         # Initialize base classes
         RadarBase.__init__(
-            self, selected_transmit_ports, selected_receive_ports, carrier_frequency, seed
+            self,
+            receive_beamformer,
+            detector,
+            selected_transmit_ports,
+            selected_receive_ports,
+            carrier_frequency,
+            seed,
         )
 
         # Initialize class attributes
@@ -681,8 +731,15 @@ class Radar(RadarBase[RadarTransmission, RadarReception], Serializable):
         reception = RadarReception(signal, cube, cloud)
         return reception
 
-    def _recall_transmission(self, group: Group) -> RadarTransmission:
-        return RadarTransmission.from_HDF(group)
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        RadarBase.serialize(self, process)
+        if self.waveform is not None:
+            process.serialize_object(self.waveform, "waveform")
 
-    def _recall_reception(self, group: Group) -> RadarReception:
-        return RadarReception.from_HDF(group)
+    @classmethod
+    @override
+    def _DeserializeParameters(cls, process: DeserializationProcess) -> dict[str, object]:
+        params = RadarBase._DeserializeParameters(process)
+        params["waveform"] = process.deserialize_object("waveform", RadarWaveform, None)
+        return params

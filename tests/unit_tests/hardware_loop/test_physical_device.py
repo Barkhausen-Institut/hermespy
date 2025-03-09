@@ -12,9 +12,9 @@ from numpy.random import default_rng
 from numpy.testing import assert_array_equal
 
 from hermespy.core import DeviceInput, ProcessedDeviceInput, Signal, SignalTransmitter
-from hermespy.hardware_loop import DelayCalibration, NoDelayCalibration, NoLeakageCalibration, PhysicalDevice, PhysicalDeviceState, SelectiveLeakageCalibration
+from hermespy.hardware_loop import DelayCalibration, NoAntennaCalibration, NoDelayCalibration, NoLeakageCalibration, PhysicalDevice, PhysicalDeviceState, SelectiveLeakageCalibration
 from hermespy.simulation import SimulatedUniformArray, SimulatedIdealAntenna
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -29,11 +29,9 @@ __status__ = "Prototype"
 class PhysicalDeviceMock(PhysicalDevice):
     """Mock for a physical device."""
 
-    __sampling_rate: float
-
-    def __init__(self, sampling_rate: float, *args, **kwargs) -> None:
+    def __init__(self, *args, **kwargs) -> None:
         PhysicalDevice.__init__(self, *args, **kwargs)
-        self.__sampling_rate = sampling_rate
+        self.__sampling_rate = 1e6
         self.__antennas = SimulatedUniformArray(SimulatedIdealAntenna, 1.0, (1, 1, 1))
 
     def state(self):
@@ -82,7 +80,7 @@ class TestPhysicalDevice(TestCase):
         self.rng = default_rng(42)
         self.sampling_rate = 1e6
 
-        self.device = PhysicalDeviceMock(sampling_rate=self.sampling_rate)
+        self.device = PhysicalDeviceMock()
 
     def test_calibration_init(self) -> None:
         """Calibration attributes should be properly initialized"""
@@ -90,7 +88,7 @@ class TestPhysicalDevice(TestCase):
         leakage_calibration = NoLeakageCalibration()
         delay_calibration = NoDelayCalibration()
 
-        self.device = PhysicalDeviceMock(sampling_rate=self.sampling_rate, leakage_calibration=leakage_calibration, delay_calibration=delay_calibration)
+        self.device = PhysicalDeviceMock(leakage_calibration=leakage_calibration, delay_calibration=delay_calibration)
 
         self.assertIs(leakage_calibration, self.device.leakage_calibration)
         self.assertIs(leakage_calibration.device, self.device)
@@ -401,6 +399,10 @@ class TestPhysicalDevice(TestCase):
 
         self.assertIsInstance(patched_recalled_device.delay_calibration, NoDelayCalibration)
 
+    def test_serialization(self) -> None:
+        """Test physical device serialization"""
+
+        test_roundtrip_serialization(self, self.device)
 
 class TestCalibration(TestCase):
     """Test calibration base class."""
@@ -431,10 +433,8 @@ class TestCalibration(TestCase):
             self.calibration.save(file_path)
 
             recalled_file_calibration = self.calibration.Load(file_path)
-            recalled_group_calibration = self.calibration.Load(File(file_path, "r"))
 
         self.assertIsInstance(recalled_file_calibration, NoDelayCalibration)
-        self.assertIsInstance(recalled_group_calibration, NoDelayCalibration)
 
 
 class TestNoDelayCalibration(TestCase):
@@ -464,10 +464,10 @@ class TestNoDelayCalibration(TestCase):
 
         assert_array_equal(test_signal.getitem(), self.calibration.correct_receive_delay(test_signal).getitem())
 
-    def test_yaml_serialization(self) -> None:
-        """Test YAML serialization and deserialization"""
+    def test_serialization(self) -> None:
+        """Test delay calibration stub serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.calibration)
+        test_roundtrip_serialization(self, self.calibration)
 
 
 class TestNoLeakageCalibration(TestCase):
@@ -484,10 +484,10 @@ class TestNoLeakageCalibration(TestCase):
 
         assert_array_equal(received_signal.getitem(), self.leakage_calibration.remove_leakage(transmitted_signal, received_signal).getitem())
 
-    def test_yaml_serialization(self) -> None:
-        """Test YAML serialization and deserialization"""
+    def test_serialization(self) -> None:
+        """Test leakage calibration stub serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.leakage_calibration)
+        test_roundtrip_serialization(self, self.leakage_calibration)
 
     def test_save_load(self) -> None:
         """Test saving and loading from and to HDF files"""
@@ -499,3 +499,14 @@ class TestNoLeakageCalibration(TestCase):
             recalled_file_calibration = self.leakage_calibration.Load(file_path)
 
         self.assertIsInstance(recalled_file_calibration, NoLeakageCalibration)
+
+
+class TestNoAntennaCalibration(TestCase):
+    
+    def setUp(self) -> None:
+        self.calibration = NoAntennaCalibration()
+
+    def test_serialization(self) -> None:
+        """Test antenna calibration stub serialization"""
+        
+        test_roundtrip_serialization(self, self.calibration)

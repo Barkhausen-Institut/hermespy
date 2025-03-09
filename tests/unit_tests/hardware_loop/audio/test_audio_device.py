@@ -9,7 +9,7 @@ from numpy.testing import assert_array_almost_equal
 from hermespy.core import Reception, Receiver, ReceiveState, Signal, Transmission, TransmitState, Transmitter
 from hermespy.hardware_loop.audio import AudioDevice
 from hermespy.hardware_loop.audio.device import AudioAntenna, AudioDeviceAntennas, AudioPlaybackPort, AudioRecordPort
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -266,6 +266,6 @@ class TestAudioDevice(TestCase):
         assert_array_almost_equal(transmission.operator_transmissions[0].signal.getitem(), reception.operator_inputs[0].getitem())
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test audio device serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.device, {"antenna_positions"})
+        test_roundtrip_serialization(self, self.device, {"antenna_positions"})

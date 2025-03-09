@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from unittest import TestCase
-from unittest.mock import Mock
 
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
-from hermespy.modem import StatedSymbols, DuplexModem
+from hermespy.modem import StatedSymbols
 from hermespy.modem.precoding import SingleCarrier
-from hermespy.simulation import SimulatedDevice, SimulatedUniformArray, SimulatedIdealAntenna
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -53,8 +51,8 @@ class TestSingleCarrier(TestCase):
 
         self.assertEqual(1, self.precoder.num_receive_output_streams(13))
 
-    def test_yaml_roundtrip_serialization(self) -> None:
-        """Test YAML roundtrip serialization"""
+    def test_serialization(self) -> None:
+        """Test single carrier serialization"""
 
         self.precoder.precoding = None
-        test_yaml_roundtrip_serialization(self, self.precoder)
+        test_roundtrip_serialization(self, self.precoder)

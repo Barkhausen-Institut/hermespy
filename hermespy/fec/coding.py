@@ -59,14 +59,12 @@ encoder with in the pipeline, respectively.
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from math import ceil
-
-from typing import TYPE_CHECKING, Type, List, Optional
+from typing import TYPE_CHECKING, List
+from typing_extensions import override
 
 import numpy as np
-from ruamel.yaml import SafeRepresenter, SafeConstructor, Node
 
-from hermespy.core.factory import Serializable
-from hermespy.core.random_node import RandomNode
+from hermespy.core import Serializable, RandomNode, SerializationProcess, DeserializationProcess
 
 if TYPE_CHECKING:
     from hermespy.modem.modem import BaseModem  # pragma: no cover
@@ -101,13 +99,10 @@ class Encoder(ABC, Serializable):
 
     """
 
-    yaml_tag: Optional[str] = "Encoder"
-    """YAML serialization tag."""
-
     # Coding pipeline configuration this encoder is registered to
-    __manager: Optional[EncoderManager]
+    __manager: EncoderManager | None
 
-    def __init__(self, manager: EncoderManager = None) -> None:
+    def __init__(self, manager: EncoderManager | None = None) -> None:
         """
         Args:
 
@@ -123,7 +118,7 @@ class Encoder(ABC, Serializable):
             self.manager = manager
 
     @property
-    def manager(self) -> Optional[EncoderManager]:
+    def manager(self) -> EncoderManager | None:
         """Coding pipeline configuration this encoder is registered in.
 
         Returns: Handle to the coding pipeline.
@@ -132,7 +127,7 @@ class Encoder(ABC, Serializable):
         return self.__manager
 
     @manager.setter
-    def manager(self, value: EncoderManager) -> None:
+    def manager(self, value: EncoderManager | None) -> None:
         if self.__manager is not value:
             self.__manager = value
 
@@ -244,8 +239,6 @@ class Encoder(ABC, Serializable):
 class EncoderManager(RandomNode, Serializable):
     """Configuration managing a channel coding pipeline."""
 
-    yaml_tag: str = "Encoding"
-
     allow_padding: bool
     """Tolerate padding of data bit blocks during encoding."""
 
@@ -253,12 +246,15 @@ class EncoderManager(RandomNode, Serializable):
     """Tolerate truncating of data code blocks during decoding."""
 
     # Communication modem instance this coding pipeline configuration is attached to
-    __modem: Optional[BaseModem]
+    __modem: BaseModem | None
     # List of encoding steps defining the internal pipeline configuration
     _encoders: List[Encoder]
 
     def __init__(
-        self, modem: BaseModem = None, allow_padding: bool = True, allow_truncating: bool = True
+        self,
+        modem: BaseModem | None = None,
+        allow_padding: bool = True,
+        allow_truncating: bool = True,
     ) -> None:
         """
         Args:
@@ -286,54 +282,6 @@ class EncoderManager(RandomNode, Serializable):
             self.modem = modem
 
         RandomNode.__init__(self)
-
-    @classmethod
-    def to_yaml(
-        cls: Type[EncoderManager], representer: SafeRepresenter, node: EncoderManager
-    ) -> Node:
-        """Serialize an EncoderManager to YAML.
-
-        Args:
-            representer (RoundTripRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
-
-            node (EncoderManager):
-                The EncoderManager instance to be serialized.
-
-        Returns:
-            Node:
-                The serialized YAML node.
-
-        :meta private:
-        """
-
-        return representer.represent_sequence(cls.yaml_tag, node.encoders)
-
-    @classmethod
-    def from_yaml(
-        cls: Type[EncoderManager], constructor: SafeConstructor, node: Node
-    ) -> EncoderManager:
-        """Recall a new `EncoderManager` instance from YAML.
-
-        Args:
-            constructor (RoundTripConstructor):
-                A handle to the constructor extracting the YAML information.
-
-            node (Node):
-                YAML node representing the `EncoderManager` serialization.
-
-        Returns:
-            EncoderManager:
-                Newly created `EncoderManager` instance.
-
-        :meta private:
-        """
-
-        manager = cls()
-        manager._encoders = constructor.construct_sequence(node, deep=True)
-
-        return manager
 
     @property
     def modem(self) -> BaseModem:
@@ -389,7 +337,7 @@ class EncoderManager(RandomNode, Serializable):
 
         return self._encoders
 
-    def encode(self, data_bits: np.ndarray, num_code_bits: Optional[int] = None) -> np.ndarray:
+    def encode(self, data_bits: np.ndarray, num_code_bits: int | None = None) -> np.ndarray:
         """Encode a stream of data bits to a stream of code bits.
 
         By default, the input `data_bits` will be padded with zeros
@@ -474,7 +422,7 @@ class EncoderManager(RandomNode, Serializable):
         # Return resulting overall code
         return code_state
 
-    def decode(self, encoded_bits: np.ndarray, num_data_bits: Optional[int] = None) -> np.ndarray:
+    def decode(self, encoded_bits: np.ndarray, num_data_bits: int | None = None) -> np.ndarray:
         """Decode a stream of code bits to a stream of plain data bits.
 
         By default, decoding `encoded_bits` may ignore bits in order
@@ -671,3 +619,16 @@ class EncoderManager(RandomNode, Serializable):
         """
 
         return self._encoders[item]
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_object_sequence(self._encoders, "encoders")
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> EncoderManager:
+        manager = cls()
+        encoders = process.deserialize_object_sequence("encoders", Encoder)
+        for encoder in encoders:
+            manager.add_encoder(encoder)
+        return manager

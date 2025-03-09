@@ -12,9 +12,11 @@ i.e. the code rate is :math:`R = 1`.
 """
 
 from __future__ import annotations
+from typing_extensions import override
+
 import numpy as np
 
-from hermespy.core import Serializable
+from hermespy.core import Serializable, SerializationProcess, DeserializationProcess
 from .coding import Encoder
 
 __author__ = "Jan Adler"
@@ -53,7 +55,6 @@ class BlockInterleaver(Encoder, Serializable):
     describes the block interleaving scheme.
     """
 
-    yaml_tag = "BlockInterleaver"
     __block_size: int  # The number of bits the interleaver operates on
     # The number of sub-blocks the interleaver divides `__block_size` in
     __interleave_blocks: int
@@ -147,3 +148,16 @@ class BlockInterleaver(Encoder, Serializable):
     @property
     def rate(self) -> float:
         return 1.0
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_integer(self.block_size, "block_size")
+        process.serialize_integer(self.interleave_blocks, "interleave_blocks")
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> BlockInterleaver:
+        block_size = process.deserialize_integer("block_size")
+        interleave_blocks = process.deserialize_integer("interleave_blocks")
+
+        return cls(block_size, interleave_blocks)

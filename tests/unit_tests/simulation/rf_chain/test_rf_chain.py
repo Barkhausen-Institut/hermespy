@@ -5,6 +5,7 @@ from unittest.mock import Mock
 
 from hermespy.core import Signal
 from hermespy.simulation.rf_chain import RfChain
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -81,3 +82,8 @@ class TestRfChain(TestCase):
         self.rf_chain.transmit(signal)
 
         pa.send.assert_called_once()
+
+    def test_serialization(self) -> None:
+        """Test RF chain serialization"""
+        
+        test_roundtrip_serialization(self, self.rf_chain)

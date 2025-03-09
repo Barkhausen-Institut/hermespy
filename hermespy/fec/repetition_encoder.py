@@ -9,10 +9,11 @@ The achieve redundancy by repeating all bits within a block during encoding.
 """
 
 from __future__ import annotations
+from typing_extensions import override
 
 import numpy as np
 
-from hermespy.core import Serializable
+from hermespy.core import Serializable, SerializationProcess, DeserializationProcess
 from .coding import Encoder
 
 __author__ = "Tobias Kronauer"
@@ -62,7 +63,6 @@ class RepetitionEncoder(Encoder, Serializable):
     assigning input bits to output bits by index.
     """
 
-    yaml_tag = "Repetition"
     __bit_block_size: int
     __repetitions: int
 
@@ -137,3 +137,16 @@ class RepetitionEncoder(Encoder, Serializable):
             raise ValueError("Repetitions must be an uneven integer")
 
         self.__repetitions = num
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_integer(self.bit_block_size, "bit_block_size")
+        process.serialize_integer(self.repetitions, "repetitions")
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> RepetitionEncoder:
+        bit_block_size = process.deserialize_integer("bit_block_size")
+        repetitions = process.deserialize_integer("repetitions")
+
+        return cls(bit_block_size, repetitions)

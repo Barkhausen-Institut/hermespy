@@ -9,7 +9,7 @@ from scipy.constants import pi
 
 from hermespy.beamforming import CaponBeamformer
 from hermespy.simulation import SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -81,6 +81,6 @@ class TestCaponBeamformer(TestCase):
             assert_array_almost_equal(expected_samples, noiseless_decoded_samples[f, 0, :])
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test capon beamformer serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.beamformer)
+        test_roundtrip_serialization(self, self.beamformer)

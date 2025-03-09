@@ -2,20 +2,19 @@
 
 from __future__ import annotations
 from math import exp, log, log10
-from enum import Enum
-from typing import Any, Mapping, Set, Tuple, Type
+from typing import Mapping, Set, Tuple
+from typing_extensions import override
 
 import numpy as np
-from h5py import Group
 
-
-from hermespy.core.factory import Serializable
+from hermespy.core import SerializableEnum, SerializationProcess, DeserializationProcess
 from .cluster_delay_lines import (
     ClusterDelayLineBase,
     ClusterDelayLineRealizationParameters,
     ClusterDelayLineSample,
     ClusterDelayLineSampleParameters,
     ClusterDelayLineRealization,
+    DelayNormalization,
     LOSState,
 )
 from ..channel import ChannelSampleHook
@@ -31,7 +30,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class FactoryType(Enum):
+class FactoryType(SerializableEnum):
     """Type of indoor factory.
 
     Defined in TR 138.901 v17.0.0 Table 7.2-4.
@@ -385,58 +384,37 @@ class IndoorFactoryRealization(ClusterDelayLineRealization[LOSState]):
         # TR 138.901 v17.0.0 Table 7.5-11
         return 0.0
 
-    def to_HDF(self, group: Group) -> None:
-        ClusterDelayLineRealization.to_HDF(self, group)
-
-        self.__los_realization.to_HDF(group.create_group("los_realization"))
-        self.__nlos_realization.to_HDF(group.create_group("nlos_realization"))
-        if self.expected_state is not None:
-            group.attrs["expected_state"] = self.expected_state.value
-        group.attrs["volume"] = self.__volume
-        group.attrs["surface"] = self.__surface
-        group.attrs["factory_type"] = self.__factory_type.value
-        group.attrs["clutter_height"] = self.__clutter_height
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        ClusterDelayLineRealization.serialize(self, process)
+        process.serialize_object(self.__los_realization, "los_realization")
+        process.serialize_object(self.__nlos_realization, "nlos_realization")
+        process.serialize_floating(self.__volume, "volume")
+        process.serialize_floating(self.__surface, "surface")
+        process.serialize_object(self.__factory_type, "factory_type")
+        process.serialize_floating(self.__clutter_height, "clutter_height")
 
     @classmethod
-    def From_HDF(
-        cls: Type[IndoorFactoryRealization],
-        group: Group,
-        parameters: ClusterDelayLineRealizationParameters,
-        sample_hooks: Set[ChannelSampleHook[ClusterDelayLineSample]],
-    ) -> IndoorFactoryRealization:
-
-        state_realization = ConsistentRealization.from_HDF(group["state_realization"])
-        los_realization = ConsistentRealization.from_HDF(group["los_realization"])
-        nlos_realization = ConsistentRealization.from_HDF(group["nlos_realization"])
-        if "expected_state" in group.attrs:
-            expected_state = LOSState(group.attrs["expected_state"])
-        else:
-            expected_state = None
-        volume = group.attrs["volume"]
-        surface = group.attrs["surface"]
-        factory_type = FactoryType(group.attrs["factory_type"])  # type: ignore[call-arg]
-        clutter_height = group.attrs["clutter_height"]
-        gain = group.attrs["gain"] if "gain" in group.attrs else 1.0
-
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> IndoorFactoryRealization:
         return IndoorFactoryRealization(
-            expected_state,
-            state_realization,
-            los_realization,
-            nlos_realization,
-            parameters,
-            volume,
-            surface,
-            factory_type,
-            clutter_height,
-            sample_hooks,
-            gain,
+            expected_state=process.deserialize_object("expected_state", LOSState, None),
+            los_realization=process.deserialize_object("los_realization", ConsistentRealization),
+            nlos_realization=process.deserialize_object("nlos_realization", ConsistentRealization),
+            volume=process.deserialize_floating("volume"),
+            surface=process.deserialize_floating("surface"),
+            factory_type=process.deserialize_object("factory_type", FactoryType),
+            clutter_height=process.deserialize_floating("clutter_height"),
+            sample_hooks=set(),
+            **ClusterDelayLineRealization._DeserializeParameters(process),  # type: ignore[arg-type]
         )
 
 
-class IndoorFactory(ClusterDelayLineBase[IndoorFactoryRealization, LOSState], Serializable):
+class IndoorFactory(ClusterDelayLineBase[IndoorFactoryRealization, LOSState]):
     """3GPP cluster delay line preset modeling an indoor factory scenario."""
 
-    yaml_tag = "IndoorFactory"
+    __DEFAULT_CLUTTER_HEIGHT = 0.0
+
     __volume: float  # Hall volume in m3
     __surface: float  # Total surface hall area in m2 (walls/floor/ceiling)
     __factory_type: FactoryType
@@ -447,9 +425,12 @@ class IndoorFactory(ClusterDelayLineBase[IndoorFactoryRealization, LOSState], Se
         volume: float,
         surface: float,
         factory_type: FactoryType,
-        clutter_height: float = 0.0,
-        gain: float = 1.0,
-        **kwargs: Any,
+        clutter_height: float = __DEFAULT_CLUTTER_HEIGHT,
+        delay_normalization: DelayNormalization = ClusterDelayLineBase._DEFAULT_DELAY_NORMALIZATION,
+        oxygen_absorption: bool = ClusterDelayLineBase._DEFAULT_OXYGEN_ABSORPTION,
+        expected_state: LOSState | None = None,
+        gain: float = ClusterDelayLineBase._DEFAULT_GAIN,
+        seed: int | None = None,
     ) -> None:
         """
         Args:
@@ -468,15 +449,18 @@ class IndoorFactory(ClusterDelayLineBase[IndoorFactoryRealization, LOSState], Se
                 Zero by default, meaning virtually no clutter.
 
             gain (float, optional):
-                Linear power gain factor a signal experiences when being propagated over this realization.
+                Linear channel energy gain factor.
+                Initializes the :meth:`gain<gain>` property.
                 :math:`1.0` by default.
 
-            \**kwargs:
-                Additional arguments passed to the base class.
+            seed (int, optional):
+                Seed used to initialize the pseudo-random number generator.
         """
 
         # Initialize base class
-        ClusterDelayLineBase.__init__(self, gain, **kwargs)
+        ClusterDelayLineBase.__init__(
+            self, delay_normalization, oxygen_absorption, expected_state, gain, seed
+        )
 
         # Initialize class attributes
         self.volume = volume
@@ -612,7 +596,21 @@ class IndoorFactory(ClusterDelayLineBase[IndoorFactoryRealization, LOSState], Se
             self.gain,
         )
 
-    def _recall_specific_realization(
-        self, group: Group, parameters: ClusterDelayLineRealizationParameters
-    ) -> IndoorFactoryRealization:
-        return IndoorFactoryRealization.From_HDF(group, parameters, self.sample_hooks)
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        ClusterDelayLineBase.serialize(self, process)
+        process.serialize_object(self.factory_type, "factory_type")
+        process.serialize_floating(self.volume, "volume")
+        process.serialize_floating(self.surface, "surface")
+        process.serialize_floating(self.clutter_height, "clutter_height")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> IndoorFactory:
+        return IndoorFactory(
+            process.deserialize_floating("volume"),
+            process.deserialize_floating("surface"),
+            process.deserialize_object("factory_type", FactoryType),
+            process.deserialize_floating("clutter_height", cls.__DEFAULT_CLUTTER_HEIGHT),
+            **ClusterDelayLineBase._DeserializeParameters(process),  # type: ignore[arg-type]
+        )

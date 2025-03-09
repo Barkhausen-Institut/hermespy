@@ -9,7 +9,7 @@ from numpy.testing import assert_array_almost_equal
 from hermespy.core import Signal
 from hermespy.simulation.rf_chain.analog_digital_converter import GainControlBase
 from hermespy.simulation.rf_chain import Gain, AutomaticGainControl, GainControlType, QuantizerType, AnalogDigitalConverter
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -105,10 +105,10 @@ class TestGain(TestCase):
         estimate = self.gain.estimate_gain(Mock())
         self.assertEqual(estimate, self.gain.gain)
 
-    def test_yaml_serialization(self) -> None:
-        """Test YAML roundtrip serialization"""
+    def test_serialization(self) -> None:
+        """Test serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.gain)
+        test_roundtrip_serialization(self, self.gain)
 
 
 class TestAutomaticGainControl(TestCase):
@@ -165,10 +165,10 @@ class TestAutomaticGainControl(TestCase):
         self.assertEqual(0.5, max_amplitude_gain_estimate)
         self.assertEqual(0.5, rms_amplitude_gain_estimate)
 
-    def test_yaml_serialization(self) -> None:
-        """Test YAML roundtrip serialization"""
+    def test_serialization(self) -> None:
+        """Test serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.gain)
+        test_roundtrip_serialization(self, self.gain)
 
 
 class TestAnalogDigitalConverter(TestCase):
@@ -272,3 +272,9 @@ class TestAnalogDigitalConverter(TestCase):
         with patch("matplotlib.pyplot.figure") as figure_mock:
             self.adc.plot_quantizer(signal.getitem())
             figure_mock.assert_called_once()
+
+    def test_serialization(self) -> None:
+        """Test serialization"""
+
+        self.adc.gain = Gain()
+        test_roundtrip_serialization(self, self.adc)

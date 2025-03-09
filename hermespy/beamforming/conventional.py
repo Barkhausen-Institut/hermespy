@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import annotations
+from typing_extensions import override
+
 import numpy as np
 from scipy.constants import pi, speed_of_light
 
-from hermespy.core import AntennaArrayState, Direction, Serializable
+from hermespy.core import AntennaArrayState, DeserializationProcess, Direction, SerializationProcess
 from .beamformer import TransmitBeamformer, ReceiveBeamformer
 
 
@@ -17,10 +20,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class ConventionalBeamformer(Serializable, TransmitBeamformer, ReceiveBeamformer):
-
-    yaml_tag = "ConventionalBeamformer"
-    """YAML serialization tag."""
+class ConventionalBeamformer(TransmitBeamformer, ReceiveBeamformer):
 
     def __init__(self) -> None:
         # Initialize base classes
@@ -121,3 +121,12 @@ class ConventionalBeamformer(Serializable, TransmitBeamformer, ReceiveBeamformer
         codebook = self._codebook(carrier_frequency, angles[:, 0, :], array)
         beamformed_samples = codebook @ samples
         return beamformed_samples[:, np.newaxis, :]
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        pass
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> ConventionalBeamformer:
+        return ConventionalBeamformer()

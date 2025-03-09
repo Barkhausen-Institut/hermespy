@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import TypeVar
+from typing_extensions import override
 
 import numpy as np
 from matplotlib import pyplot as plt
 
-from hermespy.core import Serializable, SerializableEnum, Signal
+from hermespy.core import (
+    Serializable,
+    SerializableEnum,
+    Signal,
+    SerializationProcess,
+    DeserializationProcess,
+)
 
 from hermespy.tools.math import rms_value
 
@@ -33,7 +40,7 @@ GainType = TypeVar("GainType", bound="Gain")
 """Type of gain."""
 
 
-class GainControlBase(ABC):
+class GainControlBase(Serializable):
     """Base class for all ADC gain control models."""
 
     __rescale_quantization: bool
@@ -118,11 +125,8 @@ class GainControlBase(ABC):
         return scaled_signal
 
 
-class Gain(Serializable, GainControlBase):
+class Gain(GainControlBase):
     """Constant gain model."""
-
-    yaml_tag = "Gain"
-    """YAML serialization tag."""
 
     __gain: float
 
@@ -170,12 +174,22 @@ class Gain(Serializable, GainControlBase):
     def estimate_gain(self, input_signal: Signal) -> float:
         return self.gain
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_floating(self.__gain, "gain")
+        process.serialize_integer(int(self.rescale_quantization), "rescale_quantization")
 
-class AutomaticGainControl(Serializable, GainControlBase):
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> Gain:
+        return Gain(
+            process.deserialize_floating("gain", 1.0),
+            bool(process.deserialize_integer("rescale_quantization", 0)),
+        )
+
+
+class AutomaticGainControl(GainControlBase):
     """Analog-to-digital conversion automatic gain control modeling."""
-
-    yaml_tag = "AutomaticGainControl"
-    """YAML serialization tag."""
 
     __agc_type: GainControlType
     __backoff: float
@@ -265,6 +279,21 @@ class AutomaticGainControl(Serializable, GainControlBase):
 
         return 1 / (max_amplitude * self.backoff) if max_amplitude > 0.0 else 1.0
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_object(self.agc_type, "agc_type")
+        process.serialize_floating(self.backoff, "backoff")
+        process.serialize_integer(int(self.rescale_quantization), "rescale_quantization")
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> AutomaticGainControl:
+        return AutomaticGainControl(
+            process.deserialize_object("agc_type", GainControlType, GainControlType.MAX_AMPLITUDE),
+            process.deserialize_floating("backoff", 1.0),
+            bool(process.deserialize_integer("rescale_quantization", 0)),
+        )
+
 
 class QuantizerType(SerializableEnum):
     """Type of quantizer"""
@@ -285,17 +314,14 @@ class AnalogDigitalConverter(Serializable):
     the same amplitude as the input.
     """
 
-    yaml_tag = "ADC"
-    """YAML serialization tag"""
-
     __num_quantization_bits: int | None
-    gain: Gain
+    gain: GainControlBase
     __quantizer_type: QuantizerType
 
     def __init__(
         self,
         num_quantization_bits: int | None = None,
-        gain: Gain | None = None,
+        gain: GainControlBase | None = None,
         quantizer_type: QuantizerType = QuantizerType.MID_RISER,
     ) -> None:
         """
@@ -525,3 +551,19 @@ class AnalogDigitalConverter(Serializable):
         quant_axes.axvline(0)
 
         quant_axes.set_title(self.__class__.__name__ + " - " + label)
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        if self.num_quantization_bits is not None:
+            process.serialize_integer(self.num_quantization_bits, "num_quantization_bits")
+        process.serialize_object(self.gain, "gain")
+        process.serialize_object(self.quantizer_type, "quantizer_type")
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> AnalogDigitalConverter:
+        return AnalogDigitalConverter(
+            process.deserialize_integer("num_quantization_bits", None),
+            process.deserialize_object("gain", GainControlBase, None),
+            process.deserialize_object("quantizer_type", QuantizerType, QuantizerType.MID_RISER),
+        )

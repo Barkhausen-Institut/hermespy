@@ -7,11 +7,11 @@ import unittest
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 from scipy.constants import speed_of_light
-from h5py import File
 
 from hermespy.channel.sionna_rt_channel import rt, SionnaRTChannel
 from hermespy.core import Signal, Transformation
 from hermespy.simulation import SimulatedDevice, SimulatedUniformArray, SimulatedIdealAntenna, StaticTrajectory
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Egor Achkasov"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -48,8 +48,7 @@ class TestSionnaRTChannel(unittest.TestCase):
 
         # Channel
         self.scene_file = rt.scene.simple_reflector
-        self.scene = rt.load_scene(self.scene_file)
-        self.channel = SionnaRTChannel(self.scene, 0.9876, self.seed)
+        self.channel = SionnaRTChannel(self.scene_file, 0.9876, self.seed)
         # Relization
         self.realization = self.channel.realize()
 
@@ -81,19 +80,6 @@ class TestSionnaRTChannel(unittest.TestCase):
 
         for sample in self.channel_samples:
             self.assertEqual(sample.expected_energy_scale, np.abs(np.sum(sample._SionnaRTChannelSample__a)))
-
-    def test_recall_realization(self) -> None:
-        file = File("test.h5", "w", driver="core", backing_store=False)
-        group = file.create_group("g")
-
-        self.realization.to_HDF(group)
-
-        recalled_realization = self.channel.recall_realization(group)
-        file.close()
-
-        for attr in self.realization.__dict__:
-            self.assertEqual(self.realization.__dict__[attr],
-                             recalled_realization.__dict__[attr])
 
     def test_propagate(self) -> None:
         """Propagate a signal with a spike and check if the spike is still there"""
@@ -176,3 +162,13 @@ class TestSionnaRTChannel(unittest.TestCase):
                 self.sampling_rate)
             self.assertEqual(rSample.carrier_frequency, self.carrier_freq)
             self.assertEqual(rSample.bandwidth, self.sampling_rate)
+
+    def test_model_serialization(self) -> None:
+        """Test Sionna RT channel model serialization"""
+        
+        test_roundtrip_serialization(self, self.channel)
+
+    def test_realization_serialization(self) -> None:
+        """Test Sionna RT channel realization serialization"""
+        
+        test_roundtrip_serialization(self, self.realization)

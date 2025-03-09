@@ -7,8 +7,7 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 
 from hermespy.modem import StatedSymbols, Alamouti, Ganesan
-from hermespy.simulation import SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -120,11 +119,11 @@ class TestAlamouti(TestCase):
 
         self.assertEqual(5, self.alamouti.num_receive_output_streams(5))
 
-    def test_yaml_roundtrip_serialization(self) -> None:
-        """Test YAML roundtrip serialization"""
+    def test_serialization(self) -> None:
+        """Test Alamouti STBC serialization"""
 
         self.alamouti.precoding = None
-        test_yaml_roundtrip_serialization(self, self.alamouti)
+        test_roundtrip_serialization(self, self.alamouti)
 
 
 class TestGanesan(TestCase):
@@ -249,8 +248,8 @@ class TestGanesan(TestCase):
 
         self.assertEqual(5, self.ganesan.num_receive_output_streams(5))
 
-    def test_yaml_roundtrip_serialization(self) -> None:
-        """Test YAML roundtrip serialization"""
+    def test_serialization(self) -> None:
+        """Test Ganesan STBC serialization"""
 
         self.ganesan.precoding = None
-        test_yaml_roundtrip_serialization(self, self.ganesan)
+        test_roundtrip_serialization(self, self.ganesan)

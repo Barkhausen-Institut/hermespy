@@ -6,10 +6,9 @@ from unittest.mock import Mock
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
-from hermespy.modem import StatedSymbols, ReceivingModem
+from hermespy.modem import StatedSymbols
 from hermespy.modem.precoding import MaximumRatioCombining
-from hermespy.simulation import SimulatedDevice, SimulatedUniformArray, SimulatedIdealAntenna
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -60,7 +59,7 @@ class TestMaximumRatioCombinging(TestCase):
 
         self.assertEqual(1, self.mrc.num_receive_output_streams(12))
 
-    def test_yaml_roundtrip_serialization(self) -> None:
-        """Test YAML roundtrip serialization"""
+    def test_serialization(self) -> None:
+        """Test maximum ratio combining serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.mrc)
+        test_roundtrip_serialization(self, self.mrc)

@@ -9,9 +9,10 @@ from h5py import File
 from numpy.testing import assert_array_equal
 
 from hermespy.core import Signal
-from hermespy.modem import CommunicationReception, CommunicationTransmission, DuplexModem, Symbols, CommunicationWaveform
+from hermespy.modem import CommunicationReception, CommunicationTransmission
 from hermespy.radar import RadarCube, RadarReception
 from hermespy.jcas import JCASTransmission, JCASReception
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -30,23 +31,10 @@ class TestJCASTransmission(TestCase):
         self.signal = Signal.Empty(1.0, 1, 0)
         self.transmission = JCASTransmission(CommunicationTransmission(self.signal, []))
 
-    def test_hdf_serialization(self) -> None:
-        """Test proper serialization to HDF"""
+    def test_serialization(self) -> None:
+        """Test JCAS transmission serialization"""
 
-        transmission: JCASTransmission
-
-        with TemporaryDirectory() as tempdir:
-            file_location = path.join(tempdir, "testfile.hdf5")
-
-            with File(file_location, "a") as file:
-                group = file.create_group("testgroup")
-                self.transmission.to_HDF(group)
-
-            with File(file_location, "r") as file:
-                group = file["testgroup"]
-                transmission = self.transmission.from_HDF(group)
-
-        assert_array_equal(self.signal.getitem(), transmission.signal.getitem())
+        test_roundtrip_serialization(self, self.transmission)
 
 
 class TestJCASReception(TestCase):
@@ -59,18 +47,7 @@ class TestJCASReception(TestCase):
         self.radar_reception = RadarReception(self.signal, self.cube)
         self.reception = JCASReception(self.communication_reception, self.radar_reception)
 
-    def test_hdf_serialization(self) -> None:
-        """Test proper serialization to HDF"""
+    def test_serialization(self) -> None:
+        """Test JCAS reception serialization"""
 
-        with TemporaryDirectory() as tempdir:
-            file_location = path.join(tempdir, "testfile.hdf5")
-
-            with File(file_location, "a") as file:
-                group = file.create_group("testgroup")
-                self.reception.to_HDF(group)
-
-            with File(file_location, "r") as file:
-                group = file["testgroup"]
-                reception = JCASReception.from_HDF(group)
-
-        assert_array_equal(self.signal.getitem(), reception.signal.getitem())
+        test_roundtrip_serialization(self, self.reception)

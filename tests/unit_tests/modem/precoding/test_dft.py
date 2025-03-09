@@ -6,7 +6,7 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 
 from hermespy.modem import StatedSymbols, DFT
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -56,7 +56,7 @@ class TestDFT(TestCase):
 
         self.assertEqual(234, self.dft.num_receive_output_streams(234))
     
-    def test_yaml_serialization(self) -> None:
-        """YAML serialization should be possible"""
+    def test_serialization(self) -> None:
+        """Test DFT precoding serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.dft)
+        test_roundtrip_serialization(self, self.dft)

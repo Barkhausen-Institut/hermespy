@@ -5,7 +5,7 @@ import unittest
 import numpy as np
 
 from hermespy.fec import BlockInterleaver
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 
 __author__ = "Jan Adler"
@@ -98,6 +98,6 @@ class TestBlockInterleaver(unittest.TestCase):
         np.testing.assert_array_equal(expected_bits, self.interleaver.decode(code))
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test block interleaver serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.interleaver)
+        test_roundtrip_serialization(self, self.interleaver)

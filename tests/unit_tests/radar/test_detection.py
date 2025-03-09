@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from unittest import TestCase
-from unittest.mock import patch, Mock
 
-import matplotlib.pyplot as plt
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.constants import speed_of_light
@@ -11,6 +9,7 @@ from scipy.ndimage import gaussian_filter
 
 from hermespy.radar import PointDetection, RadarCube, RadarPointCloud, ThresholdDetector, MaxDetector, CFARDetector
 from unit_tests.utils import SimulationTestContext
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -75,6 +74,11 @@ class TestPointDetection(TestCase):
 
         self.assertTrue(PointDetection.__eq__(self.point, "something") == NotImplemented)
 
+    def test_serialization(self) -> None:
+        """Test max detector serialization"""
+        
+        test_roundtrip_serialization(self, self.point)
+
 
 class TestRadarPointCloud(TestCase):
     """Test the radar point cloud class"""
@@ -113,6 +117,10 @@ class TestRadarPointCloud(TestCase):
             self.cloud.add_point(PointDetection(np.zeros(3), np.zeros(3), 1.0))
             _ = self.cloud.visualize()
 
+    def test_serialization(self) -> None:
+        """Test radar point cloud serialization"""
+
+        test_roundtrip_serialization(self, self.cloud)
 
 class TestThresholdDetector(TestCase):
     """Test the threshold detector class"""
@@ -189,6 +197,11 @@ class TestThresholdDetector(TestCase):
         assert_array_almost_equal(np.array([0.0, 0.0, range_bins[3]]), cloud.points[0].position)
         assert_array_almost_equal(np.array([0, 0, doppler_bins[2] * speed_of_light / carrier_frequency]), cloud.points[0].velocity)
 
+    def test_serialization(self) -> None:
+        """Test threshold detector serialization"""
+        
+        test_roundtrip_serialization(self, self.detector)
+
 
 class TestMaxDetector(TestCase):
     "Test the max detector class"
@@ -230,6 +243,11 @@ class TestMaxDetector(TestCase):
         cloud = self.detector.detect(cube)
 
         self.assertEqual(0, cloud.num_points)
+
+    def test_serialization(self) -> None:
+        """Test max detector serialization"""
+        
+        test_roundtrip_serialization(self, self.detector)
 
 
 class TestCFARDetector(TestCase):
@@ -371,3 +389,8 @@ class TestCFARDetector(TestCase):
         cloud = self.detector.detect(cube)
 
         self.assertEqual(0, cloud.num_points)
+
+    def test_serialization(self) -> None:
+        """Test CFAR detector serialization"""
+        
+        test_roundtrip_serialization(self, self.detector)

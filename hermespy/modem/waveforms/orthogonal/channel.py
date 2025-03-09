@@ -24,9 +24,6 @@ __status__ = "Prototype"
 class OrthogonalLeastSquaresChannelEstimation(ChannelEstimation[OrthogonalWaveform], Serializable):
     """Least-Squares channel estimation for OFDM waveforms."""
 
-    yaml_tag = "O-LS"
-    """YAML serializtion tag"""
-
     def estimate_channel(self, symbols: Symbols, delay: float = 0.0) -> StatedSymbols:
         if symbols.num_streams != 1:
             raise NotImplementedError(
@@ -68,8 +65,6 @@ class OrthogonalLeastSquaresChannelEstimation(ChannelEstimation[OrthogonalWavefo
 class OrthogonalChannelEqualization(ChannelEqualization[OrthogonalWaveform], ABC):
     """Channel estimation for OFDM waveforms."""
 
-    yaml_tag = "OFDM-NoEqualization"
-
     def __init__(self, waveform: OrthogonalWaveform | None = None) -> None:
         """
         Args:
@@ -84,5 +79,4 @@ class OrthogonalChannelEqualization(ChannelEqualization[OrthogonalWaveform], ABC
 class OrthogonalZeroForcingChannelEqualization(ZeroForcingChannelEqualization[OrthogonalWaveform]):
     """Zero-Forcing channel equalization for OFDM waveforms."""
 
-    yaml_tag = "O-ZF"
-    """YAML serialization tag"""
+    ...

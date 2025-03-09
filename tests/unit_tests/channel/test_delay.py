@@ -10,11 +10,11 @@ from scipy.constants import speed_of_light
 
 from hermespy.channel.delay.spatial import SpatialDelayChannel, SpatialDelayChannelRealization
 from hermespy.channel.delay.delay import DelayChannelBase
-from hermespy.channel.delay.random import RandomDelayChannel, RandomDelayChannelRealization
+from hermespy.channel.delay.random import RandomDelayChannel
 from hermespy.core import DenseSignal, Transformation
 from hermespy.simulation import StaticTrajectory, SimulatedDevice
 from hermespy.tools import amplitude_path_loss
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 from unit_tests.utils import assert_signals_equal
 
 __author__ = "Jan Adler"
@@ -25,31 +25,6 @@ __version__ = "1.4.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
-
-
-class TestSpatialDelayChannelRealization(TestCase):
-    """Test the spatial delay channel realization"""
-
-    def setUp(self) -> None:
-        self.gain = 1.234
-        self.realization = SpatialDelayChannelRealization(
-            True,
-            [],
-            self.gain,
-        )
-
-    def test_HDF_serialization(self) -> None:
-        """Test HDF serialization"""
-
-        file = File("test.h5", "w", driver="core")
-        group = file.create_group("g")
-
-        self.realization.to_HDF(group)
-
-        recalled_realization = SpatialDelayChannelRealization.From_HDF(group, [])
-        file.close()
-
-        self.assertEqual(self.realization.gain, recalled_realization.gain)
 
 
 class _TestDelayChannelBase(TestCase):
@@ -93,28 +68,16 @@ class _TestDelayChannelBase(TestCase):
 
         assert_signals_equal(self, channel_propagation, state_propagation)
 
-    def test_recall_realization(self) -> None:
-        """Test realization recall"""
+    def test_model_serialization(self) -> None:
+        """Test delay channel model serialization"""
+        
+        test_roundtrip_serialization(self, self.channel)
 
-        file = File("test.h5", "w", driver="core")
-        group = file.create_group("g")
-
-        expected_realization = self.channel.realize()
-        expected_realization.to_HDF(group)
-
-        recalled_realization = self.channel.recall_realization(group)
-        file.close()
-
-        self.assertIsInstance(recalled_realization, type(expected_realization))
-        self.assertEqual(expected_realization.gain, recalled_realization.gain)
-
-    def test_serialization(self) -> None:
-        """Test YAML serialization"""
-
-        with patch("hermespy.channel.Channel.random_mother", new_callable=PropertyMock) as random_mock:
-            random_mock.return_value = None
-
-            test_yaml_roundtrip_serialization(self, self.channel)
+    def test_realization_serialization(self) -> None:
+        """Test delay channel serialization realization"""
+        
+        realization = self.channel.realize()
+        test_roundtrip_serialization(self, realization)
 
 
 class TestSpatialDelayChannel(_TestDelayChannelBase):

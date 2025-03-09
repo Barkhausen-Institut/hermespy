@@ -7,15 +7,15 @@ Leakage Calibration
 
 from __future__ import annotations
 from typing import Tuple, Type
+from typing_extensions import override
 
 import matplotlib.pyplot as plt
 import numpy as np
-from h5py import Group
 from numpy.linalg import svd
 from scipy.fft import fft, ifft
 from scipy.signal import convolve, find_peaks, peak_widths
 
-from hermespy.core import Serializable, Signal, VAT
+from hermespy.core import Signal, VAT, SerializationProcess, DeserializationProcess
 from ..physical_device import LeakageCalibrationBase, PhysicalDevice
 from .delay import DelayCalibration
 
@@ -29,10 +29,10 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class SelectiveLeakageCalibration(LeakageCalibrationBase, Serializable):
+class SelectiveLeakageCalibration(LeakageCalibrationBase):
     """Calibration of a frequency-selective leakage model."""
 
-    yaml_tag = "SelectiveLeakageCalibration"
+    __DEFAULT_DELAY: float = 0.0
 
     __leakage_response: np.ndarray  # Impulse response of the leakage model
     __sampling_rate: float  # Sampling rate of the leakage model
@@ -42,7 +42,7 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Serializable):
         self,
         leakage_response: np.ndarray,
         sampling_rate: float,
-        delay: float = 0.0,
+        delay: float = __DEFAULT_DELAY,
         physical_device: PhysicalDevice | None = None,
     ) -> None:
         """
@@ -218,21 +218,6 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Serializable):
             ax.set_ylim(0, max_amplitude)
 
         return figure, axes
-
-    def to_HDF(self, group: Group) -> None:
-        self._write_dataset(group, "leakage_response", self.leakage_response)
-        group.attrs["sampling_rate"] = self.sampling_rate
-        group.attrs["delay"] = self.delay
-
-    @classmethod
-    def from_HDF(
-        cls: Type[SelectiveLeakageCalibration], group: Group
-    ) -> SelectiveLeakageCalibration:
-        leakage_response = np.asarray(group.get("leakage_response"), dtype=np.complex128)
-        sampling_rate = group.attrs.get("sampling_rate")
-        delay = group.attrs.get("delay")
-
-        return SelectiveLeakageCalibration(leakage_response, sampling_rate, delay)
 
     def estimate_delay(self) -> DelayCalibration:
         """Estimate the delay of the leakage model.
@@ -526,3 +511,20 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase, Serializable):
             device.leakage_calibration = calibration
 
         return calibration
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_array(self.leakage_response, "leakage_response")
+        process.serialize_floating(self.sampling_rate, "sampling_rate")
+        process.serialize_floating(self.delay, "delay")
+
+    @override
+    @classmethod
+    def Deserialize(
+        cls: Type[SelectiveLeakageCalibration], process: DeserializationProcess
+    ) -> SelectiveLeakageCalibration:
+        return cls(
+            process.deserialize_array("leakage_response", np.complex128),
+            process.deserialize_floating("sampling_rate"),
+            process.deserialize_floating("delay", cls.__DEFAULT_DELAY),
+        )

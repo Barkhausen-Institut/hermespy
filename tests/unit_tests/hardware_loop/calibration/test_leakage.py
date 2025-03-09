@@ -10,7 +10,7 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 from hermespy.core import Signal
 from hermespy.hardware_loop import SelectiveLeakageCalibration, PhysicalDeviceDummy
 from hermespy.simulation import SimulatedIdealAntenna, SimulatedUniformArray, SelectiveLeakage
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -148,7 +148,7 @@ class TestSelectiveLeakageCalibration(TestCase):
 
         calibration = SelectiveLeakageCalibration.LeastSquaresEstimate(device)
 
-    def test_yaml_serialization(self) -> None:
-        """Test YAML serialization and deserialization"""
+    def test_serialization(self) -> None:
+        """Test leakage calibration serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.calibration)
+        test_roundtrip_serialization(self, self.calibration)

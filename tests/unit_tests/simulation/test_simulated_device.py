@@ -9,8 +9,8 @@ from numpy.testing import assert_array_equal
 from h5py import File
 
 from hermespy.core import DeviceInput, RandomNode, Signal, SignalReceiver, SignalTransmitter, Transformation
-from hermespy.simulation import N0, ProcessedSimulatedDeviceInput, SimulatedDevice, SimulatedDeviceOutput, SimulatedIdealAntenna, SimulatedUniformArray, SNR, TriggerModel, TriggerRealization, RandomTrigger, StaticTrigger, SampleOffsetTrigger, TimeOffsetTrigger
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from hermespy.simulation import N0, ProcessedSimulatedDeviceInput, SimulatedDevice, SimulatedDeviceOutput, SimulatedIdealAntenna, SimulatedUniformArray, SNR, TriggerModel, TriggerRealization, RandomTrigger, StaticTrigger, SampleOffsetTrigger, TimeOffsetTrigger, AWGNRealization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -298,16 +298,16 @@ class TestProcessedSimulatedDeviceInput(TestCase):
         self.baseband_signal = Signal.Create(np.zeros((1, 10)), self.sampling_rate, self.carrier_frequency)
         self.operator_separation = False
         self.operator_inputs = [s for s in self.impinging_signals]
-        self.noise_realization = Mock()
         self.trigger_realization = TriggerRealization(0, self.sampling_rate)
+        self.noise_realiztion = AWGNRealization(1.0, 12345)
 
-        self.processed_input = ProcessedSimulatedDeviceInput(self.impinging_signals, self.leaking_signal, self.baseband_signal, self.operator_separation, self.operator_inputs, self.noise_realization, self.trigger_realization)
+        self.processed_input = ProcessedSimulatedDeviceInput(self.impinging_signals, self.leaking_signal, self.baseband_signal, self.operator_separation, self.operator_inputs, self.trigger_realization, self.noise_realiztion)
 
     def test_init_validation(self) -> None:
         """Initialization parameters should be properly validated"""
 
         with self.assertRaises(ValueError):
-            ProcessedSimulatedDeviceInput([Mock()], self.leaking_signal, self.baseband_signal, self.operator_separation, self.operator_inputs, self.noise_realization, self.trigger_realization)
+            ProcessedSimulatedDeviceInput([Mock()], self.leaking_signal, self.baseband_signal, self.operator_separation, self.operator_inputs, self.trigger_realization, self.noise_realiztion)
 
     def test_properties(self) -> None:
         """The properties should return the proper values"""
@@ -315,20 +315,12 @@ class TestProcessedSimulatedDeviceInput(TestCase):
         self.assertIs(self.leaking_signal, self.processed_input.leaking_signal)
         self.assertIs(self.baseband_signal, self.processed_input.baseband_signal)
         self.assertCountEqual(self.operator_inputs, self.processed_input.operator_inputs)
-        self.assertIs(self.noise_realization, self.processed_input.noise_realization)
         self.assertIs(self.trigger_realization, self.processed_input.trigger_realization)
 
-    def test_hdf_serialization(self) -> None:
-        """Test HDF roundtrip serialization"""
+    def test_serialization(self) -> None:
+        """Test input serialization"""
 
-        file = File("test.h5", "w", driver="core", backing_store=False)
-        group = file.create_group("g1")
-
-        self.processed_input.to_HDF(group)
-        recalled_input = ProcessedSimulatedDeviceInput.from_HDF(group)
-        file.close()
-
-        assert_array_equal(self.baseband_signal.getitem(), recalled_input.baseband_signal.getitem())
+        test_roundtrip_serialization(self, self.processed_input)
 
 
 class TestSimulatedDevice(TestCase):
@@ -394,9 +386,6 @@ class TestSimulatedDevice(TestCase):
 
         with self.assertRaises(ValueError):
             self.device.sampling_rate = -1.0
-
-        with self.assertRaises(ValueError):
-            self.device.sampling_rate = 0.0
 
     def test_carrier_frequency_setget(self) -> None:
         """Carrier frequency property getter should return setter argument"""
@@ -558,16 +547,6 @@ class TestSimulatedDevice(TestCase):
             self.assertAlmostEqual(expected_noise_power, reception.operator_inputs[1].power[0], places=0)
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test serialization of simulated devices"""
 
-        default_blacklist = self.device.property_blacklist
-        default_blacklist.add("scenario")
-        default_blacklist.add("antennas")
-
-        # Hack because the signal transmitter is not serializable
-        self.device.transmitters.remove(self.transmitter_alpha)
-        self.device.transmitters.remove(self.transmitter_beta)
-
-        with patch("hermespy.simulation.simulated_device.SimulatedDevice.property_blacklist", new_callable=PropertyMock) as blacklist:
-            blacklist.return_value = default_blacklist
-            test_yaml_roundtrip_serialization(self, self.device, {"sampling_rate", "scenario", "antennas", "attached"})
+        test_roundtrip_serialization(self, self.device, {'scenario', 'random_mother'})

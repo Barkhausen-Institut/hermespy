@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch, PropertyMock
 import numpy as np
 
 from hermespy.modem.tools.psk_qam_mapping import PskQamMapping
-from matplotlib import pyplot as plt
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -247,14 +247,8 @@ class TestPskQamMapping(unittest.TestCase):
         psk_qam_mapping = PskQamMapping(4, mapping=mapping)
 
         np.testing.assert_array_equal(psk_qam_mapping.mapping, psk_qam_mapping.get_mapping())
-
-
-def _plot_constellation(modulation_order: np.ndarray, is_complex: bool, soft_output: bool) -> None:
-    mapper = PskQamMapping(modulation_order, soft_output=False, is_complex=is_complex)
-    mapping = mapper.get_mapping()
-
-    plt.plot(np.real(mapping), np.imag(mapping), "*")
-
-    for idx in range(modulation_order):
-        bin_str = bin(idx)[2:].zfill(mapper.bits_per_symbol)
-        plt.annotate(bin_str, (np.real(mapping[idx]), np.imag(mapping[idx])))
+        
+    def test_serialization(self) -> None:
+        """Test PSK/QAM mapping serialization"""
+        
+        test_roundtrip_serialization(self, PskQamMapping(4))

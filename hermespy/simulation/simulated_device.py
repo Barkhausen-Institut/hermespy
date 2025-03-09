@@ -1,34 +1,39 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from collections.abc import Sequence
 from itertools import chain
 from typing import List, Set, Type
+from typing_extensions import override
 
 import numpy as np
-from h5py import Group
 
 from hermespy.core import (
     AntennaArrayState,
+    DeserializationProcess,
     Device,
     DeviceInput,
     DeviceOutput,
     DeviceReception,
     DeviceState,
     DeviceTransmission,
-    HDFSerializable,
     Hookable,
     ProcessedDeviceInput,
     RandomNode,
     Transformation,
     Transmission,
+    TransmitSignalCoding,
+    TransmitStreamEncoder,
     Transmitter,
     Reception,
     Scenario,
     Serializable,
+    SerializationProcess,
     Signal,
     Receiver,
+    ReceiveSignalCoding,
+    ReceiveStreamDecoder,
     register,
 )
 from .animation import Moveable, StaticTrajectory, Trajectory, TrajectorySample
@@ -48,7 +53,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class TriggerRealization(HDFSerializable):
+class TriggerRealization(Serializable):
     """Realization of a trigger model.
 
     A trigger realization will contain the offset between a drop start and the waveform frames contained within the drop.
@@ -132,19 +137,20 @@ class TriggerRealization(HDFSerializable):
         num_offset_samples = int(self.num_offset_samples * sampling_rate / self.sampling_rate)
         return num_offset_samples
 
-    def to_HDF(self, group: Group) -> None:
-        group.attrs["num_offset_samples"] = self.num_offset_samples
-        group.attrs["sampling_rate"] = self.sampling_rate
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_integer(self.num_offset_samples, "num_offset_samples")
+        process.serialize_floating(self.sampling_rate, "sampling_rate")
 
     @classmethod
-    def from_HDF(cls: Type[TriggerRealization], group: Group) -> TriggerRealization:
-        num_offset_samples = group.attrs.get("num_offset_samples", 0)
-        sampling_rate = group.attrs.get("sampling_rate", 1.0)
-
+    def Deserialize(
+        cls: Type[TriggerRealization], process: DeserializationProcess
+    ) -> TriggerRealization:
+        num_offset_samples = process.deserialize_integer("num_offset_samples")
+        sampling_rate = process.deserialize_floating("sampling_rate")
         return cls(num_offset_samples, sampling_rate)
 
 
-class TriggerModel(ABC, RandomNode):
+class TriggerModel(Serializable, RandomNode):
     """Base class for all trigger models."""
 
     __devices: Set[SimulatedDevice]
@@ -207,10 +213,8 @@ class TriggerModel(ABC, RandomNode):
         ...  # pragma: no cover
 
 
-class StaticTrigger(TriggerModel, Serializable):
+class StaticTrigger(TriggerModel):
     """Model of a trigger that's always perfectly synchronous with the drop start."""
-
-    yaml_tag = "StaticTrigger"
 
     def realize(self, rng: np.random.Generator | None = None) -> TriggerRealization:
         if self.num_devices < 1:
@@ -222,11 +226,19 @@ class StaticTrigger(TriggerModel, Serializable):
         # Static triggers will always consider a perfect trigger at the drop start
         return TriggerRealization(0, sampling_rate)
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        return
 
-class SampleOffsetTrigger(TriggerModel, Serializable):
+    @override
+    @classmethod
+    def Deserialize(cls: Type[StaticTrigger], process: DeserializationProcess) -> StaticTrigger:
+        return cls()
+
+
+class SampleOffsetTrigger(TriggerModel):
     """Model of a trigger that generates a constant offset of samples between drop start and frame start"""
 
-    yaml_tag = "TimeOffsetTrigger"
     __num_offset_samples: int
 
     def __init__(self, num_offset_samples: int) -> None:
@@ -269,15 +281,26 @@ class SampleOffsetTrigger(TriggerModel, Serializable):
         sampling_rate = list(self.devices)[0].sampling_rate
         return TriggerRealization(self.num_offset_samples, sampling_rate)
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_integer(self.num_offset_samples, "num_offset_samples")
 
-class TimeOffsetTrigger(TriggerModel, Serializable):
+    @override
+    @classmethod
+    def Deserialize(
+        cls: Type[SampleOffsetTrigger], process: DeserializationProcess
+    ) -> SampleOffsetTrigger:
+        num_offset_samples = process.deserialize_integer("num_offset_samples")
+        return cls(num_offset_samples)
+
+
+class TimeOffsetTrigger(TriggerModel):
     """Model of a trigger that generates a constant time offset between drop start and frame start.
 
     Note that the offset is rounded to the nearest smaller integer number of samples,
     depending on the sampling rate of the first controlled device's sampling rate.
     """
 
-    yaml_tag = "TimeOffsetTrigger"
     __offset: float
 
     def __init__(self, offset: float) -> None:
@@ -319,11 +342,21 @@ class TimeOffsetTrigger(TriggerModel, Serializable):
 
         return TriggerRealization(num_offset_samples, sampling_rate)
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_floating(self.offset, "offset")
 
-class RandomTrigger(TriggerModel, Serializable):
+    @override
+    @classmethod
+    def Deserialize(
+        cls: Type[TimeOffsetTrigger], process: DeserializationProcess
+    ) -> TimeOffsetTrigger:
+        offset = process.deserialize_floating("offset")
+        return cls(offset)
+
+
+class RandomTrigger(TriggerModel):
     """Model of a trigger that generates a random offset between drop start and frame start"""
-
-    yaml_tag = "RandomTrigger"
 
     def realize(self, rng: np.random.Generator | None = None) -> TriggerRealization:
         if self.num_devices < 1:
@@ -355,6 +388,15 @@ class RandomTrigger(TriggerModel, Serializable):
 
         trigger_delay = _rng.integers(0, max_trigger_delay)
         return TriggerRealization(trigger_delay, sampling_rate)
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        return
+
+    @override
+    @classmethod
+    def Deserialize(cls: Type[RandomTrigger], process: DeserializationProcess) -> RandomTrigger:
+        return cls()
 
 
 class SimulatedDeviceOutput(DeviceOutput):
@@ -511,47 +553,21 @@ class SimulatedDeviceOutput(DeviceOutput):
 
         return len(self.__leaking_signals)
 
+    def serialize(self, process: SerializationProcess) -> None:
+        DeviceOutput.serialize(self, process)
+        process.serialize_object(self.trigger_realization, "trigger_realization")
+        process.serialize_object_sequence(self.emerging_signals, "emerging_signals")
+        process.serialize_object_sequence(self.leaking_signals, "leaking_signals")
+
     @classmethod
-    def from_HDF(cls: Type[SimulatedDeviceOutput], group: Group) -> SimulatedDeviceOutput:
-        # Recall base class
-        device_output = DeviceOutput.from_HDF(group)
-
-        # Recall emerging signals
-        num_emerging_signals = group.attrs.get("num_emerging_signals", 0)
-        emerging_signals = [
-            Signal.from_HDF(group[f"emerging_signal_{s:02d}"]) for s in range(num_emerging_signals)
-        ]
-
-        # Recall leaking signals
-        num_leaking_signals = group.attrs.get("num_leaking_signals", 0)
-        leaking_signals = [
-            Signal.from_HDF(group[f"leaking_signal_{s:02d}"]) for s in range(num_leaking_signals)
-        ]
-
-        # Recall trigger realization
-        trigger_realization = TriggerRealization.from_HDF(group["trigger_realization"])
-
-        # Initialize object
-        return cls.From_DeviceOutput(
-            device_output, emerging_signals, leaking_signals, trigger_realization
-        )
-
-    def to_HDF(self, group: Group) -> None:
-        # Serialize base class
-        DeviceOutput.to_HDF(self, group)
-
-        # Serialize emerging signals
-        group.attrs["num_emerging_signals"] = self.num_emerging_signals
-        for e, emerging_signal in enumerate(self.emerging_signals):
-            emerging_signal.to_HDF(group.create_group(f"emerging_signal_{e:02d}"))
-
-        # Serialize leaking signals
-        group.attrs["num_leaking_signals"] = self.num_leaking_signals
-        for ell, leaking_signal in enumerate(self.leaking_signals):
-            leaking_signal.to_HDF(group.create_group(f"leaking_signal_{ell:02d}"))
-
-        # Serialize trigger realization
-        self.trigger_realization.to_HDF(self._create_group(group, "trigger_realization"))
+    def Deserialize(
+        cls: Type[SimulatedDeviceOutput], process: DeserializationProcess
+    ) -> SimulatedDeviceOutput:
+        output = DeviceOutput.Deserialize(process)
+        trigger_realization = process.deserialize_object("trigger_realization", TriggerRealization)
+        emerging_signals = process.deserialize_object_sequence("emerging_signals", Signal)
+        leaking_signals = process.deserialize_object_sequence("leaking_signals", Signal)
+        return cls.From_DeviceOutput(output, emerging_signals, leaking_signals, trigger_realization)
 
 
 class SimulatedDeviceTransmission(DeviceTransmission, SimulatedDeviceOutput):
@@ -625,27 +641,20 @@ class SimulatedDeviceTransmission(DeviceTransmission, SimulatedDeviceOutput):
             output.carrier_frequency,
         )
 
+    def serialize(self, process: SerializationProcess) -> None:
+        SimulatedDeviceOutput.serialize(self, process)
+        DeviceTransmission.serialize(self, process)
+
     @classmethod
-    def from_HDF(
-        cls: Type[SimulatedDeviceTransmission],
-        group: Group,
-        operators: Sequence[Transmitter] | None = None,
+    def Deserialize(
+        cls: Type[SimulatedDeviceTransmission], process: DeserializationProcess
     ) -> SimulatedDeviceTransmission:
-        # Recover base classes
-        device_transmission = DeviceTransmission.from_HDF(group, operators)
-        devic_output = SimulatedDeviceOutput.from_HDF(group)
-
-        # Initialize class from device output and operator transmissions
-        return cls.From_SimulatedDeviceOutput(
-            devic_output, device_transmission.operator_transmissions
-        )
-
-    def to_HDF(self, group: Group) -> None:
-        DeviceTransmission.to_HDF(self, group)
-        SimulatedDeviceOutput.to_HDF(self, group)
+        output = SimulatedDeviceOutput.Deserialize(process)
+        device_transmission = DeviceTransmission.Deserialize(process)
+        return cls.From_SimulatedDeviceOutput(output, device_transmission.operator_transmissions)
 
 
-class SimulatedDeviceReceiveRealization(object):
+class SimulatedDeviceReceiveRealization(Serializable):
     """Realization of a simulated device reception random process."""
 
     __noise_realization: NoiseRealization
@@ -669,8 +678,17 @@ class SimulatedDeviceReceiveRealization(object):
 
         return self.__noise_realization
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_object(self.noise_realization, "noise_realization")
 
-class ProcessedSimulatedDeviceInput(SimulatedDeviceReceiveRealization, ProcessedDeviceInput):
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> SimulatedDeviceReceiveRealization:
+        return cls(process.deserialize_object("noise_realization", NoiseRealization))
+
+
+class ProcessedSimulatedDeviceInput(ProcessedDeviceInput, SimulatedDeviceReceiveRealization):
     """Information generated by receiving over a simulated device."""
 
     __leaking_signal: Signal | None
@@ -685,8 +703,8 @@ class ProcessedSimulatedDeviceInput(SimulatedDeviceReceiveRealization, Processed
         baseband_signal: Signal,
         operator_separation: bool,
         operator_inputs: Sequence[Signal],
-        noise_realization: NoiseRealization,
         trigger_realization: TriggerRealization,
+        noise_realization: NoiseRealization,
     ) -> None:
         """
         Args:
@@ -705,9 +723,6 @@ class ProcessedSimulatedDeviceInput(SimulatedDeviceReceiveRealization, Processed
 
             operator_inputs (Sequence[Signal]):
                 Signal models to be processed by the device's receive DSP algorithms.
-
-            noise_realization (NoiseRealization):
-                Realization of the device's noise model.
 
             trigger_realization (TriggerRealization):
                 Trigger realization modeling the time delay between a drop start and frame start.
@@ -734,8 +749,8 @@ class ProcessedSimulatedDeviceInput(SimulatedDeviceReceiveRealization, Processed
                 raise ValueError("Invalid configuration")
 
         # Initialize base classes
-        SimulatedDeviceReceiveRealization.__init__(self, noise_realization)
         ProcessedDeviceInput.__init__(self, _impinging_signals, operator_inputs)
+        SimulatedDeviceReceiveRealization.__init__(self, noise_realization)
 
         # Initialize attributes
         self.__leaking_signal = leaking_signal
@@ -775,35 +790,27 @@ class ProcessedSimulatedDeviceInput(SimulatedDeviceReceiveRealization, Processed
 
         return self.__trigger_realization
 
-    def to_HDF(self, group: Group) -> None:
-        ProcessedDeviceInput.to_HDF(self, group)
-        group.attrs["operator_separation"] = self.operator_separation
-        if self.leaking_signal is not None:
-            self.leaking_signal.to_HDF(self._create_group(group, "leaking_signal"))
-        self.baseband_signal.to_HDF(self._create_group(group, "baseband_signal"))
-        self.trigger_realization.to_HDF(self._create_group(group, "trigger_realization"))
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        ProcessedDeviceInput.serialize(self, process)
+        SimulatedDeviceReceiveRealization.serialize(self, process)
+        process.serialize_object(self.leaking_signal, "leaking_signal")
+        process.serialize_object(self.baseband_signal, "baseband_signal")
+        process.serialize_integer(int(self.operator_separation), "operator_separation")
+        process.serialize_object(self.trigger_realization, "trigger_realization")
 
+    @override
     @classmethod
-    def from_HDF(
-        cls: Type[ProcessedSimulatedDeviceInput], group: Group
-    ) -> ProcessedSimulatedDeviceInput:
-        device_input = ProcessedDeviceInput.from_HDF(group)
-        operator_separation = False  # group.attrs.get("operator_separation", False)
-        leaking_signal = (
-            Signal.from_HDF(group["leaking_signal"]) if "leaking_signal" in group else None
-        )
-        baseband_signal = Signal.from_HDF(group["baseband_signal"])
-        noise_realization: NoiseRealization = None  # ToDo: Serialize noise realizations
-        trigger_realization = TriggerRealization.from_HDF(group["trigger_realization"])
-
+    def Deserialize(cls, process: DeserializationProcess) -> ProcessedSimulatedDeviceInput:
+        processed_input = ProcessedDeviceInput.Deserialize(process)
         return cls(
-            device_input.impinging_signals,
-            leaking_signal,
-            baseband_signal,
-            operator_separation,
-            device_input.operator_inputs,
-            noise_realization,
-            trigger_realization,
+            processed_input.impinging_signals,
+            process.deserialize_object("leaking_signal", Signal),
+            process.deserialize_object("baseband_signal", Signal),
+            bool(process.deserialize_integer("operator_separation")),
+            processed_input.operator_inputs,
+            process.deserialize_object("trigger_realization", TriggerRealization),
+            process.deserialize_object("noise_realization", NoiseRealization),
         )
 
 
@@ -817,8 +824,8 @@ class SimulatedDeviceReception(ProcessedSimulatedDeviceInput, DeviceReception):
         baseband_signal: Signal,
         operator_separation: bool,
         operator_inputs: Sequence[Signal],
-        noise_realization: NoiseRealization,
         trigger_realization: TriggerRealization,
+        noise_realization: NoiseRealization,
         operator_receptions: Sequence[Reception],
     ) -> None:
         """
@@ -839,11 +846,11 @@ class SimulatedDeviceReception(ProcessedSimulatedDeviceInput, DeviceReception):
             operator_inputs (Sequence[Signal]):
                 Signal models to be processed by the device's receive DSP algorithms.
 
-            noise_realization (NoiseRealization):
-                Device noise realization.
-
             trigger_realization (TriggerRealization):
                 Trigger realization modeling the time delay between a drop start and frame start.
+
+            noise_realization (NoiseRealization):
+                Realization of the device's noise model.
 
             operator_receptions (Sequence[Reception]):
                 Information inferred from receive operators.
@@ -856,8 +863,8 @@ class SimulatedDeviceReception(ProcessedSimulatedDeviceInput, DeviceReception):
             baseband_signal,
             operator_separation,
             operator_inputs,
-            noise_realization,
             trigger_realization,
+            noise_realization,
         )
         DeviceReception.__init__(self, self.impinging_signals, operator_inputs, operator_receptions)
 
@@ -886,24 +893,21 @@ class SimulatedDeviceReception(ProcessedSimulatedDeviceInput, DeviceReception):
             device_input.baseband_signal,
             device_input.operator_separation,
             device_input.operator_inputs,
-            device_input.noise_realization,
             device_input.trigger_realization,
+            device_input.noise_realization,
             operator_receptions,
         )
 
-    def to_HDF(self, group: Group) -> None:
-        ProcessedSimulatedDeviceInput.to_HDF(self, group)
-        DeviceReception.to_HDF(self, group)
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        ProcessedSimulatedDeviceInput.serialize(self, process)
+        DeviceReception.serialize(self, process)
 
+    @override
     @classmethod
-    def from_HDF(
-        cls: Type[SimulatedDeviceReception],
-        group: Group,
-        operators: Sequence[Receiver] | None = None,
-    ) -> SimulatedDeviceReception:
-        device_input = ProcessedSimulatedDeviceInput.from_HDF(group)
-        device_reception = DeviceReception.from_HDF(group, operators)
-
+    def Deserialize(cls, process: DeserializationProcess) -> SimulatedDeviceReception:
+        device_input = ProcessedSimulatedDeviceInput.Deserialize(process)
+        device_reception = DeviceReception.Deserialize(process)
         return cls.From_ProcessedSimulatedDeviceInput(
             device_input, device_reception.operator_receptions
         )
@@ -968,24 +972,16 @@ class SimulatedDeviceState(DeviceState):
         )
 
 
-class SimulatedDevice(Device[SimulatedDeviceState], Moveable, Serializable):
+class SimulatedDevice(Device[SimulatedDeviceState], Moveable):
     """Representation of an entity capable of emitting and receiving electromagnetic waves.
 
     A simulation scenario consists of a collection of devices,
     interconnected by a network of channel models.
     """
 
-    yaml_tag = "SimulatedDevice"
-    property_blacklist = {
-        "num_antennas",
-        "orientation",
-        "random_mother",
-        "scenario",
-        "topology",
-        "velocity",
-        "wavelength",
-    }
-    serialized_attribute = {"rf_chain", "adc"}
+    _DEFAULT_CARRIER_FREQUENCY: float = 0.0
+    _DEFAULT_SAMPLING_RATE: float = 0.0
+    _DEFAULT_OPERATOR_SEPARATION: bool = False
 
     rf_chain: RfChain
     """Model of the device's radio-frequency chain."""
@@ -1016,13 +1012,22 @@ class SimulatedDevice(Device[SimulatedDeviceState], Moveable, Serializable):
         isolation: Isolation | None = None,
         coupling: Coupling | None = None,
         trigger_model: TriggerModel | None = None,
-        sampling_rate: float | None = None,
-        carrier_frequency: float = 0.0,
+        sampling_rate: float = _DEFAULT_SAMPLING_RATE,
+        carrier_frequency: float = _DEFAULT_CARRIER_FREQUENCY,
+        operator_separation: bool = _DEFAULT_OPERATOR_SEPARATION,
         noise_level: NoiseLevel | None = None,
         noise_model: NoiseModel | None = None,
         pose: Transformation | Trajectory | None = None,
         velocity: np.ndarray | None = None,
-        power: float = 1.0,
+        transmit_dsp: Transmitter | Sequence[Transmitter] | None = None,
+        receive_dsp: Receiver | Sequence[Receiver] | None = None,
+        transmit_encoding: (
+            TransmitSignalCoding | Sequence[TransmitStreamEncoder] | TransmitStreamEncoder | None
+        ) = None,
+        receive_decoding: (
+            ReceiveSignalCoding | Sequence[ReceiveStreamDecoder] | ReceiveStreamDecoder | None
+        ) = None,
+        power: float = Device._DEFAULT_POWER,
         seed: int | None = None,
     ) -> None:
         """
@@ -1068,6 +1073,10 @@ class SimulatedDevice(Device[SimulatedDeviceState], Moveable, Serializable):
                 Spectral model of the device's additive noise.
                 By default, additive white Gaussian noise is assumed.
 
+            operator_separation (bool, optional):
+                Operator separation flag.
+                Disabled by default.
+
             pose (Transformation | Trajectory, optional):
                 Position and orientation of the device in time and space.
                 If a `Transformation` is provided, the device is assumed to be static.
@@ -1088,7 +1097,16 @@ class SimulatedDevice(Device[SimulatedDeviceState], Moveable, Serializable):
 
         # Init base classes
         _trajectory = pose if isinstance(pose, Trajectory) else StaticTrajectory(pose, velocity)
-        Device.__init__(self, power, _trajectory.sample(0).pose, seed)
+        Device.__init__(
+            self,
+            transmit_dsp,
+            receive_dsp,
+            transmit_encoding,
+            receive_decoding,
+            power,
+            _trajectory.sample(0).pose,
+            seed,
+        )
         Moveable.__init__(self, _trajectory)
         Serializable.__init__(self)
 
@@ -1111,7 +1129,7 @@ class SimulatedDevice(Device[SimulatedDeviceState], Moveable, Serializable):
 
         self.noise_level = SNR(float("inf"), self) if noise_level is None else noise_level  # type: ignore[operator]
         self.noise_model = AWGN() if noise_model is None else noise_model  # type: ignore[operator]
-        self.operator_separation = False
+        self.operator_separation = operator_separation
         self.sampling_rate = sampling_rate
         self.carrier_frequency = carrier_frequency
         self.__simulated_output_callbacks = Hookable()
@@ -1173,7 +1191,7 @@ class SimulatedDevice(Device[SimulatedDeviceState], Moveable, Serializable):
 
         return self.__scenario is not None
 
-    @register(first_impact="receive_devices", title="Device Noise Level")  # type: ignore[misc]
+    # @register(first_impact="receive_devices", title="Device Noise Level")  # type: ignore[misc]
     @property
     def noise_level(self) -> NoiseLevel:
         """Level of the simulated hardware noise."""
@@ -1196,7 +1214,7 @@ class SimulatedDevice(Device[SimulatedDeviceState], Moveable, Serializable):
         self.__noise_model = value
         self.__noise_model.random_mother = self
 
-    @register(first_impact="receive_devices", title="Device Noise Level")  # type: ignore[misc]
+    # @register(first_impact="receive_devices", title="Device Noise Level")  # type: ignore[misc]
     @property
     def noise(self) -> float:
         """Shorthand property for accessing the noise level of the device.
@@ -1267,7 +1285,7 @@ class SimulatedDevice(Device[SimulatedDeviceState], Moveable, Serializable):
             ValueError: If the sampling rate is not greater than zero.
         """
 
-        if self.__sampling_rate is not None:
+        if self.__sampling_rate > 0.0:
             return self.__sampling_rate
 
         sampling_rate = 0.0
@@ -1277,12 +1295,8 @@ class SimulatedDevice(Device[SimulatedDeviceState], Moveable, Serializable):
         return 1.0 if sampling_rate == 0.0 else sampling_rate
 
     @sampling_rate.setter
-    def sampling_rate(self, value: float | None) -> None:
-        if value is None:
-            self.__sampling_rate = None
-            return
-
-        if value <= 0.0:
+    def sampling_rate(self, value: float) -> None:
+        if value < 0.0:
             raise ValueError("Sampling rate must be greater than zero")
 
         self.__sampling_rate = value
@@ -1706,8 +1720,8 @@ class SimulatedDevice(Device[SimulatedDeviceState], Moveable, Serializable):
             antenna_outputs,
             self.operator_separation,
             operator_inputs,
-            realization.noise_realization,
             trigger_realization,
+            realization.noise_realization,
         )
 
         # Return final result
@@ -1817,3 +1831,46 @@ class SimulatedDevice(Device[SimulatedDeviceState], Moveable, Serializable):
         return SimulatedDeviceReception.From_ProcessedSimulatedDeviceInput(
             processed_input, receptions
         )
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        Device.serialize(self, process)
+        process.serialize_object(self.rf_chain, "rf_chain")
+        process.serialize_object(self.isolation, "isolation")
+        process.serialize_object(self.coupling, "coupling")
+        process.serialize_object(self.trigger_model, "trigger_model")
+        # Note: Deactivated due to circular dependency
+        # process.serialize_object(self.noise_level, "noise_level")
+        process.serialize_object(self.noise_model, "noise_model")  # type: ignore[operator]
+        if self.__sampling_rate is not None:
+            process.serialize_floating(self.__sampling_rate, "sampling_rate")
+        process.serialize_floating(self.__carrier_frequency, "carrier_frequency")
+        process.serialize_integer(int(self.__operator_separation), "operator_separation")
+
+    @classmethod
+    @override
+    def _DeserializeParameters(cls, process: DeserializationProcess) -> dict[str, object]:
+        base_parameters = Device._DeserializeParameters(process)
+        base_parameters.update(
+            {
+                "antennas": process.deserialize_object("antennas", SimulatedAntennaArray, None),
+                "rf_chain": process.deserialize_object("rf_chain", RfChain, None),
+                "isolation": process.deserialize_object("isolation", Isolation, None),
+                "coupling": process.deserialize_object("coupling", Coupling, None),
+                "trigger_model": process.deserialize_object("trigger_model", TriggerModel, None),
+                "noise_level": process.deserialize_object("noise_level", NoiseLevel, None),
+                "noise_model": process.deserialize_object("noise_model", NoiseModel, None),
+                "sampling_rate": process.deserialize_floating(
+                    "sampling_rate", cls._DEFAULT_SAMPLING_RATE
+                ),
+                "carrier_frequency": process.deserialize_floating(
+                    "carrier_frequency", cls._DEFAULT_CARRIER_FREQUENCY
+                ),
+                "operator_separation": bool(
+                    process.deserialize_integer(
+                        "operator_separation", cls._DEFAULT_OPERATOR_SEPARATION
+                    )
+                ),
+            }
+        )
+        return base_parameters

@@ -2,7 +2,7 @@
 
 from .antennas import ScalarAntennaCalibration
 from .delay import DelayCalibration
-from .leakage import SelectiveLeakageCalibration
+from .leakage import LeakageCalibrationBase, SelectiveLeakageCalibration
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -14,4 +14,9 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-__all__ = ["ScalarAntennaCalibration", "DelayCalibration", "SelectiveLeakageCalibration"]
+__all__ = [
+    "ScalarAntennaCalibration",
+    "DelayCalibration",
+    "LeakageCalibrationBase",
+    "SelectiveLeakageCalibration",
+]

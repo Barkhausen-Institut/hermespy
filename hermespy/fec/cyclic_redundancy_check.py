@@ -10,12 +10,11 @@ CRC codings usually only detect errors, they do not correct them.
 """
 
 from __future__ import annotations
-from typing import Type
+from typing_extensions import override
 
 import numpy as np
-from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, Node
 
-from hermespy.core import RandomNode, Serializable
+from hermespy.core import RandomNode, Serializable, SerializationProcess, DeserializationProcess
 from .coding import Encoder
 
 __author__ = "Tobias Kronauer"
@@ -40,11 +39,10 @@ class CyclicRedundancyCheck(Encoder, RandomNode, Serializable):
         R_{n} = \\frac{K_n}{K_n + Q} \\mathrm{.}
     """
 
-    yaml_tag = "CRC"
     __bit_block_size: int  # Number of bits per encoded block.
     __check_block_size: int  # Number of bits appended to bit blocks.
 
-    def __init__(self, bit_block_size, check_block_size) -> None:
+    def __init__(self, bit_block_size: int, check_block_size: int) -> None:
         """
         Args:
 
@@ -104,55 +102,15 @@ class CyclicRedundancyCheck(Encoder, RandomNode, Serializable):
     def code_block_size(self) -> int:
         return self.__bit_block_size + self.__check_block_size
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_integer(self.bit_block_size, "bit_block_size")
+        process.serialize_integer(self.check_block_size, "check_block_size")
+
+    @override
     @classmethod
-    def to_yaml(
-        cls: Type[CyclicRedundancyCheck], representer: SafeRepresenter, node: CyclicRedundancyCheck
-    ) -> MappingNode:
-        """Serialize a `CyclicRedundancyCheck` to YAML.
-
-        Args:
-            representer (SafeRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
-
-            node (CyclicRedundancyCheck):
-                The `CyclicRedundancyCheck` instance to be serialized.
-
-        Returns:
-            MappingNode:
-                The serialized YAML node.
-
-        :meta private:
-        """
-
-        state = {
-            "bit_block_size": node.__bit_block_size,
-            "check_block_size": node.__check_block_size,
-        }
-
-        return representer.represent_mapping(cls.yaml_tag, state)
-
-    @classmethod
-    def from_yaml(
-        cls: Type[CyclicRedundancyCheck], constructor: SafeConstructor, node: Node
-    ) -> CyclicRedundancyCheck:
-        """Recall a new `CyclicRedundancyCheck` from YAML.
-
-        Args:
-            constructor (SafeConstructor):
-                A handle to the constructor extracting the YAML information.
-
-            node (Node):
-                YAML node representing the `CyclicRedundancyCheck` serialization.
-
-        Returns:
-            CyclicRedundancyCheck:
-                Newly created `CyclicRedundancyCheck` instance.
-
-        Note that the created instance is floating by default.
-
-        :meta private:
-        """
-
-        state = constructor.construct_mapping(node)
-        return cls(**state)
+    def Deserialize(cls, process: DeserializationProcess) -> CyclicRedundancyCheck:
+        return cls(
+            bit_block_size=process.deserialize_integer("bit_block_size"),
+            check_block_size=process.deserialize_integer("check_block_size"),
+        )

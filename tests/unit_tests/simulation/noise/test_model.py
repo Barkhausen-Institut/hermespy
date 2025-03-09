@@ -9,7 +9,7 @@ from numpy.testing import assert_array_almost_equal
 
 from hermespy.core.signal_model import Signal
 from hermespy.simulation.noise import AWGN, AWGNRealization, NoiseModel, NoiseRealization
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -69,24 +69,24 @@ class _TestNoiseModel(unittest.TestCase):
             self.assertEqual(len(signal.getitem()), len(noisy_signal.getitem()))
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test noise model serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.model, {"is_random_root"})
+        test_roundtrip_serialization(self, self.model, {'random_mother'})
 
 
 class TestNoiseRealizationMock(_TestNoiseRealization):
     """Test the mock realization of noise."""
 
     def setUp(self) -> None:
-        self.realization = NoiseRealizationMock(Mock(), 0.0)
+        self.realization = NoiseRealizationMock(0.0, 12345)
 
     def test_init(self) -> None:
         """Initialization parameters should be stored correctly"""
 
         expected_power = 1.234
-        expected_noise_model = Mock(spec=NoiseModel)
+        expected_seed = 12345
 
-        realization = NoiseRealizationMock(expected_noise_model, expected_power)
+        realization = NoiseRealizationMock(expected_power, expected_seed)
 
         self.assertEqual(expected_power, realization.power)
 
@@ -94,15 +94,14 @@ class TestNoiseRealizationMock(_TestNoiseRealization):
         """Initialization should raise ValueError on negative power"""
 
         with self.assertRaises(ValueError):
-            NoiseRealizationMock(Mock(), -1.0)
+            NoiseRealizationMock(-1.0, 4567)
 
 
 class TestAWGNRealization(_TestNoiseRealization):
     """Test the realization of AWGN noise."""
 
     def setUp(self) -> None:
-        self.model = AWGN()
-        self.realization = AWGNRealization(self.model, 1.234)
+        self.realization = AWGNRealization(2.345, 1234)
 
 
 class TestAWGN(_TestNoiseModel):

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
-from hermespy.core import Signal, FloatingError
+from hermespy.core import Signal, FloatingError, Serializable
 
 if TYPE_CHECKING:
     from ..simulated_device import SimulatedDevice  # pragma: no cover
@@ -19,7 +19,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class Isolation(ABC):
+class Isolation(Serializable):
     """Base class for antenna isolation modeling."""
 
     __device: SimulatedDevice | None

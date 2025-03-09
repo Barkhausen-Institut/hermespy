@@ -7,11 +7,10 @@ from unittest.mock import Mock, patch, PropertyMock
 
 import numpy as np
 from numpy.testing import assert_array_equal
-from ruamel.yaml import SafeConstructor, SafeRepresenter, Node
 
 from hermespy.core import Serializable
 from hermespy.fec import Encoder, EncoderManager
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -45,14 +44,6 @@ class StubEncoder(Encoder):
     @property
     def code_block_size(self) -> int:
         return 2 * self.__block_size
-
-    @classmethod
-    def from_yaml(cls: Type[Serializable], constructor: SafeConstructor, node: Node) -> Serializable:
-        pass
-
-    @classmethod
-    def to_yaml(cls: Type[Serializable], representer: SafeRepresenter, node: Serializable) -> Node:
-        pass
 
 
 class TestEncoder(TestCase):
@@ -321,8 +312,6 @@ class TestEncoderManager(TestCase):
         assert_array_equal(expected_data, data)
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test encoder manager serialization"""
 
-        with patch("hermespy.fec.coding.EncoderManager.modem", new=PropertyMock) as modem:
-            modem.return_value = self.modem
-            test_yaml_roundtrip_serialization(self, self.encoder_manager)
+        test_roundtrip_serialization(self, self.encoder_manager, {'modem'})

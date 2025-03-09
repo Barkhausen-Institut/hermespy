@@ -1,15 +1,13 @@
 # -*- coding: utf-8 -*-
 """HermesPy testing for modem base class."""
 
-from fractions import Fraction
 from os import path
 from tempfile import TemporaryDirectory
 from typing import Type
 from unittest import TestCase
-from unittest.mock import MagicMock, Mock
+from unittest.mock import Mock
 
 import numpy as np
-from h5py import File
 from numpy import random as rnd
 from numpy.testing import assert_array_almost_equal
 
@@ -19,6 +17,7 @@ from hermespy.modem import Symbols, CommunicationReceptionFrame, CommunicationTr
 from hermespy.simulation import SimulatedDevice
 
 from .test_waveform import MockCommunicationWaveform
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -86,34 +85,10 @@ class TestCommunicationReception(TestCase):
         self.assertEqual(symbols.num_streams, 2)
         self.assertEqual(symbols.num_symbols, 5)
 
-    def test_hdf_serialization(self) -> None:
-        """Serialization to and from HDF5 should yield the correct object reconstruction"""
+    def test_serialization(self) -> None:
+        """Test communication reception serialization"""
 
-        reception: CommunicationReception = None
-
-        with TemporaryDirectory() as tempdir:
-            file_location = path.join(tempdir, "testfile.hdf5")
-
-            with File(file_location, "a") as file:
-                group = file.create_group("testgroup")
-                self.reception.to_HDF(group)
-
-            with File(file_location, "r") as file:
-                group = file["testgroup"]
-                reception = self.reception.from_HDF(group)
-
-        np.testing.assert_array_equal(self.base_signal.getitem(), reception.signal.getitem())
-        self.assertEqual(2, reception.num_frames)
-
-        for initial_frame, serialized_frame in zip(self.frames, reception.frames):
-            np.testing.assert_array_equal(initial_frame.signal.getitem(), serialized_frame.signal.getitem())
-            np.testing.assert_array_equal(initial_frame.decoded_signal.getitem(), serialized_frame.decoded_signal.getitem())
-            np.testing.assert_array_equal(initial_frame.symbols.raw, serialized_frame.symbols.raw)
-            np.testing.assert_array_equal(initial_frame.decoded_symbols.raw, serialized_frame.decoded_symbols.raw)
-            self.assertEqual(initial_frame.timestamp, serialized_frame.timestamp)
-            np.testing.assert_array_equal(initial_frame.equalized_symbols.raw, serialized_frame.equalized_symbols.raw)
-            np.testing.assert_array_equal(initial_frame.encoded_bits, serialized_frame.encoded_bits)
-            np.testing.assert_array_equal(initial_frame.decoded_bits, serialized_frame.decoded_bits)
+        test_roundtrip_serialization(self, self.reception)
 
 
 class TestCommunicationTransmission(TestCase):
@@ -144,56 +119,18 @@ class TestCommunicationTransmission(TestCase):
         self.assertEqual(symbols.num_streams, 2)
         self.assertEqual(symbols.num_symbols, 5)
 
-    def test_hdf_serialization(self) -> None:
-        """Serialization to and from HDF5 should yield the correct object reconstruction"""
+    def test_serialization(self) -> None:
+        """Test communication transmission serialization"""
 
-        transmission: CommunicationTransmission = None
-
-        with TemporaryDirectory() as tempdir:
-            file_location = path.join(tempdir, "testfile.hdf5")
-
-            with File(file_location, "a") as file:
-                group = file.create_group("testgroup")
-                self.transmission.to_HDF(group)
-
-            with File(file_location, "r") as file:
-                group = file["testgroup"]
-                transmission = self.transmission.from_HDF(group)
-
-        np.testing.assert_array_equal(self.base_signal.getitem(), transmission.signal.getitem())
-        self.assertEqual(2, transmission.num_frames)
-
-        for initial_frame, serialized_frame in zip(self.frames, transmission.frames):
-            np.testing.assert_array_equal(initial_frame.bits, serialized_frame.bits)
-            np.testing.assert_array_equal(initial_frame.encoded_bits, serialized_frame.encoded_bits)
-            np.testing.assert_array_equal(initial_frame.symbols.raw, serialized_frame.symbols.raw)
-            np.testing.assert_array_equal(initial_frame.encoded_symbols.raw, serialized_frame.encoded_symbols.raw)
-            np.testing.assert_array_equal(initial_frame.signal.getitem(), serialized_frame.signal.getitem())
+        test_roundtrip_serialization(self, self.transmission)
 
 
 class BaseModemMock(BaseModem):
     """Mock class to test abstract base modem."""
 
-    __transmitting_device: Device
-    __receiving_device: Device
-
-    def __init__(self, transmitting_device: Device, receiving_device: Device, **kwargs) -> None:
-        self.__transmitting_device = transmitting_device
-        self.__receiving_device = receiving_device
-
-        BaseModem.__init__(self, **kwargs)
-
     @property
     def num_data_bits_per_frame(self) -> int:
         return 100
-
-    @property
-    def transmitting_device(self) -> Device:
-        return self.__transmitting_device
-
-    @property
-    def receiving_device(self) -> Device:
-        return self.__receiving_device
 
 
 class TestBaseModem(TestCase):
@@ -211,15 +148,7 @@ class TestBaseModem(TestCase):
         self.modem.random_mother = self.random_node
 
     def setUp(self) -> None:
-        self.transmit_device = SimulatedDevice()
-        self.receive_device = SimulatedDevice()
-
-        self._init_base_modem(BaseModemMock, transmitting_device=self.transmit_device, receiving_device=self.receive_device)
-
-    def test_arg_signature(self) -> None:
-        """Test base modem serialization argument signature"""
-
-        self.assertCountEqual(["encoding", "waveform", "seed"], self.modem._arg_signature())
+        self._init_base_modem(BaseModemMock)
 
     def test_initialization(self) -> None:
         """Initialization parameters should be properly stored as class attributes"""
@@ -254,6 +183,12 @@ class TestBaseModem(TestCase):
         """Samples per frame should correctly resolve the waveform's number of samples"""
 
         self.assertEqual(self.waveform.samples_per_frame, self.modem.samples_per_frame)
+
+    def test_serialization(self) -> None:
+        """Test base modem serialzation"""
+
+        self.modem.waveform = None  # Required because the configured mock waveform is not serializatble
+        test_roundtrip_serialization(self, self.modem, {'random_mother'})
 
 
 class TestTransmittingModem(TestBaseModem):
@@ -315,23 +250,6 @@ class TestTransmittingModem(TestBaseModem):
 
         self.assertIs(expected_device, self.modem.device)
 
-    def test_recall_transmission(self) -> None:
-        """Test modem transmission recall from HDF"""
-
-        transmission = self.modem.transmit(self.transmit_device.state())
-
-        with TemporaryDirectory() as tempdir:
-            file_location = path.join(tempdir, "testfile.hdf5")
-
-            with File(file_location, "w") as file:
-                group = file.create_group("testgroup")
-                transmission.to_HDF(group)
-
-            with File(file_location, "r") as file:
-                recalled_transmission = self.modem._recall_transmission(file["testgroup"])
-
-        self.assertEqual(transmission.signal.num_samples, recalled_transmission.signal.num_samples)
-
 
 class TestReceivingModem(TestBaseModem):
     """Test the exclusively receiving simplex modem"""
@@ -360,27 +278,6 @@ class TestReceivingModem(TestBaseModem):
         self.modem.receive_symbol_coding = receive_symbol_coding
 
         self.assertIs(receive_symbol_coding, self.modem.receive_symbol_coding)
-
-    def test_recall_reception(self) -> None:
-        """Test modem reception recall from HDF"""
-
-        transmitting_modem = TransmittingModem()
-        transmitting_modem.waveform = MockCommunicationWaveform(oversampling_factor=4)
-        transmission = transmitting_modem.transmit(self.transmit_device.state())
-
-        reception = self.modem.receive(transmission.signal, self.receive_device.state())
-
-        with TemporaryDirectory() as tempdir:
-            file_location = path.join(tempdir, "testfile.hdf5")
-
-            with File(file_location, "w") as file:
-                group = file.create_group("testgroup")
-                reception.to_HDF(group)
-
-            with File(file_location, "r") as file:
-                recalled_reception = self.modem._recall_reception(file["testgroup"])
-
-        self.assertEqual(reception.signal.num_samples, recalled_reception.signal.num_samples)
 
 
 class TestDuplexModem(TestBaseModem):
@@ -438,3 +335,8 @@ class TestSimplexLink(TestCase):
         self.link = SimplexLink()
         self.transmitter.transmitters.add(self.link)
         self.receiver.receivers.add(self.link)
+
+    def test_serialization(self) -> None:
+        """Test simplex link serialization"""
+
+        test_roundtrip_serialization(self, self.link)

@@ -8,11 +8,11 @@ Delay Calibration
 from __future__ import annotations
 from time import sleep
 from typing import List, Type
+from typing_extensions import override
 
-from h5py import Group
 import numpy as np
 
-from hermespy.core import Serializable, Signal
+from hermespy.core import Signal, SerializationProcess, DeserializationProcess
 from ..physical_device import DelayCalibrationBase, PhysicalDevice
 
 __author__ = "Jan Adler"
@@ -25,10 +25,8 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class DelayCalibration(DelayCalibrationBase, Serializable):
+class DelayCalibration(DelayCalibrationBase):
     """Static delay calibration"""
-
-    yaml_tag = "DelayCalibration"
 
     __delay: float
 
@@ -46,18 +44,6 @@ class DelayCalibration(DelayCalibrationBase, Serializable):
     @delay.setter
     def delay(self, value: float) -> None:
         self.__delay = value
-
-    def to_HDF(self, group: Group) -> None:
-        # Serialize attributes
-        group.attrs["delay"] = self.delay
-
-    @classmethod
-    def from_HDF(cls: Type[DelayCalibration], group: Group) -> DelayCalibration:
-        # Deserialize attributes
-        delay = group.attrs["delay"]
-
-        # Return new instance
-        return cls(delay=delay)
 
     @staticmethod
     def Estimate(
@@ -124,14 +110,15 @@ class DelayCalibration(DelayCalibrationBase, Serializable):
         mean_dirac_index = np.mean(propagated_dirac_indices)
         calibration_delay = (mean_dirac_index - dirac_index) / propagated_signal.sampling_rate
 
-        # Visualize the results
-        # Feature currently deactivated
-        # fig, axes = plt.subplots(2, 1)
-        # fig.suptitle("Device Delay Calibration")
-
-        # axes[0].plot(calibration_signal.timestamps, abs(calibration_signal.getitem(0)))
-        # for sig in propagated_signals:
-        #    axes[1].plot(sig.timestamps, abs(sig[0, :]), color="blue")
-        # axes[1].axvline(x=(dirac_index / sampling_rate - calibration_delay), color="red")
-
         return DelayCalibration(calibration_delay)
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_floating(self.delay, "delay")
+
+    @override
+    @classmethod
+    def Deserialize(
+        cls: Type[DelayCalibration], process: DeserializationProcess
+    ) -> DelayCalibration:
+        return cls(process.deserialize_floating("delay"))

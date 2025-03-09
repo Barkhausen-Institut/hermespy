@@ -8,7 +8,7 @@ import numpy as np
 from hermespy.core import DeviceState, Signal
 from hermespy.core.precoding import ReceiveStreamDecoder, ReceiveSignalCoding, TransmitSignalCoding, TransmitStreamEncoder
 from hermespy.simulation import SimulatedDevice, SimulatedUniformArray, SimulatedIdealAntenna
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -57,7 +57,7 @@ class _TestSignalCoding():
     def test_yaml_serialization(self) -> None:
         """Test serialization to and from YAML"""
 
-        test_yaml_roundtrip_serialization(self, self.coding)
+        test_roundtrip_serialization(self, self.coding)
 
     def test_pop_precoder(self) -> None:
         """Precoders should be properly removed from the configuration"""

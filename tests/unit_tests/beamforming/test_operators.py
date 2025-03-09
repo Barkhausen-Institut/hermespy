@@ -8,7 +8,7 @@ import numpy as np
 from hermespy.beamforming import BeamformingTransmitter, BeamformingReceiver, ConventionalBeamformer
 from hermespy.core import Signal
 from hermespy.simulation import SimulatedDevice
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -52,6 +52,11 @@ class TestBeamformingTransmitter(TestCase):
         transmission = self.transmitter.transmit(self.device.state())
         self.assertEqual(100, transmission.signal.num_samples)
 
+    def test_serialization(self) -> None:
+        """Test beamforming transmitter serialization"""
+
+        test_roundtrip_serialization(self, self.transmitter)
+
 
 class TestBeamformingReceiver(TestCase):
     """Test class for BeamformingReceiver."""
@@ -84,7 +89,7 @@ class TestBeamformingReceiver(TestCase):
         reception = self.receiver.receive(signal, self.device.state())
         self.assertEqual(100, reception.signal.num_samples)
 
-    def test_yaml_roundtrip_serialization(self) -> None:
-        """Test YAML serialization and deserialization"""
+    def test_serialization(self) -> None:
+        """Test beamforming receiver serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.receiver)
+        test_roundtrip_serialization(self, self.receiver)

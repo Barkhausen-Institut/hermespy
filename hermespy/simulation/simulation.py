@@ -2,23 +2,18 @@
 
 from __future__ import annotations
 from collections.abc import Sequence
-from itertools import product
 from sys import maxsize
-from typing import Any, Callable, Dict, List, Mapping, Type
+from typing import Any, Callable, List, Mapping
 
 import numpy as np
 from os import path
 from ray import remote
-from ruamel.yaml import SafeConstructor, SafeRepresenter, MappingNode, Node
 from rich.console import Console
 
 from hermespy.core import (
-    Serializable,
     Pipeline,
     Verbosity,
-    Operator,
     ConsoleMode,
-    Evaluator,
     MonteCarloActor,
     MonteCarlo,
     MonteCarloResult,
@@ -250,12 +245,9 @@ class SimulationActor(MonteCarloActor[SimulationScenario], SimulationRunner):
         ]
 
 
-class Simulation(
-    Serializable, Pipeline[SimulationScenario, SimulatedDevice], MonteCarlo[SimulationScenario]
-):
+class Simulation(Pipeline[SimulationScenario, SimulatedDevice], MonteCarlo[SimulationScenario]):
     """Executable HermesPy simulation configuration."""
 
-    yaml_tag = "Simulation"
     property_blacklist = {"console", "console_mode", "scenario"}
 
     plot_results: bool
@@ -460,122 +452,6 @@ class Simulation(
         """
 
         self.scenario.set_channel(alpha, beta, channel)
-
-    @classmethod
-    def to_yaml(
-        cls: Type[Simulation], representer: SafeRepresenter, node: Simulation
-    ) -> MappingNode:
-        """Serialize an `Simulation` object to YAML.
-
-        Args:
-            representer (SafeRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
-
-            node (Simulation):
-                The `Simulation` instance to be serialized.
-
-        Returns:
-            Node:
-                The serialized YAML node
-        """
-
-        # Prepare dimensions
-        dimension_fields: List[Mapping[str, Any]] = []
-        for dimension in node.dimensions:
-            dimension_map = {
-                "property": dimension.dimension,
-                "points": [p.value for p in dimension.sample_points],
-                "title": dimension.title,
-            }
-
-            considered_objects = dimension.considered_objects
-            if considered_objects != (node.scenario,):
-                dimension_map["objects"] = considered_objects
-
-            dimension_fields.append(dimension_map)
-
-        # Collection channel models
-        channels = []
-        for device_alpha, device_beta in product(node.scenario.devices, node.scenario.devices):
-            channel = node.scenario.channel(device_alpha, device_beta)
-            if channel is not None:
-                channels.append((device_alpha, device_beta, channel))
-
-        additional_fields = {
-            "noise_model": node.scenario.noise_model,  # type: ignore[operator]
-            "noise_level": node.scenario.noise_level,  # type: ignore[operator]
-            "verbosity": node.verbosity.name,
-            "Devices": node.scenario.devices,
-            "Operators": node.scenario.operators,
-            "Evaluators": node.evaluators,
-            "Dimensions": dimension_fields,
-            "Channels": channels,
-        }
-
-        return node._mapping_serialization_wrapper(representer, additional_fields=additional_fields)
-
-    @classmethod
-    def from_yaml(cls: Type[Simulation], constructor: SafeConstructor, node: Node) -> Simulation:
-        """Recall a new `Simulation` instance from YAML.
-
-        Args:
-            constructor (SafeConstructor):
-                A handle to the constructor extracting the YAML information.
-
-            node (Node):
-                YAML node representing the `Simulation` serialization.
-
-        Returns:
-            Simulation:
-                Newly created `Simulation` instance.
-        """
-
-        state: dict = constructor.construct_mapping(node, deep=True)
-
-        # Pop configuration sections for "special" treatment
-        devices: List[SimulatedDevice] = state.pop("Devices", [])
-        channels: list[tuple[SimulatedDevice, SimulatedDevice, Channel]] = state.pop("Channels", [])
-        _: List[Operator] = state.pop("Operators", [])
-        evaluators: List[Evaluator] = state.pop("Evaluators", [])
-        dimensions: Dict[str, Any] | List[Mapping[str, Any]] = state.pop("Dimensions", {})
-
-        # Initialize simulation
-        state["scenario"] = SimulationScenario(
-            noise_level=state.pop("noise_level", None), noise_model=state.pop("noise_model", None)
-        )
-        simulation: Simulation = cls.InitializationWrapper(state)
-
-        # Add devices to the simulation
-        for device in devices:
-            simulation.scenario.add_device(device)
-
-        # Assign channel models
-        for device_alpha, device_beta, channel in channels:
-            simulation.scenario.set_channel(device_alpha, device_beta, channel)
-
-        # Register evaluators
-        for evaluator in evaluators:
-            simulation.add_evaluator(evaluator)
-
-        # Add simulation dimensions
-        if isinstance(dimensions, list):
-            for dimension in dimensions:
-                considered_objects = dimension.get("objects", (simulation.scenario,))
-                new_dim = simulation.new_dimension(
-                    dimension["property"], dimension["points"], *considered_objects
-                )
-
-                title = dimension.get("title", None)
-                if title is not None:
-                    new_dim.title = title
-
-        else:
-            for property_name, property_values in dimensions.items():
-                simulation.new_dimension(property_name, property_values, simulation.scenario)
-
-        # Return simulation instance recovered from the serialization
-        return simulation
 
     @staticmethod
     def _pip_packages() -> List[str]:

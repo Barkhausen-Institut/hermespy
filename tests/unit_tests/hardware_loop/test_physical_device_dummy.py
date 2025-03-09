@@ -9,6 +9,7 @@ from numpy.testing import assert_array_almost_equal
 
 from hermespy.core import Signal, SignalReceiver, SignalTransmitter
 from hermespy.hardware_loop.physical_device_dummy import PhysicalDeviceDummy, PhysicalScenarioDummy
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -74,6 +75,11 @@ class TestPhysicalDeviceDummy(TestCase):
 
         assert_array_almost_equal(expected_signal.getitem(), direction_reception.getitem())
 
+    def test_serialize(self) -> None:
+        """Test physical device dummy serialization"""
+
+        test_roundtrip_serialization(self, self.dummy)
+
 
 class TestPhysicalScenarioDummy(TestCase):
     """Test Physical scenario dummy"""
@@ -102,3 +108,8 @@ class TestPhysicalScenarioDummy(TestCase):
         with patch("hermespy.simulation.SimulationScenario.drop") as drop_mock:
             self.scenario._trigger()
             drop_mock.assert_called()
+
+    def test_serialize(self) -> None:
+        """Test physical device dummy serialization"""
+        
+        test_roundtrip_serialization(self, self.scenario)

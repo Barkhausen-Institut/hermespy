@@ -10,6 +10,7 @@ from numpy.testing import assert_array_equal
 from hermespy.core import Signal
 from hermespy.simulation import SimulatedDevice, SimulatedUniformArray, SimulatedIdealAntenna, SpecificIsolation
 from hermespy.tools import db2lin, lin2db
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -81,3 +82,8 @@ class TestSpecificIsolation(TestCase):
         self.isolation._SpecificIsolation__leakage_factors = np.ones((1, 2))
         with self.assertRaises(RuntimeError):
             _ = self.isolation._leak(signal)
+
+    def test_serialization(self) -> None:
+        """Serialization should be properly implemented"""
+
+        test_roundtrip_serialization(self, self.isolation, {'device'})

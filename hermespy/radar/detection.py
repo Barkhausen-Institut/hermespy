@@ -9,6 +9,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from math import cos, sin
 from typing import List, Tuple, Type
+from typing_extensions import override
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -16,7 +17,14 @@ from mpl_toolkits.mplot3d import Axes3D  # type: ignore
 from scipy.ndimage import generate_binary_structure, maximum_filter
 from scipy.signal import convolve
 
-from hermespy.core import ScatterVisualization, Serializable, VAT, Visualizable
+from hermespy.core import (
+    ScatterVisualization,
+    Serializable,
+    VAT,
+    Visualizable,
+    SerializationProcess,
+    DeserializationProcess,
+)
 from .cube import RadarCube
 
 __author__ = "Jan Adler"
@@ -29,7 +37,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class PointDetection(object):
+class PointDetection(Serializable):
     """A single radar point detection."""
 
     __position: np.ndarray  # Cartesian position of the detection in m
@@ -146,8 +154,22 @@ class PointDetection(object):
             and self.power == __value.power
         )
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_array(self.position, "position")
+        process.serialize_array(self.velocity, "velocity")
+        process.serialize_floating(self.power, "power")
 
-class RadarPointCloud(Visualizable[ScatterVisualization]):
+    @classmethod
+    @override
+    def Deserialize(cls: Type[PointDetection], process: DeserializationProcess) -> PointDetection:
+        position = process.deserialize_array("position", np.float64)
+        velocity = process.deserialize_array("velocity", np.float64)
+        power = process.deserialize_floating("power")
+        return cls(position, velocity, power)
+
+
+class RadarPointCloud(Serializable, Visualizable[ScatterVisualization]):
     """A sparse radar point cloud."""
 
     __points: List[PointDetection]
@@ -253,8 +275,22 @@ class RadarPointCloud(Visualizable[ScatterVisualization]):
         path.set_data(point_positions[:, 0], point_positions[:, 1])
         path.set_3d_properties(point_positions[:, 2])
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_floating(self.max_range, "max_range")
+        process.serialize_object_sequence(self.points, "points")
 
-class RadarDetector(object):
+    @classmethod
+    @override
+    def Deserialize(cls: Type[RadarPointCloud], process: DeserializationProcess) -> RadarPointCloud:
+        pcl = cls(process.deserialize_floating("max_range"))
+        points = process.deserialize_object_sequence("points", PointDetection)
+        for point in points:
+            pcl.add_point(point)
+        return pcl
+
+
+class RadarDetector(Serializable):
     """Base class for radar detection algorithms.
 
     Radar detection algorithms convert a radar cube to a radar point cloud.
@@ -276,10 +312,8 @@ class RadarDetector(object):
         ...  # pragma: no cover
 
 
-class ThresholdDetector(RadarDetector, Serializable):
+class ThresholdDetector(RadarDetector):
     """Extract points by a power threshold."""
-
-    yaml_tag = "Threshold"
 
     __min_power: float  # Minmally required point power
     __normalize: bool
@@ -352,6 +386,7 @@ class ThresholdDetector(RadarDetector, Serializable):
     def peak_detection(self, value: bool) -> None:
         self.__peak_detection = value
 
+    @override
     def detect(self, cube: RadarCube) -> RadarPointCloud:
         # Extract cube data and normalize if the respective flag is enabled
         cube_max = cube.data.max()
@@ -387,13 +422,27 @@ class ThresholdDetector(RadarDetector, Serializable):
 
         return cloud
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_floating(self.min_power, "min_power")
+        process.serialize_integer(self.normalize, "normalize")
+        process.serialize_integer(self.peak_detection, "peak_detection")
+
+    @classmethod
+    @override
+    def Deserialize(
+        cls: Type[ThresholdDetector], process: DeserializationProcess
+    ) -> ThresholdDetector:
+        min_power = process.deserialize_floating("min_power")
+        normalize = bool(process.deserialize_integer("normalize"))
+        peak_detection = bool(process.deserialize_integer("peak_detection"))
+        return cls(min_power, normalize, peak_detection)
+
 
 class MaxDetector(RadarDetector, Serializable):
     """Extracts the maximum point from the radar cube."""
 
-    yaml_tag = "Max"
-    """YAML serialization tag."""
-
+    @override
     def detect(self, cube: RadarCube) -> RadarPointCloud:
         # Find the maximum point
         point_index = np.unravel_index(np.argmax(cube.data), cube.data.shape)
@@ -415,6 +464,15 @@ class MaxDetector(RadarDetector, Serializable):
         )
 
         return cloud
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        pass
+
+    @classmethod
+    @override
+    def Deserialize(cls: Type[MaxDetector], process: DeserializationProcess) -> MaxDetector:
+        return cls()
 
 
 class CFARDetector(RadarDetector, Serializable):
@@ -455,9 +513,6 @@ class CFARDetector(RadarDetector, Serializable):
     based on the configured probability of false alarm :math:`P_{\\mathrm{Fa}}`.
     """
 
-    yaml_tag = "CFAR"
-    """YAML serialization tag."""
-
     def __init__(self, num_training_cells: tuple, num_guard_cells: tuple, pfa: float) -> None:
         """
         CFAR Detector over the radar cube.
@@ -492,8 +547,8 @@ class CFARDetector(RadarDetector, Serializable):
         if (
             not isinstance(value, tuple)
             or (len(value) != 2)
-            or not isinstance(value[0], int)
-            or not isinstance(value[1], int)
+            or not isinstance(value[0], (int, np.int64))
+            or not isinstance(value[1], (int, np.int64))
         ):
             raise ValueError("num_training_cells must be a tuple of two ints")
         if (value[0] <= 0) or (value[1] <= 0):
@@ -515,8 +570,8 @@ class CFARDetector(RadarDetector, Serializable):
         if (
             not isinstance(value, tuple)
             or (len(value) != 2)
-            or not isinstance(value[0], int)
-            or not isinstance(value[1], int)
+            or not isinstance(value[0], (int, np.int64))
+            or not isinstance(value[1], (int, np.int64))
         ):
             raise ValueError("num_guard_cells must be a tuple of two ints")
         if (value[0] < 0) or (value[1] < 0):
@@ -540,6 +595,7 @@ class CFARDetector(RadarDetector, Serializable):
 
         self.__pfa = value
 
+    @override
     def detect(self, cube: RadarCube) -> RadarPointCloud:
         # window is
         # [half of training cells][half of guard cells][CUT][half of guard cells][half of training cells]
@@ -585,3 +641,17 @@ class CFARDetector(RadarDetector, Serializable):
             )
 
         return cloud
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_array(np.asarray(self.num_training_cells), "num_training_cells")
+        process.serialize_array(np.asarray(self.num_guard_cells), "num_guard_cells")
+        process.serialize_floating(self.pfa, "pfa")
+
+    @classmethod
+    @override
+    def Deserialize(cls: Type[CFARDetector], process: DeserializationProcess) -> CFARDetector:
+        num_training_cells = tuple(process.deserialize_array("num_training_cells", np.int64))
+        num_guard_cells = tuple(process.deserialize_array("num_guard_cells", np.int64))
+        pfa = process.deserialize_floating("pfa")
+        return cls(num_training_cells, num_guard_cells, pfa)

@@ -15,6 +15,7 @@ An example for such an implementation is the :class:`Conventional <.conventional
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Literal, overload, Sequence, TypeVar
+from typing_extensions import override
 
 import numpy as np
 
@@ -23,7 +24,9 @@ from hermespy.core import (
     Direction,
     Operator,
     ReceiveState,
+    DeserializationProcess,
     Serializable,
+    SerializationProcess,
     Signal,
     State,
     TransmitState,
@@ -82,7 +85,6 @@ class BeamFocus(ABC, Serializable):
 class SphericalFocus(BeamFocus):
     """Focus point in spherical coordinates."""
 
-    yaml_tag = "SphericalFocus"
     __angles: np.ndarray
 
     @overload
@@ -129,17 +131,27 @@ class SphericalFocus(BeamFocus):
 
         return self.__angles
 
+    @override
     def copy(self) -> SphericalFocus:
         return SphericalFocus(self.__angles.copy())
 
+    @override
     def spherical_angles(self, device: State) -> np.ndarray:
         return self.__angles
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_array(self.__angles, "angles")
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> SphericalFocus:
+        return SphericalFocus(process.deserialize_array("angles", np.float64))
 
 
 class CoordinateFocus(BeamFocus):
     """Focus the beamformer towards a certain Cartesian coordinate."""
 
-    yaml_tag = "CoordinateFocus"
     __direction: Direction
     __reference: Literal["global", "local"]
 
@@ -176,9 +188,11 @@ class CoordinateFocus(BeamFocus):
 
         return self.__reference
 
+    @override
     def copy(self) -> CoordinateFocus:
         return CoordinateFocus(self.__direction.copy(), self.__reference)
 
+    @override
     def spherical_angles(self, device: State) -> np.ndarray:
         if self.reference == "local":
             return self.__direction.to_spherical()
@@ -187,6 +201,19 @@ class CoordinateFocus(BeamFocus):
             transformation = device.antennas.backwards_transformation
             local_direction = transformation.transform_direction(self.__direction)
             return local_direction.to_spherical()
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_array(self.__direction, "direction")
+        process.serialize_string(self.__reference, "reference")
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> CoordinateFocus:
+        return CoordinateFocus(
+            process.deserialize_array("direction", np.float64).view(Direction),
+            process.deserialize_string("reference"),  # type: ignore[arg-type]
+        )
 
 
 OT = TypeVar("OT", bound=Operator)

@@ -32,7 +32,6 @@ class QuadrigaInterface(RandomNode):
     This mapping is done in that class.
     """
 
-    yaml_tag = "QuadrigaInterface"
     _instance: QuadrigaInterface | None = None
     __path_quadriga_src: str
     __antenna_kind: str  # TODO: Implement Enumeration for possible types of antennas

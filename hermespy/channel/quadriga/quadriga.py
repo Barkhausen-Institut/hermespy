@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 from typing import Set
+from typing_extensions import override
 
 
 import numpy as np
-from h5py import Group
 
-from hermespy.core import ChannelStateInformation, ChannelStateFormat, SignalBlock
+from hermespy.core import (
+    ChannelStateInformation,
+    ChannelStateFormat,
+    DeserializationProcess,
+    SerializationProcess,
+    SignalBlock,
+)
 from ..channel import (
     Channel,
     ChannelRealization,
@@ -173,16 +179,14 @@ class QuadrigaChannelRealization(ChannelRealization[QuadrigaChannelSample]):
     ) -> QuadrigaChannelSample:  # pragma: no cover
         return self._sample(state)
 
-    def to_HDF(self, group: Group) -> None:
-        group.attrs["gain"] = self.gain
-
-    @staticmethod
-    def From_HDF(
-        group: Group,
-        quadriga_interface: QuadrigaInterface,
-        sample_hooks: Set[ChannelSampleHook[QuadrigaChannelSample]],
-    ) -> QuadrigaChannelRealization:
-        return QuadrigaChannelRealization(quadriga_interface, sample_hooks, group.attrs["gain"])
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> QuadrigaChannelRealization:
+        return cls(
+            QuadrigaInterface(),
+            set(),
+            **ChannelRealization._DeserializeParameters(process),  # type: ignore[arg-type]
+        )
 
 
 class QuadrigaChannel(Channel[QuadrigaChannelRealization, QuadrigaChannelSample]):
@@ -191,20 +195,30 @@ class QuadrigaChannel(Channel[QuadrigaChannelRealization, QuadrigaChannelSample]
     Maps the output of the :class:`QuadrigaInterface<hermespy.channel.quadriga_interface.QuadrigaInterface>` to fit into Hermes' software architecture.
     """
 
-    yaml_tag = "Quadriga"
-
     __interface: QuadrigaInterface | None  # Reference to the interface class
 
-    def __init__(self, *args, interface: QuadrigaInterface | None = None, **kwargs) -> None:
+    def __init__(
+        self,
+        interface: QuadrigaInterface | None = None,
+        gain: float = Channel._DEFAULT_GAIN,
+        seed: int | None = None,
+    ) -> None:
         """
         Args:
 
             interface (QuadrigaInterface, optional):
                 Specifies the consisdered Quadriga interface.
+
+            gain (float, optional):
+                Linear channel power gain factor.
+                :math:`1.0` by default.
+
+            seed (int, optional):
+                Seed used to initialize the pseudo-random number generator.
         """
 
         # Init base channel class
-        Channel.__init__(self, *args, **kwargs)
+        Channel.__init__(self, gain, seed)
 
         # Save interface settings
         self.__interface = QuadrigaInterface() if interface is None else interface  # type: ignore
@@ -212,5 +226,11 @@ class QuadrigaChannel(Channel[QuadrigaChannelRealization, QuadrigaChannelSample]
     def _realize(self) -> QuadrigaChannelRealization:
         return QuadrigaChannelRealization(self.__interface, self.sample_hooks, self.gain)
 
-    def recall_realization(self, group: Group) -> QuadrigaChannelRealization:
-        return QuadrigaChannelRealization.From_HDF(group, self.__interface, self.sample_hooks)
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        Channel.serialize(self, process)
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> QuadrigaChannel:
+        return cls(**Channel._DeserializeParameters(process))  # type: ignore[arg-type]

@@ -8,14 +8,13 @@ from abc import ABC
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import numpy as np
-from h5py import Group
 from numba import jit, complex128
 from scipy.constants import pi
 from scipy.fft import fft, fftshift, fftfreq
 from scipy.ndimage import convolve1d
 from scipy.signal import butter, sosfilt, firwin
 
-from .factory import HDFSerializable
+from .factory import Serializable, SerializationProcess, DeserializationProcess
 from .visualize import PlotVisualization, VAT, VisualizableAttribute
 
 __author__ = "Jan Adler"
@@ -359,7 +358,7 @@ class _EyeVisualization(_SignalVisualization):
             visualization.lines.flat[0][0].set_data(stream_slice.real, stream_slice.imag)
 
 
-class SignalBlock(np.ndarray):
+class SignalBlock(np.ndarray, Serializable):
     """A TxN matrix of complex entries representing signal samples over T streams and N time samples.
     Used in Signal to store pieces of signal samples.
     Use \"offset\" property to set the offset of this block relative to a signal start sample."""
@@ -645,8 +644,18 @@ class SignalBlock(np.ndarray):
 
         return output
 
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_array(self, "samples")
+        process.serialize_integer(self.offset, "offset")
 
-class Signal(ABC, HDFSerializable):
+    @classmethod
+    def Deserialize(cls: Type[SignalBlock], process: DeserializationProcess) -> SignalBlock:
+        samples = process.deserialize_array("samples", np.complex128)
+        offset = process.deserialize_integer("offset", 0)
+        return cls(samples, offset)
+
+
+class Signal(ABC, Serializable):
     """Abstract base class for all signal models in HermesPy."""
 
     filter_order: int = 10  # Order of the filters applied during superimposition
@@ -1623,23 +1632,22 @@ class Signal(ABC, HDFSerializable):
             res_b[:, b.offset : b.offset + b.num_samples] = b
         return DenseSignal(res_b, **self.kwargs)
 
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_floating(self.sampling_rate, "sampling_rate")
+        process.serialize_floating(self.carrier_frequency, "carrier_frequency")
+        process.serialize_floating(self.delay, "delay")
+        process.serialize_floating(self.noise_power, "noise_power")
+        process.serialize_integer(self.num_streams, "num_streams")
+        process.serialize_object_sequence(self._blocks, "blocks")
+
     @classmethod
-    def from_HDF(cls, group: Group) -> Signal:
-        # De-serialize attributes
-        sampling_rate = group.attrs.get("sampling_rate", 1.0)
-        carrier_frequency = group.attrs.get("carrier_frequency", 0.0)
-        delay = group.attrs.get("delay", 0.0)
-        noise_power = group.attrs.get("noise_power", 0.0)
-        num_streams = group.attrs.get("num_streams", 0)
-
-        # De-serialize blocks
-        num_blocks = group.attrs.get("num_blocks", 0)
-        offsets = np.array(group["offsets"], int)
-        blocks = [
-            SignalBlock(np.array(group[f"block{i}"], np.complex128), offsets[i])
-            for i in range(num_blocks)
-        ]
-
+    def Deserialize(cls, process: DeserializationProcess) -> Signal:
+        sampling_rate = process.deserialize_floating("sampling_rate", 1.0)
+        carrier_frequency = process.deserialize_floating("carrier_frequency", 0.0)
+        delay = process.deserialize_floating("delay", 0.0)
+        noise_power = process.deserialize_floating("noise_power", 0.0)
+        num_streams = process.deserialize_integer("num_streams", 0)
+        blocks = process.deserialize_object_sequence("blocks", SignalBlock)
         res = cls.Create(
             samples=blocks,
             sampling_rate=sampling_rate,
@@ -1649,23 +1657,6 @@ class Signal(ABC, HDFSerializable):
         )
         res._num_streams = num_streams
         return res
-
-    def to_HDF(self, group: Group) -> None:
-        # Serialize attributes
-        group.attrs["carrier_frequency"] = self.carrier_frequency
-        group.attrs["sampling_rate"] = self.sampling_rate
-        group.attrs["num_streams"] = self.num_streams
-        group.attrs["num_samples"] = self.num_samples
-        group.attrs["power"] = self.power
-        group.attrs["delay"] = self.delay
-        group.attrs["noise_power"] = self.noise_power
-
-        # Serialize samples
-        group.attrs["num_blocks"] = len(self._blocks)
-        for i in range(len(self._blocks)):
-            self._write_dataset(group, f"block{i}", self._blocks[i])
-        self._write_dataset(group, "offsets", [b.offset for b in self])
-        self._write_dataset(group, "timestamps", self.timestamps)
 
 
 class DenseSignal(Signal):
@@ -1713,10 +1704,10 @@ class DenseSignal(Signal):
         """
 
         # Initialize base classes
-        HDFSerializable.__init__(self)
+        Signal.__init__(self)
 
-        self._blocks = []
         # Initialize attributes
+        self._blocks = []
         self.sampling_rate = sampling_rate
         self.carrier_frequency = carrier_frequency
         self.delay = delay
@@ -1915,10 +1906,10 @@ class SparseSignal(Signal):
         """
 
         # Initialize base classes
-        HDFSerializable.__init__(self)
+        Signal.__init__(self)
 
-        self._blocks = []
         # Initialize attributes
+        self._blocks = []
         self.sampling_rate = sampling_rate
         self.carrier_frequency = carrier_frequency
         self.delay = delay

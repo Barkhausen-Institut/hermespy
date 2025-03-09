@@ -178,7 +178,7 @@ class TestChannelRealization(TestCase):
         self.sample_callback = Mock()
         self.sample_hooks = {ChannelSampleHook(self.sample_callback, None, None),}
         self.gain = 0.9
-        
+
         self.transmitter = SimulatedDevice(antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1e-3, (2, 1, 1)))
         self.receiver = SimulatedDevice()
         self.carrier_frequency = 1.234e9

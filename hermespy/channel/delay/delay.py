@@ -2,12 +2,19 @@
 
 from __future__ import annotations
 from typing import Generic, Set, TypeVar
+from typing_extensions import override
 
 import numpy as np
-from h5py import Group
 from scipy.constants import speed_of_light
 
-from hermespy.core import AntennaMode, ChannelStateInformation, ChannelStateFormat, SignalBlock
+from hermespy.core import (
+    AntennaMode,
+    ChannelStateInformation,
+    ChannelStateFormat,
+    DeserializationProcess,
+    SerializationProcess,
+    SignalBlock,
+)
 from hermespy.tools import amplitude_path_loss
 from ..channel import (
     Channel,
@@ -171,6 +178,7 @@ class DelayChannelRealization(ChannelRealization[DelayChannelSample]):
     ) -> None:
         """
         Args:
+
             model_propagation_loss (bool):
                 Should free space propagation loss be modeled?
 
@@ -195,9 +203,17 @@ class DelayChannelRealization(ChannelRealization[DelayChannelSample]):
     ) -> DelayChannelSample:
         return DelayChannelSample(sample.delay, self.model_propagation_loss, self.gain, state)
 
-    def to_HDF(self, group: Group) -> None:
-        group.attrs["model_propagation_loss"] = self.model_propagation_loss
-        group.attrs["gain"] = self.gain
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_integer(int(self.model_propagation_loss), "model_propagation_loss")
+        process.serialize_floating(self.gain, "gain")
+
+    @classmethod
+    def _DeserializeParameters(cls, process: DeserializationProcess) -> dict[str, object]:
+        return {
+            "model_propagation_loss": bool(process.deserialize_integer("model_propagation_loss")),
+            "gain": process.deserialize_floating("gain", Channel._DEFAULT_GAIN),
+        }
 
 
 class DelayChannelBase(Generic[DCRT], Channel[DCRT, DelayChannelSample]):
@@ -205,7 +221,12 @@ class DelayChannelBase(Generic[DCRT], Channel[DCRT, DelayChannelSample]):
 
     __model_propagation_loss: bool
 
-    def __init__(self, model_propagation_loss: bool = True, gain: float = 1.0, **kwargs) -> None:
+    def __init__(
+        self,
+        model_propagation_loss: bool = True,
+        gain: float = Channel._DEFAULT_GAIN,
+        seed: int | None = None,
+    ) -> None:
         """
         Args:
 
@@ -217,12 +238,12 @@ class DelayChannelBase(Generic[DCRT], Channel[DCRT, DelayChannelSample]):
                 Linear power gain factor a signal experiences when being propagated over this realization.
                 :math:`1.0` by default.
 
-            \**kawrgs:
-                :class:`Channel` base class initialization arguments.
+            seed (int, optional):
+                Seed used to initialize the pseudo-random number generator.
         """
 
         # Initialize base class
-        Channel.__init__(self, gain, **kwargs)
+        Channel.__init__(self, gain, seed)
 
         # Initialize class attributes
         self.__model_propagation_loss = model_propagation_loss
@@ -236,3 +257,17 @@ class DelayChannelBase(Generic[DCRT], Channel[DCRT, DelayChannelSample]):
     @model_propagation_loss.setter
     def model_propagation_loss(self, value: bool) -> None:
         self.__model_propagation_loss = value
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_integer(int(self.model_propagation_loss), "model_propagation_loss")
+        Channel.serialize(self, process)
+
+    @classmethod
+    @override
+    def _DeserializeParameters(cls, process: DeserializationProcess) -> dict[str, object]:
+        parameters = Channel._DeserializeParameters(process)
+        parameters["model_propagation_loss"] = bool(
+            process.deserialize_integer("model_propagation_loss")
+        )
+        return parameters

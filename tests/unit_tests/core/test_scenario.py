@@ -7,10 +7,10 @@ from unittest import TestCase
 from unittest.mock import PropertyMock, MagicMock, Mock, patch
 
 import numpy.random as rnd
-from h5py import File, Group
+from h5py import File
 
-from hermespy.core import Device, DeviceState, Drop, Scenario, ScenarioMode, Signal, SignalReceiver, SilentTransmitter, ReplayScenario
-from hermespy.simulation import SimulatedDevice
+from hermespy.core import ScenarioMode, Signal, SignalReceiver, SilentTransmitter, ReplayScenario
+from hermespy.simulation import SimulatedDevice, SimulationScenario
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -22,19 +22,6 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class MockScenario(Scenario[Device, DeviceState, Drop]):
-    """Implementation of abstract scenario base for testing purpuses"""
-
-    def _drop(self) -> Drop:
-        # Minimal drop generation
-        transmissions = self.transmit_devices()
-        receptions = self.receive_devices([t.mixed_signal for t in transmissions])
-        return Drop(0.0, transmissions, receptions)
-
-    def _recall_drop(self, group: Group) -> Drop:
-        return Drop.from_HDF(group)
-
-
 class TestScenario(TestCase):
     """Test scenario base class"""
 
@@ -43,27 +30,23 @@ class TestScenario(TestCase):
         self.random_root = Mock()
         self.random_root._rng = self.rng
 
+        self.scenario = SimulationScenario()
+        self.scenario.random_mother = self.random_root
+
+        self.device_alpha = self.scenario.new_device()
+        self.device_beta = self.scenario.new_device()
+
         self.transmitter_alpha = SilentTransmitter(10, 1.0)
         self.transmitter_beta = SilentTransmitter(10, 1.0)
         self.receiver_alpha = SignalReceiver(10, 1.0)
         self.receiver_beta = SignalReceiver(10, 1.0)
-
-        self.device_alpha = SimulatedDevice()
-        self.device_beta = SimulatedDevice()
         self.device_alpha.transmitters.add(self.transmitter_alpha)
         self.device_beta.transmitters.add(self.transmitter_beta)
         self.device_alpha.receivers.add(self.receiver_alpha)
         self.device_beta.receivers.add(self.receiver_beta)
 
         self.drop_duration = 1e-3
-        self.scenario = MockScenario(devices=[self.device_alpha, self.device_beta])
-        self.scenario.random_mother = self.random_root
 
-    def test_arg_signature(self) -> None:
-        """Arg signature class method should return correct signature"""
-
-        expected_signature = {"seed", "devices"}
-        self.assertEqual(expected_signature, Scenario._arg_signature())
 
     def test_add_device_validation(self) -> None:
         """Adding an already registered device should raise a ValueError"""
@@ -82,12 +65,6 @@ class TestScenario(TestCase):
         self.scenario.add_device(device)
 
         self.assertTrue(self.scenario.device_registered(device))
-
-    def test_new_device(self) -> None:
-        """Creating a new device should raise a RuntimeError by default"""
-
-        with self.assertRaises(RuntimeError):
-            _ = self.scenario.new_device()
 
     def test_device_index_validation(self) -> None:
         """Device index sould raise ValueError if device is not registered"""
@@ -175,12 +152,8 @@ class TestScenario(TestCase):
     def test_campaign_validation(self) -> None:
         """The campaign property setter should raise a ValueError on invalid calls"""
 
-        with patch("hermespy.core.scenario.Scenario.mode", new_callable=PropertyMock) as mode_mock, patch("hermespy.core.scenario.Scenario._Scenario__campaign_exists") as campaign_exists_mock:
-            mode_mock.return_value = ScenarioMode.REPLAY
-            campaign_exists_mock.return_value = False
-
-            with self.assertRaises(ValueError):
-                self.scenario.campaign = "test"
+        with self.assertRaises(ValueError):
+            self.scenario.campaign = "state"
 
     def test_campaign_setget(self) -> None:
         """The campaign property getter should return the setter argument"""
@@ -191,20 +164,6 @@ class TestScenario(TestCase):
         # Second call for coverage
         self.scenario.campaign = "test2"
         self.assertEqual("test2", self.scenario.campaign)
-
-        with patch("hermespy.core.scenario.Scenario.mode", new_callable=PropertyMock) as mode_mock, patch("hermespy.core.scenario.Scenario._Scenario__campaign_exists") as campaign_exists_mock:
-            mode_mock.return_value = ScenarioMode.REPLAY
-            campaign_exists_mock.return_value = True
-
-            self.scenario.campaign = "test3"
-            self.assertEqual("test3", self.scenario.campaign)
-
-            mode_mock.return_value = ScenarioMode.RECORD
-            campaign_exists_mock.return_value = False
-
-            with patch.object(self.scenario, "_Scenario__file", new_callable=MagicMock) as file_mock:
-                self.scenario.campaign = "test4"
-                self.assertEqual("test4", self.scenario.campaign)
 
     def test_record_validation(self) -> None:
         """Record should raise a RuntimeError if the scenario is already recording"""
@@ -248,61 +207,19 @@ class TestScenario(TestCase):
 
             file_path = join(tmp_dir, "test.hdf")
 
-            self.scenario.record(file_path, campaign=campagin)
+            self.scenario.record(file_path, campagin)
             recorded_drop = self.scenario.drop()
-
-            self.scenario.replay(campaign=campagin)
-            directly_replayed_drop = self.scenario.drop()
-
             self.scenario.stop()
 
-            replayed_scenario = MockScenario.Replay(file_path, campaign=campagin)
+            self.scenario.replay(file_path, campagin)
+            directly_replayed_drop = self.scenario.drop()
+            self.scenario.stop()
+
+            replayed_scenario, _ = SimulationScenario.Replay(file_path, campagin)
             replayed_drop = replayed_scenario.drop()
             replayed_scenario.stop()
 
         self.assertEqual(campagin, replayed_scenario.campaign)
-        self.assertEqual(recorded_drop.timestamp, replayed_drop.timestamp)
-        self.assertEqual(recorded_drop.num_device_receptions, replayed_drop.num_device_receptions)
-        self.assertEqual(recorded_drop.num_device_transmissions, replayed_drop.num_device_receptions)
-
-    def test_replay_validation(self) -> None:
-        """Replay should raise a ValueError if the requested campaign does not exist"""
-
-        with self.assertRaises(ValueError):
-            self.scenario.replay()
-
-        with TemporaryDirectory() as tmp_dir:
-            campaign = "abrc"
-            self.scenario.drop_duration = 1e-3
-
-            file_path = join(tmp_dir, "test.hdf")
-            self.scenario.record(file_path, campaign=campaign)
-            _ = self.scenario.drop()
-            self.scenario.stop()
-
-            with patch("hermespy.core.scenario.Scenario._Scenario__campaign_exists") as campaign_exists_mock:
-                campaign_exists_mock.return_value = False
-
-                with self.assertRaises(ValueError):
-                    self.scenario.replay(file_path, campaign=campaign)
-
-    def test_replay_from_file(self) -> None:
-        """Replay from file should return the same drop"""
-
-        with TemporaryDirectory() as tmp_dir:
-            campagin = "abrc"
-            self.scenario.drop_duration = 1e-3
-
-            file_path = join(tmp_dir, "test.hdf")
-            self.scenario.record(file_path, campaign=campagin)
-            recorded_drop = self.scenario.drop()
-            self.scenario.stop()
-
-            file = File(file_path, "r")
-            self.scenario.replay(file, campaign=campagin)
-            replayed_drop = self.scenario.drop()
-            self.scenario.stop()
-
         self.assertEqual(recorded_drop.timestamp, replayed_drop.timestamp)
         self.assertEqual(recorded_drop.num_device_receptions, replayed_drop.num_device_receptions)
         self.assertEqual(recorded_drop.num_device_transmissions, replayed_drop.num_device_receptions)
@@ -372,24 +289,26 @@ class TestScenario(TestCase):
 
         self.assertEqual(2, len(receptions))
 
-    def test_num_drop_devices(self) -> None:
-        """Num drop devices should return the correct number of devices"""
+    def test_num_drops(self) -> None:
+        """Number of drops should be correctly returned by the respective property"""
 
         with TemporaryDirectory() as tmp_dir:
             self.scenario.drop_duration = 1e-3
-
             file_path = join(tmp_dir, "test.hdf")
+
             self.scenario.record(file_path)
             _ = self.scenario.drop()
             self.assertEqual(1, self.scenario.num_drops)
             self.scenario.stop()
 
-            replayed_scenario = MockScenario.Replay(file_path)
+            replayed_scenario, num_replayed_drops = SimulationScenario.Replay(file_path)
+            self.assertEqual(1, num_replayed_drops)
+            
             _ = replayed_scenario.drop()
             self.assertEqual(1, replayed_scenario.num_drops)
             replayed_scenario.stop()
 
-        self.assertIsNone(self.scenario.num_drops)
+        self.assertEqual(0, self.scenario.num_drops)
 
 
 class TestReplayScenario(TestCase):
@@ -403,3 +322,4 @@ class TestReplayScenario(TestCase):
 
         with self.assertRaises(RuntimeError):
             self.scenario.drop()
+

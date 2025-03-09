@@ -1,11 +1,17 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
+from typing_extensions import override
 
 import numpy as np
-from h5py import Group
 
-from hermespy.core import AntennaMode, Signal, SignalBlock
+from hermespy.core import (
+    AntennaMode,
+    DeserializationProcess,
+    SerializationProcess,
+    Signal,
+    SignalBlock,
+)
 from ..physical_device import AntennaCalibration, PhysicalDevice
 from ..scenario import PhysicalScenario
 
@@ -63,6 +69,7 @@ class ScalarAntennaCalibration(AntennaCalibration):
 
         return self.__receive_correction_weights
 
+    @override
     def correct_transmission(self, transmission: SignalBlock) -> None:
         if transmission.num_streams != self.__transmit_correction_weights.size:
             raise ValueError(
@@ -71,6 +78,7 @@ class ScalarAntennaCalibration(AntennaCalibration):
 
         np.copyto(transmission, self.__transmit_correction_weights[:, None] * transmission, "safe")
 
+    @override
     def correct_reception(self, reception: SignalBlock) -> None:
         if reception.num_streams != self.__receive_correction_weights.size:
             raise ValueError(
@@ -207,21 +215,15 @@ class ScalarAntennaCalibration(AntennaCalibration):
             transmit_correction_weights, receive_correction_weights, device
         )
 
-    def to_HDF(self, group: Group) -> None:
-        # Serialize correction weights
-        self._write_dataset(
-            group, "transmit_correction_weights", self.__transmit_correction_weights
-        )
-        self._write_dataset(group, "receive_correction_weights", self.__receive_correction_weights)
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_array(self.transmit_correction_weights, "transmit_correction_weights")
+        process.serialize_array(self.receive_correction_weights, "receive_correction_weights")
 
     @classmethod
-    def from_HDF(cls: type[ScalarAntennaCalibration], group: Group) -> ScalarAntennaCalibration:
-        # Deserialize correction weights
-        transmit_correction_weights = np.array(
-            group["transmit_correction_weights"], dtype=np.complex128
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> ScalarAntennaCalibration:
+        return ScalarAntennaCalibration(
+            process.deserialize_array("transmit_correction_weights", np.complex128),
+            process.deserialize_array("receive_correction_weights", np.complex128),
         )
-        receive_correction_weights = np.array(
-            group["receive_correction_weights"], dtype=np.complex128
-        )
-
-        return ScalarAntennaCalibration(transmit_correction_weights, receive_correction_weights)

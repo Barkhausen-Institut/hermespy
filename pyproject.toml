@@ -41,7 +41,6 @@ dependencies = [
     "scipy>=1.14.1",
     "pybind11>=2.10.4",
     "ray>=2.40.0",
-    "ruamel.yaml>=0.17.32",
     "sparse>=0.15.4",
     "numba>=0.60.0",
     "rich>=13.9.4",
@@ -51,9 +50,6 @@ dependencies = [
 Documentation = "https://hermespy.org/"
 Homepage = "https://github.com/Barkhausen-Institut/hermespy.git"
 Issues = "https://github.com/Barkhausen-Institut/hermespy/issues"
-
-[project.scripts]
-hermes = "hermespy.bin:hermes_simulation"
 
 [project.optional-dependencies]
 test = [
@@ -149,11 +145,13 @@ omit = [
 
 [tool.mypy] 
 namespace_packages = true 
-strict_optional = false
+strict_optional = false  # should be changed to true
 no_implicit_optional = true
 explicit_package_bases = true
-packages = "hermespy.beamforming, hermespy.bin, hermespy.channel, hermespy.core, hermespy.fec, hermespy.hardware_loop, hermespy.jcas, hermespy.modem, hermespy.radar, hermespy.simulation, hermespy.tools"
+packages = "hermespy.beamforming, hermespy.channel, hermespy.core, hermespy.fec, hermespy.hardware_loop, hermespy.jcas, hermespy.modem, hermespy.radar, hermespy.simulation, hermespy.tools"
 plugins = "numpy.typing.mypy_plugin"
+disallow_untyped_calls = false  # should be changed to true
+disable_error_code = "type-abstract"
 
 [[tool.mypy.overrides]]
 module = "numpy.*,scipy.*,oct2py.*,matlab.*,matplotlib.*,ruamel.*,numba.*,h5py.*,hermespy.fec.aff3ct.*,zerorpc.*,sounddevice.*,usrp_client.*,uhd_wrapper.*"
@@ -176,7 +174,6 @@ push = false
 
 # Source files
 "hermespy/beamforming/*.py" = [ '__version__ = "{version}"' ]
-"hermespy/bin/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/channel/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/channel/cdl/*.py" = [ '__version__ = "{version}"' ]
 "hermespy/channel/delay/*.py" = [ '__version__ = "{version}"' ]

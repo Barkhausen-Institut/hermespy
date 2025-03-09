@@ -7,10 +7,11 @@ import numpy as np
 from scipy.constants import speed_of_light
 from scipy.fft import ifft, fft, ifftshift
 
+from hermespy.beamforming import ReceiveBeamformer
 from hermespy.core import Serializable, ReceiveState, Signal, TransmitState
 from hermespy.jcas.jcas import JCASReception, JCASTransmission
 from hermespy.modem import OFDMWaveform, ReceivingModemBase, TransmittingModemBase, Symbols
-from hermespy.radar import RadarCube, RadarReception
+from hermespy.radar import RadarCube, RadarDetector, RadarReception
 from .jcas import DuplexJCASOperator
 
 __author__ = "Jan Adler"
@@ -29,13 +30,13 @@ class OFDMRadar(DuplexJCASOperator[OFDMWaveform], Serializable):
     Refer to :footcite:p:`2009:sturm` for the original publication.
     """
 
-    yaml_tag = "OFDMRadar"
-
     __last_transmission: JCASTransmission | None = None
 
     def __init__(
         self,
         waveform: OFDMWaveform | None = None,
+        receive_beamformer: ReceiveBeamformer | None = None,
+        detector: RadarDetector | None = None,
         selected_transmit_ports: Sequence[int] | None = None,
         selected_receive_ports: Sequence[int] | None = None,
         carrier_frequency: float | None = None,
@@ -43,8 +44,15 @@ class OFDMRadar(DuplexJCASOperator[OFDMWaveform], Serializable):
     ) -> None:
         """
         Args:
+
             waveform (OFDMWaveform, optional):
                 Communication waveform emitted by this operator.
+
+            receive_beamformer (ReceiveBeamformer, optional):
+                Beamformer used to process the received signal.
+
+            detector (RadarDetector, optional):
+                Detector used to process the radar cube.
 
             selected_transmit_ports (Sequence[int] | None):
                 Indices of antenna ports selected for transmission from the operated :class:`Device's<Device>` antenna array.
@@ -64,7 +72,14 @@ class OFDMRadar(DuplexJCASOperator[OFDMWaveform], Serializable):
 
         # Initalize base class
         DuplexJCASOperator.__init__(
-            self, waveform, selected_transmit_ports, selected_receive_ports, carrier_frequency, seed
+            self,
+            waveform,
+            receive_beamformer,
+            detector,
+            selected_transmit_ports,
+            selected_receive_ports,
+            carrier_frequency,
+            seed,
         )
 
         # Initialize class attributes

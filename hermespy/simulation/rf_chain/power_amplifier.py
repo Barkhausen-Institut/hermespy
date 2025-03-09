@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from typing import Any
+from typing import Any, TypeVar
+from typing_extensions import override
 
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.constants import pi
 
-from hermespy.core import Serializable, VAT
+from hermespy.core import Serializable, VAT, SerializationProcess, DeserializationProcess
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -19,11 +20,12 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
+_PAT = TypeVar("_PAT", bound="PowerAmplifier")
+"""Type of power amplifier."""
+
+
 class PowerAmplifier(Serializable):
     """Base class of a distorionless power-amplifier model."""
-
-    yaml_tag: str = "Distortionless"
-    serialized_attributes = {"adjust_power"}
 
     adjust_power: bool
     """Power adjustment flag.
@@ -174,22 +176,37 @@ class PowerAmplifier(Serializable):
 
         return fig
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_floating(self.saturation_amplitude, "saturation_amplitude")
+        process.serialize_integer(self.adjust_power, "adjust_power")
+
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> PowerAmplifier:
+        saturation_amplitude = process.deserialize_floating("saturation_amplitude")
+        adjust_power = bool(process.deserialize_integer("adjust_power", 0))
+
+        return cls(saturation_amplitude, adjust_power)
+
 
 class ClippingPowerAmplifier(PowerAmplifier):
     """Model of a clipping power amplifier."""
 
-    yaml_tag = "Clipping"
-    """YAML serialization tag."""
-
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(
+        self, saturation_amplitude: float = float("inf"), adjust_power: bool = False
+    ) -> None:
         """
         Args:
-            \**kwargs (Any):
-                PowerAmplifier base class initialization arguments.
+
+            saturation_amplitude (float, optional):
+                Cut-off point for the linear behaviour of the amplification in Volt.
+
+            adjust_power (bool, optional):
+                Power adjustment flag.
         """
 
         # Initialize base class
-        PowerAmplifier.__init__(self, **kwargs)
+        PowerAmplifier.__init__(self, saturation_amplitude, adjust_power)
 
     def model(self, input_signal: np.ndarray) -> np.ndarray:
         output_signal = input_signal.copy()
@@ -207,9 +224,6 @@ class RappPowerAmplifier(PowerAmplifier):
 
     See :footcite:t:`1991:rapp` for further details.
     """
-
-    yaml_tag = "Rapp"
-    """YAML serialization tag."""
 
     def __init__(self, smoothness_factor: float = 1.0, **kwargs: Any) -> None:
         """
@@ -257,15 +271,26 @@ class RappPowerAmplifier(PowerAmplifier):
 
         return input_signal * gain
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        PowerAmplifier.serialize(self, process)
+        process.serialize_floating(self.smoothness_factor, "smoothness_factor")
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> RappPowerAmplifier:
+        return cls(
+            process.deserialize_floating("smoothness_factor", 1.0),
+            saturation_amplitude=process.deserialize_floating("saturation_amplitude", float("inf")),
+            adjust_power=bool(process.deserialize_integer("adjust_power", 0)),
+        )
+
 
 class SalehPowerAmplifier(PowerAmplifier):
     """Model of a power amplifier according to Saleh.
 
     See :footcite:t:`1981:saleh` for further details.
     """
-
-    yaml_tag = "Saleh"
-    serialized_attributes = {"adjust_power", "phase_alpha", "phase_beta"}
 
     phase_alpha: float
     """Phase model factor :math:`\\alpha_\\Phi`."""
@@ -362,12 +387,29 @@ class SalehPowerAmplifier(PowerAmplifier):
 
         return input_signal * gain * np.exp(1j * phase_shift)
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        PowerAmplifier.serialize(self, process)
+        process.serialize_floating(self.amplitude_alpha, "amplitude_alpha")
+        process.serialize_floating(self.amplitude_beta, "amplitude_beta")
+        process.serialize_floating(self.phase_alpha, "phase_alpha")
+        process.serialize_floating(self.phase_beta, "phase_beta")
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> SalehPowerAmplifier:
+        return cls(
+            process.deserialize_floating("amplitude_alpha"),
+            process.deserialize_floating("amplitude_beta"),
+            process.deserialize_floating("phase_alpha"),
+            process.deserialize_floating("phase_beta"),
+            saturation_amplitude=process.deserialize_floating("saturation_amplitude", float("inf")),
+            adjust_power=bool(process.deserialize_integer("adjust_power", 0)),
+        )
+
 
 class CustomPowerAmplifier(PowerAmplifier):
     """Model of a customized power amplifier."""
-
-    yaml_tag = "Custom"
-    serialized_attributes = {"adjust_power", "input", "gain", "phase"}
 
     __input: np.ndarray
     __gain: np.ndarray
@@ -428,3 +470,21 @@ class CustomPowerAmplifier(PowerAmplifier):
     @property
     def phase(self) -> np.ndarray:
         return self.__phase.copy()
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        PowerAmplifier.serialize(self, process)
+        process.serialize_array(self.__input, "input")
+        process.serialize_array(self.__gain, "gain")
+        process.serialize_array(self.__phase, "phase")
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> CustomPowerAmplifier:
+        return cls(
+            process.deserialize_array("input", np.float64),
+            process.deserialize_array("gain", np.float64),
+            process.deserialize_array("phase", np.float64),
+            saturation_amplitude=process.deserialize_floating("saturation_amplitude", float("inf")),
+            adjust_power=bool(process.deserialize_integer("adjust_power", 0)),
+        )

@@ -2,7 +2,7 @@
 
 import logging
 from contextlib import ExitStack
-from os import path as os_path
+from os import path as os_path, listdir
 from sys import path as sys_path
 from unittest import TestCase
 from unittest.mock import patch, PropertyMock
@@ -23,7 +23,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class TestLibraryExamples(TestCase):
+class TestGettingStartedExamples(TestCase):
     """Test library example execution without exceptions"""
 
     def setUp(self) -> None:
@@ -34,7 +34,7 @@ class TestLibraryExamples(TestCase):
         # Ignore matplotlib warnings stemming from the non-interactive backend
         filterwarnings("ignore", category=UserWarning)
 
-        library_dir = os_path.abspath(os_path.join(os_path.dirname(__file__), "..", "..", "..", "_examples", "library"))
+        library_dir = os_path.abspath(os_path.join(os_path.dirname(__file__), "..", "..", "..", "_examples", "getting_started"))
         sys_path.append(library_dir)
 
         # Patch the executable debug flag to True
@@ -58,7 +58,7 @@ class TestLibraryExamples(TestCase):
         """Test getting started library link example execution"""
 
         try:
-            import getting_started_link  # type: ignore  # noqa: F401
+            import link  # type: ignore  # noqa: F401
         except Exception as e:
             self.fail(f"Exception raised: {e}")
 
@@ -67,7 +67,7 @@ class TestLibraryExamples(TestCase):
         """Test getting started library loop example"""
 
         try:
-            import getting_started_loop  # type: ignore  # noqa: F401
+            import loop  # type: ignore  # noqa: F401
         except Exception as e:
             self.fail(f"Exception raised: {e}")
 
@@ -76,7 +76,7 @@ class TestLibraryExamples(TestCase):
 
         with SimulationTestContext(patch_plot=True):
             try:
-                import getting_started_mobility  # type: ignore  # noqa: F401
+                import mobility  # type: ignore  # noqa: F401
             except Exception as e:
                 self.fail(f"Exception raised: {e}")
 
@@ -84,7 +84,7 @@ class TestLibraryExamples(TestCase):
         """Test getting started library OFDM link example execution"""
 
         try:
-            import getting_started_ofdm_link  # type: ignore  # noqa: F401
+            import ofdm_link  # type: ignore  # noqa: F401
         except Exception as e:
             self.fail(f"Exception raised: {e}")
 
@@ -93,7 +93,7 @@ class TestLibraryExamples(TestCase):
 
         with SimulationTestContext(patch_plot=True):
             try:
-                import getting_started_simulation_multidim  # type: ignore  # noqa: F401
+                import simulation_multidim  # type: ignore  # noqa: F401
             except Exception as e:
                 self.fail(f"Exception raised: {e}")
 
@@ -104,29 +104,33 @@ class TestLibraryExamples(TestCase):
 
         with SimulationTestContext(patch_plot=True):
             try:
-                import getting_started_simulation  # type: ignore  # noqa: F401
+                import simulation  # type: ignore  # noqa: F401
             except Exception as e:
                 self.fail(f"Exception raised: {e}")
 
-    def test_usrp_loop(self) -> None:
-        """Test USRP loop example execution"""
 
-        with ExitStack() as stack:
-            stack.enter_context(SimulationTestContext(patch_plot=True))
+class TestAdvancedExamples(TestCase):
+    """Test advanced example execution"""
 
-            from hermespy.hardware_loop import PhysicalScenarioDummy, PhysicalDeviceDummy
+    test_blacklist: set[str] = {
+        'audio.py',
+        'ofdm_5g.py',  # Execution time is too long
+        'interference.py',  # Execution time is too long
+        'usrp.py',  # Not supported in CI
+        'usrp_loop.py',  # Not supported in CI
+    }
 
-            new_device = PhysicalDeviceDummy()
+    @patch('builtins.input')
+    def test_examples(self, input_mock) -> None:
+        """Test all example scripts within the advanced examples directory"""
 
-            def new_device_callback(self, *args, **kwargs):
-                if new_device not in self.devices:
-                    self.add_device(new_device)
-                return new_device
+        base_path = os_path.abspath(os_path.join(os_path.dirname(__file__), "..", "..", "..", "_examples", "advanced"))
 
-            new_device_patch = stack.enter_context(patch.object(PhysicalScenarioDummy, "new_device", autospec=True))
-            new_device_patch.side_effect = new_device_callback
-
-            stack.enter_context(patch("hermespy.hardware_loop.UsrpSystem", PhysicalScenarioDummy))
-            stack.enter_context(patch("hermespy.hardware_loop.HardwareLoop.new_dimension"))
-
-            import usrp_loop  # type: ignore  # noqa: F401
+        for script in listdir(base_path):
+            script_path = os_path.join(base_path, script)
+            if os_path.isfile(script_path) and script.endswith('.py') and script not in self.test_blacklist:
+                with SimulationTestContext(patch_plot=True), self.subTest(script=script):
+                    try:
+                        exec(open(script_path).read(), {'__file__': script_path})
+                    except Exception as e:
+                        self.fail(f"Exception raised: {e}")

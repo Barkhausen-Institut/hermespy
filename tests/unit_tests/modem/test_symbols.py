@@ -11,6 +11,7 @@ from numpy.testing import assert_array_equal
 
 from hermespy.modem import Symbol, Symbols, StatedSymbols
 from hermespy.modem.symbols import SymbolType
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -155,23 +156,10 @@ class TestSymbols(TestCase):
             self.symbols.plot_constellation(axes=axes)
             ax_mock.scatter.assert_called()
 
-    def test_hdf_serialization(self) -> None:
-        """Serialization to and from HDF5 should yield the correct object reconstruction"""
-
-        symbols: Symbols = None
-
-        with TemporaryDirectory() as tempdir:
-            file_location = path.join(tempdir, "testfile.hdf5")
-
-            with File(file_location, "a") as file:
-                group = file.create_group("testgroup")
-                self.symbols.to_HDF(group)
-
-            with File(file_location, "r") as file:
-                group = file["testgroup"]
-                symbols = self.symbols.from_HDF(group)
-
-        np.testing.assert_array_equal(self.raw_symbols, symbols.raw)
+    def test_serialization(self) -> None:
+        """Test symbols serialization"""
+        
+        test_roundtrip_serialization(self, self.symbols)
 
 
 class TestStatedSymbols(TestCase):
@@ -197,21 +185,7 @@ class TestStatedSymbols(TestCase):
         with self.assertRaises(ValueError):
             self.symbols.states = np.zeros((3, 2, 4, 6))
 
-    def test_hdf_serialization(self) -> None:
-        """Serialization to and from HDF5 should yield the correct object reconstruction"""
-
-        symbols: StatedSymbols = None
-
-        with TemporaryDirectory() as tempdir:
-            file_location = path.join(tempdir, "testfile.hdf5")
-
-            with File(file_location, "a") as file:
-                group = file.create_group("testgroup")
-                self.symbols.to_HDF(group)
-
-            with File(file_location, "r") as file:
-                group = file["testgroup"]
-                symbols = self.symbols.from_HDF(group)
-
-        np.testing.assert_array_equal(self.raw_symbols, symbols.raw)
-        np.testing.assert_array_equal(self.raw_states, symbols.states)
+    def test_serialization(self) -> None:
+        """Test stated symbols serialization"""
+        
+        test_roundtrip_serialization(self, self.symbols)

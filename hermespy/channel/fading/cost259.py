@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from typing import Any, Optional, Type
+from typing_extensions import override
 
 import numpy as np
-from ruamel.yaml import SafeRepresenter, MappingNode
 
-from hermespy.core import SerializableEnum
-from .fading import MultipathFadingChannel
+from hermespy.core import DeserializationProcess, SerializableEnum, SerializationProcess
+from .fading import AntennaCorrelation, MultipathFadingChannel
+from ..channel import Channel
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -35,36 +35,55 @@ class Cost259Type(SerializableEnum):
 class Cost259(MultipathFadingChannel):
     """Cost action 259 multipath fading channel model."""
 
-    yaml_tag = "COST259"
+    __DEFAULT_TYPE = Cost259Type.URBAN
+
     __model_type: Cost259Type
 
     def __init__(
         self,
-        model_type: Cost259Type = Cost259Type.URBAN,
-        gain: float = 1.0,
-        los_angle: Optional[float] = None,
-        doppler_frequency: Optional[float] = None,
-        los_doppler_frequency: Optional[float] = None,
-        **kwargs: Any,
+        model_type: Cost259Type = __DEFAULT_TYPE,
+        correlation_distance: float = MultipathFadingChannel._DEFAULT_DECORRELATION_DISTANCE,
+        num_sinusoids: int = MultipathFadingChannel._DEFAULT_NUM_SINUSOIDS,
+        los_angle: float | None = None,
+        doppler_frequency: float = MultipathFadingChannel._DEFAULT_DOPPLER_FREQUENCY,
+        los_doppler_frequency: float | None = None,
+        antenna_correlation: AntennaCorrelation | None = None,
+        gain: float = MultipathFadingChannel._DEFAULT_GAIN,
+        seed: int | None = None,
     ) -> None:
         """
         Args:
 
             model_type (Cost259Type):
                 The model type.
+                By default, an urban model is assumed.
+
+            correlation_distance (float, optional):
+                Distance at which channel samples are considered to be uncorrelated.
+                :math:`\\infty` by default, i.e. the channel is considered to be fully correlated in space.
+
+            num_sinusoids (int, optional):
+                Number of sinusoids used to sample the statistical distribution.
+                Denoted by :math:`N` within the respective equations.
+
+            los_angle (float, optional):
+                Angle phase of the line of sight component within the statistical distribution.
+                Will be ignored for the Hilly model type.
+
+            doppler_frequency (float, optional):
+                Doppler frequency shift of the statistical distribution.
+                Denoted by :math:`\\omega_{\\ell}` within the respective equations.
+
+            antenna_correlation (AntennaCorrelation, optional):
+                Antenna correlation model.
+                By default, the channel assumes ideal correlation, i.e. no cross correlations.
 
             gain (float, optional):
                 Linear power gain factor a signal experiences when being propagated over this realization.
                 :math:`1.0` by default.
 
-            los_angle (float, optional):
-                Angle phase of the line of sight component within the statistical distribution.
-
-            doppler_frequency (float, optional):
-                Doppler frequency shift of the statistical distribution.
-
-            \**kwargs (Any):
-                `MultipathFadingChannel` initialization parameters.
+            seed (int, optional):
+                Seed used to initialize the pseudo-random number generator.
 
         Raises:
            ValueError:
@@ -131,11 +150,6 @@ class Cost259(MultipathFadingChannel):
             rice_factors = np.zeros(delays.shape)
 
         elif model_type == Cost259Type.HILLY:
-            if los_angle is not None:
-                raise ValueError(
-                    "Model type HILLY does not support line of sight angle configuration"
-                )
-
             delays = 1e-6 * np.array(
                 [
                     0,
@@ -199,14 +213,17 @@ class Cost259(MultipathFadingChannel):
         # Init base class with pre-defined model parameters
         MultipathFadingChannel.__init__(
             self,
-            gain=gain,
-            delays=delays,
-            power_profile=power_profile,
-            rice_factors=rice_factors,
-            los_angle=los_angle,
-            doppler_frequency=doppler_frequency,
-            los_doppler_frequency=los_doppler_frequency,
-            **kwargs,
+            delays,
+            power_profile,
+            rice_factors,
+            correlation_distance,
+            num_sinusoids,
+            los_angle,
+            doppler_frequency,
+            los_doppler_frequency,
+            antenna_correlation,
+            gain,
+            seed,
         )
 
     @property
@@ -218,25 +235,34 @@ class Cost259(MultipathFadingChannel):
 
         return self.__model_type
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_object(self.model_type, "model_type")
+        process.serialize_floating(self.correlation_distance, "correlation_distance")
+        process.serialize_integer(self.num_sinusoids, "num_sinusoids")
+        process.serialize_floating(self.los_angle, "los_angle")
+        process.serialize_floating(self.doppler_frequency, "doppler_frequency")
+        process.serialize_floating(self.los_doppler_frequency, "los_doppler_frequency")
+        if self.antenna_correlation is not None:
+            process.serialize_object(self.antenna_correlation, "antenna_correlation")
+        Channel.serialize(self, process)
+
     @classmethod
-    def to_yaml(cls: Type[Cost259], representer: SafeRepresenter, node: Cost259) -> MappingNode:
-        """Serialize a serializable object to YAML.
-
-        Args:
-
-            representer (SafeRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
-
-            node (Serializable):
-                The MultipathFadingCost256 instance to be serialized.
-
-        Returns: The serialized YAML node.
-        """
-
-        blacklist = set()
-
-        if node.model_type == Cost259Type.HILLY:
-            blacklist.add("los_angle")
-
-        return node._mapping_serialization_wrapper(representer, blacklist=blacklist)
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> Cost259:
+        return cls(
+            model_type=process.deserialize_object("model_type", Cost259Type, cls.__DEFAULT_TYPE),
+            correlation_distance=process.deserialize_floating(
+                "correlation_distance", cls._DEFAULT_DECORRELATION_DISTANCE
+            ),
+            num_sinusoids=process.deserialize_integer("num_sinusoids", cls._DEFAULT_NUM_SINUSOIDS),
+            los_angle=process.deserialize_floating("los_angle"),
+            doppler_frequency=process.deserialize_floating(
+                "doppler_frequency", cls._DEFAULT_DOPPLER_FREQUENCY
+            ),
+            los_doppler_frequency=process.deserialize_floating("los_doppler_frequency"),
+            antenna_correlation=process.deserialize_object(
+                "antenna_correlation", AntennaCorrelation, None
+            ),
+            **Channel._DeserializeParameters(process),  # type: ignore[arg-type]
+        )

@@ -31,7 +31,7 @@ class TestRadarSionna(unittest.TestCase):
         device.transmit_coding[0] = ConventionalBeamformer()
 
         # Create a radar channel modeling a single target
-        channel = SionnaRTChannel(rt.load_scene(rt.scene.simple_reflector), 1.0, 42)
+        channel = SionnaRTChannel(rt.scene.simple_reflector, 1.0, 42)
         simulation.set_channel(device, device, channel)
 
         # Configure an FMCW radar illuminating the target

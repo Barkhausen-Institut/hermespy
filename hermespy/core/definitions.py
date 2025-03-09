@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-
 from .factory import SerializableEnum
 
 __author__ = "Jan Adler"

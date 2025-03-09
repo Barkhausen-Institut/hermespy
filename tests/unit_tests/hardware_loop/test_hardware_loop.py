@@ -19,7 +19,7 @@ from hermespy.core import VAT, ConsoleMode, GridDimension, Visualization
 from hermespy.hardware_loop.hardware_loop import HardwareLoopSample
 from hermespy.modem import BitErrorEvaluator, DuplexModem, RRCWaveform
 from hermespy.hardware_loop import DeviceTransmissionPlot, EvaluatorPlotMode, EvaluatorRegistration, HardwareLoop, HardwareLoopPlot, IterationPriority, PhysicalScenarioDummy, PhysicalDeviceDummy
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 from unit_tests.utils import SimulationTestContext
 
 __author__ = "Jan Adler"
@@ -392,16 +392,3 @@ class TestHardwareLoop(TestCase):
 
         self.assertEqual(1, self.hardware_loop.num_evaluators)
         self.assertIn(evaluator, self.hardware_loop.evaluators)
-
-    def test_yaml_serialization(self) -> None:
-        """Test YAML serialization"""
-
-        device = self.hardware_loop.new_device()
-        modem = DuplexModem()
-        modem.device = device
-        modem.waveform = RRCWaveform(symbol_rate=1e8, oversampling_factor=4, num_preamble_symbols=0, num_data_symbols=20)
-        evaluator = BitErrorEvaluator(modem, modem)
-        self.hardware_loop.add_evaluator(evaluator)
-        self.hardware_loop.new_dimension("sampling_rate", [1, 2, 3], device)
-
-        test_yaml_roundtrip_serialization(self, self.hardware_loop)

@@ -8,7 +8,7 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal, assert_array_equal, assert_array_less
 
 from hermespy.simulation.rf_chain.power_amplifier import PowerAmplifier, ClippingPowerAmplifier, RappPowerAmplifier, SalehPowerAmplifier, CustomPowerAmplifier
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -107,9 +107,9 @@ class TestPowerAmplifier(unittest.TestCase):
             self.pa.plot_characteristics(axes=np.array([[axes]]))
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.pa)
+        test_roundtrip_serialization(self, self.pa)
 
 
 class TestRappPowerAmplifier(unittest.TestCase):
@@ -165,9 +165,9 @@ class TestRappPowerAmplifier(unittest.TestCase):
         assert_array_almost_equal(expected_output, output)
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.pa)
+        test_roundtrip_serialization(self, self.pa)
 
 
 class TestClippingPowerAmplifier(unittest.TestCase):
@@ -198,9 +198,9 @@ class TestClippingPowerAmplifier(unittest.TestCase):
         assert_array_equal(signal[non_distorted_index], output[non_distorted_index])
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.pa)
+        test_roundtrip_serialization(self, self.pa)
 
 
 class TestSalehPowerAmplifier(unittest.TestCase):
@@ -301,9 +301,9 @@ class TestSalehPowerAmplifier(unittest.TestCase):
         assert_array_almost_equal(output, expected_output)
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.pa)
+        test_roundtrip_serialization(self, self.pa)
 
 
 class TestCustomPowerAmplifier(unittest.TestCase):
@@ -352,6 +352,6 @@ class TestCustomPowerAmplifier(unittest.TestCase):
         assert_array_almost_equal(expected_output, output)
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.pa)
+        test_roundtrip_serialization(self, self.pa)

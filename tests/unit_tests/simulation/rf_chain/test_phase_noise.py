@@ -9,7 +9,7 @@ from hermespy.core import Signal
 from hermespy.simulation.rf_chain.phase_noise import NoPhaseNoise, OscillatorPhaseNoise
 from hermespy.simulation import SimulatedDevice
 from hermespy.modem import DuplexModem, RootRaisedCosineWaveform
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Egor Achkasov"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -35,19 +35,19 @@ class TestNoPhaseNoise(TestCase):
 
         assert_array_equal(signal.getitem(), noisy_signal.getitem())
 
-    def test_yaml_serialization(self) -> None:
-        """Test serialization to and from yaml"""
+    def test_serialization(self) -> None:
+        """Test serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.pn)
+        test_roundtrip_serialization(self, self.pn)
 
 
 class TestOscillatorPhaseNoise(TestCase):
     """Test the doi: 10.1109/TCSI.2013.2285698 phase noise implementation"""
 
     def setUp(self) -> None:
-        self.K0 = 10 ** (-110 / 10)
-        self.K2 = 10
-        self.K3 = 10**4
+        self.K0 = 10.0 ** (-110 / 10)
+        self.K2 = 10.0
+        self.K3 = 10.0**4
         self.pn = OscillatorPhaseNoise(self.K0, self.K2, self.K3)
         self.pn0 = OscillatorPhaseNoise(self.K0, 0, 0)
         self.pn2 = OscillatorPhaseNoise(0, self.K2, 0)
@@ -122,7 +122,7 @@ class TestOscillatorPhaseNoise(TestCase):
         # check if the pn time domain starts close to zero
         assert np.all(np.abs(pn_samples[:, 0]) < 1e7)
 
-    def test_yaml_serialization(self) -> None:
-        """Test serialization to and from yaml"""
+    def test_serialization(self) -> None:
+        """Test serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.pn)
+        test_roundtrip_serialization(self, self.pn)

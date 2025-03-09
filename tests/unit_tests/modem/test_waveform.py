@@ -14,7 +14,7 @@ from hermespy.core import ChannelStateFormat, ChannelStateInformation, Signal
 from hermespy.modem.symbols import StatedSymbols, Symbols
 from hermespy.modem.waveform import ChannelEqualization, ChannelEstimation
 from hermespy.modem import ChannelEstimation, ConfigurablePilotWaveform, CustomPilotSymbolSequence, CommunicationWaveform, UniformPilotSymbolSequence, StatedSymbols, Synchronization, Symbols, ChannelEqualization, ZeroForcingChannelEqualization
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -143,11 +143,9 @@ class TestSynchronization(unittest.TestCase):
         self.assertEqual(num_frames, len(frames))
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test synchronization serialization"""
 
-        with patch("hermespy.modem.waveform.Synchronization.property_blacklist", new_callable=PropertyMock) as blacklist:
-            blacklist.return_value = {"waveform"}
-            test_yaml_roundtrip_serialization(self, self.synchronization)
+        test_roundtrip_serialization(self, self.synchronization, {'waveform'})
 
 
 class TestChannelEstimation(unittest.TestCase):
@@ -174,11 +172,9 @@ class TestChannelEstimation(unittest.TestCase):
         self.assertIsNone(self.estimation.waveform)
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test channel estimation serialization"""
 
-        with patch("hermespy.modem.waveform.ChannelEstimation.property_blacklist", new_callable=PropertyMock) as blacklist:
-            blacklist.return_value = {"waveform"}
-            test_yaml_roundtrip_serialization(self, self.estimation)
+        test_roundtrip_serialization(self, self.estimation, {'waveform'})
 
 
 class TestChannelEqualization(unittest.TestCase):
@@ -201,6 +197,11 @@ class TestChannelEqualization(unittest.TestCase):
         equalized_symbols = self.equalization.equalize_channel(symbols)
 
         self.assertIs(symbols, equalized_symbols)
+
+    def test_serialization(self) -> None:
+        """Test channel equalization serialization"""
+
+        test_roundtrip_serialization(self, self.equalization, {'waveform'})
 
 
 class TestZeroForcingEqualization(unittest.TestCase):
@@ -231,6 +232,11 @@ class TestZeroForcingEqualization(unittest.TestCase):
 
         equalized_symbols = self.equalization.equalize_channel(propagated_symbols)
         assert_array_almost_equal(self.symbols.raw, equalized_symbols.raw)
+
+    def test_serialization(self) -> None:
+        """Test zero-forcing channel equalization serialization"""
+
+        test_roundtrip_serialization(self, self.equalization, {'waveform'})
 
 
 class TestCommunicationWaveform(unittest.TestCase):
@@ -350,13 +356,37 @@ class TestCommunicationWaveform(unittest.TestCase):
 class TestUniformPilotSymbolSequence(unittest.TestCase):
     """Test the uniform pilot symbol sequence"""
 
+    def setUp(self) -> None:
+        self.pilot_symbol = 1.234 - 1234j
+        self.uniform_sequence = UniformPilotSymbolSequence(self.pilot_symbol)
+
     def test_sequence(self) -> None:
         """The generated sequence should be an array containing only the configured symbol"""
 
-        expected_symbol = 1.234 - 1234j
-        uniform_sequence = UniformPilotSymbolSequence(expected_symbol)
+        assert_array_equal(np.array([self.pilot_symbol], dtype=complex), self.uniform_sequence.sequence)
 
-        assert_array_equal(np.array([expected_symbol], dtype=complex), uniform_sequence.sequence)
+    def test_serialization(self) -> None:
+        """Test pilot symbol sequence serialization"""
+        
+        test_roundtrip_serialization(self, self.uniform_sequence)
+
+
+class TestCustomPilotSymbolSequence(unittest.TestCase):
+    """Test the custom pilot symbol sequence"""
+
+    def setUp(self) -> None:
+        self.pilot_symbols = np.array([1.234 - 1234j, 2.345 + 2345j, 3.456 - 3456j])
+        self.pilot_sequence = CustomPilotSymbolSequence(self.pilot_symbols)
+
+    def test_sequence(self) -> None:
+        """The generated sequence should be an array containing the configured symbols"""
+
+        assert_array_equal(self.pilot_symbols, self.pilot_sequence.sequence)
+
+    def test_serialization(self) -> None:
+        """Test pilot symbol sequence serialization"""
+
+        test_roundtrip_serialization(self, self.pilot_sequence)
 
 
 class TestConfigurablePilotWaveform(unittest.TestCase):

@@ -10,8 +10,7 @@ Assuming HermesPy is properly :doc:`installed</installation>` within the current
 users may define custom wireless communication scenarios to be investigated within the context of
 :doc:`Simulations</api/simulation>` or :doc:`Hardware Loops</api/hardware_loop>`.
 The whole HermesPy suite can either be directly integrated into custom software projects and operated as a plug-in
-library via a detailed object-oriented programming interface or configured by YAML-style configuration files
-and launched from any system command line.
+library via a detailed object-oriented programming interface.
 
 This section provides a rough description of the HermesPy software architecture and gives an introduction
 into both the library and command line interface in order to get new users quickly accustomed.
@@ -25,10 +24,10 @@ within a strictly object-oriented class structure.
 Each processing step is represented by a dedicated class and can be adapted and customized by the software user.
 
 Consider a typically heterogeneous wireless scenario featuring multiple entities transmitting and receiving electromagnetic waveforms.
-The physical description of said entities is referred to as a :doc:`Device<api/core/device.Device>` in Hermes.
-:doc:`Devices<api/core/device.Device>` provide general information required for the modeling of electromagnetic propagation,
+The physical description of said entities is referred to as a :doc:`Device<api/core/device>` in Hermes.
+:doc:`Devices<api/core/device>` provide general information required for the modeling of electromagnetic propagation,
 such as carrier frequency, spatial position, orientation, number of available antennas and the respective antenna array topology.
-Now, while :doc:`Devices<api/core/device.Device>` describe the physical properties,
+Now, while :doc:`Devices<api/core/device>` describe the physical properties,
 the digital signal processing required for generating waveform transmissions and receptions is modeled by :doc:`Transmitters<api/core/device.Transmitter>`
 and :doc:`Receivers<api/core/device.Receiver>`, respectively.
 They form HermesPy's general abstraction for digital signal processing applied before digital-to-analog conversion and after analog-to-digital conversion, respectively:
@@ -71,20 +70,20 @@ They form HermesPy's general abstraction for digital signal processing applied b
 
    click oai "api/core/device.Transmitter.html" "Transmitter"
    click obi "api/core/device.Transmitter.html" "Transmitter"
-   click dai "api/core/device.Device.html" "Device"
-   click dbi "api/core/device.Device.html" "Device"
-   click dao "api/core/device.Device.html" "Device"
-   click dbo "api/core/device.Device.html" "Device"
+   click dai "api/core/device.html" "Device"
+   click dbi "api/core/device.html" "Device"
+   click dao "api/core/device.html" "Device"
+   click dbo "api/core/device.html" "Device"
    click oao "api/core/device.Receiver.html" "Receiver"
    click obo "api/core/device.Receiver.html" "Receiver"
 
 A typical information flow consists of a :doc:`Transmitter<api/core/device.Transmitter>` generating a base-band waveform,
-submitting it to its assigned :doc:`Device<api/core/device.Device>`,
-followed by the :doc:`Device<api/core/device.Device>` emitting the submitted transmission in RF-band, while simultaneously recording impinging broadcasts.
+submitting it to its assigned :doc:`Device<api/core/device>`,
+followed by the :doc:`Device<api/core/device>` emitting the submitted transmission in RF-band, while simultaneously recording impinging broadcasts.
 The recorded broadcasts are submitted to the assigend :doc:`Receivers<api/core/device.Receiver>` to be processed.
 
 There are two types of devices, namely :doc:`Simulated<api/simulation.simulated_device>` and :doc:`Physical<api/hardware_loop.physical_device.PhysicalDevice>`,
-which both inherit from the abstract :doc:`Device<api/core/device.Device>` base:
+which both inherit from the abstract :doc:`Device<api/core/device>` base:
 
 .. mermaid::
    :align: center
@@ -123,13 +122,13 @@ which both inherit from the abstract :doc:`Device<api/core/device.Device>` base:
    Device *--* Transmitter
    Device *--* Receiver
 
-   link Device "api/core/device.Device.html" "Device"
+   link Device "api/core/device.html" "Device"
    link PhysicalDevice "api/hardware_loop.physical_device.PhysicalDevice.html" "Physical Device"
    link SimulatedDevice "api/simulation.simulated_device.html" "Simulated Device"
    link Transmitter "api/core/device.Transmitter.html"
    link Receiver "api/core/device.Receiver.html"
 
-Depending on which :doc:`Device<api/core/device.Device>` realization is selected,
+Depending on which :doc:`Device<api/core/device>` realization is selected,
 Hermes acts as  either a physical layer simulation platform or a hardware testbed,
 with the advantage that implemented signal processing algorithms, which are simply classes inheriting from
 either :doc:`Transmitter<api/core/device.Transmitter>`, :doc:`Receiver<api/core/device.Receiver>`, or both,
@@ -160,7 +159,7 @@ leading to a total of :math:`\tfrac{2(2+1)}{2}=3` unique channel instances for t
 Initializing said scenario is as simple as creating a new simulation instance and adding two
 devices: 
 
-.. literalinclude:: ../_examples/library/getting_started_simulation.py
+.. literalinclude:: ../_examples/getting_started/simulation.py
    :language: python
    :linenos:
    :lines: 08-13
@@ -170,7 +169,7 @@ as :doc:`IdealChannels<api/channel/ideal>`.
 However, the user may freely select from a multitude of different channel models, which are provided by the :doc:`Channel<api/channel/channel>` package.
 For example, the following snippet configures the depicted scenario with a :doc:`5G Tapped Delay Line Channel<api/channel/fading/tdl>`:
 
-.. literalinclude:: ../_examples/library/getting_started_simulation.py
+.. literalinclude:: ../_examples/getting_started/simulation.py
    :language: python
    :linenos:
    :lines: 19-20
@@ -181,7 +180,7 @@ over the channels.
 For communication cases in which we want to declare one device as the sole transmitter and one device as the sole receiver,
 HermesPy offers the :doc:`SimplexLink<api/modem.modem.SimplexLink>` class, which automatically configures the transmit and receive layer of the devices:
 
-.. literalinclude:: ../_examples/library/getting_started_simulation.py
+.. literalinclude:: ../_examples/getting_started/simulation.py
    :language: python
    :linenos:
    :lines: 22-25
@@ -189,7 +188,7 @@ HermesPy offers the :doc:`SimplexLink<api/modem.modem.SimplexLink>` class, which
 The :doc:`Modem<api/modem>` package provides a range of communication waveform implementations,
 for this minimal introduction we will choose a :doc:`Root-Raised-Cosine<api/modem.waveform.single_carrier.RootRaisedCosine>` single carrier waveform:
 
-.. literalinclude:: ../_examples/library/getting_started_simulation.py
+.. literalinclude:: ../_examples/getting_started/simulation.py
    :language: python
    :linenos:
    :lines: 27-32
@@ -197,7 +196,7 @@ for this minimal introduction we will choose a :doc:`Root-Raised-Cosine<api/mode
 We may now already directly call the :doc:`SimplexLink<api/modem.modem.SimplexLink>`'s transmit and receive rountines to directly generate, process and visualize
 the generated information such as base-band waveforms and symbol constellations:
 
-.. literalinclude:: ../_examples/library/getting_started_simulation.py
+.. literalinclude:: ../_examples/getting_started/simulation.py
    :language: python
    :linenos:
    :lines: 36-32
@@ -211,16 +210,16 @@ new realizations of the configured channel models are generated, the transmit ro
 the generated waveforms are propagated over the configured channels and the receive routines of all :doc:`Receivers<api/core/device.Receiver>`.
 The generated information is collected in :doc:`SimulatedDrops<api/simulation.simulation.SimulatedDrop>` to be accessed by the user:
 
-.. literalinclude:: ../_examples/library/getting_started_simulation.py
+.. literalinclude:: ../_examples/getting_started/simulation.py
    :language: python
    :linenos:
    :lines: 44-47
 
 After the generation of a new :doc:`SimulatedDrop<api/simulation.simulation.SimulatedDrop>`,
-:doc:`Evaluators<api/core/monte_carlo.Evaluator>` may be used to conveniently extract performance information.
+:class:`Evaluators<hermespy.core.monte_carlo.Evaluator>` may be used to conveniently extract performance information.
 For instance, the bit error rate of the generated drop may be extracted by a :doc:`BitErrorEvaluator<api/modem.evaluators.ber>`:
 
-.. literalinclude:: ../_examples/library/getting_started_simulation.py
+.. literalinclude:: ../_examples/getting_started/simulation.py
    :language: python
    :linenos:
    :lines: 49-50
@@ -235,13 +234,13 @@ Finally, the generated evaluations are concatenated towards a single result.
 A simulation iterating over the receiving device's signal to noise ratio as parameters and estimating the respective bit error RootRaisedCosine
 can be launched by executing
 
-.. literalinclude:: ../_examples/library/getting_started_simulation.py
+.. literalinclude:: ../_examples/getting_started/simulation.py
    :language: python
    :linenos:
    :lines: 42-57
 
 which will result in a rendered plot being generated.
-The full code snippet implementing the above introduction can be downloaded from `GitHub - Getting Started Simulation <https://github.com/Barkhausen-Institut/hermespy/blob/main/_examples/library/getting_started_simulation.py>`_.
+The full code snippet implementing the above introduction can be downloaded from `GitHub - Getting Started Simulation <https://github.com/Barkhausen-Institut/hermespy/blob/main/_examples/getting_started/simulation.py>`_.
 For more complex simulation examples and instructions on how to integrate and evaluate your own signal processing algorithms in HermesPy,
 please refer to the :doc:`Tutorials <tutorials>` section.
 
@@ -288,7 +287,7 @@ In other words, the simulated device and channel models have been replaced by th
 Setting up a :doc:`Hardware Loop<api/hardware_loop>` is as simple as creating a new :doc:`PhysicalScenario<api/hardware_loop.scenario.PhysicalScenario>`
 and passing it to a new :doc:`HardwareLoop<api/hardware_loop.hardware_loop.HardwareLoop>` instance:
 
-.. literalinclude:: ../_examples/library/getting_started_loop.py
+.. literalinclude:: ../_examples/getting_started/loop.py
    :language: python
    :linenos:
    :lines: 07-13
@@ -298,7 +297,7 @@ purposes and does not require real hardware.
 Instead, the :doc:`PhysicalDeviceDummies<api/hardware_loop.physical_device_dummy.PhysicalDeviceDummy>` instances behave identical to :doc:`SimulatedDevices<api/simulation.simulated_device>`.
 For this reason, we can also assign channel models to the managing :doc:`PhysicalScenarioDummy<api/hardware_loop.physical_device_dummy.PhysicalScenarioDummy>` instances:
 
-.. literalinclude:: ../_examples/library/getting_started_loop.py
+.. literalinclude:: ../_examples/getting_started/loop.py
    :language: python
    :linenos:
    :lines: 15-17
@@ -310,7 +309,7 @@ This is, of course, not possible in real hardware scenarios such as
 For communication cases in which we want to declare one device as the sole transmitter and one device as the sole receiver,
 HermesPy offers the :doc:`SimplexLink<api/modem.modem.SimplexLink>` class, which automatically configures the transmit and receive layer of the devices:
 
-.. literalinclude:: ../_examples/library/getting_started_loop.py
+.. literalinclude:: ../_examples/getting_started/loop.py
    :language: python
    :linenos:
    :lines: 19-22
@@ -318,7 +317,7 @@ HermesPy offers the :doc:`SimplexLink<api/modem.modem.SimplexLink>` class, which
 The :doc:`Modem<api/modem>` package provides a range of communication waveform implementations,
 for this minimal introduction we will choose a :doc:`Root-Raised-Cosine<api/modem.waveform.single_carrier.RootRaisedCosine>` single carrier waveform:
 
-.. literalinclude:: ../_examples/library/getting_started_loop.py
+.. literalinclude:: ../_examples/getting_started/loop.py
    :language: python
    :linenos:
    :lines: 24-29
@@ -327,11 +326,11 @@ Just like the simulation pipeline, the hardware loop runtime will generate drops
 However, instead of multiple drops being generated in parallel, the hardware loop's drop generation is performed sequentially by triggering
 the configured :doc:`PhysicalDevices<api/hardware_loop.physical_device.PhysicalDevice>`.
 
-After the generation of a new :doc:`Drop<api/core/drop.Drop>`,
-:doc:`Evaluators<api/core/monte_carlo.Evaluator>` may be used to conveniently extract performance information.
+After the generation of a new :doc:`Drop<api/core/drop>`,
+:class:`Evaluators<hermespy.core.monte_carlo.Evaluator>` may be used to conveniently extract performance information.
 For instance, the bit error rate of the generated drop may be extracted by a :doc:`BitErrorEvaluator<api/modem.evaluators.ber>`:
 
-.. literalinclude:: ../_examples/library/getting_started_loop.py
+.. literalinclude:: ../_examples/getting_started/loop.py
    :language: python
    :linenos:
    :lines: 31-33
@@ -340,18 +339,18 @@ Working with real hardware usually requires a lot of oversight and debugging,
 so the :doc:`HardwareLoop<api/hardware_loop.hardware_loop.HardwareLoop>` features a visualization
 interface which will render plots of required information in real-time:
 
-.. literalinclude:: ../_examples/library/getting_started_loop.py
+.. literalinclude:: ../_examples/getting_started/loop.py
    :language: python
    :linenos:
    :lines: 35-38
 
-The plots will be updated with each new :doc:`Drop<api/core/drop.Drop>`.
+The plots will be updated with each new :doc:`Drop<api/core/drop>`.
 An overview of existing visualization routines can be found in :doc:`Visualizers<api/hardware_loop.visualizers>`.
 
 Identically to the simulation pipeline, the :doc:`HardwareLoop<api/hardware_loop.hardware_loop.HardwareLoop>`
 can be configured to iterate over a grid of parameter values and generate a fixed number of drops per parameter combination:
 
-.. literalinclude:: ../_examples/library/getting_started_loop.py
+.. literalinclude:: ../_examples/getting_started/loop.py
    :language: python
    :linenos:
    :lines: 40-42
@@ -359,11 +358,11 @@ can be configured to iterate over a grid of parameter values and generate a fixe
 Setting the `results_dir` parameter will result in a consolidation of all drop data and evaluations into a single `drops.h5` file within the respective directory.
 The data can be accessed by the user for further processing, or even directly replayed by the :doc:`HardwareLoop<api/hardware_loop.hardware_loop.HardwareLoop>`:
 
-.. literalinclude:: ../_examples/library/getting_started_loop.py
+.. literalinclude:: ../_examples/getting_started/loop.py
    :language: python
    :linenos:
    :lines: 44-45
 
-The full code snippet implementing the above introduction can be downloaded from `GitHub - Getting Started Loop <https://github.com/Barkhausen-Institut/hermespy/blob/main/_examples/library/getting_started_loop.py>`_.
+The full code snippet implementing the above introduction can be downloaded from `GitHub - Getting Started Loop <https://github.com/Barkhausen-Institut/hermespy/blob/main/_examples/getting_started/loop.py>`_.
 For more complex simulation examples and instructions on how to integrate and evaluate your own signal processing algorithms in HermesPy,
 please refer to the :doc:`Tutorials <tutorials>` section.

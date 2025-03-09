@@ -6,7 +6,7 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 
 from hermespy.core.transformation import Direction, Transformation, TransformableBase, TransformableLink, Transformable
-from .test_factory import test_yaml_roundtrip_serialization
+from .test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -198,17 +198,17 @@ class TestTransformation(TestCase):
 
     def test_quaternions(self) -> None:
         """Test orientations from and to quaternions"""
-        
+
         transformation = Transformation.No()
         quaternion = transformation.rotation_quaternion
         transformation.rotation_quaternion = quaternion
-        
+
         assert_array_almost_equal(quaternion, transformation.rotation_quaternion)
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test transformation serialization"""
 
-        test_yaml_roundtrip_serialization(self, Transformation.No())
+        test_roundtrip_serialization(self, Transformation.No())
 
 
 class TestTransformableLink(TestCase):

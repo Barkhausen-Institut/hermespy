@@ -3,10 +3,10 @@
 from __future__ import annotations
 from abc import abstractmethod
 from math import ceil
-from typing import Any, Generic, Mapping, Set, Sequence, Tuple, Type, TypeVar
+from typing import Generic, Set, Sequence, Tuple, TypeVar
+from typing_extensions import override
 
 import numpy as np
-from h5py import Group
 from scipy.constants import pi, speed_of_light
 from sparse import GCXS  # type: ignore
 
@@ -14,9 +14,11 @@ from hermespy.core import (
     AntennaMode,
     ChannelStateInformation,
     ChannelStateFormat,
+    DeserializationProcess,
     DeviceState,
     Direction,
-    HDFSerializable,
+    Serializable,
+    SerializationProcess,
     SignalBlock,
 )
 from ..channel import (
@@ -234,18 +236,27 @@ class RadarChannelRealization(ChannelRealization[RadarChannelSample]):
     ) -> RadarChannelSample:
         return RadarChannelSample(sample.paths, sample.gain, state)
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        ChannelRealization.serialize(self, process)
+
 
 RCRT = TypeVar("RCRT", bound=RadarChannelRealization)
 """Type of radar channel realization."""
 
 
-class RadarPath(HDFSerializable):
+class RadarPath(Serializable):
     """Realization of a radar propagation path between transmitter and receiver"""
+
+    _DEFAULT_ATTENUATE = True
+    _DEFAULT_STATIC = False
 
     __attenuate: bool
     __static: bool
 
-    def __init__(self, attenuate: bool = True, static: bool = False) -> None:
+    def __init__(
+        self, attenuate: bool = _DEFAULT_ATTENUATE, static: bool = _DEFAULT_STATIC
+    ) -> None:
         """
         Args:
 
@@ -473,21 +484,17 @@ class RadarPath(HDFSerializable):
             "ij,k->ijk", propagation_response, echo_weights
         )
 
-    def to_HDF(self, group: Group) -> None:
-        # Serialize the class attributes
-        group.attrs["attenuate"] = self.attenuate
-        group.attrs["static"] = self.static
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_integer(self.attenuate, "attenuate")
+        process.serialize_integer(self.static, "static")
 
     @classmethod
-    def _parameters_from_HDF(cls: Type[RadarPath], group: Group) -> Mapping[str, Any]:
-        """Deserialize the object's parameters from HDF5.
-
-        Intended to be used as a subroutine of :meth:`From_HDF`.
-
-        Returns: The object's parmeters as a keyword argument dictionary.
-        """
-
-        return {"attenuate": group.attrs["attenuate"], "static": group.attrs["static"]}
+    def _DeserializeParameters(cls, process: DeserializationProcess) -> dict[str, object]:
+        return {
+            "attenuate": bool(process.deserialize_integer("attenuate", cls._DEFAULT_ATTENUATE)),
+            "static": bool(process.deserialize_integer("static", cls._DEFAULT_STATIC)),
+        }
 
 
 class RadarTargetPath(RadarPath):
@@ -499,8 +506,8 @@ class RadarTargetPath(RadarPath):
         velocity: np.ndarray,
         cross_section: float,
         reflection_phase: float,
-        attenuate: bool = True,
-        static: bool = False,
+        attenuate: bool = RadarPath._DEFAULT_ATTENUATE,
+        static: bool = RadarPath._DEFAULT_STATIC,
     ) -> None:
         """
         Args:
@@ -634,28 +641,27 @@ class RadarTargetPath(RadarPath):
             * np.inner(rx_response, tx_response)
         )
 
-    def to_HDF(self, group: Group) -> None:
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
         # Serialize base class
-        RadarPath.to_HDF(self, group)
+        RadarPath.serialize(self, process)
 
         # Serialize class attributes
-        self._write_dataset(group, "position", self.position)
-        self._write_dataset(group, "velocity", self.velocity)
-        group.attrs["cross_section"] = self.cross_section
-        group.attrs["reflection_phase"] = self.reflection_phase
+        process.serialize_array(self.position, "position")
+        process.serialize_array(self.velocity, "velocity")
+        process.serialize_floating(self.cross_section, "cross_section")
+        process.serialize_floating(self.reflection_phase, "reflection_phase")
 
     @classmethod
-    def from_HDF(cls: Type[RadarTargetPath], group: Group) -> RadarTargetPath:
-        # Deserialize base class
-        parameters = RadarPath._parameters_from_HDF(group)
-
-        # Deserialize class attributes
-        position = np.array(group["position"], dtype=np.float64)
-        velocity = np.array(group["velocity"], dtype=np.float64)
-        cross_section = group.attrs["cross_section"]
-        reflection_phase = group.attrs["reflection_phase"]
-
-        return RadarTargetPath(position, velocity, cross_section, reflection_phase, **parameters)
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> RadarTargetPath:
+        return cls(
+            process.deserialize_array("position", np.float64),
+            process.deserialize_array("velocity", np.float64),
+            process.deserialize_floating("cross_section"),
+            process.deserialize_floating("reflection_phase"),
+            **RadarPath._DeserializeParameters(process),  # type: ignore[arg-type]
+        )
 
 
 class RadarInterferencePath(RadarPath):
@@ -701,28 +707,41 @@ class RadarInterferencePath(RadarPath):
         return amplitude_factor * np.inner(rx_response, tx_response)
 
     @classmethod
-    def from_HDF(cls: Type[RadarInterferencePath], group: Group) -> RadarInterferencePath:
-        # Deserialize base class
-        parameters = RadarPath._parameters_from_HDF(group)
-        return RadarInterferencePath(**parameters)
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> RadarInterferencePath:
+        return cls(**RadarPath._DeserializeParameters(process))  # type: ignore[arg-type]
 
 
 class RadarChannelBase(Generic[RCRT], Channel[RCRT, RadarChannelSample]):
     """Base class of all radar channel implementations."""
 
+    _DEFAULT_ATTENUATE = True
+
     __attenuate: bool  # Should signals be attenuated during propagation modeling?
 
-    def __init__(self, attenuate: bool = True, *args, **kwargs) -> None:
+    def __init__(
+        self,
+        attenuate: bool = _DEFAULT_ATTENUATE,
+        gain: float = Channel._DEFAULT_GAIN,
+        seed: int | None = None,
+    ) -> None:
         """
         Args:
 
             attenuate (bool, optional):
                 Radar channel attenuation flag, see also :meth:`RadarChannelBase.attenuate`.
                 Enabled by default.
+
+            gain (float, optional):
+                Linear power gain factor a signal experiences when being propagated over this realization.
+                :math:`1.0` by default.
+
+            seed (int, optional):
+                Seed used to initialize the pseudo-random number generator.
         """
 
         # Initialize base class
-        Channel.__init__(self, *args, **kwargs)
+        Channel.__init__(self, gain, seed)
 
         # Initialize class attributes
         self.__attenuate = attenuate
@@ -739,3 +758,17 @@ class RadarChannelBase(Generic[RCRT], Channel[RCRT, RadarChannelSample]):
     @attenuate.setter
     def attenuate(self, value: bool) -> None:
         self.__attenuate = value
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        Channel.serialize(self, process)
+        process.serialize_integer(self.attenuate, "attenuate")
+
+    @classmethod
+    @override
+    def _DeserializeParameters(cls, process: DeserializationProcess) -> dict[str, object]:
+        parameters = Channel._DeserializeParameters(process)
+        parameters["attenuate"] = bool(
+            process.deserialize_integer("attenuate", cls._DEFAULT_ATTENUATE)
+        )
+        return parameters

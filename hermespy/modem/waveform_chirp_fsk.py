@@ -3,13 +3,14 @@
 from __future__ import annotations
 from importlib.metadata import version
 from typing import Tuple
+from typing_extensions import override
 from math import ceil
 from functools import lru_cache
 
 import numpy as np
 from scipy import integrate
 
-from hermespy.core.factory import Serializable
+from hermespy.core import Serializable, SerializationProcess, DeserializationProcess
 from hermespy.modem.waveform import (
     PilotCommunicationWaveform,
     StatedSymbols,
@@ -33,11 +34,14 @@ __status__ = "Prototype"
 scipy_minor_version = int(version("scipy").split(".")[1])
 
 
-class ChirpFSKWaveform(PilotCommunicationWaveform, Serializable):
+class ChirpFSKWaveform(PilotCommunicationWaveform):
     """Chirp Frequency Shift Keying communication waveform  description."""
 
-    # YAML tag
-    yaml_tag = "ChirpFsk"
+    __DEFAULT_CHIRP_DURATION: float = 10e-9
+    __DEFAULT_CHIRP_BANDWIDTH: float = 1e9
+    __DEFAULT_NUM_PILOT_CHIRPS: int = 14
+    __DEFAULT_NUM_DATA_CHIRPS: int = 50
+    __DEFAULT_GUARD_INTERVAL: float = 0.0
 
     # Modulation parameters
     symbol_type = np.int_
@@ -53,12 +57,12 @@ class ChirpFSKWaveform(PilotCommunicationWaveform, Serializable):
 
     def __init__(
         self,
-        chirp_duration: float = 10e-9,
-        chirp_bandwidth: float = 1e9,
+        chirp_duration: float = __DEFAULT_CHIRP_DURATION,
+        chirp_bandwidth: float = __DEFAULT_CHIRP_BANDWIDTH,
         freq_difference: float | None = None,
-        num_pilot_chirps: int = 14,
-        num_data_chirps: int = 50,
-        guard_interval: float = 0.0,
+        num_pilot_chirps: int = __DEFAULT_NUM_PILOT_CHIRPS,
+        num_data_chirps: int = __DEFAULT_NUM_DATA_CHIRPS,
+        guard_interval: float = __DEFAULT_GUARD_INTERVAL,
         **kwargs,
     ) -> None:
         """
@@ -82,7 +86,7 @@ class ChirpFSKWaveform(PilotCommunicationWaveform, Serializable):
             guard_interval (float, optional):
                 Frame guard interval in seconds.
 
-            \**kwargs:
+            \*\*kwargs:
                 Base waveform generator initialization arguments.
         """
 
@@ -291,6 +295,7 @@ class ChirpFSKWaveform(PilotCommunicationWaveform, Serializable):
         return int(np.log2(self.modulation_order))
 
     @property
+    @override
     def num_data_symbols(self) -> int:
         return self.num_data_chirps
 
@@ -317,21 +322,25 @@ class ChirpFSKWaveform(PilotCommunicationWaveform, Serializable):
         return self.num_pilot_chirps + self.num_data_chirps
 
     @property
+    @override
     def samples_per_frame(self) -> int:
         return self.samples_in_chirp * self.chirps_in_frame + int(
             (np.around(self.__guard_interval * self.sampling_rate))
         )
 
     @property
+    @override
     def symbol_duration(self) -> float:
         return self.chirp_duration
 
     @property
+    @override
     def symbol_energy(self) -> float:
         _, energy = self._prototypes()
         return energy
 
     @property
+    @override
     def bit_energy(self) -> float:
         """Theoretical average bit energy of the modulated signal.
 
@@ -343,10 +352,12 @@ class ChirpFSKWaveform(PilotCommunicationWaveform, Serializable):
         bit_energy = symbol_energy / self.bits_per_symbol
         return bit_energy
 
+    @override
     def map(self, data_bits: np.ndarray) -> Symbols:
         offset = self._calculate_frequency_offsets(data_bits)
         return Symbols(offset[np.newaxis, np.newaxis, :])
 
+    @override
     def unmap(self, symbols: Symbols) -> np.ndarray:
         bits_per_symbol = self.bits_per_symbol
         bits = np.empty(symbols.num_symbols * self.bits_per_symbol)
@@ -359,12 +370,15 @@ class ChirpFSKWaveform(PilotCommunicationWaveform, Serializable):
 
         return bits
 
+    @override
     def place(self, symbols: Symbols) -> Symbols:
         return symbols
 
+    @override
     def pick(self, symbols: StatedSymbols) -> StatedSymbols:
         return symbols
 
+    @override
     def modulate(self, symbols: Symbols) -> np.ndarray:
         prototypes, _ = self._prototypes()
         frame_samples = np.empty(self.samples_per_frame, dtype=complex)
@@ -387,6 +401,7 @@ class ChirpFSKWaveform(PilotCommunicationWaveform, Serializable):
 
         return frame_samples
 
+    @override
     def demodulate(self, baseband_signal: np.ndarray) -> Symbols:
         # Assess number of frames contained within this signal
         samples_in_chirp = self.samples_in_chirp
@@ -403,6 +418,7 @@ class ChirpFSKWaveform(PilotCommunicationWaveform, Serializable):
         return Symbols(symbols[np.newaxis, np.newaxis, :])
 
     @property
+    @override
     def bandwidth(self) -> float:
         # The bandwidth is identical to the chirp bandwidth
         return self.chirp_bandwidth
@@ -426,6 +442,7 @@ class ChirpFSKWaveform(PilotCommunicationWaveform, Serializable):
         return offset
 
     @property
+    @override
     def power(self) -> float:
         return self.symbol_energy / self.samples_in_chirp
 
@@ -483,6 +500,7 @@ class ChirpFSKWaveform(PilotCommunicationWaveform, Serializable):
         return prototypes, symbol_energy
 
     @property
+    @override
     def sampling_rate(self) -> float:
         # Sampling rate scales with the chirp bandwidth
         return self.oversampling_factor * self.__chirp_bandwidth
@@ -511,11 +529,42 @@ class ChirpFSKWaveform(PilotCommunicationWaveform, Serializable):
 
         self._prototypes.cache_clear()
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        PilotCommunicationWaveform.serialize(self, process)
+        process.serialize_floating(self.chirp_duration, "chirp_duration")
+        process.serialize_floating(self.chirp_bandwidth, "chirp_bandwidth")
+        process.serialize_floating(self.freq_difference, "freq_difference")
+        process.serialize_integer(self.num_pilot_chirps, "num_pilot_chirps")
+        process.serialize_integer(self.num_data_chirps, "num_data_chirps")
+        process.serialize_floating(self.guard_interval, "guard_interval")
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> ChirpFSKWaveform:
+        return ChirpFSKWaveform(
+            chirp_duration=process.deserialize_floating(
+                "chirp_duration", ChirpFSKWaveform.__DEFAULT_CHIRP_DURATION
+            ),
+            chirp_bandwidth=process.deserialize_floating(
+                "chirp_bandwidth", ChirpFSKWaveform.__DEFAULT_CHIRP_BANDWIDTH
+            ),
+            freq_difference=process.deserialize_floating("freq_difference", None),
+            num_pilot_chirps=process.deserialize_integer(
+                "num_pilot_chirps", ChirpFSKWaveform.__DEFAULT_NUM_PILOT_CHIRPS
+            ),
+            num_data_chirps=process.deserialize_integer(
+                "num_data_chirps", ChirpFSKWaveform.__DEFAULT_NUM_DATA_CHIRPS
+            ),
+            guard_interval=process.deserialize_floating(
+                "guard_interval", ChirpFSKWaveform.__DEFAULT_GUARD_INTERVAL
+            ),
+            **cls._DeserializeParameters(process),
+        )
+
 
 class ChirpFSKSynchronization(Synchronization[ChirpFSKWaveform], Serializable):
     """Synchronization for chirp-based frequency shift keying communication waveforms."""
-
-    yaml_tag = "ChirpFsk-Synchronization"
 
     def __init__(self, waveform: ChirpFSKWaveform | None = None) -> None:
         """
@@ -528,9 +577,5 @@ class ChirpFSKSynchronization(Synchronization[ChirpFSKWaveform], Serializable):
         Synchronization.__init__(self, waveform)
 
 
-class ChirpFSKCorrelationSynchronization(
-    CorrelationSynchronization[ChirpFSKWaveform], Serializable
-):
+class ChirpFSKCorrelationSynchronization(CorrelationSynchronization[ChirpFSKWaveform]):
     """Correlation-based clock-synchronization for Chirp-FSK waveforms."""
-
-    yaml_tag = "ChirpFsk-Correlation"

@@ -12,7 +12,7 @@ from scipy.constants import pi
 from hermespy.core import Signal
 from hermespy.modem import FilteredSingleCarrierWaveform, StatedSymbols, Symbols, RaisedCosineWaveform, RootRaisedCosineWaveform, RectangularWaveform, FMCWWaveform, SingleCarrierCorrelationSynchronization, SingleCarrierMinimumMeanSquareChannelEqualization
 from hermespy.modem.waveform_single_carrier import SingleCarrierLeastSquaresChannelEstimation, RolledOffSingleCarrierWaveform
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -524,7 +524,7 @@ class TestRootRaisedCosineWaveform(TestCase):
     def test_serialization(self) -> None:
         """Test YAML serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.waveform)
+        test_roundtrip_serialization(self, self.waveform)
 
 
 class TestRaisedCosineWaveform(TestCase):
@@ -566,9 +566,9 @@ class TestRaisedCosineWaveform(TestCase):
         assert_array_almost_equal(expected_symbols.raw, symbols.raw, decimal=1)
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test raised cosine serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.waveform)
+        test_roundtrip_serialization(self, self.waveform)
 
 
 class TestRectangularWaveform(TestCase):
@@ -621,9 +621,9 @@ class TestRectangularWaveform(TestCase):
         assert_array_almost_equal(expected_symbols.raw, symbols.raw, decimal=1)
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test rectangular serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.waveform)
+        test_roundtrip_serialization(self, self.waveform)
 
 
 class TestFMCWWaveform(TestCase):
@@ -687,6 +687,6 @@ class TestFMCWWaveform(TestCase):
         assert_array_almost_equal(expected_symbols.raw, symbols.raw, decimal=1)
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test FMCW serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.waveform)
+        test_roundtrip_serialization(self, self.waveform)

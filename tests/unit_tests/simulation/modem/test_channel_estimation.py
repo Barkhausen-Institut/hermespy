@@ -23,7 +23,7 @@ from hermespy.modem import(
     Symbols,
 )
 from hermespy.simulation.modem.channel_estimation import IdealChannelEstimation, OFDMIdealChannelEstimation, SimulatedDevice, SingleCarrierIdealChannelEstimation
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 from unit_tests.modem.test_waveform_single_carrier import MockSingleCarrierWaveform
 
 __author__ = "Jan Adler"
