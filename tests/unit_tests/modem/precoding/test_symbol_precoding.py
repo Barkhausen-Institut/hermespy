@@ -7,7 +7,7 @@ import numpy as np
 
 from hermespy.modem import StatedSymbols
 from hermespy.modem.precoding.symbol_precoding import TransmitSymbolCoding, ReceiveSymbolCoding, TransmitSymbolEncoder, ReceiveSymbolDecoder
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -92,7 +92,7 @@ class TestReceiveSymbolCoding(unittest.TestCase):
     def test_yaml_serialization(self) -> None:
         """Test serialization from and to YAML"""
         
-        test_yaml_roundtrip_serialization(self, self.coding)
+        test_roundtrip_serialization(self, self.coding)
 
 
 class TestTransmitSymbolCoding(unittest.TestCase):
@@ -130,4 +130,4 @@ class TestTransmitSymbolCoding(unittest.TestCase):
     def test_yaml_serialization(self) -> None:
         """Test serialization from and to YAML"""
         
-        test_yaml_roundtrip_serialization(self, self.coding)
+        test_roundtrip_serialization(self, self.coding)

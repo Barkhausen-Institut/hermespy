@@ -8,7 +8,7 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.constants import pi, speed_of_light
 
 from hermespy.core import Antenna, AntennaArray, AntennaMode, AntennaPort, CustomAntennaArray, Dipole, Direction, LinearAntenna, IdealAntenna, PatchAntenna, UniformArray
-from .test_factory import test_yaml_roundtrip_serialization
+from .test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -87,9 +87,9 @@ class _TestAntenna(TestCase):
             figure_mock.assert_called_once()
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test antenna serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.antenna)
+        test_roundtrip_serialization(self, self.antenna, {'port'})
 
 
 class TestIdealAntenna(_TestAntenna):
@@ -127,12 +127,12 @@ class TestLinearAntenna(TestCase):
 
     def test_copy_antenna(self) -> None:
         """Test copying the antenna"""
-        
+
         copy = self.antenna.copy()
         self.assertEqual(self.antenna.mode, copy.mode)
         self.assertEqual(self.antenna.slant, copy.slant)
         assert_array_equal(self.antenna.pose, copy.pose)
-        
+
 
 class TestPatchAntenna(_TestAntenna):
     """Test the patch antenna model"""
@@ -148,7 +148,7 @@ class TestPatchAntenna(_TestAntenna):
 
     def test_copy_antenna(self) -> None:
         """Test copying the antenna"""
-        
+
         copy = self.antenna.copy()
         self.assertEqual(self.antenna.mode, copy.mode)
         assert_array_equal(self.antenna.pose, copy.pose)
@@ -168,7 +168,7 @@ class TestDipoleAntenna(_TestAntenna):
 
     def test_copy_antenna(self) -> None:
         """Test copying the antenna"""
-        
+
         copy = self.antenna.copy()
         self.assertEqual(self.antenna.mode, copy.mode)
         assert_array_equal(self.antenna.pose, copy.pose)
@@ -281,10 +281,10 @@ class TestAntennaPort(TestCase):
         self.port.array = array
         self.assertIs(array, self.port.array)
 
-    def test_yaml_serialization(self) -> None:
-        """Test YAML serialization"""
+    def test_serialization(self) -> None:
+        """Test antenna port serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.port)
+        test_roundtrip_serialization(self, self.port)
 
 
 class _TestAntennaArray(TestCase):
@@ -402,7 +402,7 @@ class _TestAntennaArray(TestCase):
 
         expected_antennas = []
         for port in self.array.receive_ports:
-            expected_antennas.extend(port.antennas)
+            expected_antennas.extend(port.receive_antennas)
 
         self.assertSequenceEqual(expected_antennas, self.array.receive_antennas)
 
@@ -626,9 +626,9 @@ class _TestAntennaArray(TestCase):
         assert_array_almost_equal(front_array_response, back_array_response)
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test antenna array serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.array)
+        test_roundtrip_serialization(self, self.array)
 
 
 class TestUniformArray(_TestAntennaArray):
@@ -710,8 +710,10 @@ class TestUniformArray(_TestAntennaArray):
         assert_array_equal(expected_topology, self.array.topology)
 
 
-class TestCustomAntennaArray(TestCase):
+class TestCustomAntennaArray(_TestAntennaArray):
     """Test the customizable antenna array model"""
+
+    array: CustomAntennaArray[AntennaPort[Antenna, AntennaArray], Antenna]
 
     def setUp(self) -> None:
         self.ports = [AntennaPort([IdealAntenna(AntennaMode.DUPLEX), IdealAntenna(AntennaMode.TX)]), IdealAntenna(AntennaMode.RX)]

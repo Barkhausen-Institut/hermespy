@@ -11,20 +11,20 @@ It specifically targets researchers, engineers and students interested in wirele
 
 Users of HermesPy may formulate their own wireless research questions and investigate
 
-   * Spatially distributed heterogeneous communication in up-, down- and side-link
-   * Spatially distributed heterogeneous sensing
-   * Interference between multi-antenna heterogeneous devices
-   * Communication performance indicators such as bit, block and frame error rates and throughput
-   * Sensing performance indicators such as detection probabilities, false alarm rates and estimation errors
+* Spatially distributed heterogeneous communication in up-, down- and side-link
+* Spatially distributed heterogeneous sensing
+* Interference between multi-antenna heterogeneous devices
+* Communication performance indicators such as bit, block and frame error rates and throughput
+* Sensing performance indicators such as detection probabilities, false alarm rates and estimation errors
 
 in both Monte-Carlo style simulations deployable on high-performance computing clusters and in software-defined radio hardware testbeds.
-The framework can be operated by means of a compact YAML configuration files or via the native Python :doc:`API<api/api>` and its experimental
+The framework can be operated via the Python :doc:`API<api/api>` and its experimental
 :doc:`Matlab Interface<matlab>`, enabling the evaluation of complex scenarios and integration with thrid-party applications with minimal effort.
+Measurement datasets including the full parameterization can be imported and exported by HermesPy's native :doc:`Serialization<api/core/factory>` interface.
 
 To get started, visit the :doc:`Getting Started<getting_started>` section to become accustomed with the basic concepts of HermesPy.
 For an in-depth view of how to make complex :doc:`API<api/api>` calls and implement your own algorithms within the signal processing
 pipelines, visit the :doc:`Tutorials<tutorials>` section.
-As a starting point for your own configuration files, visit the :doc:`Examples<examples/examples>` section.
 
 The project is completely open-source and published under the :doc:`GNU AGPL License<license>` on `GitHub`_.
 Please cite :footcite:t:`2022:adler` for any results obtained with the help of HermesPy.
@@ -43,7 +43,6 @@ or directly contact the current `maintainer`_.
    api/api
    matlab
    references
-   examples/examples
    developer_hints
    license
 

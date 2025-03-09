@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 from typing import TYPE_CHECKING
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
-from hermespy.core import Signal, FloatingError
+from hermespy.core import Signal, FloatingError, Serializable
 
 if TYPE_CHECKING:
     from ..simulated_device import SimulatedDevice  # pragma: no cover
@@ -19,7 +19,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class Coupling(ABC):
+class Coupling(Serializable):
     """Base class for mutual coupling model implementations."""
 
     __device: SimulatedDevice | None

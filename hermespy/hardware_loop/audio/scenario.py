@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import annotations
+from typing_extensions import override
+
 from hermespy.core import Signal
 from ..scenario import PhysicalScenario
 from .device import AudioDevice
@@ -17,32 +20,20 @@ __status__ = "Prototype"
 class AudioScenario(PhysicalScenario[AudioDevice]):
     """Scenario of phyical device bindings to sound cards."""
 
-    yaml_tag = "AudioSystem"
-
     def __init__(self, *args, **kwargs) -> None:
         PhysicalScenario.__init__(self, *args, **kwargs)
 
-    def new_device(self, *args, **kwargs) -> AudioDevice:
-        """Create a new UHD device managed by the system.
+    @classmethod
+    @override
+    def _device_type(cls) -> type[AudioDevice]:
+        return AudioDevice
 
-        Args:
-
-            *args, \**kwargs:
-                Device initialization parameters.
-                Refer to :class:`AudioDevice` for further details.
-
-        Returns: A handle to the initialized device.
-        """
-
-        device = AudioDevice(*args, **kwargs)
-        self.add_device(device)
-
-        return device
-
+    @override
     def _trigger(self) -> None:
         for device in self.devices:
             device.trigger()
 
+    @override
     def _trigger_direct(
         self, transmissions: list[Signal], devices: list[AudioDevice], calibrate: bool = True
     ) -> list[Signal]:

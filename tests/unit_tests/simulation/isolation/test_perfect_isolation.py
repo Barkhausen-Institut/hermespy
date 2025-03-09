@@ -6,6 +6,7 @@ from numpy.random import default_rng
 
 from hermespy.core import FloatingError, Signal
 from hermespy.simulation import PerfectIsolation, SimulatedDevice
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -47,3 +48,8 @@ class TestPerfectIsolation(TestCase):
         leaked_signal = self.isolation.leak(some_signal)
 
         self.assertEqual(0, leaked_signal.num_samples)
+
+    def test_serialization(self) -> None:
+        """Serialization should be properly implemented"""
+
+        test_roundtrip_serialization(self, self.isolation, {'device'})

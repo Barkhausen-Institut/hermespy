@@ -13,6 +13,7 @@ from hermespy.simulation.animation import (
     StaticTrajectory,
     TrajectorySample,
 )
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -122,6 +123,11 @@ class TestLinearTrajectory(TestCase):
             self.linear_trajectory.lookat_enable()
             assert_array_equal(pose, self.linear_trajectory.sample(t).pose)
 
+    def test_serialization(self) -> None:
+        """Test linear trajectory serialization"""
+        
+        test_roundtrip_serialization(self, self.linear_trajectory)
+
 
 class TestStaticTrajectory(TestCase):
     """Test static trajectory class."""
@@ -150,6 +156,11 @@ class TestStaticTrajectory(TestCase):
         assert_array_equal(self.trajectory.sample_velocity(t), self.velocity)
         assert_array_equal(self.trajectory.sample_translation(t), self.pose.translation)
         assert_array_equal(self.trajectory.sample_orientation(t), self.pose[:3, :3])
+
+    def test_serialization(self) -> None:
+        """Test static trajectory serialization"""
+        
+        test_roundtrip_serialization(self, self.trajectory)
 
 
 class TestMoveable(TestCase):
@@ -234,3 +245,16 @@ class TestBITrajectoryB(TestCase):
             # assert lookat orientation
             f = lookat_target.pose[:3, 3] - sample.pose[:3, 3]
             assert_array_almost_equal(sample.pose[:3, 2], f / np.linalg.norm(f))
+
+
+class TestBITrajectoryB(TestCase):
+    
+    def setUp(self) -> None:
+        self.height = 10
+        self.duration = 11.2345
+        self.trajectory = BITrajectoryB(self.height, self.duration)
+
+    def test_serialization(self) -> None:
+        """Test BI B trajectory serialization"""
+        
+        test_roundtrip_serialization(self, self.trajectory)

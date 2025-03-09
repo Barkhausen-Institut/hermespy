@@ -9,16 +9,18 @@ Radar cubes represent the raw image create after the base-band processing of rad
 
 from __future__ import annotations
 from typing import Literal, Type
+from typing_extensions import override
 
 import matplotlib.pyplot as plt
 import numpy as np
-from h5py import Group
 from scipy.constants import speed_of_light
 from scipy.interpolate import bisplrep, bisplev
 
 from hermespy.core import (
-    HDFSerializable,
+    DeserializationProcess,
     PlotVisualization,
+    Serializable,
+    SerializationProcess,
     QuadMeshVisualization,
     VisualizableAttribute,
     VAT,
@@ -161,7 +163,7 @@ class _AnglePlot(VisualizableAttribute[QuadMeshVisualization]):
         visualization.mesh.set_array(interpolated_image.T)
 
 
-class RadarCube(HDFSerializable):
+class RadarCube(Serializable):
     """A representation of raw radar image samples."""
 
     __data: np.ndarray
@@ -386,25 +388,21 @@ class RadarCube(HDFSerializable):
 
         self.__data = self.__data / self.__data.max()
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_array(self.__data, "data")
+        process.serialize_array(self.__angle_bins, "angle_bins")
+        process.serialize_array(self.__doppler_bins, "doppler_bins")
+        process.serialize_array(self.__range_bins, "range_bins")
+        process.serialize_floating(self.__carrier_frequency, "carrier_frequency")
+
     @classmethod
-    def from_HDF(cls: Type[RadarCube], group: Group) -> RadarCube:
-        data = np.array(group["data"])
-        angle_bins = np.array(group["angle_bins"], dtype=np.float64)
-        doppler_bins = np.array(group["doppler_bins"], dtype=np.float64)
-        range_bins = np.array(group["range_bins"], dtype=np.float64)
-        carrier_frequency = group.attrs.get("carrier_frequency", 0.0)
-
+    @override
+    def Deserialize(cls: Type[RadarCube], process: DeserializationProcess) -> RadarCube:
         return cls(
-            data=data,
-            angle_bins=angle_bins,
-            doppler_bins=doppler_bins,
-            range_bins=range_bins,
-            carrier_frequency=carrier_frequency,
+            data=process.deserialize_array("data", np.float64),
+            angle_bins=process.deserialize_array("angle_bins", np.float64),
+            doppler_bins=process.deserialize_array("doppler_bins", np.float64),
+            range_bins=process.deserialize_array("range_bins", np.float64),
+            carrier_frequency=process.deserialize_floating("carrier_frequency", 0.0),
         )
-
-    def to_HDF(self, group: Group) -> None:
-        self._write_dataset(group, "data", self.data)
-        self._write_dataset(group, "angle_bins", self.angle_bins)
-        self._write_dataset(group, "doppler_bins", self.doppler_bins)
-        self._write_dataset(group, "range_bins", self.range_bins)
-        group.attrs["carrier_frequency"] = self.__carrier_frequency

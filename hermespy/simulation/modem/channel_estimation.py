@@ -37,8 +37,6 @@ class IdealChannelEstimation(Generic[CWT], ChannelEstimation[CWT]):
     This type of channel estimation is only available during simulation runtime.
     """
 
-    yaml_tag = "IdealChannelEstimation"
-
     __cached_sample: ChannelSample | None = None
 
     def __init__(
@@ -128,8 +126,6 @@ class SingleCarrierIdealChannelEstimation(
 ):
     """Ideal channel estimation for single carrier waveforms"""
 
-    yaml_tag = "SC-Ideal"
-
     def estimate_channel(self, symbols: Symbols, frame_delay: float = 0.0) -> StatedSymbols:
         oversampling_factor = self.waveform.oversampling_factor
         num_symbols = self.waveform._num_frame_symbols
@@ -167,7 +163,6 @@ class SingleCarrierIdealChannelEstimation(
 class OFDMIdealChannelEstimation(IdealChannelEstimation[OFDMWaveform], Serializable):
     """Ideal channel state estimation for OFDM waveforms."""
 
-    yaml_tag = "OFDM-Ideal"
     serialized_attributes = {"reference_position"}
 
     reference_position: ReferencePosition

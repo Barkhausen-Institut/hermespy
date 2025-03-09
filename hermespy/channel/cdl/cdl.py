@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 from typing import Mapping, Set
+from typing_extensions import override
 
-from h5py import Group
 import numpy as np
 
-from hermespy.core import HDFSerializable, SerializableEnum
+from hermespy.core import DeserializationProcess, SerializableEnum, SerializationProcess
 from ..channel import Channel, ChannelRealization, ChannelSampleHook, LinkState
 from ..consistent import ConsistentGenerator, ConsistentUniform, ConsistentRealization
 from .cluster_delay_lines import ClusterDelayLineSample, ClusterDelayLineRealization
@@ -303,61 +303,59 @@ class CDLRealization(ChannelRealization[ClusterDelayLineSample]):
     ) -> ClusterDelayLineSample:
         return sample.reciprocal(state)
 
-    def to_HDF(self, group: Group) -> None:
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_object(self.__type, "type")
+        process.serialize_floating(self.__rms_delay, "rms_delay")
+        process.serialize_floating(self.__rayleigh_factor, "rayleigh_factor")
+        process.serialize_array(self.__angle_coupling_indices, "angle_coupling_indices")
+        process.serialize_object(self.__consistent_realization, "consistent_realization")
+        process.serialize_object(self.__xpr_phase, "xpr_phase")
+        ChannelRealization.serialize(self, process)
 
-        group.attrs["type"] = self.__type.value
-        group.attrs["rms_delay"] = self.__rms_delay
-        group.attrs["rayleigh_factor"] = self.__rayleigh_factor
-        HDFSerializable._write_dataset(
-            group, "angle_coupling_indices", self.__angle_coupling_indices
-        )
-        self.__consistent_realization.to_HDF(
-            HDFSerializable._create_group(group, "consistent_realization")
-        )
-        group.attrs["gain"] = self.gain
+    @classmethod
+    @override
+    def _DeserializeParameters(cls, process: DeserializationProcess) -> dict[str, object]:
+        parameters = {
+            "type": process.deserialize_object("type", CDLType),
+            "rms_delay": process.deserialize_floating("rms_delay"),
+            "rayleigh_factor": process.deserialize_floating("rayleigh_factor"),
+            "angle_coupling_indices": process.deserialize_array("angle_coupling_indices", np.int64),
+            "consistent_realization": process.deserialize_object(
+                "consistent_realization", ConsistentRealization
+            ),
+            "xpr_phase": process.deserialize_object("xpr_phase", ConsistentUniform),
+        }
+        parameters.update(ChannelRealization._DeserializeParameters(process))
+        return parameters
 
-    @staticmethod
-    def From_HDF(
-        group: Group,
-        xpr_phase: ConsistentUniform,
-        sample_hooks: Set[ChannelSampleHook[ClusterDelayLineSample]],
-    ) -> CDLRealization:
-
-        type = CDLType(group.attrs["type"])
-        rms_delay = group.attrs["rms_delay"]
-        rayleigh_factor = group.attrs["rayleigh_factor"]
-        angle_coupling_indices = np.array(group["angle_coupling_indices"], dtype=np.int_)
-        consistent_realization = ConsistentRealization.from_HDF(group["consistent_realization"])
-        gain = group.attrs["gain"]
-
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> CDLRealization:
         return CDLRealization(
-            type,
-            rms_delay,
-            rayleigh_factor,
-            angle_coupling_indices,
-            consistent_realization,
-            xpr_phase,
-            sample_hooks,
-            gain,
+            sample_hooks=set(), **cls._DeserializeParameters(process)  # type: ignore[arg-type]
         )
 
 
 class CDL(Channel[CDLRealization, ClusterDelayLineSample]):
     """Static cluster delay line model for link-level simulations."""
 
-    yaml_tag = "CDL"
+    __DEFAULT_RAYLEIGH_FACTOR: float = 0.0
+    __DEFAULT_DECORRELATION_DISTANCE: float = 30.0
 
     __model_type: CDLType
     __rms_delay: float
     __rayleigh_factor: float
     __decorrelation_distance: float
+    __consistent_generator: ConsistentGenerator
+    __xpr_phase: ConsistentUniform
 
     def __init__(
         self,
         model_type: CDLType,
         rms_delay: float,
-        rayleigh_factor: float = 0.0,
-        decorrelation_distance: float = 30.0,
+        rayleigh_factor: float = __DEFAULT_RAYLEIGH_FACTOR,
+        decorrelation_distance: float = __DEFAULT_DECORRELATION_DISTANCE,
         **kwargs,
     ) -> None:
         """
@@ -366,7 +364,7 @@ class CDL(Channel[CDLRealization, ClusterDelayLineSample]):
             rms_delay: Root mean square delay spread of the channel.
             rayleigh_factor: Rayleigh K-factor of the channel.
             decorrelation_distance: Decorrelation distance of the channel.
-            \**kwargs: Additional parameters for the base class.
+            \*\*kwargs: Additional parameters for the base class.
         """
 
         # Initialize base class
@@ -379,14 +377,13 @@ class CDL(Channel[CDLRealization, ClusterDelayLineSample]):
         self.decorrelation_distance = decorrelation_distance
 
         self.__consistent_generator = ConsistentGenerator(self)
-        self.__xpr_phase = ConsistentUniform(
-            self.__consistent_generator,
+        self.__xpr_phase = self.__consistent_generator.uniform(
             (
                 2,
                 2,
                 CDL_Cluster_Parameters[model_type].shape[0],
                 ClusterDelayLineRealization._ray_offset_angles.size,
-            ),
+            )
         )
 
     @property
@@ -473,5 +470,23 @@ class CDL(Channel[CDLRealization, ClusterDelayLineSample]):
             self.gain,
         )
 
-    def recall_realization(self, group: Group) -> CDLRealization:
-        return CDLRealization.From_HDF(group, self.__xpr_phase, self.sample_hooks)
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_object(self.model_type, "model_type")
+        process.serialize_floating(self.rms_delay, "rms_delay")
+        process.serialize_floating(self.rayleigh_factor, "rayleigh_factor")
+        process.serialize_floating(self.decorrelation_distance, "decorrelation_distance")
+        process.serialize_floating(self.gain, "gain")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> CDL:
+        return CDL(
+            process.deserialize_object("model_type", CDLType),
+            process.deserialize_floating("rms_delay"),
+            process.deserialize_floating("rayleigh_factor", cls.__DEFAULT_RAYLEIGH_FACTOR),
+            process.deserialize_floating(
+                "decorrelation_distance", cls.__DEFAULT_DECORRELATION_DISTANCE
+            ),
+            gain=process.deserialize_floating("gain"),
+        )

@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
+from typing import Type
+from typing_extensions import override
 
 import numpy as np
-from h5py import Group
 
 from .device import Transmission, Transmitter, Receiver, Reception
-from .factory import Serializable
+from .factory import Serializable, SerializationProcess, DeserializationProcess
 from .signal_model import Signal
 from .state import ReceiveState, TransmitState
 
@@ -64,11 +65,14 @@ class StaticOperator(object):
     def frame_duration(self) -> float:
         return self.__num_samples / self.sampling_rate
 
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_integer(self.__num_samples, "num_samples")
+        process.serialize_floating(self.__sampling_rate, "sampling_rate")
+
 
 class SilentTransmitter(StaticOperator, Transmitter[Transmission], Serializable):
     """Silent transmitter mock."""
 
-    yaml_tag = "SilentTransmitter"
     serialized_attributes = {"num_samples", "sampling_rate"}
 
     def __init__(self, num_samples: int, sampling_rate: float, *args, **kwargs) -> None:
@@ -102,14 +106,18 @@ class SilentTransmitter(StaticOperator, Transmitter[Transmission], Serializable)
 
         return Transmission(silence)
 
-    def _recall_transmission(self, group: Group) -> Transmission:
-        return Transmission.from_HDF(group)
+    @classmethod
+    def Deserialize(
+        cls: Type[SilentTransmitter], process: DeserializationProcess
+    ) -> SilentTransmitter:
+        return SilentTransmitter(
+            process.deserialize_integer("num_samples"),
+            process.deserialize_floating("sampling_rate"),
+        )
 
 
 class SignalTransmitter(StaticOperator, Transmitter[Transmission], Serializable):
     """Custom signal transmitter."""
-
-    yaml_tag = "SignalTransmitter"
 
     __signal: Signal
 
@@ -152,15 +160,24 @@ class SignalTransmitter(StaticOperator, Transmitter[Transmission], Serializable)
         transmission = Transmission(transmitted_signal)
         return transmission
 
-    def _recall_transmission(self, group: Group) -> Transmission:
-        return Transmission.from_HDF(group)
+    @override
+    def _recall_transmission(self, group):
+        return super()._recall_transmission(group)
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_object(self.__signal, "signal")
+
+    @override
+    @classmethod
+    def Deserialize(
+        cls: Type[SignalTransmitter], process: DeserializationProcess
+    ) -> SignalTransmitter:
+        return SignalTransmitter(process.deserialize_object("signal", Signal))
 
 
 class SignalReceiver(StaticOperator, Receiver[Reception], Serializable):
     """Custom signal receiver."""
-
-    yaml_tag = "SignalReceiver"
-    serialized_attributes = {"num_samples", "sampling_rate"}
 
     __expected_power: float
 
@@ -188,5 +205,15 @@ class SignalReceiver(StaticOperator, Receiver[Reception], Serializable):
         received_signal = signal.resample(self.sampling_rate)
         return Reception(received_signal)
 
-    def _recall_reception(self, group: Group) -> Reception:
-        return Reception.from_HDF(group)
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_integer(self.num_samples, "num_samples")
+        process.serialize_floating(self.sampling_rate, "sampling_rate")
+        process.serialize_floating(self.__expected_power, "expected_power")
+
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> SignalReceiver:
+        return cls(
+            process.deserialize_integer("num_samples"),
+            process.deserialize_floating("sampling_rate"),
+            process.deserialize_floating("expected_power"),
+        )

@@ -12,7 +12,7 @@ from scipy.constants import pi
 
 from hermespy.modem import DuplexModem, ElementType, GridElement, GridResource, OFDMWaveform, SchmidlCoxPilotSection, SchmidlCoxSynchronization, SymbolSection, TransmittingModem
 from hermespy.simulation import SimulatedDevice
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -136,6 +136,12 @@ class TestOFDMWaveform(TestCase):
 
         # Make sure the symbols are properly received
         assert_array_almost_equal(transmission.symbols.raw, reception.equalized_symbols.raw)
+        
+    def test_serialization(self) -> None:
+        """Test OFDM waveform serialization"""
+
+        test_roundtrip_serialization(self, self.ofdm, {'modem'})
+
 
 class TestSchmidlCoxPilotSection(TestCase):
     """Test the Schmidl Cox Algorithm Pilot section implementation."""
@@ -144,9 +150,9 @@ class TestSchmidlCoxPilotSection(TestCase):
         self.pilot = SchmidlCoxPilotSection()
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test schmidl cox pilot section serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.pilot)
+        test_roundtrip_serialization(self, self.pilot)
 
 
 class TestSchmidlCoxSynchronization(TestCase):
@@ -197,6 +203,6 @@ class TestSchmidlCoxSynchronization(TestCase):
                     self.fail(f"Estimated delay {estimated_delay} too far off (should be {expected_delay})")
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test schmiodl cox synchronization serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.synchronization)
+        test_roundtrip_serialization(self, self.synchronization, {'waveform'})

@@ -2,14 +2,24 @@
 
 from __future__ import annotations
 from typing import Sequence
+from typing_extensions import override
 
 import numpy as np
 from scipy.constants import speed_of_light
 from scipy.signal import correlate, correlation_lags
 
-from hermespy.core import AntennaMode, ReceiveState, Signal, Serializable, TransmitState
+from hermespy.beamforming import ReceiveBeamformer
+from hermespy.core import (
+    AntennaMode,
+    DeserializationProcess,
+    ReceiveState,
+    Signal,
+    Serializable,
+    SerializationProcess,
+    TransmitState,
+)
 from hermespy.modem import TransmittingModemBase, ReceivingModemBase, CommunicationWaveform
-from hermespy.radar import RadarReception, RadarCube
+from hermespy.radar import RadarDetector, RadarReception, RadarCube
 from .jcas import DuplexJCASOperator, JCASTransmission, JCASReception
 
 __author__ = "Jan Adler"
@@ -29,9 +39,6 @@ class MatchedFilterJcas(DuplexJCASOperator[CommunicationWaveform], Serializable)
     Senses the enviroment via a correlatiom-based time of flight estimation of transmitted waveforms.
     """
 
-    yaml_tag = "MatchedFilterJcas"
-    property_blacklist = {"slot"}
-
     # The specific required sampling rate
     __last_transmission: JCASTransmission | None = None
     __sampling_rate: float | None
@@ -41,6 +48,8 @@ class MatchedFilterJcas(DuplexJCASOperator[CommunicationWaveform], Serializable)
         self,
         max_range: float,
         waveform: CommunicationWaveform | None = None,
+        receive_beamformer: ReceiveBeamformer | None = None,
+        detector: RadarDetector | None = None,
         selected_transmit_ports: Sequence[int] | None = None,
         selected_receive_ports: Sequence[int] | None = None,
         carrier_frequency: float | None = None,
@@ -51,6 +60,18 @@ class MatchedFilterJcas(DuplexJCASOperator[CommunicationWaveform], Serializable)
 
             max_range (float):
                 Maximally detectable range in m.
+
+            waveform (CommunicationWaveform, optional):
+                Communication waveform used for transmission.
+                If not specified, transmitting or receiving will not be possible.
+
+            receive_beamformer (ReceiveBeamformer, optional):
+                Beamforming applied during signal reception.
+                If not specified, no beamforming will be applied during reception.
+
+            detector (RadarDetector, optional):
+                Detector routine configured to generate point clouds from radar cubes.
+                If not specified, no point cloud will be generated during reception.
 
             selected_transmit_ports (Sequence[int] | None):
                 Indices of antenna ports selected for transmission from the operated :class:`Device's<Device>` antenna array.
@@ -70,7 +91,14 @@ class MatchedFilterJcas(DuplexJCASOperator[CommunicationWaveform], Serializable)
 
         # Initialize base class
         DuplexJCASOperator.__init__(
-            self, waveform, selected_transmit_ports, selected_receive_ports, carrier_frequency, seed
+            self,
+            waveform,
+            receive_beamformer,
+            detector,
+            selected_transmit_ports,
+            selected_receive_ports,
+            carrier_frequency,
+            seed,
         )
 
         # Initialize class attributes
@@ -234,3 +262,19 @@ class MatchedFilterJcas(DuplexJCASOperator[CommunicationWaveform], Serializable)
             raise ValueError("Maximum range must be greater than zero")
 
         self.__max_range = value
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        DuplexJCASOperator.serialize(self, process)
+        process.serialize_floating(self.max_range, "max_range")
+        if self.waveform is not None:
+            process.serialize_object(self.waveform, "waveform")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> MatchedFilterJcas:
+        return MatchedFilterJcas(
+            process.deserialize_floating("max_range"),
+            process.deserialize_object("waveform", CommunicationWaveform, None),
+            **cls._DeserializeParameters(process),  # type: ignore[arg-type]
+        )

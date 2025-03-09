@@ -10,7 +10,6 @@ from typing import Type
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import matplotlib.pyplot as plt
-from ruamel.yaml import SafeRepresenter, Node, ScalarNode
 
 from hermespy.core import ConsoleMode, Executable, Verbosity
 from hermespy.core.factory import Serializable
@@ -33,10 +32,6 @@ class ExecutableStub(Executable):
 
     def run(self) -> None:
         pass
-
-    @classmethod
-    def to_yaml(cls: Type[Serializable], representer: SafeRepresenter, node: Serializable) -> Node:
-        return ScalarNode("ExecutableStub", None)
 
 
 class TestExecutable(unittest.TestCase):

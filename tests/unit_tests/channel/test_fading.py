@@ -19,7 +19,7 @@ from hermespy.channel.channel import LinkState
 from hermespy.channel.fading.fading import MultipathFadingSample
 from hermespy.core import AntennaMode, Signal, DenseSignal, Transformation
 from hermespy.simulation import StaticTrajectory, SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 from unit_tests.utils import SimulationTestContext
 from unit_tests.utils import assert_signals_equal
 
@@ -629,26 +629,10 @@ class TestMultipathFadingChannel(unittest.TestCase):
 
         assert_array_almost_equal(sample.nlos_angles, reciprocal_sample.nlos_angles)
 
-    def test_recall_realization(self) -> None:
-        """Test realization recall"""
-
-        channel = MultipathFadingChannel(**self.channel_params)
-
-        file = File("test.h5", "w", driver="core", backing_store=False)
-        group = file.create_group("g")
-
-        expected_realization = channel.realize()
-        expected_realization.to_HDF(group)
-
-        recalled_realization = channel.recall_realization(group)
-        file.close()
-
-        assert_array_almost_equal(expected_realization.gain, recalled_realization.gain)
-
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test multipath fading channel serialization"""
 
-        test_yaml_roundtrip_serialization(self, MultipathFadingChannel(**self.channel_params), {"num_outputs", "num_inputs"})
+        test_roundtrip_serialization(self, MultipathFadingChannel(**self.channel_params), {"num_outputs", "num_inputs"})
 
 
 class TestStandardAntennaCorrelation(unittest.TestCase):
@@ -712,9 +696,6 @@ class TestCost259(unittest.TestCase):
         with self.assertRaises(ValueError):
             _ = Cost259(100000)
 
-        with self.assertRaises(ValueError):
-            _ = Cost259(Cost259Type.HILLY, los_angle=0.0)
-
     def test_model_type(self) -> None:
         """The model type property should return"""
 
@@ -744,9 +725,9 @@ class TestCost259(unittest.TestCase):
         self.assertAlmostEqual(mean_propagated_energy, mean_expected_energy, delta=1e-1)
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test Cost259 channel model serialization"""
 
-        test_yaml_roundtrip_serialization(self, Cost259(Cost259Type.HILLY), {"num_outputs", "num_inputs"})
+        test_roundtrip_serialization(self, Cost259(Cost259Type.HILLY))
 
 
 class Test5GTDL(unittest.TestCase):
@@ -811,10 +792,10 @@ class Test5GTDL(unittest.TestCase):
         self.assertAlmostEqual(mean_propagated_energy, mean_expected_energy, delta=1e-1)
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test 5GTDL channel model serialization"""
 
         channel = TDL(model_type=TDLType.B)
-        test_yaml_roundtrip_serialization(self, channel, {"num_outputs", "num_inputs"})
+        test_roundtrip_serialization(self, channel)
 
 
 class TestExponential(unittest.TestCase):
@@ -865,6 +846,6 @@ class TestExponential(unittest.TestCase):
 
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test exponential channel model serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.channel, {"num_outputs", "num_inputs"})
+        test_roundtrip_serialization(self, self.channel)

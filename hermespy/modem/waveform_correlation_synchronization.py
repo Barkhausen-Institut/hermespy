@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 from typing import Any, Generic, List, TypeVar
+from typing_extensions import override
 
 import numpy as np
 from scipy.signal import correlate, find_peaks
 
-from hermespy.core import Serializable
+from hermespy.core import SerializationProcess, DeserializationProcess
 from .waveform import PilotCommunicationWaveform, Synchronization
 
 __author__ = "Jan Adler"
@@ -23,14 +24,15 @@ PGT = TypeVar("PGT", bound=PilotCommunicationWaveform)
 """Type of pilot-generating waveforms."""
 
 
-class CorrelationSynchronization(Generic[PGT], Synchronization[PGT], Serializable):
+class CorrelationSynchronization(Generic[PGT], Synchronization[PGT]):
     """Correlation-based clock synchronization for arbitrary communication waveforms.
 
     The implemented algorithm is equivalent to :cite:p:`1976:knapp` without pre-filtering.
     """
 
-    yaml_tag = "PilotCorrelation"
-    """YAML serialization tag."""
+    __DEFAULT_THRESHOLD: float = 0.9  # Default correlation threshold
+    __DEFAULT_GUARD_RATIO: float = 0.8  # Default guard ratio
+    __DEFAULT_PEAK_PROMINENCE: float = 0.2  # Default peak prominence
 
     __threshold: float  # Correlation threshold at which a pilot signal is detected
     __guard_ratio: float  # Guard ratio of frame duration
@@ -38,9 +40,9 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT], Serializabl
 
     def __init__(
         self,
-        threshold: float = 0.9,
-        guard_ratio: float = 0.8,
-        peak_prominence: float = 0.2,
+        threshold: float = __DEFAULT_THRESHOLD,
+        guard_ratio: float = __DEFAULT_GUARD_RATIO,
+        peak_prominence: float = __DEFAULT_PEAK_PROMINENCE,
         *args: Any,
         **kwargs: Any,
     ) -> None:
@@ -63,6 +65,7 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT], Serializabl
 
         self.threshold = threshold
         self.guard_ratio = guard_ratio
+        self.__peak_prominence = peak_prominence
 
         Synchronization.__init__(self, *args, **kwargs)
 
@@ -157,3 +160,20 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT], Serializabl
         )
 
         return pilot_indices.tolist()
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_floating(self.threshold, "threshold")
+        process.serialize_floating(self.guard_ratio, "guard_ratio")
+        process.serialize_floating(self.__peak_prominence, "peak_prominence")
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> CorrelationSynchronization:
+        return cls(
+            threshold=process.deserialize_floating("threshold", cls.__DEFAULT_THRESHOLD),
+            guard_ratio=process.deserialize_floating("guard_ratio", cls.__DEFAULT_GUARD_RATIO),
+            peak_prominence=process.deserialize_floating(
+                "peak_prominence", cls.__DEFAULT_PEAK_PROMINENCE
+            ),
+        )

@@ -6,9 +6,8 @@ from collections.abc import Sequence
 from enum import IntEnum
 from itertools import chain
 from os import path, remove
-from typing import Generic, Type, TypeVar, Union
-
-from h5py import File, Group
+from typing import Generic, Type, TypeVar
+from typing_extensions import override
 
 from .device import (
     Device,
@@ -27,7 +26,13 @@ from .device import (
     Operator,
 )
 from .drop import Drop, DropType
-from .factory import Factory
+from .factory import (
+    DeserializationProcess,
+    Factory,
+    Serializable,
+    SerializationBackend,
+    SerializationProcess,
+)
 from .random_node import RandomNode
 from .signal_model import Signal
 from .transformation import TransformableBase
@@ -64,27 +69,23 @@ class ScenarioMode(IntEnum):
     """
 
 
-class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType, DST, DropType]):
+class Scenario(
+    ABC, Serializable, RandomNode, TransformableBase, Generic[DeviceType, DST, DropType]
+):
     """A wireless scenario.
 
     Scenarios consist of several devices transmitting and receiving electromagnetic signals.
     Each device can be operated by multiple operators simultaneously.
     """
 
-    yaml_tag = "Scenario"
-    serialized_attributes = {"devices"}
-
-    @classmethod
-    def _arg_signature(cls: Type[Scenario]) -> set[str]:
-        return {"seed", "devices"}
-
     __mode: ScenarioMode  # Current scenario operating mode
     __devices: list[DeviceType]  # Registered devices within this scenario.
     __drop_duration: float  # Drop duration in seconds.
-    __file: File | None  # HDF5 file handle
+    __serialization_process: SerializationProcess | None  # Available during recording
+    __deserialization_process: DeserializationProcess | None  # Available during replay
     __drop_counter: int  # Internal drop counter
     __campaign: str  # Measurement campaign name
-    __num_replayed_drops: int  # Number of replayed drops
+    __replay_file: str | None  # File path for replay
 
     def __init__(
         self, seed: int | None = None, devices: Sequence[DeviceType] | None = None
@@ -108,10 +109,12 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType, DST, Drop
         self.__mode = ScenarioMode.DEFAULT
         self.__devices = list()
         self.drop_duration = 0.0
-        self.__file = None
+        self.__serialization_process = None
         self.__drop_counter = 0
         self.__campaign = "default"
-        self.__num_replayed_drops = 0
+        self.__replay_file = None
+        self.__serialization_process = None
+        self.__deserialization_process = None
 
         # Add devices if specified
         if devices is not None:
@@ -170,9 +173,9 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType, DST, Drop
             RuntimeError: If the scenario does not allow for the creation or addition of new devices.
         """
 
-        raise RuntimeError(
-            "Error trying to create a new device within a scenario not supporting the operation"
-        )
+        device = self._device_type()(*args, **kwargs)
+        self.add_device(device)
+        return device
 
     def device_registered(self, device: DeviceType) -> bool:
         """Check if an device is registered in this scenario.
@@ -367,81 +370,54 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType, DST, Drop
 
     @campaign.setter
     def campaign(self, value: str) -> None:
+        # For serialization compatibility, the campaign name 'state' is reserved
+        if value == "state":
+            raise ValueError("The campaign name 'state' is reserved for serialization purposes")
+
         # Do nothing if value matches the current campaign
         if value == self.__campaign:
             return
 
-        # If in replay mode, make sure the campaign exists
+        # Setting the campaign will always reset the internal drop counter
+        self.__drop_counter = 0
+
+        # When in replay mode, changing the campaign changes the number of replayed drops
         if self.mode == ScenarioMode.REPLAY:
-            if not self.__campaign_exists(value, self.__file):
-                raise ValueError(
-                    f"The requested measurement campaign '{value}' does not exists within the currently replayed savefile"
-                )
-
-            self.__drop_counter = 0
-
-        elif self.mode == ScenarioMode.RECORD:
-            # Create the campaign if it doesn't exists
-            if not self.__campaign_exists(value, self.__file):
-                self.__file.create_group("/campaigns/" + value)
-
-            self.__drop_counter = self.__file["/campaigns/" + value].len
+            raise NotImplementedError(
+                "Changing the campaign name during replay is currently not supported"
+            )
 
         # Update the campaign identifier
         self.__campaign = value
 
-    def _state_to_HDF(self, factory: Factory, group: Group) -> None:
-        """Serialize the scenario's state to an HDF5 group.
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_object_sequence(list(self.devices), "devices")
+        process.serialize_floating(self.drop_duration, "drop_duration")
 
-        Args:
-
-            factory (Factory):
-                Reference to the serialization factory.
-
-            group (Group):
-                Reference to an empty HDF5 group.
-        """
-
-        # Serialize required attributes
-        group.attrs["num_devices"] = self.num_devices
-        group.attrs["num_operators"] = self.num_operators
-
-        # Serialize device states
-        for d, device in enumerate(self.devices):
-            group.attrs[f"device_{d:02d}"] = factory.to_str(device)
-
-            # Serialize operator states
-            for o, operator in enumerate(self.operators):
-                group.attrs[f"operator_{o:02d}"] = factory.to_str(operator)
-
-        # Serialize full state
-        group.attrs["state"] = factory.to_str(
-            {"devices": self.devices, "operators": self.operators}
-        )
-
+    @override
     @classmethod
-    def _state_from_HDF(cls: Type[Scenario], factory: Factory, group: Group) -> Scenario:
-        # Initialize class
-        scenario = cls()
+    def Deserialize(cls, process: DeserializationProcess) -> Scenario:
+        # Deserialize class instance
+        instance = cls()
 
-        # Recall serialization
-        state: dict = factory.from_str(group.attrs["state"])  # type: ignore
+        # Configure drop duration parameter
+        instance.drop_duration = process.deserialize_floating("drop_duration", 0.0)
 
-        # Add devices to the scenario
-        device: DeviceType
-        for device in state["devices"]:
-            scenario.add_device(device)
+        # Add devices and (implicitly) their respective operators
+        for device in process.deserialize_object_sequence("devices", cls._device_type()):
+            instance.add_device(device)
 
-        # Return initialize scenario
-        return scenario
+        return instance
 
     def record(
         self,
         file: str,
+        campaign: str | None = None,
         overwrite: bool = False,
-        campaign: str = "default",
         state: Scenario | None = None,
         serialize_state: bool = True,
+        backend: SerializationBackend = SerializationBackend.HDF,
     ) -> None:
         """Start recording drop information generated from this scenario.
 
@@ -453,12 +429,12 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType, DST, Drop
             file (str):
                 The system path where to store the generated recording data.
 
+            campaign (str, optional):
+                Name of the measurement campaign.
+
             overwrite (bool, optional):
                 Overwrite the file if a recording already exists.
                 Disabled by default.
-
-            campaign (str, optional):
-                Name of the measurement campaign.
 
             state (scenario, optional):
                 Scenario to be used for state serialization.
@@ -467,6 +443,10 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType, DST, Drop
             serialize_state (bool, optional):
                 Serialize the scenario state to the recording.
                 Enabled by default.
+
+            backend (SerializationBackend, optional):
+                Serialization backend to be used for serialization.
+                Default is HDF5.
 
         Raises:
 
@@ -486,160 +466,129 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType, DST, Drop
             remove(file)
             file_exists = False
 
-        # Compute drop duration
-        drop_duration = self.drop_duration
+        # Start the serialization process
+        factory = Factory()
+        self.__serialization_process = factory.serialize(file, campaign, backend)
 
-        # Initialize dataset
-        file_mode = "w-" if overwrite else "a"
-        self.__file = File(file, file_mode)
-        self.__drop_counter = 0
-        self.__campaign = campaign
-
-        # Switch mode
-        self.__mode = ScenarioMode.RECORD
-
-        # Write required attributes
-        self.__file.attrs["drop_duration"] = drop_duration
-
-        # Write required groups
-        if "/campaigns" not in self.__file:
-            self.__file.create_group("/campaigns")
-
-        # Write scenario state to the dataset for easy recollection
-        # Future feature: Write a locking mechanism during recording
+        # Serialize the scenario's state, i.e. the device and operator configurations
         if serialize_state:
-            if "/state" not in self.__file:
-                self.__file.create_group("state")
+            self.__serialization_process.serialize_object(
+                self if state is None else state, "state", True
+            )
 
-            factory = Factory()
+        # Switch mode flag and reset the drop counter
+        self.__mode = ScenarioMode.RECORD
+        self.__drop_counter = 0
 
-            if state is None:
-                self._state_to_HDF(factory, self.__file["/state"])
-
-            else:
-                state._state_to_HDF(factory, self.__file["/state"])
-
-        # Write meta-information
-        self.__file.attrs["hermes_version"] = __version__
-        self.__file.attrs["hermes_status"] = __status__
-
-        # Update the campaign, will create the respective group if it doesn't exist yet
+        # Create the campaign if it doesn't exists
         self.campaign = campaign
 
-    def __campaign_exists(self, campaign: str, file: File) -> bool:
-        """Check whether a campaign identifier exists within the current dataset.
-
-        Args:
-
-            campaign (str):
-                The campaign identifier string.
-
-            file (File):
-                The HDF5 file to check for campaign existence.
-
-        Returns: Boolean indicator.
-
-        Raises:
-
-            RuntimeError: If the scenario is currently in default mode and `file` was not specified.
-        """
-
-        return "/campaigns/" + campaign in file
-
-    def replay(self, file: str | File | None = None, campaign: str = "default") -> None:
+    def replay(
+        self,
+        file: str | None = None,
+        campaign: str | None = None,
+        backend: SerializationBackend = SerializationBackend.HDF,
+    ) -> int:
         """Replay the scenario from and HDF5 savefile.
 
         Args:
 
-            file (Union[None, str, File], optional):
-                File from which the scenario should be replayed.
-                May be a file system location or an HDF5 `File` handle.
+            file (str, optional):
+                File system location from which the scenario should be replayed.
+                Must be specified if the scenario is not in replay mode.
 
             campaign (str, optional):
                 Identifier of the campaign to replay.
-                If not specified, the assumed campaign name is `default`.
+
+            backend (SerializationBackend, optional):
+                Serialization backend to be used for deserialization.
+                Default is HDF5.
 
         Raises:
 
-            RuntimeError: If `file` is not specified and can't be inferred from previous record executions.
+            RuntimeError: If `file` is not specified and scenario is not in replay mode.
             ValueError: If `campaign` is specified and is not contained within the savefile.
+
+        Returns: Number of recorded drops to be replayed.
         """
 
+        _file: str
         if file is None:
-            if self.__file is None:
-                raise ValueError(
-                    "A file location must be specified or the scenario most be in record or replay mode"
-                )
-
-            file = self.__file.filename
-
-        # If only a file system location was specified, open the file
-        _file = File(file, "r") if isinstance(file, str) else file
-
-        # Check if the campaign is available (if a campaign was specified)
-        if not self.__campaign_exists(campaign, _file):
-            filename = _file.filename
-            _file.close()
-            raise ValueError(
-                f"The requested measurement campaign '{campaign}' does not exists within the savefile '{filename}'"
-            )
+            if self.__replay_file is None:
+                raise ValueError("Initial replay requires a valid file path argument")
+            else:
+                _file = self.__replay_file
+        else:
+            _file = file
 
         # Stop any action and close file handles if required
         self.stop()
 
-        # Initialize dataset
-        self.__file = _file
+        # Start a new deserialization process
+        self.__deserialization_process = Factory().deserialize(_file, campaign, backend)
+        self.__replay_file = _file
         self.__drop_counter = 0
         self.__campaign = campaign
-        self.__num_replayed_drops = len(_file["/campaigns/" + campaign])
 
-        # Switch mode
+        # Switch mode flag
         self.__mode = ScenarioMode.REPLAY
 
+        # Return the number of recorded drops
+        return self.__deserialization_process.sequence_length("drops")
+
     @classmethod
-    def Replay(cls: Type[Scenario], file: Union[str, File], campaign: str = "default") -> Scenario:
+    def Replay(
+        cls: Type[Scenario],
+        file: str,
+        campaign: str | None = None,
+        backend: SerializationBackend = SerializationBackend.HDF,
+    ) -> tuple[Scenario, int]:
         """Replay a scenario from an HDF5 save file.
+
+        .. note::
+           This function is currently highly experimental and may be subject to change.
+           It does not fully deserialize all configurations in the case of simulation scenarios.
 
         Args:
 
             file (str):
                 File system location of the HDF5 save file.
 
-
             campaign (str, optional):
                 Identifier of the campaign to replay.
-                If not specified, the assumed campaign name is `default`.
+
+            backend (SerializationBackend, optional):
+                Serialization backend to be used for deserialization.
+                Default is HDF5.
+
+        Returns: Tuple containing the replayed scenario and the number of recorded drops.
         """
 
-        # Load the dataset
-        if isinstance(file, str):
-            file = File(file, "r")
-
-        # Recall the class state from the respective HDF5 group
-        factory = Factory()
-        scenario = cls._state_from_HDF(factory, file["state"])
+        # Deserialize the respective scenario state
+        deserialization_process = Factory().deserialize(file, campaign, backend)
+        scenario: Scenario = deserialization_process.deserialize_object("state", cls)
+        deserialization_process.finalize()
 
         # Enable the replay mode
-        scenario.replay(file, campaign)
+        num_drops = scenario.replay(file, campaign, backend)
 
         # Return the scenario (initialized and in replay mode)
-        return scenario
+        return scenario, num_drops
 
     def stop(self) -> None:
         """Stop a running recording / playback session."""
 
-        # In default mode, nothing needs to be done
-        if self.mode == ScenarioMode.DEFAULT:
-            return
+        # Finalize the serialization process if in record mode
+        if self.__serialization_process is not None:
+            self.__serialization_process.finalize()
+            self.__serialization_process = None
+            self.__drop_counter = 0
 
-        # Save the overall number of recorder drops if in record mode
-        if self.mode == ScenarioMode.RECORD:
-            self.__file.attrs["num_drops"] = self.__drop_counter
-
-        # Close HDF5 file handle properly
-        self.__file.close()
-        self.__file = None
-        self.__drop_counter = 0
+        # Finalize the deserialization process if in replay mode
+        if self.__deserialization_process is not None:
+            self.__deserialization_process.finalize()
+            self.__deserialization_process = None
+            self.__drop_counter = 0
 
         # Reset the mode
         self.__mode = ScenarioMode.DEFAULT
@@ -842,49 +791,59 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType, DST, Drop
         return device_receptions
 
     @property
-    def num_drops(self) -> int | None:
+    def num_drops(self) -> int:
         """Number of drops within the scenario.
 
         If the scenario is in replay mode, this property represents the
         recorded number of drops
 
-        If the scenario is in record mode, this property represnts the
+        If the scenario is in record mode, this property represents the
         current number of recorded drops.
 
-        Returns: Number of drops. `None` if not applicable.
+        Returns: Number of drops. Zero if the scenario is in default mode.
         """
 
-        if self.mode == ScenarioMode.RECORD:
-            return self.__drop_counter
+        # Drops are not supposed to be counted in default mode
+        # So return zero in this case
+        if self.__mode == ScenarioMode.DEFAULT:
+            return 0
 
-        if self.mode == ScenarioMode.REPLAY:
-            return self.__num_replayed_drops
+        return self.__drop_counter
 
-        return None
+    @classmethod
+    @abstractmethod
+    def _device_type(cls) -> Type[DeviceType]:
+        """Type of device used by the scenario.
+
+        Wrapped by the scenario base class' :meth:`.new_device` method.
+
+        Returns:
+            Type of the device.
+        """
+        ...  # pragma: no cover
+
+    @classmethod
+    @abstractmethod
+    def _drop_type(cls) -> Type[DropType]:
+        """Type of drop object used by the scenario.
+
+        Wrapped by the scenario base class' :meth:`.drop` method.
+
+        Returns:
+            Type of the drop object.
+        """
+        ...  # pragma: no cover
 
     @abstractmethod
     def _drop(self) -> DropType:
         """Generate a single scenario drop.
 
-        Wrapped by the scenario base class :meth:`.drop` method.
+        Wrapped by the scenario base class' :meth:`.drop` method.
 
         Returns:
             The drop object containing all information.
         """
-        ...  # pragma no cover
-
-    @abstractmethod
-    def _recall_drop(self, group: Group) -> DropType:
-        """Recall a recorded drop from a HDF5 group.
-
-        Args:
-
-            group (Group):
-                HDF5 group containing the drop information.
-
-        Returns: The recalled drop.
-        """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
     def drop(self) -> DropType:
         """Generate a single data drop from all scenario devices.
@@ -893,14 +852,15 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType, DST, Drop
         """
 
         if self.mode == ScenarioMode.REPLAY:
-            # Recall the drop from the savefile
-            for _ in range(self.__num_replayed_drops):
-                drop_path = f"/campaigns/{self.__campaign}/drop_{self.__drop_counter:02d}"
-                self.__drop_counter = (self.__drop_counter + 1) % self.__num_replayed_drops
+            # Ensure a valid deserialization process is available
+            if self.__deserialization_process is None:
+                raise RuntimeError("Replay scenario mode requires a valid deserialization process")
 
-                if drop_path in self.__file:
-                    drop = self._recall_drop(self.__file[drop_path])
-                    break
+            # Recall the latest drop, identified by the campaign and the drop counter
+            drop: DropType = self.__deserialization_process.deserialize_object_sequence(
+                "drops", self._drop_type(), self.__drop_counter, 1 + self.__drop_counter
+            )[0]
+            self.__drop_counter += 1
 
             # Notify the transmit callbacks about the replayed transmissions
             for device, replayed_transmission in zip(self.devices, drop.device_transmissions):
@@ -919,11 +879,7 @@ class Scenario(ABC, RandomNode, TransformableBase, Generic[DeviceType, DST, Drop
 
             # Serialize the drop to HDF if in record mode
             if self.mode == ScenarioMode.RECORD:
-                drop.to_HDF(
-                    self.__file.create_group(
-                        f"campaigns/{self.__campaign}/drop_{self.__drop_counter:02d}"
-                    )
-                )
+                self.__serialization_process.serialize_object_sequence([drop], "drops", True, True)
                 self.__drop_counter += 1
 
         return drop
@@ -936,8 +892,16 @@ ScenarioType = TypeVar("ScenarioType", bound="Scenario")
 class ReplayScenario(Scenario[Device, DeviceState, Drop]):
     """Scenario which is unable to generate drops."""
 
+    @override
     def _drop(self) -> Drop:
-        raise RuntimeError("Replay scenario may not generate data drops.")
+        raise RuntimeError("Replay scenarios may not generate data drops")
 
-    def _recall_drop(self, group: Group) -> Drop:
-        return Drop.from_HDF(group, self.devices)
+    @classmethod
+    @override
+    def _device_type(cls) -> Type[Device]:
+        return Device
+
+    @classmethod
+    @override
+    def _drop_type(cls) -> Type[Drop]:
+        return Drop

@@ -1,13 +1,20 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from abc import ABC, abstractmethod
+from abc import abstractmethod
+from typing_extensions import override
 
 import numpy as np
 from scipy.signal import lfilter
 from scipy.constants import pi
 
-from hermespy.core import RandomNode, Serializable, Signal
+from hermespy.core import (
+    RandomNode,
+    Serializable,
+    Signal,
+    SerializationProcess,
+    DeserializationProcess,
+)
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -19,7 +26,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class PhaseNoise(RandomNode, ABC):
+class PhaseNoise(RandomNode, Serializable):
     """Base class of phase noise models."""
 
     @abstractmethod
@@ -33,18 +40,24 @@ class PhaseNoise(RandomNode, ABC):
 
         Returns: Noise signal model.
         """
-        ...  # pragma no cover
+        ...  # pragma: no cover
 
 
-class NoPhaseNoise(PhaseNoise, Serializable):
+class NoPhaseNoise(PhaseNoise):
     """No phase noise considered within the device model."""
-
-    yaml_tag = "NoPhaseNoise"
-    """YAML serialization tag"""
 
     def add_noise(self, signal: Signal) -> Signal:
         # It's just a stub
         return signal
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        return
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> NoPhaseNoise:
+        return NoPhaseNoise()
 
 
 class OscillatorPhaseNoise(PhaseNoise, Serializable):
@@ -56,8 +69,6 @@ class OscillatorPhaseNoise(PhaseNoise, Serializable):
     __K0: float
     __K2: float
     __K3: float
-
-    yaml_tag = "OscillatorPhaseNoise"
 
     def __init__(
         self,
@@ -190,3 +201,17 @@ class OscillatorPhaseNoise(PhaseNoise, Serializable):
             b *= np.exp(1j * pn[:, b.offset : b.end])
 
         return signal
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_floating(self.__K0, "K0")
+        process.serialize_floating(self.__K2, "K2")
+        process.serialize_floating(self.__K3, "K3")
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> OscillatorPhaseNoise:
+        K0 = process.deserialize_floating("K0")
+        K2 = process.deserialize_floating("K2")
+        K3 = process.deserialize_floating("K3")
+        return OscillatorPhaseNoise(K0, K2, K3)

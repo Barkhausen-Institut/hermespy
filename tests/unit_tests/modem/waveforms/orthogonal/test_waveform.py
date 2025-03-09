@@ -12,7 +12,7 @@ from scipy.constants import pi
 
 from hermespy.core import ChannelStateInformation, Signal
 from hermespy.modem import OrthogonalWaveform, SymbolSection, GuardSection, GridResource, StatedSymbols, Symbols, CustomPilotSymbolSequence, GridElement, ElementType, PrefixType, GridSection, OFDMCorrelationSynchronization, PilotSection, ReferencePosition, OrthogonalLeastSquaresChannelEstimation, OrthogonalChannelEqualization, OrthogonalZeroForcingChannelEqualization
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 from unit_tests.utils import SimulationTestContext
 
 __author__ = "André Noll Barreto"
@@ -32,13 +32,13 @@ class TestGridElement(TestCase):
         self.element = GridElement(ElementType.DATA, repetitions=1)
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test grid element serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.element)
+        test_roundtrip_serialization(self, self.element)
 
 
 class TestGridResource(TestCase):
-    """Test a single grid resource."""
+    """Test a single grid resource"""
 
     def setUp(self) -> None:
         self.repetitions = 2
@@ -49,7 +49,7 @@ class TestGridResource(TestCase):
         self.resource = GridResource(self.repetitions, self.prefix_type, self.prefix_ratio, self.elements)
 
     def test_init(self) -> None:
-        """Initialization parameters should be properly stored as class attributes."""
+        """Initialization parameters should be properly stored as class attributes"""
 
         self.assertEqual(self.repetitions, self.resource.repetitions)
         self.assertEqual(self.prefix_type, self.resource.prefix_type)
@@ -57,7 +57,7 @@ class TestGridResource(TestCase):
         self.assertCountEqual(self.elements, self.resource.elements)
 
     def test_repetitions_setget(self) -> None:
-        """Repetitions property getter should return setter argument."""
+        """Repetitions property getter should return setter argument"""
 
         repetitions = 10
         self.resource.repetitions = repetitions
@@ -65,7 +65,7 @@ class TestGridResource(TestCase):
         self.assertEqual(repetitions, self.resource.repetitions)
 
     def test_repetitions_validation(self) -> None:
-        """Repetitions property setter should raise ValueError on arguments smaller than one."""
+        """Repetitions property setter should raise ValueError on arguments smaller than one"""
 
         with self.assertRaises(ValueError):
             self.resource.repetitions = 0
@@ -74,7 +74,7 @@ class TestGridResource(TestCase):
             self.resource.repetitions = -1
 
     def test_prefix_ratio_setget(self) -> None:
-        """Cyclic prefix ratio property getter should return setter argument."""
+        """Cyclic prefix ratio property getter should return setter argument"""
 
         prefix_ratio = 0.5
         self.resource.prefix_ratio = 0.5
@@ -83,7 +83,7 @@ class TestGridResource(TestCase):
 
     def test_prefix_ratio_validation(self) -> None:
         """Cyclic prefix ratio property setter should raise ValueError on arguments
-        smaller than zero or bigger than one."""
+        smaller than zero or bigger than one"""
 
         with self.assertRaises(ValueError):
             self.resource.prefix_ratio = -1.0
@@ -99,22 +99,22 @@ class TestGridResource(TestCase):
             self.fail()
 
     def test_num_subcarriers(self) -> None:
-        """Number of subcarriers property should return the correct subcarrier count."""
+        """Number of subcarriers property should return the correct subcarrier count"""
 
         self.assertEqual(12, self.resource.num_subcarriers)
 
     def test_num_symbols(self) -> None:
-        """Number of symbols property should return the correct data symbol count."""
+        """Number of symbols property should return the correct data symbol count"""
 
         self.assertEqual(4, self.resource.num_symbols)
 
     def test_num_references(self) -> None:
-        """Number of references property should return the correct reference symbol count."""
+        """Number of references property should return the correct reference symbol count"""
 
         self.assertEqual(2, self.resource.num_references)
 
     def test_resource_mask(self) -> None:
-        """Resource mask property should return a mask selecting the proper elements."""
+        """Resource mask property should return a mask selecting the proper elements"""
 
         expected_mask = np.zeros((3, 12), bool)
         expected_mask[1, [0, 1, 6, 7]] = True  # Data symbol mask
@@ -124,13 +124,13 @@ class TestGridResource(TestCase):
         assert_array_equal(expected_mask, self.resource.mask)
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test grid resource serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.resource)
+        test_roundtrip_serialization(self, self.resource)
 
 
 class GridSectionMock(GridSection):
-    """Grid section implementation for testing purposes."""
+    """Grid section implementation for testing purposes"""
 
     @property
     def num_samples(self) -> int:
@@ -153,7 +153,7 @@ class GridSectionMock(GridSection):
         return signal
 
 class TestGridSection(TestCase):
-    """Test the grid section base class section."""
+    """Test the grid section base class section"""
 
     def setUp(self) -> None:
         self.wave = Mock()
@@ -162,13 +162,13 @@ class TestGridSection(TestCase):
         self.section = GridSectionMock(self.num_repetitions, wave=self.wave)
 
     def test_init(self) -> None:
-        """Initialization parameters should be properly stored as attributes."""
+        """Initialization parameters should be properly stored as attributes"""
 
         self.assertIs(self.wave, self.section.wave)
         self.assertEqual(self.num_repetitions, self.section.num_repetitions)
 
     def test_num_repetitions_setget(self) -> None:
-        """Number of repetitions property getter should return setter argument."""
+        """Number of repetitions property getter should return setter argument"""
 
         num_repetitions = 3
         self.section.num_repetitions = num_repetitions
@@ -176,7 +176,7 @@ class TestGridSection(TestCase):
         self.assertEqual(num_repetitions, self.section.num_repetitions)
 
     def test_num_repetitions_validation(self) -> None:
-        """Number of repetitions property setter should raise ValueError on arguments smaller than zero."""
+        """Number of repetitions property setter should raise ValueError on arguments smaller than zero"""
 
         with self.assertRaises(ValueError):
             self.section.num_repetitions = 0
@@ -186,7 +186,7 @@ class TestGridSection(TestCase):
 
 
 class TestSymbolSection(TestCase):
-    """Test grid symbol section."""
+    """Test grid symbol section"""
 
     def setUp(self) -> None:
         self.rnd = np.random.default_rng(42)
@@ -209,24 +209,24 @@ class TestSymbolSection(TestCase):
         self.wave = OrthogonalWaveformMock(20, grid_resources=[self.resource_a, self.resource_b], grid_structure=[self.section])
 
     def test_init(self) -> None:
-        """Initialization parameters should be properly stored as object attributes."""
+        """Initialization parameters should be properly stored as object attributes"""
 
         self.assertEqual(self.num_repetitions, self.section.num_repetitions)
         self.assertCountEqual(self.pattern, self.section.pattern)
         self.assertIs(self.wave, self.section.wave)
 
     def test_num_symbols(self) -> None:
-        """Number of symbols property should return the correct data symbol count."""
+        """Number of symbols property should return the correct data symbol count"""
 
         self.assertEqual(22, self.section.num_symbols)
 
     def test_num_references(self) -> None:
-        """Number of references property should return the correct reference symbol count."""
+        """Number of references property should return the correct reference symbol count"""
 
         self.assertEqual(20, self.section.num_references)
 
     def test_num_words(self) -> None:
-        """Number of words property should return the correct word count."""
+        """Number of words property should return the correct word count"""
 
         self.assertIs(6, self.section.num_words)
 
@@ -248,15 +248,13 @@ class TestSymbolSection(TestCase):
         _ = self.section.resource_mask
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test symbol section serialization"""
 
-        with patch("hermespy.modem.waveforms.orthogonal.waveform.SymbolSection.wave", new_callable=PropertyMock) as wave:
-            wave.return_value = self.wave
-            test_yaml_roundtrip_serialization(self, self.section)
+        test_roundtrip_serialization(self, self.section, {'wave'})
 
 
 class TestGuardSection(TestCase):
-    """Test the grid guard section."""
+    """Test the grid guard section"""
 
     def setUp(self) -> None:
         self.duration = 1.23e-3
@@ -268,14 +266,14 @@ class TestGuardSection(TestCase):
         self.section = GuardSection(self.duration, self.num_repetitions, self.wave)
 
     def test_init(self) -> None:
-        """Initialization parameters should be properly stored as object attributes."""
+        """Initialization parameters should be properly stored as object attributes"""
 
         self.assertEqual(self.num_repetitions, self.section.num_repetitions)
         self.assertEqual(self.duration, self.section.duration)
         self.assertIs(self.wave, self.section.wave)
 
     def test_duration_setget(self) -> None:
-        """Duration property getter should return setter argument."""
+        """Duration property getter should return setter argument"""
 
         duration = 4.56
         self.section.duration = duration
@@ -283,7 +281,7 @@ class TestGuardSection(TestCase):
         self.assertEqual(duration, self.section.duration)
 
     def test_duration_validation(self) -> None:
-        """Duration property setter should raise ValueError on arguments smaller than zero."""
+        """Duration property setter should raise ValueError on arguments smaller than zero"""
 
         with self.assertRaises(ValueError):
             self.section.duration = -1.0
@@ -295,21 +293,19 @@ class TestGuardSection(TestCase):
             self.fail()
 
     def test_num_samples(self) -> None:
-        """Number of samples property should compute the correct amount of samples."""
+        """Number of samples property should compute the correct amount of samples"""
 
         expected_num_samples = int(self.num_repetitions * self.duration * self.wave.sampling_rate)
         self.assertEqual(expected_num_samples, self.section.num_samples)
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test guard section serialization"""
 
-        with patch("hermespy.modem.waveforms.orthogonal.waveform.GuardSection.wave", new_callable=PropertyMock) as wave:
-            wave.return_value = self.wave
-            test_yaml_roundtrip_serialization(self, self.section)
+        test_roundtrip_serialization(self, self.section, {'wave'})
 
 
 class OrthogonalWaveformMock(OrthogonalWaveform):
-    """Mock class for testing the abstract base class."""
+    """Mock class for testing the abstract base class"""
     
     def _forward_transformation(self, symbol_grid: np.ndarray) -> np.ndarray:
         return symbol_grid.repeat(self.oversampling_factor, axis=-1)
@@ -370,7 +366,7 @@ class TestOrthogonalWaveform(TestCase):
         )
 
     def test_init(self) -> None:
-        """Object initialization arguments should be properly stored as class attributes."""
+        """Object initialization arguments should be properly stored as class attributes"""
 
         self.assertIs(self.modem, self.waveform.modem)
         self.assertEqual(self.num_subcarriers, self.waveform.num_subcarriers)
@@ -416,12 +412,12 @@ class TestOrthogonalWaveform(TestCase):
         self.assertEqual(self.waveform.sampling_rate, pilot_signal.sampling_rate)
 
     def test_symbols_per_frame(self) -> None:
-        """Symbols per frame property should return the correct number of symbols per frame."""
+        """Symbols per frame property should return the correct number of symbols per frame"""
 
         self.assertEqual(90, self.waveform.symbols_per_frame)
 
     def test_num_data_symbols(self) -> None:
-        """Number of data symbols property should report the correct number of data symbols."""
+        """Number of data symbols property should report the correct number of data symbols"""
 
         self.assertEqual(42, self.waveform.num_data_symbols)
 
@@ -436,7 +432,7 @@ class TestOrthogonalWaveform(TestCase):
         self.assertEqual(self.section_a.num_references + self.section_b.num_references + self.section_c.num_references, self.waveform.references_per_frame)
 
     def test_samples_per_frame(self) -> None:
-        """Samples per frame property should return the correct sample count."""
+        """Samples per frame property should return the correct sample count"""
 
         expected_bits = self.rng.integers(0, 2, self.waveform.bits_per_frame(self.waveform.num_data_symbols))
         mapped_symbols = self.waveform.map(expected_bits)
@@ -446,7 +442,7 @@ class TestOrthogonalWaveform(TestCase):
         self.assertEqual(signal.size, self.waveform.samples_per_frame)
 
     def test_symbol_duration(self) -> None:
-        """Symbol duration property should report the correct symbol duration."""
+        """Symbol duration property should report the correct symbol duration"""
 
         self.assertEqual(1 / self.waveform.bandwidth, self.waveform.symbol_duration)
 
@@ -472,7 +468,7 @@ class TestOrthogonalWaveform(TestCase):
             self.waveform.place(Symbols(np.random.standard_normal(2)))
 
     def test_modulate_demodulate(self) -> None:
-        """Modulating and subsequently de-modulating a data frame should yield identical symbols."""
+        """Modulating and subsequently de-modulating a data frame should yield identical symbols"""
 
         bits = self.rng.integers(0, 2, self.waveform.bits_per_frame(self.waveform.num_data_symbols))
         expected_symbols = self.waveform.place(self.waveform.map(bits))
@@ -483,7 +479,7 @@ class TestOrthogonalWaveform(TestCase):
         assert_array_almost_equal(expected_symbols.raw, symbols.raw)
 
     def test_modulate_demodulate_pilot(self) -> None:
-        """Modulating and subsequently de-modulating a data frame with pilot section should yield identical symbols."""
+        """Modulating and subsequently de-modulating a data frame with pilot section should yield identical symbols"""
 
         self.waveform.pilot_section = PilotSection()
         bits = self.rng.integers(0, 2, self.waveform.bits_per_frame(self.waveform.num_data_symbols))
@@ -566,7 +562,7 @@ class TestOrthogonalWaveform(TestCase):
         self.assertAlmostEqual(self.waveform.power, frame_signal.power[0], places=2)
 
     def test_num_subcarriers_validation(self) -> None:
-        """Number of subcarries property setter should raise ValueError on arguments smaller than one."""
+        """Number of subcarries property setter should raise ValueError on arguments smaller than one"""
 
         with self.assertRaises(ValueError):
             self.waveform.num_subcarriers = 0
@@ -576,7 +572,7 @@ class TestOrthogonalWaveform(TestCase):
 
 
 class TestPilotSection(TestCase):
-    """Test the general base class for OFDM pilot sections."""
+    """Test the general base class for OFDM pilot sections"""
 
     def setUp(self) -> None:
         self.rng = default_rng(42)
@@ -703,10 +699,10 @@ class TestPilotSection(TestCase):
             self.pilot_section.generate()
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test pilot section serialization"""
 
         self.pilot_section.wave = None
-        test_yaml_roundtrip_serialization(self, self.pilot_section)
+        test_roundtrip_serialization(self, self.pilot_section)
 
 
 class TestCorrelationSynchronization(TestCase):
@@ -745,11 +741,11 @@ class TestCorrelationSynchronization(TestCase):
     def test_serialization(self) -> None:
         """Test YAML serialization"""
 
-        test_yaml_roundtrip_serialization(self, OFDMCorrelationSynchronization())
+        test_roundtrip_serialization(self, OFDMCorrelationSynchronization())
 
 
 class TestLeastSquaresChannelEstimation(TestCase):
-    """Test leat squares channel estimation for orthogonal waveforms."""
+    """Test leat squares channel estimation for orthogonal waveforms"""
     
     def setUp(self) -> None:
         self.subcarrier_spacing = 1e3
@@ -798,21 +794,21 @@ class TestLeastSquaresChannelEstimation(TestCase):
         assert_array_almost_equal(expected_state, stated_symbols.states)
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test orthogonal least squares channel estimation serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.estimation)
+        test_roundtrip_serialization(self, self.estimation, {'waveform'})
 
 
 class TestChannelEqualization(TestCase):
-    """Test orthogonal waveform channel equalization."""
+    """Test orthogonal waveform channel equalization"""
     
     def setUp(self) -> None:
         self.channel_equalization = OrthogonalChannelEqualization()
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test orthogonal channel equalization serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.channel_equalization)
+        test_roundtrip_serialization(self, self.channel_equalization, {'waveform'})
 
 
 class TestZeroForcingChannelEqualization(TestCase):
@@ -822,6 +818,6 @@ class TestZeroForcingChannelEqualization(TestCase):
         self.channel_equalization = OrthogonalZeroForcingChannelEqualization()
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test orthogonal zero forcing equalization serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.channel_equalization)
+        test_roundtrip_serialization(self, self.channel_equalization)

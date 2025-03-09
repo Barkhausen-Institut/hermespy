@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
+from typing_extensions import override
 
 import numpy as np
 
-from hermespy.core import Serializable
+from hermespy.core import Serializable, SerializationProcess, DeserializationProcess
 from ..symbols import StatedSymbols
 from .symbol_precoding import ReceiveSymbolDecoder
 
@@ -23,8 +24,6 @@ class MaximumRatioCombining(ReceiveSymbolDecoder, Serializable):
 
     Refer to :footcite:t:`1954:kahn` for further information.
     """
-
-    yaml_tag: str = "MRC"
 
     def decode_symbols(
         self, symbols: StatedSymbols, num_output_streams: int
@@ -64,3 +63,12 @@ class MaximumRatioCombining(ReceiveSymbolDecoder, Serializable):
     @property
     def num_receive_output_symbols(self) -> int:
         return 1
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        pass
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> MaximumRatioCombining:
+        return cls()

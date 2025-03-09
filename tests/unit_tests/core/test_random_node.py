@@ -7,7 +7,7 @@ from unittest.mock import Mock
 from numpy.random import Generator
 
 from hermespy.core.random_node import RandomNode, RandomRealization
-
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -23,21 +23,26 @@ class TestRandomRealization(TestCase):
     """Test a single randim realization"""
 
     def setUp(self) -> None:
-        self.node = RandomNode(seed=42)
-        self.realization = RandomRealization(self.node)
+        self.seed = 42
+        self.realization = RandomRealization(self.seed)
 
-    def test_seed(self) -> None:
+    def test_seed_init(self) -> None:
         """The seed property should return the correct seed"""
 
-        self.assertEqual(RandomRealization(RandomNode(seed=42)).seed, self.realization.seed)
+        self.assertEqual(self.seed, self.realization.seed)
 
     def test_generator(self) -> None:
         """The generator property should provide a reproducible generator"""
 
-        test_generator = RandomRealization(RandomNode(seed=42)).generator()
-        generator = self.realization.generator()
+        initial_generator = self.realization.generator()
+        test_generator = self.realization.generator()
 
-        self.assertEqual(test_generator.integers(maxsize), generator.integers(maxsize))
+        self.assertEqual(test_generator.integers(maxsize), initial_generator.integers(maxsize))
+
+    def test_serialization(self) -> None:
+        """Test random realization serialization"""
+        
+        test_roundtrip_serialization(self, self.realization)
 
 
 class TestRandomNode(TestCase):

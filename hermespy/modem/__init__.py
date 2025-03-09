@@ -78,6 +78,7 @@ from .precoding import (
     ReceiveSymbolDecoder,
     SingleCarrier,
     DFT,
+    DFTNorm,
     MaximumRatioCombining,
 )
 from .evaluators import (
@@ -183,6 +184,7 @@ __all__ = [
     "SymbolPrecoder",
     "SingleCarrier",
     "DFT",
+    "DFTNorm",
     "MaximumRatioCombining",
     "BitErrorEvaluator",
     "BlockErrorEvaluator",

@@ -10,6 +10,7 @@ from hermespy.channel import SpatialDelayChannel
 from hermespy.core import AntennaMode, Transformation
 from hermespy.simulation import SimulatedUniformArray, SimulatedIdealAntenna, StaticTrajectory
 from hermespy.hardware_loop import ScalarAntennaCalibration, PhysicalDeviceDummy, PhysicalScenarioDummy
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -83,3 +84,11 @@ class TestScalarAntennaCalibration(TestCase):
         relative_transmit_calibration = scalar_calibration.transmit_correction_weights[1:] / scalar_calibration.transmit_correction_weights[0]
         np.testing.assert_allclose(relative_transmit_weights, 1/relative_transmit_calibration, atol=1e-2)
         np.testing.assert_allclose(relative_receive_weights, 1/relative_receive_calibration, atol=1e-2)
+
+    def test_serialization(self) -> None:
+        """Test scalar antenna calibration serialization"""
+        
+        transmit_weights = np.exp(1j * self.rng.uniform(0, 2 * np.pi, self.calibrated_antennas.num_transmit_antennas))
+        receive_weights = np.exp(1j * self.rng.uniform(0, 2 * np.pi, self.calibrated_antennas.num_receive_antennas))
+        calibration = ScalarAntennaCalibration(transmit_weights, receive_weights)
+        test_roundtrip_serialization(self, calibration)

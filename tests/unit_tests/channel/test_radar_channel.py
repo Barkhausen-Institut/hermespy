@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Generic, TypeVar
 import unittest
 from unittest.mock import patch, Mock, PropertyMock
-from h5py import File
 
 import numpy as np
 from numpy.random import default_rng
@@ -18,7 +17,7 @@ from hermespy.channel.radar.radar import RadarChannelBase, RadarPath, RadarTarge
 from hermespy.core import ChannelStateInformation, ChannelStateFormat, Direction, Signal, Transformation
 from hermespy.simulation import SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
 from hermespy.simulation.animation import Moveable, StaticTrajectory
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 from unit_tests.utils import assert_signals_equal
 
 __author__ = "Andre Noll Barreto"
@@ -69,6 +68,11 @@ class TestFixedCrossSection(unittest.TestCase):
 
         cross_section = self.cross_section.get_cross_section(impinging_direction, emerging_direction)
         self.assertEqual(1.23454, cross_section)
+
+    def test_serialization(self) -> None:
+        """Test fixed cross section serialization"""
+
+        test_roundtrip_serialization(self, self.cross_section)
 
 
 class TestVirtualRadarTarget(unittest.TestCase):
@@ -209,6 +213,12 @@ class _TestRadarPathRealization(Generic[RPT], unittest.TestCase):
         self.path_realization.add_state(self.transmitter.state(0), self.receiver.state(0), self.sampling_rate, self.carrier_frequency, 0.0, state)
         assert_array_equal(np.zeros_like(state), state)
 
+    def test_serialization(self) -> None:
+        """Test radar path serialization"""
+        
+        test_roundtrip_serialization(self, self.path_realization)
+
+
 class TestRadarTargetRealization(_TestRadarPathRealization[RadarTargetPath]):
     """Test the radar target realization class"""
 
@@ -228,42 +238,12 @@ class TestRadarTargetRealization(_TestRadarPathRealization[RadarTargetPath]):
         self.assertEqual(self.cross_section, self.path_realization.cross_section)
         self.assertEqual(self.reflection_phase, self.path_realization.reflection_phase)
 
-    def test_hdf_serialization(self) -> None:
-        """Test serialization to and from HDF"""
-
-        file = File("test.h5", "w", driver="core", backing_store=False)
-        group = file.create_group("group")
-
-        self.path_realization.to_HDF(group)
-        recalled_realization = self.path_realization.from_HDF(group)
-
-        file.close()
-
-        self.assertIsInstance(recalled_realization, RadarTargetPath)
-        assert_array_equal(self.target_position, recalled_realization.position)
-        assert_array_equal(self.target_velocity, recalled_realization.velocity)
-        self.assertEqual(self.cross_section, recalled_realization.cross_section)
-        self.assertEqual(self.reflection_phase, recalled_realization.reflection_phase)
-
 
 class TestInterferenceRealization(_TestRadarPathRealization[RadarInterferencePath]):
     """Test the radar interference realization class"""
 
     def _init_realization(self) -> RadarInterferencePath:
         return RadarInterferencePath(self.attenuate, self.static)
-
-    def test_hdf_serialization(self) -> None:
-        """Test serialization to and from HDF"""
-
-        file = File("test.h5", "w", driver="core", backing_store=False)
-        group = file.create_group("group")
-
-        self.path_realization.to_HDF(group)
-        recalled_realization = self.path_realization.from_HDF(group)
-
-        file.close()
-
-        self.assertIsInstance(recalled_realization, RadarInterferencePath)
 
 
 class _TestRadarChannelBase(Generic[RCT], unittest.TestCase):
@@ -290,28 +270,15 @@ class _TestRadarChannelBase(Generic[RCT], unittest.TestCase):
         self.channel.attenuate = False
         self.assertFalse(self.channel.attenuate)
 
-    def test_yaml_serialization(self) -> None:
-        """Test YAML serialization"""
+    def test_model_serialization(self) -> None:
+        """Test radar channel model serialization"""
 
-        with patch("hermespy.channel.Channel.random_mother", new_callable=PropertyMock) as random_mock:
-            random_mock.return_value = None
+        test_roundtrip_serialization(self, self.channel, {'random_mother'})
 
-            test_yaml_roundtrip_serialization(self, self.channel)
+    def test_realization_serialization(self) -> None:
+        """Test radar channel realization serialization"""
 
-    def test_recall_realization(self) -> None:
-        """Test recalling channel realizations from HDF"""
-
-        realization = self.channel.realize()
-
-        file = File("test.h5", "w", driver="core", backing_store=False)
-        group = file.create_group("group")
-
-        realization.to_HDF(group)
-        recalled_realization = self.channel.recall_realization(group)
-
-        file.close()
-
-        self.assertIsInstance(recalled_realization, type(realization))
+        test_roundtrip_serialization(self, self.channel.realize())
 
     def test_propagate_state(self) -> None:
         """Test if the state propagation is correct"""
@@ -387,7 +354,6 @@ class TestSingleTargetRadarChannel(_TestRadarChannelBase[SingleTargetRadarChanne
 
         with self.assertRaises(ValueError):
             self.channel.target_velocity = (3, 2)
-            
 
     def test_radar_cross_section_get(self) -> None:
         """Radar cross section getter should return init param"""

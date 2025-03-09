@@ -7,11 +7,10 @@ from enum import Enum
 
 import numpy as np
 import matplotlib.pyplot as plt
-from h5py import Group
 from scipy.fft import fft, ifft
 from sparse import COO, SparseArray  # type: ignore
 
-from .factory import HDFSerializable
+from .factory import Serializable, SerializationProcess, DeserializationProcess
 from .signal_model import Signal
 
 __author__ = "Jan Adler"
@@ -40,7 +39,7 @@ class ChannelStateDimension(Enum):
     INFORMATION = 3
 
 
-class ChannelStateInformation(HDFSerializable):
+class ChannelStateInformation(Serializable):
     """State of a single wireless link between a transmitting and receiving device.
 
     Attributes:
@@ -564,25 +563,14 @@ class ChannelStateInformation(HDFSerializable):
             self.__state_format, reciprocal_state, self.num_delay_taps, self.__num_frequency_bins
         )
 
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_integer(self.__state_format.value, "state_format")
+        process.serialize_array(self.dense_state(), "state")
+
     @classmethod
-    def from_HDF(cls: Type[ChannelStateInformation], group: Group) -> ChannelStateInformation:
-        # Recall datasets
-        state = np.array(group["state"], dtype=complex)
-
-        # Recall attributes
-        format = ChannelStateFormat[group.attrs.get("format", "IMPULSE_RESPONSE")]
-
-        # Initialize object from recalled state
-        return cls(state=state, state_format=format)
-
-    def to_HDF(self, group: Group) -> None:
-        # Serialize datasets
-        group.create_dataset("state", data=self.dense_state())
-
-        # Serialize attributes
-        group.attrs["num_transmit_streams"] = self.num_transmit_streams
-        group.attrs["num_receive_streams"] = self.num_receive_streams
-        group.attrs["num_symbols"] = self.num_symbols
-        group.attrs["num_taps"] = self.num_delay_taps
-        group.attrs["num_samples"] = self.num_samples
-        group.attrs["format"] = self.state_format.name
+    def Deserialize(
+        cls: Type[ChannelStateInformation], process: DeserializationProcess
+    ) -> ChannelStateInformation:
+        state_format = ChannelStateFormat(process.deserialize_integer("state_format"))
+        state = process.deserialize_array("state", np.complex128)
+        return cls(state_format, state)

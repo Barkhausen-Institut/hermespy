@@ -4,7 +4,7 @@ from numpy.testing import assert_array_equal
 
 from hermespy.fec.scrambler import PseudoRandomGenerator
 from hermespy.fec import Scrambler3GPP, Scrambler80211a
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -77,9 +77,9 @@ class TestScrambler3GPP(unittest.TestCase):
         assert_array_equal(data, decoded_data)
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test scrambler serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.scrambler)
+        test_roundtrip_serialization(self, self.scrambler)
 
 
 class TestScrambler80211a(unittest.TestCase):
@@ -153,6 +153,6 @@ class TestScrambler80211a(unittest.TestCase):
         assert_array_equal(expected_data, self.scrambler.decode(scramble))
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test scrambler serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.scrambler)
+        test_roundtrip_serialization(self, self.scrambler)

@@ -8,6 +8,7 @@ from numpy.testing import assert_array_almost_equal
 
 from hermespy.radar import RadarCube
 from unit_tests.utils import SimulationTestContext
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -110,3 +111,8 @@ class TestCube(TestCase):
 
         self.cube.normalize_power()
         self.assertEqual(1, self.cube.data.max())
+
+    def test_serialization(self) -> None:
+        """Test radar cube serialization"""
+        
+        test_roundtrip_serialization(self, self.cube)

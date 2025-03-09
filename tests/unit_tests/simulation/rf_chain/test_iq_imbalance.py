@@ -5,7 +5,7 @@ import numpy as np
 from numpy.testing import assert_array_almost_equal
 
 from hermespy.simulation.rf_chain.rf_chain import RfChain
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -48,9 +48,3 @@ class TestIqImbalance(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             _ = RfChain(None, 3)
-
-    def test_serialization(self) -> None:
-        """Test YAML serialization"""
-
-        rf_chain = RfChain()
-        test_yaml_roundtrip_serialization(self, rf_chain)

@@ -3,14 +3,14 @@
 from __future__ import annotations
 from abc import abstractmethod
 from dataclasses import dataclass
-from enum import Enum, IntEnum
+from enum import IntEnum
 from functools import cache, cached_property
 from math import ceil, sin, cos, sqrt
 from typing import Generator, Generic, Literal, List, Set, Tuple, TypeVar
+from typing_extensions import override
 
 import matplotlib.pyplot as plt
 import numpy as np
-from h5py import Group
 from matplotlib.projections.polar import PolarAxes
 from mpl_toolkits.mplot3d import Axes3D  # type: ignore
 from scipy.constants import pi, speed_of_light
@@ -19,15 +19,18 @@ from hermespy.core import (
     AntennaMode,
     ChannelStateInformation,
     ChannelStateFormat,
+    DeserializationProcess,
     Direction,
     Executable,
-    HDFSerializable,
+    Serializable,
+    SerializableEnum,
+    SerializationProcess,
     ScatterVisualization,
     SignalBlock,
     StemVisualization,
+    VAT,
     VisualizableAttribute,
 )
-from hermespy.core.visualize import VAT
 from hermespy.tools import db2lin
 from ..channel import (
     Channel,
@@ -55,7 +58,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class DelayNormalization(Enum):
+class DelayNormalization(SerializableEnum):
     """Normalization routine applied to a set of sampled delays.
 
     Configuration option to :class:.ClusterDelayLineBase models.
@@ -740,7 +743,7 @@ class ClusterDelayLineSample(ChannelSample):
         )
 
 
-class LargeScaleState(object):
+class LargeScaleState(SerializableEnum):
     """Large scale state of a 3GPP Cluster Delay Line channel model."""
 
     @property
@@ -877,7 +880,7 @@ class ClusterDelayLineSampleParameters(object):
 
 
 @dataclass
-class ClusterDelayLineRealizationParameters(object):
+class ClusterDelayLineRealizationParameters(Serializable):
     """Data class for initialization parameters of a 3GPP Cluster Delay Line channel model realization."""
 
     state_variable: ConsistentUniform
@@ -899,6 +902,51 @@ class ClusterDelayLineRealizationParameters(object):
     angle_coupling_indices: np.ndarray
     cross_polarization_power_variable: ConsistentGaussian
     cross_polarization_phase_variable: ConsistentUniform
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_object(self.state_variable, "state_variable")
+        process.serialize_object(self.delay_normalization, "delay_normalization")
+        process.serialize_integer(self.oxygen_absorption, "oxygen_absorption")
+        process.serialize_array(self.large_scale_parameters, "large_scale_parameters")
+        process.serialize_object(
+            self.cluster_shadowing_log_variable, "cluster_shadowing_log_variable"
+        )
+        process.serialize_object(self.cluster_delays_variable, "cluster_delays_variable")
+        process.serialize_object(
+            self.azimuth_angle_variation_variable, "azimuth_angle_variation_variable"
+        )
+        process.serialize_array(self.azimuth_spread_sign, "azimuth_spread_sign")
+        process.serialize_object(
+            self.zenith_angle_variation_variable, "zenith_angle_variation_variable"
+        )
+        process.serialize_array(self.zenith_spread_sign, "zenith_spread_sign")
+        process.serialize_array(self.angle_coupling_indices, "angle_coupling_indices")
+        process.serialize_object(
+            self.cross_polarization_power_variable, "cross_polarization_power_variable"
+        )
+        process.serialize_object(
+            self.cross_polarization_phase_variable, "cross_polarization_phase_variable"
+        )
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> ClusterDelayLineRealizationParameters:
+        return ClusterDelayLineRealizationParameters(
+            process.deserialize_object("state_variable", ConsistentUniform),
+            process.deserialize_object("delay_normalization", DelayNormalization),
+            bool(process.deserialize_integer("oxygen_absorption")),
+            process.deserialize_array("large_scale_parameters", np.float64),
+            process.deserialize_object("cluster_shadowing_log_variable", ConsistentGaussian),
+            process.deserialize_object("cluster_delays_variable", ConsistentUniform),
+            process.deserialize_object("azimuth_angle_variation_variable", ConsistentGaussian),
+            process.deserialize_array("azimuth_spread_sign", np.int64),
+            process.deserialize_object("zenith_angle_variation_variable", ConsistentGaussian),
+            process.deserialize_array("zenith_spread_sign", np.int64),
+            process.deserialize_array("angle_coupling_indices", np.int64),
+            process.deserialize_object("cross_polarization_power_variable", ConsistentGaussian),
+            process.deserialize_object("cross_polarization_phase_variable", ConsistentUniform),
+        )
 
 
 class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Generic[LSST]):
@@ -1995,15 +2043,46 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
 
         return sample.reciprocal(state)
 
-    def to_HDF(self, group: Group) -> None:
-        self.__state_realization.to_HDF(HDFSerializable._create_group(group, "state_realization"))
-        group.attrs["gain"] = self.gain
-        group.attrs["delay_normalization"] = self.__delay_normalization.value
-        group.attrs["oxygen_absorption"] = self.__oxygen_absorption
-        group.create_dataset("large_scale_parameters", data=self.__large_scale_parameters)
-        group.create_dataset("zenith_spread_sign", data=self.__zenith_spread_sign)
-        group.create_dataset("azimuth_spread_sign", data=self.__azimuth_spread_sign)
-        group.create_dataset("angle_coupling_indices", data=self.__angle_coupling_indices)
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        ChannelRealization.serialize(self, process)
+        if self.expected_state is not None:
+            process.serialize_object(self.expected_state, "expected_state")
+        process.serialize_object(self.__state_realization, "state_realization")
+        process.serialize_object(
+            ClusterDelayLineRealizationParameters(
+                state_variable=self.__state_variable,
+                delay_normalization=self.__delay_normalization,
+                oxygen_absorption=self.__oxygen_absorption,
+                large_scale_parameters=self.__large_scale_parameters,
+                cluster_shadowing_log_variable=self.__cluster_shadowing_log_variable,
+                cluster_delays_variable=self.__cluster_delays_variable,
+                azimuth_angle_variation_variable=self.__azimuth_angle_variation_variable,
+                azimuth_spread_sign=self.__azimuth_spread_sign,
+                zenith_angle_variation_variable=self.__zenith_angle_variation_variable,
+                zenith_spread_sign=self.__zenith_spread_sign,
+                angle_coupling_indices=self.__angle_coupling_indices,
+                cross_polarization_power_variable=self.__xpr_variable,
+                cross_polarization_phase_variable=self.__xpr_phase,
+            ),
+            "parameters",
+        )
+
+    @classmethod
+    @override
+    def _DeserializeParameters(cls, process: DeserializationProcess) -> dict[str, object]:
+        base_parameters = ChannelRealization._DeserializeParameters(process)
+        base_parameters.update(
+            {
+                "state_realization": process.deserialize_object(
+                    "state_realization", ConsistentRealization
+                ),
+                "parameters": process.deserialize_object(
+                    "parameters", ClusterDelayLineRealizationParameters
+                ),
+            }
+        )
+        return base_parameters
 
 
 CDLRT = TypeVar("CDLRT", bound=ClusterDelayLineRealization)
@@ -2013,17 +2092,21 @@ CDLRT = TypeVar("CDLRT", bound=ClusterDelayLineRealization)
 class ClusterDelayLineBase(Channel[CDLRT, ClusterDelayLineSample], Generic[CDLRT, LSST]):
     """Base class for all 3GPP Cluster Delay Line channel models."""
 
+    _DEFAULT_GAIN = 1.0
+    _DEFAULT_DELAY_NORMALIZATION = DelayNormalization.ZERO
+    _DEFAULT_OXYGEN_ABSORPTION = True
+
     __delay_normalization: DelayNormalization
     __oxygen_absorption: bool
     __expected_state: LSST | None
 
     def __init__(
         self,
-        gain: float = 1.0,
-        delay_normalization: DelayNormalization = DelayNormalization.ZERO,
-        oxygen_absorption: bool = True,
+        delay_normalization: DelayNormalization = _DEFAULT_DELAY_NORMALIZATION,
+        oxygen_absorption: bool = _DEFAULT_OXYGEN_ABSORPTION,
         expected_state: LSST | None = None,
-        **kwargs,
+        gain: float = _DEFAULT_GAIN,
+        seed: int | None = None,
     ) -> None:
         """
         Args:
@@ -2043,12 +2126,17 @@ class ClusterDelayLineBase(Channel[CDLRT, ClusterDelayLineSample], Generic[CDLRT
                 Expected large-scale state of the channel.
                 If `None`, the state is randomly generated during each sample of the channel's realization.
 
-            \**kwargs:
-                Additional keyword arguments passed to the base class.
+            gain (float, optional):
+                Linear channel energy gain factor.
+                Initializes the :meth:`gain<gain>` property.
+                :math:`1.0` by default.
+
+            seed (int, optional):
+                Seed used to initialize the pseudo-random number generator.
         """
 
         # Initialize base class
-        Channel.__init__(self, gain, **kwargs)
+        Channel.__init__(self, gain, seed)
 
         # Initialize class attributes
         self.delay_normalization = delay_normalization
@@ -2209,32 +2297,23 @@ class ClusterDelayLineBase(Channel[CDLRT, ClusterDelayLineSample], Generic[CDLRT
             self.__state_generator, self.__parameter_generator, parameters
         )
 
-    @abstractmethod
-    def _recall_specific_realization(
-        self, group: Group, parameters: ClusterDelayLineRealizationParameters
-    ) -> CDLRT: ...  # pragma: no cover
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_floating(self.gain, "gain")
+        process.serialize_object(self.delay_normalization, "delay_normalization")
+        process.serialize_integer(self.oxygen_absorption, "oxygen_absorption")
+        if self.expected_state is not None:
+            process.serialize_object(self.expected_state, "expected_state")
 
-    def recall_realization(self, group: Group) -> CDLRT:
-
-        # Recall the static random variables
-        LSPs = np.array(group["large_scale_parameters"], dtype=np.float64)
-        azimuth_spread_sign = np.array(group["azimuth_spread_sign"], dtype=np.float64)
-        zenith_spread_sign = np.array(group["zenith_spread_sign"], dtype=np.float64)
-        angle_coupling_indices = np.array(group["angle_coupling_indices"], dtype=np.int_)
-
-        parameters = ClusterDelayLineRealizationParameters(
-            self.__state_variable,
-            self.delay_normalization,
-            self.oxygen_absorption,
-            LSPs,
-            self.__cluster_shadowing_log_variable,
-            self.__cluster_delays_variable,
-            self.__azimuth_variation_variable,
-            azimuth_spread_sign,
-            self.__zenith_variation_variable,
-            zenith_spread_sign,
-            angle_coupling_indices,
-            self.__cross_polarization_power_variable,
-            self.__cross_polarization_phase_variable,
-        )
-        return self._recall_specific_realization(group, parameters)
+    @classmethod
+    def _DeserializeParameters(cls, process: DeserializationProcess) -> dict[str, object]:
+        return {
+            "gain": process.deserialize_floating("gain", cls._DEFAULT_GAIN),
+            "delay_normalization": process.deserialize_object(
+                "delay_normalization", DelayNormalization, cls._DEFAULT_DELAY_NORMALIZATION
+            ),
+            "oxygen_absorption": bool(
+                process.deserialize_integer("oxygen_absorption", cls._DEFAULT_OXYGEN_ABSORPTION)
+            ),
+            "expected_state": process.deserialize_object("expected_state", LargeScaleState, None),
+        }

@@ -312,13 +312,13 @@ class TestReciverOperatingCharacteristics(TestCase):
         mock_h1_scenario.mode = ScenarioMode.REPLAY
 
         with self.assertRaises(ValueError):
-            ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario)
+            ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario, 1)
 
         mock_h0_scenario.mode = ScenarioMode.REPLAY
         mock_h1_scenario.mode = ScenarioMode.RECORD
 
         with self.assertRaises(ValueError):
-            ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario)
+            ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario, 1)
 
         mock_h0_scenario.mode = ScenarioMode.REPLAY
         mock_h1_scenario.mode = ScenarioMode.REPLAY
@@ -327,46 +327,46 @@ class TestReciverOperatingCharacteristics(TestCase):
         mock_h1_scenario.num_drops = 1
 
         with self.assertRaises(ValueError):
-            ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario)
+            ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario, 1)
 
         mock_h0_scenario.num_drops = 1
         mock_h1_scenario.num_drops = 0
 
         with self.assertRaises(ValueError):
-            ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario)
+            ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario, 1)
 
         mock_h0_scenario.num_drops = 1
         mock_h1_scenario.num_drops = 1
 
         with self.assertRaises(ValueError):
-            ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario, h0_operator=Mock())
+            ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario, 1, h0_operator=Mock())
 
         mock_h0_scenario.num_operators = 0
 
         with self.assertRaises(ValueError):
-            ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario)
+            ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario, 1)
 
         mock_h0_scenario.num_operators = 1
         mock_h0_scenario.operators = [Mock()]
 
         with self.assertRaises(ValueError):
-            ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario)
+            ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario, 1)
 
         mock_h0_scenario.operators = [Mock(spec=Radar)]
 
         with self.assertRaises(ValueError):
-            ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario, h1_operator=Mock())
+            ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario, 1, h1_operator=Mock())
 
         mock_h1_scenario.num_operators = 0
 
         with self.assertRaises(ValueError):
-            ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario)
+            ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario, 1)
 
         mock_h1_scenario.num_operators = 1
         mock_h1_scenario.operators = [Mock()]
 
         with self.assertRaises(ValueError):
-            ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario)
+            ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario, 1)
 
     @patch('hermespy.simulation.scenario.SimulationScenario.mode', ScenarioMode.REPLAY)
     @patch('hermespy.simulation.scenario.SimulationScenario.num_drops', 2)
@@ -378,25 +378,27 @@ class TestReciverOperatingCharacteristics(TestCase):
 
         with patch.object(self.scenario, 'drop') as drop_mock:
             drop_mock.side_effect = self.scenario._drop
-            result = ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario)
+            result = ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario, 1)
     
         self.assertIsInstance(result, RocEvaluationResult)
 
-    def test_from_hdf(self) -> None:
-        """Recall ROC from HDF should be properly handled"""
+    def test_from_file(self) -> None:
+        """Recalling ROCs from the filesystem should be properly handled"""
 
         with TemporaryDirectory() as tempdir:
             file_path = join(tempdir, "test.hdf")
 
             self.scenario.record(file_path, campaign="h0_measurements")
-            self.scenario.drop()
+            for _ in range(3):
+                self.scenario.drop()
             self.scenario.stop()
 
             self.scenario.record(file_path, campaign="h1_measurements")
-            self.scenario.drop()
+            for _ in range(3):
+                self.scenario.drop()
             self.scenario.stop()
 
-            result = ReceiverOperatingCharacteristic.From_HDF(file_path, "h0_measurements", "h1_measurements")
+            result = ReceiverOperatingCharacteristic.FromFile(file_path, "h0_measurements", "h1_measurements")
 
         self.assertIsInstance(result, RocEvaluationResult)
 

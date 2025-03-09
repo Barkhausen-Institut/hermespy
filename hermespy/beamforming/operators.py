@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
+from typing_extensions import override
 
 from hermespy.core import (
+    DeserializationProcess,
     ReceiveState,
     Reception,
     Serializable,
+    SerializationProcess,
     Signal,
     SignalTransmitter,
     SignalReceiver,
@@ -59,6 +62,7 @@ class BeamformingTransmitter(SignalTransmitter):
     def beamformer(self, value: TransmitBeamformer) -> None:
         self.__beamformer = value
 
+    @override
     def _transmit(self, device: TransmitState, duration: float) -> Transmission:
         # Generate base transmission
         base_transmission = SignalTransmitter._transmit(self, device, duration)
@@ -71,11 +75,22 @@ class BeamformingTransmitter(SignalTransmitter):
         # Return transmission
         return Transmission(beamformed_signal)
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_object(self.beamformer, "beamformer")
+        process.serialize_object(self.signal, "signal")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> BeamformingTransmitter:
+        return BeamformingTransmitter(
+            process.deserialize_object("signal"), process.deserialize_object("beamformer")
+        )
+
 
 class BeamformingReceiver(SignalReceiver, Serializable):
     """Signal receiver with digital beamforming capabilities."""
 
-    yaml_tag = "BeamformingReceiver"
     __beamformer: ReceiveBeamformer
 
     def __init__(
@@ -120,6 +135,7 @@ class BeamformingReceiver(SignalReceiver, Serializable):
     def beamformer(self, value: ReceiveBeamformer) -> None:
         self.__beamformer = value
 
+    @override
     def _receive(self, signal: Signal, device: ReceiveState) -> Reception:
         # Receive base reception
         base_reception = SignalReceiver._receive(self, signal, device)
@@ -133,3 +149,18 @@ class BeamformingReceiver(SignalReceiver, Serializable):
 
         # Return reception
         return Reception(beamformed_signal)
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        SignalReceiver.serialize(self, process)
+        process.serialize_object(self.beamformer, "beamformer")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> BeamformingReceiver:
+        return BeamformingReceiver(
+            process.deserialize_object("beamformer"),
+            process.deserialize_integer("num_samples"),
+            process.deserialize_floating("sampling_rate"),
+            process.deserialize_floating("expected_power"),
+        )

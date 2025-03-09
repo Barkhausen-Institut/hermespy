@@ -12,7 +12,7 @@ from numpy.random import default_rng
 from hermespy.channel import IdealChannel
 from hermespy.core import Signal
 from hermespy.simulation import SimulatedDevice, SimulatedUniformArray, SimulatedIdealAntenna
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 from unit_tests.utils import assert_signals_equal
 
 __author__ = "Andre Noll Barreto"
@@ -213,24 +213,7 @@ class TestIdealChannel(unittest.TestCase):
                 assert_signals_equal(self, forwards_propagation, expected_csi_signal)
                 assert_signals_equal(self, backwards_propagation, expected_csi_signal)
 
-    def test_recall_realization(self) -> None:
-        """Test realization recall"""
-
-        file = File("test.h5", "w", driver="core", backing_store=False)
-        group = file.create_group("g")
-
-        expected_realization = self.channel.realize()
-        expected_realization.to_HDF(group)
-
-        recalled_realization = self.channel.recall_realization(group)
-        file.close()
-
-        self.assertEqual(expected_realization.gain, recalled_realization.gain)
-
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test ideal channel serialization"""
 
-        with patch("hermespy.channel.Channel.random_mother", new_callable=PropertyMock) as random_mock:
-            random_mock.return_value = None
-
-            test_yaml_roundtrip_serialization(self, self.channel)
+        test_roundtrip_serialization(self, self.channel, {'random_mother'})

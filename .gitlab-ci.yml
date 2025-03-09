@@ -74,7 +74,7 @@ Unit Testing:
     - unzip dist/$HERMES_WHEEL_11 "hermespy/fec/aff3ct/*.so"
     - pip install -qq pyzmq>=25.1.1 usrp-uhd-client memray>=1.11.0
   script:
-    - coverage run --include=hermespy/* ./tests/test_install.py ./tests/unit_tests/
+    - coverage run --include=hermespy/* ./tests/test_install.py unit_tests
   after_script:
     - coverage xml
     - coverage report -m --include=hermespy/* --skip-covered
@@ -96,7 +96,7 @@ Integration Testing:
     - pip install -qq dist/$HERMES_WHEEL_11\[test,quadriga,audio,sionna,scapy\]
     - pip install -qq memray
   script:
-    - python ./tests/test_install.py ./tests/integration_tests/
+    - python ./tests/test_install.py integration_tests
   artifacts:
     paths:
       - ./scripts/performance/results/integration_tests/results.json
@@ -110,7 +110,7 @@ Integrity Python 3.12:
     - pip install -qq dist/$HERMES_WHEEL_12\[test,quadriga,audio\]
     - pip install -qq memray
   script:
-    - python ./tests/test_install.py ./tests/integrity_tests/ 
+    - python ./tests/test_install.py integrity_tests
   artifacts:
     paths:
       - ./scripts/performance/results/integration_tests/results.json
@@ -125,7 +125,7 @@ Integrity Python 3.11:
     - pip install -qq dist/$HERMES_WHEEL_11\[test,quadriga,audio\]
     - pip install -qq memray
   script:
-    - python ./tests/test_install.py ./tests/integrity_tests/
+    - python ./tests/test_install.py integrity_tests
   artifacts:
     paths:
       - ./scripts/performance/results/integration_tests/results.json
@@ -140,7 +140,7 @@ Integrity Python 3.10:
     - pip install -qq dist/$HERMES_WHEEL_10\[test,quadriga,audio\]
     - pip install -qq memray
   script:
-    - python ./tests/test_install.py ./tests/integrity_tests/ 
+    - python ./tests/test_install.py integrity_tests
   artifacts:
     paths:
       - ./scripts/performance/results/integration_tests/results.json

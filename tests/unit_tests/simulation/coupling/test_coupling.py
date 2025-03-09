@@ -26,6 +26,13 @@ class MockCoupling(Coupling):
 
     def _receive(self, signal: Signal) -> Signal:
         return signal
+    
+    def serialize(self, process):
+        pass
+
+    @classmethod
+    def deserialize(cls, process):
+        return cls()
 
 
 class TestCoupling(TestCase):

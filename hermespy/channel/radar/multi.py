@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import List, Set, Sequence
+from typing_extensions import override
 
 import numpy as np
-from h5py import Group
 
-from hermespy.core import Direction, HDFSerializable, Serializable
+from hermespy.core import DeserializationProcess, Direction, Serializable, SerializationProcess
 from hermespy.simulation.animation import Moveable, Trajectory, TrajectorySample
 from ..channel import ChannelSampleHook, LinkState
 from ..consistent import ConsistentGenerator, ConsistentRealization, ConsistentUniform
@@ -30,15 +30,17 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class RadarTarget(ABC):
+class RadarTarget(Serializable):
     """Abstract base class of radar targets.
 
     Radar targets represent reflectors of electromagnetic waves within :class:`RadarChannelBase<hermespy.channel.radar.radar.RadarChannelBase>` instances.
     """
 
+    _DEFAULT_STATIC = False
+
     __static: bool
 
-    def __init__(self, static: bool = False) -> None:
+    def __init__(self, static: bool = _DEFAULT_STATIC) -> None:
         """
         Args:
 
@@ -89,8 +91,16 @@ class RadarTarget(ABC):
 
         return self.__static
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_integer(self.static, "static")
 
-class RadarCrossSectionModel(ABC):
+    @classmethod
+    def _DeserializeParameters(cls, process: DeserializationProcess) -> dict[str, object]:
+        return {"static": bool(process.deserialize_integer("static", cls._DEFAULT_STATIC))}
+
+
+class RadarCrossSectionModel(Serializable):
     """Base class for spatial radar cross section models."""
 
     @abstractmethod
@@ -150,14 +160,22 @@ class FixedCrossSection(RadarCrossSectionModel):
 
         self.__cross_section = value
 
+    @override
     def get_cross_section(self, _: Direction, __: Direction) -> float:
         return self.__cross_section
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_floating(self.cross_section, "cross_section")
 
-class VirtualRadarTarget(Moveable, RadarTarget, Serializable):
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> FixedCrossSection:
+        return cls(process.deserialize_floating("cross_section"))
+
+
+class VirtualRadarTarget(Moveable, RadarTarget):
     """Model of a spatial radar target only existing within a channe link."""
-
-    yaml_tag = "VirtualTarget"
 
     __cross_section: RadarCrossSectionModel
 
@@ -165,7 +183,7 @@ class VirtualRadarTarget(Moveable, RadarTarget, Serializable):
         self,
         cross_section: RadarCrossSectionModel,
         trajectory: Trajectory | None = None,
-        static: bool = False,
+        static: bool = RadarTarget._DEFAULT_STATIC,
     ) -> None:
         """
         Args:
@@ -184,8 +202,7 @@ class VirtualRadarTarget(Moveable, RadarTarget, Serializable):
 
         # Initialize base classes
         Moveable.__init__(self, trajectory)
-        RadarTarget.__init__(self, static=static)
-        Serializable.__init__(self)
+        RadarTarget.__init__(self, static)
 
         # Initialize class attributes
         self.cross_section = cross_section
@@ -200,13 +217,30 @@ class VirtualRadarTarget(Moveable, RadarTarget, Serializable):
     def cross_section(self, value: RadarCrossSectionModel) -> None:
         self.__cross_section = value
 
+    @override
     def sample_cross_section(
         self, impinging_direction: Direction, emerging_direction: Direction
     ) -> float:
         return self.cross_section.get_cross_section(impinging_direction, emerging_direction)
 
+    @override
     def sample_trajectory(self, timestamp: float) -> TrajectorySample:
         return self.trajectory.sample(timestamp)
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        RadarTarget.serialize(self, process)
+        process.serialize_object(self.cross_section, "cross_section")
+        process.serialize_object(self.trajectory, "trajectory")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> VirtualRadarTarget:
+        return cls(
+            process.deserialize_object("cross_section", RadarCrossSectionModel),
+            process.deserialize_object("trajectory", Trajectory),
+            **RadarTarget._DeserializeParameters(process),  # type: ignore[arg-type]
+        )
 
 
 class PhysicalRadarTarget(RadarTarget, Serializable):
@@ -215,13 +249,14 @@ class PhysicalRadarTarget(RadarTarget, Serializable):
     The radar target will always be modeled at its moveable global position.
     """
 
-    yaml_tag = "PhysicalTarget"
-
     __cross_section: RadarCrossSectionModel
     __moveable: Moveable
 
     def __init__(
-        self, cross_section: RadarCrossSectionModel, moveable: Moveable, static: bool = False
+        self,
+        cross_section: RadarCrossSectionModel,
+        moveable: Moveable,
+        static: bool = RadarTarget._DEFAULT_STATIC,
     ) -> None:
         """
         Args:
@@ -238,8 +273,7 @@ class PhysicalRadarTarget(RadarTarget, Serializable):
         """
 
         # Initialize base classes
-        RadarTarget.__init__(self, static=static)
-        Serializable.__init__(self)
+        RadarTarget.__init__(self, static)
 
         # Initialize properties
         self.cross_section = cross_section
@@ -264,13 +298,30 @@ class PhysicalRadarTarget(RadarTarget, Serializable):
 
         return self.__moveable
 
+    @override
     def sample_cross_section(
         self, impinging_direction: Direction, emerging_direction: Direction
     ) -> float:
         return self.cross_section.get_cross_section(impinging_direction, emerging_direction)
 
+    @override
     def sample_trajectory(self, timestamp: float) -> TrajectorySample:
         return self.moveable.trajectory.sample(timestamp)
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        RadarTarget.serialize(self, process)
+        process.serialize_object(self.cross_section, "cross_section")
+        process.serialize_object(self.moveable, "moveable")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> PhysicalRadarTarget:
+        return cls(
+            process.deserialize_object("cross_section", RadarCrossSectionModel),
+            process.deserialize_object("moveable", Moveable),
+            **RadarTarget._DeserializeParameters(process),  # type: ignore[arg-type]
+        )
 
 
 class MultiTargetRadarChannelRealization(RadarChannelRealization):
@@ -279,7 +330,11 @@ class MultiTargetRadarChannelRealization(RadarChannelRealization):
     Generated by the :meth:`realize<MultiTargetRadarChannel.realize>` method of :class:`MultiTargetRadarChannel`.
     """
 
-    __target_realizations: Sequence[RadarTargetPath]
+    __consistent_realization: ConsistentRealization
+    __phase_variable: ConsistentUniform
+    __targets: Set[RadarTarget]
+    __interference: bool
+    __attenuate: bool
 
     def __init__(
         self,
@@ -368,6 +423,7 @@ class MultiTargetRadarChannelRealization(RadarChannelRealization):
             target.static,
         )
 
+    @override
     def _generate_paths(self, state: LinkState) -> Sequence[RadarPath]:
 
         paths: List[RadarPath] = [self.__sample_target(target, state) for target in self.__targets]
@@ -377,43 +433,33 @@ class MultiTargetRadarChannelRealization(RadarChannelRealization):
 
         return paths
 
-    def to_HDF(self, group: Group) -> None:
-        self.__consistent_realization.to_HDF(
-            HDFSerializable._create_group(group, "consistent_realization")
-        )
-        group.attrs["gain"] = self.gain
-        group.attrs["attenuate"] = self.__attenuate
-        group.attrs["interference"] = self.__interference
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        RadarChannelRealization.serialize(self, process)
+        process.serialize_object(self.__consistent_realization, "consistent_realization")
+        process.serialize_object(self.__phase_variable, "phase_variable")
+        process.serialize_object_sequence(list(self.__targets), "targets")
+        process.serialize_integer(self.__interference, "interference")
+        process.serialize_integer(self.__attenuate, "attenuate")
 
-    @staticmethod
-    def From_HDF(
-        group: Group,
-        phase_variable: ConsistentUniform,
-        targets: Set[RadarTarget],
-        sample_hooks: Set[ChannelSampleHook[RadarChannelSample]],
-    ) -> MultiTargetRadarChannelRealization:
-        consistent_realization = ConsistentRealization.from_HDF(group["consistent_realization"])
-        gain = group.attrs["gain"]
-        attenuate = group.attrs["attenuate"]
-        interference = group.attrs["interference"]
-
-        return MultiTargetRadarChannelRealization(
-            consistent_realization,
-            phase_variable,
-            targets,
-            interference,
-            attenuate,
-            sample_hooks,
-            gain,
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> MultiTargetRadarChannelRealization:
+        return cls(
+            process.deserialize_object("consistent_realization", ConsistentRealization),
+            process.deserialize_object("phase_variable", ConsistentUniform),
+            set(process.deserialize_object_sequence("targets", RadarTarget)),
+            bool(process.deserialize_integer("interference")),
+            bool(process.deserialize_integer("attenuate")),
+            set(),
+            **RadarChannelRealization._DeserializeParameters(process),  # type: ignore[arg-type]
         )
 
 
 class MultiTargetRadarChannel(RadarChannelBase[MultiTargetRadarChannelRealization], Serializable):
     """Model of a spatial radar channel featuring multiple reflecting targets."""
 
-    yaml_tag = "SpatialRadarChannel"
-
-    interfernce: bool
+    interference: bool
     """Consider interference between linked devices.
 
     Only applies in the bistatic case, where transmitter and receiver are two dedicated device instances.
@@ -423,18 +469,14 @@ class MultiTargetRadarChannel(RadarChannelBase[MultiTargetRadarChannelRealizatio
 
     def __init__(
         self,
-        attenuate: bool = True,
         interference: bool = True,
         decorrelation_distance: float = float("inf"),
-        *args,
-        **kwargs,
+        attenuate: bool = RadarChannelBase._DEFAULT_ATTENUATE,
+        gain: float = RadarChannelBase._DEFAULT_GAIN,
+        seed: int | None = None,
     ) -> None:
         """
         Args:
-
-            attenuate (bool, optional):
-                Should the propagated signal be attenuated during propagation modeling?
-                Enabled by default.
 
             interference (bool, optional):
                 Should the channel model consider interference between the linked devices?
@@ -443,11 +485,21 @@ class MultiTargetRadarChannel(RadarChannelBase[MultiTargetRadarChannelRealizatio
             decorrelation_distance (float, optional):
                 Distance at which the channel's random variable realizations are considered uncorrelated.
                 :math:`\\infty` by default, meaning the channel is static in space.
+
+            attenuate (bool, optional):
+                Should the propagated signal be attenuated during propagation modeling?
+                Enabled by default.
+
+            gain (float, optional):
+                Linear power gain factor a signal experiences when being propagated over this realization.
+                :math:`1.0` by default.
+
+            seed (int, optional):
+                Seed used to initialize the pseudo-random number generator.
         """
 
         # Initialize base classes
-        RadarChannelBase.__init__(self, attenuate, *args, **kwargs)
-        Serializable.__init__(self)
+        RadarChannelBase.__init__(self, attenuate, gain, seed)
 
         # Initialize attributes
         self.interference = interference
@@ -533,7 +585,24 @@ class MultiTargetRadarChannel(RadarChannelBase[MultiTargetRadarChannelRealizatio
             self.gain,
         )
 
-    def recall_realization(self, group: Group) -> MultiTargetRadarChannelRealization:
-        return MultiTargetRadarChannelRealization.From_HDF(
-            group, self.__phase_variable, self.targets, self.sample_hooks
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        RadarChannelBase.serialize(self, process)
+        process.serialize_integer(self.interference, "interference")
+        process.serialize_floating(self.decorrelation_distance, "decorrelation_distance")
+        process.serialize_object_sequence(list(self.targets), "targets")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> MultiTargetRadarChannel:
+        instance = cls(
+            interference=bool(process.deserialize_integer("interference", 1)),
+            decorrelation_distance=process.deserialize_floating("decorrelation_distance"),
+            **RadarChannelBase._DeserializeParameters(process),  # type: ignore[arg-type]
         )
+
+        targets = process.deserialize_object_sequence("targets", RadarTarget)
+        for target in targets:
+            instance.add_target(target)
+
+        return instance

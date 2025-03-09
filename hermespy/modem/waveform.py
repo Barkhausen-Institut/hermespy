@@ -3,12 +3,13 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from math import ceil
-from typing import Generic, TYPE_CHECKING, Optional, TypeVar, List
+from typing import Generic, TYPE_CHECKING, TypeVar, List
+from typing_extensions import override
 
 import numpy as np
 from sparse import GCXS  # type: ignore
 
-from hermespy.core import Serializable, Signal
+from hermespy.core import Serializable, Signal, SerializationProcess, DeserializationProcess
 from hermespy.modem.tools.psk_qam_mapping import PskQamMapping
 from .symbols import StatedSymbols, Symbols
 
@@ -29,19 +30,16 @@ CWT = TypeVar("CWT", bound="CommunicationWaveform")
 """Communication waveform type."""
 
 
-class Synchronization(Generic[CWT], ABC, Serializable):
+class Synchronization(Generic[CWT], Serializable):
     """Abstract base class for synchronization routines of waveform generators.
 
     Refer to :footcite:t:`2016:nasir` for an overview of the current state of the art.
     """
 
-    yaml_tag = "Synchronization"
-    property_blacklist = {"waveform"}
-
     # Waveform generator this routine is attached to
-    __waveform: Optional[CWT]
+    __waveform: CWT | None
 
-    def __init__(self, waveform: Optional[CWT] = None) -> None:
+    def __init__(self, waveform: CWT | None = None) -> None:
         """
         Args:
             waveform (CommunicationWaveform, optional):
@@ -51,7 +49,7 @@ class Synchronization(Generic[CWT], ABC, Serializable):
         self.__waveform = waveform
 
     @property
-    def waveform(self) -> Optional[CWT]:
+    def waveform(self) -> CWT | None:
         """Waveform generator this synchronization routine is attached to.
 
         Returns:
@@ -62,7 +60,7 @@ class Synchronization(Generic[CWT], ABC, Serializable):
         return self.__waveform
 
     @waveform.setter
-    def waveform(self, value: Optional[CWT]) -> None:
+    def waveform(self, value: CWT | None) -> None:
         """Set waveform generator this synchronization routine is attached to."""
 
         # Un-register this synchronization routine from its previously assigned waveform
@@ -101,14 +99,20 @@ class Synchronization(Generic[CWT], ABC, Serializable):
 
         return list(range(0, num_frames * samples_per_frame, samples_per_frame))
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        pass
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> Synchronization:
+        return cls()
+
 
 class ChannelEstimation(Generic[CWT], Serializable):
     """Base class for channel estimation routines of waveform generators."""
 
-    yaml_tag = "NoChannelEstimation"
-    property_blacklist = {"waveform"}
-
-    def __init__(self, waveform: Optional[CWT] = None) -> None:
+    def __init__(self, waveform: CWT | None = None) -> None:
         """
         Args:
             waveform (CommunicationWaveform, optional):
@@ -118,7 +122,7 @@ class ChannelEstimation(Generic[CWT], Serializable):
         self.__waveform = waveform
 
     @property
-    def waveform(self) -> Optional[CWT]:
+    def waveform(self) -> CWT | None:
         """Waveform generator this synchronization routine is attached to.
 
         Returns:
@@ -129,7 +133,7 @@ class ChannelEstimation(Generic[CWT], Serializable):
         return self.__waveform
 
     @waveform.setter
-    def waveform(self, value: Optional[CWT]) -> None:
+    def waveform(self, value: CWT | None) -> None:
         """Set waveform generator this synchronization routine is attached to."""
 
         if value is None:
@@ -167,14 +171,20 @@ class ChannelEstimation(Generic[CWT], Serializable):
         )
         return StatedSymbols(symbols.raw, state)
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        pass
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> ChannelEstimation:
+        return cls()
+
 
 class ChannelEqualization(Generic[CWT], ABC, Serializable):
     """Abstract base class for channel equalization routines of waveform generators."""
 
-    yaml_tag = "NoEqualization"
-    property_blacklist = {"waveform"}
-
-    def __init__(self, waveform: Optional[CWT] = None) -> None:
+    def __init__(self, waveform: CWT | None = None) -> None:
         """
         Args:
             waveform (CommunicationWaveform, optional):
@@ -184,7 +194,7 @@ class ChannelEqualization(Generic[CWT], ABC, Serializable):
         self.__waveform = waveform
 
     @property
-    def waveform(self) -> Optional[CWT]:
+    def waveform(self) -> CWT | None:
         """Waveform generator this equalization routine is attached to.
 
         Returns:
@@ -195,7 +205,7 @@ class ChannelEqualization(Generic[CWT], ABC, Serializable):
         return self.__waveform
 
     @waveform.setter
-    def waveform(self, value: Optional[CWT]) -> None:
+    def waveform(self, value: CWT | None) -> None:
         """Set waveform generator this equalization routine is attached to."""
 
         if self.__waveform is not None:
@@ -216,12 +226,18 @@ class ChannelEqualization(Generic[CWT], ABC, Serializable):
         # The default routine performs no equalization
         return stated_symbols
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        pass
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> ChannelEqualization:
+        return cls()
+
 
 class ZeroForcingChannelEqualization(Generic[CWT], ChannelEqualization[CWT], Serializable):
     """Zero-Forcing channel equalization for arbitrary waveforms."""
-
-    yaml_tag = "ZF"
-    """YAML serialization tag"""
 
     def equalize_channel(self, symbols: StatedSymbols) -> Symbols:
         equalized_symbols: np.ndarray
@@ -240,12 +256,13 @@ class ZeroForcingChannelEqualization(Generic[CWT], ChannelEqualization[CWT], Ser
 class CommunicationWaveform(ABC, Serializable):
     """Abstract base class for all communication waveform descriptions."""
 
-    property_blacklist = {"modem"}
-
     symbol_type: type = np.complex128
     """Symbol type."""
 
-    __modem: Optional[BaseModem]
+    __DEFAULT_MODULATION_ORDER: int = 16  # Default modulation order
+    __DEFAULT_OVERSAMPLING_FACTOR: int = 1  # Default oversampling factor
+
+    __modem: BaseModem | None  # Modem this generator is attached to
     __synchronization: Synchronization  # Synchronization routine
     __channel_estimation: ChannelEstimation  # Channel estimation routine
     __channel_equalization: ChannelEqualization  # Channel equalization routine
@@ -254,11 +271,12 @@ class CommunicationWaveform(ABC, Serializable):
 
     def __init__(
         self,
-        modem: Optional[BaseModem] = None,
-        oversampling_factor: int = 1,
-        modulation_order: int = 16,
+        modem: BaseModem | None = None,
+        oversampling_factor: int = __DEFAULT_OVERSAMPLING_FACTOR,
+        modulation_order: int = __DEFAULT_MODULATION_ORDER,
         channel_estimation: ChannelEstimation | None = None,
         channel_equalization: ChannelEqualization | None = None,
+        synchronization: Synchronization | None = None,
     ) -> None:
         """
         Args:
@@ -278,13 +296,17 @@ class CommunicationWaveform(ABC, Serializable):
 
             channel_equalization (ChannelEqualization, optional):
                 Channel equalization algorithm. If not specified, no symbol equalization is performed.
+
+            synchronization (Synchronization, optional):
+                Time-domain synchronization routine.
+                If not specified, no synchronization is performed.
         """
 
         # Default parameters
         self.__modem = None
         self.oversampling_factor = oversampling_factor
         self.modulation_order = modulation_order
-        self.synchronization = Synchronization(self)
+        self.synchronization = Synchronization(self) if synchronization is None else synchronization
         self.channel_estimation = (
             ChannelEstimation(self) if channel_estimation is None else channel_estimation
         )
@@ -564,7 +586,7 @@ class CommunicationWaveform(ABC, Serializable):
         return bits / time
 
     @property
-    def modem(self) -> Optional[BaseModem]:
+    def modem(self) -> BaseModem | None:
         """Access the modem this generator is attached to.
 
         Returns: A handle to the modem.
@@ -669,6 +691,43 @@ class CommunicationWaveform(ABC, Serializable):
 
         return True
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_integer(self.oversampling_factor, "oversampling_factor")
+        process.serialize_integer(self.modulation_order, "modulation_order")
+        process.serialize_object(self.synchronization, "synchronization")
+        process.serialize_object(self.channel_estimation, "channel_estimation")
+        process.serialize_object(self.channel_equalization, "channel_equalization")
+
+    @classmethod
+    def _DeserializeParameters(cls, process: DeserializationProcess) -> dict[str, object]:
+        """Deserialize the initialization paramters of the communication waveform base class.
+
+        Args:
+
+            process (DeserializationProcess):
+                The deserialization process.
+
+        Returns:
+            dict[str, object]: The deserialized parameters.
+        """
+
+        return {
+            "oversampling_factor": process.deserialize_integer(
+                "oversampling_factor", cls.__DEFAULT_OVERSAMPLING_FACTOR
+            ),
+            "modulation_order": process.deserialize_integer(
+                "modulation_order", cls.__DEFAULT_MODULATION_ORDER
+            ),
+            "synchronization": process.deserialize_object("synchronization", Synchronization),
+            "channel_estimation": process.deserialize_object(
+                "channel_estimation", ChannelEstimation
+            ),
+            "channel_equalization": process.deserialize_object(
+                "channel_equalization", ChannelEqualization
+            ),
+        }
+
 
 class PilotCommunicationWaveform(CommunicationWaveform):
     """Abstract base class of communication waveform generators generating a pilot signal."""
@@ -684,7 +743,7 @@ class PilotCommunicationWaveform(CommunicationWaveform):
         ...  # pragma: no cover
 
 
-class PilotSymbolSequence(ABC):
+class PilotSymbolSequence(Serializable):
     """Abstract base class for pilot sequences."""
 
     @property
@@ -707,9 +766,11 @@ class UniformPilotSymbolSequence(PilotSymbolSequence):
     Not advisable to be used in production scenarios.
     """
 
+    __DEFAULT_PILOT_SYMBOL: complex = 1.0 + 0.0j  # Default pilot symbol
+
     __pilot_symbol: complex  # The configured pilot symbol
 
-    def __init__(self, pilot_symbol: complex = 1.0 + 0.0j) -> None:
+    def __init__(self, pilot_symbol: complex = __DEFAULT_PILOT_SYMBOL) -> None:
         """
         Args:
 
@@ -721,8 +782,23 @@ class UniformPilotSymbolSequence(PilotSymbolSequence):
         self.__pilot_symbol = pilot_symbol
 
     @property
+    @override
     def sequence(self) -> np.ndarray:
         return np.array([self.__pilot_symbol], dtype=complex)
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_array(
+            np.array([self.__pilot_symbol], dtype=np.complex128), "pilot_symbol"
+        )
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> UniformPilotSymbolSequence:
+        pilot_symbol = process.deserialize_array(
+            "pilot_symbol", np.complex128, np.array([cls.__DEFAULT_PILOT_SYMBOL])
+        )[0]
+        return UniformPilotSymbolSequence(pilot_symbol)
 
 
 class CustomPilotSymbolSequence(PilotSymbolSequence):
@@ -746,6 +822,16 @@ class CustomPilotSymbolSequence(PilotSymbolSequence):
     @property
     def sequence(self) -> np.ndarray:
         return self.__pilot_symbols
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_array(self.__pilot_symbols, "pilot_symbols")
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> CustomPilotSymbolSequence:
+        pilot_symbols = process.deserialize_array("pilot_symbols", np.complex128)
+        return CustomPilotSymbolSequence(pilot_symbols)
 
 
 class MappedPilotSymbolSequence(CustomPilotSymbolSequence):

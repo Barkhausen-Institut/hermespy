@@ -2,18 +2,17 @@
 """Test Channel State Information model for wireless transmission links"""
 
 from os import path
-from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import MagicMock, patch, PropertyMock
 
 import numpy as np
-from h5py import File
 from numpy import exp
 from numpy.random import default_rng
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.constants import pi
 
 from hermespy.core import ChannelStateDimension, ChannelStateInformation, ChannelStateFormat
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -236,21 +235,8 @@ class TestChannelStateInformation(TestCase):
 
         assert_array_equal(expected_csi.state, self.csi.state)
 
-    def test_hdf_serialization(self) -> None:
-        """Serialization to and from HDF5 should yield the correct object reconstruction"""
+    def test_serialization(self) -> None:
+        """Test channel state information serialization"""
 
-        csi: ChannelStateInformation = None
+        test_roundtrip_serialization(self, self.csi)
 
-        with TemporaryDirectory() as tempdir:
-            file_location = path.join(tempdir, "testfile.hdf5")
-
-            with File(file_location, "a") as file:
-                group = file.create_group("testgroup")
-                self.csi.to_HDF(group)
-
-            with File(file_location, "r") as file:
-                group = file["testgroup"]
-                csi = self.csi.from_HDF(group)
-
-        assert_array_equal(self.csi.state, csi.state)
-        self.assertEqual(self.csi.state_format, csi.state_format)

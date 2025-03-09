@@ -2,12 +2,20 @@
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Any, Optional, Set
+from typing import Any
+from typing_extensions import override
 
 import matplotlib.pyplot as plt
 import numpy as np
 
-from hermespy.core import Executable, FloatingError, Serializable, Signal
+from hermespy.core import (
+    Executable,
+    FloatingError,
+    Serializable,
+    Signal,
+    SerializationProcess,
+    DeserializationProcess,
+)
 from .waveform import (
     ConfigurablePilotWaveform,
     MappedPilotSymbolSequence,
@@ -46,6 +54,11 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
     - no equalization (only amplitude and phase of first propagation path is compensated)
     """
 
+    __DEFAULT_NUM_POSTAMBLE_SYMBOLS: int = 0  # Default number of postamble symbols
+    __DEFAULT_PILOT_RATE: int = 0  # Default pilot rate
+    __DEFAULT_GUARD_INTERVAL: float = 0.0  # Default guard interval
+    __DEFAULT_OVERSAMPLING_FACTOR: int = 4  # Default oversampling factor
+
     __symbol_rate: float
     __num_preamble_symbols: int
     __num_data_symbols: int
@@ -53,19 +66,19 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
     __guard_interval: float
     __mapping: PskQamMapping
     __pilot_rate: int
-    _data_symbol_idx: Optional[np.ndarray]
-    _pulse_correlation_matrix: Optional[np.ndarray]
+    _data_symbol_idx: np.ndarray | None
+    _pulse_correlation_matrix: np.ndarray | None
 
     def __init__(
         self,
         symbol_rate: float,
         num_preamble_symbols: int,
         num_data_symbols: int,
-        num_postamble_symbols: int = 0,
-        pilot_rate: int = 0,
-        guard_interval: float = 0.0,
-        oversampling_factor: int = 4,
-        pilot_symbol_sequence: Optional[PilotSymbolSequence] = None,
+        num_postamble_symbols: int = __DEFAULT_NUM_POSTAMBLE_SYMBOLS,
+        pilot_rate: int = __DEFAULT_PILOT_RATE,
+        guard_interval: float = __DEFAULT_GUARD_INTERVAL,
+        oversampling_factor: int = __DEFAULT_OVERSAMPLING_FACTOR,
+        pilot_symbol_sequence: PilotSymbolSequence | None = None,
         repeat_pilot_symbol_sequence: bool = True,
         **kwargs: Any,
     ) -> None:
@@ -246,12 +259,15 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
             np.convolve(pilot_symbols, self._transmit_filter()), sampling_rate=self.sampling_rate
         )
 
+    @override
     def map(self, bits: np.ndarray) -> Symbols:
         return Symbols(self.__mapping.get_symbols(bits))
 
+    @override
     def unmap(self, symbols: Symbols) -> np.ndarray:
         return self.__mapping.detect_bits(symbols.raw.flatten())
 
+    @override
     def place(self, data_symbols: Symbols) -> Symbols:
         # Generate pilot symbol sequences
         pilot_symbols = self.pilot_symbols(
@@ -278,6 +294,7 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
 
         return Symbols(placed_symbols[np.newaxis, :, np.newaxis])
 
+    @override
     def pick(self, symbols: StatedSymbols) -> StatedSymbols:
         data_block_indices = self.num_preamble_symbols + self._data_symbol_indices
         picked_symbol_blocks = symbols.raw[:, data_block_indices, :]
@@ -285,6 +302,7 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
 
         return StatedSymbols(picked_symbol_blocks, picked_state_blocks)
 
+    @override
     def modulate(self, symbols: Symbols) -> np.ndarray:
         frame = np.zeros(
             1 + (self._num_frame_symbols - 1) * self.oversampling_factor, dtype=complex
@@ -295,6 +313,7 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
         output_signal = np.convolve(frame, self._transmit_filter())
         return output_signal
 
+    @override
     def demodulate(self, signal: np.ndarray) -> Symbols:
         # Query filters
         filter_delay = self._filter_delay
@@ -445,22 +464,27 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
         ) * self.oversampling_factor + self._transmit_filter().shape[0]
 
     @property
+    @override
     def symbol_duration(self) -> float:
         return 1 / self.symbol_rate
 
     @property
+    @override
     def bit_energy(self) -> float:
         return 1 / self.bits_per_symbol
 
     @property
+    @override
     def symbol_energy(self) -> float:
         return 1.0
 
     @property
+    @override
     def power(self) -> float:
         return 1 / self.oversampling_factor
 
     @property
+    @override
     def sampling_rate(self) -> float:
         return self.symbol_rate * self.oversampling_factor
 
@@ -502,21 +526,50 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
 
         return fig
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        ConfigurablePilotWaveform.serialize(self, process)
+        process.serialize_floating(self.symbol_rate, "symbol_rate")
+        process.serialize_integer(self.num_preamble_symbols, "num_preamble_symbols")
+        process.serialize_integer(self.num_data_symbols, "num_data_symbols")
+        process.serialize_integer(self.num_postamble_symbols, "num_postamble_symbols")
+        process.serialize_floating(self.guard_interval, "guard_interval")
+        process.serialize_integer(self.pilot_rate, "pilot_rate")
+
+    @override
+    @classmethod
+    def _DeserializeParameters(cls, process: DeserializationProcess) -> dict[str, Any]:
+        parameters = ConfigurablePilotWaveform._DeserializeParameters(process)
+        parameters["symbol_rate"] = process.deserialize_floating("symbol_rate")
+        parameters["num_preamble_symbols"] = process.deserialize_integer("num_preamble_symbols")
+        parameters["num_data_symbols"] = process.deserialize_integer("num_data_symbols")
+        parameters["num_postamble_symbols"] = process.deserialize_integer(
+            "num_postamble_symbols", cls.__DEFAULT_NUM_POSTAMBLE_SYMBOLS
+        )
+        parameters["guard_interval"] = process.deserialize_floating(
+            "guard_interval", cls.__DEFAULT_GUARD_INTERVAL
+        )
+        parameters["pilot_rate"] = process.deserialize_integer(
+            "pilot_rate", cls.__DEFAULT_PILOT_RATE
+        )
+        return parameters
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> FilteredSingleCarrierWaveform:
+        return cls(**cls._DeserializeParameters(process))
+
 
 class SingleCarrierCorrelationSynchronization(
     CorrelationSynchronization[FilteredSingleCarrierWaveform]
 ):
     """Correlation-based clock-synchronization for PSK-QAM waveforms."""
 
-    yaml_tag = "SC-Correlation"
-
 
 class SingleCarrierChannelEstimation(ChannelEstimation[FilteredSingleCarrierWaveform], ABC):
     """Channel estimation for Psk Qam waveforms."""
 
-    def __init__(
-        self, waveform: Optional[FilteredSingleCarrierWaveform] = None, *args: Any
-    ) -> None:
+    def __init__(self, waveform: FilteredSingleCarrierWaveform | None = None) -> None:
         """
         Args:
 
@@ -530,12 +583,7 @@ class SingleCarrierChannelEstimation(ChannelEstimation[FilteredSingleCarrierWave
 class SingleCarrierLeastSquaresChannelEstimation(SingleCarrierChannelEstimation):
     """Least-Squares channel estimation for Psk Qam waveforms."""
 
-    yaml_tag = "SC-LS"
-    """YAML serialization tag"""
-
-    def __init__(
-        self, waveform: Optional[FilteredSingleCarrierWaveform] = None, *args: Any
-    ) -> None:
+    def __init__(self, waveform: FilteredSingleCarrierWaveform | None = None) -> None:
         """
         Args:
 
@@ -595,7 +643,7 @@ class SingleCarrierLeastSquaresChannelEstimation(SingleCarrierChannelEstimation)
 class SingleCarrierChannelEqualization(ChannelEqualization[FilteredSingleCarrierWaveform], ABC):
     """Channel estimation for Psk Qam waveforms."""
 
-    def __init__(self, waveform: Optional[FilteredSingleCarrierWaveform] = None) -> None:
+    def __init__(self, waveform: FilteredSingleCarrierWaveform | None = None) -> None:
         """
         Args:
 
@@ -611,17 +659,11 @@ class SingleCarrierZeroForcingChannelEqualization(
 ):
     """Zero-Forcing Channel estimation for Psk Qam waveforms."""
 
-    yaml_tag = "SC-ZF"
-    """YAML serialization tag"""
-
 
 class SingleCarrierMinimumMeanSquareChannelEqualization(SingleCarrierChannelEqualization, ABC):
     """Minimum-Mean-Square Channel estimation for Psk Qam waveforms."""
 
-    yaml_tag = "SC-MMSE"
-    """YAML serialization tag"""
-
-    def __init__(self, waveform: Optional[FilteredSingleCarrierWaveform] = None) -> None:
+    def __init__(self, waveform: FilteredSingleCarrierWaveform | None = None) -> None:
         """
         Args:
 
@@ -662,20 +704,20 @@ class SingleCarrierMinimumMeanSquareChannelEqualization(SingleCarrierChannelEqua
 class RolledOffSingleCarrierWaveform(FilteredSingleCarrierWaveform):
     """Base class for single carrier waveforms applying linear filters longer than a single symbol duration."""
 
+    __DEFAULT_RELATIVE_BANDWIDTH: float = 1.0  # Default pulse bandwidth relative to the symbol rate
+    __DEFAULT_ROLL_OFF: float = 0.0  # Default filter pulse roll off factor
+    __DEFAULT_FILTER_LENGTH: int = 16  # Default filter length in modulation symbols
+
     # Pulse bandwidth relative to the configured symbol rate
     __relative_bandwidth: float
     __roll_off: float  # Filter pulse roll off factor
     __filter_length: int  # Filter length in modulation symbols
 
-    @staticmethod
-    def _arg_signature() -> Set[str]:
-        return {"symbol_rate", "num_preamble_symbols", "num_data_symbols"}
-
     def __init__(
         self,
-        relative_bandwidth: float = 1.0,
-        roll_off: float = 0.0,
-        filter_length: int = 16,
+        relative_bandwidth: float = __DEFAULT_RELATIVE_BANDWIDTH,
+        roll_off: float = __DEFAULT_ROLL_OFF,
+        filter_length: int = __DEFAULT_FILTER_LENGTH,
         *args,
         **kwargs,
     ) -> None:
@@ -784,12 +826,29 @@ class RolledOffSingleCarrierWaveform(FilteredSingleCarrierWaveform):
     def _filter_delay(self) -> int:
         return 2 * int(0.5 * self.filter_length) * self.oversampling_factor
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        FilteredSingleCarrierWaveform.serialize(self, process)
+        process.serialize_floating(self.relative_bandwidth, "relative_bandwidth")
+        process.serialize_floating(self.roll_off, "roll_off")
+        process.serialize_integer(self.filter_length, "filter_length")
+
+    @override
+    @classmethod
+    def _DeserializeParameters(cls, process: DeserializationProcess) -> dict[str, Any]:
+        parameters = FilteredSingleCarrierWaveform._DeserializeParameters(process)
+        parameters["relative_bandwidth"] = process.deserialize_floating(
+            "relative_bandwidth", cls.__DEFAULT_RELATIVE_BANDWIDTH
+        )
+        parameters["roll_off"] = process.deserialize_floating("roll_off", cls.__DEFAULT_ROLL_OFF)
+        parameters["filter_length"] = process.deserialize_integer(
+            "filter_length", cls.__DEFAULT_FILTER_LENGTH
+        )
+        return parameters
+
 
 class RootRaisedCosineWaveform(RolledOffSingleCarrierWaveform, Serializable):
     """Root-Raised-Cosine filtered single carrier modulation."""
-
-    yaml_tag = "SC-RootRaisedCosine"
-    """YAML serialization tag"""
 
     def __init__(self, *args, **kwargs) -> None:
         RolledOffSingleCarrierWaveform.__init__(self, *args, **kwargs)
@@ -838,9 +897,6 @@ class RootRaisedCosineWaveform(RolledOffSingleCarrierWaveform, Serializable):
 class RaisedCosineWaveform(RolledOffSingleCarrierWaveform, Serializable):
     """Root-Raised-Cosine filtered single carrier modulation."""
 
-    yaml_tag = "SC-RaisedCosine"
-    """YAML serialization tag"""
-
     def __init__(self, *args, **kwargs) -> None:
         RolledOffSingleCarrierWaveform.__init__(self, *args, **kwargs)
 
@@ -879,19 +935,19 @@ class RaisedCosineWaveform(RolledOffSingleCarrierWaveform, Serializable):
 class RectangularWaveform(FilteredSingleCarrierWaveform, Serializable):
     """Rectangular filtered single carrier modulation."""
 
-    yaml_tag = "SC-Rectangular"
-    """YAML serialization tag"""
+    __DEFAULT_RELATIVE_BANDWIDTH: float = 1.0  # Default pulse bandwidth relative to the symbol rate
 
     __relative_bandwidth: float
 
-    @staticmethod
-    def _arg_signature() -> Set[str]:
-        return {"symbol_rate", "num_preamble_symbols", "num_data_symbols"}
+    def __init__(
+        self, relative_bandwidth: float = __DEFAULT_RELATIVE_BANDWIDTH, *args, **kwargs
+    ) -> None:
 
-    def __init__(self, relative_bandwidth: float = 1.0, *args, **kwargs) -> None:
-        self.relative_bandwidth = relative_bandwidth
-
+        # Init base class
         FilteredSingleCarrierWaveform.__init__(self, *args, **kwargs)
+
+        # Init attributes
+        self.relative_bandwidth = relative_bandwidth
 
     @property
     def relative_bandwidth(self) -> float:
@@ -925,20 +981,26 @@ class RectangularWaveform(FilteredSingleCarrierWaveform, Serializable):
     def _filter_delay(self) -> int:
         return int(self.oversampling_factor / self.relative_bandwidth) - 1
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        FilteredSingleCarrierWaveform.serialize(self, process)
+        process.serialize_floating(self.relative_bandwidth, "relative_bandwidth")
+
+    @override
+    @classmethod
+    def _DeserializeParameters(cls, process: DeserializationProcess) -> dict[str, Any]:
+        params = FilteredSingleCarrierWaveform._DeserializeParameters(process)
+        params["relative_bandwidth"] = process.deserialize_floating(
+            "relative_bandwidth", cls.__DEFAULT_RELATIVE_BANDWIDTH
+        )
+        return params
+
 
 class FMCWWaveform(FilteredSingleCarrierWaveform, Serializable):
     """Frequency Modulated Continuous Waveform Filter Modulation Scheme."""
 
-    yaml_tag = "SC-FMCW"
-    """YAML serialization tag"""
-    property_blacklist = {"pilot_symbol_sequence"}
-
     __bandwidth: float  # Chirp bandwidth in Hz
     __chirp_duration: float  # Chirp duration in seconds
-
-    @staticmethod
-    def _arg_signature() -> Set[str]:
-        return {"symbol_rate", "num_preamble_symbols", "num_data_symbols"}
 
     def __init__(self, bandwidth: float, chirp_duration: float = 0.0, *args, **kwargs) -> None:
         """
@@ -1033,3 +1095,18 @@ class FMCWWaveform(FilteredSingleCarrierWaveform, Serializable):
     @property
     def _filter_delay(self) -> int:
         return self.oversampling_factor - 1
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        FilteredSingleCarrierWaveform.serialize(self, process)
+        process.serialize_floating(self.bandwidth, "bandwidth")
+        process.serialize_floating(self.chirp_duration, "chirp_duration")
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> FMCWWaveform:
+        return cls(
+            process.deserialize_floating("bandwidth"),
+            process.deserialize_floating("chirp_duration"),
+            **cls._DeserializeParameters(process),
+        )

@@ -3,10 +3,10 @@
 from __future__ import annotations
 from time import time
 from typing import Sequence, Tuple
+from typing_extensions import override
 
 import matplotlib.pyplot as plt
 import numpy as np
-from h5py import Group
 from mpl_toolkits.mplot3d.axes3d import Axes3D  # type: ignore
 from mpl_toolkits.mplot3d.art3d import Line3DCollection  # type: ignore
 
@@ -184,8 +184,6 @@ class _ScenarioVisualizer(VisualizableAttribute[ScenarioVisualization]):
 class SimulationScenario(Scenario[SimulatedDevice, SimulatedDeviceState, SimulatedDrop]):
     """Description of a physical layer wireless communication scenario."""
 
-    yaml_tag = "SimulationScenario"
-
     __default_channel: Channel  # Initial channel to be assumed for device links
     __channels: list[Channel]  # Set of unique channel model instances
     __links: dict[frozenset[SimulatedDevice], Channel]
@@ -229,17 +227,15 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDeviceState, Simulat
         self.noise_model = noise_model  # type: ignore[operator]
         self.__visualizer = _ScenarioVisualizer(self)
 
-    def new_device(self, *args, **kwargs) -> SimulatedDevice:
-        """Add a new device to the simulation scenario.
+    @classmethod
+    @override
+    def _device_type(cls) -> type[SimulatedDevice]:
+        return SimulatedDevice
 
-        Returns:
-            SimulatedDevice: Newly added simulated device.
-        """
-
-        device = SimulatedDevice(*args, **kwargs)
-        self.add_device(device)
-
-        return device
+    @classmethod
+    @override
+    def _drop_type(cls) -> type[SimulatedDrop]:
+        return SimulatedDrop
 
     def add_device(self, device: SimulatedDevice) -> None:
         # Add the device to the scenario
@@ -751,9 +747,6 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDeviceState, Simulat
         return SimulatedDrop(
             drop_timestamp, device_transmissions, channel_realizations, device_receptions
         )
-
-    def _recall_drop(self, group: Group) -> SimulatedDrop:
-        return SimulatedDrop.from_HDF(group, self.devices, self.channels)
 
     @property
     def visualize(self) -> _ScenarioVisualizer:

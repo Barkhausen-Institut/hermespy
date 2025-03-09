@@ -9,6 +9,7 @@ from numpy.testing import assert_array_almost_equal
 
 from hermespy.channel import ConsistentGenerator
 from hermespy.channel.consistent import ConsistentRealization, DualConsistentRealization, StaticConsistentRealization, StaticConsistentSample
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -118,23 +119,26 @@ class TestDualConsistent(TestCase):
         self.assertAlmostEqual(0.5, boolean.mean(), delta=0.1)
         self.assertAlmostEqual(0.25, boolean.var(), delta=0.1)
 
+    def test_variable_serialization(self) -> None:
+        """Test serialization of consistent variables"""
+        
+        for var in [self.gaussian_variable, self.uniform_variable, self.boolean_variable]:
+            with self.subTest(var.__class__.__name__):
+                test_roundtrip_serialization(self, var)
 
-class TestConsistentRealization(TestCase):
+
+class _TestConsistentRealization(object):
     """Test the consistent realization base class"""
     
-    def test_from_hdf_validation(self) -> None:
+    realization: ConsistentRealization
+    
+    def test_serialization(self) -> None:
+        """Test serialization of consistent realizations"""
         
-        file = File("test.hdf", "w", "core")
-        test_group = file.create_group("test")
-        test_group.attrs["type"] = "wrong_type"
-        
-        with self.assertRaises(ValueError):
-            ConsistentRealization.from_HDF(test_group)
-            
-        file.close()
+        test_roundtrip_serialization(self, self.realization)
 
 
-class TestDualConsistentRealization(TestCase):
+class TestDualConsistentRealization(TestCase, _TestConsistentRealization):
     """Test realization of dual consistent random processes."""
 
     def setUp(self) -> None:
@@ -145,18 +149,6 @@ class TestDualConsistentRealization(TestCase):
         self.frequencies = rng.normal(size=(3, num_variables, 2))
 
         self.realization = DualConsistentRealization(self.frequencies, self.phases)
-
-    def test_hdf_serialization(self) -> None:
-        """Serialization to and from HDF5 should yield the correct object reconstruction"""
-
-        file = File("test.hdf", "w", "core")
-        test_group = file.create_group("test")
-
-        self.realization.to_HDF(test_group)
-        realization = DualConsistentRealization.from_HDF(test_group)
-
-        assert_array_almost_equal(self.phases, realization.phases)
-        assert_array_almost_equal(self.frequencies, realization.frequencies)
 
 
 class TestStaticConstentSample(TestCase):
@@ -174,7 +166,7 @@ class TestStaticConstentSample(TestCase):
         assert_array_almost_equal(self.scalar_samples, scalars)
 
 
-class TestStaticConsistentRealization(TestCase):
+class TestStaticConsistentRealization(TestCase, _TestConsistentRealization):
     """Test the realization of a spatially invariant random process."""
 
     def setUp(self) -> None:
@@ -184,20 +176,3 @@ class TestStaticConsistentRealization(TestCase):
         self.scalar_samples = rng.normal(size=num_variables)
 
         self.realization = StaticConsistentRealization(self.scalar_samples)
-
-    def test_hdf_serialization(self) -> None:
-        """Serialization to and from HDF5 should yield the correct object reconstruction"""
-
-        file = File("test.hdf", "w", "core")
-        test_group = file.create_group("test")
-
-        self.realization.to_HDF(test_group)
-        recalled_realization = StaticConsistentRealization.from_HDF(test_group)
-
-        initial_sample = self.realization.sample(np.array([1, 2, 3]), np.array([4, 5, 6]))
-        recalled_sample = recalled_realization.sample(np.array([1, 2, 3]), np.array([4, 5, 6]))
-
-        initial_scalars = initial_sample.fetch_scalars(0, 15)
-        recalled_scalars = recalled_sample.fetch_scalars(0, 15)
-
-        assert_array_almost_equal(initial_scalars, recalled_scalars)

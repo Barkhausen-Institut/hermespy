@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 from math import log10
-from typing import Mapping, Set, Tuple, Type
+from typing import Mapping, Set, Tuple
+from typing_extensions import override
 
-from h5py import Group
 import numpy as np
 
-from hermespy.core.factory import Serializable
+from hermespy.core import DeserializationProcess, SerializationProcess
 from .cluster_delay_lines import (
     ClusterDelayLineBase,
     ClusterDelayLineRealization,
@@ -429,51 +429,28 @@ class UrbanMacrocellsRealization(ClusterDelayLineRealization[O2IState]):
                 - 0.07 * (parameters.terminal_height - 1.5)
             )
 
-    def to_HDF(self, group: Group) -> None:
-        ClusterDelayLineRealization.to_HDF(self, group)
-
-        self.__los_realization.to_HDF(group.create_group("los_realization"))
-        self.__nlos_realization.to_HDF(group.create_group("nlos_realization"))
-        self.__o2i_realization.to_HDF(group.create_group("o2i_realization"))
-
-        if self.expected_state is not None:
-            group.attrs["expected_state"] = self.expected_state.value
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        ClusterDelayLineRealization.serialize(self, process)
+        process.serialize_object(self.__los_realization, "los_realization")
+        process.serialize_object(self.__nlos_realization, "nlos_realization")
+        process.serialize_object(self.__o2i_realization, "o2i_realization")
 
     @classmethod
-    def From_HDF(
-        cls: Type[UrbanMacrocellsRealization],
-        group: Group,
-        parameters: ClusterDelayLineRealizationParameters,
-        sample_hooks: Set[ChannelSampleHook[ClusterDelayLineSample]],
-    ) -> UrbanMacrocellsRealization:
-
-        state_realization = ConsistentRealization.from_HDF(group["state_realization"])
-        los_realization = ConsistentRealization.from_HDF(group["los_realization"])
-        nlos_realization = ConsistentRealization.from_HDF(group["nlos_realization"])
-        o2i_realization = ConsistentRealization.from_HDF(group["o2i_realization"])
-        gain = group.attrs["gain"] if "gain" in group.attrs else 1.0
-        if "expected_state" in group.attrs:
-            expected_state = O2IState(group.attrs["expected_state"])
-        else:
-            expected_state = None
-
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> UrbanMacrocellsRealization:
         return UrbanMacrocellsRealization(
-            expected_state,
-            state_realization,
-            los_realization,
-            nlos_realization,
-            o2i_realization,
-            parameters,
-            sample_hooks,
-            gain,
+            expected_state=process.deserialize_object("expected_state", O2IState, None),
+            los_realization=process.deserialize_object("los_realization", ConsistentRealization),
+            nlos_realization=process.deserialize_object("nlos_realization", ConsistentRealization),
+            o2i_realization=process.deserialize_object("o2i_realization", ConsistentRealization),
+            sample_hooks=set(),
+            **ClusterDelayLineRealization._DeserializeParameters(process),  # type: ignore[arg-type]
         )
 
 
-class UrbanMacrocells(ClusterDelayLineBase[UrbanMacrocellsRealization, O2IState], Serializable):
+class UrbanMacrocells(ClusterDelayLineBase[UrbanMacrocellsRealization, O2IState]):
     """3GPP cluster delay line preset modeling an urban macrocell scenario."""
-
-    yaml_tag = "UMa"
-    """YAML serialization tag."""
 
     @property
     def _large_scale_correlations(self) -> np.ndarray:
@@ -515,6 +492,11 @@ class UrbanMacrocells(ClusterDelayLineBase[UrbanMacrocellsRealization, O2IState]
     def max_num_rays(self) -> int:
         return 20
 
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> UrbanMacrocells:
+        return UrbanMacrocells(**ClusterDelayLineBase._DeserializeParameters(process))  # type: ignore[arg-type]
+
     def _initialize_realization(
         self,
         state_generator: ConsistentGenerator,
@@ -539,8 +521,3 @@ class UrbanMacrocells(ClusterDelayLineBase[UrbanMacrocellsRealization, O2IState]
             self.sample_hooks,
             self.gain,
         )
-
-    def _recall_specific_realization(
-        self, group: Group, parameters: ClusterDelayLineRealizationParameters
-    ) -> UrbanMacrocellsRealization:
-        return UrbanMacrocellsRealization.From_HDF(group, parameters, self.sample_hooks)

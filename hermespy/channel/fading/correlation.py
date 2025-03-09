@@ -5,7 +5,7 @@ from typing import Union
 
 import numpy as np
 
-from hermespy.core import AntennaArrayState, AntennaMode, Serializable, SerializableEnum
+from hermespy.core import AntennaArrayState, AntennaMode, SerializableEnum
 from .fading import AntennaCorrelation
 
 __author__ = "Tobias Kronauer"
@@ -44,11 +44,8 @@ class CorrelationType(SerializableEnum):
     """High antenna correlation"""
 
 
-class StandardAntennaCorrelation(Serializable, AntennaCorrelation):
+class StandardAntennaCorrelation(AntennaCorrelation):
     """3GPP 5G Multipath fading standardized antenna correlations"""
-
-    yaml_tag = "StandardCorrelation"
-    """YAML serialization tag"""
 
     __correlation: CorrelationType  # The assumed correlation
 

@@ -2,13 +2,20 @@
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Generic, List, Sequence, Type, TypeVar, Union
+from typing import Any, Generic, List, Sequence, TypeVar
+from typing_extensions import override
+
 import matplotlib.pyplot as plt
-
 import numpy as np
-from ruamel.yaml import MappingNode, Node, SafeConstructor, SafeRepresenter
 
-from hermespy.core import Serializable, SerializableEnum, Signal, VisualizableAttribute
+from hermespy.core import (
+    Serializable,
+    SerializableEnum,
+    Signal,
+    VisualizableAttribute,
+    SerializationProcess,
+    DeserializationProcess,
+)
 from hermespy.core.visualize import ImageVisualization, VAT
 from ...symbols import Symbols, StatedSymbols
 from ...tools import PskQamMapping
@@ -56,15 +63,31 @@ class PrefixType(SerializableEnum):
 
 
 class GridElement(Serializable):
-    yaml_tag = "Element"
-    serialized_attributes = {"type", "repetitions"}
+    """Representation of a single element within a resource grid."""
+
+    __DEFAULT_NUM_REPETITIONS: int = 1
 
     type: ElementType
     repetitions: int = 1
 
-    def __init__(self, type: str | ElementType, repetitions: int = 1) -> None:
+    def __init__(
+        self, type: str | ElementType, repetitions: int = __DEFAULT_NUM_REPETITIONS
+    ) -> None:
         self.type = ElementType[type] if isinstance(type, str) else type
         self.repetitions = repetitions
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_object(self.type, "type")
+        process.serialize_integer(self.repetitions, "repetitions")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> GridElement:
+        return cls(
+            process.deserialize_object("type", ElementType),
+            process.deserialize_integer("repetitions", cls.__DEFAULT_NUM_REPETITIONS),
+        )
 
 
 class ReferencePosition(SerializableEnum):
@@ -79,8 +102,9 @@ class ReferencePosition(SerializableEnum):
 class GridResource(Serializable):
     """Configures one sub-section of a resource grid in both dimensions."""
 
-    yaml_tag = "Resource"
-    serialized_attributes = {"prefix_type", "elements"}
+    __DEFAULT_REPETITIONS: int = 1
+    __DEFAULT_PREFIX_TYPE: PrefixType = PrefixType.CYCLIC
+    __DEFAULT_PREFIX_RATIO: float = 0.0
 
     __repetitions: int
     __prefix_ratio: float
@@ -93,9 +117,9 @@ class GridResource(Serializable):
 
     def __init__(
         self,
-        repetitions: int = 1,
-        prefix_type: Union[PrefixType, str] = PrefixType.CYCLIC,
-        prefix_ratio: float = 0.0,
+        repetitions: int = __DEFAULT_REPETITIONS,
+        prefix_type: PrefixType | str = __DEFAULT_PREFIX_TYPE,
+        prefix_ratio: float = __DEFAULT_PREFIX_RATIO,
         elements: List[GridElement] | None = None,
     ) -> None:
         self.repetitions = repetitions
@@ -214,20 +238,43 @@ class GridResource(Serializable):
         mask = np.tile(mask[:, :element_count], (1, self.__repetitions))
         return mask
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_integer(self.repetitions, "repetitions")
+        process.serialize_object(self.prefix_type, "prefix_type")
+        process.serialize_floating(self.prefix_ratio, "prefix_ratio")
+        process.serialize_object_sequence(self.elements, "elements")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> GridResource:
+        return cls(
+            process.deserialize_integer("repetitions", cls.__DEFAULT_REPETITIONS),
+            process.deserialize_object("prefix_type", PrefixType, cls.__DEFAULT_PREFIX_TYPE),
+            process.deserialize_floating("prefix_ratio", cls.__DEFAULT_PREFIX_RATIO),
+            list(process.deserialize_object_sequence("elements", GridElement)),
+        )
+
 
 OWT = TypeVar("OWT", bound="OrthogonalWaveform")
 """Type variable for orthogonal waveform types."""
 
 
-class GridSection(Generic[OWT], ABC):
+class GridSection(Generic[OWT], Serializable):
     """Description of a part of a grid's time domain."""
+
+    _DEFAULT_NUM_REPETITIONS: int = 1
+    _DEFAULT_SAMPLE_OFFSET: int = 0
 
     __wave: OWT | None
     __num_repetitions: int
     __sample_offset: int
 
     def __init__(
-        self, num_repetitions: int = 1, sample_offset: int = 0, wave: OWT | None = None
+        self,
+        num_repetitions: int = _DEFAULT_NUM_REPETITIONS,
+        sample_offset: int = _DEFAULT_SAMPLE_OFFSET,
+        wave: OWT | None = None,
     ) -> None:
         """
         Args:
@@ -417,18 +464,42 @@ class GridSection(Generic[OWT], ABC):
         """
         ...  # pragma: no cover
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_integer(self.num_repetitions, "num_repetitions")
+        process.serialize_integer(self.sample_offset, "sample_offset")
 
-class SymbolSection(GridSection["OrthogonalWaveform"], Serializable):
-    yaml_tag: str = "Symbol"
-    serialized_attributes = {"pattern"}
+    @classmethod
+    def _DeserializeArguments(cls, process: DeserializationProcess) -> dict[str, Any]:
+        """Deserialize arguments from a serialization process.
+
+        Args:
+            process (DeserializationProcess): Process to extract the arguments from.
+
+        Returns:
+            dict[str, Any]: Deserialized arguments.
+        """
+
+        return {
+            "num_repetitions": process.deserialize_integer(
+                "num_repetitions", cls._DEFAULT_NUM_REPETITIONS
+            ),
+            "sample_offset": process.deserialize_integer(
+                "sample_offset", cls._DEFAULT_SAMPLE_OFFSET
+            ),
+        }
+
+
+class SymbolSection(GridSection["OrthogonalWaveform"]):
+    """Representation of a section of symbols within an OFDM-grid's time-domain."""
 
     pattern: List[int]
 
     def __init__(
         self,
-        num_repetitions: int = 1,
+        num_repetitions: int = GridSection._DEFAULT_NUM_REPETITIONS,
         pattern: List[int] | None = None,
-        sample_offset: int = 0,
+        sample_offset: int = GridSection._DEFAULT_SAMPLE_OFFSET,
         wave: OrthogonalWaveform | None = None,
     ) -> None:
         """
@@ -587,13 +658,30 @@ class SymbolSection(GridSection["OrthogonalWaveform"], Serializable):
         # Add up the base samples from each timeslot
         return num * self.num_repetitions
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        GridSection.serialize(self, process)
+        process.serialize_array(np.asarray(self.pattern), "pattern")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> SymbolSection:
+        return cls(
+            **GridSection._DeserializeArguments(process),
+            pattern=process.deserialize_array("pattern", np.int64, None).tolist(),
+        )
+
 
 class GuardSection(GridSection["OrthogonalWaveform"], Serializable):
-    yaml_tag = "Guard"
+    """Guard section within the time-domain of a resource grid."""
+
     __duration: float
 
     def __init__(
-        self, duration: float, num_repetitions: int = 1, frame: OrthogonalWaveform | None = None
+        self,
+        duration: float,
+        num_repetitions: int = GridSection._DEFAULT_NUM_REPETITIONS,
+        frame: OrthogonalWaveform | None = None,
     ) -> None:
         GridSection.__init__(self, num_repetitions=num_repetitions, wave=frame)
         self.duration = duration
@@ -636,12 +724,22 @@ class GuardSection(GridSection["OrthogonalWaveform"], Serializable):
             (0, self.wave.num_subcarriers * self.wave.oversampling_factor), dtype=np.complex128
         )
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_floating(self.duration, "duration")
+        process.serialize_integer(self.num_repetitions, "num_repetitions")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> GuardSection:
+        return cls(
+            process.deserialize_floating("duration"),
+            process.deserialize_integer("num_repetitions", cls._DEFAULT_NUM_REPETITIONS),
+        )
+
 
 class PilotSection(Generic[OWT], GridSection[OWT], Serializable):
     """Pilot symbol section within an resource grid."""
-
-    yaml_tag = "Pilot"
-    """YAML serialization tag"""
 
     __pilot_elements: Symbols | None
     __cached_num_subcarriers: int
@@ -808,58 +906,15 @@ class PilotSection(Generic[OWT], GridSection[OWT], Serializable):
 
         return pilot
 
-    @classmethod
-    def to_yaml(
-        cls: Type[PilotSection], representer: SafeRepresenter, node: PilotSection
-    ) -> MappingNode:
-        """Serialize a serializable object to YAML.
-
-        Args:
-
-            representer (SafeRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
-
-            node (PilotSection):
-                The channel instance to be serialized.
-
-        Returns: The serialized YAML node.
-        """
-
-        additional_fields = {}
-
-        if node.pilot_elements:
-            additional_fields["pilot_elements"] = node.pilot_elements.raw
-
-        return node._mapping_serialization_wrapper(
-            representer, blacklist={"pilot_elements"}, additional_fields=additional_fields
-        )
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        if self.pilot_elements is not None:
+            process.serialize_object(self.pilot_elements, "pilot_elements")
 
     @classmethod
-    def from_yaml(
-        cls: Type[PilotSection], constructor: SafeConstructor, node: Node
-    ) -> PilotSection:
-        """Recall a new serializable class instance from YAML.
-
-        Args:
-
-            constructor (SafeConstructor):
-                A handle to the constructor extracting the YAML information.
-
-            node (Node):
-                YAML node representing the `PilotSection` serialization.
-
-        Returns: The de-serialized object.
-        """
-
-        state: dict = constructor.construct_mapping(node, deep=True)
-        pilot_elements = state.pop("pilot_elements", None)
-
-        if pilot_elements is not None:
-            pilot_elements = Symbols(pilot_elements)
-            state["pilot_elements"] = pilot_elements
-
-        return cls.InitializationWrapper(state)
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> PilotSection:
+        return cls(process.deserialize_object("pilot_elements", Symbols, None))
 
 
 class GridVisualization(VisualizableAttribute[ImageVisualization]):
@@ -1033,18 +1088,22 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
         self.__mapping = PskQamMapping(value)
 
     @property
+    @override
     def bit_energy(self) -> float:
         return 1 / self.mapping.bits_per_symbol  # ToDo: Check validity
 
     @property
+    @override
     def symbol_energy(self) -> float:
         return 1  # ToDo: Check validity
 
     @property
+    @override
     def symbol_duration(self) -> float:
         return 1 / self.bandwidth
 
     @property
+    @override
     def power(self) -> float:
         return 1.0
 
@@ -1126,6 +1185,7 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
         return num_symbols
 
     @property
+    @override
     def samples_per_frame(self) -> int:
         num = 0
         for section in self.grid_structure:
@@ -1155,12 +1215,15 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
 
         return resource_mask
 
+    @override
     def map(self, data_bits: np.ndarray) -> Symbols:
         return Symbols(self.mapping.get_symbols(data_bits)[None, :, None])
 
+    @override
     def unmap(self, symbols: Symbols) -> np.ndarray:
         return self.mapping.detect_bits(symbols.raw.flatten()).astype(int)
 
+    @override
     def place(self, symbols: Symbols) -> Symbols:
         # Prepare symbols to be placed
         data_symbols = symbols.raw.flatten()
@@ -1199,6 +1262,7 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
 
         return Symbols(placed_symbols)
 
+    @override
     def pick(self, placed_symbols: StatedSymbols) -> StatedSymbols:
         raw_symbols = placed_symbols.raw
         raw_states = placed_symbols.dense_states()
@@ -1230,6 +1294,7 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
 
         return StatedSymbols(raw_picked_symbols, raw_picked_states)
 
+    @override
     def modulate(self, symbols: Symbols) -> np.ndarray:
         frame_samples = np.empty(self.samples_per_frame, dtype=np.complex128)
         sample_idx = 0
@@ -1256,6 +1321,7 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
 
         return frame_samples
 
+    @override
     def demodulate(self, signal: np.ndarray) -> Symbols:
         sample_idx = 0
 
@@ -1292,3 +1358,35 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
                 )
 
         return Symbols(symbol_grid[np.newaxis, :, :])
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        ConfigurablePilotWaveform.serialize(self, process)
+        process.serialize_integer(self.num_subcarriers, "num_subcarriers")
+        process.serialize_object_sequence(self.grid_resources, "grid_resources")
+        process.serialize_object_sequence(self.grid_structure, "grid_structure")
+        if self.pilot_section is not None:
+            process.serialize_object(self.pilot_section, "pilot_section")
+
+    @classmethod
+    @override
+    def _DeserializeParameters(cls, process: DeserializationProcess) -> dict[str, Any]:
+        params = ConfigurablePilotWaveform._DeserializeParameters(process)
+        params.update(
+            {
+                "num_subcarriers": process.deserialize_integer("num_subcarriers"),
+                "grid_resources": process.deserialize_object_sequence(
+                    "grid_resources", GridResource
+                ),
+                "grid_structure": process.deserialize_object_sequence(
+                    "grid_structure", GridSection
+                ),
+                "pilot_section": process.deserialize_object("pilot_section", PilotSection, None),
+            }
+        )
+        return params
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> OrthogonalWaveform:
+        return cls(**cls._DeserializeParameters(process))

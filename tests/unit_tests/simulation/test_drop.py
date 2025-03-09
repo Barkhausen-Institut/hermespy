@@ -6,6 +6,7 @@ from h5py import File
 
 from hermespy.simulation.scenario import SimulationScenario
 from hermespy.simulation.drop import SimulatedDrop
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -32,18 +33,7 @@ class TestSimulatedDrop(TestCase):
 
         self.assertEqual(1, len(self.drop.channel_realizations))
 
-    def test_hdf_serialization(self) -> None:
-        """Test HDF roundtrip serialization"""
+    def test_serialization(self) -> None:
+        """Test drop serialization"""
 
-        file = File("test.h5", "w", driver="core", backing_store=False)
-        group = file.create_group("group")
-
-        self.drop.to_HDF(group)
-        deserialization = SimulatedDrop.from_HDF(group, self.scenario.devices, self.scenario.channels)
-
-        file.close()
-
-        self.assertIsInstance(deserialization, SimulatedDrop)
-        self.assertEqual(self.drop.timestamp, deserialization.timestamp)
-        self.assertEqual(self.drop.num_device_transmissions, deserialization.num_device_transmissions)
-        self.assertEqual(self.drop.num_device_receptions, deserialization.num_device_receptions)
+        test_roundtrip_serialization(self, self.drop)

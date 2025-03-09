@@ -1,8 +1,16 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import annotations
+from typing_extensions import override
+
 import numpy as np
 
-from hermespy.core import AntennaMode, AntennaArrayState, Serializable
+from hermespy.core import (
+    AntennaMode,
+    AntennaArrayState,
+    DeserializationProcess,
+    SerializationProcess,
+)
 from .beamformer import ReceiveBeamformer
 
 __author__ = "Jan Adler"
@@ -15,9 +23,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class CaponBeamformer(Serializable, ReceiveBeamformer):
-
-    yaml_tag = "Capon"
+class CaponBeamformer(ReceiveBeamformer):
 
     def __init__(self, loading: float = 0.0) -> None:
         """
@@ -91,3 +97,12 @@ class CaponBeamformer(Serializable, ReceiveBeamformer):
 
         beamformed_samples = dictionary.T.conj() @ samples
         return beamformed_samples[:, np.newaxis, :]
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_floating(self.loading, "loading")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> CaponBeamformer:
+        return CaponBeamformer(process.deserialize_floating("loading"))

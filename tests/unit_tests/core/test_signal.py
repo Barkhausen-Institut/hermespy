@@ -3,15 +3,12 @@
 
 from contextlib import nullcontext
 from os import getenv
-from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import patch
 from typing import List
 from abc import abstractmethod
 
 import numpy as np
-from h5py import File
-from os import path
 from numpy.random import default_rng
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.constants import pi
@@ -19,6 +16,7 @@ from scipy.fft import ifft, ifftshift
 
 from hermespy.core.signal_model import Signal, SignalBlock
 from unit_tests.utils import SimulationTestContext
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
@@ -838,34 +836,15 @@ class TestSignal():
         self.assertEqual(self.signal.delay, deinterleaved_signal.delay)
         self.assertEqual(self.signal.noise_power, deinterleaved_signal.noise_power)
 
-    def test_hdf_serialization(self) -> None:
-        """Serialization to and from HDF5 should yield the correct object reconstruction"""
-
-        signal: Signal = None
-
-        with TemporaryDirectory() as tempdir:
-            file_location = path.join(tempdir, "testfile.hdf5")
-
-            with File(file_location, "a") as file:
-                group = file.create_group("testgroup")
-                self.signal.to_HDF(group)
-
-            with File(file_location, "r") as file:
-                group = file["testgroup"]
-                signal = self.signal.from_HDF(group)
-
-        self.assertEqual(self.signal.carrier_frequency, signal.carrier_frequency)
-        self.assertEqual(self.signal.sampling_rate, signal.sampling_rate)
-        self.assertEqual(self.signal.delay, signal.delay)
-        self.assertEqual(self.signal.noise_power, signal.noise_power)
-        for b_exp, b_act in zip(self.signal, signal):
-            assert_array_equal(b_exp, b_act)
-            self.assertEqual(b_exp.offset, b_act.offset)
-
     def test_to_dense(self) -> None:
         """to_dense method should return a DenseSignal version of the signal."""
 
         assert_array_equal(self.signal.getitem(), self.signal.to_dense().getitem())
+
+    def test_serialization(self) -> None:
+        """Test signal serialization"""
+
+        test_roundtrip_serialization(self, self.signal)
 
 
 class TestDenseSignal(TestSignal, TestCase):

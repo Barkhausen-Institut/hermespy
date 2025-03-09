@@ -10,6 +10,7 @@ from collections.abc import Sequence
 from datetime import datetime
 from functools import cached_property
 from typing import Any, List, Callable
+from typing_extensions import override
 
 import numpy as np
 from zerorpc.exceptions import LostRemote, RemoteError
@@ -20,8 +21,10 @@ from hermespy.core import (
     AntennaArray,
     AntennaMode,
     AntennaPort,
+    DeserializationProcess,
     IdealAntenna,
     Serializable,
+    SerializationProcess,
     Signal,
     Transformation,
 )
@@ -132,11 +135,6 @@ class UsrpAntennas(AntennaArray[AntennaPort, Antenna]):
 
 class UsrpDevice(PhysicalDevice[PhysicalDeviceState], Serializable):
     """Bindung to a USRP device via the UHD library."""
-
-    yaml_tag = "USRP"
-    """YAML serialization tag"""
-
-    property_blacklist = {"topology", "wavelength", "velocity"}
 
     __usrp_client: UsrpClient
     __num_rpc_retries = 10
@@ -651,3 +649,36 @@ class UsrpDevice(PhysicalDevice[PhysicalDeviceState], Serializable):
     @scale_transmission.setter
     def scale_transmission(self, value: bool) -> None:
         self.__scale_transmission = value
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        PhysicalDevice.serialize(self, process)
+        process.serialize_string(self.ip, "ip")
+        process.serialize_integer(self.port, "port")
+        process.serialize_floating(self.carrier_frequency, "carrier_frequency")
+        process.serialize_floating(self.sampling_rate, "sampling_rate")
+        process.serialize_floating(self.tx_gain, "tx_gain")
+        process.serialize_floating(self.rx_gain, "rx_gain")
+        process.serialize_integer(self.scale_transmission, "scale_transmission")
+        process.serialize_integer(self.num_prepeneded_zeros, "num_prepeneded_zeros")
+        process.serialize_integer(self.num_appended_zeros, "num_appended_zeros")
+        process.serialize_array(np.asarray(self.selected_transmit_ports), "selected_transmit_ports")
+        process.serialize_array(np.asarray(self.selected_receive_ports), "selected_receive_ports")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> UsrpDevice:
+        return cls(
+            process.deserialize_string("ip"),
+            process.deserialize_integer("port"),
+            process.deserialize_floating("carrier_frequency"),
+            process.deserialize_floating("sampling_rate"),
+            process.deserialize_floating("tx_gain"),
+            process.deserialize_floating("rx_gain"),
+            bool(process.deserialize_integer("scale_transmission")),
+            process.deserialize_integer("num_prepeneded_zeros"),
+            process.deserialize_integer("num_appended_zeros"),
+            process.deserialize_array("selected_transmit_ports", np.int64).tolist(),
+            process.deserialize_array("selected_receive_ports", np.int64).tolist(),
+            **cls._DeserializeParameters(process),  # type: ignore[arg-type]
+        )

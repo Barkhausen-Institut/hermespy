@@ -12,7 +12,7 @@ from contextlib import AbstractContextManager, ExitStack
 from os import path
 from signal import signal, SIGINT
 from types import TracebackType
-from typing import Any, Callable, Generic, List, Mapping, Sequence, Tuple, Type
+from typing import Any, Callable, Generic, List, Sequence, Tuple, Type
 from warnings import catch_warnings, simplefilter
 
 import matplotlib as mpl
@@ -21,7 +21,6 @@ import numpy as np
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TimeElapsedColumn
 from rich.prompt import Confirm
-from ruamel.yaml import SafeConstructor, Node, SafeRepresenter, MappingNode
 
 from hermespy.core import (
     Artifact,
@@ -431,16 +430,8 @@ class ThreadContextManager(AbstractContextManager):
         return super().__exit__(__exc_type, __exc_value, __traceback)
 
 
-class HardwareLoop(
-    Serializable, Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenarioType, PDT]
-):
+class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenarioType, PDT]):
     """Hermespy hardware loop configuration."""
-
-    yaml_tag = "HardwareLoop"
-    """YAML serialization tag"""
-
-    property_blacklist = {"console"}
-    serialized_attributes = {"scenario", "manual_triggering", "plot_information", "record_drops"}
 
     manual_triggering: bool
     """Require a user input to trigger each drop manually"""
@@ -674,7 +665,9 @@ class HardwareLoop(
     def iteration_priority(self, value: IterationPriority) -> None:
         self.__iteration_priority = value
 
-    def run(self, overwrite=True, campaign: str = "default", serialize_state: bool = True) -> None:
+    def run(
+        self, overwrite=True, campaign: str | None = None, serialize_state: bool = True
+    ) -> None:
         """Run the hardware loop configuration.
 
         Args:
@@ -975,53 +968,3 @@ class HardwareLoop(
 
         if self.plot_information:
             plt.show()
-
-    @classmethod
-    def to_yaml(
-        cls: Type[HardwareLoop], representer: SafeRepresenter, node: HardwareLoop
-    ) -> MappingNode:
-        # Prepare dimensions
-        dimension_fields: List[Mapping[str, Any]] = []
-        for dimension in node.__dimensions:
-            dimension_fields.append(
-                {
-                    "objects": dimension.considered_objects,
-                    "property": dimension.dimension,
-                    "points": [p.value for p in dimension.sample_points],
-                    "title": dimension.title,
-                }
-            )
-
-        additional_fields = {"Evaluators": node.__evaluators, "Dimensions": dimension_fields}
-
-        return node._mapping_serialization_wrapper(representer, additional_fields=additional_fields)
-
-    @classmethod
-    def from_yaml(
-        cls: Type[HardwareLoop], constructor: SafeConstructor, node: Node
-    ) -> HardwareLoop:
-        state = constructor.construct_mapping(node, deep=True)
-
-        state.pop("Operators", [])
-        evaluators: List[Evaluator] = state.pop("Evaluators", [])
-        dimensions: List[Mapping[str, Any]] = state.pop("Dimensions", [])
-
-        # Initialize the hardware loop
-        hardware_loop: HardwareLoop = cls.InitializationWrapper(state)
-
-        # Register evaluators
-        for evaluator in evaluators:
-            hardware_loop.add_evaluator(evaluator)
-
-        # Add sweeping dimensions
-        for dimension in dimensions:
-            new_dim = hardware_loop.new_dimension(
-                dimension["property"], dimension["points"], *dimension["objects"]
-            )
-
-            title = dimension.get("title", None)
-            if title is not None:
-                new_dim.title = title
-
-        # Return fully configured hardware loop
-        return hardware_loop

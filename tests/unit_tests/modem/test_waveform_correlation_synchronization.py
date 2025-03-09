@@ -8,7 +8,7 @@ import numpy as np
 
 from hermespy.core import Signal
 from hermespy.modem.waveform_correlation_synchronization import CorrelationSynchronization
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -99,6 +99,6 @@ class TestCorellationSynchronization(TestCase):
         self.assertSequenceEqual([], pilot_indices)
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Tes corellation synchronization serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.synchronization)
+        test_roundtrip_serialization(self, self.synchronization)

@@ -1,8 +1,12 @@
+# -*- coding: utf-8 -*-
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
+from typing_extensions import override
 
 import numpy as np
 
-from hermespy.core import Serializable
+from hermespy.core import DeserializationProcess, Serializable, SerializationProcess
 from ..bits_source import BitsSource
 
 __author__ = "Egor Achkasov"
@@ -29,7 +33,7 @@ class FrameGenerator(ABC, Serializable):
         Return:
             frame (numpy.ndarray): array of ints with each element beeing an individual bit.
         """
-        ...
+        ...  # pragma: no cover
 
     @abstractmethod
     def unpack_frame(self, frame: np.ndarray) -> np.ndarray:
@@ -40,16 +44,23 @@ class FrameGenerator(ABC, Serializable):
 
         Return:
             payload (numpy.ndarray): array of payload bits."""
-        ...
+        ...  # pragma: no cover
 
 
 class FrameGeneratorStub(FrameGenerator):
     """A dummy placeholder frame generator, packing and unpacking payload without any overhead."""
-
-    yaml_tag = "GeneratorStub"
 
     def pack_frame(self, source: BitsSource, num_bits: int) -> np.ndarray:
         return source.generate_bits(num_bits)
 
     def unpack_frame(self, frame: np.ndarray) -> np.ndarray:
         return frame
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        return
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> FrameGeneratorStub:
+        return cls()

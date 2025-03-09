@@ -3,6 +3,7 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
+from typing_extensions import override
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,7 +11,9 @@ from scipy.stats import uniform
 
 from hermespy.core import (
     ArtifactTemplate,
+    DeserializationProcess,
     Serializable,
+    SerializationProcess,
     Evaluator,
     EvaluationTemplate,
     GridDimension,
@@ -37,8 +40,10 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class CommunicationEvaluator(Evaluator, ABC):
+class CommunicationEvaluator(Evaluator, Serializable):
     """Base class for evaluating communication processes between two modems."""
+
+    _DEFAULT_PLOT_SURFACE: bool = True
 
     __transmitting_modem: TransmittingModem
     __receiving_modem: ReceivingModem
@@ -52,7 +57,7 @@ class CommunicationEvaluator(Evaluator, ABC):
         self,
         transmitting_modem: TransmittingModem,
         receiving_modem: ReceivingModem,
-        plot_surface: bool = True,
+        plot_surface: bool = _DEFAULT_PLOT_SURFACE,
     ) -> None:
         """
         Args:
@@ -140,6 +145,21 @@ class CommunicationEvaluator(Evaluator, ABC):
         self.__transmit_hook.remove()
         self.__receive_hook.remove()
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_object(self.__transmitting_modem, "transmitting_modem")
+        process.serialize_object(self.__receiving_modem, "receiving_modem")
+        process.serialize_integer(self.__plot_surface, "plot_surface")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> CommunicationEvaluator:
+        return cls(
+            process.deserialize_object("transmitting_modem", TransmittingModem),
+            process.deserialize_object("receiving_modem", ReceivingModem),
+            bool(process.deserialize_integer("plot_surface", cls._DEFAULT_PLOT_SURFACE)),
+        )
+
 
 class ErrorEvaluation(EvaluationTemplate[np.ndarray, StemVisualization], ABC):
     """Base class for error evaluations between two modems exchanging information."""
@@ -217,8 +237,6 @@ class BitErrorEvaluation(ErrorEvaluation):
 
 class BitErrorEvaluator(CommunicationEvaluator, Serializable):
     """Evaluate bit errors between two modems exchanging information."""
-
-    yaml_tag = "BitErrorEvaluator"
 
     def __init__(
         self,
@@ -303,8 +321,6 @@ class BlockErrorEvaluation(ErrorEvaluation):
 
 class BlockErrorEvaluator(CommunicationEvaluator, Serializable):
     """Evaluate block errors between two modems exchanging information."""
-
-    yaml_tag = "BlockErrorEvaluator"
 
     def __init__(
         self,
@@ -395,9 +411,6 @@ class FrameErrorEvaluation(ErrorEvaluation):
 
 class FrameErrorEvaluator(CommunicationEvaluator, Serializable):
     """Evaluate frame errors between two modems exchanging information."""
-
-    yaml_tag = "FrameErrorEvaluator"
-    """YAML serialization tag"""
 
     def __init__(
         self,
@@ -500,9 +513,6 @@ class ThroughputEvaluation(EvaluationTemplate[float, PlotVisualization]):
 
 class ThroughputEvaluator(CommunicationEvaluator, Serializable):
     """Evaluate data throughput between two modems exchanging information."""
-
-    yaml_tag = "ThroughputEvaluator"
-    """YAML serialization tag"""
 
     __framer_error_evaluator: FrameErrorEvaluator
 

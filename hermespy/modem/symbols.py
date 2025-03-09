@@ -2,15 +2,22 @@
 
 from __future__ import annotations
 from enum import Enum
-from typing import Optional, Union, Iterable, Type
+from typing import Iterable, Type
+from typing_extensions import override
 
 import matplotlib.pyplot as plt
 import numpy as np
-from h5py import Group
 from matplotlib import rcParams
 from sparse import SparseArray  # type: ignore
 
-from hermespy.core import HDFSerializable, VisualizableAttribute, ScatterVisualization, VAT
+from hermespy.core import (
+    DeserializationProcess,
+    Serializable,
+    SerializationProcess,
+    VisualizableAttribute,
+    ScatterVisualization,
+    VAT,
+)
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -128,17 +135,17 @@ class Symbol(object):
         self.flag = flag
 
 
-class Symbols(HDFSerializable):
+class Symbols(Serializable):
     """A time-series of communication symbols located somewhere on the complex plane."""
 
     __symbols: np.ndarray  # Internal symbol storage
     __constellation_plot: _ConstellationPlot  # Symbol constellation plot
 
-    def __init__(self, symbols: Optional[Union[Iterable, np.ndarray]] = None) -> None:
+    def __init__(self, symbols: Iterable | np.ndarray | None = None) -> None:
         """
         Args:
 
-            symbols (Union[Iterable, numpy.ndarray], optional):
+            symbols (Iterable or numpy.ndarray, optional):
                 A three-dimensional array of complex-valued communication symbols.
                 The first dimension denotes the number of streams,
                 the second dimension the number of symbol blocks per stream,
@@ -192,14 +199,14 @@ class Symbols(HDFSerializable):
 
         return self.__symbols.shape[2]
 
-    def append_stream(self, symbols: Union[Symbols, np.ndarray]) -> None:
+    def append_stream(self, symbols: Symbols | np.ndarray) -> None:
         """Append a new symbol stream to this symbol seris.
 
         Represents a matrix concatenation in the first dimensions.
 
         Args:
 
-            symbols (Union[Symbols, np.ndarray]):
+            symbols (Symbols or numpy.ndarray):
                 Symbol stream to be appended to this symbol series.
 
         Raises:
@@ -231,14 +238,14 @@ class Symbols(HDFSerializable):
 
             self.__symbols = np.append(self.__symbols, symbols, axis=0)
 
-    def append_symbols(self, symbols: Union[Symbols, np.ndarray]) -> None:
+    def append_symbols(self, symbols: Symbols | np.ndarray) -> None:
         """Append a new symbol sequence to this symbol seris.
 
         Represents a matrix concatenation in the second dimensions.
 
         Args:
 
-            symbols (Union[Symbols, np.ndarray]):
+            symbols (Symbols or numpy.ndarray):
                 Symbol sequence to be appended to this symbol series.
 
         Raises:
@@ -307,14 +314,14 @@ class Symbols(HDFSerializable):
 
         return Symbols(self.__symbols[section])
 
-    def __setitem__(self, section: slice, value: Union[Symbols, np.ndarray]) -> None:
+    def __setitem__(self, section: slice, value: Symbols | np.ndarray) -> None:
         """Set symbols within this series.
 
         Args:
             section (slice):
                 Slice pointing to the symbol positions to be updated.
 
-            value (Union[Symbols, np.ndarray]):
+            value (Symbols or numpy.ndarray):
                 The symbols to be set.
         """
 
@@ -330,23 +337,14 @@ class Symbols(HDFSerializable):
 
         return self.__constellation_plot
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_array(self.__symbols, "symbols")
+
     @classmethod
-    def from_HDF(cls: Type[Symbols], group: Group) -> Symbols:
-        # Recall datasets
-
-        symbols = np.array(group["symbols"])  # dtype=complex
-
-        # Initialize object from recalled state
-        return cls(symbols=symbols)
-
-    def to_HDF(self, group: Group) -> None:
-        # Serialize datasets
-        group.create_dataset("symbols", data=self.__symbols)
-
-        # Serialize attributes
-        group.attrs["num_streams"] = self.num_streams
-        group.attrs["num_blocks"] = self.num_blocks
-        group.attrs["num_symbols"] = self.num_symbols
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> Symbols:
+        return cls(process.deserialize_array("symbols", np.complex128))
 
 
 class StatedSymbols(Symbols):
@@ -434,18 +432,12 @@ class StatedSymbols(Symbols):
     def copy(self) -> StatedSymbols:
         return StatedSymbols(self.raw.copy(), self.states.copy())
 
+    def serialize(self, process: SerializationProcess) -> None:
+        Symbols.serialize(self, process)
+        process.serialize_array(self.dense_states(), "states")
+
     @classmethod
-    def from_HDF(cls: Type[StatedSymbols], group: Group) -> StatedSymbols:
-        # Recall datasets
-        symbols = np.array(group["symbols"], dtype=complex)
-        states = np.array(group["states"], dtype=complex)
-
-        # Initialize object from recalled state
-        return cls(symbols=symbols, states=states)
-
-    def to_HDF(self, group: Group) -> None:
-        # Serialize base class
-        Symbols.to_HDF(self, group)
-
-        # Serialize datasets
-        group.create_dataset("states", data=self.dense_states())
+    def Deserialize(cls: Type[StatedSymbols], process: DeserializationProcess) -> StatedSymbols:
+        symbols = process.deserialize_array("symbols", np.complex128)
+        states = process.deserialize_array("states", np.complex128)
+        return cls(symbols, states)

@@ -18,8 +18,12 @@ This implementation has currently the following limitations:
     Application to HIPERLAN/2", Proceedings of IEEE International Commun. Conf. (ICC) 2002
 """
 
-from typing import Union
+from __future__ import annotations
+from typing_extensions import override
+
 import numpy as np
+
+from hermespy.core import Serializable, SerializationProcess, DeserializationProcess
 
 __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -31,7 +35,7 @@ __email__ = "andre.nollbarreto@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class PskQamMapping(object):
+class PskQamMapping(Serializable):
     """Implements the mapping of bits into complex numbers, following a PSK/QAM modulation.
 
     Attributes:
@@ -53,7 +57,7 @@ class PskQamMapping(object):
     def __init__(
         self,
         modulation_order: int,
-        mapping: np.ndarray = None,
+        mapping: np.ndarray | None = None,
         soft_output: bool = False,
         is_complex: bool = True,
     ):
@@ -180,7 +184,7 @@ class PskQamMapping(object):
         return np.ravel(symbols)
 
     def detect_bits(
-        self, rx_symbols: np.ndarray, noise_variance: Union[np.ndarray, float] = 1
+        self, rx_symbols: np.ndarray, noise_variance: np.ndarray | float = 1.0
     ) -> np.ndarray:
         """Returns either bits or LLR for the provided symbols.
 
@@ -531,3 +535,17 @@ class PskQamMapping(object):
             mapping = self.get_symbols(bits_all)
 
         return mapping
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_integer(self.modulation_order, "modulation_order")
+        if self.mapping is not None:
+            process.serialize_array(self.mapping, "mapping")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> PskQamMapping:
+        return cls(
+            process.deserialize_integer("modulation_order"),
+            process.deserialize_array("mapping", np.complex128, None),
+        )

@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from abc import ABC
 from typing import Any, Generator, Set, Tuple, List
+from typing_extensions import override
 
 import matplotlib.pyplot as plt
 import numpy as np
-from h5py import Group
 from numpy import cos, exp
 from scipy.constants import pi
 from sparse import GCXS  # type: ignore
@@ -16,8 +15,9 @@ from hermespy.core import (
     AntennaMode,
     ChannelStateInformation,
     ChannelStateFormat,
-    HDFSerializable,
+    DeserializationProcess,
     Serializable,
+    SerializationProcess,
     SignalBlock,
     VAT,
 )
@@ -41,7 +41,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class AntennaCorrelation(ABC):
+class AntennaCorrelation(Serializable):
     """Base class for statistical modeling of antenna array correlations."""
 
     __channel: Channel | None
@@ -89,11 +89,8 @@ class AntennaCorrelation(ABC):
         self.__channel = value
 
 
-class CustomAntennaCorrelation(Serializable, AntennaCorrelation):
+class CustomAntennaCorrelation(AntennaCorrelation):
     """Customizable antenna correlations."""
-
-    yaml_tag = "CustomCorrelation"
-    """YAML serialization tag"""
 
     __covariance_matrix: np.ndarray
 
@@ -134,6 +131,17 @@ class CustomAntennaCorrelation(Serializable, AntennaCorrelation):
             raise ValueError("Antenna correlation matrix must be positive definite")
 
         self.__covariance_matrix = value
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_array(self.__covariance_matrix, "covariance_matrix")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> CustomAntennaCorrelation:
+        return CustomAntennaCorrelation(
+            process.deserialize_array("covariance_matrix", np.complex128)
+        )
 
 
 class MultipathFadingSample(ChannelSample):
@@ -494,58 +502,6 @@ class MultipathFadingRealization(ChannelRealization[MultipathFadingSample]):
             state,
         )
 
-    def to_HDF(self, group: Group) -> None:
-        # Serialize class attributes
-        self.__random_realization.to_HDF(group.create_group("random_realization"))
-        HDFSerializable._write_dataset(group, "power_profile", self.__power_profile)
-        HDFSerializable._write_dataset(group, "delay_profile", self.__delay_profile)
-        HDFSerializable._write_dataset(group, "los_gains", self.__los_gains)
-        HDFSerializable._write_dataset(group, "nlos_gains", self.__nlos_gains)
-        group.attrs["los_doppler"] = self.__los_doppler
-        group.attrs["nlos_doppler"] = self.__nlos_doppler
-        group.attrs["gain"] = self.gain
-
-    @staticmethod
-    def From_HDF(
-        group: Group,
-        random_realization: ConsistentRealization,
-        antenna_correlation_variable: ConsistentUniform,
-        los_angles_variable: float | ConsistentUniform,
-        nlos_angles_variable: ConsistentUniform,
-        los_phases_variable: ConsistentUniform,
-        nlos_phases_variable: ConsistentUniform,
-        antenna_correlation: AntennaCorrelation | None,
-        sample_hooks: Set[ChannelSampleHook[MultipathFadingSample]],
-    ) -> MultipathFadingRealization:
-
-        # Deserialize base class
-        random_realization = ConsistentRealization.from_HDF(group["random_realization"])
-        power_profile = np.array(group["power_profile"], dtype=np.float64)
-        delay_profile = np.array(group["delay_profile"], dtype=np.float64)
-        los_gains = np.array(group["los_gains"], dtype=np.float64)
-        nlos_gains = np.array(group["nlos_gains"], dtype=np.float64)
-        los_doppler = group.attrs["los_doppler"]
-        nlos_doppler = group.attrs["nlos_doppler"]
-        gain = group.attrs["gain"]
-
-        return MultipathFadingRealization(
-            random_realization,
-            antenna_correlation_variable,
-            los_angles_variable,
-            nlos_angles_variable,
-            los_phases_variable,
-            nlos_phases_variable,
-            power_profile,
-            delay_profile,
-            los_gains,
-            nlos_gains,
-            los_doppler,
-            nlos_doppler,
-            antenna_correlation,
-            sample_hooks,
-            gain,
-        )
-
     def _reciprocal_sample(
         self, sample: MultipathFadingSample, state: LinkState
     ) -> MultipathFadingSample:
@@ -565,13 +521,59 @@ class MultipathFadingRealization(ChannelRealization[MultipathFadingSample]):
             state,
         )
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_object(self.__random_realization, "random_realization")
+        process.serialize_object(
+            self.__antenna_correlation_variable, "antenna_correlation_variable"
+        )
+        if isinstance(self.__los_angles_variable, float):
+            process.serialize_floating(self.__los_angles_variable, "los_angles_variable")
+        else:
+            process.serialize_object(self.__los_angles_variable, "los_angles_variable")
+        process.serialize_object(self.__path_angles_variable, "path_angles_variable")
+        process.serialize_object(self.__los_phases_variable, "los_phases_variable")
+        process.serialize_object(self.__path_phases_variable, "path_phases_variable")
+        process.serialize_array(self.__power_profile, "power_profile")
+        process.serialize_array(self.__delay_profile, "delay_profile")
+        process.serialize_array(self.__los_gains, "los_gains")
+        process.serialize_array(self.__nlos_gains, "nlos_gains")
+        process.serialize_floating(self.__los_doppler, "los_doppler")
+        process.serialize_floating(self.__nlos_doppler, "nlos_doppler")
+        if self.__antenna_correlation is not None:
+            process.serialize_object(self.__antenna_correlation, "antenna_correlation")
+        ChannelRealization.serialize(self, process)
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> MultipathFadingRealization:
+        return MultipathFadingRealization(
+            process.deserialize_object("random_realization", ConsistentRealization),
+            process.deserialize_object("antenna_correlation_variable", ConsistentUniform),
+            process.deserialize_object("los_angles_variable", ConsistentUniform),
+            process.deserialize_object("path_angles_variable", ConsistentUniform),
+            process.deserialize_object("los_phases_variable", ConsistentUniform),
+            process.deserialize_object("path_phases_variable", ConsistentUniform),
+            process.deserialize_array("power_profile", np.float64),
+            process.deserialize_array("delay_profile", np.float64),
+            process.deserialize_array("los_gains", np.float64),
+            process.deserialize_array("nlos_gains", np.float64),
+            process.deserialize_floating("los_doppler"),
+            process.deserialize_floating("nlos_doppler"),
+            process.deserialize_object("antenna_correlation", AntennaCorrelation, None),
+            set(),
+            **Channel._DeserializeParameters(process),  # type: ignore[arg-type]
+        )
+
 
 class MultipathFadingChannel(
     Channel[MultipathFadingRealization, MultipathFadingSample], Serializable
 ):
     """Base class for the implementation of stochastic multipath fading channels."""
 
-    yaml_tag = "MultipathFading"
+    _DEFAULT_DECORRELATION_DISTANCE = float("inf")
+    _DEFAULT_NUM_SINUSOIDS = 20
+    _DEFAULT_DOPPLER_FREQUENCY = 0.0
 
     __delays: np.ndarray
     __power_profile: np.ndarray
@@ -590,14 +592,14 @@ class MultipathFadingChannel(
         delays: np.ndarray | List[float],
         power_profile: np.ndarray | List[float],
         rice_factors: np.ndarray | List[float],
-        correlation_distance: float = float("inf"),
-        num_sinusoids: int | None = None,
+        correlation_distance: float = _DEFAULT_DECORRELATION_DISTANCE,
+        num_sinusoids: int = _DEFAULT_NUM_SINUSOIDS,
         los_angle: float | None = None,
-        doppler_frequency: float | None = None,
+        doppler_frequency: float = _DEFAULT_DOPPLER_FREQUENCY,
         los_doppler_frequency: float | None = None,
         antenna_correlation: AntennaCorrelation | None = None,
-        gain: float = 1.0,
-        **kwargs: Any,
+        gain: float = Channel._DEFAULT_GAIN,
+        seed: int | None = None,
     ) -> None:
         """
         Args:
@@ -637,8 +639,8 @@ class MultipathFadingChannel(
                 Linear power gain factor a signal experiences when being propagated over this realization.
                 :math:`1.0` by default.
 
-            \**kwargs (Any, optional):
-                Channel base class initialization parameters.
+            seed (int, optional):
+                Seed used to initialize the pseudo-random number generator.
 
         Raises:
 
@@ -683,7 +685,7 @@ class MultipathFadingChannel(
 
         # Initialize base class
         self.__antenna_correlation = None
-        Channel.__init__(self, gain=gain, **kwargs)
+        Channel.__init__(self, gain, seed)
 
         # Sort delays
         sorting = np.argsort(delays)
@@ -691,13 +693,10 @@ class MultipathFadingChannel(
         self.__delays = self.__delays[sorting]
         self.__power_profile = self.__power_profile[sorting]
         self.__rice_factors = self.__rice_factors[sorting]
-        self.__num_sinusoids = 20 if num_sinusoids is None else num_sinusoids
+        self.__num_sinusoids = num_sinusoids
         self.los_angle = self._rng.uniform(-pi, pi) if los_angle is None else los_angle
-        self.doppler_frequency = 0.0 if doppler_frequency is None else doppler_frequency
-        self.__los_doppler_frequency = None
-
-        if los_doppler_frequency is not None:
-            self.los_doppler_frequency = los_doppler_frequency
+        self.doppler_frequency = doppler_frequency
+        self.__los_doppler_frequency = los_doppler_frequency
 
         # Infer additional parameters
         self.__max_delay = max(self.__delays)
@@ -911,15 +910,46 @@ class MultipathFadingChannel(
 
         self.__alpha_correlation = value
 
-    def recall_realization(self, group: Group) -> MultipathFadingRealization:
-        return MultipathFadingRealization.From_HDF(
-            group,
-            self.__rng.realize(self.correlation_distance),
-            self.__antenna_correlation_variable,
-            self.__los_angles_variable,
-            self.__nlos_angles_variable,
-            self.__los_phases_variable,
-            self.__nlos_phases_variable,
-            self.antenna_correlation,
-            self.sample_hooks,
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_array(self.__delays, "delays")
+        process.serialize_array(self.__power_profile, "power_profile")
+        process.serialize_array(self.__rice_factors, "rice_factors")
+        process.serialize_integer(self.num_sinusoids, "num_sinusoids")
+        process.serialize_floating(self.__correlation_distance, "correlation_distance")
+        process.serialize_floating(self.__doppler_frequency, "doppler_frequency")
+        process.serialize_floating(self.__los_doppler_frequency, "los_doppler_frequency")
+        if self.antenna_correlation is not None:
+            process.serialize_object(self.antenna_correlation, "antenna_correlation")
+        Channel.serialize(self, process)
+
+    @classmethod
+    @override
+    def _DeserializeParameters(cls, process: DeserializationProcess) -> dict[str, Any]:
+        parameters = Channel._DeserializeParameters(process)
+        parameters.update(
+            {
+                "delays": process.deserialize_array("delays", np.float64),
+                "power_profile": process.deserialize_array("power_profile", np.float64),
+                "rice_factors": process.deserialize_array("rice_factors", np.float64),
+                "num_sinusoids": process.deserialize_integer(
+                    "num_sinusoids", cls._DEFAULT_NUM_SINUSOIDS
+                ),
+                "correlation_distance": process.deserialize_floating(
+                    "correlation_distance", cls._DEFAULT_DECORRELATION_DISTANCE
+                ),
+                "doppler_frequency": process.deserialize_floating(
+                    "doppler_frequency", cls._DEFAULT_DOPPLER_FREQUENCY
+                ),
+                "los_doppler_frequency": process.deserialize_floating("los_doppler_frequency"),
+                "antenna_correlation": process.deserialize_object(
+                    "antenna_correlation", AntennaCorrelation, None
+                ),
+            }
         )
+        return parameters
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> MultipathFadingChannel:
+        return MultipathFadingChannel(**cls._DeserializeParameters(process))

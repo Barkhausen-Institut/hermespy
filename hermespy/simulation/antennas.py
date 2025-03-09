@@ -46,7 +46,6 @@ __status__ = "Prototype"
 class SimulatedAntennaPort(AntennaPort["SimulatedAntenna", "SimulatedAntennaArray"]):
     """Port within a simulated antenna array."""
 
-    yaml_tag = "SimulatedAntennaPort"
     __rf_chain: RfChain | None  # radio frequency chain connected to this antenna port
 
     def __init__(
@@ -196,8 +195,6 @@ class SimulatedAntenna(Antenna[SimulatedAntennaPort]):
 class SimulatedDipole(SimulatedAntenna, Dipole[SimulatedAntennaPort]):
     """Model of single dipole antenna within an antenna array."""
 
-    yaml_tag = "SimulatedDipole"
-
     def __init__(
         self,
         mode: AntennaMode = AntennaMode.DUPLEX,
@@ -227,8 +224,6 @@ class SimulatedDipole(SimulatedAntenna, Dipole[SimulatedAntennaPort]):
 class SimulatedIdealAntenna(SimulatedAntenna, IdealAntenna[SimulatedAntennaPort]):
     """Model of single ideal antenna within an antenna array."""
 
-    yaml_tag = "SimulatedIdealAntenna"
-
     def __init__(
         self,
         mode: AntennaMode = AntennaMode.DUPLEX,
@@ -257,8 +252,6 @@ class SimulatedIdealAntenna(SimulatedAntenna, IdealAntenna[SimulatedAntennaPort]
 
 class SimulatedLinearAntenna(SimulatedAntenna, LinearAntenna[SimulatedAntennaPort]):
     """Model of single linear antenna within an antenna array."""
-
-    yaml_tag = "SimulatedLinearAntenna"
 
     def __init__(
         self,
@@ -292,8 +285,6 @@ class SimulatedLinearAntenna(SimulatedAntenna, LinearAntenna[SimulatedAntennaPor
 
 class SimulatedPatchAntenna(SimulatedAntenna, PatchAntenna[SimulatedAntennaPort]):
     """Model of single patch antenna within an antenna array."""
-
-    yaml_tag = "SimulatedPatchAntenna"
 
     def __init__(
         self,
@@ -963,8 +954,6 @@ class SimulatedUniformArray(
 ):
     """A uniform array of simulated antennas."""
 
-    yaml_tag = "SimulatedUniformArray"
-
     def __init__(
         self,
         element: Type[SimulatedAntenna] | SimulatedAntenna,
@@ -998,8 +987,6 @@ class SimulatedCustomArray(
     SimulatedAntennaArray, CustomAntennaArray[SimulatedAntennaPort, SimulatedAntenna]
 ):
     """A custom array of simulated antennas."""
-
-    yaml_tag = "SimulatedCustomArray"
 
     def __init__(
         self,

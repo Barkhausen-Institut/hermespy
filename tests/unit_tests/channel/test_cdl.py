@@ -2,20 +2,21 @@
 
 from abc import abstractmethod
 from unittest import TestCase
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import numpy as np
 from numpy.testing import assert_array_equal
-from h5py import File
 from scipy.constants import speed_of_light
 
 from hermespy.core import DenseSignal, Transformation
 from hermespy.simulation import SimulatedDeviceState, SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
 from hermespy.simulation.animation import StaticTrajectory, TrajectorySample
+from hermespy.channel import ConsistentGaussian, ConsistentUniform
 from hermespy.channel.channel import LinkState
 from hermespy.channel.cdl import CDL, CDLType, LOSState, O2IState, FactoryType, IndoorFactory, IndoorOffice, OfficeType, RuralMacrocells, UrbanMacrocells, UrbanMicrocells
-from hermespy.channel.cdl.cluster_delay_lines import ClusterDelayLineBase, ClusterDelayLineRealization, ClusterDelayLineSample, ClusterDelayLineSampleParameters, DelayNormalization
+from hermespy.channel.cdl.cluster_delay_lines import ClusterDelayLineBase, ClusterDelayLineRealization, ClusterDelayLineRealizationParameters, ClusterDelayLineSample, ClusterDelayLineSampleParameters, DelayNormalization
 from unit_tests.utils import assert_signals_equal, SimulationTestContext
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -213,6 +214,32 @@ class TestClusterDelayLineSampleParameters(TestCase):
         self.assertEqual(self.transmitter_height, self.parameters.terminal_height)
 
 
+class TestClusterDelayLineRealizationParameters(TestCase):
+    """Test cluster delay line realization parameters data class"""
+    
+    def setUp(self) -> None:
+        self.parameters = ClusterDelayLineRealizationParameters(
+            ConsistentUniform([1, 2], 0),
+            DelayNormalization.TOF,
+            False,
+            np.array([1, 2, 3], dtype=np.float64),
+            ConsistentGaussian([1, 2], 0),
+            ConsistentUniform([1, 2], 0),
+            ConsistentGaussian([1, 2], 0),
+            np.array([0, 1, 2]),
+            ConsistentGaussian([1, 2], 0),
+            np.array([2, 3, 4]),
+            np.array([1, 2, 3]),
+            ConsistentGaussian([1, 2], 0),
+            ConsistentUniform([1, 2], 0),
+        )
+
+    def test_serialization(self) -> None:
+        """Test serialization of CDL init parmeter dataclass"""
+        
+        test_roundtrip_serialization(self, self.parameters)
+
+
 class TestClusterDelayLine(TestCase):
     
     def setUp(self) -> None:
@@ -364,31 +391,26 @@ class TestClusterDelayLine(TestCase):
         self.alpha_device.carrier_frequency = 2e9
         reciprocal_sample = realization.reciprocal_sample(sample, self.alpha_device, self.beta_device)
             
-    def test_hdf_serialization(self) -> None:
-        """Test the realization serialization to and from HDF"""
-        
+    def test_model_serialization(self) -> None:
+        """Test CDL channel model serialization"""
+
+        test_roundtrip_serialization(self, self.model)
+
+    def test_realization_serialization(self) -> None:
+        """Test CDL channel realization serialization"""
+
         expected_realization: ClusterDelayLineRealization = self.model.realize()
-        
-        file = File("test.hdf", "w", "core")
-        group = file.create_group("realization")
-        
-        expected_realization.to_HDF(group)
-        recalled_realization: ClusterDelayLineRealization = self.model.recall_realization(group)
-        
-        file.close()
-        
-        self.assertEqual(expected_realization.expected_state, recalled_realization.expected_state)
-        self.assertEqual(expected_realization.gain, recalled_realization.gain)
+        test_roundtrip_serialization(self, expected_realization)
 
 
 class TestIndoorFactory(TestClusterDelayLine):
     
     def _init_model(self) -> IndoorFactory:
-        return IndoorFactory(2000, 3000, FactoryType.HH, 1.0, self.gain, delay_normalization=self.delay_normalization, oxygen_absorption=self.oxygen_absorption)
-    
+        return IndoorFactory(2000.0, 3000.0, FactoryType.HH, 1.0, gain=self.gain, delay_normalization=self.delay_normalization, oxygen_absorption=self.oxygen_absorption)
+
     def _large_scale_states(self) -> list:
         return list(LOSState)
-    
+
     def test_volume_setget(self) -> None:
         """Volume getter should return setter argument"""
         
@@ -443,25 +465,6 @@ class TestIndoorFactory(TestClusterDelayLine):
             sample = realization.sample(self.alpha_device, self.beta_device, self.carrier_frequency, self.bandwidth)
             self._test_propagation(sample)
 
-    def test_hdf_serialization_expected_state(self) -> None:
-        """Test HDF serialization with a fixed expected state"""
-    
-        expected_state = LOSState.LOS
-        self.model.expected_state = expected_state
-        
-        realization = self.model.realize()
-        
-        file = File("test.hdf", "w", "core")
-        group = file.create_group("realization")
-        
-        realization.to_HDF(group)
-        recalled_realization = self.model.recall_realization(group)
-        
-        file.close()
-        
-        self.assertEqual(expected_state, recalled_realization.expected_state)
-
-
 
 class TestIndoorOffice(TestClusterDelayLine):
     
@@ -470,7 +473,7 @@ class TestIndoorOffice(TestClusterDelayLine):
     
     def _large_scale_states(self) -> list:
         return list(LOSState)
-    
+
     def test_office_type(self) -> None:
         """Test different office types"""
         
@@ -479,111 +482,40 @@ class TestIndoorOffice(TestClusterDelayLine):
             realization = self.model.realize()
             sample = realization.sample(self.alpha_device, self.beta_device, self.carrier_frequency, self.bandwidth)
             self._test_propagation(sample)
-            
+
     def test_office_type_setget(self) -> None:
         """Office type getter should return setter argument"""
         
         self.model.office_type = OfficeType.OPEN
         self.assertEqual(OfficeType.OPEN, self.model.office_type)
-            
-    def test_hdf_serialization_expected_state(self) -> None:
-        """Test HDF serialization with a fixed expected state"""
-    
-        expected_state = LOSState.LOS
-        self.model.expected_state = expected_state
-        
-        realization = self.model.realize()
-        
-        file = File("test.hdf", "w", "core")
-        group = file.create_group("realization")
-        
-        realization.to_HDF(group)
-        recalled_realization = self.model.recall_realization(group)
-        
-        file.close()
-        
-        self.assertEqual(expected_state, recalled_realization.expected_state)
 
 
 class TestRuralMacrocells(TestClusterDelayLine):
 
     def _init_model(self) -> RuralMacrocells:
-        return RuralMacrocells(self.gain, self.delay_normalization, self.oxygen_absorption)
+        return RuralMacrocells(self.delay_normalization, self.oxygen_absorption, gain=self.gain)
     
     def _large_scale_states(self) -> list:
         return list(O2IState)
-    
-    def test_hdf_serialization_expected_state(self) -> None:
-        """Test HDF serialization with a fixed expected state"""
-    
-        expected_state = O2IState.LOS
-        self.model.expected_state = expected_state
-        
-        realization = self.model.realize()
-        
-        file = File("test.hdf", "w", "core")
-        group = file.create_group("realization")
-        
-        realization.to_HDF(group)
-        recalled_realization = self.model.recall_realization(group)
-        
-        file.close()
-        
-        self.assertEqual(expected_state, recalled_realization.expected_state)
 
 
 class TestUrbanMacrocells(TestClusterDelayLine):
 
     def _init_model(self) -> UrbanMacrocells:
-        return UrbanMacrocells(self.gain, self.delay_normalization, self.oxygen_absorption)
+        return UrbanMacrocells(self.delay_normalization, self.oxygen_absorption, gain=self.gain)
     
     def _large_scale_states(self) -> list:
         return list(O2IState)
-    
-    def test_hdf_serialization_expected_state(self) -> None:
-        """Test HDF serialization with a fixed expected state"""
-    
-        expected_state = LOSState.LOS
-        self.model.expected_state = expected_state
-        
-        realization = self.model.realize()
-        
-        file = File("test.hdf", "w", "core")
-        group = file.create_group("realization")
-        
-        realization.to_HDF(group)
-        recalled_realization = self.model.recall_realization(group)
-        
-        file.close()
-        
-        self.assertEqual(expected_state, recalled_realization.expected_state)
-    
+
 
 class TestUrbanMicrocells(TestClusterDelayLine):
 
     def _init_model(self) -> UrbanMicrocells:
-        return UrbanMicrocells(self.gain, self.delay_normalization, self.oxygen_absorption)
+        return UrbanMicrocells(self.delay_normalization, self.oxygen_absorption, gain=self.gain)
     
     def _large_scale_states(self) -> list:
         return list(O2IState)
-    
-    def test_hdf_serialization_expected_state(self) -> None:
-        """Test HDF serialization with a fixed expected state"""
-    
-        expected_state = O2IState.LOS
-        self.model.expected_state = expected_state
-        
-        realization = self.model.realize()
-        
-        file = File("test.hdf", "w", "core")
-        group = file.create_group("realization")
-        
-        realization.to_HDF(group)
-        recalled_realization = self.model.recall_realization(group)
-        
-        file.close()
-        
-        self.assertEqual(expected_state, recalled_realization.expected_state)
+
     
 class TestCDL(TestCase):
     """Test static CDL models."""
@@ -598,7 +530,7 @@ class TestCDL(TestCase):
         self.bandwidth = 1e8
         self.gain = 0.98
         
-        self.model = CDL(CDLType.E, 1e-8, 0.123, 29, gain=self.gain)
+        self.model = CDL(CDLType.E, 1e-8, 0.123, 29.0, gain=self.gain)
         
         
     def test_init(self) -> None:
@@ -607,7 +539,7 @@ class TestCDL(TestCase):
         self.assertEqual(CDLType.E, self.model.model_type)
         self.assertEqual(1e-8, self.model.rms_delay)
         self.assertEqual(0.123, self.model.rayleigh_factor)
-        self.assertEqual(29, self.model.decorrelation_distance)
+        self.assertEqual(29.0, self.model.decorrelation_distance)
         
     def test_rms_delay_setget(self) -> None:
         """RMS delay getter should return setter argument"""
@@ -663,21 +595,16 @@ class TestCDL(TestCase):
         reciprocal_sample = realization.reciprocal_sample(sample, self.alpha_device, self.beta_device)
         reciprocal_sample = realization.reciprocal_sample(sample, self.beta_device, self.alpha_device)
         
-    def test_hdf_serialization(self) -> None:
-        """Test the realization serialization to and from HDF"""
+    def test_serialize(self) -> None:
+        """Test CDL model serialization"""
         
-        expected_realization = self.model.realize()
+        test_roundtrip_serialization(self, self.model)
         
-        file = File("test.hdf", "w", "core")
-        group = file.create_group("realization")
+    def test_realization_serialization(self) -> None:
+        """Test CDL model realization serialization"""
         
-        expected_realization.to_HDF(group)
-        recalled_realization = self.model.recall_realization(group)
-        
-        file.close()
-        
-        self.assertEqual(expected_realization.gain, recalled_realization.gain)
+        realization = self.model.realize()
+        test_roundtrip_serialization(self, realization)
 
 
-        
 del TestClusterDelayLine

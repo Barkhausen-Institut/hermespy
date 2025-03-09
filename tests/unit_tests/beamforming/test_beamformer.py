@@ -9,7 +9,7 @@ from numpy.testing import assert_array_equal
 from hermespy.beamforming import BeamFocus, CoordinateFocus, ReceiveBeamformer, SphericalFocus, TransmitBeamformer
 from hermespy.core import AntennaArray, DeviceState, Direction, Device, FloatingError, Signal, Transformation
 from hermespy.simulation import DeviceFocus, SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -51,10 +51,10 @@ class _TestBeamFocus(TestCase):
 
         self.assertIsNot(copy, self.device_focus)
 
-    def test_yaml_serialization(self) -> None:
-        """Beam focus should be serializable to and from YAML"""
+    def test_serialization(self) -> None:
+        """Test beam focus serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.device_focus)
+        test_roundtrip_serialization(self, self.device_focus)
 
 
 class TestDeviceFocus(_TestBeamFocus):

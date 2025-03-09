@@ -9,7 +9,7 @@ from scipy.constants import pi
 
 from hermespy.beamforming import ConventionalBeamformer
 from hermespy.simulation import SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -52,6 +52,6 @@ class TestConventionalBeamformer(TestCase):
             assert_array_almost_equal(expected_samples, decoded_samples[0, ::])
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test conventional beamformer serialization"""
 
-        test_yaml_roundtrip_serialization(self, self.beamformer)
+        test_roundtrip_serialization(self, self.beamformer)

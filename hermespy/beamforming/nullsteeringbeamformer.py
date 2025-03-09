@@ -4,7 +4,7 @@ import numpy as np
 from scipy.linalg import pinvh
 
 from hermespy.beamforming import TransmitBeamformer, ReceiveBeamformer
-from hermespy.core import AntennaArrayState, Serializable
+from hermespy.core import AntennaArrayState
 
 __author__ = "Alan Thomas"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -17,9 +17,7 @@ __status__ = "Prototype"
 
 
 # Define the NullStearingBeamformer class by inheriting from the ReceiveBeamformer class
-class NullSteeringBeamformer(Serializable, TransmitBeamformer, ReceiveBeamformer):
-
-    yaml_tag = "NullSteeringBeamformer"
+class NullSteeringBeamformer(TransmitBeamformer, ReceiveBeamformer):
 
     def __init__(self) -> None:
         TransmitBeamformer.__init__(self)

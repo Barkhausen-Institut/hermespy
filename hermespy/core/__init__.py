@@ -46,7 +46,14 @@ from .device import (
 )
 from .executable import Executable
 from .pipeline import Pipeline
-from .factory import Factory, Serializable, SerializableEnum, HDFSerializable
+from .factory import (
+    Factory,
+    Serializable,
+    SerializableEnum,
+    SerializationBackend,
+    SerializationProcess,
+    DeserializationProcess,
+)
 from .hooks import Hook, Hookable
 from .monte_carlo import (
     Artifact,
@@ -180,7 +187,9 @@ __all__ = [
     "Factory",
     "Serializable",
     "SerializableEnum",
-    "HDFSerializable",
+    "SerializationBackend",
+    "SerializationProcess",
+    "DeserializationProcess",
     "Precoder",
     "Precoding",
     "TransmitEncoder",

@@ -65,11 +65,11 @@ def simulation_init_mock(self: Simulation, scenario: None | SimulationScenario =
     simulation_init(self, scenario, num_samples, drop_duration, drop_interval, plot_results, dump_results, console_mode, ray_address, results_dir, verbosity, seed, num_actors)
 
 
-def new_dimension_mock(cls: MonteCarlo, dimension: str, sample_points: List[Any], *args) -> GridDimension:
+def new_dimension_mock(cls: MonteCarlo, dimension: str, sample_points: List[Any], *args, **kwargs) -> GridDimension:
     _considered_object = cls.investigated_object if len(args) < 1 else args
 
     # Only take a single sample point into account to speed up simulations
-    dimension = GridDimension(_considered_object, dimension, [sample_points[0]])
+    dimension = GridDimension(_considered_object, dimension, [sample_points[0]], **kwargs)
     cls.add_dimension(dimension)
 
     return dimension

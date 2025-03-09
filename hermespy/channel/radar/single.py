@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 from typing import Set, Sequence, Tuple
+from typing_extensions import override
 
 import numpy as np
-from h5py import Group
 
-from hermespy.core import Direction, HDFSerializable, Serializable
+from hermespy.core import DeserializationProcess, Direction, Serializable, SerializationProcess
 from ..channel import ChannelSampleHook, LinkState
 from ..consistent import ConsistentGenerator, ConsistentRealization, ConsistentUniform
 from .radar import RadarChannelBase, RadarTargetPath, RadarChannelRealization, RadarChannelSample
@@ -132,64 +132,64 @@ class SingleTargetRadarChannelRealization(RadarChannelRealization):
 
         return [target_path]
 
-    def to_HDF(self, group: Group) -> None:
-        self.__consistent_realization.to_HDF(
-            HDFSerializable._create_group(group, "consistent_realization")
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        RadarChannelRealization.serialize(self, process)
+        process.serialize_object(self.__consistent_realization, "consistent_realization")
+        process.serialize_object(self.__target_range_variable, "target_range_variable")
+        process.serialize_object(self.__target_azimuth_variable, "target_azimuth_variable")
+        process.serialize_object(self.__target_zenith_variable, "target_zenith_variable")
+        process.serialize_object(self.__target_velocity_variable, "target_velocity_variable")
+        process.serialize_object(self.__target_phase_variable, "target_phase_variable")
+        process.serialize_range(self.__target_range, "target_range")
+        process.serialize_range(self.__target_azimuth, "target_azimuth")
+        process.serialize_range(self.__target_zenith, "target_zenith")
+        process.serialize_floating(self.__target_cross_section, "target_cross_section")
+        process.serialize_array(
+            (
+                np.array([self.__target_velocity])
+                if isinstance(self.__target_velocity, float)
+                else np.asarray(self.__target_velocity)
+            ),
+            "target_velocity",
         )
-        if self.__target_range is not None:
-            HDFSerializable._range_to_HDF(group, "target_range", self.__target_range)
-        HDFSerializable._range_to_HDF(group, "target_azimuth", self.__target_azimuth)
-        HDFSerializable._range_to_HDF(group, "target_zenith", self.__target_zenith)
-        group.attrs["target_cross_section"] = self.__target_cross_section
-        if isinstance(self.__target_velocity, np.ndarray):  # pragma: no cover
-            HDFSerializable._write_dataset(group, "target_velocity", self.__target_velocity)
-        else:
-            HDFSerializable._range_to_HDF(group, "target_velocity", self.__target_velocity)
-        group.attrs["attenuate"] = self.__attenuate
-        group.attrs["gain"] = self.gain
+        process.serialize_integer(self.__attenuate, "attenuate")
 
-    @staticmethod
-    def From_HDF(
-        group: Group,
-        target_range_variable: ConsistentUniform,
-        target_azimuth_variable: ConsistentUniform,
-        target_zenith_variable: ConsistentUniform,
-        target_velocity_variable: ConsistentUniform,
-        target_phase_variable: ConsistentUniform,
-        sample_hooks: Set[ChannelSampleHook[RadarChannelSample]],
-    ) -> SingleTargetRadarChannelRealization:
-        target_velocity: np.ndarray | Tuple[float, float] | float
-        if "target_velocity" in group:  # pragma: no cover
-            target_velocity = np.asarray(group["target_velocity"], dtype=np.float64)
-        else:
-            target_velocity = HDFSerializable._range_from_HDF(group, "target_velocity")
-
-        target_range = None
-        if "target_range" in group:  # pragma: no cover
-            target_range = HDFSerializable._range_from_HDF(group, "target_range")
-
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> SingleTargetRadarChannelRealization:
+        target_velocity: float | tuple[float, float] | np.ndarray
+        target_velocity = process.deserialize_array("target_velocity", np.float64)
+        if len(target_velocity) == 1:
+            target_velocity = float(target_velocity[0])
+        elif len(target_velocity) == 2:
+            target_velocity = (target_velocity[0], target_velocity[1])
         return SingleTargetRadarChannelRealization(
-            ConsistentRealization.from_HDF(group["consistent_realization"]),
-            target_range_variable,
-            target_azimuth_variable,
-            target_zenith_variable,
-            target_velocity_variable,
-            target_phase_variable,
-            target_range,
-            HDFSerializable._range_from_HDF(group, "target_azimuth"),
-            HDFSerializable._range_from_HDF(group, "target_zenith"),
-            group.attrs["target_cross_section"],
+            process.deserialize_object("consistent_realization", ConsistentRealization),
+            process.deserialize_object("target_range_variable", ConsistentUniform),
+            process.deserialize_object("target_azimuth_variable", ConsistentUniform),
+            process.deserialize_object("target_zenith_variable", ConsistentUniform),
+            process.deserialize_object("target_velocity_variable", ConsistentUniform),
+            process.deserialize_object("target_phase_variable", ConsistentUniform),
+            process.deserialize_range("target_range"),
+            process.deserialize_range("target_azimuth"),
+            process.deserialize_range("target_zenith"),
+            process.deserialize_floating("target_cross_section"),
             target_velocity,
-            group.attrs["attenuate"],
-            sample_hooks,
-            group.attrs["gain"],
+            bool(process.deserialize_integer("attenuate")),
+            set(),
+            process.deserialize_floating("gain"),
         )
 
 
 class SingleTargetRadarChannel(RadarChannelBase[SingleTargetRadarChannelRealization], Serializable):
     """Model of a radar channel featuring a single reflecting target."""
 
-    yaml_tag = "RadarChannel"
+    _DEFAULT_TARGET_AZIMUTH = 0.0
+    _DEFAULT_TARGET_ZENITH = 0.0
+    _DEFAULT_TARGET_EXISTS = True
+    _DEFAULT_VELOCITY = 0.0
+    _DEFAULT_DECORRELATION_DISTANCE = float("inf")
 
     __target_range: float | Tuple[float, float]
     __radar_cross_section: float
@@ -202,13 +202,14 @@ class SingleTargetRadarChannel(RadarChannelBase[SingleTargetRadarChannelRealizat
         self,
         target_range: float | Tuple[float, float],
         radar_cross_section: float,
-        target_azimuth: float | Tuple[float, float] = 0.0,
-        target_zenith: float | Tuple[float, float] = 0.0,
-        target_exists: bool = True,
-        velocity: float | Tuple[float, float] | np.ndarray = 0,
-        attenuate: bool = True,
+        target_azimuth: float | Tuple[float, float] = _DEFAULT_TARGET_AZIMUTH,
+        target_zenith: float | Tuple[float, float] = _DEFAULT_TARGET_ZENITH,
+        target_exists: bool = _DEFAULT_TARGET_EXISTS,
+        velocity: float | Tuple[float, float] | np.ndarray = _DEFAULT_VELOCITY,
         decorrelation_distance: float = float("inf"),
-        **kwargs,
+        attenuate: bool = RadarChannelBase._DEFAULT_ATTENUATE,
+        gain: float = RadarChannelBase._DEFAULT_GAIN,
+        seed: int | None = None,
     ) -> None:
         """
         Args:
@@ -234,6 +235,10 @@ class SingleTargetRadarChannel(RadarChannelBase[SingleTargetRadarChannelRealizat
             velocity (float | Tuple[float, float] | np.ndarray , optional):
                 Velocity as a 3D vector (or as a float), in m/s (default = 0)
 
+            decorrelation_distance (float, optional):
+                Distance at which channel samples are considered to be uncorrelated.
+                :math:`\\infty` by default, i.e. the channel is considered to be fully correlated in space.
+
             attenuate (bool, optional):
                 If True, then signal will be attenuated depending on the range, RCS and losses.
                 If False, then received power is equal to transmit power.
@@ -246,7 +251,7 @@ class SingleTargetRadarChannel(RadarChannelBase[SingleTargetRadarChannelRealizat
         """
 
         # Initialize base class
-        RadarChannelBase.__init__(self, attenuate=attenuate, **kwargs)
+        RadarChannelBase.__init__(self, attenuate, gain, seed)
 
         # Initialize class properties
         self.__consistent_generator = ConsistentGenerator(self)
@@ -420,6 +425,7 @@ class SingleTargetRadarChannel(RadarChannelBase[SingleTargetRadarChannelRealizat
 
         self.__decorrelation_distance = value
 
+    @override
     def _realize(self) -> SingleTargetRadarChannelRealization:
         return SingleTargetRadarChannelRealization(
             self.__consistent_generator.realize(self.decorrelation_distance),
@@ -438,13 +444,46 @@ class SingleTargetRadarChannel(RadarChannelBase[SingleTargetRadarChannelRealizat
             self.gain,
         )
 
-    def recall_realization(self, group: Group) -> SingleTargetRadarChannelRealization:
-        return SingleTargetRadarChannelRealization.From_HDF(
-            group,
-            self.__target_range_variable,
-            self.__target_azimuth_variable,
-            self.__target_zenith_variable,
-            self.__target_velocity_variable,
-            self.__target_phase_variable,
-            self.sample_hooks,
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        RadarChannelBase.serialize(self, process)
+        process.serialize_object(self.__target_range_variable, "target_range_variable")
+        process.serialize_object(self.__target_azimuth_variable, "target_azimuth_variable")
+        process.serialize_object(self.__target_zenith_variable, "target_zenith_variable")
+        process.serialize_object(self.__target_velocity_variable, "target_velocity_variable")
+        process.serialize_object(self.__target_phase_variable, "target_phase_variable")
+        process.serialize_range(self.target_range, "target_range")
+        process.serialize_range(self.target_azimuth, "target_azimuth")
+        process.serialize_range(self.target_zenith, "target_zenith")
+        process.serialize_floating(self.radar_cross_section, "radar_cross_section")
+        process.serialize_integer(self.target_exists, "target_exists")
+        process.serialize_array(
+            (
+                np.array([self.target_velocity], dtype=np.float64)
+                if isinstance(self.target_velocity, float)
+                else np.asarray(self.target_velocity)
+            ),
+            "target_velocity",
+            False,
+        )
+        process.serialize_floating(self.decorrelation_distance, "decorrelation_distance")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> SingleTargetRadarChannel:
+        target_velocity: float | tuple[float, float] | np.ndarray
+        target_velocity = process.deserialize_array("target_velocity", np.float64)
+        if len(target_velocity) == 1:
+            target_velocity = float(target_velocity[0])
+        elif len(target_velocity) == 2:
+            target_velocity = (target_velocity[0], target_velocity[1])
+        return SingleTargetRadarChannel(
+            process.deserialize_range("target_range"),
+            process.deserialize_floating("radar_cross_section"),
+            process.deserialize_range("target_azimuth", cls._DEFAULT_TARGET_AZIMUTH),
+            process.deserialize_range("target_zenith", cls._DEFAULT_TARGET_ZENITH),
+            bool(process.deserialize_integer("target_exists", cls._DEFAULT_TARGET_EXISTS)),
+            target_velocity,
+            process.deserialize_floating("decorrelation_distance"),
+            **RadarChannelBase._DeserializeParameters(process),  # type: ignore[arg-type]
         )

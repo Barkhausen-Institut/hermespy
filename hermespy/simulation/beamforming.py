@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
+from typing import Type
+from typing_extensions import override
 
 import numpy as np
 
 from hermespy.beamforming import BeamFocus
-from hermespy.core import Direction, State
+from hermespy.core import DeserializationProcess, Direction, SerializationProcess, State
 from .simulated_device import SimulatedDevice
 
 __author__ = "Jan Adler"
@@ -21,7 +23,6 @@ __status__ = "Prototype"
 class DeviceFocus(BeamFocus):
     """Focus point targeting a device."""
 
-    yaml_tag = "DeviceFocus"
     __focused_device: SimulatedDevice  # Device focused by the beamformer
 
     def __init__(self, focused_device: SimulatedDevice) -> None:
@@ -56,3 +57,13 @@ class DeviceFocus(BeamFocus):
 
         direction = Direction.From_Cartesian(receiver_position - transmitter_position, True)
         return direction.to_spherical()
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_object(self.focused_device, "focus")
+
+    @classmethod
+    @override
+    def Deserialize(cls: Type[DeviceFocus], process: DeserializationProcess) -> DeviceFocus:
+        focused_device = process.deserialize_object("focus", SimulatedDevice)
+        return DeviceFocus(focused_device)

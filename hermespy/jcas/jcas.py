@@ -3,13 +3,20 @@
 from __future__ import annotations
 from abc import abstractmethod
 from typing import Generic, Sequence, Type
+from typing_extensions import override
 
-from h5py import Group
 
-from hermespy.core import ReceiveState, Signal, TransmitState
+from hermespy.beamforming import ReceiveBeamformer
+from hermespy.core import (
+    ReceiveState,
+    Signal,
+    TransmitState,
+    SerializationProcess,
+    DeserializationProcess,
+)
 from hermespy.modem.modem import TransmittingModemBase, ReceivingModemBase
 from hermespy.modem import CommunicationTransmission, CommunicationReception, CWT
-from hermespy.radar import RadarBase, RadarTransmission, RadarReception
+from hermespy.radar import RadarBase, RadarDetector, RadarTransmission, RadarReception
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -30,9 +37,18 @@ class JCASTransmission(CommunicationTransmission, RadarTransmission):
         )
         RadarTransmission.__init__(self, signal=transmission.signal)
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        # The radar transmission is serialized as a communication transmission and can be skipped
+        CommunicationTransmission.serialize(self, process)
+
     @classmethod
-    def from_HDF(cls: Type[JCASTransmission], group: Group) -> JCASTransmission:
-        return JCASTransmission(CommunicationTransmission.from_HDF(group))
+    @override
+    def Deserialize(
+        cls: Type[JCASTransmission], process: DeserializationProcess
+    ) -> JCASTransmission:
+        communication_transmission = CommunicationTransmission.Deserialize(process)
+        return JCASTransmission(communication_transmission)
 
 
 class JCASReception(CommunicationReception, RadarReception):
@@ -44,16 +60,17 @@ class JCASReception(CommunicationReception, RadarReception):
         )
         RadarReception.__init__(self, radar.signal, radar.cube, radar.cloud)
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        CommunicationReception.serialize(self, process)
+        RadarReception.serialize(self, process)
+
     @classmethod
-    def from_HDF(cls: Type[JCASReception], group: Group) -> JCASReception:
-        communication_reception = CommunicationReception.from_HDF(group)
-        radar_reception = RadarReception.from_HDF(group)
-
-        return JCASReception(communication_reception, radar_reception)
-
-    def to_HDF(self, group: Group) -> None:
-        CommunicationReception.to_HDF(self, group)
-        RadarReception.to_HDF(self, group)
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> JCASReception:
+        return JCASReception(
+            CommunicationReception.Deserialize(process), RadarReception.Deserialize(process)
+        )
 
 
 class DuplexJCASOperator(
@@ -71,6 +88,8 @@ class DuplexJCASOperator(
     def __init__(
         self,
         waveform: CWT | None = None,
+        receive_beamformer: ReceiveBeamformer | None = None,
+        detector: RadarDetector | None = None,
         selected_transmit_ports: Sequence[int] | None = None,
         selected_receive_ports: Sequence[int] | None = None,
         carrier_frequency: float | None = None,
@@ -80,6 +99,14 @@ class DuplexJCASOperator(
         Args:
             waveform (CWT, optional):
                 Communication waveform emitted by this operator.
+
+            receive_beamformer (ReceiveBeamformer, optional):
+                Beamforming applied during signal reception.
+                If not specified, no beamforming will be applied during reception.
+
+            detector (RadarDetector, optional):
+                Detector routine configured to generate point clouds from radar cubes.
+                If not specified, no point cloud will be generated during reception.
 
             selected_transmit_ports (Sequence[int] | None):
                 Indices of antenna ports selected for transmission from the operated :class:`Device's<Device>` antenna array.
@@ -101,7 +128,13 @@ class DuplexJCASOperator(
         TransmittingModemBase.__init__(self)
         ReceivingModemBase.__init__(self)
         RadarBase.__init__(
-            self, selected_transmit_ports, selected_receive_ports, carrier_frequency, seed
+            self,
+            receive_beamformer,
+            detector,
+            selected_transmit_ports,
+            selected_receive_ports,
+            carrier_frequency,
+            seed,
         )
 
         # Initialize class attributes
@@ -129,8 +162,5 @@ class DuplexJCASOperator(
         self, signal: Signal, device: ReceiveState
     ) -> JCASReception: ...  # pragma: no cover
 
-    def _recall_transmission(self, group: Group) -> JCASTransmission:
-        return JCASTransmission.from_HDF(group)
-
-    def _recall_reception(self, group: Group) -> JCASReception:
-        return JCASReception.from_HDF(group)
+    def serialize(self, process: SerializationProcess) -> None:
+        RadarBase.serialize(self, process)

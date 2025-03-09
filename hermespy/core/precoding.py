@@ -3,11 +3,10 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
-from typing import overload, Type, TypeVar, Generic
+from typing import overload, TypeVar, Generic
+from typing_extensions import override
 
-from ruamel.yaml import Node, SafeConstructor, SafeRepresenter
-
-from .factory import Serializable
+from .factory import DeserializationProcess, Serializable, SerializationProcess
 from .signal_model import Signal
 from .state import ReceiveState, TransmitState
 
@@ -40,7 +39,7 @@ ReceivePrecodingType = TypeVar("ReceivePrecodingType", bound="ReceivePrecoding")
 """Type of receive precoding."""
 
 
-class Precoder(Generic[PrecodingType]):
+class Precoder(Generic[PrecodingType], Serializable):
     """Base class for signal processing algorithms operating on parallel complex data streams."""
 
     __precoding: PrecodingType | None
@@ -117,7 +116,6 @@ class ReceiveDecoder(ABC, Precoder[ReceivePrecodingType], Generic[ReceivePrecodi
 class Precoding(Sequence[PrecoderType], Generic[PrecoderType], Serializable):
     """Base class of precoding configurations."""
 
-    yaml_tag = "Precoding"
     __precoders: list[PrecoderType]  # Sequence of precoding steps
 
     def __init__(self) -> None:
@@ -126,54 +124,6 @@ class Precoding(Sequence[PrecoderType], Generic[PrecoderType], Serializable):
 
         # Initialize class attributes
         self.__precoders = []
-
-    @classmethod
-    def to_yaml(
-        cls: Type[PrecodingType], representer: SafeRepresenter, node: PrecodingType
-    ) -> Node:
-        """Serialize a `Precoding` configuration to YAML.
-
-        Args:
-            representer (SafeRepresenter):
-                A handle to a representer used to generate valid YAML code.
-                The representer gets passed down the serialization tree to each node.
-
-            node (Precoding):
-                The `Precoding` instance to be serialized.
-
-        Returns:
-            Node:
-                The serialized YAML node.
-                None if the object state is default.
-        """
-
-        return representer.represent_sequence(cls.yaml_tag, node.__precoders)
-
-    @classmethod
-    def from_yaml(
-        cls: Type[PrecodingType], constructor: SafeConstructor, node: Node
-    ) -> PrecodingType:
-        """Recall a new `Precoding` instance from YAML.
-
-        Args:
-            constructor (SafeConstructor):
-                A handle to the constructor extracting the YAML information.
-
-            node (Node):
-                YAML node representing the `Precoding` serialization.
-
-        Returns:
-            Precoding:
-                Newly created `Precoding` instance.
-        """
-
-        state: list[Precoder] = constructor.construct_sequence(node, deep=True)
-        precoding = cls()
-
-        for p, precoder in enumerate(state):
-            precoding[p] = precoder
-
-        return precoding
 
     @overload
     def __getitem__(self, index: int) -> PrecoderType: ...  # pragma: no cover
@@ -232,6 +182,17 @@ class Precoding(Sequence[PrecoderType], Generic[PrecoderType], Serializable):
         """
 
         return self.__precoders.pop(index)
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_object_sequence(self.__precoders, "precoders")
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> Precoding[PrecoderType]:
+        precoding = cls()
+        precoding.__precoders = process.deserialize_object_sequence("precoders", Precoder)  # type: ignore
+        return precoding
 
 
 class TransmitPrecoding(Precoding[TransmitEncoderType], Generic[TransmitEncoderType]):
@@ -376,9 +337,6 @@ class ReceiveStreamDecoder(ReceiveDecoder["ReceiveSignalCoding"]):
 class TransmitSignalCoding(TransmitPrecoding[TransmitStreamEncoder]):
     """Stream MIMO coding configuration during signal transmission."""
 
-    yaml_tag = "TransmitCoding"
-    """YAML serialization tag."""
-
     def encode_streams(self, signal: Signal, device: TransmitState) -> Signal:
         """Encode a signal MIMO stream during transmission.
 
@@ -417,9 +375,6 @@ class TransmitSignalCoding(TransmitPrecoding[TransmitStreamEncoder]):
 
 class ReceiveSignalCoding(ReceivePrecoding[ReceiveStreamDecoder], Serializable):
     """Stream MIMO coding configuration during signal transmission."""
-
-    yaml_tag = "ReceiveCoding"
-    """YAML serialization tag."""
 
     def decode_streams(self, signal: Signal, device: ReceiveState) -> Signal:
         """Decode a signal MIMO stream during reception.

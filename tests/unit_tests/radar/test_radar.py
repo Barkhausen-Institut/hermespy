@@ -12,9 +12,9 @@ from scipy.constants import speed_of_light
 
 from hermespy.beamforming import ConventionalBeamformer
 from hermespy.core import Signal
-from hermespy.radar import Radar, RadarCube, RadarWaveform, RadarReception, RadarPointCloud
+from hermespy.radar import Radar, RadarCube, RadarWaveform, RadarReception, RadarPointCloud, RadarTransmission
 from hermespy.simulation import SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
-from unit_tests.core.test_factory import test_yaml_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -78,6 +78,20 @@ class RadarWaveformMock(RadarWaveform):
         return 12.345
 
 
+class TestRadarTransmission(TestCase):
+    """Test the radar transmission model"""
+    
+    def setUp(self) -> None:
+        self.rng = np.random.default_rng(42)
+        self.signal = Signal.Create(self.rng.normal(size=(2, 1)), 1.0, 0.0)
+        self.transmission = RadarTransmission(self.signal)
+
+    def test_serialization(self) -> None:
+        """Test radar transmission serialization"""
+        
+        test_roundtrip_serialization(self, self.transmission)
+
+
 class TestRadarReception(TestCase):
     """Test the radar reception model"""
 
@@ -90,22 +104,10 @@ class TestRadarReception(TestCase):
 
         self.reception = RadarReception(self.signal, self.cube, self.cloud)
 
-    def test_hdf_serialization(self) -> None:
-        """Test HDF roundtrip serialization"""
+    def test_serialization(self) -> None:
+        """Test radar reception serialization"""
 
-        with TemporaryDirectory() as tempdir:
-            file_path = join(tempdir, "test.hdf")
-
-            file = File(file_path, "w")
-            group = file.create_group("g1")
-            self.reception.to_HDF(group)
-            file.close()
-
-            file = File(file_path, "r")
-            recalled_reception = RadarReception.from_HDF(file["g1"])
-            file.close()
-
-        assert_array_equal(self.reception.signal.getitem(), recalled_reception.signal.getitem())
+        test_roundtrip_serialization(self, self.reception)
 
 
 class TestRadar(TestCase):
@@ -269,37 +271,8 @@ class TestRadar(TestCase):
 
         self.assertEqual(1, len(reception.cube.angle_bins))
 
-    def test_recall_transmission(self) -> None:
-        """Recalling a transmission should return the correct deserialization"""
-
-        with patch("hermespy.radar.radar.RadarTransmission") as transmission_mock:
-            recall_mock = Mock()
-            transmission_mock.from_HDF.return_value = recall_mock
-
-            group_mock = Mock()
-            recall = self.radar.recall_transmission(group_mock)
-
-            self.assertIs(recall, recall_mock)
-            transmission_mock.from_HDF.assert_called_with(group_mock)
-
-    def test_recall_reception(self) -> None:
-        """Recalling a reception should return the correct deserialization"""
-
-        with patch("hermespy.radar.radar.RadarReception") as reception_mock:
-            recall_mock = Mock()
-            reception_mock.from_HDF.return_value = recall_mock
-
-            group_mock = Mock()
-            recall = self.radar.recall_reception(group_mock)
-
-            self.assertIs(recall, recall_mock)
-            reception_mock.from_HDF.assert_called_with(group_mock)
-
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test radar serialization"""
 
-        with patch("hermespy.radar.Radar.property_blacklist", new_callable=PropertyMock) as blacklist, patch("hermespy.radar.Radar.waveform", new_callable=PropertyMock) as waveform:
-            blacklist.return_value = {"slot", "waveform", "receive_beamformer", "device"}
-            waveform.return_value = self.waveform
-
-            test_yaml_roundtrip_serialization(self, self.radar)
+        self.radar.waveform = None
+        test_roundtrip_serialization(self, self.radar)

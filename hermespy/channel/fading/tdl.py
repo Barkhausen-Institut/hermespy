@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
+from typing_extensions import override
 
 import numpy as np
 
-from hermespy.core import SerializableEnum
-from .fading import MultipathFadingChannel
+from hermespy.core import DeserializationProcess, SerializableEnum, SerializationProcess
+from .fading import AntennaCorrelation, MultipathFadingChannel
+from ..channel import Channel
 
 __author__ = "Tobias Kronauer"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -30,49 +32,60 @@ class TDLType(SerializableEnum):
 class TDL(MultipathFadingChannel):
     """5G TDL Multipath Fading Channel models."""
 
-    yaml_tag = "5GTDL"
+    _DEFAULT_TYPE = TDLType.A
+    _DEFAULT_RMS_DELAY = 0.0
+
     __rms_delay: float
 
     def __init__(
         self,
-        model_type: TDLType = TDLType.A,
-        rms_delay: float = 0.0,
-        gain: float = 1.0,
-        doppler_frequency: float | None = None,
+        model_type: TDLType = _DEFAULT_TYPE,
+        rms_delay: float = _DEFAULT_RMS_DELAY,
+        correlation_distance: float = MultipathFadingChannel._DEFAULT_DECORRELATION_DISTANCE,
+        num_sinusoids: int = MultipathFadingChannel._DEFAULT_NUM_SINUSOIDS,
+        los_angle: float | None = None,
+        doppler_frequency: float = MultipathFadingChannel._DEFAULT_DOPPLER_FREQUENCY,
         los_doppler_frequency: float | None = None,
-        **kwargs,
+        antenna_correlation: AntennaCorrelation | None = None,
+        gain: float = MultipathFadingChannel._DEFAULT_GAIN,
+        seed: int | None = None,
     ) -> None:
         """
         Args:
 
             model_type (TYPE):
                 The model type.
-                Initializes the :attr:`model_type` attribute.
+                If not specified, the default model type A is assumed.
 
             rms_delay (float):
                 Root-Mean-Squared delay in seconds.
                 Initializes the :attr:`rms_delay` attribute.
 
-            alpha_device (SimulatedDevice, optional):
-                First device linked by this :class:`MultipathFading5GTDL` channel instance.
-                Initializes the :attr:`alpha_device` property.
-                If not specified the channel is considered floating,
-                meaning a call to :meth:`realize<Channel.realize>` will raise an exception.
-
-            beta_device (SimulatedDevice, optional):
-                Second device linked by this :class:`MultipathFading5GTDL` channel.
-                Initializes the :attr:`beta_device` property.
-                If not specified the channel is considered floating,
-                meaning a call to :meth:`realize` will raise an exception.
+            correlation_distance (float, optional):
+                Distance at which channel samples are considered to be uncorrelated.
+                :math:`\\infty` by default, i.e. the channel is considered to be fully correlated in space.
 
             num_sinusoids (int, optional):
                 Number of sinusoids used to sample the statistical distribution.
+                Denoted by :math:`N` within the respective equations.
 
-            doppler_frequency (float, optional)
+            los_angle (float, optional):
+                Angle phase of the line of sight component within the statistical distribution.
+
+            doppler_frequency (float, optional):
                 Doppler frequency shift of the statistical distribution.
+                Denoted by :math:`\\omega_{\\ell}` within the respective equations.
 
-            \***kwargs (Any):
-                Additional `MultipathFadingChannel` initialization parameters.
+            antenna_correlation (AntennaCorrelation, optional):
+                Antenna correlation model.
+                By default, the channel assumes ideal correlation, i.e. no cross correlations.
+
+            gain (float, optional):
+                Linear power gain factor a signal experiences when being propagated over this realization.
+                :math:`1.0` by default.
+
+            seed (int, optional):
+                Seed used to initialize the pseudo-random number generator.
 
         Raises:
 
@@ -370,13 +383,17 @@ class TDL(MultipathFadingChannel):
         # Init base class with pre-defined model parameters
         MultipathFadingChannel.__init__(
             self,
-            gain=gain,
-            delays=delays,
-            power_profile=power_profile,
-            rice_factors=rice_factors,
-            doppler_frequency=doppler_frequency,
-            los_doppler_frequency=los_doppler_frequency,
-            **kwargs,
+            delays,
+            power_profile,
+            rice_factors,
+            correlation_distance,
+            num_sinusoids,
+            los_angle,
+            doppler_frequency,
+            los_doppler_frequency,
+            antenna_correlation,
+            gain,
+            seed,
         )
 
     @property
@@ -397,3 +414,37 @@ class TDL(MultipathFadingChannel):
         """
 
         return self.__rms_delay
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_object(self.model_type, "model_type")
+        process.serialize_floating(self.rms_delay, "rms_delay")
+        process.serialize_floating(self.correlation_distance, "correlation_distance")
+        process.serialize_integer(self.num_sinusoids, "num_sinusoids")
+        process.serialize_floating(self.los_angle, "los_angle")
+        process.serialize_floating(self.doppler_frequency, "doppler_frequency")
+        process.serialize_floating(self.los_doppler_frequency, "los_doppler_frequency")
+        if self.antenna_correlation is not None:
+            process.serialize_object(self.antenna_correlation, "antenna_correlation")
+        Channel.serialize(self, process)
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> TDL:
+        return cls(
+            model_type=process.deserialize_object("model_type", TDLType, cls._DEFAULT_TYPE),
+            rms_delay=process.deserialize_floating("rms_delay", cls._DEFAULT_RMS_DELAY),
+            correlation_distance=process.deserialize_floating(
+                "correlation_distance", cls._DEFAULT_DECORRELATION_DISTANCE
+            ),
+            num_sinusoids=process.deserialize_integer("num_sinusoids", cls._DEFAULT_NUM_SINUSOIDS),
+            los_angle=process.deserialize_floating("los_angle"),
+            doppler_frequency=process.deserialize_floating(
+                "doppler_frequency", cls._DEFAULT_DOPPLER_FREQUENCY
+            ),
+            los_doppler_frequency=process.deserialize_floating("los_doppler_frequency"),
+            antenna_correlation=process.deserialize_object(
+                "antenna_correlation", AntennaCorrelation, None
+            ),
+            **Channel._DeserializeParameters(process),  # type: ignore[arg-type]
+        )

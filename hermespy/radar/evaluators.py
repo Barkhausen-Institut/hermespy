@@ -51,11 +51,10 @@ from __future__ import annotations
 from abc import ABC
 from collections.abc import Sequence
 from itertools import product
-from typing import Type, Union
+from typing import Type
 
 import matplotlib.pyplot as plt
 import numpy as np
-from h5py import File
 from rich import get_console
 from rich.console import Console
 from rich.progress import track
@@ -65,11 +64,11 @@ from hermespy.core import (
     Executable,
     Hook,
     PlotVisualization,
-    ReplayScenario,
     ScatterVisualization,
     Scenario,
     ScenarioMode,
     Serializable,
+    SerializationBackend,
     VAT,
 )
 from hermespy.core.monte_carlo import (
@@ -332,8 +331,6 @@ class DetectionProbEvaluator(Evaluator, Serializable):
        :lines: 03-27
     """
 
-    yaml_tag = "DetectionProbEvaluator"
-
     __radar: Radar
     __cloud: RadarPointCloud | None
     __hook: Hook[RadarReception]
@@ -594,8 +591,6 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
        :lines: 03-23
     """
 
-    yaml_tag = "ROC"
-
     _title = "Receiver Operating Characteristics"
     __num_thresholds: int
     __output_hook: Hook[SimulatedDeviceOutput]
@@ -814,6 +809,7 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
     def FromScenarios(
         h0_scenario: Scenario,
         h1_scenario: Scenario,
+        num_drops: int,
         h0_operator: Radar | None = None,
         h1_operator: Radar | None = None,
         num_thresholds: int = 101,
@@ -827,6 +823,10 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
 
             h1_scenario (Scenario):
                 Scenario of the alternative hypothesis.
+
+            num_drops (int):
+                Number of drops to be considered in the evaluation.
+                The more drops, the smoother the estimated ROC curve will be.
 
             h0_operator (Radar, optional):
                 Radar operator of the null hypothesis.
@@ -844,25 +844,14 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
         Raises:
 
             ValueError:
-                - If the scenarios are not in replay mode
-                - If the scenarios have no recorded drops available
+                - If the number of drops is less than one
                 - If the operators are not registered within the scenarios
                 - If, for any reason, the operated devices cannot be determined
         """
 
-        # Assert that both scenarios are in replay mode
-        if h0_scenario.mode != ScenarioMode.REPLAY:
-            raise ValueError("Null hypothesis scenario is not in replay mode")
-
-        if h1_scenario.mode != ScenarioMode.REPLAY:
-            raise ValueError("One hypothesis scenario is not in replay mode")
-
-        # Assert that both scenarios have at least a single drop recorded
-        if h0_scenario.num_drops < 1:
-            raise ValueError("Null hypothesis scenario has no recorded drops")
-
-        if h1_scenario.num_drops < 1:
-            raise ValueError("One hypothesis scenario has no recorded drops")
+        # There should be at least a single drop available
+        if num_drops < 1:
+            raise ValueError("At least one drop is required for the ROC evaluation")
 
         # Select operators if none were provided
         if h0_operator:
@@ -931,12 +920,9 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
                 "Could not detect devices and operators within the provided scenarios."
             )
 
-        # The overall number of considered drops is bounded by the H1 hypothesis
-        num_drops = h1_scenario.num_drops
+        # Collect artifacts
         artifacts = np.empty(1, dtype=object)
         artifacts[0] = []
-
-        # Collect artifacts
         for _ in range(num_drops):
             h0_drop = h0_scenario.drop()
             h1_drop = h1_scenario.drop()
@@ -963,8 +949,26 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
         operator: Radar,
         h0_campaign: str = "h0",
         h1_campaign: str = "h1",
+        backend: SerializationBackend = SerializationBackend.HDF,
         console: Console | None = None,
     ) -> RocEvaluationResult:
+        """Extract an ROC evaluation from an existing scenario.
+
+        Args:
+            scenario: Scenario from which to extract the ROC from.
+            operator: Radar operator to be evaluated.
+            h0_campaign: Campaign identifier of the null hypothesis measurements.
+            h1_campaign: Campaign identifier of the alternative hypothesis measurements.
+            backend: Serialization backend to be used for the evaluation.
+            console: Rich console to be used for progress tracking.
+
+        Raises:
+            ValueError: If the scenario is not in replay mode.
+
+        Returns:
+            The ROC evaluation result.
+        """
+
         _console = get_console() if console is None else console
 
         # Check if the scenario is in replay mode
@@ -991,7 +995,7 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
             ["null hypothesis", "alt hypothesis"],
             [null_receptions, alt_receptions],
         ):
-            scenario.replay(campaign=campaign)
+            scenario.replay(campaign=campaign, backend=backend)
             for _ in track(
                 range(scenario.num_drops), description="Replaying " + hypothesis, console=_console
             ):
@@ -1010,18 +1014,19 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
         return ReceiverOperatingCharacteristic.GenerateResult(grid, artifacts)
 
     @classmethod
-    def From_HDF(
+    def FromFile(
         cls: Type[ReceiverOperatingCharacteristic],
-        file: Union[str, File],
+        file: str,
         h0_campaign="h0_measurements",
         h1_campaign="h1_measurements",
         num_thresholds: int = 101,
+        backend: SerializationBackend = SerializationBackend.HDF,
     ) -> RocEvaluationResult:
         """Compute an ROC evaluation result from a savefile.
 
         Args:
 
-            file (Union[str, File]):
+            file (str | File):
                 Savefile containing the measurements.
                 Either as file system location or h5py `File` handle.
 
@@ -1036,15 +1041,24 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
             num_thresholds (int, optional):
                 Number of different thresholds to be considered in ROC curve
 
+            backend (SerializationBackend, optional):
+                Serialization backend to be used for the evaluation.
+                By default, `HDF` is assumed.
+
         Returns: The ROC evaluation result.
         """
 
-        # Load scenarios with the respective campaigns from the specified savefile
-        h0_scenario = ReplayScenario.Replay(file, h0_campaign)
-        h1_scenario = ReplayScenario.Replay(file, h1_campaign)
+        # Load scenarios from the savefile
+        h0_scenario, h0_num_drops = Scenario.Replay(file, h0_campaign, backend)
+        h1_scenario, h1_num_drops = Scenario.Replay(file, h1_campaign, backend)
+
+        # Ensure that the number of drops is the same for both scenarios
+        num_drops = min(h0_num_drops, h1_num_drops)
 
         # Resort to the from scenarios routine for computing the evaluation result
-        result = cls.FromScenarios(h0_scenario, h1_scenario, num_thresholds=num_thresholds)
+        result = cls.FromScenarios(
+            h0_scenario, h1_scenario, num_drops, num_thresholds=num_thresholds
+        )
 
         # Close the scenarios properly
         h0_scenario.stop()

@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from abc import ABC, abstractmethod
+from abc import abstractmethod
+from typing_extensions import override
 
 import numpy as np
 from scipy.spatial.transform import Slerp, Rotation
 
-from hermespy.core import Serializable, Transformation
+from hermespy.core import DeserializationProcess, Serializable, SerializationProcess, Transformation
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -54,7 +55,7 @@ class TrajectorySample(object):
         return self.__velocity
 
 
-class Trajectory(ABC):
+class Trajectory(Serializable):
     """Base class for motion trajectories of moveable objects within simulation scenarios."""
 
     # lookat attributes
@@ -152,6 +153,8 @@ class Trajectory(ABC):
 class LinearTrajectory(Trajectory):
     """A helper class generating a linear trajectory between two poses."""
 
+    _DEFAULT_START: float = 0.0
+
     __initial_pose: Transformation
     __final_pose: Transformation
     __duration: float
@@ -162,7 +165,7 @@ class LinearTrajectory(Trajectory):
         initial_pose: Transformation,
         final_pose: Transformation,
         duration: float,
-        start: float = 0.0,
+        start: float = _DEFAULT_START,
     ) -> None:
 
         # Verify initialization parameters
@@ -174,6 +177,7 @@ class LinearTrajectory(Trajectory):
 
         # Initialize class attributes
         self.__initial_pose = initial_pose
+        self.__final_pose = final_pose
         self.__duration = duration
         self.__start = start
 
@@ -200,11 +204,26 @@ class LinearTrajectory(Trajectory):
         t = np.clip(timestamp, self.__start, self.__start + self.__duration)
         return self.__slerp(t).as_matrix()
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_object(self.__initial_pose, "initial_pose")
+        process.serialize_object(self.__final_pose, "final_pose")
+        process.serialize_floating(self.__duration, "duration")
+        process.serialize_floating(self.__start, "start")
 
-class StaticTrajectory(Serializable, Trajectory):
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> LinearTrajectory:
+        return cls(
+            initial_pose=process.deserialize_object("initial_pose", Transformation),
+            final_pose=process.deserialize_object("final_pose", Transformation),
+            duration=process.deserialize_floating("duration"),
+            start=process.deserialize_floating("start", cls._DEFAULT_START),
+        )
+
+
+class StaticTrajectory(Trajectory):
     """A helper class generating a static trajectory."""
-
-    yaml_tag = "Static"
 
     __pose: Transformation
     __velocity: np.ndarray
@@ -245,8 +264,46 @@ class StaticTrajectory(Serializable, Trajectory):
     def sample(self, timestamp: float) -> TrajectorySample:
         return TrajectorySample(timestamp, self.__pose, self.__velocity)
 
+    @staticmethod
+    def From_Translation(
+        translation: np.ndarray, velocity: np.ndarray | None = None
+    ) -> StaticTrajectory:
+        """Shorthand to create a static trajectory from cartesian coordinates.
 
-class Moveable(object):
+        Args:
+
+            translation (numpy.ndarray):
+                Cartesian coordinates of the object.
+
+            velocity (numpy.ndarray, optional):
+                Cartesian velocity of the object.
+                If not provided, the object is assumed to be static.
+
+        Returns:
+
+            StaticTrajectory: The static trajectory object.
+        """
+
+        return StaticTrajectory(
+            Transformation.From_Translation(translation),
+            np.zeros(3, dtype=np.float64) if velocity is None else velocity,
+        )
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_object(self.__pose, "pose")
+        process.serialize_array(self.__velocity, "velocity")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> StaticTrajectory:
+        return cls(
+            pose=process.deserialize_object("pose", Transformation, None),
+            velocity=process.deserialize_array("velocity", np.float64, None),
+        )
+
+
+class Moveable(Serializable):
     """Base class of moveable objects within simulation scenarios."""
 
     __trajectory: Trajectory
@@ -278,6 +335,15 @@ class Moveable(object):
         """Maximum timestamp of this object's motion trajectory."""
 
         return self.__trajectory.max_timestamp
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_object(self.__trajectory, "trajectory")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> Moveable:
+        return cls(process.deserialize_object("trajectory", Trajectory))
 
 
 class BITrajectoryB(Trajectory):
@@ -344,3 +410,16 @@ class BITrajectoryB(Trajectory):
 
     def sample_orientation(self, timestamp: float) -> np.ndarray:
         return np.array([[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]], float)
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_floating(self.__height, "height")
+        process.serialize_floating(self.__duration, "duration")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> BITrajectoryB:
+        return cls(
+            height=process.deserialize_floating("height"),
+            duration=process.deserialize_floating("duration"),
+        )

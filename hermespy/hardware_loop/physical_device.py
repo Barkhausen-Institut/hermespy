@@ -9,23 +9,32 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from typing import Generic, Type, TypeVar
+from typing_extensions import override
 
 import numpy as np
-from h5py import File, Group
 from scipy.signal import butter, sosfilt
 
 from hermespy.core import (
+    DeserializationProcess,
     Device,
     DeviceInput,
     DeviceReception,
     DeviceState,
     DeviceTransmission,
     Factory,
-    HDFSerializable,
     ProcessedDeviceInput,
+    Receiver,
+    ReceiveSignalCoding,
+    ReceiveStreamDecoder,
     Serializable,
+    SerializationBackend,
+    SerializationProcess,
     Signal,
     SignalBlock,
+    Transformation,
+    TransmitSignalCoding,
+    TransmitStreamEncoder,
+    Transmitter,
 )
 
 __author__ = "Jan Adler"
@@ -59,6 +68,9 @@ PDST = TypeVar("PDST", bound=PhysicalDeviceState)
 class PhysicalDevice(Generic[PDST], Device[PDST]):
     """Base representing any device controlling real hardware."""
 
+    _DEFAULT_MAX_RECEIVE_DELAY: float = 0.0
+    _DEFAULT_LOWPASS_BANDWIDTH: float = 0.0
+
     __max_receive_delay: float
     __adaptive_sampling: bool
     __lowpass_filter: bool
@@ -71,13 +83,25 @@ class PhysicalDevice(Generic[PDST], Device[PDST]):
 
     def __init__(
         self,
-        max_receive_delay: float = 0.0,
+        max_receive_delay: float = _DEFAULT_MAX_RECEIVE_DELAY,
         noise_power: np.ndarray | None = None,
         leakage_calibration: LeakageCalibrationBase | None = None,
         delay_calibration: DelayCalibrationBase | None = None,
         antenna_calibration: AntennaCalibration | None = None,
-        *args,
-        **kwargs,
+        adaptive_sampling: bool = False,
+        lowpass_filter: bool = False,
+        lowpass_bandwidth: float = _DEFAULT_LOWPASS_BANDWIDTH,
+        transmit_dsp: Transmitter | Sequence[Transmitter] | None = None,
+        receive_dsp: Receiver | Sequence[Receiver] | None = None,
+        transmit_encoding: (
+            TransmitSignalCoding | Sequence[TransmitStreamEncoder] | TransmitStreamEncoder | None
+        ) = None,
+        receive_decoding: (
+            ReceiveSignalCoding | Sequence[ReceiveStreamDecoder] | ReceiveStreamDecoder | None
+        ) = None,
+        power: float = Device._DEFAULT_POWER,
+        pose: Transformation | None = None,
+        seed: int | None = None,
     ) -> None:
         """
         Args:
@@ -101,23 +125,32 @@ class PhysicalDevice(Generic[PDST], Device[PDST]):
                 The antenna calibration routine to apply to transmitted and received signals.
                 If not provided, defaults to the :class:`NoAntennaCalibration` stub routine.
 
-            \*args:
-                :class:`Device` base class initialization parameters.
+            adaptive_sampling (bool, optional):
+                Adapt the assumed sampling rate to the device's actual sampling rate.
+                Disabled by default.
 
-            \*\*kwargs:
-                :class:`Device` base class initialization parameters.
+            lowpass_filter (bool, optional):
+                Apply a digital lowpass filter to the received base-band samples.
+                Disabled by default.
+
+            lowpass_bandwidth (float, optional):
+                Digital lowpass filter bandwidth in Hz.
+                Only relevant if the lowpass filter is enabled.
+                Zero by default.
         """
 
         # Initialize base class
-        Device.__init__(self, *args, **kwargs)
+        Device.__init__(
+            self, transmit_dsp, receive_dsp, transmit_encoding, receive_decoding, power, pose, seed
+        )
 
         # Initialize class attributes
         self.max_receive_delay = max_receive_delay
-        self.__adaptive_sampling = False
-        self.__lowpass_filter = False
-        self.__lowpass_bandwidth = 0.0
+        self.adaptive_sampling = False
+        self.lowpass_filter = False
+        self.lowpass_bandwidth = lowpass_bandwidth
         self.__recent_upload = None
-        self.__noise_power = noise_power
+        self.noise_power = noise_power
 
         self.__leakage_calibration = NoLeakageCalibration()
         self.__antenna_calibration = NoAntennaCalibration()
@@ -186,92 +219,73 @@ class PhysicalDevice(Generic[PDST], Device[PDST]):
         self.__antenna_calibration = value
         self.__antenna_calibration.device = self
 
-    def save_calibration(self, path: str) -> None:
+    def save_calibration(
+        self, path: str, backend: SerializationBackend = SerializationBackend.HDF
+    ) -> None:
         """Save the calibration file to the hard drive.
 
         Args:
 
             path (str):
                 Path under which the file should be stored.
+
+            backend (SerializationBackend, optional):
+                Serialization backend to use.
+                HDF by default.
         """
 
-        file = File(path, "w")
+        process = Factory().serialize(path, backend=backend)
 
-        # Write leakage calibration to file
-        file.attrs[LeakageCalibrationBase.hdf_group_name] = self.leakage_calibration.yaml_tag
-        self.leakage_calibration.to_HDF(file.create_group(LeakageCalibrationBase.hdf_group_name))
+        # Serialize relevant calibration objects
+        try:
+            process.serialize_object(
+                self.leakage_calibration, LeakageCalibrationBase.hdf_group_name
+            )
+            process.serialize_object(self.delay_calibration, DelayCalibrationBase.hdf_group_name)
+            process.serialize_object(self.antenna_calibration, AntennaCalibration.hdf_group_name)
 
-        # Write delay calibration to file
-        file.attrs[DelayCalibrationBase.hdf_group_name] = self.delay_calibration.yaml_tag
-        self.delay_calibration.to_HDF(file.create_group(DelayCalibrationBase.hdf_group_name))
+        finally:
+            process.finalize()
 
-        # Write antenna calibration to file
-        file.attrs[AntennaCalibration.hdf_group_name] = self.antenna_calibration.yaml_tag
-        self.antenna_calibration.to_HDF(file.create_group(AntennaCalibration.hdf_group_name))
-
-        # Close file handle
-        file.close()
-
-    @staticmethod
-    def __calibration_from_hdf(file: File, factory: Factory, calibration: Type[CT]) -> CT | None:
-        """Load a calibration object from an HDF file.
-
-        Subroutine of :meth:`PhysicalDevice.load_calibration`.
-
-        Args:
-
-            file (File):
-                File handle of the HDF file.
-
-            factory (Factory):
-                Factory object to create the calibration object.
-
-            calibration (Type[CT]):
-                Type of the calibration object to load.
-
-        Returns:
-
-            The loaded calibration object.
-            `None` if the calibration object is not present in the HDF file.
-        """
-
-        group_name = calibration.hdf_group_name
-
-        # If the tag isn't specified in the attribute list, the calibration object is not present in the file
-        if group_name not in file.attrs:
-            return None
-
-        calibration_class: Type[CT] = factory.tag_registry[file.attrs.get(group_name)]  # type: ignore
-        return calibration_class.from_HDF(file[group_name])
-
-    def load_calibration(self, path: str) -> None:
+    def load_calibration(
+        self, path: str, backend: SerializationBackend = SerializationBackend.HDF
+    ) -> None:
         """Load the calibration file from the hard drive.
 
         Args:
 
             path (str):
-                Path from which to load the calibration file.
+                Path from which to load the calibration.
+
+            backend (SerializationBackend, optional):
+                Serialization backend to use.
+                HDF by default.
         """
 
-        file = File(path, "r")
-        factory = Factory()
+        process = Factory().deserialize(path, backend=backend)
 
-        # Load leakage calibration if available in save file
-        leakage_calibration = self.__calibration_from_hdf(file, factory, LeakageCalibrationBase)  # type: ignore
-        if leakage_calibration is not None:
-            self.leakage_calibration = leakage_calibration
+        try:
+            # Deserialize relevant calibration objects
+            leakage_calibration = process.deserialize_object(
+                LeakageCalibrationBase.hdf_group_name, LeakageCalibrationBase, None
+            )
+            delay_calibration = process.deserialize_object(
+                DelayCalibrationBase.hdf_group_name, DelayCalibrationBase, None
+            )
+            antenna_calibration = process.deserialize_object(
+                AntennaCalibration.hdf_group_name, AntennaCalibration, None
+            )
 
-        # Load delay calibration if available in save file
-        delay_calibration = self.__calibration_from_hdf(file, factory, DelayCalibrationBase)  # type: ignore
-        if delay_calibration is not None:
-            self.delay_calibration = delay_calibration
+            # Apply calibrations if they were loaded
+            if leakage_calibration is not None:
+                self.leakage_calibration = leakage_calibration
+            if delay_calibration is not None:
+                self.delay_calibration = delay_calibration
+            if antenna_calibration is not None:
+                self.antenna_calibration = antenna_calibration
 
-        # Load antenna calibration if available in save file
-        antenna_calibration = self.__calibration_from_hdf(file, factory, AntennaCalibration)  # type: ignore
-        if antenna_calibration is not None:
-            self.antenna_calibration = antenna_calibration
-
-        file.close()
+        finally:
+            process.finalize()
 
     @property
     def adaptive_sampling(self) -> bool:
@@ -620,8 +634,49 @@ class PhysicalDevice(Generic[PDST], Device[PDST]):
         _impinging_signals = self._download() if impinging_signals is None else impinging_signals
         return Device.receive(self, _impinging_signals, state, notify)
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        Device.serialize(self, process)
+        process.serialize_floating(self.max_receive_delay, "max_receive_delay")
+        process.serialize_integer(self.adaptive_sampling, "adaptive_sampling")
+        process.serialize_integer(self.lowpass_filter, "lowpass_filter")
+        process.serialize_floating(self.lowpass_bandwidth, "lowpass_bandwidth")
+        if self.noise_power is not None:
+            process.serialize_array(self.noise_power, "noise_power")
+        process.serialize_object(self.leakage_calibration, LeakageCalibrationBase.hdf_group_name)
+        process.serialize_object(self.delay_calibration, DelayCalibrationBase.hdf_group_name)
+        process.serialize_object(self.antenna_calibration, AntennaCalibration.hdf_group_name)
 
-class Calibration(ABC, HDFSerializable, Serializable):
+    @classmethod
+    @override
+    def _DeserializeParameters(cls, process: DeserializationProcess) -> dict[str, object]:
+        parameters = Device._DeserializeParameters(process)
+        parameters.update(
+            {
+                "max_receive_delay": process.deserialize_floating(
+                    "max_receive_delay", cls._DEFAULT_MAX_RECEIVE_DELAY
+                ),
+                "adaptive_sampling": bool(process.deserialize_integer("adaptive_sampling", False)),
+                "lowpass_filter": bool(process.deserialize_integer("lowpass_filter", False)),
+                "lowpass_bandwidth": process.deserialize_floating(
+                    "lowpass_bandwidth", cls._DEFAULT_LOWPASS_BANDWIDTH
+                ),
+                "noise_power": process.deserialize_array("noise_power", np.float64, None),
+                "leakage_calibration": process.deserialize_object(
+                    LeakageCalibrationBase.hdf_group_name, LeakageCalibrationBase, None
+                ),
+                "delay_calibration": process.deserialize_object(
+                    DelayCalibrationBase.hdf_group_name, DelayCalibrationBase, None
+                ),
+                "antenna_calibration": process.deserialize_object(
+                    AntennaCalibration.hdf_group_name, AntennaCalibration, None
+                ),
+            }
+        )
+        return parameters
+
+
+class Calibration(ABC, Serializable):
     """Abstract basse class of all calibration classes."""
 
     hdf_group_name = "calibration"
@@ -659,7 +714,7 @@ class Calibration(ABC, HDFSerializable, Serializable):
         if self.__device is not None:
             self._configure_slot(self.__device, self)
 
-    def save(self, path: str) -> None:
+    def save(self, path: str, backend: SerializationBackend = SerializationBackend.HDF) -> None:
         """Save the calibration file to the hard drive.
 
         Args:
@@ -667,46 +722,48 @@ class Calibration(ABC, HDFSerializable, Serializable):
             path (str):
                 Path under which the file should be stored.
 
-        Raises:
+            backend (SerializationBackend, optional):
+                Serialization backend to use.
+                HDF by default.
         """
 
-        file = File(path, "a")
+        process = Factory().serialize(path, "calibration", backend)
 
-        # Create dataset for the calibrateable
-        dataset = file.create_group(self.hdf_group_name)
-
-        # Save state to dataset
-        self.to_HDF(dataset)
-
-        # Close file handle
-        file.close()
+        try:
+            process.serialize_object(self, self.hdf_group_name)
+        finally:
+            process.finalize()
 
     @classmethod
-    def Load(cls: Type[CT], source: str | Group) -> CT:
-        if isinstance(source, str):
-            file = File(source, "r")
+    def Load(
+        cls: Type[CT], path: str, backend: SerializationBackend = SerializationBackend.HDF
+    ) -> CT:
+        """Load the calibration file from the hard drive.
 
-            # Load dataset for the calibrateable
-            group = file[cls.hdf_group_name]
+        Args:
 
-        else:
-            group = source
+            path (str):
+                Path from which to load the calibration.
 
-        # Recall and return the calibration from the HDF dataset
-        calibration = cls.from_HDF(group)
+            backend (SerializationBackend, optional):
+                Serialization backend to use.
+                HDF by default.
+        """
 
-        # Close file handle
-        if isinstance(source, str):
-            file.close()
+        process = Factory().deserialize(path, "calibration", backend)
+
+        try:
+            calibration = process.deserialize_object(cls.hdf_group_name, cls)
+        finally:
+            process.finalize()
 
         return calibration
 
 
-class DelayCalibrationBase(Calibration, ABC):
+class DelayCalibrationBase(Calibration, Serializable):
     """Abstract base class for all delay calibration classes."""
 
     hdf_group_name = "delay_calibration"
-    """Group name of the delay calibration in the HDF save file."""
 
     @classmethod
     def _configure_slot(
@@ -773,34 +830,37 @@ class DelayCalibrationBase(Calibration, ABC):
         return signal
 
 
-class NoDelayCalibration(DelayCalibrationBase, Serializable):
+class NoDelayCalibration(DelayCalibrationBase):
     """No delay calibration."""
-
-    yaml_tag = "NoDelayCalibration"
 
     @property
     def delay(self) -> float:
         return 0.0
 
+    @override
     def correct_transmit_delay(self, signal: Signal) -> Signal:
         return signal
 
+    @override
     def correct_receive_delay(self, signal: Signal) -> Signal:
         return signal
 
-    def to_HDF(self, group: Group) -> None:
-        return
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        pass
 
     @classmethod
-    def from_HDF(cls: Type[NoDelayCalibration], group: Group) -> NoDelayCalibration:
-        return cls()
+    @override
+    def Deserialize(
+        cls: Type[NoDelayCalibration], process: DeserializationProcess
+    ) -> NoDelayCalibration:
+        return NoDelayCalibration()
 
 
-class LeakageCalibrationBase(Calibration):
+class LeakageCalibrationBase(Calibration, Serializable):
     """Abstract base class for all leakage calibration classes."""
 
     hdf_group_name = "leakage_calibration"
-    """Group name of the leakage calibration in the HDF save file."""
 
     @classmethod
     def _configure_slot(
@@ -842,25 +902,29 @@ class LeakageCalibrationBase(Calibration):
         ...  # pragma: no cover
 
 
-class NoLeakageCalibration(LeakageCalibrationBase, Serializable):
+class NoLeakageCalibration(LeakageCalibrationBase):
     """No leakage calibration."""
 
-    yaml_tag = "NoLeakageCalibration"
-
+    @override
     def predict_leakage(self, transmitted_signal: Signal) -> Signal:
         return Signal.Empty(
             transmitted_signal.sampling_rate, self.device.num_digital_receive_ports, 0
         )
 
+    @override
     def remove_leakage(self, transmitted_signal: Signal, received_signal: Signal) -> Signal:
         return received_signal
 
-    def to_HDF(self, group: Group) -> None:
-        return
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        pass
 
     @classmethod
-    def from_HDF(cls: Type[NoLeakageCalibration], group: Group) -> NoLeakageCalibration:
-        return cls()
+    @override
+    def Deserialize(
+        cls: Type[NoLeakageCalibration], process: DeserializationProcess
+    ) -> NoLeakageCalibration:
+        return NoLeakageCalibration()
 
 
 class AntennaCalibration(Calibration):
@@ -898,19 +962,21 @@ class AntennaCalibration(Calibration):
 class NoAntennaCalibration(AntennaCalibration):
     """No calibration for antenna arrays."""
 
-    yaml_tag = "NoAntennaCalibration"
-
-    yaml_tag = "NoAntennaCalibration"
-
+    @override
     def correct_transmission(self, transmission: SignalBlock):
         pass  # Do nothing, since this is a stub
 
+    @override
     def correct_reception(self, reception: SignalBlock):
         pass  # Do nothing, since this is a stub
 
-    def to_HDF(self, group: Group) -> None:
-        return
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        pass  # Do nothing, since this is a stub
 
     @classmethod
-    def from_HDF(cls: Type[NoAntennaCalibration], group: Group) -> NoAntennaCalibration:
-        return cls()
+    @override
+    def Deserialize(
+        cls: Type[NoAntennaCalibration], process: DeserializationProcess
+    ) -> NoAntennaCalibration:
+        return NoAntennaCalibration()

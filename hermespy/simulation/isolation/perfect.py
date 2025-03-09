@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
+from typing_extensions import override
 
-from hermespy.core import FloatingError, Serializable, Signal
+from hermespy.core import FloatingError, Signal, SerializationProcess, DeserializationProcess
 from .isolation import Isolation
 
 __author__ = "Jan Adler"
@@ -15,10 +16,8 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class PerfectIsolation(Serializable, Isolation):
+class PerfectIsolation(Isolation):
     """Perfect isolation model without leakage between RF chains."""
-
-    yaml_tag = "PerfectIsolation"
 
     def leak(self, signal: Signal | None) -> Signal:
         if self.device is None:
@@ -48,3 +47,12 @@ class PerfectIsolation(Serializable, Isolation):
                 self.device.antennas.num_receive_antennas,
                 carrier_frequency=signal.carrier_frequency,
             )
+
+    @override
+    def serialize(self, serialization_process: SerializationProcess) -> None:
+        return
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> PerfectIsolation:
+        return cls()

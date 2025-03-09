@@ -6,8 +6,9 @@ Perfect Coupling
 """
 
 from __future__ import annotations
+from typing_extensions import override
 
-from hermespy.core import Serializable, Signal
+from hermespy.core import Signal, SerializationProcess, DeserializationProcess
 from .coupling import Coupling
 
 __author__ = "Jan Adler"
@@ -20,13 +21,20 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class PerfectCoupling(Serializable, Coupling):
+class PerfectCoupling(Coupling):
     """Ideal mutual coupling between two antenna arrays."""
-
-    yaml_tag = "Perfect-Coupling"
 
     def _transmit(self, signal: Signal) -> Signal:
         return signal
 
     def _receive(self, signal: Signal) -> Signal:
         return signal
+
+    @override
+    def serialize(self, serialization_process: SerializationProcess) -> None:
+        return
+
+    @override
+    @classmethod
+    def Deserialize(cls, process: DeserializationProcess) -> PerfectCoupling:
+        return cls()

@@ -7,7 +7,7 @@ from .symbol_precoding import (
     ReceiveSymbolDecoder,
 )
 from .single_carrier import SingleCarrier
-from .dft import DFT
+from .dft import DFT, DFTNorm
 from .space_time_block_coding import Alamouti, Ganesan
 from .ratio_combining import MaximumRatioCombining
 
@@ -28,6 +28,7 @@ __all__ = [
     "ReceiveSymbolDecoder",
     "SingleCarrier",
     "DFT",
+    "DFTNorm",
     "Alamouti",
     "Ganesan",
     "MaximumRatioCombining",

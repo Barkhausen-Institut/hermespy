@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from math import ceil
-from typing import Optional
+from typing_extensions import override
 from io import BufferedReader
 
 import numpy as np
 
-from hermespy.core.factory import Serializable
-from hermespy.core.random_node import RandomNode
+from hermespy.core import DeserializationProcess, Serializable, SerializationProcess, RandomNode
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -21,13 +20,13 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class BitsSource(ABC, RandomNode):
+class BitsSource(RandomNode, Serializable):
     """Base Class for Arbitrary Streams of Communication Bits.
 
     Inheriting classes are required to implement the :meth:`.generate_bits` routine.
     """
 
-    def __init__(self, seed: Optional[int] = None) -> None:
+    def __init__(self, seed: int | None = None) -> None:
         """
         Args:
             seed (int, optional): Seed used to initialize the pseudo-random number generator.
@@ -51,12 +50,10 @@ class BitsSource(ABC, RandomNode):
         ...  # pragma: no cover
 
 
-class RandomBitsSource(BitsSource, Serializable):
+class RandomBitsSource(BitsSource):
     """Bit stream generator for pseudo-random sequences of bits."""
 
-    yaml_tag = "RandomBits"
-
-    def __init__(self, seed: Optional[int] = None) -> None:
+    def __init__(self, seed: int | None = None) -> None:
         """
         Args:
             seed (int, optional):
@@ -68,6 +65,16 @@ class RandomBitsSource(BitsSource, Serializable):
 
     def generate_bits(self, num_bits: int) -> np.ndarray:
         return self._rng.integers(0, 2, size=num_bits, dtype=int)
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        if self.seed is not None:
+            process.serialize_integer(self.seed, "seed")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> RandomBitsSource:
+        return RandomBitsSource(process.deserialize_integer("seed", None))
 
 
 class StreamBitsSource(BitsSource, Serializable):
@@ -100,3 +107,12 @@ class StreamBitsSource(BitsSource, Serializable):
         array = np.unpackbits(np.frombuffer(byte_string, dtype=np.uint8))
 
         return array
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_string(self.__stream.name, "path")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> StreamBitsSource:
+        return StreamBitsSource(process.deserialize_string("path"))

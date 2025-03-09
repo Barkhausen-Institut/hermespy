@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from typing import Literal
+from typing_extensions import override
 
 import numpy as np
 
-from hermespy.core import Serializable
+from hermespy.core import (
+    Serializable,
+    SerializableEnum,
+    SerializationProcess,
+    DeserializationProcess,
+)
 from ..symbols import StatedSymbols
 from .symbol_precoding import TransmitSymbolEncoder, ReceiveSymbolDecoder
 
@@ -19,18 +24,27 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
+class DFTNorm(SerializableEnum):
+    """Discrete Fourier Transform precoding normalization options."""
+
+    BACKWARD = "backward"
+    ORTHO = "ortho"
+    FORWARD = "forward"
+
+
 class DFT(TransmitSymbolEncoder, ReceiveSymbolDecoder, Serializable):
     """A precoder applying the Discrete Fourier Transform to each data stream."""
 
-    yaml_tag = "DFT"
-    __fft_norm: Literal["backward", "ortho", "forward"]
+    __DEFAULT_FFT_NORM: DFTNorm = DFTNorm.ORTHO
+    __fft_norm: DFTNorm
 
-    def __init__(self, fft_norm: Literal["backward", "ortho", "forward"] = "ortho") -> None:
+    def __init__(self, fft_norm: DFTNorm = __DEFAULT_FFT_NORM) -> None:
         """
 
         Args:
-            fft_norm (str, optional):
+            fft_norm (DFTNorm, optional):
                 The norm applied to the discrete fourier transform.
+                Defaults to DFTNorm.ORTHO.
                 See also numpy.fft.fft for details
         """
 
@@ -44,13 +58,13 @@ class DFT(TransmitSymbolEncoder, ReceiveSymbolDecoder, Serializable):
 
     def encode_symbols(self, symbols: StatedSymbols, num_output_streams: int) -> StatedSymbols:
         encoded_symbols = symbols.copy()
-        encoded_symbols.raw = np.fft.fft(symbols.raw, axis=1, norm=self.__fft_norm)
+        encoded_symbols.raw = np.fft.fft(symbols.raw, axis=1, norm=self.__fft_norm.value)
 
         return encoded_symbols
 
     def decode_symbols(self, symbols: StatedSymbols, num_output_streams: int) -> StatedSymbols:
         decoded_symbols = symbols.copy()
-        decoded_symbols.raw = np.fft.ifft(symbols.raw, axis=1, norm=self.__fft_norm)
+        decoded_symbols.raw = np.fft.ifft(symbols.raw, axis=1, norm=self.__fft_norm.value)
 
         return decoded_symbols
 
@@ -75,3 +89,12 @@ class DFT(TransmitSymbolEncoder, ReceiveSymbolDecoder, Serializable):
     @property
     def num_receive_output_symbols(self) -> int:
         return 1
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_string(self.__fft_norm.value, "fft_norm")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> DFT:
+        return cls(DFTNorm(process.deserialize_string("fft_norm", cls.__DEFAULT_FFT_NORM.value)))

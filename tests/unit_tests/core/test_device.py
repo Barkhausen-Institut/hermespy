@@ -12,7 +12,8 @@ from scipy.constants import speed_of_light
 from numpy.testing import assert_array_equal
 
 from hermespy.core import AntennaArray, IdealAntenna, Signal, Transformation, UniformArray
-from hermespy.core.device import Device, DeviceInput, DeviceState, ProcessedDeviceInput, DeviceReception, DeviceOutput, DeviceTransmission, MixingOperator, OperationResult, Operator, OperatorSlot, Receiver, ReceiverSlot, Reception, Transmission, TransmitState, Transmitter, TransmitterSlot, UnsupportedSlot
+from hermespy.core.device import Device, DeviceInput, DeviceState, ProcessedDeviceInput, DeviceReception, DeviceOutput, DeviceTransmission, MixingOperator, OperationResult, Operator, OperatorSlot, Receiver, Reception, Transmission, TransmitState, Transmitter, UnsupportedSlot
+from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -96,23 +97,10 @@ class TestOperationResult(TestCase):
         self.signal = Signal.Create(np.random.standard_normal((2, 10)), 1.0)
         self.result = OperationResult(self.signal)
 
-    def test_hdf_serialization(self) -> None:
-        """Test HDF roundtrip serialization"""
+    def test_serialization(self) -> None:
+        """Test operation result serialization"""
 
-        with TemporaryDirectory() as tempdir:
-            file_path = join(tempdir, "test.hdf")
-
-            file = File(file_path, "w")
-            group = file.create_group("g1")
-            self.result.to_HDF(group)
-            file.close()
-
-            file = File(file_path, "r")
-            recalled_result = OperationResult.from_HDF(file["g1"])
-            file.close()
-
-            assert_array_equal(self.result.signal.getitem(), recalled_result.signal.getitem())
-
+        test_roundtrip_serialization(self, self.result)
 
 
 class TestDeviceOutput(TestCase):
@@ -132,22 +120,10 @@ class TestDeviceOutput(TestCase):
         self.assertSequenceEqual([self.signal], self.output.emerging_signals)
         self.assertEqual(1, self.output.num_emerging_signals)
 
-    def test_hdf_serialization(self) -> None:
-        """Test HDF roundtrip serialization"""
+    def test_serialization(self) -> None:
+        """Test device output serialization"""
 
-        with TemporaryDirectory() as tempdir:
-            file_path = join(tempdir, "test.hdf")
-
-            file = File(file_path, "w")
-            group = file.create_group("g1")
-            self.output.to_HDF(group)
-            file.close()
-
-            file = File(file_path, "r")
-            recalled_output = DeviceOutput.from_HDF(file["g1"])
-            file.close()
-
-            assert_array_equal(self.signal.getitem(), recalled_output.mixed_signal.getitem())
+        test_roundtrip_serialization(self, self.output)
 
 
 class TestDeviceTransmission(TestCase):
@@ -169,24 +145,10 @@ class TestDeviceTransmission(TestCase):
         self.assertSequenceEqual(self.operator_transmissions, self.operator_transmissions)
         self.assertEqual(1, self.transmission.num_operator_transmissions)
 
-    def test_hdf_serialization(self) -> None:
-        """Test HDF roundtrip serialization"""
+    def test_serialization(self) -> None:
+        """Test device transmission serialization"""
 
-        with TemporaryDirectory() as tempdir:
-            file_path = join(tempdir, "test.hdf")
-
-            file = File(file_path, "w")
-            group = file.create_group("g1")
-            self.transmission.to_HDF(group)
-            file.close()
-
-            file = File(file_path, "r")
-            deserialized_transmission = DeviceTransmission.from_HDF(file["g1"])
-            recalled_transmission = DeviceTransmission.Recall(file["g1"], self.device)
-            file.close()
-
-            assert_array_equal(self.mixed_signal.getitem(), deserialized_transmission.mixed_signal.getitem())
-            assert_array_equal(self.mixed_signal.getitem(), recalled_transmission.mixed_signal.getitem())
+        test_roundtrip_serialization(self, self.transmission)
 
 
 class TestDeviceInput(TestCase):
@@ -202,22 +164,10 @@ class TestDeviceInput(TestCase):
         self.assertSequenceEqual(self.impinging_signals, self.input.impinging_signals)
         self.assertEqual(1, self.input.num_impinging_signals)
 
-    def test_hdf_serialization(self) -> None:
-        """Test HDF roundtrip serialization"""
+    def test_serialization(self) -> None:
+        """Test device input serialization"""
 
-        with TemporaryDirectory() as tempdir:
-            file_path = join(tempdir, "test.hdf")
-
-            file = File(file_path, "w")
-            group = file.create_group("g1")
-            self.input.to_HDF(group)
-            file.close()
-
-            file = File(file_path, "r")
-            recalled_input = DeviceInput.from_HDF(file["g1"])
-            file.close()
-
-            assert_array_equal(self.impinging_signals[0].getitem(), recalled_input.impinging_signals[0].getitem())
+        test_roundtrip_serialization(self, self.input)
 
 
 class TestProcessedDeviceInput(TestCase):
@@ -237,22 +187,10 @@ class TestProcessedDeviceInput(TestCase):
         self.assertSequenceEqual(self.operator_inputs, self.input.operator_inputs)
         self.assertEqual(1, self.input.num_operator_inputs)
 
-    def test_hdf_serialization(self) -> None:
-        """Test HDF roundtrip serialization"""
+    def test_serialization(self) -> None:
+        """Test processed device input serialization"""
 
-        with TemporaryDirectory() as tempdir:
-            file_path = join(tempdir, "test.hdf")
-
-            file = File(file_path, "w")
-            group = file.create_group("g1")
-            self.input.to_HDF(group)
-            file.close()
-
-            file = File(file_path, "r")
-            recalled_input = ProcessedDeviceInput.from_HDF(file["g1"])
-            file.close()
-
-            assert_array_equal(self.impinging_signals[0].getitem(), recalled_input.impinging_signals[0].getitem())
+        test_roundtrip_serialization(self, self.input)
 
 
 class TestDeviceReception(TestCase):
@@ -274,20 +212,10 @@ class TestDeviceReception(TestCase):
         self.assertSequenceEqual(self.operator_receptions, self.reception.operator_receptions)
         self.assertEqual(1, self.reception.num_operator_receptions)
 
-    def test_hdf_serialization(self) -> None:
-        """Test HDF roundtrip serialization"""
+    def test_serialization(self) -> None:
+        """Test device reception serialization"""
 
-        file = File("test.h5", "w", driver="core", backing_store=False)
-        group = file.create_group("g1")
-
-        self.reception.to_HDF(group)
-        deserialized_reception = DeviceReception.from_HDF(file["g1"])
-        recalled_reception = DeviceReception.Recall(file["g1"], self.device)
-
-        file.close()
-
-        assert_array_equal(self.operator_receptions[0].signal.getitem(), deserialized_reception.operator_receptions[0].signal.getitem())
-        assert_array_equal(self.operator_receptions[0].signal.getitem(), recalled_reception.operator_receptions[0].signal.getitem())
+        test_roundtrip_serialization(self, self.reception)
 
 
 class MixingOperatorMock(MixingOperator):
@@ -332,7 +260,6 @@ class TestMixingOperator(TestCase):
         self.assertEqual(carrier_frequency, self.mixing_operator.carrier_frequency)
 
 
-
 class ReceiverMock(Receiver):
     """Mock of the receiving device operator base class"""
 
@@ -341,7 +268,7 @@ class ReceiverMock(Receiver):
 
     def _receive(self, signal: Signal, device: DeviceState) -> Reception:
         return Reception(signal)
-    
+
     @property
     def frame_duration(self) -> float:
         return 10.0
@@ -747,7 +674,7 @@ class TestDevice(TestCase):
 
         operator_receptions = self.device.receive_operators([signal], state)
         self.assertEqual(1, len(operator_receptions))
-        
+
         impinging_signals = [Signal.Create(np.random.standard_normal((2, 10)), self.device.sampling_rate, self.device.carrier_frequency)]
         operator_receptions = self.device.receive_operators(self.device.process_input(impinging_signals, state), state)
         self.assertEqual(1, len(operator_receptions))
@@ -763,3 +690,8 @@ class TestDevice(TestCase):
 
         reception = self.device.receive(impinging_signal)
         assert_array_equal(impinging_signal.getitem(), reception.impinging_signals[0].getitem())
+
+    def test_serialization(self) -> None:
+        """"Test device roundtrip serialization"""
+
+        test_roundtrip_serialization(self, self.device)
