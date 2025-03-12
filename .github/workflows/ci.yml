@@ -38,7 +38,7 @@ jobs:
 
     - name: Run unit tests
       run: |
-        coverage run --include=hermespy/* ./tests/test_install.py ./tests/unit_tests/
+        coverage run --include=hermespy/* ./tests/test_install.py unit_tests
         coverage xml
         coverage report -m --include=hermespy/* --skip-covered
 
