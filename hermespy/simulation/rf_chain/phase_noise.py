@@ -169,6 +169,9 @@ class OscillatorPhaseNoise(PhaseNoise, Serializable):
         Returns: Phase noise samples.
         """
 
+        if num_samples < 1 or num_streams < 1:
+            return np.empty((num_streams, num_samples), dtype=np.float64)
+
         sampling_interval = 1 / sampling_rate
 
         var_w0 = self.K0 / sampling_interval
