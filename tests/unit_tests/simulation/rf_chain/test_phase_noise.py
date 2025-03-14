@@ -88,6 +88,17 @@ class TestOscillatorPhaseNoise(TestCase):
 
         self.pn.K3 = self.K3
         self.assertEqual(self.pn.K3, self.K3)
+    
+    def test_add_noise_zero_length(self) -> None:
+        """Phase noise model should correctly compute sequences of zero length"""
+
+        device = SimulatedDevice()
+        device.rf_chain.phase_noise = self.pn
+        transmission = device.transmit()
+        reception = device.receive(transmission)
+        
+        self.assertEqual(1, transmission.mixed_signal.num_streams)
+        self.assertEqual(0, transmission.mixed_signal.num_samples)
 
     def test_add_noise(self) -> None:
         """Phase noise model should introduce the correct phase offset"""
