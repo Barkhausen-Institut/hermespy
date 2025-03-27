@@ -36,6 +36,13 @@ class SpecificIsolation(ScalarDimension, Isolation):
     def __init__(
         self, isolation: np.ndarray | float | int = None, device: SimulatedDevice | None = None
     ) -> None:
+        """
+
+        Args:
+            isolation (numpy.ndarray | float | int, optional): Linear isolation power scales between transmit and receive chains. Defaults to None.
+            device (SimulatedDevice, optional): The device to which the isolation applies.
+        """
+
         # Initialize base class
         Isolation.__init__(self, device=device)
 
@@ -90,14 +97,14 @@ class SpecificIsolation(ScalarDimension, Isolation):
 
         if self.__leakage_factors.shape[0] != self.device.antennas.num_receive_antennas:
             raise RuntimeError(
-                "Number of receiving antennas in isolation specifications ({self.__leakage_factors.shape[0]}) "
-                "don't match the antenna array ({self.device.antennas.num_receive_antennas})"
+                f"Number of receiving antennas in isolation specifications ({self.__leakage_factors.shape[0]}) "
+                f"don't match the antenna array ({self.device.antennas.num_receive_antennas})"
             )
 
         if self.__leakage_factors.shape[1] != self.device.antennas.num_transmit_antennas:
             raise RuntimeError(
-                "Number of receiving antennas in isolation specifications ({self.__leakage_factors.shape[0]}) "
-                "don't match the antenna array ({self.device.antennas.num_receive_antennas})"
+                f"Number of receiving antennas in isolation specifications ({self.__leakage_factors.shape[0]}) "
+                f"don't match the antenna array ({self.device.antennas.num_receive_antennas})"
             )
 
         leaked_samples = self.__leakage_factors @ signal.getitem()

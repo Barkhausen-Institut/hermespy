@@ -148,5 +148,6 @@ From there, the result can be printed to the console, plotted, or saved to the d
    simulation.rf_chain.amplifier
    simulation.coupling
    simulation.isolation
+   simulation.evaluators
    simulation.simulation.SimulationScenario
    simulation.simulation.SimulatedDrop

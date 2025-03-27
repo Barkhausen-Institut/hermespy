@@ -1874,3 +1874,9 @@ class SimulatedDevice(Device[SimulatedDeviceState], Moveable):
             }
         )
         return base_parameters
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> SimulatedDevice:
+        parameters = cls._DeserializeParameters(process)
+        return cls(**parameters)  # type: ignore[arg-type]

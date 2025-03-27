@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from abc import abstractmethod
-from typing import Generic, Sequence, Type
+from typing import Generic, Sequence, Type, TypeVar
 from typing_extensions import override
 
 
@@ -71,6 +71,9 @@ class JCASReception(CommunicationReception, RadarReception):
         return JCASReception(
             CommunicationReception.Deserialize(process), RadarReception.Deserialize(process)
         )
+
+
+_DJOT = TypeVar("_DJOT", bound="DuplexJCASOperator")
 
 
 class DuplexJCASOperator(
@@ -162,5 +165,11 @@ class DuplexJCASOperator(
         self, signal: Signal, device: ReceiveState
     ) -> JCASReception: ...  # pragma: no cover
 
+    @override
     def serialize(self, process: SerializationProcess) -> None:
         RadarBase.serialize(self, process)
+
+    @classmethod
+    @override
+    def Deserialize(cls: Type[_DJOT], process: DeserializationProcess) -> _DJOT:
+        return cls(**cls._DeserializeParameters(process))  # type: ignore[arg-type]

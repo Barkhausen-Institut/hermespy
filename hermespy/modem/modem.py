@@ -983,6 +983,14 @@ class TransmittingModem(
         parameters.update(TransmittingModemBase._DeserializeParameters(process))
         return parameters
 
+    @classmethod
+    @override
+    def Deserialize(
+        cls: Type[TransmittingModem], process: DeserializationProcess
+    ) -> TransmittingModem:
+        parameters = cls._DeserializeParameters(process)
+        return cls(**parameters)  # type: ignore[arg-type]
+
 
 class ReceivingModemBase(Generic[CWT], BaseModem[CWT]):
     """Base class of signal processing algorithms receiving information."""
@@ -1310,6 +1318,12 @@ class ReceivingModem(
         parameters.update(Receiver._DeserializeParameters(process))
         return parameters
 
+    @classmethod
+    @override
+    def Deserialize(cls: Type[ReceivingModem], process: DeserializationProcess) -> ReceivingModem:
+        parameters = cls._DeserializeParameters(process)
+        return cls(**parameters)  # type: ignore[arg-type]
+
 
 class DuplexModem(TransmittingModem, ReceivingModem):
     """Representation of a wireless modem simultaneously transmitting and receiving."""
@@ -1412,6 +1426,12 @@ class DuplexModem(TransmittingModem, ReceivingModem):
         parameters = TransmittingModem._DeserializeParameters(process)
         parameters.update(ReceivingModem._DeserializeParameters(process))
         return parameters
+
+    @classmethod
+    @override
+    def Deserialize(cls: Type[DuplexModem], process: DeserializationProcess) -> DuplexModem:
+        parameters = cls._DeserializeParameters(process)
+        return cls(**parameters)  # type: ignore[arg-type]
 
 
 class SimplexLink(TransmittingModem, ReceivingModem):
@@ -1533,3 +1553,9 @@ class SimplexLink(TransmittingModem, ReceivingModem):
         parameters = TransmittingModem._DeserializeParameters(process)
         parameters.update(ReceivingModem._DeserializeParameters(process))
         return parameters
+
+    @classmethod
+    @override
+    def Deserialize(cls: Type[SimplexLink], process: DeserializationProcess) -> SimplexLink:
+        parameters = cls._DeserializeParameters(process)
+        return cls(**parameters)  # type: ignore[arg-type]

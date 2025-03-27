@@ -9,11 +9,13 @@ Implements a physical device dummy for testing and demonstration purposes.
 
 from __future__ import annotations
 from collections.abc import Sequence
+from typing import Type
 from typing_extensions import override
 
 import numpy as np
 
 from hermespy.core import (
+    DeserializationProcess,
     DeviceInput,
     DeviceState,
     Receiver,
@@ -277,6 +279,13 @@ class PhysicalDeviceDummy(SimulatedDevice, PhysicalDevice, Serializable):
     @property
     def max_sampling_rate(self) -> float:
         return self.sampling_rate
+
+    @classmethod
+    @override
+    def Deserialize(
+        cls: Type[PhysicalDeviceDummy], process: DeserializationProcess
+    ) -> PhysicalDeviceDummy:
+        return cls(**cls._DeserializeParameters(process))  # type: ignore[arg-type]
 
 
 class PhysicalScenarioDummy(

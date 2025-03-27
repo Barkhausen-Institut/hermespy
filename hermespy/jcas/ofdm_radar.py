@@ -1,14 +1,21 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from typing import Sequence
+from typing import Sequence, Type
+from typing_extensions import override
 
 import numpy as np
 from scipy.constants import speed_of_light
 from scipy.fft import ifft, fft, ifftshift
 
 from hermespy.beamforming import ReceiveBeamformer
-from hermespy.core import Serializable, ReceiveState, Signal, TransmitState
+from hermespy.core import (
+    DeserializationProcess,
+    Serializable,
+    ReceiveState,
+    Signal,
+    TransmitState,
+)
 from hermespy.jcas.jcas import JCASReception, JCASTransmission
 from hermespy.modem import OFDMWaveform, ReceivingModemBase, TransmittingModemBase, Symbols
 from hermespy.radar import RadarCube, RadarDetector, RadarReception
@@ -210,3 +217,8 @@ class OFDMRadar(DuplexJCASOperator[OFDMWaveform], Serializable):
         # Generate reception object
         radar_reception = RadarReception(signal, cube, cloud)
         return JCASReception(communication_reception, radar_reception)
+
+    @classmethod
+    @override
+    def Deserialize(cls: Type[OFDMRadar], process: DeserializationProcess) -> OFDMRadar:
+        return cls(**cls._DeserializeParameters(process))  # type: ignore[arg-type]
