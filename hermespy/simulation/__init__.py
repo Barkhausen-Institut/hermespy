@@ -13,6 +13,7 @@ from .antennas import (
 )
 from .beamforming import DeviceFocus
 from .drop import SimulatedDrop
+from .evaluators import SI, SSINR
 from .scenario import SimulationScenario
 from .simulation import Simulation
 from .simulated_device import (
@@ -83,6 +84,8 @@ __all__ = [
     "Simulation",
     "DeviceFocus",
     "SimulatedDrop",
+    "SI",
+    "SSINR",
     "SimulationScenario",
     "SimulatedDeviceState",
     "ProcessedSimulatedDeviceInput",

@@ -36,7 +36,7 @@ class PowerResult(ScalarEvaluationResult):
         self,
         average_powers: np.ndarray,
         grid: Sequence[GridDimension],
-        evaluator: ReceivePowerEvaluator | TransmitPowerEvaluator,
+        evaluator: Evaluator,
         plot_surface: bool = False,
     ) -> None:
         """
@@ -48,7 +48,7 @@ class PowerResult(ScalarEvaluationResult):
             grid (Sequence[GridDimension]):
                 The grid dimensions of the evaluation.
 
-            evaluator (ReceivePowerEvaluator | TransmitPowerEvaluator):
+            evaluator (Evaluator):
                 The evaluator that generated this result.
 
             plot_surface (bool):
@@ -127,6 +127,12 @@ class PowerEvaluation(Evaluation[StemVisualization]):
 
         # Initialize class members
         self.__power = power
+
+    @property
+    def power(self) -> np.ndarray:
+        """The received power indicator in V^2 for each antenna stream."""
+
+        return self.__power
 
     def artifact(self) -> PowerArtifact:
         return PowerArtifact(self.__power)
