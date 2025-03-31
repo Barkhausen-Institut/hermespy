@@ -498,7 +498,7 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
         self.__interrupt_run = False
 
     def new_dimension(
-        self, dimension: str, sample_points: List[Any], *args: Tuple[Any]
+        self, dimension: str, sample_points: List[Any], *args: Tuple[Any], **kwargs
     ) -> GridDimension:
         """Add a dimension to the sweep grid.
 
@@ -513,16 +513,20 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
                 List points at which the dimension will be sampled into a grid.
                 The type of points must be identical to the grid arguments / type.
 
-            *args (Tuple[Any], optional):
+            \*args (Tuple[Any], optional):
                 References to the object the imension belongs to.
                 Resolved to the investigated object by default,
                 but may be an attribute or sub-attribute of the investigated object.
+
+            \*\*kwargs:
+                Additional keyword arguments to be passed to the dimension.
+                See :class:`GridDimension` for more information.
 
         Returns: The newly created dimension object.
         """
 
         considered_objects = (self.__scenario) if len(args) < 1 else args
-        grid_dimension = GridDimension(considered_objects, dimension, sample_points)
+        grid_dimension = GridDimension(considered_objects, dimension, sample_points, **kwargs)
         self.add_dimension(grid_dimension)
 
         return grid_dimension
@@ -667,7 +671,7 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
 
     def run(
         self, overwrite=True, campaign: str | None = None, serialize_state: bool = True
-    ) -> None:
+    ) -> MonteCarloResult:
         """Run the hardware loop configuration.
 
         Args:
@@ -681,6 +685,8 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
             serialize_state (bool, optional):
                 Serialize the state of the scenario to the results file.
                 Enabled by default.
+
+        Returns: The result of the hardware loop.
         """
 
         # Prepare the results file
@@ -725,10 +731,17 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
                     self.console.print("Skipping drop recording", style="bright_yellow")
 
         # Run internally
-        self.__run()
+        result = self.__run()
 
         # Save results and close file streams
         self.scenario.stop()
+
+        # Save results if a directory was provided
+        if self.results_dir:
+            result.save_to_matlab(path.join(self.results_dir, "results.mat"))
+
+        # Return the result
+        return result
 
     def replay(self, file_location: str) -> None:
         """Replay a stored pipeline run.
@@ -787,7 +800,7 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
 
         self.__interrupt_run = True
 
-    def __run(self) -> None:
+    def __run(self) -> MonteCarloResult:
         """Internal run method executing drops"""
 
         # Reset variables
@@ -945,26 +958,17 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
                 progress.update(loop_drop_progress, completed=indices[drop_selector])
                 progress.update(total_progress, completed=total)
 
+        # Ensure all plots are closed
+        for thread in plot_threads:
+            try:
+                thread.join(10.0)
+            except RuntimeError:
+                pass
+
         # Compute the evaluation results
         result: MonteCarloResult = MonteCarloResult(
             self.__dimensions, self.__evaluators, sample_grid, 0.0
         )
 
-        # Generate result plots
-        visualizations = result.plot()
-
-        # Save results if a directory was provided
-        if self.results_dir:
-            result.save_to_matlab(path.join(self.results_dir, "results.mat"))
-
-            for idx, (visualization, evaluator) in enumerate(
-                zip(visualizations, self.__evaluators)
-            ):
-                if visualization.figure is not None:
-                    visualization.figure.savefig(
-                        path.join(self.results_dir, f"result_{idx}_{evaluator.abbreviation}.png"),
-                        format="png",
-                    )
-
-        if self.plot_information:
-            plt.show()
+        # Return the result
+        return result

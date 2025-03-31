@@ -1191,7 +1191,7 @@ class SimulatedDevice(Device[SimulatedDeviceState], Moveable):
 
         return self.__scenario is not None
 
-    # @register(first_impact="receive_devices", title="Device Noise Level")  # type: ignore[misc]
+    @register(first_impact="receive_devices", title="Device Noise Level")  # type: ignore[misc]
     @property
     def noise_level(self) -> NoiseLevel:
         """Level of the simulated hardware noise."""
@@ -1476,6 +1476,12 @@ class SimulatedDevice(Device[SimulatedDeviceState], Moveable):
         )
         for signal in emerging_signals:
             signal.set_samples(np.append(trigger_padding, signal.getitem(), axis=1))
+
+        # Scale the emerging signals by the device's power
+        # This assumes that the expected power of each signal is 1.0
+        for signal in emerging_signals:
+            for block in signal._blocks:
+                block *= self.power  # type: ignore[misc]
 
         # Genreate the output data object
         output = SimulatedDeviceOutput(
