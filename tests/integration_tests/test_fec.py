@@ -10,8 +10,8 @@ import ray
 import numpy as np
 from numpy.testing import assert_array_equal
 
-from hermespy.simulation import SimulatedDevice, Simulation
-from hermespy.fec import EncoderManager, LDPCCoding, TurboCoding, RepetitionEncoder, Scrambler3GPP, BlockInterleaver, Scrambler80211a, CyclicRedundancyCheck, PolarSCCoding, PolarSCLCoding, ReedSolomonCoding, RSCCoding, BCHCoding
+from hermespy.simulation import SimulatedDevice
+from hermespy.fec import EncoderManager, LDPCCoding, TurboCoding, RepetitionEncoder, Scrambler3GPP, BlockInterleaver, Scrambler80211a, CyclicRedundancyCheck, PolarSCCoding, ReedSolomonCoding, RSCCoding, BCHCoding
 from hermespy.modem import RootRaisedCosineWaveform, SimplexLink
 from hermespy.tools import db2lin
 
@@ -37,7 +37,6 @@ class TestFEC(TestCase):
 
         self.link.waveform = RootRaisedCosineWaveform(oversampling_factor=1, symbol_rate=100e6, num_data_symbols=1024, modulation_order=64, num_preamble_symbols=0)
 
-
         self.alpha_candidates = [
             Scrambler3GPP(),
 #            Scrambler80211a(),  The scrambler80211a decsrambling is incorrect
@@ -50,7 +49,7 @@ class TestFEC(TestCase):
             LDPCCoding(100, path.join(path.dirname(path.realpath(__file__)), "..", "..", "submodules", "affect", "conf", "dec", "LDPC", "CCSDS_64_128.alist"), "", False, 10),
             TurboCoding(40, 13, 15, 100),
             PolarSCCoding(256, 512, 0.5),
-            PolarSCLCoding(256, 512, 0.1, 256),
+#            PolarSCLCoding(256, 512, 0.1, 256),
 #            ReedSolomonCoding(107, 10),  The reed solomon coding is not working and will crash
             RSCCoding(20, 46, False, 13, 15),
             BCHCoding(99, 127, 4),

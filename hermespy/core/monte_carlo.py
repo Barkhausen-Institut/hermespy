@@ -406,6 +406,11 @@ class EvaluationResult(Visualizable[PlotVisualization], ABC):
                 ax.plot(x_points, np.zeros_like(x_points, dtype=np.float64), label=line_label)
             )
 
+        # Add a legend to the plot
+        # Only required if more than one line is plotted
+        if len(self.grid) > 1:
+            ax.legend()
+
         return lines
 
     def _update_multidim_visualization(

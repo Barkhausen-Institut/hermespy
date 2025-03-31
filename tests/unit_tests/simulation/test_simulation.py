@@ -210,6 +210,19 @@ class TestSimulation(TestCase):
         self.simulation.console = console
 
         self.assertIs(console, self.simulation.console)
+        
+    def test_devices(self) -> None:
+        """Devices property should return the devices in the simulation"""
+        
+        new_device = self.simulation.new_device()
+        self.assertIn(new_device, self.simulation.devices)
+        
+    def test_drop(self) -> None:
+        """Test the drop generation routine"""
+        
+        drop = self.simulation.drop(0.1234)
+        self.assertEqual(1, drop.num_device_receptions)
+        self.assertEqual(1, drop.num_device_transmissions)
 
     def test_run(self) -> None:
         """Test running the simulation"""

@@ -9,13 +9,7 @@ from scipy.constants import speed_of_light
 from scipy.fft import ifft, fft, ifftshift
 
 from hermespy.beamforming import ReceiveBeamformer
-from hermespy.core import (
-    DeserializationProcess,
-    Serializable,
-    ReceiveState,
-    Signal,
-    TransmitState,
-)
+from hermespy.core import DeserializationProcess, Serializable, ReceiveState, Signal, TransmitState
 from hermespy.jcas.jcas import JCASReception, JCASTransmission
 from hermespy.modem import OFDMWaveform, ReceivingModemBase, TransmittingModemBase, Symbols
 from hermespy.radar import RadarCube, RadarDetector, RadarReception

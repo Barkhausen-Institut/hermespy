@@ -22,6 +22,7 @@ from hermespy.core import (
     Visualization,
 )
 from hermespy.channel import Channel, ChannelRealization
+from .drop import SimulatedDrop
 from .scenario import SimulationScenario
 from .simulated_device import (
     ProcessedSimulatedDeviceInput,
@@ -378,6 +379,25 @@ class Simulation(Pipeline[SimulationScenario, SimulatedDevice], MonteCarlo[Simul
     def console(self, value: Console) -> None:  # type: ignore
         Pipeline.console.fset(self, value)  # type: ignore
         MonteCarlo.console.fset(self, value)  # type: ignore
+
+    @property
+    def devices(self) -> Sequence[SimulatedDevice]:
+        """Sequence of all devices registered in the simulation scenario"""
+
+        return self.scenario.devices
+
+    def drop(self, timestamp: float = 0.0) -> SimulatedDrop:
+        """Generate a drop at a specific timestamp.
+
+        Args:
+
+            timestamp (float, optional):
+                Timestamp at which the drop is generated.
+                Defaults to 0.0.
+        """
+
+        # Generate a drop at the specified timestamp
+        return self.scenario.drop(timestamp)
 
     def run(self) -> MonteCarloResult:
         # Print indicator that the simulation is starting

@@ -8,7 +8,7 @@ from ray.cloudpickle.cloudpickle_fast import dump
 from ray.cloudpickle import load
 
 
-from hermespy.fec import PolarSCCoding, PolarSCLCoding
+from hermespy.fec import PolarSCCoding #, PolarSCLCoding
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -53,8 +53,8 @@ class TestPolarSCCoding(TestCase):
 
             _ = load(file)
 
-
-class TestPolarSCLCoding(TestCase):
+# Polar SCL codes are currently disabled because of a bugt in the underlying AFF3CT library
+class _TestPolarSCLCoding(object):
     """Test the Polar SCL Coding."""
 
     def setUp(self) -> None:

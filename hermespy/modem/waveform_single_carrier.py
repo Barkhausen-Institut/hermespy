@@ -54,10 +54,13 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
     - no equalization (only amplitude and phase of first propagation path is compensated)
     """
 
-    __DEFAULT_NUM_POSTAMBLE_SYMBOLS: int = 0  # Default number of postamble symbols
-    __DEFAULT_PILOT_RATE: int = 0  # Default pilot rate
-    __DEFAULT_GUARD_INTERVAL: float = 0.0  # Default guard interval
-    __DEFAULT_OVERSAMPLING_FACTOR: int = 4  # Default oversampling factor
+    __DEFAULT_SYMBOL_RATE: float = 1e6
+    __DEFAULT_NUM_PREAMBLE_SYMBOLS: int = 16
+    __DEFAULT_NUM_DATA_SYMBOLS: int = 256
+    __DEFAULT_NUM_POSTAMBLE_SYMBOLS: int = 0
+    __DEFAULT_PILOT_RATE: int = 0
+    __DEFAULT_GUARD_INTERVAL: float = 0.0
+    __DEFAULT_OVERSAMPLING_FACTOR: int = 4
 
     __symbol_rate: float
     __num_preamble_symbols: int
@@ -71,9 +74,9 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
 
     def __init__(
         self,
-        symbol_rate: float,
-        num_preamble_symbols: int,
-        num_data_symbols: int,
+        symbol_rate: float = __DEFAULT_SYMBOL_RATE,
+        num_preamble_symbols: int = __DEFAULT_NUM_PREAMBLE_SYMBOLS,
+        num_data_symbols: int = __DEFAULT_NUM_DATA_SYMBOLS,
         num_postamble_symbols: int = __DEFAULT_NUM_POSTAMBLE_SYMBOLS,
         pilot_rate: int = __DEFAULT_PILOT_RATE,
         guard_interval: float = __DEFAULT_GUARD_INTERVAL,
@@ -540,9 +543,15 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
     @classmethod
     def _DeserializeParameters(cls, process: DeserializationProcess) -> dict[str, Any]:
         parameters = ConfigurablePilotWaveform._DeserializeParameters(process)
-        parameters["symbol_rate"] = process.deserialize_floating("symbol_rate")
-        parameters["num_preamble_symbols"] = process.deserialize_integer("num_preamble_symbols")
-        parameters["num_data_symbols"] = process.deserialize_integer("num_data_symbols")
+        parameters["symbol_rate"] = process.deserialize_floating(
+            "symbol_rate", cls.__DEFAULT_SYMBOL_RATE
+        )
+        parameters["num_preamble_symbols"] = process.deserialize_integer(
+            "num_preamble_symbols", cls.__DEFAULT_NUM_PREAMBLE_SYMBOLS
+        )
+        parameters["num_data_symbols"] = process.deserialize_integer(
+            "num_data_symbols", cls.__DEFAULT_NUM_DATA_SYMBOLS
+        )
         parameters["num_postamble_symbols"] = process.deserialize_integer(
             "num_postamble_symbols", cls.__DEFAULT_NUM_POSTAMBLE_SYMBOLS
         )
@@ -557,7 +566,7 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
     @override
     @classmethod
     def Deserialize(cls, process: DeserializationProcess) -> FilteredSingleCarrierWaveform:
-        return cls(**cls._DeserializeParameters(process))
+        return cls(**cls._DeserializeParameters(process))  # type: ignore[arg-type]
 
 
 class SingleCarrierCorrelationSynchronization(

@@ -722,13 +722,38 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDeviceState, Simulat
         device_receptions = [SimulatedDeviceReception.From_ProcessedSimulatedDeviceInput(i, r) for i, r in zip(processed_inputs, operator_receptions)]  # type: ignore
         return device_receptions
 
-    def _drop(self) -> SimulatedDrop:
+    def drop(self, timestamp: float | None = None) -> SimulatedDrop:
+        """Simulate a drop at the given time.
+
+        Args:
+            timestamp (float, optional):
+                Time at which the drop is simulated.
+                In replay mode, setting the timestamp will lead to a new drop being generated at the given time instead of a replay.
+
+        Returns: Simulated drop.
+        """
+
+        if timestamp is None:
+            return Scenario.drop(self)
+
+        return self._drop(timestamp)
+
+    def _drop(self, timestamp: float = 0.0) -> SimulatedDrop:
+        """Simulate a drop at the given time.
+
+        Args:
+            timestamp (float, optional):
+                Time at which the drop is simulated.
+                Defaults to 0.0.
+
+        Returns: Simulated drop.
+        """
+
         # Generate drop timestamp
         drop_timestamp = time()
 
         # Query all device states
-        simulation_timestamp = 0.0
-        states = [d.state(simulation_timestamp) for d in self.devices]
+        states = [d.state(timestamp) for d in self.devices]
 
         # Generate device transmissions
         device_transmissions = self.transmit_devices(states)
