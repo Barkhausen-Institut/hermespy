@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-==========
-UHD Device
-==========
-"""
 
 from __future__ import annotations
 from collections.abc import Sequence
@@ -47,10 +42,10 @@ class UsrpPort(AntennaPort):
         """
         Args:
 
-            array (UsrpAntennas):
+            array:
                 Antenna array this port belongs to.
 
-            mode (AntennaMode):
+            mode:
                 Direction of the port.
         """
 
@@ -69,10 +64,10 @@ class UsrpAntennas(AntennaArray[AntennaPort, Antenna]):
         """
         Args:
 
-            device (UsrpDevice):
+            device:
                 USRP device this antenna array models.
 
-            pose (Transformation, optional):
+            pose:
                 Pose of the antenna array with respect to the `device`.
         """
 
@@ -168,45 +163,45 @@ class UsrpDevice(PhysicalDevice[PhysicalDeviceState], Serializable):
         """
         Args:
 
-            ip (str):
+            ip:
                 The IP address of the USRP device.
 
-            port (int, optional):
+            port:
                 The port of the USRP device.
 
-            carrier_frequency (float, optional):
+            carrier_frequency:
                 Carrier frequency of the USRP device.
                 :math:`700~\\mathrm{MHz}` by default.
 
-            sampling_rate (float, optional):
+            sampling_rate:
                 Sampling rate of the USRP device.
                 If not provided, the sampling rate is determined from the configured operators.
 
-            tx_gain (float, optional):
+            tx_gain:
                 The transmission gain of the USRP device.
                 Zero by default.
 
-            rx_gain (float, optional):
+            rx_gain:
                 The reception gain of the USRP device.
                 Zero by default.
 
-            scale_transmission (bool, optional):
+            scale_transmission:
                 If `True`, the transmission signal is scaled to the maximum floating point value of the USRP device.
                 This ensures a proper digital to analog conversion.
 
-            num_prepended_zeros (int, optional):
+            num_prepended_zeros:
                 The number of zeros prepended to the transmission signal.
                 :math:`200` by default.
 
-            num_appended_zeros (int, optional):
+            num_appended_zeros:
                 The number of zeros appended to the transmission signal.
                 :math:`200` by default.
 
-            selected_transmit_ports (Sequence[int], optional):
+            selected_transmit_ports:
                 Indices of the selected transmit antenna ports.
                 If not specified, i.e. :py:obj:`None`, only the first antenna port is selected.
 
-            selected_receive_ports (Sequence[int], optional):
+            selected_receive_ports:
                 Indices of the selected receive antenna ports.
                 If not specified, i.e. :py:obj:`None`, only the first antenna port is selected.
 
@@ -557,8 +552,8 @@ class UsrpDevice(PhysicalDevice[PhysicalDeviceState], Serializable):
         """Antenna array model of the USRP device.
 
         Allows for the further configuration of the antenna elements,
-        however, the number of :attr:`transmit ports<num_transmit_ports>`
-        and :attr:`receive ports<num_receive_ports>` is fixed.
+        however, the number of :attr:`transmit ports<.num_transmit_antenna_ports>`
+        and :attr:`receive ports<.num_receive_antenna_ports>` is fixed.
         """
 
         return self.__antennas

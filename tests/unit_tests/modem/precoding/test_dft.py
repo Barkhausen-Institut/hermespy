@@ -49,7 +49,7 @@ class TestDFT(TestCase):
     def test_num_transmit_output_streams(self) -> None:
         """Number of output streams should be equal to the number of input streams"""
 
-        self.assertEqual(123, self.dft._num_transmit_input_streams(123))
+        self.assertEqual(123, self.dft.num_transmit_input_streams(123))
     
     def test_num_receive_output_streams(self) -> None:
         """Number of output streams should be equal to the number of input streams"""

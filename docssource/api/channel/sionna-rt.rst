@@ -2,14 +2,12 @@
 SionnaRT Channel
 ================
 
-
 .. inheritance-diagram:: hermespy.channel.sionna_rt_channel.SionnaRTChannel hermespy.channel.sionna_rt_channel.SionnaRTChannelRealization hermespy.channel.sionna_rt_channel.SionnaRTChannelSample
    :parts: 1
 
-
 The :class:`SionnaRTChannel<hermespy.channel.sionna_rt_channel.SionnaRTChannel>` is an adapter for `Sionna Ray Tracing <https://nvlabs.github.io/sionna/api/rt.html>`_ module.
 
-It is deterministic, defined by the given `sionna.rt.Scene <https://nvlabs.github.io/sionna/api/rt.html#scene>`_. Meaning, given same devices and positions, different channel samples (:class:`SionnaRTChannelSample<hermespy.channel.sionna_rt_channel.SionnaRTChannelSample>`) and realizations (:class:`SionnaRTChannelRealization<hermespy.channel.sionna_rt_channel.SionnaRTChannelRealization>``) would not introduce any random changes and would produce equal state and propagation results.
+It is deterministic, defined by the given `sionna.rt.Scene <https://nvlabs.github.io/sionna/api/rt.html#scene>`_. Meaning, given same devices and positions, different channel samples (:class:`SionnaRTChannelSample<hermespy.channel.sionna_rt_channel.SionnaRTChannelSample>`) and realizations (:class:`SionnaRTChannelRealization<hermespy.channel.sionna_rt_channel.SionnaRTChannelRealization>`) would not introduce any random changes and would produce equal state and propagation results.
 
 This channel model requires `sionna.rt.Scene` to operate. It should be loaded with `sionna.rt.load_scene` and provided to the :class:`SionnaRTChannel<hermespy.channel.sionna_rt_channel.SionnaRTChannel>` `__init__` method.
 
@@ -59,8 +57,10 @@ within the context of a :class:`Simulation<hermespy.simulation.simulation.Simula
    :lines: 12-36
 
 .. autoclass:: hermespy.channel.sionna_rt_channel.SionnaRTChannel
+   :private-members: _realize
    
 .. autoclass:: hermespy.channel.sionna_rt_channel.SionnaRTChannelRealization
+   :private-members: _sample
    
 .. autoclass:: hermespy.channel.sionna_rt_channel.SionnaRTChannelSample
 

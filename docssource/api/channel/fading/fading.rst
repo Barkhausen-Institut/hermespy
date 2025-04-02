@@ -90,7 +90,7 @@ Instead, they are purely statistical approximations.
 
 
 The base equations are implemented in the :class:`hermespy.channel.fading.fading.MultipathFadingChannel` and its respective
-:class:`hermespy.channel.fading.fading.MultipathFadingRealizaiton` / :class:`hermespy.channel.fading.fading.MultipathFadingSample`.
+:class:`hermespy.channel.fading.fading.MultipathFadingRealization` / :class:`hermespy.channel.fading.fading.MultipathFadingSample`.
 Users may directly use the :class:`hermespy.channel.fading.fading.MultipathFadingChannel` with their own parameter sets.
 More conveniently, several standard parameterizations such as :class:`hermespy.channel.fading.tdl.TDL`
 :class:`hermespy.channel.fading.cost259.Cost259` and :class:`hermespy.channel.fading.exponential.Exponential`

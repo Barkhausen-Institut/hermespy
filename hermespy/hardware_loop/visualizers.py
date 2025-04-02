@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-=============
-Visualizers
-=============
-"""
 
 from __future__ import annotations
 from abc import ABC
@@ -67,7 +62,7 @@ class SignalPlot(HardwareLoopPlot[PlotVisualization], ABC):
 
         Args:
 
-            num_streams (int): Then number of expected streams.
+            num_streams: Then number of expected streams.
 
         Returns: The figure and axes of the subplots.
         """
@@ -87,9 +82,9 @@ class SignalPlot(HardwareLoopPlot[PlotVisualization], ABC):
 
         Args:
 
-            signal (Signal): Signal model to be plotted.
+            signal: Signal model to be plotted.
 
-            visualization (PlotVisualization): Visualization to be updated.
+            visualization: Visualization to be updated.
         """
 
         signal.plot.update_visualization(visualization, space=self.__space)
@@ -104,10 +99,10 @@ class HardwareLoopDevicePlot(Generic[VT], HardwareLoopPlot[VT], ABC):
         """
         Args:
 
-            device (PhysicalDevice):
+            device:
                 Physical device of which information is to be plotted.
 
-            title (str, optional):
+            title:
                 Title of the hardware loop plot.
                 If not specified, resorts to the default title of the plot.
         """
@@ -137,14 +132,14 @@ class DeviceTransmissionPlot(HardwareLoopDevicePlot[PlotVisualization], SignalPl
         """
         Args:
 
-            device (PhysicalDevice):
+            device:
                 Physical device of which information is to be plotted.
 
-            title (str, optional):
+            title:
                 Title of the hardware loop plot.
                 If not specified, resorts to the default title of the plot.
 
-            space (Literal["time", "frequency", "both"], optional):
+            space:
                 Space in which the signal is to be plotted.
                 By the default, the signal is plotted in the time domain.
         """
@@ -190,14 +185,14 @@ class DeviceReceptionPlot(HardwareLoopDevicePlot[PlotVisualization], SignalPlot)
         """
         Args:
 
-            device (PhysicalDevice):
+            device:
                 Physical device of which information is to be plotted.
 
-            title (str, optional):
+            title:
                 Title of the hardware loop plot.
                 If not specified, resorts to the default title of the plot.
 
-            space (Literal["time", "frequency", "both"], optional):
+            space:
                 Space in which the signal is to be plotted.
                 By the default, the signal is plotted in the time domain.
         """
@@ -241,10 +236,10 @@ class EyePlot(HardwareLoopPlot[PlotVisualization]):
         """
         Args:
 
-            modem (ReceivingModem):
+            modem:
                 Modem of which information is to be plotted.
 
-            title (str, optional):
+            title:
                 Title of the hardware loop plot.
                 If not specified, resorts to the default title of the plot.
         """
@@ -261,7 +256,7 @@ class EyePlot(HardwareLoopPlot[PlotVisualization]):
 
         Args:
 
-            reception (CommunicationReception):
+            reception:
                 The most recent reception.
         """
 
@@ -311,10 +306,10 @@ class ReceivedConstellationPlot(HardwareLoopPlot[ScatterVisualization]):
         """
         Args:
 
-            modem (ReceivingModem):
+            modem:
                 Modem of which information is to be plotted.
 
-            title (str, optional):
+            title:
                 Title of the hardware loop plot.
                 If not specified, resorts to the default title of the plot.
         """
@@ -331,7 +326,7 @@ class ReceivedConstellationPlot(HardwareLoopPlot[ScatterVisualization]):
 
         Args:
 
-            reception (CommunicationReception):
+            reception:
                 The most recent reception.
         """
 
@@ -366,10 +361,10 @@ class RadarRangePlot(HardwareLoopPlot[PlotVisualization]):
         """
         Args:
 
-            radar (Radar):
+            radar:
                 Radar of which information is to be plotted.
 
-            title (str, optional):
+            title:
                 Title of the hardware loop plot.
                 If not specified, resorts to the default title of the plot.
         """
@@ -387,7 +382,7 @@ class RadarRangePlot(HardwareLoopPlot[PlotVisualization]):
 
         Args:
 
-            reception (RadarReception):
+            reception:
                 The most recent reception.
         """
 
@@ -521,7 +516,7 @@ class ArtifactPlot(HardwareLoopEvaluatorPlot[PlotVisualization]):
 
         Args:
 
-            sample (HardwareLoopSample): The most recent sample.
+            sample: The most recent sample.
         """
 
         self.__artifact_queue = np.roll(self.__artifact_queue, 1)

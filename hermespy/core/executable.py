@@ -51,20 +51,20 @@ class Executable(ABC):
         """
         Args:
 
-            results_dir(str, optional):
+            results_dir:
                 Directory in which all execution artifacts will be dropped.
 
-            verbosity (Union[str, Verbosity], optional):
+            verbosity:
                 Information output behaviour during execution.
 
-            console (Console, optional):
+            console:
                 The console instance the executable will operate on.
 
-            console_mode (ConsoleMode, optional):
+            console_mode:
                 Output behaviour of the information printed to the console.
                 Interactive by default.
 
-            debug (bool, optional):
+            debug:
                 If enabled, the executable will be run in debug mode.
                 In this case, the exception handler will re-raise exceptions
                 and stop the execution.
@@ -109,7 +109,7 @@ class Executable(ABC):
         """Modify the directory in which the execution results will be saved.
 
         Args:
-            directory (str): New directory.
+            directory: New directory.
 
         Raises:
             ValueError: If `directory` does not exist within the filesystem.
@@ -142,7 +142,7 @@ class Executable(ABC):
         """Modify the information output behaviour during execution.
 
         Args:
-            new_verbosity (Union[str, Verbosity]): The new output behaviour.
+            new_verbosity: The new output behaviour.
         """
 
         # Convert string arguments to verbosity enum fields
@@ -173,11 +173,11 @@ class Executable(ABC):
 
         Args:
 
-            experiment(str, optional):
+            experiment:
                 Name of the experiment.
                 If specified, will generate a subdirectory with the experiment name.
 
-            overwrite_results(bool, optional):
+            overwrite_results:
                 If False, a new dated directory will be created with a unique index.
                 If True, executing this function will erase the current results directory.
 
@@ -217,8 +217,7 @@ class Executable(ABC):
     def style(self) -> str:
         """Matplotlib color scheme.
 
-        Returns:
-            str: Color scheme.
+        Returns: Color scheme.
 
         Raises:
             ValueError: If the `style` is not available.
@@ -244,8 +243,7 @@ class Executable(ABC):
     def __hermes_styles() -> List[str]:
         """Styles available in Hermes only.
 
-        Returns:
-            List[str]: List of style identifiers.
+        Returns: List of style identifiers.
         """
 
         return [
@@ -273,8 +271,7 @@ class Executable(ABC):
     def __hermes_root_dir() -> str:
         """HermesPy Package Root Directory.
 
-        Returns:
-            str: Path to the package root.
+        Returns: Path to the package root.
         """
 
         return path.dirname(path.dirname(path.abspath(__file__)))
@@ -283,8 +280,7 @@ class Executable(ABC):
     def console(self) -> Console:
         """Console the Simulation writes to.
 
-        Returns:
-            Console: Handle to the console.
+        Returns: Handle to the console.
         """
 
         return self.__console
@@ -297,7 +293,7 @@ class Executable(ABC):
     def console_mode(self) -> ConsoleMode:
         """Console mode during runtime.
 
-        Returms: The current console mode.
+        Returns: The current console mode.
         """
 
         return self.__console_mode
@@ -321,10 +317,10 @@ class Executable(ABC):
 
         Args:
 
-            exception (Exception): The exception to be handled.
-            force (bool): If True, print the traceback regardless of Verbosity level
-            show_locals (bool): Output the local variables.
-            confirm (bool): Confirm for continuing execution.
+            exception: The exception to be handled.
+            force: If True, print the traceback regardless of Verbosity level
+            show_locals: Output the local variables.
+            confirm: Confirm for continuing execution.
 
         Raises: The original exception if debug mode is enabled.
         """

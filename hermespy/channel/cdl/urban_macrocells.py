@@ -46,29 +46,29 @@ class UrbanMacrocellsRealization(ClusterDelayLineRealization[O2IState]):
         """
         Args:
 
-            expected_state (O2IState | None):
+            expected_state:
                 Expected large-scale state of the channel.
                 If not specified, the large-scale state is randomly generated.
 
-            state_realization (ConsistentRealization):
+            state_realization:
                 Realization of a spatially consistent random number generator for the large-scale state.
 
-            los_realization (ConsistentRealization):
+            los_realization:
                 Realization of a spatially consistent random number generator for small-scale parameters in the LOS state.
 
-            nlos_realization (ConsistentRealization):
+            nlos_realization:
                 Realization of a spatially consistent random number generator for small-scale parameters in the NLOS state.
 
-            o2i_realization (ConsistentRealization):
+            o2i_realization:
                 Realization of a spatially consistent random number generator for small-scale parameters in the O2I state.
 
-            parameters (ClusterDelayLineRealizationParameters):
+            parameters:
                 General parameters of the cluster delay line realization.
 
-            sample_hooks (Set[ChannelSampleHook[ClusterDelayLineSample]]):
+            sample_hooks:
                 Hooks to be called when a channel sample is generated.
 
-            gain (float, optional):
+            gain:
                 Linear amplitude scaling factor if signals propagated over the channel.
         """
 
@@ -152,9 +152,9 @@ class UrbanMacrocellsRealization(ClusterDelayLineRealization[O2IState]):
            y = a + b * log_{10}(f)
 
         Args:
-            carrier_frequency (float): Carrier frequency
-            summand (float): Added constant.
-            factor (float): Factor scaling the logarithmic frequency dependency.
+            carrier_frequency: Carrier frequency
+            summand: Added constant.
+            factor: Factor scaling the logarithmic frequency dependency.
 
         Returns: The result.
         """

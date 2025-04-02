@@ -49,13 +49,13 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT]):
         """
         Args:
 
-            threshold (float, optional):
+            threshold:
                 Correlation threshold at which a pilot signal is detected.
 
-            guard_ratio (float, optional):
+            guard_ratio:
                 Guard ratio of frame duration.
 
-            peak_prominence (float, optional):
+            peak_prominence:
                 Minimum peak prominence for peak detection in the interval (0, 1].
                 :math:`0.2` is a good default value for most applications.
 

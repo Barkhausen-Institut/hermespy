@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-=============
-Hardware Loop
-=============
-"""
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
@@ -91,10 +86,10 @@ class EvaluatorRegistration(Evaluator):
         """
         Args:
 
-            evaluator (Evaluator):
+            evaluator:
                 Registered evaluator.
 
-            plot_mode (EvaluatorPlotMode):
+            plot_mode:
                 Plot mode of the registered evaluator.
         """
 
@@ -197,7 +192,7 @@ class HardwareLoopPlot(ABC, Generic[VT]):
         """
         Args:
 
-            title (str, optional):
+            title:
                 Title of the hardware loop plot.
                 If not specified, resorts to the default title of the plot.
         """
@@ -262,7 +257,7 @@ class HardwareLoopPlot(ABC, Generic[VT]):
 
         Args:
 
-            sample (HardwareLoopSample):
+            sample:
                 Hardware loop sample to be plotted.
 
         Raises:
@@ -302,8 +297,8 @@ class HardwareLoopPlot(ABC, Generic[VT]):
 
         Args:
 
-            sample (HardwareLoopSample): Hardware loop sample to be plotted.
-            axes (VAT): The visualization to be plotted into.
+            sample: Hardware loop sample to be plotted.
+            axes: The visualization to be plotted into.
 
         Returns: The plotted information including axes and lines.
         """
@@ -317,10 +312,9 @@ class HardwareLoopPlot(ABC, Generic[VT]):
 
         Args:
 
-            sample (HardwareLoopSample):
-                Hardware loop sample to be plotted.
+            sample: Hardware loop sample to be plotted.
 
-            visualization (VT): The visualization to be updated.
+            visualization: The visualization to be updated.
         """
         ...  # pragma: no cover
 
@@ -338,8 +332,8 @@ class PlotThread(Thread):
         """
         Args:
 
-            rc_params (mpl.RcParams): Matplotlib style parameters.
-            plot (HardwareLoopPlot): Plot to be visualized by the thread.
+            rc_params: Matplotlib style parameters.
+            plot: Plot to be visualized by the thread.
             \**kwargs: Additional keyword arguments to be passed to the base class.
         """
 
@@ -375,7 +369,7 @@ class PlotThread(Thread):
 
         Args:
 
-            sample (HardwareLoopSample): Sample to be plotted.
+            sample: Sample to be plotted.
         """
 
         self.__sample = sample
@@ -397,7 +391,7 @@ class ThreadContextManager(AbstractContextManager):
         """
         Args:
 
-            threads (List[PlotThread]): Threads to be managed by this context manager.
+            threads: Threads to be managed by this context manager.
         """
 
         # Initialize base class
@@ -462,22 +456,22 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
         """
         Args:
 
-            scenario (PhysicalScenarioType):
+            scenario:
                 The physical scenario being controlled by the hardware loop.
 
-            manual_triggering (bool, optional):
+            manual_triggering:
                 Require a keyboard user input to trigger each drop manually.
                 Disabled by default.
 
-            plot_information (bool, optional):
+            plot_information:
                 Plot information during loop runtime.
                 Enabled by default.
 
-            iteration_priority (IterationPriority, optional):
+            iteration_priority:
                 Which dimension to iterate over first.
                 Defaults to :attr:`IterationPriority.DROPS`.
 
-            record_drops (bool, optional):
+            record_drops:
                 Record drops during loop runtime.
                 Enabled by default.
         """
@@ -502,25 +496,25 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
     ) -> GridDimension:
         """Add a dimension to the sweep grid.
 
-        Must be a property of the :meth:`HardwareLoop.scenario`.
+        Must be a property of the managed scenario.
 
         Args:
 
-            dimension (str):
+            dimension:
                 String representation of dimension location relative to the investigated object.
 
-            sample_points (List[Any]):
+            sample_points:
                 List points at which the dimension will be sampled into a grid.
                 The type of points must be identical to the grid arguments / type.
 
-            \*args (Tuple[Any], optional):
+            \*args:
                 References to the object the imension belongs to.
                 Resolved to the investigated object by default,
                 but may be an attribute or sub-attribute of the investigated object.
 
             \*\*kwargs:
                 Additional keyword arguments to be passed to the dimension.
-                See :class:`GridDimension` for more information.
+                See :class:`GridDimension<hermespy.core.monte_carlo.GridDimension>` for more information.
 
         Returns: The newly created dimension object.
         """
@@ -536,7 +530,7 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
 
         Args:
 
-            dimension (GridDimension):
+            dimension:
                 Dimension to be added.
 
         Raises:
@@ -555,7 +549,7 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
 
         Args:
 
-            evaluator (Evaluator):
+            evaluator:
                 The evaluator to be added.
         """
 
@@ -566,7 +560,7 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
 
         Args:
 
-            plot (HardwareLoopPlot):
+            plot:
                 The plot to be added.
         """
 
@@ -593,7 +587,7 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
 
         Args:
 
-            evaluator (Evaluator):
+            evaluator:
                 The evaluator to be searched for.
 
         Returns: The index of the evaluator.
@@ -616,7 +610,7 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
 
         Args:
 
-            hook (Callable[[PhysicalScenarioType, Console], None]):
+            hook:
                 The hook to be added.
                 The hook must accept the scenario and console as arguments.
 
@@ -645,7 +639,7 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
 
         Args:
 
-            hook (Callable[[PhysicalScenarioType, Console], None]):
+            hook:
                 The hook to be added.
                 The hook must accept the scenario and console as arguments.
 
@@ -676,13 +670,13 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
 
         Args:
 
-            overwrite (bool, optional):
+            overwrite:
                 Allow the replacement of an already existing savefile.
 
-            campaing (str, optional):
+            campaing:
                 Name of the measurement campaign.
 
-            serialize_state (bool, optional):
+            serialize_state:
                 Serialize the state of the scenario to the results file.
                 Enabled by default.
 
@@ -748,7 +742,7 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
 
         Args:
 
-            file_location (str):
+            file_location:
                 File system location of the replay.
         """
 
@@ -768,10 +762,10 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
 
         Args:
 
-            section_indices (Tuple[int, ...]):
+            section_indices:
                 The indices of the section within the sample grid.
 
-            sample_index (int):
+            sample_index:
                 Index of the sample within the section.
 
         Returns: The generated sample.

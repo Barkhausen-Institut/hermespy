@@ -1,11 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-=====================
-Physical Device Dummy
-=====================
-
-Implements a physical device dummy for testing and demonstration purposes.
-"""
 
 from __future__ import annotations
 from collections.abc import Sequence
@@ -319,6 +312,13 @@ class PhysicalScenarioDummy(
         trigger_realizations: Sequence[TriggerRealization] | None = None,
         leaking_signals: Sequence[Signal] | Sequence[Sequence[Signal]] | None = None,
     ) -> Sequence[SimulatedDeviceReception]:
+        """Process receive layers of all registered devices.
+
+        Resolves to :meth:`PhysicalScenario.receive_devices<hermespy.hardware_loop.scenario.PhysicalScenario.receive_devices>`
+        if `impinging_signals` is not provided.
+        Otherwise, resolves to :meth:`SimulationScenario.receive_devices<hermespy.simulation.simulation.SimulationScenario.receive_devices>`.
+        """
+
         if impinging_signals is None:
             physical_device_receptions = PhysicalScenario.receive_devices(
                 self, impinging_signals, states, False

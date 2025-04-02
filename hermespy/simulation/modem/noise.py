@@ -25,10 +25,9 @@ class CommunicationNoiseLevel(NoiseLevel):
     ) -> None:
         """
         Args:
-            reference (BaseModem | CommunicationWaveform):
-                Reference with respect to which the noise level is defined.
 
-            level (float, optional): Noise level relative to the reference'
+            reference: Reference with respect to which the noise level is defined.
+            level: Noise level relative to the reference'
         """
 
         # Init base class

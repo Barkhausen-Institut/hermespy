@@ -102,7 +102,7 @@ class DelayChannelSample(ChannelSample):
     def __path_gain(self, carrier_frequency: float) -> float:
         """Compute the realization's linear path gain factor.
 
-            carrier_frequency (float):
+            carrier_frequency:
                 Central frequency of the propagation in :math:`\\mathrm{Hz}`.
 
         Returns: Linear path gain scaling the amplitude of a propagated signal.
@@ -179,10 +179,10 @@ class DelayChannelRealization(ChannelRealization[DelayChannelSample]):
         """
         Args:
 
-            model_propagation_loss (bool):
+            model_propagation_loss:
                 Should free space propagation loss be modeled?
 
-            gain (float):
+            gain:
                 Linear power gain factor a signal experiences when being propagated over this realization.
         """
 
@@ -230,15 +230,15 @@ class DelayChannelBase(Generic[DCRT], Channel[DCRT, DelayChannelSample]):
         """
         Args:
 
-            model_propagation_loss (bool, optional):
+            model_propagation_loss:
                 Should free space propagation loss be modeled?
                 Enabled by default.
 
-            gain (float, optional):
+            gain:
                 Linear power gain factor a signal experiences when being propagated over this realization.
                 :math:`1.0` by default.
 
-            seed (int, optional):
+            seed:
                 Seed used to initialize the pseudo-random number generator.
         """
 

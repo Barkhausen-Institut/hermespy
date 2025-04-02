@@ -56,8 +56,7 @@ class SimulationRunner(object):
         """
         Args:
 
-            scenario(SimulationScenario):
-                Scenario to be run.
+            scenario: Scenario to be run.
         """
 
         self.__scenario = scenario
@@ -202,13 +201,13 @@ class SimulationActor(MonteCarloActor[SimulationScenario], SimulationRunner):
                 Dimensions over which the simulation will iterate.
                 Evaluators used to process the investigated object sample state.
 
-            index (int):
+            index:
                 Global index of the actor.
 
-            stage_arguments (Mapping[str, Sequence[Tuple]], optional):
+            stage_arguments:
                 Arguments for the simulation stages.
 
-            catch_exceptions (bool, optional):
+            catch_exceptions:
                 Catch exceptions during run.
                 Enabled by default.
         """
@@ -275,46 +274,46 @@ class Simulation(Pipeline[SimulationScenario, SimulatedDevice], MonteCarlo[Simul
         """
         Args:
 
-            scenario (SimulationScenario, optional):
+            scenario:
                 The simulated scenario.
                 If none is provided, an empty one will be initialized.
 
-            num_samples (int, optional):
+            num_samples:
                 Number of drops generated per sweeping grid section.
                 100 by default.
 
-            drop_duration(float, optional):
+            drop_duration:
                 Duration of simulation drops in seconds.
 
-            drop_interval(float, optional):
+            drop_interval:
                 Interval at which drops are being generated in seconds.
                 If not specified, only a single drop is generated at the beginning of the simulation.
 
-            plot_results (bool, optional):
+            plot_results:
                 Plot results after simulation runs.
                 Disabled by default.
 
-            dump_results (bool, optional):
+            dump_results:
                 Dump results to files after simulation runs.
                 Enabled by default.
 
-            console_mode (ConsoleMode, optional):
+            console_mode:
                 Console output behaviour during execution.
 
-            ray_address (str, optional):
+            ray_address:
                 The address of the ray head node.
                 If None is provided, the head node will be launched in this machine.
 
-            results_dir (str, optional):
+            results_dir:
                 Directory in which all simulation artifacts will be dropped.
 
-            verbosity (Union[str, Verbosity], optional):
+            verbosity:
                 Information output behaviour during execution.
 
-            seed (int, optional):
+            seed:
                 Random seed used to initialize the pseudo-random number generator.
 
-            num_actors (int, optional):
+            num_actors:
                 Number of actors to be deployed for parallel execution.
                 If None is provided, the number of actors will be set to the number of available CPU cores.
         """
@@ -358,7 +357,7 @@ class Simulation(Pipeline[SimulationScenario, SimulatedDevice], MonteCarlo[Simul
         """Interval at which drops are being generated in seconds.
 
         Raises:
-            ValueError for values smaller or equal to zero.
+            ValueError: For values smaller or equal to zero.
         """
 
         return self.__drop_interval
@@ -391,7 +390,7 @@ class Simulation(Pipeline[SimulationScenario, SimulatedDevice], MonteCarlo[Simul
 
         Args:
 
-            timestamp (float, optional):
+            timestamp:
                 Timestamp at which the drop is generated.
                 Defaults to 0.0.
         """
@@ -455,19 +454,18 @@ class Simulation(Pipeline[SimulationScenario, SimulatedDevice], MonteCarlo[Simul
     ) -> None:
         """Specify a channel within the channel matrix.
 
-        Convenience method resolving to the :meth:`set_channel<SimulationScenario.set_channel>` method
-        of the managed :class:`SimulationScenario` instance,
-        which can be accessed via the :attr:`scenario<hermespy.core.monte_carlo.MonteCarlo.scenario>` property.
+        Convenience method to setting the channel of the managed of the managed :class:`SimulationScenario<hermespy.simulation.scenario.SimulationScenario>` instance,
+        which can be accessed via the :attr:`scenario<hermespy.core.pipeline.Pipeline.scenario>` property.
 
         Args:
 
-            receiver (SimulatedDevice):
+            receiver:
                 Index of the receiver within the channel matrix.
 
-            transmitter (SimulatedDevice):
+            transmitter:
                 Index of the transmitter within the channel matrix.
 
-            channel (Channel | None):
+            channel:
                 The channel instance to be set at position (`transmitter_index`, `receiver_index`).
         """
 

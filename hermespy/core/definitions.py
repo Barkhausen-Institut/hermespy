@@ -42,3 +42,9 @@ class Verbosity(SerializableEnum):
 
     NONE = 4
     """Print absolutely nothing"""
+
+
+class FloatingError(RuntimeError):
+    """Exception raised if an operation fails due to a currently being considered floating."""
+
+    ...  # pragma: no cover

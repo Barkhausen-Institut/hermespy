@@ -48,13 +48,13 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase):
         """
         Args:
 
-            leakage_response (numpy.ndarray):
+            leakage_response:
                 The leakage impulse response matrix.
 
-            sampling_rate (float):
+            sampling_rate:
                 The sampling rate of the leakage model in Hz.
 
-            delay (float, optional):
+            delay:
                 The implicit delay of the leakage model in seconds.
                 Defaults to zero.
         """
@@ -314,22 +314,22 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase):
 
         Args:
 
-            device (PhysicalDevice):
+            device:
                 Physical device to estimate the covariance matrix for.
 
-            num_probes (int, optional):
+            num_probes:
                 Number of probings transmitted to estimate the covariance matrix.
                 :math:`7` by default.
 
-            num_wavelet_samples (int, optional):
+            num_wavelet_samples:
                 Number of samples transmitted per probing to estimate the covariance matrix.
                 :math:`4673` by default.
 
-            configure_device (bool, optional):
+            configure_device:
                 Configure the specified device by the estimated leakage calibration.
                 Enabled by default.
 
-            filter_calibration (bool, optional):
+            filter_calibration:
                 Filter the estimated calibration to consider only prominent peaks.
                 Enabled by default.
 
@@ -415,22 +415,22 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase):
 
         Args:
 
-            device (PhysicalDevice):
+            device:
                 Physical device to estimate the covariance matrix for.
 
-            num_probes (int, optional):
+            num_probes:
                 Number of probings transmitted to estimate the covariance matrix.
                 :math:`7` by default.
 
-            num_wavelet_samples (int, optional):
+            num_wavelet_samples:
                 Number of samples transmitted per probing to estimate the covariance matrix.
                 :math:`127` by default.
 
-            noise_power (numpy.ndarray, optional):
+            noise_power:
                 Noise power at the receiving antennas.
                 If not specified, the device's noise power configuration will be assumed or estimated on-the-fly.
 
-            configure_device (bool, optional):
+            configure_device:
                 Configure the specified device by the estimated leakage calibration.
                 Enabled by default.
 

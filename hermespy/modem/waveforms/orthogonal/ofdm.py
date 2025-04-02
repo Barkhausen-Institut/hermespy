@@ -54,42 +54,42 @@ class OFDMWaveform(OrthogonalWaveform, Serializable):
         """
         Args:
 
-            grid_resources (Sequence[GridResource]):
+            grid_resources:
                 Frequency-domain resource section configurations.
 
-            grid_structure (Sequence[GridSection]):
+            grid_structure:
                 Time-domain frame configuration.
 
-            num_subcarriers (int, optional):
+            num_subcarriers:
                 Maximum number of assignable subcarriers.
                 Unassigned subcarriers will be assumed to be zero.
                 :math:`1024` by default.
 
-            subcarrier_spacing (float, optional):
+            subcarrier_spacing:
                 Spacing between individual subcarriers in Hz.
                 :math:`1~\\mathrm{kHz}` by default.
 
-            num_subcarriers (int, optional):
+            num_subcarriers:
                 Maximum number of assignable subcarriers.
                 Unassigned subcarriers will be assumed to be zero.
                 :math:`1024` by default.
 
-            dc_suppression (bool, optional):
+            dc_suppression:
                 Suppress the direct current component during waveform generation.
                 Enabled by default.
 
-            pilot_section (PilotSection, optional):
+            pilot_section:
                 Pilot section preceding the frame's payload.
                 If not specified, no dedicated pilot section will be generated.
 
-            pilot_sequence (PilotSymbolSequence, optional):
+            pilot_sequence:
                 Sequence of symbols used for the pilot section and reference symbols
                 within the frame. If not specified, pseudo-random sequences will be generated
                 from the set of data symbols.
 
-            **kwargs (Any):
+            \*\*kwargs:
                 Waveform generator base class initialization parameters.
-                Refer to :class:`CommunicationWaveform` for details.
+                Refer to :class:`CommunicationWaveform<hermespy.modem.waveform.CommunicationWaveform>` for details.
         """
 
         # Initialize the base class
@@ -204,7 +204,7 @@ class OFDMWaveform(OrthogonalWaveform, Serializable):
         """Modify the subcarrier spacing between frames.
 
         Args:
-            spacing (float): New spacing in Hz.
+            spacing: New spacing in Hz.
 
         Raises:
             ValueError: If `spacing` is smaller or equal to zero.

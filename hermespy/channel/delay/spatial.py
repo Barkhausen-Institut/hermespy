@@ -23,7 +23,7 @@ __status__ = "Prototype"
 class SpatialDelayChannelRealization(DelayChannelRealization):
     """Realization of a spatial delay channel.
 
-    Generated from :class:`SpatialDelayChannel's<SpatialDelayChannel>` :meth:`realize<SpatialDelayChannel.realize>` routine.
+    Generated from :class:`SpatialDelayChannel<SpatialDelayChannel>`.
     """
 
     def _sample(self, state: LinkState) -> DelayChannelSample:

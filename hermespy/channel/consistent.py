@@ -33,10 +33,10 @@ class ConsistentVariable(ABC, Serializable):
     def __init__(self, shape: Tuple[int, ...], offset: int = _DEFAULT_OFFSET) -> None:
         """
         Args:
-            shape (Tuple[int, ...]):
+            shape:
                 Shape of the output array
 
-            offset (int, optional):
+            offset:
                 Offset of the variable within its generator.
                 Defaults to zero.
                 Adding a variable to a generator will change the offset.
@@ -77,7 +77,7 @@ class ConsistentVariable(ABC, Serializable):
 
         Args:
 
-            sample (ConsistentSample): Sample of the realization.
+           sample: Sample of the realization.
 
         Returns: Numpy array of samples of dimensions matching the variable size.
         """
@@ -115,8 +115,8 @@ class ConsistentSample(object):
 
         Args:
 
-            offset (int): Offset of the scalar samples within this realization.
-            num_scalars (int): Number of scalar samples to fetch.
+           offset: Offset of the scalar samples within this realization.
+           num_scalars: Number of scalar samples to fetch.
 
         Returns: Numpy vector of scalar samples.
         """
@@ -132,8 +132,8 @@ class ConsistentRealization(ABC, Serializable):
 
         Args:
 
-            position_a (numpy.ndarray): First position in euclidean space.
-            position_b (numpy.ndarray): Second position in euclidean space.
+           position_a: First position in euclidean space.
+           position_b: Second position in euclidean space.
 
         Returns: Sample of the realization.
         """
@@ -165,8 +165,8 @@ class DualConsistentRealization(ConsistentRealization):
     def __init__(self, frequencies: np.ndarray, phases: np.ndarray) -> None:
         """
         Args:
-            frequencies (numpy.ndarray): Frequencies of the spatially consistent process.
-            phases (numpy.ndarray): Phases of the spatially consistent process.
+           frequencies: Frequencies of the spatially consistent process.
+           phases: Phases of the spatially consistent process.
         """
 
         self.__frequencies = frequencies
@@ -222,7 +222,7 @@ class StaticConsistentSample(ConsistentSample):
         """
         Args:
 
-            scalar_samples (numpy.ndarray):
+           scalar_samples:
                 Scalar samples of the realization.
         """
 
@@ -241,7 +241,7 @@ class StaticConsistentRealization(ConsistentRealization):
     def __init__(self, scalar_samples: np.ndarray) -> None:
         """
         Args:
-            scalar_samples (numpy.ndarray): Scalar samples of the realization.
+           scalar_samples: Scalar samples of the realization.
         """
 
         self.__scalar_samples = scalar_samples.flatten()
@@ -273,9 +273,9 @@ class ConsistentGenerator(object):
         """Implementation of the probability density function in Eq. 10
 
         Args:
-            fr (float): Radial velocity.
-            a (float): Correlation distance.
-            U (float): Expected CDF value.
+           fr: Radial velocity.
+           a: Correlation distance.
+           U: Expected CDF value.
         """
 
         return (
@@ -288,7 +288,7 @@ class ConsistentGenerator(object):
         """
         Args:
 
-            rng (np.random.Generator | RandomNode): Random number generator used to initialize this random variable.
+           rng: Random number generator used to initialize this random variable.
         """
 
         # Initialize attributes
@@ -301,7 +301,7 @@ class ConsistentGenerator(object):
 
         Args:
 
-            shape (Tuple[int, ...], optional):
+            shape:
                 Shape of the output array.
                 If not specified, the variable will be scalar.
 
@@ -319,7 +319,7 @@ class ConsistentGenerator(object):
 
         Args:
 
-            shape (Tuple[int, ...], optional):
+            shape:
                 Shape of the output array.
                 If not specified, the variable will be scalar.
 
@@ -337,7 +337,7 @@ class ConsistentGenerator(object):
 
         Args:
 
-            shape (Tuple[int, ...], optional):
+            shape:
                 Shape of the output array.
                 If not specified, the variable will be scalar.
 
@@ -374,8 +374,8 @@ class ConsistentGenerator(object):
 
         Args:
 
-            decorrelation_distance (float): Euclidean distance at which a sample of this Gaussian process is considered to be uncorrelated with another sample.
-            num_samples (int, optional): Number of samples to generate. 1000 by default.
+            decorrelation_distance: Euclidean distance at which a sample of this Gaussian process is considered to be uncorrelated with another sample.
+            num_samples: Number of samples to generate. 1000 by default.
 
         Returns: Numpy array of radial velocities.
         """
@@ -413,8 +413,8 @@ class ConsistentGenerator(object):
         """
         Args:
 
-            decorrelation_distance (float): Euclidean distance at which a sample of this Gaussian process is considered to be uncorrelated with another sample.
-            num_sinusoids (int, optional): Number of sinusoids used to approximate the Gaussian process. 30 by default.
+            decorrelation_distance: Euclidean distance at which a sample of this Gaussian process is considered to be uncorrelated with another sample.
+            num_sinusoids: Number of sinusoids used to approximate the Gaussian process. 30 by default.
 
         Returns: Realization of the consistent generator.
         """

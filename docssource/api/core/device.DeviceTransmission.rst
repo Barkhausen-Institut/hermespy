@@ -7,4 +7,6 @@ Device Transmission
 
 .. autoclass:: hermespy.core.device.DeviceTransmission
 
+.. autoclass::  hermespy.core.device.DTT
+
 .. footbibliography::

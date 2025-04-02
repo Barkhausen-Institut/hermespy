@@ -42,7 +42,7 @@ class Synchronization(Generic[CWT], Serializable):
     def __init__(self, waveform: CWT | None = None) -> None:
         """
         Args:
-            waveform (CommunicationWaveform, optional):
+            waveform:
                 The waveform generator this synchronization routine is attached to.
         """
 
@@ -52,9 +52,7 @@ class Synchronization(Generic[CWT], Serializable):
     def waveform(self) -> CWT | None:
         """Waveform generator this synchronization routine is attached to.
 
-        Returns:
-            Optional[WaveformType]:
-                Handle to tghe waveform generator. None if the synchronization routine is floating.
+        Returns: Handle to tghe waveform generator. None if the synchronization routine is floating.
         """
 
         return self.__waveform
@@ -76,7 +74,7 @@ class Synchronization(Generic[CWT], Serializable):
 
         Args:
 
-            signal (numpy.ndarray):
+            signal:
                 Vector of complex base-band samples of with `num_streams`x`num_samples` entries.
 
         Returns:
@@ -115,7 +113,7 @@ class ChannelEstimation(Generic[CWT], Serializable):
     def __init__(self, waveform: CWT | None = None) -> None:
         """
         Args:
-            waveform (CommunicationWaveform, optional):
+            waveform:
                 The waveform generator this estimation routine is attached to.
         """
 
@@ -125,9 +123,7 @@ class ChannelEstimation(Generic[CWT], Serializable):
     def waveform(self) -> CWT | None:
         """Waveform generator this synchronization routine is attached to.
 
-        Returns:
-            Optional[WaveformType]:
-                Handle to the waveform generator. None if the synchronization routine is floating.
+        Returns: Handle to the waveform generator. None if the synchronization routine is floating.
         """
 
         return self.__waveform
@@ -155,10 +151,10 @@ class ChannelEstimation(Generic[CWT], Serializable):
 
         Args:
 
-            symbols (Symbols):
+            symbols:
                 Demodulated communication symbols.
 
-            delay (float, optional):
+            delay:
                 The considered frame's delay offset to the drop start in seconds.
 
         Returns: The symbols and their respective channel states.
@@ -187,7 +183,7 @@ class ChannelEqualization(Generic[CWT], ABC, Serializable):
     def __init__(self, waveform: CWT | None = None) -> None:
         """
         Args:
-            waveform (CommunicationWaveform, optional):
+            waveform:
                 The waveform generator this equalization routine is attached to.
         """
 
@@ -197,9 +193,7 @@ class ChannelEqualization(Generic[CWT], ABC, Serializable):
     def waveform(self) -> CWT | None:
         """Waveform generator this equalization routine is attached to.
 
-        Returns:
-            Optional[WaveformType]:
-                Handle to the waveform generator. None if the equalization routine is floating.
+        Returns: Handle to the waveform generator. None if the equalization routine is floating.
         """
 
         return self.__waveform
@@ -218,7 +212,7 @@ class ChannelEqualization(Generic[CWT], ABC, Serializable):
 
         Args:
 
-            frame (Symbols): Symbols and channel state of the received communication frame.
+            frame: Symbols and channel state of the received communication frame.
 
         Returns: The equalize symbols.
         """
@@ -280,24 +274,24 @@ class CommunicationWaveform(ABC, Serializable):
     ) -> None:
         """
         Args:
-            modem (BaseModem, optional):
+            modem:
                 A modem this generator is attached to.
                 By default, the generator is considered to be floating.
 
-            oversampling_factor (int, optional):
+            oversampling_factor:
                 The factor at which the simulated baseband_signal is oversampled.
 
-            modulation_order (int, optional):
+            modulation_order:
                 Order of modulation.
                 Must be a non-negative power of two.
 
-            channel_estimation (ChannelEstimation, optional):
+            channel_estimation:
                 Channel estimation algorithm. If not specified, an ideal channel is assumed.
 
-            channel_equalization (ChannelEqualization, optional):
+            channel_equalization:
                 Channel equalization algorithm. If not specified, no symbol equalization is performed.
 
-            synchronization (Synchronization, optional):
+            synchronization:
                 Time-domain synchronization routine.
                 If not specified, no synchronization is performed.
         """
@@ -339,7 +333,7 @@ class CommunicationWaveform(ABC, Serializable):
         """Modify the oversampling factor.
 
         Args:
-            factor (int):
+            factor:
                 The new oversampling factor.
 
         Raises:
@@ -370,7 +364,7 @@ class CommunicationWaveform(ABC, Serializable):
         Must be a positive power of two.
 
         Args:
-            order (int):
+            order:
                 The new modulation order.
 
         Raises:
@@ -398,7 +392,7 @@ class CommunicationWaveform(ABC, Serializable):
 
         Args:
 
-            num_data_symbols (int):
+            num_data_symbols:
                 Number of unique data symbols contained within the frame.
                 If not specified, the waveform's default number of data symbols will be assumed.
 
@@ -470,11 +464,10 @@ class CommunicationWaveform(ABC, Serializable):
         """Map a stream of bits to data symbols.
 
         Args:
-            data_bits (numpy.ndarray):
+            data_bits:
                 Vector containing a sequence of L hard data bits to be mapped onto data symbols.
 
-        Returns:
-            Symbols: Mapped data symbols.
+        Returns: Mapped data symbols.
         """
         ...  # pragma: no cover
 
@@ -483,13 +476,12 @@ class CommunicationWaveform(ABC, Serializable):
         """Map a stream of data symbols to data bits.
 
         Args:
-            symbols (Symbols):
+            symbols:
                 Sequence of K data symbols to be mapped onto bit sequences.
 
         Returns:
-            np.ndarray:
-                Vector containing the resulting sequence of L data bits
-                In general, L is greater or equal to K.
+            Vector containing the resulting sequence of L data bits
+            In general, L is greater or equal to K.
         """
         ...  # pragma: no cover
 
@@ -500,9 +492,7 @@ class CommunicationWaveform(ABC, Serializable):
         Additionally interleaves pilot symbols.
 
         Args:
-
-            symbols (Symbols):
-                The mapped symbols.
+            symbols: The mapped symbols.
 
         Returns: The symbols with the mapped symbols placed within the frame.
         """
@@ -515,9 +505,7 @@ class CommunicationWaveform(ABC, Serializable):
         Additionally removes interleaved pilot symbols.
 
         Args:
-
-            placed_symbols (StatedSymbols):
-                The placed symbols.
+            placed_symbols: The placed symbols.
 
         Returns: The symbols with the mapped symbols picked from the frame.
         """
@@ -528,9 +516,7 @@ class CommunicationWaveform(ABC, Serializable):
         """Modulate a stream of data symbols to a base-band signal containing a single data frame.
 
         Args:
-
-            data_symbols (Symbols):
-                Singular stream of data symbols to be modulated by this waveform.
+            data_symbols: Singular stream of data symbols to be modulated by this waveform.
 
         Returns: Samples of the modulated base-band signal.
         """
@@ -541,9 +527,7 @@ class CommunicationWaveform(ABC, Serializable):
         """Demodulate a base-band signal stream to data symbols.
 
         Args:
-
-            signal (numpy.ndarray):
-                Vector of complex-valued base-band samples of a single communication frame.
+            signal:  Vector of complex-valued base-band samples of a single communication frame.
 
         Returns:
 
@@ -564,8 +548,7 @@ class CommunicationWaveform(ABC, Serializable):
 
         Used to estimate the minimal sampling frequency required to adequately simulate the scenario.
 
-        Returns:
-            float: Bandwidth in Hz.
+        Returns: Bandwidth in Hz.
         """
         ...  # pragma: no cover
 
@@ -573,9 +556,7 @@ class CommunicationWaveform(ABC, Serializable):
         """Data rate theoretically achieved by this waveform configuration.
 
         Args:
-
-            num_data_symbols (int):
-                Number of data symbols contained within the frame.
+            num_data_symbols: Number of data symbols contained within the frame.
 
         Returns: Bits per second.
         """
@@ -590,23 +571,15 @@ class CommunicationWaveform(ABC, Serializable):
         """Access the modem this generator is attached to.
 
         Returns: A handle to the modem.
+
+        Raises:
+            RuntimeError: If the `modem` does not reference this generator.
         """
 
         return self.__modem
 
     @modem.setter
     def modem(self, handle: BaseModem | None) -> None:
-        """Modify the modem this generator is attached to.
-
-        Args:
-            handle (Modem):
-                Handle to a modem.
-
-        Raises:
-            RuntimeError:
-                If the `modem` does not reference this generator.
-        """
-
         if handle is None:
             modem = self.__modem
             self.__modem = None
@@ -623,11 +596,7 @@ class CommunicationWaveform(ABC, Serializable):
 
     @property
     def synchronization(self) -> Synchronization:
-        """Synchronization routine.
-
-        Returns:
-            Synchronization: Handle to the synchronization routine.
-        """
+        """Synchronization routine."""
 
         return self.__synchronization
 
@@ -640,11 +609,7 @@ class CommunicationWaveform(ABC, Serializable):
 
     @property
     def channel_estimation(self) -> ChannelEstimation:
-        """Channel estimation routine.
-
-        Returns:
-            ChannelEstimation: Handle to the estimation routine.
-        """
+        """Channel estimation routine."""
 
         return self.__channel_estimation
 
@@ -657,11 +622,7 @@ class CommunicationWaveform(ABC, Serializable):
 
     @property
     def channel_equalization(self) -> ChannelEqualization:
-        """Channel estimation routine.
-
-        Returns:
-            ChannelEqualization: Handle to the equalization routine.
-        """
+        """Channel estimation routine."""
 
         return self.__channel_equalization
 
@@ -677,8 +638,7 @@ class CommunicationWaveform(ABC, Serializable):
     def sampling_rate(self) -> float:
         """Rate at which the waveform generator signal is internally sampled.
 
-        Returns:
-            float: Sampling rate in Hz.
+        Returns: Sampling rate in Hz.
         """
         ...  # pragma: no cover
 
@@ -704,12 +664,9 @@ class CommunicationWaveform(ABC, Serializable):
         """Deserialize the initialization paramters of the communication waveform base class.
 
         Args:
+            process: The deserialization process.
 
-            process (DeserializationProcess):
-                The deserialization process.
-
-        Returns:
-            dict[str, object]: The deserialized parameters.
+        Returns: The deserialized parameters.
         """
 
         return {
@@ -737,8 +694,7 @@ class PilotCommunicationWaveform(CommunicationWaveform):
     def pilot_signal(self) -> Signal:
         """Model of the pilot sequence within this communication waveform.
 
-        Returns:
-            Signal: The pilot sequence.
+        Returns: The pilot sequence.
         """
         ...  # pragma: no cover
 
@@ -753,8 +709,7 @@ class PilotSymbolSequence(Serializable):
 
         For a configurable pilot section, this symbol sequence will be repeated accordingly.
 
-        Returns:
-            The symbol sequence.
+        Returns: The symbol sequence.
         """
         ...  # pragma: no cover
 
@@ -773,8 +728,7 @@ class UniformPilotSymbolSequence(PilotSymbolSequence):
     def __init__(self, pilot_symbol: complex = __DEFAULT_PILOT_SYMBOL) -> None:
         """
         Args:
-
-            pilot_symbol (complex):
+            pilot_symbol:
                 The configured single pilot symbol.
                 `1.` by default.
         """
@@ -813,7 +767,7 @@ class CustomPilotSymbolSequence(PilotSymbolSequence):
         """
         Args:
 
-            pilot_symbols (numpy.ndarray):
+            pilot_symbols:
                 The configured pilot symbols
         """
 
@@ -841,7 +795,7 @@ class MappedPilotSymbolSequence(CustomPilotSymbolSequence):
         """
 
         Args:
-            mapping (PskQamMapping): Mapping from which the symbols pilot symbols should be inferred
+            mapping: Mapping from which the symbols pilot symbols should be inferred
         """
 
         CustomPilotSymbolSequence.__init__(self, mapping.get_mapping())
@@ -863,15 +817,15 @@ class ConfigurablePilotWaveform(PilotCommunicationWaveform):
         """
         Args:
 
-           symbol_sequence (PilotSymbolSequence, optional):
+           symbol_sequence:
                The configured pilot symbol sequence.
                Uniform by default.
 
-           repeat_symbol_sequence (bool, optional):
+           repeat_symbol_sequence:
                Allow the repetition of pilot symbol sequences.
                Enabled by default.
 
-           **kwargs:
+           \*\*kwargs:
                Additional :class:`CommunicationWaveform` initialization parameters.
         """
 
@@ -887,16 +841,12 @@ class ConfigurablePilotWaveform(PilotCommunicationWaveform):
         """Sample a pilot symbol sequence.
 
         Args:
-            num_symbols (int):
-                The expected number of symbols within the sequence.
+            num_symbols: The expected number of symbols within the sequence.
 
-        Returns:
-            A pilot symbol sequence of length `num_symbols`.
+        Returns: A pilot symbol sequence of length `num_symbols`.
 
         Raises:
-
-            RuntimeError:
-                If a repetition of the symbol sequence is required but not allowed.
+            RuntimeError: If a repetition of the symbol sequence is required but not allowed.
         """
 
         symbol_sequence = self.pilot_symbol_sequence.sequence

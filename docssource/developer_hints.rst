@@ -91,7 +91,7 @@ most API information should be directly inserted into the source code files and 
 by the `autodocs <https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html>`_
 extension.
 A reference example can be found in `/hermespy/simulation/rf_chain/power_amplifier.py`.
-See :doc:`api/simulation.rf_chain.power_amplifier` for the rendered results.
+See :doc:`api/simulation/rf_chain.amplifier.PowerAmplifier` for the rendered results.
 
 Sphinx with serveral extensions is used to generate the documentation.
 Build the documentation by executing

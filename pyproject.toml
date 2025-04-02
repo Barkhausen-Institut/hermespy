@@ -41,7 +41,7 @@ dependencies = [
     "scipy>=1.14.1",
     "pybind11>=2.10.4",
     "ray>=2.40.0",
-    "sparse>=0.15.4",
+    "sparse>=0.15.5",
     "numba>=0.60.0",
     "rich>=13.9.4",
 ]
@@ -63,17 +63,17 @@ quadriga = [
     "oct2py>=5.6.0",
 ]
 documentation = [
-    "sphinx>=8.1.3",
+    "sphinx>=8.0.0, <8.2.0",  # 8.2.0 is not compatible nbsphinx 0.9.7
     "furo>=2024.8.6",
-    "sphinx-autodoc-typehints>=1.25.2",
+    "sphinx-autodoc-typehints>=3.0.1",
     "sphinxcontrib-apidoc>=0.5.0",
     "sphinxcontrib-mermaid>=1.0.0",
     "sphinxcontrib-bibtex>=2.6.3",
     "sphinx-tabs>=3.4.7",
     "sphinx-copybutton>=0.5.2",
     "sphinx-carousel>=1.2.0",
-    "nbsphinx>=0.9.5",
-    "ipywidgets==8.0.5",  # Required for sionna compatibility
+    "nbsphinx>=0.9.7",
+    "ipywidgets==8.0.5",  # Required for sionna 0.19.1 compatibility, which requires jupyterlab-widgets==3.0.5
 ]
 uhd = [
     "usrp-uhd-client==1.7.3",
@@ -93,7 +93,7 @@ develop = [
 ]
 sionna = [
     "mitsuba<=3.5.2",
-    "sionna>=0.19.1",
+    "sionna==0.19.1",
 ]
 scapy = [
     "scapy>=2.5.0",

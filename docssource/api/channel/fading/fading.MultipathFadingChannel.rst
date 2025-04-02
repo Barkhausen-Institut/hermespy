@@ -25,5 +25,6 @@ within the context of a :class:`Simulation<hermespy.simulation.simulation.Simula
    :lines: 12-40
 
 .. autoclass:: hermespy.channel.fading.fading.MultipathFadingChannel
+   :private-members: _realize
 
 .. footbibliography::

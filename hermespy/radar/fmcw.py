@@ -33,7 +33,7 @@ class FMCW(RadarWaveform):
     A minimal example configuring an :class:`FMCW` radar waveform illuminating a single target
     within the context of a :class:`Simulation<hermespy.simulation.simulation.Simulation>` would look like this:
 
-    .. literalinclude:: ../../docssource/scripts/examples/radar_fmcw_FMCW.py
+    .. literalinclude:: ../../scripts/examples/radar_fmcw_FMCW.py
         :language: python
         :linenos:
         :lines: 03-23
@@ -65,27 +65,27 @@ class FMCW(RadarWaveform):
         """
         Args:
 
-            num_chirps (float, optional):
+            num_chirps:
                 Number of dedicated chirps within a single radar frame.
                 :math:`10` by default.
 
-            bandwidth (float, optional):
+            bandwidth:
                 Sweep bandwidth of every chirp in Hz.
                 :math:`0.1~\\mathrm{GHz}` by default.
 
-            chirp_duration (float, optional):
+            chirp_duration:
                 Duration of every chirp in seconds.
                 :math:`1.5~\\mathrm{\\mu s}` by default.
 
-            pulse_rep_interval (float, optional):
+            pulse_rep_interval:
                 Repetition interval of the individual chirps in seconds.
                 :math:`1.5~\\mathrm{\\mu s}` by default.
 
-            sampling_rate (float, optional):
+            sampling_rate:
                 Sampling rate of the baseband signal in Hz.
                 If not specified, the sampling rate will be equal to the bandwidth.
 
-            adc_sampling_rate (float, optional):
+            adc_sampling_rate:
                 Sampling rate of the analog-digital conversion in Hz.
                 If not specified, the adc sampling rate will be equal to the bandwidth.
         """
@@ -235,7 +235,7 @@ class FMCW(RadarWaveform):
 
         Raises:
 
-            ValueErorr: For durations smaller or equal to zero.
+            ValueError: For durations smaller or equal to zero.
         """
 
         return self.__chirp_duration

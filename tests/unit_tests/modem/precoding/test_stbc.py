@@ -111,8 +111,8 @@ class TestAlamouti(TestCase):
     def test_num_transmit_input_streams(self) -> None:
         """Number of transmit input streams should report the correct value"""
 
-        self.assertEqual(1, self.alamouti._num_transmit_input_streams(2))
-        self.assertEqual(-1, self.alamouti._num_transmit_input_streams(1))
+        self.assertEqual(1, self.alamouti.num_transmit_input_streams(2))
+        self.assertEqual(-1, self.alamouti.num_transmit_input_streams(1))
 
     def test_receive_output_streams(self) -> None:
         """Number of receive output streams should report the correct value"""
@@ -240,8 +240,8 @@ class TestGanesan(TestCase):
     def test_num_transmit_input_streams(self) -> None:
         """Number of transmit input streams should report the correct value"""
 
-        self.assertEqual(1, self.ganesan._num_transmit_input_streams(4))
-        self.assertEqual(-1, self.ganesan._num_transmit_input_streams(3))
+        self.assertEqual(1, self.ganesan.num_transmit_input_streams(4))
+        self.assertEqual(-1, self.ganesan.num_transmit_input_streams(3))
 
     def test_receive_output_streams(self) -> None:
         """Number of receive output streams should report the correct value"""

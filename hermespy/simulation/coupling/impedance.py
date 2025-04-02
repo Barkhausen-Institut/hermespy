@@ -43,26 +43,25 @@ class ImpedanceCoupling(Coupling):
         """
         Args:
 
-            device (SimulatedDevice, optional)
-                Device the model is configured to.
+            device: Device the model is configured to.
 
-            transmit_correlation (numpy.ndarray, optional):
+            transmit_correlation:
                 Correlation matrix of the transmit antenna array.
                 Defaults to the identity matrix.
 
-            receive_correlation (numpy.ndarray, optional):
+            receive_correlation:
                 Correlation matrix of the receive antenna array.
                 Defaults to the identity matrix.
 
-            transmit_impedance (numpy.ndarray, optional):
+            transmit_impedance:
                 Impedance matrix of the transmit antenna array.
                 Defaults to the identity matrix.
 
-            receive_impedance (numpy.ndarray, optional):
+            receive_impedance:
                 Impedance matrix of the receive antenna array.
                 Defaults to the identity matrix.
 
-            matching_impedance (numpy.ndarray, optional):
+            matching_impedance:
                 Impedance matrix of the matching network.
                 Defaults to the identity matrix.
         """

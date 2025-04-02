@@ -49,7 +49,7 @@ class GainControlBase(Serializable):
         """
         Args:
 
-            rescale_quantization (bool, optional):
+            rescale_quantization:
                 If enabled, the quantized signal is rescaled to the original signal range before gain adjustment.
                 Disabled by default.
         """
@@ -72,7 +72,7 @@ class GainControlBase(Serializable):
 
         Args:
 
-            input_signal (Signal):
+            input_signal:
                 Input signal to be adjusted.
 
         Returns: Linear gain to be applied to the `input_signal`'s Voltage samples.
@@ -84,10 +84,10 @@ class GainControlBase(Serializable):
 
         Args:
 
-            input_signal (Signal):
+            input_signal:
                 Input signal to be adjusted.
 
-            gain (float):
+            gain:
                 Linear gain to be applied to the `input_signal`'s Voltage samples.
 
         Returns: The adjusted signal.
@@ -106,10 +106,10 @@ class GainControlBase(Serializable):
 
         Args:
 
-            quantized_signal (Signal):
+            quantized_signal:
                 Quantized signal to be adjusted.
 
-            gain (float):
+            gain:
                 Linear gain to applied to the `input_signal`'s Voltage samples before quantization.
 
         Returns: The scaled qzanitized signal.
@@ -134,11 +134,11 @@ class Gain(GainControlBase):
         """
         Args:
 
-            gain (float, optional):
+            gain:
                 Linear signal gain to be applied before ADC quantization.
                 Unit by default, meaning no gain adjustment.
 
-            rescale_quantization (bool, optional):
+            rescale_quantization:
                 If enabled, the quantized signal is rescaled to the original signal range before gain adjustment.
                 Disabled by default.
         """
@@ -203,14 +203,14 @@ class AutomaticGainControl(GainControlBase):
         """
         Args:
 
-            agc_type (GainControlType, optional):
+            agc_type:
                 Type of amplitude gain control at ADC input. Default is GainControlType.MAX_AMPLITUDE.
 
-            backoff (float, optional):
+            backoff:
                 this is the ratio between maximum amplitude and the rms value or maximum of input signal,
                 depending on AGC type. Default value is 1.0.
 
-            rescale_quantization (bool, optional):
+            rescale_quantization:
                 If enabled, the quantized signal is rescaled to the original signal range before gain adjustment.
                 Disabled by default.
         """
@@ -232,10 +232,6 @@ class AutomaticGainControl(GainControlBase):
         - GainControlType.RMS_AMPLITUDE: the range is given by the rms value plus a given backoff
         Note the for complex numbers, amplitude is calculated for both real and imaginary parts separately, and the
         greatest value is considered.
-
-        Returns:
-            GainControlType:
-
         """
         return self.__agc_type
 
@@ -248,9 +244,8 @@ class AutomaticGainControl(GainControlBase):
         """Quantizer backoff in linear scale
 
         This quantity determines the ratio between the maximum quantization level and the signal rms value
-        Returns:
-            float: the backoff in linear scale
 
+        Returns: The backoff in linear scale
         """
         return self.__backoff
 
@@ -327,13 +322,13 @@ class AnalogDigitalConverter(Serializable):
         """
         Args:
 
-            num_quantization_bits (int, optional):
+            num_quantization_bits:
                 ADC resolution in bits. Default is infinite resolution (no quantization)
 
-            gain (Gain, optional):
+            gain:
                 Amplitude gain control at ADC input. Default is Gain(1.0), i.e., no gain.
 
-            quantizer_type (QuantizerType, optional):
+            quantizer_type:
                 Determines quantizer behaviour at zero. Default is QuantizerType.MID_RISER.
         """
 
@@ -350,7 +345,6 @@ class AnalogDigitalConverter(Serializable):
 
         Raises:
             ValueError: If resolution is less than zero.
-
         """
 
         return self.__num_quantization_bits
@@ -371,9 +365,7 @@ class AnalogDigitalConverter(Serializable):
     def num_quantization_levels(self) -> float:
         """Number of quantization levels
 
-        Returns:
-            int: Number of levels
-
+        Returns: Number of levels.
         """
 
         if self.__num_quantization_bits is None:
@@ -389,9 +381,6 @@ class AnalogDigitalConverter(Serializable):
                                       must be even, negative values will have one step more than positive values
         - QuantizerType.MID_RISE: input values around zero are quantized as either -delta/2 or delta/2, with delta the
                                   quantization step
-
-        Returns:
-            QuantizerType: type of quantizer
         """
 
         return self.__quantizer_type
@@ -406,7 +395,7 @@ class AnalogDigitalConverter(Serializable):
         Subroutine of :meth:`convert`.
 
         Args:
-            input_signal (Signal): Signal to be converted.
+            input_signal: Signal to be converted.
 
         Returns: Gain adjusted and quantized signal.
         """
@@ -430,10 +419,10 @@ class AnalogDigitalConverter(Serializable):
 
         Args:
 
-            input_signal (Signal):
+            input_signal:
                 Signal to be converted.
 
-            frame_duration (float, optional):
+            frame_duration:
                 Duration of a signal frame frame in seconds.
                 Each frame will get converted indepentedly.
                 By default the whole signal is converted at once.
@@ -471,13 +460,12 @@ class AnalogDigitalConverter(Serializable):
         """Quantizes the input signal
 
         Args:
-            input_signal(numpy.ndarray):
+            input_signal:
                 Sample vector of the signal feeding into the quantizer.
 
         Returns:
-            np.ndarray:
-                Distorted signal after quantization.
-                Note that the original signal amplitude will be preserved.
+            Distorted signal after quantization.
+            Note that the original signal amplitude will be preserved.
         """
 
         quantized_signal = np.zeros(input_signal.shape, dtype=complex)
@@ -517,14 +505,13 @@ class AnalogDigitalConverter(Serializable):
 
         Args:
 
-            input_samples (numpy.ndarray, optional):
+            input_samples:
                 Sample points at which to evaluate the characteristics, i.e., the x-axis of the resulting
                 characteristics plot. It should be a sorted number sequence.
 
-            label(str, optional):
-                A label describing the desired plot.
+            label: A label describing the desired plot.
 
-            fig_axes (Optional[plt.axes], optional):
+            fig_axes:
                 Axes to which to plot the charateristics.
                 By default, a new figure is created.
         """

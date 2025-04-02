@@ -29,7 +29,7 @@ class BitsSource(RandomNode, Serializable):
     def __init__(self, seed: int | None = None) -> None:
         """
         Args:
-            seed (int, optional): Seed used to initialize the pseudo-random number generator.
+            seed: Seed used to initialize the pseudo-random number generator.
         """
 
         RandomNode.__init__(self, seed=seed)
@@ -39,13 +39,9 @@ class BitsSource(RandomNode, Serializable):
         """Generate a new sequence of bits.
 
         Args:
+            num_bits: Number of bits to be generated.
 
-            num_bits (int):
-                Number of bits to be generated.
-
-        Returns:
-            np.ndarray:
-                A numpy vector of `num_bits` generated bits.
+        Returns: A numpy vector of `num_bits` generated bits.
         """
         ...  # pragma: no cover
 
@@ -56,8 +52,7 @@ class RandomBitsSource(BitsSource):
     def __init__(self, seed: int | None = None) -> None:
         """
         Args:
-            seed (int, optional):
-                Seed used to initialize the pseudo-random number generator.
+            seed: Seed used to initialize the pseudo-random number generator.
         """
 
         # Initialize base classes
@@ -86,8 +81,7 @@ class StreamBitsSource(BitsSource, Serializable):
         """
         Args:
 
-            path (str):
-                Path to the stream bits source.
+            path: Path to the stream bits source.
         """
 
         BitsSource.__init__(self)

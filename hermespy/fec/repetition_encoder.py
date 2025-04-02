@@ -69,8 +69,8 @@ class RepetitionEncoder(Encoder, Serializable):
     def __init__(self, bit_block_size: int = 32, repetitions: int = 3) -> None:
         """
         Args:
-            bit_block_size (int, optional): The number of input bits per data block.
-            repetitions (int, optional): The number of times the input bit block is repeated.
+            bit_block_size: The number of input bits per data block.
+            repetitions: The number of times the input bit block is repeated.
 
         Raises:
             ValueError: If `bit_block_size` times `repetitions` is smaller than `code_block_size`.

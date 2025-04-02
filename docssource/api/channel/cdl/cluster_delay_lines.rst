@@ -73,9 +73,17 @@ These preset standard parameterizations distinguish between line-of-sight, no li
 
 .. autoclass:: hermespy.channel.cdl.cluster_delay_lines.ClusterDelayLineRealization
 
+.. autoclass:: hermespy.channel.cdl.cluster_delay_lines.ClusterDelayLineRealizationParameters
+
 .. autoclass:: hermespy.channel.cdl.cluster_delay_lines.ClusterDelayLineSample
 
 .. autoclass:: hermespy.channel.cdl.cluster_delay_lines.LargeScaleState
+
+.. autoclass:: hermespy.channel.cdl.cluster_delay_lines.LOSState
+
+.. autoclass:: hermespy.channel.cdl.cluster_delay_lines.O2IState
+
+.. autoclass:: hermespy.channel.cdl.cluster_delay_lines.DelayNormalization
 
 .. autoclass:: hermespy.channel.cdl.cluster_delay_lines.CDLRT
 

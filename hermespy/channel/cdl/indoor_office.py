@@ -66,29 +66,29 @@ class IndoorOfficeRealization(ClusterDelayLineRealization[LOSState]):
         """
         Args:
 
-            expected_state (O2IState | None):
+            expected_state:
                 Expected large-scale state of the channel.
                 If not specified, the large-scale state is randomly generated.
 
-            state_realization (ConsistentRealization):
+            state_realization:
                 Realization of a spatially consistent random number generator for the large-scale state.
 
-            los_realization (ConsistentRealization):
+            los_realization:
                 Realization of a spatially consistent random number generator for small-scale parameters in the LOS state.
 
-            nlos_realization (ConsistentRealization):
+            nlos_realization:
                 Realization of a spatially consistent random number generator for small-scale parameters in the NLOS state.
 
-            parameters (ClusterDelayLineRealizationParameters):
+            parameters:
                 General parameters of the cluster delay line realization.
 
-            office_type (OfficeType):
+            office_type:
                 Type of the modeled office.
 
-            sample_hooks (Set[ChannelSampleHook[ClusterDelayLineSample]]):
+            sample_hooks:
                 Hooks to be called when a channel sample is generated.
 
-            gain (float, optional):
+            gain:
                 Linear amplitude scaling factor if signals propagated over the channel.
         """
 
@@ -160,9 +160,9 @@ class IndoorOfficeRealization(ClusterDelayLineRealization[LOSState]):
            y = a \\log_{10}(1 + f_c) + b
 
         Args:
-            carrier_frequency (float): Carrier frequency
-            factor (float): Factor scaling the logarithmic frequency dependency.
-            summand (float): Added constant.
+           carrier_frequency: Carrier frequency
+           factor: Factor scaling the logarithmic frequency dependency.
+           summand: Added constant.
 
         Returns: The result.
         """
@@ -392,27 +392,27 @@ class IndoorOffice(ClusterDelayLineBase[IndoorOfficeRealization, LOSState], Seri
         """
         Args:
 
-            office_type (OfficeType, optional):
+           office_type:
                 Type of the modeled office.
                 If not specified, a mixed office is assumed.
 
-            delay_normalization (DelayNormalization, optional):
+           delay_normalization:
                 The delay normalization routine applied during channel sampling.
 
-            oxygen_absorption (bool, optional):
+           oxygen_absorption:
                 Model oxygen absorption in the channel.
                 Enabled by default.
 
-            expected_state (LSST, optional):
+           expected_state:
                 Expected large-scale state of the channel.
                 If `None`, the state is randomly generated during each sample of the channel's realization.
 
-            gain (float, optional):
+           gain:
                 Linear channel energy gain factor.
-                Initializes the :meth:`gain<gain>` property.
+                Initializes the :attr:`gain<hermespy.channel.channel.Channel.gain>` property.
                 :math:`1.0` by default.
 
-            seed (int, optional):
+           seed:
                 Seed used to initialize the pseudo-random number generator.
         """
 

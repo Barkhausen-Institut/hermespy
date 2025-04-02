@@ -28,7 +28,7 @@ class Coupling(Serializable):
         """
         Args:
 
-            device (SimulatedDevice, optional): Device the model is configured to.
+            device: Device the model is configured to.
         """
 
         self.device = device
@@ -53,7 +53,7 @@ class Coupling(Serializable):
 
         Args:
 
-            signal (Signal): The signal to be transmitted.
+            signal: The signal to be transmitted.
 
         Returns: The signal resulting from coupling modeling.
 
@@ -79,7 +79,7 @@ class Coupling(Serializable):
 
         Args:
 
-            signal (Signal): The signal to be transmitted.
+            signal: The signal to be transmitted.
 
         Returns: The signal resulting from coupling modeling.
         """
@@ -90,7 +90,7 @@ class Coupling(Serializable):
 
         Args:
 
-            signal (Signal): The signal to be received.
+            signal: The signal to be received.
 
         Returns: The signal resulting from coupling modeling.
 
@@ -116,7 +116,7 @@ class Coupling(Serializable):
 
         Args:
 
-            signal (Signal): The signal to be received.
+            signal: The signal to be received.
 
         Returns: The signal resulting from coupling modeling.
         """

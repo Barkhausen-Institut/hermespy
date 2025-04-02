@@ -88,38 +88,38 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
         """
         Args:
 
-            symbol_rate (float):
+            symbol_rate:
                 Rate at which symbols are being generated in Hz.
 
-            num_preamble_symbols (int):
+            num_preamble_symbols:
                 Number of preamble symbols within a single communication frame.
 
-            num_data_symbols (int):
+            num_data_symbols:
                 Number of data symbols within a single communication frame.
 
-            num_postamble_symbols (int, optional):
+            num_postamble_symbols:
                 Number of postamble symbols within a single communication frame.
 
-            guard_interval (float, optional):
+            guard_interval:
                 Guard interval between communication frames in seconds.
                 Zero by default.
 
-            oversampling_factor (int, optional):
+            oversampling_factor:
                 The oversampling factor of the waform.
 
-            pilot_rate (int, optional):
+            pilot_rate:
                 Pilot symbol rate.
                 Zero by default, i.e. no pilot symbols.
 
-            pilot_symbol_sequence (Optional[PilotSymbolSequence], optional):
+            pilot_symbol_sequence:
                 The configured pilot symbol sequence.
                 Uniform by default.
 
-            repeat_pilot_symbol_sequence (bool, optional):
+            repeat_pilot_symbol_sequence:
                 Allow the repetition of pilot symbol sequences.
                 Enabled by default.
 
-            kwargs (Any):
+            \*\*kwargs:
                 Waveform generator base class initialization parameters.
         """
 
@@ -147,9 +147,7 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
     def _transmit_filter(self) -> np.ndarray:
         """Pulse shaping filter applied to data symbols during transmission.
 
-        Returns:
-
-            The shaping filter impulse response.
+        Returns: The shaping filter impulse response.
         """
         ...  # pragma: no cover
 
@@ -158,9 +156,7 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
         """Pulse shaping filter applied to signal streams during reception.
 
 
-        Returns:
-
-            The shaping filter impulse response.
+        Returns: The shaping filter impulse response.
         """
         ...  # pragma: no cover
 
@@ -169,8 +165,7 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
     def _filter_delay(self) -> int:
         """Cumulative delay introduced during transmit and receive filtering.
 
-        Returns:
-            Delay in samples.
+        Returns: Delay in samples.
         """
         ...  # pragma: no cover
 
@@ -178,12 +173,9 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
     def symbol_rate(self) -> float:
         """Repetition rate of symbols.
 
-
-        Returns:
-            Symbol rate in Hz.
+        Returns: Symbol rate in Hz.
 
         Raises:
-
             ValueError: For rates smaller or equal to zero.
         """
 
@@ -202,10 +194,7 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
 
         Transmitted at the beginning of communication frames.
 
-        Returns: The number of symbols.
-
         Raises:
-
             ValueError: If the number of symbols is smaller than zero.
         """
 
@@ -224,10 +213,7 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
 
         Transmitted at the end of communication frames.
 
-        Returns: The number of symbols.
-
         Raises:
-
             ValueError: If the number of symbols is smaller than zero.
         """
 
@@ -334,23 +320,14 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
     def guard_interval(self) -> float:
         """Frame guard interval.
 
-        Returns:
-            float: Interval in seconds.
+        Raises:
+            ValueError: If `interval` is smaller than zero.
         """
 
         return self.__guard_interval
 
     @guard_interval.setter
     def guard_interval(self, interval: float) -> None:
-        """Modify frame guard interval.
-
-        Args:
-            interval (float): Interval in seconds.
-
-        Raises:
-            ValueError: If `interval` is smaller than zero.
-        """
-
         if interval < 0.0:
             raise ValueError("Guard interval must be greater or equal to zero")
 
@@ -358,11 +335,7 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
 
     @property
     def num_guard_samples(self) -> int:
-        """Number of samples within the guarding section of a frame.
-
-        Returns:
-            int: Number of samples.
-        """
+        """Number of samples within the guarding section of a frame."""
 
         return int(round(self.guard_interval * self.sampling_rate))
 
@@ -372,9 +345,6 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
 
         A pilot rate of zero indicates no pilot symbols within the data frame.
 
-        Returns:
-            Rate in number of symbols
-
         Raises:
             ValueError: If the pilot rate is smaller than zero.
         """
@@ -383,15 +353,6 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
 
     @pilot_rate.setter
     def pilot_rate(self, value: int) -> None:
-        """Modify frame pilot symbol rate.
-
-        Args:
-            rate (float): Rate in seconds.
-
-        Raises:
-            ValueError: If `rate` is smaller than zero.
-        """
-
         if value < 0:
             raise ValueError("Pilot symbol rate must be greater or equal to zero")
 
@@ -415,11 +376,7 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
 
     @property
     def _pilot_symbol_indices(self) -> np.ndarray:
-        """Indices of pilot symbols within the ful communication frame.
-
-        Returns:
-            Numpy array containing pilot symbol indices.
-        """
+        """Indices of pilot symbols within the ful communication frame."""
 
         if self.pilot_rate <= 0:
             return np.empty(0, dtype=int)
@@ -429,11 +386,7 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
 
     @property
     def _data_symbol_indices(self) -> np.ndarray:
-        """Indices of data symbols within the full communication frame.
-
-        Returns:
-            Nump array containging data symbol indices.
-        """
+        """Indices of data symbols within the full communication frame."""
 
         data_indices = np.arange(self._num_payload_symbols)
 
@@ -494,8 +447,7 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
     def plot_filter_correlation(self) -> plt.Figure:
         """Plot the convolution between transmit and receive filter shapes.
 
-        Returns:
-            Handle to the generated matplotlib figure.
+        Returns: Handle to the generated matplotlib figure.
         """
 
         with Executable.style_context():
@@ -514,8 +466,7 @@ class FilteredSingleCarrierWaveform(ConfigurablePilotWaveform):
     def plot_filter(self) -> plt.Figure:
         """Plot the transmit filter shape.
 
-        Returns:
-            Handle to the generated matplotlib figure.
+        Returns: Handle to the generated matplotlib figure.
         """
 
         with Executable.style_context():
@@ -582,8 +533,7 @@ class SingleCarrierChannelEstimation(ChannelEstimation[FilteredSingleCarrierWave
         """
         Args:
 
-            waveform (CommunicationWaveform, optional):
-                The waveform generator this synchronization routine is attached to.
+            waveform: The waveform generator this synchronization routine is attached to.
         """
 
         ChannelEstimation.__init__(self, waveform)
@@ -596,8 +546,7 @@ class SingleCarrierLeastSquaresChannelEstimation(SingleCarrierChannelEstimation)
         """
         Args:
 
-            waveform (CommunicationWaveform, optional):
-                The waveform generator this channel estimation routine is attached to.
+            waveform: The waveform generator this channel estimation routine is attached to.
         """
 
         SingleCarrierChannelEstimation.__init__(self, waveform)
@@ -656,7 +605,7 @@ class SingleCarrierChannelEqualization(ChannelEqualization[FilteredSingleCarrier
         """
         Args:
 
-            waveform (CommunicationWaveform, optional):
+            waveform:
                 The waveform generator this equalization routine is attached to.
         """
 
@@ -676,7 +625,7 @@ class SingleCarrierMinimumMeanSquareChannelEqualization(SingleCarrierChannelEqua
         """
         Args:
 
-            waveform (CommunicationWaveform, optional):
+            waveform:
                 The waveform generator this equalization routine is attached to.
         """
 
@@ -733,16 +682,16 @@ class RolledOffSingleCarrierWaveform(FilteredSingleCarrierWaveform):
         """
         Args:
 
-            relative_bandwidth (float, optional):
+            relative_bandwidth:
                 Bandwidth relative to the configured symbol rate.
                 One by default, meaning the pulse bandwidth is equal to the symbol rate in Hz,
                 assuming zero `roll_off`.
 
-            roll_off (float, optional):
+            roll_off:
                 Filter pulse shape roll off factor between zero and one.
                 Zero by default, meaning no inter-symbol interference at the sampling instances.
 
-            filter_length (float, optional):
+            filter_length:
                 Filter length in modulation symbols.
                 16 by default.
         """
@@ -759,9 +708,6 @@ class RolledOffSingleCarrierWaveform(FilteredSingleCarrierWaveform):
 
         Configures how far the shaping filter stretches in terms of the number of
         modulation symbols it overlaps with.
-
-        Returns:
-            Filter length in number of modulation symbols.
 
         Raises:
             ValueError: For filter lengths smaller than one.
@@ -1015,10 +961,10 @@ class FMCWWaveform(FilteredSingleCarrierWaveform, Serializable):
         """
         Args:
 
-            bandwidth (float):
+            bandwidth:
                 The chirp bandwidth in Hz.
 
-            chirp_duration (float, optional):
+            chirp_duration:
                 Duration of each FMCW chirp in seconds.
                 By default, the inverse symbol rate is assumed.
         """
@@ -1034,12 +980,7 @@ class FMCWWaveform(FilteredSingleCarrierWaveform, Serializable):
 
         A duration of zero will result in the inverse symbol rate as chirp duration.
 
-        Returns:
-
-            Chirp duration in seconds.
-
         Raises:
-
             ValueError: If the duration is smaller than zero.
         """
 
@@ -1054,12 +995,7 @@ class FMCWWaveform(FilteredSingleCarrierWaveform, Serializable):
 
     @property
     def __true_chirp_duration(self) -> float:
-        """Chirp duration for internal calculations.
-
-        Returns:
-
-            The inverse symbol rate or the specified chirp duration.
-        """
+        """Chirp duration for internal calculations."""
 
         if self.chirp_duration <= 0.0:
             return 1 / self.symbol_rate
@@ -1081,12 +1017,7 @@ class FMCWWaveform(FilteredSingleCarrierWaveform, Serializable):
     def chirp_slope(self) -> float:
         """Chirp slope.
 
-        The slope is equal to the chirp bandwidth divided by its duration.
-
-        Returns:
-
-            Slope in Hz/s.
-        """
+        The slope is equal to the chirp bandwidth divided by its duration."""
 
         return self.bandwidth / self.__true_chirp_duration
 

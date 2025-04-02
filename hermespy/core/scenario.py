@@ -93,10 +93,10 @@ class Scenario(
         """
         Args:
 
-            seed (int, optional):
+            seed:
                 Random seed used to initialize the pseudo-random number generator.
 
-            devices (Sequence[Device], optional):
+            devices:
                 Devices to be added to the scenario during initialization.
 
         """
@@ -135,7 +135,7 @@ class Scenario(
 
         Args:
 
-            device (Device):
+            device:
                 New device to be added to the scenario.
 
         Raises:
@@ -181,7 +181,7 @@ class Scenario(
         """Check if an device is registered in this scenario.
 
         Args:
-            device (Device): The device to be checked.
+            device: The device to be checked.
 
         Returns:
             bool: The device's registration status.
@@ -194,7 +194,7 @@ class Scenario(
 
         Args:
 
-            device (Device): Device for which to lookup the index.
+            device: Device for which to lookup the index.
 
         Returns: The device index.
 
@@ -426,25 +426,25 @@ class Scenario(
 
         Args:
 
-            file (str):
+            file:
                 The system path where to store the generated recording data.
 
-            campaign (str, optional):
+            campaign:
                 Name of the measurement campaign.
 
-            overwrite (bool, optional):
+            overwrite:
                 Overwrite the file if a recording already exists.
                 Disabled by default.
 
-            state (scenario, optional):
+            state:
                 Scenario to be used for state serialization.
                 By default, this scenario is assumed.
 
-            serialize_state (bool, optional):
+            serialize_state:
                 Serialize the scenario state to the recording.
                 Enabled by default.
 
-            backend (SerializationBackend, optional):
+            backend:
                 Serialization backend to be used for serialization.
                 Default is HDF5.
 
@@ -493,14 +493,14 @@ class Scenario(
 
         Args:
 
-            file (str, optional):
+            file:
                 File system location from which the scenario should be replayed.
                 Must be specified if the scenario is not in replay mode.
 
-            campaign (str, optional):
+            campaign:
                 Identifier of the campaign to replay.
 
-            backend (SerializationBackend, optional):
+            backend:
                 Serialization backend to be used for deserialization.
                 Default is HDF5.
 
@@ -551,13 +551,13 @@ class Scenario(
 
         Args:
 
-            file (str):
+            file:
                 File system location of the HDF5 save file.
 
-            campaign (str, optional):
+            campaign:
                 Identifier of the campaign to replay.
 
-            backend (SerializationBackend, optional):
+            backend:
                 Serialization backend to be used for deserialization.
                 Default is HDF5.
 
@@ -600,11 +600,11 @@ class Scenario(
 
         Args:
 
-            states (Sequence[DST], optional):
+            states:
                 States of the transmitting devices.
-                If not specified, the current device states will be queried by calling :meth:`Device.state`.
+                If not specified, the current device states will be queried by calling :meth:`Device.state<hermespy.core.device.Device.state>`.
 
-            notify (bool, optional):
+            notify:
                 Notify the DSP layer's callbacks about the transmission results.
                 Enabled by default.
 
@@ -626,12 +626,12 @@ class Scenario(
 
         Args:
 
-            transmissions (list[list[Transmission]]):
+            transmissions:
                 Results of all transmitting DSP algorithms.
 
-            states (Sequence[DST | None], optional):
+            states:
                 States of the transmitting devices.
-                If not specified, the current device states will be queried by calling :meth:`Device.state`.
+                If not specified, the current device states will be queried by calling :meth:`Device.state<hermespy.core.device.Device.state>`.
 
         Returns: List of device outputs.
         """
@@ -653,11 +653,11 @@ class Scenario(
 
         Args:
 
-            states (Sequence[DST | None], optional):
+            states:
                 States of the transmitting devices.
-                If not specified, the current device states will be queried by calling :meth:`Device.state`.
+                If not specified, the current device states will be queried by calling :meth:`Device.state<hermespy.core.device.Device.state>`.
 
-            notify (bool, optional):
+            notify:
                 Notify the transmit DSP layer's callbacks about the transmission results.
                 Enabled by default.
 
@@ -676,15 +676,12 @@ class Scenario(
         """Process input signals impinging onto the scenario's devices.
 
         Args:
-
-            impinging_signals (Sequence[DeviceInput | Signal | Sequence[Signal]]):
-                list of signals impinging onto the devices.
-
-            states (Sequence[DST | None], optional):
+            impinging_signals: List of signals impinging onto the devices.
+            states:
                 States of the transmitting devices.
-                If not specified, the current device states will be queried by calling :meth:`Device.state`.
+                If not specified, the current device states will be queried by calling :meth:`hermespy.core.device.Device.state`.
 
-        Returns: list of the processed device input information.
+        Returns: List of the processed device input information.
 
         Raises:
 
@@ -713,15 +710,15 @@ class Scenario(
 
         Args:
 
-            operator_inputs (Sequence[Sequence[Signal]] | ProcessedDeviceInput):
+            operator_inputs:
                 Signal models to be processed by the receive DSP algorithms.
                 Two-dimensional sequence where the first dimension corresponds to the devices and the second to the operators.
 
-            states (Sequence[DST | None], optional):
+            states:
                 States of the transmitting devices.
-                If not specified, the current device states will be queried by calling :meth:`Device.state`.
+                If not specified, the current device states will be queried by calling :meth:`hermespy.core.device.Device.state`.
 
-            notify (bool, optional):
+            notify:
                 Notify the receive DSP layer's callbacks about the reception results.
                 Enabled by default.
 
@@ -755,14 +752,14 @@ class Scenario(
 
         Args:
 
-            impinging_signals (Sequence[DeviceInput] | Sequence[Signal] | Sequence[Sequence[Signal]):
+            impinging_signals:
                 list of signals impinging onto the devices.
 
-            states (Sequence[DST | None], optional):
+            states:
                 States of the transmitting devices.
-                If not specified, the current device states will be queried by calling :meth:`Device.state
+                If not specified, the current device states will be queried by calling :meth:`Device.state<hermespy.core.device.Device.state>`.
 
-            notify (bool, optional):
+            notify:
                 Notify the receiving DSP layer's callbacks about the reception results.
                 Enabled by default.
 

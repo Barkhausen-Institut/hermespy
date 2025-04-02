@@ -26,24 +26,23 @@ def delay_resampling_matrix(
 
     Args:
 
-        sampling_rate (float):
+        sampling_rate:
             Rate in Hz at which the signal to be transformed is sampled.
 
-        num_samples_in (int):
+        num_samples_in:
             Number of samples provided.
 
-        delay (float):
+        delay:
             Delay in seconds, by which the sampled signal should be shifted.
 
-        num_samples_out(int, optional):
+        num_samples_out:
             Number of output samples.
 
     Returns:
-        np.ndarray:
-            A MxN linear resampling transformation matrix, where M is the number of input samples
-            and N is the number of resampled output samples.
-            Due to the delay, M might be bigger (or smaller for negative delays) than N, so that
-            the transformation matrix is not necessarily square.
+        A MxN linear resampling transformation matrix, where M is the number of input samples
+        and N is the number of resampled output samples.
+        Due to the delay, M might be bigger (or smaller for negative delays) than N, so that
+        the transformation matrix is not necessarily square.
     """
 
     input_timestamps = np.arange(num_samples_in)

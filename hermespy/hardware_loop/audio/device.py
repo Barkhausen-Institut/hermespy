@@ -1,16 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-====================
-Audio Device Binding
-====================
-
-Hermes hardware bindings to audio devices offer the option to benchmark complex-valued
-communication waveforms over affordable consumer-grade audio hardware.
-The effective available bandwidth is limited to half of the audio devices sampling rate,
-which is typically either :math:`44.1~\\mathrm{kHz}` or :math:`48~\\mathrm{kHz}`.
-
-
-"""
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
@@ -76,10 +64,10 @@ class AudioPlaybackPort(AudioPort):
         """
         Args:
 
-            array (AudioDeviceAntennas):
+            array:
                 Antenna array to which the port belongs.
 
-            channel (int):
+            channel:
                 Recording audio channel index.
         """
 
@@ -107,10 +95,10 @@ class AudioRecordPort(AudioPort):
         """
         Args:
 
-            array (AudioDeviceAntennas):
+            array:
                 Antenna array to which the port belongs.
 
-            channel (int):
+            channel:
                 Recording audio channel index.
         """
 
@@ -204,21 +192,21 @@ class AudioDevice(PhysicalDevice[PhysicalDeviceState], Serializable):
         """
         Args:
 
-            playback_device (int):
+            playback_device:
                 Device over which audio streams are to be transmitted.
 
-            record_device (int):
+            record_device:
                 Device over which audio streams are to be received.
 
-            playback_channels (Union[np.ndarray, Iterable], optional):
+            playback_channels:
                 List of audio channels for signal transmission.
                 By default, the first channel is selected.
 
-            record_channels (Union[np.ndarray, Iterable], optional):
+            record_channels:
                 List of audio channels for signal reception.
                 By default, the first channel is selected.
 
-            sampling_rate (float, optional):
+            sampling_rate:
                 Configured sampling rate.
                 48 kHz by default.
         """

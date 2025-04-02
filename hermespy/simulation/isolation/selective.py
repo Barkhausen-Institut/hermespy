@@ -34,7 +34,7 @@ class SelectiveLeakage(Isolation):
         """
         Args:
 
-            leakage_response (numpy.ndarray):
+            leakage_response:
                 Three-dimensional leakge impulse response matrix :math:`\\mathbf{H}` of dimensions :math:`M \\times N \\times L`,
                 where :math:`M` is the number of receive streams and
                 :math:`N` is the number of transmit streams and
@@ -69,11 +69,11 @@ class SelectiveLeakage(Isolation):
 
         Args:
 
-            mean (float, optional):
+            mean:
                 Mean of the frequency response in real and imaginary parts.
                 One by default.
 
-            variance (float, optional):
+            variance:
                 Variance of the frequency response in real and imaginary parts.
                 One by default.
 

@@ -1,16 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-==========
-Beamformer
-==========
-
-Beamforming is split into the prototype classes :class:`.TransmitBeamformer` and :class:`.ReceiveBeamformer`
-for beamforming operations during signal transmission and reception, respectively.
-They are both derived from the base :class:`BeamformerBase`.
-This is due to the fact that some beamforming algorithms may be exclusive to transmission or reception use-cases.
-Should a beamformer be applicable during both transmission and reception both prototypes can be inherited.
-An example for such an implementation is the :class:`Conventional <.conventional.ConventionalBeamformer>` beamformer.
-"""
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
@@ -63,7 +51,7 @@ class BeamFocus(ABC, Serializable):
 
         Args:
 
-            device (State):
+           device:
                 State of the device the beamformer is operating on.
 
         Returns:
@@ -92,7 +80,7 @@ class SphericalFocus(BeamFocus):
         """
         Args:
 
-            angles (numpy.ndarray): Spherical angles in radians.
+           angles: Spherical angles in radians.
 
         Raises:
 
@@ -105,8 +93,8 @@ class SphericalFocus(BeamFocus):
         """
         Args:
 
-            azimuth (float): Azimuth angle in radians.
-            zenith (float): Zenith angle in radians.
+           azimuth: Azimuth angle in radians.
+           zenith: Zenith angle in radians.
         """
         ...  # pragma: no cover
 
@@ -161,8 +149,8 @@ class CoordinateFocus(BeamFocus):
         """
         Args:
 
-            coordinates (numpy.ndarray): Cartesian coordinates in m.
-            reference (str, optional): Reference frame of the coordinates.
+            coordinates: Cartesian coordinates in m.
+            reference: Reference frame of the coordinates.
         """
 
         # Initialize base class
@@ -284,26 +272,25 @@ class TransmitBeamformer(TransmitStreamEncoder):
     ) -> Signal:
         """Encode a MIMO signal for transmit beamforming.
 
-        Wrapper around :meth:`_encode` to encode a signal for transmit beamforming.
-        Compliant with the :class:`TransmitStreamEncoder` interface.
+        Wrapper around :meth:`_encode<hermespy.beamforming.beamformer.TransmitBeamformer._encode>` to encode a signal for transmit beamforming.
+        Compliant with the :class:`TransmitStreamEncoder<hermespy.core.precoding.TransmitStreamEncoder>` interface.
 
         Args:
 
-            streams (Signal):
+            streams:
                 The signal to be encoded.
 
-            num_output_streams (int):
+            num_output_streams:
                 The number of desired output streams.
-                Must match :attr:`.num_transmit_output_streams`.
 
-            device (TransmitState):
+            device:
                 State of the device this beamformer is operating on.
 
-            focus (BeamFocus | Sequence[BeamFocus], optional):
+            focus:
                 Focus points of the steered signal power.
                 Must either be a single focus point or a sequence of focus points,
                 depending on :attr:`.num_transmit_focus_points`.
-                If not provided, the beamformer's default :attr:`.transmit_focus` is assumed.
+                If not provided, the beamformer's default :attr:`transmit_focus<hermespy.beamforming.beamformer.TransmitBeamformer.transmit_focus>` is assumed.
 
         Raises:
 
@@ -327,7 +314,7 @@ class TransmitBeamformer(TransmitStreamEncoder):
             _focus = focus
 
         # Assert the correct number of input signal streams
-        num_input_streams = self._num_transmit_input_streams(num_output_streams)
+        num_input_streams = self.num_transmit_input_streams(num_output_streams)
         if streams.num_streams != num_input_streams:
             raise ValueError(
                 "Stream encoding configuration invalid, number of provided streams don't match the beamformer requirements"
@@ -360,18 +347,18 @@ class TransmitBeamformer(TransmitStreamEncoder):
 
         Args:
 
-            samples (numpy.ndarray):
+           samples:
                 Signal samples, first dimension being the number of transmit antennas, second the number of samples.
 
-            carrier_frequency (float):
+           carrier_frequency:
                 The assumed central carrier frequency of the samples generated RF signal after mixing in Hz.
 
-            focus_angles (numpy.ndarray):
+           focus_angles:
                 Focused angles of departure in radians.
                 Two-dimensional numpy array with the first dimension representing the number of focus points
                 and the second dimension of magnitude two being the azimuth and elevation angles, respectively.
 
-            array (AntennaArrayState):
+           array:
                 The assumed antenna array.
 
         Returns:
@@ -496,23 +483,23 @@ class ReceiveBeamformer(ReceiveStreamDecoder):
     ) -> np.ndarray:
         """Decode signal streams for receive beamforming.
 
-        This method is called as a subroutine during :meth:`decode_streams` and :meth:`probe`.
+        This method is called as a subroutine during :meth:`decode_streams<hermespy.beamforming.beamformer.ReceiveBeamformer.decode_streams>` and :meth:`probe<hermespy.beamforming.beamformer.ReceiveBeamformer.probe>`.
 
         Args:
 
-            samples (numpy.ndarray):
+            samples:
                 Signal samples, first dimension being the number of signal streams :math:`N`, second the number of samples :math:`T`.
 
-            carrier_frequency (float):
+            carrier_frequency:
                 The assumed carrier central frequency of the samples :math:`f_\\mathrm{c}`.
 
-            angles (numpy.ndarray):
+            angles:
                 Spherical coordinate system angles of arrival in radians.
                 A three-dimensional numpy array with the first dimension representing the number of angles,
                 the second dimension of magnitude number of focus points :math:`F`,
                 and the third dimension containing the azimuth and zenith angle in radians, respectively.
 
-            array (AntennaArrayState):
+            array:
                 The assumed antenna array.
 
         Returns:
@@ -533,21 +520,20 @@ class ReceiveBeamformer(ReceiveStreamDecoder):
         """Decode a MIMO signal for receive beamforming.
 
         Wrapper around :meth:`_decode` to decode a signal for receive beamforming.
-        Compliant with the :class:`ReceiveStreamDecoder` interface.
+        Compliant with the :class:`ReceiveStreamDecoder<hermespy.core.precoding.ReceiveStreamDecoder>` interface.
 
         Args:
 
-            streams (Signal):
+            streams:
                 The signal to be decoded.
 
-            num_output_streams (int):
+            num_output_streams:
                 The number of desired output streams.
-                Must match :attr:`.num_receive_output_streams`.
 
-            device (ReceiveState):
+            device:
                 State of the device this beamformer is operating on.
 
-            focus (BeamFocus | Sequence[BeamFocus], optional):
+            focus:
                 Focus points of the steered signal power.
                 Must either be a single focus point or a sequence of focus points,
                 depending on :attr:`.num_receive_focus_points`.
@@ -596,19 +582,14 @@ class ReceiveBeamformer(ReceiveStreamDecoder):
 
         Args:
 
-            signal (Signal):
-                The signal to be steered.
-
-            device (ReceiveState):
-                State of the device this beamformer is operating on.
-
-            focus_points (numpy.ndarray, optional):
+            signal: The signal to be steered.
+            device: State of the device this beamformer is operating on.
+            focus_points:
                 Focus point of the steered signal power.
                 Two-dimensional numpy array with the first dimension representing the number of points
                 and the second dimension representing the point values.
 
         Returns:
-
             Stream samples of the focused signal towards all focus points.
             A three-dimensional numpy array with the first dimension representing the number of focus points,
             the second dimension the number of returned streams and the third dimension the amount of samples.

@@ -20,8 +20,8 @@ class FrameGeneratorScapy(FrameGenerator):
     """Scapy wrapper frame generator.
 
     Attrs:
-       packet(Packet): Scapy packet header to which a payload would be attached.
-       packet_type(Type[Packet]): Type of the first layer of the packet header.
+       packet: Scapy packet header to which a payload would be attached.
+       packet_type: Type of the first layer of the packet header.
     """
 
     packet: Packet
@@ -30,7 +30,7 @@ class FrameGeneratorScapy(FrameGenerator):
     def __init__(self, packet: Packet) -> None:
         """
         Args:
-            packet(Packet): Packet to which a payload will be attached.
+            packet: Packet to which a payload will be attached.
         """
         self.packet = packet
         self.packet_num_bits = len(packet) * 8
@@ -42,11 +42,11 @@ class FrameGeneratorScapy(FrameGenerator):
         Note that payload can be of size 0, in which case no data would be sent (except for the packet header).
 
         Args:
-            source (BitsSource): payload source.
-            num_bits (int): number of bits in the whole resulting frame.
+            source: Payload source.
+            num_bits: Number of bits in the whole resulting frame.
 
         Raises:
-            ValueError if num_bits is not enough to fit the packet.
+            ValueError: If num_bits is not enough to fit the packet.
         """
 
         payload_num_bits = num_bits - self.packet_num_bits

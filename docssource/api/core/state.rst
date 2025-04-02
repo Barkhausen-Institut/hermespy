@@ -16,4 +16,6 @@ They are being passed in between the different stages of processing and simulati
 
 .. autoclass:: hermespy.core.state.ReceiveState
 
+.. autoclass:: hermespy.core.state.DST
+
 .. footbibliography::

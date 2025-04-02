@@ -120,24 +120,24 @@ class RandomDelayChannel(DelayChannelBase[RandomDelayChannelRealization]):
         """
         Args:
 
-            delay (float | Tuple[float, float]):
+            delay:
                 Assumed propagation delay in seconds.
                 If a scalar floating point, the delay is assumed to be constant.
                 If a tuple of two floats, the tuple values indicate the mininum and maxium values of a uniform distribution, respectively.
 
-            decorrelation_distance (float, optional):
+            decorrelation_distance:
                 Distance in meters at which the channel decorrelates.
                 By default, the channel is assumed to be static in space.
 
-            model_propagation_loss (bool, optional):
+            model_propagation_loss:
                 Should free space propagation loss be modeled?
                 Enabled by default.
 
-            gain (float, optional):
+            gain:
                 Linear power gain factor a signal experiences when being propagated over this realization.
                 :math:`1.0` by default.
 
-            seed (int, optional):
+            seed:
                 Seed used to initialize the pseudo-random number generator.
         """
 

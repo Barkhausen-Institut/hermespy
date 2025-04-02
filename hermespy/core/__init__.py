@@ -13,7 +13,7 @@ from .antennas import (
     CustomAntennaArray,
     UniformArray,
 )
-from .definitions import ConsoleMode, Verbosity
+from .definitions import ConsoleMode, Verbosity, FloatingError
 from .evaluators import (
     ReceivePowerEvaluator,
     PowerResult,
@@ -35,7 +35,6 @@ from .device import (
     Transmitter,
     Receiver,
     Device,
-    FloatingError,
     Transmission,
     Reception,
     ReceptionType,
@@ -170,6 +169,7 @@ __all__ = [
     "Artifact",
     "ArtifactTemplate",
     "ConsoleMode",
+    "FloatingError",
     "Evaluator",
     "Evaluator",
     "Evaluation",

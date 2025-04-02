@@ -26,9 +26,9 @@ class TrajectorySample(object):
         """
         Args:
 
-            timestamp (float): Time at which the trajectory was sampled in seconds.
-            pose (Timestamp): Pose of the object at the given time.
-            velocity (numpy.ndarray): Velocity of the object at the given time.
+            timestamp: Time at which the trajectory was sampled in seconds.
+            pose: Pose of the object at the given time.
+            velocity: Velocity of the object at the given time.
         """
 
         # Initialize class attributes
@@ -67,8 +67,8 @@ class Trajectory(Serializable):
         """Set a target to look at and track.
 
         Args:
-            target (Trajectory): Target trajectory.
-            up (numpy.ndarray): Up/sky/head/ceiling global unit vector. Defaults to [0., 1., 0.].
+            target: Target trajectory.
+            up: Up/sky/head/ceiling global unit vector. Defaults to [0., 1., 0.].
         """
 
         self._lookat_flag = True
@@ -99,7 +99,7 @@ class Trajectory(Serializable):
         """Sample the trajectory's velocity.
 
         Args:
-            timestamp (float): Time at which to sample the trajectory in seconds.
+            timestamp: Time at which to sample the trajectory in seconds.
 
         Returns: A sample of the trajectory's velocity (vector (3,) of floats).
         """
@@ -110,7 +110,7 @@ class Trajectory(Serializable):
         """Sample the trajectory's translation.
 
         Args:
-            timestamp (float): Time at which to sample the trajectory in seconds.
+            timestamp: Time at which to sample the trajectory in seconds.
 
         Returns: A sample of the trajectory's translation (vector (3,) of floats).
         """
@@ -121,7 +121,7 @@ class Trajectory(Serializable):
         """Sample the trajectory's orientation. Does not consider lookat.
 
         Args:
-            timestamp (float): Time at which to sample the trajectory in seconds.
+            timestamp: Time at which to sample the trajectory in seconds.
 
         Returns: A sample of the trajectory's orientation matrix (matrix (3, 3) of float).
         """
@@ -131,7 +131,7 @@ class Trajectory(Serializable):
         """Sample the trajectory at a given point in time.
 
         Args:
-            timestamp (float): Time at which to sample the trajectory in seconds.
+            timestamp: Time at which to sample the trajectory in seconds.
 
         Returns: A sample of the trajectory.
         """
@@ -272,10 +272,10 @@ class StaticTrajectory(Trajectory):
 
         Args:
 
-            translation (numpy.ndarray):
+            translation:
                 Cartesian coordinates of the object.
 
-            velocity (numpy.ndarray, optional):
+            velocity:
                 Cartesian velocity of the object.
                 If not provided, the object is assumed to be static.
 
@@ -312,7 +312,7 @@ class Moveable(Serializable):
         """
         Args:
 
-            trajectory (Trajectory, optional):
+            trajectory:
                 Trajectory this object is following.
                 If not provided, the object is assumed to be static.
         """
@@ -353,8 +353,8 @@ class BITrajectoryB(Trajectory):
         """
         Args:
 
-            height (float): Height of the b in meters.
-            duration (float): Duration of the b in seconds.
+            height: Height of the b in meters.
+            duration: Duration of the b in seconds.
         """
 
         # Initialize base class

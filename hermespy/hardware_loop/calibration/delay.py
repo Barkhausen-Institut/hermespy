@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-=================
-Delay Calibration
-=================
-"""
 
 from __future__ import annotations
 from time import sleep
@@ -56,17 +51,17 @@ class DelayCalibration(DelayCalibrationBase):
 
         Args:
 
-            device (PhysicalDevice):
+            device:
                 The physical device to calibrate, i.e. the device of which a delay is to be estimated.
 
-            max_delay (float):
+            max_delay:
                 The maximum expected delay which the calibration should compensate for in seconds.
 
-            num_iterations (int, optional):
+            num_iterations:
                 Number of calibration iterations.
                 Default is 10.
 
-            wait (float, optional):
+            wait:
                 Idle time between iteration transmissions in seconds.
                 Zero by default.
 

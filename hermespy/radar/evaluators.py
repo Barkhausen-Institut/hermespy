@@ -106,16 +106,16 @@ class RadarEvaluator(Evaluator, ABC):
     """Bastract base class for evaluating sensing performance.
 
     Inherits from the abstract :class:`Evaluator<hermespy.core.monte_carlo.Evaluator>` base class.
-    Expects the abstract method :meth:`evaluate` as well as the abstract properties
-    :meth:`abbreviation<abbreviation>` and :meth:`title<title>` to be implemented.
+    Expects the abstract method :meth:`evaluate<hermespy.core.monte_carlo.Evaluator.evaluate>` as well as the abstract properties
+    :attr:`abbreviation<hermespy.core.monte_carlo.Evaluator.abbreviation>` and :attr:`title<hermespy.core.monte_carlo.Evaluator.title>` to be implemented.
 
     There are currently three different :class:`RadarEvaluators<.RadarEvaluator>` implemented:
 
     .. toctree::
 
-        radar.evaluators.DetectionProbEvaluator
-        radar.evaluators.ReceiverOperatingCharacteristic
-        radar.evaluators.RootMeanSquareError
+        evaluators.DetectionProbEvaluator
+        evaluators.ReceiverOperatingCharacteristic
+        evaluators.RootMeanSquareError
     """
 
     __receiving_radar: Radar  # Handle to the radar receiver
@@ -136,17 +136,17 @@ class RadarEvaluator(Evaluator, ABC):
         """
         Args:
 
-            receiving_radar (Radar):
+            receiving_radar:
                 Radar detector to be evaluated.
 
-            transmitting_device (SimulatedDevice):
+            transmitting_device:
                 Device transmitting into the evaluated channel.
 
-            receiving_device (SimulatedDevice):
+            receiving_device:
                 Device receiving from the evaluated channel.
                 The `receiving_radar` must be a receive DSP algorithm of this device.
 
-            radar_channel (RadarChannelBase):
+            radar_channel:
                 The radar channel containing the ground truth to be evaluated.
 
         Raises:
@@ -184,7 +184,7 @@ class RadarEvaluator(Evaluator, ABC):
 
         Args:
 
-            reception (RadarReception):
+            reception:
                 Received radar reception.
         """
 
@@ -195,7 +195,7 @@ class RadarEvaluator(Evaluator, ABC):
 
         Args:
 
-            sample (RadarChannelSample):
+            sample:
                 Sampled radar channel realization.
         """
 
@@ -318,14 +318,14 @@ class DetectionProbabilityEvaluation(EvaluationTemplate[bool, ScatterVisualizati
 class DetectionProbEvaluator(Evaluator, Serializable):
     """Estimates the probability of detection for a given radar detector.
 
-    Assumes a successful detection if the :class:`Radar's<hermespy.radar.radar.Radar>` :meth:`reception<hermespy.radar.radar.Radar.reception>` contains a non-empty point cloud.
+    Assumes a successful detection if the :class:`Radar's<hermespy.radar.radar.Radar>` :class:`RadarReception<hermespy.radar.radar.RadarReception>` contains a non-empty point cloud.
     This is the case if the configured :class:`RadarDetector<hermespy.radar.detection.RadarDetector>` made a positive decision
     for any bin within the processed :class:`RadarCube<hermespy.radar.cube.RadarCube>`.
 
     A minimal example within the context of a :class:`Simulation<hermespy.simulation.simulation.Simulation>`
     evaluating the probability of detection for a single radar target illuminated by an :class:`FMCW<hermespy.radar.fmcw.FMCW>` radar would be:
 
-    .. literalinclude:: ../scripts/examples/radar_evaluators_DetectionProbEvaluator.py
+    .. literalinclude:: ../../scripts/examples/radar_evaluators_DetectionProbEvaluator.py
        :language: python
        :linenos:
        :lines: 03-27
@@ -339,7 +339,7 @@ class DetectionProbEvaluator(Evaluator, Serializable):
         """
         Args:
 
-            radar (Radar):
+            radar:
                 Radar detector to be evaluated.
         """
 
@@ -357,7 +357,7 @@ class DetectionProbEvaluator(Evaluator, Serializable):
 
         Args:
 
-            reception (RadarReception):
+            reception:
                 Received radar reception.
         """
 
@@ -410,10 +410,10 @@ class RocArtifact(Artifact):
         """
         Args:
 
-            h0_value (float):
+            h0_value:
                 Measured value for null-hypothesis (H0), i.e., noise only
 
-            h1_value (float):
+            h1_value:
                 Measured value for alternative hypothesis (H1)
 
         """
@@ -445,8 +445,8 @@ class RocEvaluation(Evaluation[PlotVisualization]):
     def __init__(self, cube_h0: RadarCube, cube_h1: RadarCube) -> None:
         """
         Args:
-            cube_h0 (RadarCube): H0 hypothesis radar cube.
-            cube_h1 (RadarCube): H1 hypothesis radar cube.
+            cube_h0: H0 hypothesis radar cube.
+            cube_h1: H1 hypothesis radar cube.
         """
 
         # Initialize base class
@@ -510,16 +510,16 @@ class RocEvaluationResult(EvaluationResult):
         """
         Args:
 
-            detection_probabilities (numpy.ndarray):
+            detection_probabilities:
                 Detection probabilities for each grid point.
 
-            false_alarm_probabilities (numpy.ndarray):
+            false_alarm_probabilities:
                 False alarm probabilities for each grid point.
 
-            grid (Sequence[GridDimension]):
+            grid:
                 Grid dimensions of the evaluation result.
 
-            evaluator (ReceiverOperatingCharacteristic, optional):
+            evaluator:
                 Evaluator that generated the evaluation result.
         """
 
@@ -585,7 +585,7 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
     A minimal example within the context of a :class:`Simulation<hermespy.simulation.simulation.Simulation>`
     evaluating the probability of detection for a single radar target illuminated by an :class:`FMCW<hermespy.radar.fmcw.FMCW>` radar would be:
 
-    .. literalinclude:: ../scripts/examples/radar_evaluators_ReceiverOperatingCharacteristic.py
+    .. literalinclude:: ../../scripts/examples/radar_evaluators_ReceiverOperatingCharacteristic.py
        :language: python
        :linenos:
        :lines: 03-23
@@ -609,13 +609,13 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
         """
         Args:
 
-            radar (Radar):
+            radar:
                 Radar under test.
 
-            radar_channel (RadarChannelBase):
+            radar_channel:
                 Radar channel containing a desired target.
 
-            num_thresholds (int, optional)
+            num_thresholds:
                 Number of different thresholds to be considered in ROC curve
         """
 
@@ -640,7 +640,7 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
 
         Args:
 
-            input (ProcessedSimulatedDeviceInput):
+            input:
                 Newly generated device input.
         """
 
@@ -651,7 +651,7 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
 
         Args:
 
-            output (SimulatedDeviceOutput):
+            output:
                 Newly generated device output.
         """
 
@@ -665,10 +665,10 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
 
         Args:
 
-            h0_reception (RadarReception):
+            h0_reception:
                 Reception missing the target of interest.
 
-            h1_reception (RadarReception):
+            h1_reception:
                 Reception containing the target of interest.
 
         Returns: An initialized :class:`RocEvaluation`.
@@ -741,17 +741,17 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
 
         Args:
 
-            grid (Sequence[GridDimension]):
+            grid:
                 Grid dimensions of the evaluation result.
 
-            artifacts (numpy.ndarray):
+            artifacts:
                 Artifacts of the evaluation result.
 
-            num_thresholds (int, optional):
+            num_thresholds:
                 Number of different thresholds to be considered in ROC curve
                 101 by default.
 
-            evaluator (ReceiverOperatingCharacteristic, optional):
+            evaluator:
                 Evaluator that generated the evaluation result.
 
         Returns: The generated result.
@@ -794,10 +794,10 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
 
         Args:
 
-            grid (Sequence[GridDimension]):
+            grid:
                 Grid dimensions of the evaluation result.
 
-            artifacts (numpy.ndarray):
+            artifacts:
                 Artifacts of the evaluation result.
 
         Returns: The generated result.
@@ -818,25 +818,25 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
 
         Args:
 
-            h0_scenario (Scenario):
+            h0_scenario:
                 Scenario of the null hypothesis.
 
-            h1_scenario (Scenario):
+            h1_scenario:
                 Scenario of the alternative hypothesis.
 
-            num_drops (int):
+            num_drops:
                 Number of drops to be considered in the evaluation.
                 The more drops, the smoother the estimated ROC curve will be.
 
-            h0_operator (Radar, optional):
+            h0_operator:
                 Radar operator of the null hypothesis.
                 If not provided, the first radar operator of the null hypothesis scenario will be used.
 
-            h1_operator (Radar, optional):
+            h1_operator:
                 Radar operator of the alternative hypothesis.
                 If not provided, the first radar operator of the alternative hypothesis scenario will be used.
 
-            num_thresholds (int, optional):
+            num_thresholds:
                 Number of different thresholds to be considered in ROC curve
 
         Returns: The ROC evaluation result.
@@ -1026,22 +1026,22 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
 
         Args:
 
-            file (str | File):
+            file:
                 Savefile containing the measurements.
                 Either as file system location or h5py `File` handle.
 
-            h0_campaign (str, optional):
+            h0_campaign:
                 Campaign identifier of the h0 hypothesis measurements.
                 By default, `h0_measurements` is assumed.
 
-            h1_campaign (str, optional):
+            h1_campaign:
                 Campaign identifier of the h1 hypothesis measurements.
                 By default, `h1_measurements` is assumed.
 
-            num_thresholds (int, optional):
+            num_thresholds:
                 Number of different thresholds to be considered in ROC curve
 
-            backend (SerializationBackend, optional):
+            backend:
                 Serialization backend to be used for the evaluation.
                 By default, `HDF` is assumed.
 
@@ -1081,10 +1081,10 @@ class RootMeanSquareArtifact(Artifact):
         """
         Args:
 
-            num_errors (int):
+            num_errors:
                 Number of errros.
 
-            cummulation (float):
+            cummulation:
                 Sum of squared errors distances.
         """
 
@@ -1153,7 +1153,7 @@ class RootMeanSquareError(RadarEvaluator):
     A minimal example within the context of a :class:`Simulation<hermespy.simulation.simulation.Simulation>`
     evaluating the probability of detection for a single radar target illuminated by an :class:`FMCW<hermespy.radar.fmcw.FMCW>` radar would be:
 
-    .. literalinclude:: ../scripts/examples/radar_evaluators_RootMeanSquareError.py
+    .. literalinclude:: ../../scripts/examples/radar_evaluators_RootMeanSquareError.py
        :language: python
        :linenos:
        :lines: 03-29

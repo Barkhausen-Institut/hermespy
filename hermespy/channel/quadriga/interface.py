@@ -46,18 +46,18 @@ class QuadrigaInterface(RandomNode):
     ) -> None:
         """
         Args:
-            path_quadriga_src (str, optional):
+            path_quadriga_src:
                 Path to the Quadriga Matlab source files.
                 If not specified, the environment variable `HERMES_QUADRIGA` is assumed.
 
-            antenna_kind (str, optional):
+            antenna_kind:
                 Type of antenna considered.
                 Defaults to "omni".
 
-            scenario_label (str, optional):
+            scenario_label:
                 Scenario label.
 
-            seed (int, optional):
+            seed:
                 Random seed.
         """
 
@@ -134,7 +134,7 @@ class QuadrigaInterface(RandomNode):
 
         Args:
 
-            state (ChannelState):
+            state:
                 Physical state of the channel at the time of sampling.
         """
 

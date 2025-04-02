@@ -4,7 +4,7 @@ from __future__ import annotations
 from contextlib import redirect_stdout
 from logging import getLogger, Logger
 from os import devnull
-from typing import Optional, Any
+from typing import Any
 
 
 import numpy as np
@@ -36,15 +36,15 @@ class QuadrigaOctaveInterface(QuadrigaInterface):  # pragma: no cover
     __octave: Oct2Py
     __logger: Logger
 
-    def __init__(self, octave_bin: Optional[str] = None, **kwargs: Any) -> None:
+    def __init__(self, octave_bin: str | None = None, **kwargs: Any) -> None:
         """Quadriga Octave interface object initialization.
 
         Args:
 
-            octave_bin (str, optional):
+            octave_bin:
                 Path to the octave cli executable.
 
-            kwargs (Any):
+            \*\*kwargs:
                 Interface arguments.
         """
 

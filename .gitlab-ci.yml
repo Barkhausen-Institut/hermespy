@@ -161,6 +161,15 @@ Type Checking:
   script:
     - mypy
 
+Documentation:
+  stage: lint
+  before_script:
+    - apt -qq update && apt-get -qq install -y octave portaudio19-dev python-dev-is-python3 pandoc graphviz  # remove for docker
+    - pip install -qq dist/$HERMES_WHEEL_11\[documentation,quadriga,uhd,audio,sionna,scapy\]
+  script:
+    - let "N_PROC = $(grep -c ^processor /proc/cpuinfo)"  # Count the number of available processor cores
+    - sphinx-build -W -j $N_PROC ./docssource/ ./documentation/
+
 pages:
   stage: deploy
   only:
