@@ -53,18 +53,10 @@ class QuadrigaChannelSample(ChannelSample):
     ) -> None:
         """
         Args:
-
-            path_gains (numpy.ndarray):
-                Path gains.
-
-            path_delays (numpy.ndarray):
-                Path delays.
-
-            gain (float):
-                Channel gain.
-
-            state (ChannelState):
-                Channel state at which the sample was generated.
+            path_gains: Path gains.
+            path_delays: Path delays.
+            gain: Channel gain.
+            state: Channel state at which the sample was generated.
         """
 
         # Initialize base class
@@ -151,14 +143,9 @@ class QuadrigaChannelRealization(ChannelRealization[QuadrigaChannelSample]):
         """
         Args:
 
-            quadriga_interface (QuadrigaInterface):
-                Interface to the Quadriga channel model.
-
-            sample_hooks (Set[ChannelSampleHook[QuadrigaChannelSample]]):
-                Hooks to be called when a new sample is generated.
-
-            gain (float):
-                Linear channel power gain factor.
+            quadriga_interface: Interface to the Quadriga channel model.
+            sample_hooks: Hooks to be called when a new sample is generated.
+            gain: Linear channel power gain factor.
         """
 
         # Initialize base class
@@ -192,7 +179,7 @@ class QuadrigaChannelRealization(ChannelRealization[QuadrigaChannelSample]):
 class QuadrigaChannel(Channel[QuadrigaChannelRealization, QuadrigaChannelSample]):
     """Quadriga Channel Model.
 
-    Maps the output of the :class:`QuadrigaInterface<hermespy.channel.quadriga_interface.QuadrigaInterface>` to fit into Hermes' software architecture.
+    Maps the output of the selected interface to fit into Hermes' software architecture.
     """
 
     __interface: QuadrigaInterface | None  # Reference to the interface class
@@ -205,15 +192,12 @@ class QuadrigaChannel(Channel[QuadrigaChannelRealization, QuadrigaChannelSample]
     ) -> None:
         """
         Args:
-
-            interface (QuadrigaInterface, optional):
+            interface:
                 Specifies the consisdered Quadriga interface.
-
-            gain (float, optional):
+            gain:
                 Linear channel power gain factor.
                 :math:`1.0` by default.
-
-            seed (int, optional):
+            seed:
                 Seed used to initialize the pseudo-random number generator.
         """
 

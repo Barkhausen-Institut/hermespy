@@ -61,11 +61,11 @@ class Antenna(ABC, Generic[APT], Transformable):
         """
         Args:
 
-            mode (AntennaMode, optional):
+            mode:
                 Antenna's mode of operation.
                 By default, a full duplex antenna is assumed.
 
-            pose (Transformation, optional):
+            pose:
                 The antenna's position and orientation with respect to its array.
         """
 
@@ -152,10 +152,10 @@ class Antenna(ABC, Generic[APT], Transformable):
 
         Args:
 
-            azimuth (float):
+            azimuth:
                 Considered horizontal wave angle in radians :math:`\\phi`.
 
-            elevation (float):
+            elevation:
                 Considered vertical wave angle in radians :math:`\\theta`.
 
         Returns:
@@ -170,7 +170,7 @@ class Antenna(ABC, Generic[APT], Transformable):
 
         Args:
 
-            global_direction (Direction):
+            global_direction:
                 Cartesian direction unit vector of interest.
 
         Returns:
@@ -244,7 +244,7 @@ class Antenna(ABC, Generic[APT], Transformable):
 
         Args:
 
-            angle_resolution (int, optional):
+            angle_resolution:
                 Resolution of the polarization visualization.
 
 
@@ -339,7 +339,7 @@ class Antenna(ABC, Generic[APT], Transformable):
 
         Args:
 
-            angle_resolution (int, optional):
+            angle_resolution:
                 Resolution of the polarization visualization.
 
 
@@ -448,11 +448,11 @@ class IdealAntenna(Generic[APT], Antenna[APT], Serializable):
         """
         Args:
 
-            mode (AntennaMode, optional):
+            mode:
                 Antenna's mode of operation.
                 By default, a full duplex antenna is assumed.
 
-            pose (Transformation, optional):
+            pose:
                 The antenna's position and orientation with respect to its array.
         """
 
@@ -502,18 +502,18 @@ class LinearAntenna(Generic[APT], Antenna[APT], Serializable):
 
         Args:
 
-            mode (AntennaMode, optional):
+            mode:
                 Antenna's mode of operation.
                 By default, a full duplex antenna is assumed.
 
-            mode (AntennaMode, optional):
+            mode:
                 Antenna's mode of operation.
                 By default, a full duplex antenna is assumed.
 
-            slant (float):
+            slant:
                 Slant of the antenna in radians.
 
-            pose (Transformation, optional):
+            pose:
                 Pose of the antenna.
         """
 
@@ -569,11 +569,11 @@ class PatchAntenna(Generic[APT], Antenna[APT], Serializable):
         """
         Args:
 
-            mode (AntennaMode, optional):
+            mode:
                 Antenna's mode of operation.
                 By default, a full duplex antenna is assumed.
 
-            pose (Transformation, optional):
+            pose:
                 The antenna's position and orientation with respect to its array.
         """
 
@@ -623,11 +623,11 @@ class Dipole(Generic[APT], Antenna[APT], Serializable):
         """
         Args:
 
-            mode (AntennaMode, optional):
+            mode:
                 Antenna's mode of operation.
                 By default, a full duplex antenna is assumed.
 
-            pose (Transformation, optional):
+            pose:
                 The antenna's position and orientation with respect to its array.
         """
 
@@ -669,14 +669,14 @@ class AntennaPort(Generic[AT, AAT], Transformable, Serializable):
         """
         Args:
 
-            antennas (Sequence[AT], optional):
+            antennas:
                 Sequence of antennas to be connected to this port.
                 If not specified, no antennas are connected by default.
 
-            pose (Transformation, optional):
+            pose:
                 The antenna port's position and orientation with respect to its array.
 
-            array (AAT, optional):
+            array:
                 Antenna array this port belongs to.
         """
 
@@ -732,7 +732,7 @@ class AntennaPort(Generic[AT, AAT], Transformable, Serializable):
 
         Args:
 
-            antenna (AT):
+            antenna:
                 The antenna to be added.
 
         Raises:
@@ -757,7 +757,7 @@ class AntennaPort(Generic[AT, AAT], Transformable, Serializable):
 
         Args:
 
-            antenna (AT):
+            antenna:
                 The antenna to be removed.
         """
 
@@ -949,7 +949,6 @@ class AntennaArrayBase(ABC, Generic[APT], Transformable):
         of each transmitting antenna element within the local coordinate system.
 
         Returns:
-
             :math:`M_{\\mathrm{Tx}} \\times 3`
             topology matrix, where :math:`M_{\\mathrm{Tx}}` is the number of antenna elements.
         """
@@ -972,7 +971,6 @@ class AntennaArrayBase(ABC, Generic[APT], Transformable):
         of each receiving antenna element within the local coordinate system.
 
         Returns:
-
             :math:`M_{\\mathrm{Rx}} \\times 3` topology matrix,
             where :math:`M_{\\mathrm{Rx}}` is the number of antenna elements.
         """
@@ -991,17 +989,13 @@ class AntennaArrayBase(ABC, Generic[APT], Transformable):
         """Topology of antenna elements of a certain mode.
 
         Args:
-
-            mode (AntennaMode):
-                Antenna mode of interest.
+            mode:  Antenna mode of interest.
 
         Returns:
-
             :math:`M \\times 3` topology matrix,
             where :math:`M` is the number of antenna elements.
 
         Raises:
-
             ValueError: If an unknown antenna mode is encountered.
         """
 
@@ -1024,20 +1018,14 @@ class AntennaArrayBase(ABC, Generic[APT], Transformable):
         """Sensor array characteristics towards a certain angle.
 
         Args:
-
-            location (numpy.ndarray):
-                Cartesian position of the target of interest.
-
-            mode (AntennaMode):
-                Antenna mode of interest.
-
+            location: Cartesian position of the target of interest.
+            mode: Antenna mode of interest.
             frame(Literal['local', 'global']):
                 Coordinate system reference frame.
                 `local` assumes `location` to be in the antenna array's native coordiante system.
                 `global` assumes `location` and `azimuth` to be in the antenna array's root coordinate system.
 
         Returns:
-
             :math:`M \\times 2` topology matrix,
             where :math:`M` is the number of antenna elements.
         """
@@ -1050,20 +1038,14 @@ class AntennaArrayBase(ABC, Generic[APT], Transformable):
         """Sensor array polarizations towards a certain angle.
 
         Args:
-
-            direction (Direction):
-                Direction of the angles of interest.
-
-            mode (AntennaMode):
-                Antenna mode of interest.
-
+            direction: Direction of the angles of interest.
+            mode: Antenna mode of interest.
             frame(Literal['local', 'global']):
                 Coordinate system reference frame.
                 `local` assumes `direction` to be in the antenna array's native coordiante system.
                 `global` assumes `direction` to be in the antenna array's root coordinate system.
 
         Returns:
-
             :math:`M \\times 2` topology matrix,
             where :math:`M` is the number of antenna elements.
         """
@@ -1114,14 +1096,11 @@ class AntennaArrayBase(ABC, Generic[APT], Transformable):
         """Plot a scatter representation of the array topology.
 
         Args:
-
-            mode (AntennaMode, optional):
+            mode:
                 Antenna mode of interest.
                 `DUPLEX` by default, meaning that all antenna elements are considered.
 
-        Returns:
-            plt.Figure:
-                The created figure.
+        Returns: The created figure.
         """
 
         with Executable.style_context():
@@ -1185,29 +1164,27 @@ class AntennaArrayBase(ABC, Generic[APT], Transformable):
 
         Args:
 
-            carrier_frequency (float):
+            carrier_frequency:
                 Center frequency :math:`f_\\mathrm{c}` of the assumed transmitted signal in Hz.
 
-            position (numpy.ndarray):
+            position:
                 Cartesian location :math:`\\mathbf{t}` of the impinging target.
 
-            frame (Literal['local', 'global']):
+            frame:
                 Coordinate system reference frame.
                 `local` by default.
                 `local` assumes `position` to be in the antenna array's native coordiante system.
                 `global` assumes `position` to be in the antenna array's root coordinate system.
 
-            mode (AntennaMode, optional):
+            mode:
                 Antenna mode of interest.
                 `DUPLEX` by default, meaning that all antenna elements are considered.
 
         Returns:
-
             The sensor array response vector :math:`\\mathbf{a}`.
             A one-dimensional, complex-valued numpy array modeling the phase responses of each antenna element.
 
         Raises:
-
             ValueError: If `position` is not a cartesian vector.
         """
 
@@ -1242,10 +1219,10 @@ class AntennaArrayBase(ABC, Generic[APT], Transformable):
 
         Args:
 
-            carrier_frequency (float):
+            carrier_frequency:
                 Center frequency :math:`f_\\mathrm{c}` of the assumed transmitted signal in Hz.
 
-            position (numpy.ndarray):
+            position:
                 Cartesian location :math:`\\mathbf{t}` of the impinging target.
 
             frame(Literal['local', 'global']):
@@ -1254,17 +1231,15 @@ class AntennaArrayBase(ABC, Generic[APT], Transformable):
                 `local` assumes `position` to be in the antenna array's native coordiante system.
                 `global` assumes `position` to be in the antenna array's root coordinate system.
 
-            mode (AntennaMode, optional):
+            mode:
                 Antenna mode of interest.
                 `DUPLEX` by default, meaning that all antenna elements are considered.
 
         Returns:
-
             The sensor array response matrix :math:`\\mathbf{A} \\in \\mathbb{C}^{M \\times 2}`.
             A one-dimensional, complex-valued numpy matrix modeling the far-field charactersitics of each antenna element.
 
         Raises:
-
             ValueError: If `position` is not a cartesian vector.
         """
 
@@ -1319,21 +1294,20 @@ class AntennaArrayBase(ABC, Generic[APT], Transformable):
 
         Args:
 
-            carrier_frequency (float):
+            carrier_frequency:
                 Center frequency :math:`f_\\mathrm{c}` of the assumed transmitted signal in Hz.
 
-            azimuth (float):
+            azimuth:
                 Azimuth angle :math:`\\phi` in radians.
 
-            elevation (float):
+            elevation:
                 Elevation angle :math:`\\theta` in radians.
 
-            mode (AntennaMode, optional):
+            mode:
                 Antenna mode of interest.
                 `DUPLEX` by default, meaning that all antenna elements are considered.
 
         Returns:
-
             The sensor array response vector :math:`\\mathbf{a}`.
             A one-dimensional, complex-valued numpy array modeling the phase responses of each antenna element.
 
@@ -1391,21 +1365,20 @@ class AntennaArrayBase(ABC, Generic[APT], Transformable):
 
         Args:
 
-            carrier_frequency (float):
+            carrier_frequency:
                 Center frequency :math:`f_\\mathrm{c}` of the assumed transmitted signal in Hz.
 
-            azimuth (float):
+            azimuth:
                 Azimuth angle :math:`\\phi` in radians.
 
-            zenith (float):
+            zenith:
                 Zenith angle :math:`\\theta` in radians.
 
-            mode (AntennaMode, optional):
+            mode:
                 Antenna mode of interest.
                 `DUPLEX` by default, meaning that all antenna elements are considered.
 
         Returns:
-
             The sensor array response vector :math:`\\mathbf{a}`.
             A one-dimensional, complex-valued numpy array modeling the phase responses of each antenna element.
 
@@ -1437,12 +1410,8 @@ class AntennaArrayState(Sequence, AntennaArrayBase):
     def __init__(self, ports: Sequence[AntennaPort], global_pose: Transformation) -> None:
         """
         Args:
-
-            ports (Sequence[AntennaPort]):
-                Physical ports of the represented antenna array.
-
-            global_pose (Transformation):
-                Global pose of the represented antenna array.
+            ports: Physical ports of the represented antenna array.
+            global_pose: Global pose of the represented antenna array.
         """
 
         # Initialize base class
@@ -1487,12 +1456,8 @@ class AntennaArrayState(Sequence, AntennaArrayBase):
         Depending on the selected `AntennaMode`, the provided `indices` refer to ports only transmitting, receiving, or both.
 
         Args:
-
-            indices (int | slice | Sequence[int]):
-                Index or slice of the antenna ports to be considered.
-
-            mode (AntennaMode, optional):
-                The modes of the ports to be selected.
+            indices: Index or slice of the antenna ports to be considered.
+            mode: The modes of the ports to be selected.
 
         Returns: The subset of the antenna array state.
         """
@@ -1549,7 +1514,7 @@ class AntennaArray(AntennaArrayBase[APT], Generic[APT, AT]):
         """
         Args:
 
-            pose (Transformation, optional):
+            pose:
                 The antenna array's position and orientation with respect to its device.
                 If not specified, the same orientation and position as the device is assumed.
         """
@@ -1587,14 +1552,11 @@ class AntennaArray(AntennaArrayBase[APT], Generic[APT, AT]):
         """Count the number of antenna elements within a subset of ports.
 
         Args:
-
-            ports (Sequence[int]):
-                Indices of the ports to be considered.
+            ports: Indices of the ports to be considered.
 
         Returns: Number of antenna elements within the specified ports.
 
         Raises:
-
             IndexError: If an invalid port index is encountered.
         """
 
@@ -1608,14 +1570,11 @@ class AntennaArray(AntennaArrayBase[APT], Generic[APT, AT]):
         """Count the number of transmitting antenna elements within a subset of ports.
 
         Args:
-
-            ports (Sequence[int]):
-                Indices of the ports to be considered.
+            ports: Indices of the ports to be considered.
 
         Returns: Number of transmitting antenna elements within the specified ports.
 
         Raises:
-
             IndexError: If an invalid port index is encountered.
         """
 
@@ -1629,14 +1588,11 @@ class AntennaArray(AntennaArrayBase[APT], Generic[APT, AT]):
         """Count the number of receiving antenna elements within a subset of ports.
 
         Args:
-
-            ports (Sequence[int]):
-                Indices of the ports to be considered.
+            ports: Indices of the ports to be considered.
 
         Returns: Number of receiving antenna elements within the specified ports.
 
         Raises:
-
             IndexError: If an invalid port index is encountered.
         """
 
@@ -1680,9 +1636,7 @@ class AntennaArray(AntennaArrayBase[APT], Generic[APT, AT]):
         """Return the current state of the antenna array.
 
         Args:
-
-            base_pose (Transformation):
-                Assumed pose of the antenna array's base coordinate frame.
+            base_pose: Assumed pose of the antenna array's base coordinate frame.
 
         Returns: The current immutable state of the antenna array.
         """
@@ -1712,17 +1666,17 @@ class UniformArray(Generic[APT, AT], AntennaArray[APT, AT], Serializable):
         """
         Args:
 
-            element (Type[AT] | AT | APT):
+            element:
                 The element uniformly repeated across the array.
                 If an antenna is passed instead of a port, a new port is automatically created.
 
-            spacing (float):
+            spacing:
                 Spacing between the elements in m.
 
-            dimensions (Sequence[int]):
+            dimensions:
                 The number of elements in x-, y-, and z-dimension.
 
-            pose (Tranformation, optional):
+            pose:
                 The anntena array's transformation with respect to its device.
         """
 
@@ -1784,12 +1738,10 @@ class UniformArray(Generic[APT, AT], AntennaArray[APT, AT], Serializable):
     def spacing(self) -> float:
         """Spacing between the antenna elements.
 
-        Returns:
-            float: Spacing in m.
+        Returns: Spacing in m.
 
         Raises:
-            ValueError:
-                If `spacing` is less or equal to zero.
+            ValueError: If `spacing` is less or equal to zero.
         """
 
         return self.__spacing
@@ -1808,10 +1760,7 @@ class UniformArray(Generic[APT, AT], AntennaArray[APT, AT], Serializable):
 
     @property
     def dimensions(self) -> Tuple[int, ...]:
-        """Number of antennas in x-, y-, and z-dimension.
-
-        Returns: Number of antennas in each direction.
-        """
+        """Number of antennas in x-, y-, and z-dimension."""
 
         return self.__dimensions
 
@@ -1871,12 +1820,12 @@ class CustomAntennaArray(Generic[APT, AT], AntennaArray[APT, AT], Serializable):
         """
         Args:
 
-            ports (Sequence[APT | AT], optional):
+            ports:
                 Sequence of antenna ports available within this array.
                 If antennas are passed instead of ports, the ports are automatically created.
                 If not specified, an empty array is assumed.
 
-            pose (Transformation, optional):
+            pose:
                 The anntena array's transformation with respect to its device.
 
         Raises:
@@ -1908,7 +1857,7 @@ class CustomAntennaArray(Generic[APT, AT], AntennaArray[APT, AT], Serializable):
 
         Args:
 
-            port (APT):
+            port:
                 The antenna port to be added.
         """
 
@@ -1925,7 +1874,7 @@ class CustomAntennaArray(Generic[APT, AT], AntennaArray[APT, AT], Serializable):
 
         Args:
 
-            port (APT):
+            port:
                 The antenna port to be removed.
 
         Raises:
@@ -1948,7 +1897,7 @@ class CustomAntennaArray(Generic[APT, AT], AntennaArray[APT, AT], Serializable):
 
         Args:
 
-            antenna (AT):
+            antenna:
                 The antenna element to be added.
 
         Raises:

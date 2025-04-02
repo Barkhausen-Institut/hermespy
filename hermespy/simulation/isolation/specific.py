@@ -39,8 +39,8 @@ class SpecificIsolation(ScalarDimension, Isolation):
         """
 
         Args:
-            isolation (numpy.ndarray | float | int, optional): Linear isolation power scales between transmit and receive chains. Defaults to None.
-            device (SimulatedDevice, optional): The device to which the isolation applies.
+            isolation: Linear isolation power scales between transmit and receive chains. Defaults to None.
+            device: The device to which the isolation applies.
         """
 
         # Initialize base class

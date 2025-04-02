@@ -9,7 +9,6 @@ Implementations of basic maths equations.
 """
 
 from enum import Enum
-from typing import Optional
 
 import numpy as np
 from scipy import stats
@@ -35,18 +34,18 @@ class DbConversionType(Enum):
 
 @jit(nopython=True)
 def db2lin(
-    db_val: float, conversion_type: Optional[DbConversionType] = DbConversionType.POWER
+    db_val: float, conversion_type: DbConversionType | None = DbConversionType.POWER
 ):  # pragma: no cover
     """
     Converts from dB to linear
 
     Args:
-        db_val (float): value in dB
-        conversion_type (DbConversionType, optional): if POWER then it converts from dB to a power ratio
+        db_val: value in dB
+        conversion_type: if POWER then it converts from dB to a power ratio
                                                       if AMPLITUDE, then it converts from dB to an amplitude ratio
                                                       default = POWER
     Returns:
-        (float): the equivalent value in linear scale
+       : the equivalent value in linear scale
     """
     if conversion_type == DbConversionType.POWER:
         output = 10 ** (db_val / 10)
@@ -60,18 +59,17 @@ def db2lin(
 
 @jit(nopython=True)
 def lin2db(
-    val: float, conversion_type: Optional[DbConversionType] = DbConversionType.POWER
+    val: float, conversion_type: DbConversionType | None = DbConversionType.POWER
 ):  # pragma: no cover
     """
     Converts from linear to dB
 
     Args:
-        val (float): value in linear scale
-        conversion_type (DbConversionType, optional): if POWER then it converts from a power ratio to dB
+        val: value in linear scale
+        conversion_type: if POWER then it converts from a power ratio to dB
                                                       if AMPLITUDE, then it converts from an amplitude ratio to dB
                                                       default = POWER
-    Returns:
-        (float) the equivalent value in linear scale
+    Returns: Zhe equivalent value in linear scale
     """
     if conversion_type == DbConversionType.POWER:
         output = 10 * np.log10(val)
@@ -83,18 +81,17 @@ def lin2db(
     return output
 
 
-def marcum_q(a: float, b: np.ndarray, m: Optional[float] = 1):
+def marcum_q(a: float, b: np.ndarray, m: float = 1.0):
     """Calculates the Marcum-Q function Q_m(a, b)
 
     This method uses the relationship between Marcum-Q function and the chi-squared distribution.
 
     Args:
-        a (float):
-        b (np.array):
-        m (float):
+        a:
+        b:
+        m:
 
-    Returns:
-        (numpy.ndarray): the approximated Marcum-Q function for the desired parameters
+    Returns: The approximated Marcum-Q function for the desired parameters
     """
 
     q = stats.ncx2.sf(b**2, 2 * m, a**2)
@@ -114,10 +111,10 @@ def amplitude_path_loss(carrier_frequency: float, distance: float) -> float:
 
     Args:
 
-        carrier_frequency (float):
+        carrier_frequency:
             The wave's carrier frequency in Hz.
 
-        distance (float):
+        distance:
             The traveled distance in m.
 
     Raises:

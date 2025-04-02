@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-====
-Drop
-====
-"""
 
 from __future__ import annotations
 from collections.abc import Sequence

@@ -31,7 +31,7 @@ class Direction(np.ndarray):
 
         Args:
 
-            angles (numpy.ndarray):
+            angles:
                 Azimuth and zenith in radians.
 
         Returns: The unit vector.
@@ -49,11 +49,11 @@ class Direction(np.ndarray):
 
         Args:
 
-            azimuth (float):
+            azimuth:
                 Azimuth angle in radians.
 
 
-            zenith (float):
+            zenith:
                 Zenith angle in radians.
 
         Returns: The initialized direction.
@@ -68,8 +68,7 @@ class Direction(np.ndarray):
 
         Args:
 
-            unit_vector (numpy.ndarray):
-                Cartesian numpy vector.
+            unit_vector: Cartesian numpy vector.
 
         Returns: An array representing azimuth and zenith angles in radians.
         """
@@ -168,12 +167,8 @@ class Transformation(np.ndarray, Serializable):
         """Calculate a rotation matrix from a quaternion.
 
         Args:
-
-            q (numpy.ndarray):
-                Quaternion in w, x, y, z representation.
-
-            normalize (bool):
-                Normalize the quaternion before computing the rotation matrix.
+            q: Quaternion in w, x, y, z representation.
+            normalize: Normalize the quaternion before computing the rotation matrix.
 
         Returns: A :math:`3 \\times 3` numpy matrix representing the rotation.
         """
@@ -271,13 +266,9 @@ class Transformation(np.ndarray, Serializable):
         """Calculate a rotation matrix from roll pitch yaw angles.
 
         Args:
+            rpy: Numpy vector of length 3 representing roll pitch and yaw in radians.
 
-            rpy (numpy.ndarray):
-                Numpy vector of length 3 representing roll pitch and yaw in radians.
-
-        Returns:
-
-            A :math:`3 \\times 3` numpy matrix representing the rotation.
+        Returns:  A :math:`3 \\times 3` numpy matrix representing the rotation.
         """
 
         # Compute rotational transformation portion
@@ -312,14 +303,9 @@ class Transformation(np.ndarray, Serializable):
         """Initialize a transformation from a quaternion.
 
         Args:
-
-            quaternion (numpy.ndarray):
-                Quaternion in w, x, y, z representation.
-
-            pos (numpy.ndarray):
-                Cartesian position in m.
-
-            normalize (bool, optional):
+            quaternion: Quaternion in w, x, y, z representation.
+            pos: Cartesian position in m.
+            normalize:
                 Normalize the quaternion before computing the rotation matrix.
                 Enabled by default.
 
@@ -348,12 +334,8 @@ class Transformation(np.ndarray, Serializable):
         """Initialize a transformation from roll pitch yaw angles.
 
         Args:
-
-            rpy (numpy.ndarray):
-                Roll, pitch and yaw angles in radians.
-
-            pos (numpy.ndarray):
-                Cartesian position in m.
+            rpy: Roll, pitch and yaw angles in radians.
+            pos: Cartesian position in m.
 
         Returns: The initialized transformation.
         """
@@ -394,14 +376,11 @@ class Transformation(np.ndarray, Serializable):
         """Transform a cartesian position.
 
         Args:
-
-            position (numpy.ndarray):
-                Numpy array representing the cartesian position.
+            position: Numpy array representing the cartesian position.
 
         Returns: The transformed position.
 
         Raises:
-
             ValueError: If `position` is invalid.
         """
 
@@ -421,14 +400,11 @@ class Transformation(np.ndarray, Serializable):
         """Rotate a cartesian direction.
 
         Args:
-
-            direction (numpy.ndarray):
-                A directional vector.
+            direction: A directional vector.
 
         Returns: The transformed direction.
 
         Raises:
-
             ValueError: If `direction` is invalid.
         """
 
@@ -444,11 +420,8 @@ class Transformation(np.ndarray, Serializable):
         """Transform a direction.
 
         Args:
-
-            direction (numpy.ndarray):
-                Direction to be transformed.
-
-            normalize (bool, optional):
+            direction: Direction to be transformed.
+            normalize:
                 Normalize the resulting transformed direction to a unit norm vector.
                 Disabled by default.
 
@@ -473,16 +446,15 @@ class Transformation(np.ndarray, Serializable):
         """Rotate and loook at the given coordinates. Modifies `orientation` property.
 
         Args:
-            target (numpy.ndarray):
+            target:
                 Cartesean coordinates to look at.
                 Defaults to np.array([0., 0., 0.], float)
-            up (numpy.ndarray):
+            up:
                 Global catesean sky vector.
                 Defines the upward direction of the local viewport.
                 Defaults to np.array([0., 1., 0.], float)
 
-        Returns:
-            self (Transformation): This modified Transformation.
+        Returns: This modified Transformation.
         """
 
         # Validate arguments
@@ -553,8 +525,7 @@ class TransformableLink(metaclass=ABCMeta):
         """Set the relative base coordinate frame of this link.
 
         Args:
-
-            base (TransformableLink | None):
+            base:
                 The base to be coordinate frame to be set.
                 `None` to detach the link.
         """
@@ -568,9 +539,7 @@ class TransformableLink(metaclass=ABCMeta):
         """Establish a new link to a coordinate frame depending on this frame.
 
         Args:
-
-            link (Transformable):
-                The transformable frame to be registered.
+            link:  The transformable frame to be registered.
         """
 
         self.__linked_frames.add(link)
@@ -580,17 +549,11 @@ class TransformableLink(metaclass=ABCMeta):
         """Remove an established link to this coordinate frame.
 
         Args:
-
-            link (Transformable):
-                The coordinate frame to be linked to this frame.
-
-            force_removal(bool, optional):
-                Raise a RuntimeError if the link is not registered
+            link: The coordinate frame to be linked to this frame.
+            force_removal: Raise a RuntimeError if the link is not registered
 
         Raises:
-
-            RuntimeError:
-                If the `link` is not currently registerd and `force_removal` is enabled.
+            RuntimeError: If the `link` is not currently registerd and `force_removal` is enabled.
         """
 
         if link not in self.__linked_frames:
@@ -631,9 +594,9 @@ class Transformable(Serializable, TransformableLink):
         """
         Args:
 
-            pose (Transformation, optional):
+            pose:
                 Transformation of the transformable with respect to its reference frame.
-                By default, no transformation is considered, i.e. :meth:`Transformation.No`
+                By default, no transformation is considered.
         """
 
         # Init base class
@@ -644,15 +607,11 @@ class Transformable(Serializable, TransformableLink):
 
     @property
     def position(self) -> np.ndarray:
-        """Position of the Transformable.
+        """Position of the transformable.
 
-        Cartesian offset to the reference coordinate frame.
-
-        Returns:
-            Cartesian position x, y, z in m.
+        Cartesian x, y, z offset to the reference coordinate frame in m.
 
         Raises:
-
             ValueError: If `position` is not a valid three-dimensional vector.
         """
 
@@ -677,10 +636,9 @@ class Transformable(Serializable, TransformableLink):
     def orientation(self) -> np.ndarray:
         """Orientation of the Transformable.
 
-        Returns: The transformation in radians for roll, pitch and yaw.
+        The transformation in radians for roll, pitch and yaw.
 
         Raises:
-
             ValueError: If `orientation` is not a three-dimensional numpy vector.
         """
 
@@ -711,7 +669,7 @@ class Transformable(Serializable, TransformableLink):
     def global_position(self) -> np.ndarray:
         """Position of the represented object within the global coordinate system.
 
-        Returns: Three-dimensional numpy vector representing the cartesian object coordinates.
+        Three-dimensional numpy vector representing the cartesian object coordinates.
         """
 
         return self.forwards_transformation.translation
@@ -720,26 +678,20 @@ class Transformable(Serializable, TransformableLink):
     def global_orientation(self) -> np.ndarray:
         """Orientation of the represented object within the global coordinate system.
 
-        Returns: Three-dimensional numpy vector representing roll, pitch and yaw in radians.
+        Three-dimensional numpy vector representing roll, pitch and yaw in radians.
         """
 
         return self.forwards_transformation.rotation_rpy
 
     @property
     def is_base(self) -> bool:
-        """Is this transformable acting as a base frame?
-
-        Returns: Boolean indicator.
-        """
+        """Is this transformable acting as a base frame?"""
 
         return self.__base is None
 
     @property
     def pose(self) -> Transformation:
-        """Pose of the Transformable with respect to its reference link.
-
-        Returns: The pose's transformation.
-        """
+        """Pose of the Transformable with respect to its reference link"""
 
         return self.__pose
 
@@ -807,13 +759,13 @@ class Transformable(Serializable, TransformableLink):
         """Rotate and loook at the given coordinates. Modifies `orientation` property.
 
         Args:
-            target (numpy.ndarray):
+            target:
                 Cartesean coordinates to look at.
-                Defaults to np.ndarray([0., 0., 0.], float).
-            up (array of 3 numbers):
+                Defaults to numpy.ndarray([0., 0., 0.], float).
+            up:
                 Global catesean sky vector.
                 Defines the upward direction of the local viewport.
-                Defaults to np.ndarray([0., 1., 0.], float).
+                Defaults to numpy.ndarray([0., 1., 0.], float).
         """
 
         self.pose.lookat(target, up)

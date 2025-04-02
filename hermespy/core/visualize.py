@@ -39,11 +39,11 @@ class Visualization(ABC):
         """
         Args:
 
-            figure (plt.FigureBase | None):
+            figure:
                 The figure containing the plot.
                 May be :py:obj:`None` if the figure is unknown or unavailable.
 
-            axes (VAT):
+            axes:
                 The individual axes contained within the figure.
                 A numpy object array of shape (nrows, ncols) containing matplotlib axes.
         """
@@ -85,14 +85,14 @@ class PlotVisualization(Visualization):
         """
         Args:
 
-            figure (plt.FigureBase):
+            figure:
                 The figure containing the plot.
 
-            axes (VAT):
+            axes:
                 The individual axes contained within the figure.
                 A numpy object array of shape (nrows, ncols) containing matplotlib axes.
 
-            lines (VLT):
+            lines:
                 The lines contained within the axes.
                 A numpy object array of shape (nrows, ncols) containing matplotlib lines for each axis.
         """
@@ -125,15 +125,15 @@ class StemVisualization(Visualization):
         """
         Args:
 
-            figure (plt.FigureBase | None):
+            figure:
                 The figure containing the plot.
                 May be :py:obj:`None` if the figure is unknown or unavailable.
 
-            axes (VAT):
+            axes:
                 The individual axes contained within the figure.
                 A numpy object array of shape (nrows, ncols) containing matplotlib axes.
 
-            container (StemContainer):
+            container:
                 The container containing the stem plot.
         """
 
@@ -159,15 +159,15 @@ class ScatterVisualization(Visualization):
         """
         Args:
 
-            figure (plt.FigureBase | None):
+            figure:
                 The figure containing the plot.
                 May be :py:obj:`None` if the figure is unknown or unavailable.
 
-            axes (VAT):
+            axes:
                 The individual axes contained within the figure.
                 A numpy object array of shape (nrows, ncols) containing matplotlib axes.
 
-            paths (PathCollection):
+            paths:
                 The path collection representing the scatter plot.
         """
 
@@ -193,14 +193,14 @@ class ImageVisualization(Visualization):
         """
         Args:
 
-            figure (plt.FigureBase):
+            figure:
                 The figure containing the plot.
 
-            axes (VAT):
+            axes:
                 The individual axes contained within the figure.
                 A numpy object array of shape (nrows, ncols) containing matplotlib axes.
 
-            image (AxesImage):
+            image:
                 The axes image representing the image plot.
         """
 
@@ -226,14 +226,14 @@ class QuadMeshVisualization(Visualization):
         """
         Args:
 
-            figure (plt.FigureBase):
+            figure:
                 The figure containing the plot.
 
-            axes (VAT):
+            axes:
                 The individual axes contained within the figure.
                 A numpy object array of shape (nrows, ncols) containing matplotlib axes.
 
-            mesh (QuadMesh):
+            mesh:
                 The quad mesh representing the image plot.
         """
 
@@ -302,11 +302,11 @@ class Visualizable(Generic[VT], ABC):
 
         Args:
 
-            figure (plt.FigureBase):
+            figure:
                 Figure to which the `axes` belong.
                 If unknown or unavailable, :py:obj:`None` is passed.
 
-            axes (VAT):
+            axes:
                 Axes to plot into.
                 The dimensions must match the result of :meth:`Visualizable._axes_dimensions`.
 
@@ -324,11 +324,11 @@ class Visualizable(Generic[VT], ABC):
 
         Args:
 
-            axes (VAT | plt.Axes, optional):
+            axes:
                 The Matplotlib axes object into which the information should be plotted.
                 If not specified, the routine will generate and return a new figure.
 
-            title (str, optional):
+            title:
                 Title of the generated plot.
                 If not specified, :attr:`Visualizable.title` will be applied.
 
@@ -358,7 +358,7 @@ class Visualizable(Generic[VT], ABC):
 
         Args:
 
-            visualization (VT, optional):
+            visualization:
                 The visualization to update.
                 If not specified, the most recent visualization will be updated.
 
@@ -390,11 +390,11 @@ class VisualizableAttribute(Generic[VT], Visualizable[VT]):
 
         Args:
 
-            axes (VAT, optional):
+            axes:
                 The Matplotlib axes object into which the information should be plotted.
                 If not specified, the routine will generate and return a new figure.
 
-            title (str, optional):
+            title:
                 Title of the generated plot.
                 If not specified, :attr:`Visualizable.title` will be applied.
 

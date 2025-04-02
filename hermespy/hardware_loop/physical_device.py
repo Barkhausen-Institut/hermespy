@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-================
-Physical Devices
-================
-"""
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
@@ -106,34 +101,34 @@ class PhysicalDevice(Generic[PDST], Device[PDST]):
         """
         Args:
 
-            max_receive_delay (float, optional):
+            max_receive_delay:
                 Maximum expected delay during siganl reception in seconds.
                 Zero by default.
 
-            noise_power (numpy.ndarray, optional):
+            noise_power:
                 Assumed power of the hardware noise at the device's receive chains.
 
-            leakage_calibration (LeakageCalibrationBase, optional):
+            leakage_calibration:
                 The leakage calibration routine to apply to received signals.
                 If not provided, defaults to the :class:`NoLeakageCalibration` stub routine.
 
-            delay_calibration (DelayCalibrationBase, optional):
+            delay_calibration:
                 The delay calibration routine to apply to received signals.
                 If not provided, defaults to the :class:`NoDelayCalibration` stub routine.
 
-            antenna_calibration (AntennaCalibration, optional):
+            antenna_calibration:
                 The antenna calibration routine to apply to transmitted and received signals.
                 If not provided, defaults to the :class:`NoAntennaCalibration` stub routine.
 
-            adaptive_sampling (bool, optional):
+            adaptive_sampling:
                 Adapt the assumed sampling rate to the device's actual sampling rate.
                 Disabled by default.
 
-            lowpass_filter (bool, optional):
+            lowpass_filter:
                 Apply a digital lowpass filter to the received base-band samples.
                 Disabled by default.
 
-            lowpass_bandwidth (float, optional):
+            lowpass_bandwidth:
                 Digital lowpass filter bandwidth in Hz.
                 Only relevant if the lowpass filter is enabled.
                 Zero by default.
@@ -226,10 +221,10 @@ class PhysicalDevice(Generic[PDST], Device[PDST]):
 
         Args:
 
-            path (str):
+            path:
                 Path under which the file should be stored.
 
-            backend (SerializationBackend, optional):
+            backend:
                 Serialization backend to use.
                 HDF by default.
         """
@@ -254,10 +249,10 @@ class PhysicalDevice(Generic[PDST], Device[PDST]):
 
         Args:
 
-            path (str):
+            path:
                 Path from which to load the calibration.
 
-            backend (SerializationBackend, optional):
+            backend:
                 Serialization backend to use.
                 HDF by default.
         """
@@ -408,17 +403,16 @@ class PhysicalDevice(Generic[PDST], Device[PDST]):
 
         Args:
 
-            num_samples (int, optional):
+            num_samples:
                 Number of received samples.
                 1000 by default.
 
-            cache (bool, optional):
+            cache:
                 If enabled, the :meth:`PhysicalDevice.noise_power` property will be updated.
 
         Returns:
-            np.ndarray:
-                Estimated noise power at each respective receive channel,
-                i.e. the variance of the unbiased received samples.
+            Estimated noise power at each respective receive channel,
+            i.e. the variance of the unbiased received samples.
         """
 
         silent_signal = Signal.Create(
@@ -440,7 +434,7 @@ class PhysicalDevice(Generic[PDST], Device[PDST]):
 
         Args:
 
-            signal (Signal):
+            signal:
                 The samples to be uploaded.
 
         Returns: The actually uploaded samples, including quantization scaling.
@@ -499,17 +493,16 @@ class PhysicalDevice(Generic[PDST], Device[PDST]):
 
         Args:
 
-            signal (Signal):
+            signal:
                 The signal to be transmitted.
 
-            calibrate (bool, optional):
+            calibrate:
                 If enabled, the signal will be calibrated using the device's leakage calibration.
                 Enabled by default.
 
         Returns: The received signal.
 
         Raises:
-
             ValueError: If the signal's carrier frequency or sampling rate does not match the device's.
         """
 
@@ -613,19 +606,19 @@ class PhysicalDevice(Generic[PDST], Device[PDST]):
     ) -> DeviceReception:
         """Receive over this physical device.
 
-        Internally calls :meth:`PhysicalDevice.process_input` and :meth:`Device.receive_operators`.
+        Internally calls :meth:`PhysicalDevice.process_input` and :meth:`Device.receive_operators<hermespy.core.device.Device.receive_operators>`.
 
         Args:
 
-            impinging_signals (DeviceInput | Signal | Sequence[Signal], optional):
+            impinging_signals:
                 The samples to be processed by the device.
                 If not specified, the device will download the samples directly from the represented hardware.
 
-            state (PDST, optional):
+            state:
                 Device state to be used for the processing.
-                If not provided, query the current device state by calling :meth:`state`.
+                If not provided, query the current device state by calling :meth:`state<hermespy.core.device.Device.state>`.
 
-            notify (bool, optional):
+            notify:
                 Notify all registered callbacks within the involved DSP algorithms.
                 Enabled by default.
 
@@ -719,10 +712,10 @@ class Calibration(ABC, Serializable):
 
         Args:
 
-            path (str):
+            path:
                 Path under which the file should be stored.
 
-            backend (SerializationBackend, optional):
+            backend:
                 Serialization backend to use.
                 HDF by default.
         """
@@ -742,10 +735,10 @@ class Calibration(ABC, Serializable):
 
         Args:
 
-            path (str):
+            path:
                 Path from which to load the calibration.
 
-            backend (SerializationBackend, optional):
+            backend:
                 Serialization backend to use.
                 HDF by default.
         """
@@ -782,7 +775,7 @@ class DelayCalibrationBase(Calibration, Serializable):
 
         Args:
 
-            signal (Signal):
+            signal:
                 The signal to be corrected.
 
         Returns:
@@ -811,12 +804,9 @@ class DelayCalibrationBase(Calibration, Serializable):
         """Apply the delay calibration to a received signal.
 
         Args:
+            signal: The signal to be corrected.
 
-            signal (Signal):
-                The signal to be corrected.
-
-        Returns:
-            The corrected signal.
+        Returns: The corrected signal.
         """
 
         # Do nothing for zero delays
@@ -875,12 +865,9 @@ class LeakageCalibrationBase(Calibration, Serializable):
         """Predict the leakage of a transmitted signal.
 
         Args:
+            transmitted_signal: The transmitted signal.
 
-            transmitted_signal (Signal):
-                The transmitted signal.
-
-        Returns:
-            The predicted leakage.
+        Returns: The predicted leakage.
         """
         ...  # pragma: no cover
 
@@ -889,15 +876,10 @@ class LeakageCalibrationBase(Calibration, Serializable):
         """Remove leakage from a received signal.
 
         Args:
+            transmitted_signal: The transmitted signal.
+            recveived_signal: The received signal from which to remove the leakage.
 
-            transmitted_signal (Signal):
-                The transmitted signal.
-
-            recveived_signal (Signal):
-                The received signal from which to remove the leakage.
-
-        Returns:
-            The signal with removed leakage.
+        Returns: The signal with removed leakage.
         """
         ...  # pragma: no cover
 

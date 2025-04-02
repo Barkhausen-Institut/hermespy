@@ -62,13 +62,13 @@ class CommunicationEvaluator(Evaluator, Serializable):
         """
         Args:
 
-            transmitting_modem (TransmittingModem):
+            transmitting_modem:
                 Communication modem transmitting information.
 
-            receiving_modem (ReceivingModem):
+            receiving_modem:
                 Communication modem receiving information.
 
-            plot_surface (bool, optional):
+            plot_surface:
                 Plot the surface of the evaluation result in two-dimensional grids.
                 Defaults to True.
         """
@@ -247,13 +247,13 @@ class BitErrorEvaluator(CommunicationEvaluator, Serializable):
         """
         Args:
 
-            transmitting_modem (TransmittingModem):
+            transmitting_modem:
                 Modem transmitting information.
 
-            receiving_modem (ReceivingModem):
+            receiving_modem:
                 Modem receiving information.
 
-            plot_surface (bool, optional):
+            plot_surface:
                 Plot the surface of the evaluation result in two-dimensional grids.
                 Defaults to True.
         """
@@ -331,13 +331,13 @@ class BlockErrorEvaluator(CommunicationEvaluator, Serializable):
         """
         Args:
 
-            transmitting_modem (TransmittingModem):
+            transmitting_modem:
                 Modem transmitting information.
 
-            receiving_modem (ReceivingModem):
+            receiving_modem:
                 Modem receiving information.
 
-            plot_surface (bool, optional):
+            plot_surface:
                 Plot the surface of the evaluation result in two-dimensional grids.
                 Defaults to True.
         """
@@ -421,13 +421,13 @@ class FrameErrorEvaluator(CommunicationEvaluator, Serializable):
         """
         Args:
 
-            transmitting_modem (TransmittingModem):
+            transmitting_modem:
                 Modem transmitting information.
 
-            receiving_modem (ReceivingModem):
+            receiving_modem:
                 Modem receiving information.
 
-            plot_surface (bool, optional):
+            plot_surface:
                 Plot the surface of the evaluation result in two-dimensional grids.
                 Defaults to True.
         """
@@ -478,13 +478,13 @@ class ThroughputEvaluation(EvaluationTemplate[float, PlotVisualization]):
         """
         Args:
 
-            bits_per_frame (int):
+            bits_per_frame:
                 Number of bits per communication frame
 
-            frame_duration (float):
+            frame_duration:
                 Duration of a single communication frame in seconds
 
-            frame_errors (numpy.ndarray):
+            frame_errors:
                 Frame error indicators
         """
 
@@ -525,13 +525,13 @@ class ThroughputEvaluator(CommunicationEvaluator, Serializable):
         """
         Args:
 
-            transmitting_modem (TransmittingModem):
+            transmitting_modem:
                 Modem transmitting information.
 
-            receiving_modem (ReceivingModem):
+            receiving_modem:
                 Modem receiving information.
 
-            plot_surface (bool, optional):
+            plot_surface:
                 Plot the surface of the evaluation result in two-dimensional grids.
                 Defaults to True.
         """
@@ -577,8 +577,8 @@ class EVMEvaluation(EvaluationTemplate[float, PlotVisualization]):
         """
         Args:
 
-            transmitted_symbols (numpy.ndarray): Originally transmitted communication symbols.
-            received_symbols (numpy.ndarray): Received communication symbols.
+            transmitted_symbols: Originally transmitted communication symbols.
+            received_symbols: Received communication symbols.
         """
 
         _transmitted_symbols = transmitted_symbols.flatten()

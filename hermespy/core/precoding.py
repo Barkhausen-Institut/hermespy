@@ -81,7 +81,7 @@ class TransmitEncoder(ABC, Precoder[TransmitPrecodingType], Generic[TransmitPrec
         Precoder.__init__(self)
 
     @abstractmethod
-    def _num_transmit_input_streams(self, num_output_streams: int) -> int:
+    def num_transmit_input_streams(self, num_output_streams: int) -> int:
         """Get required number of input streams during encoding.
 
         Args:
@@ -221,7 +221,7 @@ class TransmitPrecoding(Precoding[TransmitEncoderType], Generic[TransmitEncoderT
         for encoder in reversed(self):
             # The input of the current precoder is dependent on its required output
             # In turn, the output of the current precoder is the input of the next precoder
-            num_input_streams = encoder._num_transmit_input_streams(num_encoder_io_streams[0])
+            num_input_streams = encoder.num_transmit_input_streams(num_encoder_io_streams[0])
 
             # Negative numbers of input streams indicate that the configuration is not feasible
             if num_input_streams < 0:

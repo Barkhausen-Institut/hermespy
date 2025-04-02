@@ -33,17 +33,10 @@ class SimulatedDrop(Drop[SimulatedDeviceTransmission, SimulatedDeviceReception])
         """
         Args:
 
-            timestamp (float):
-                Time at which the drop was generated.
-
-            device_transmissions (Sequence[DeviceTransmission]):
-                Transmitted device information.
-
-            channel_realizations (Sequence[ChannelRealization]):
-                Matrix of channel realizations linking the simulated devices.
-
-            device_receptions (Sequence[ProcessedSimulatedDeviceReception]):
-                Received device information.
+            timestamp: Time at which the drop was generated.
+            device_transmissions: Transmitted device information.
+            channel_realizations: Matrix of channel realizations linking the simulated devices.
+            device_receptions: Received device information.
         """
 
         # Initialize attributes

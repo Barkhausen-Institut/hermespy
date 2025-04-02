@@ -26,7 +26,7 @@ class RandomRealization(Serializable):
         """
         Args:
 
-            seed (int):
+            seed:
                 Seed with which to initialize the random number generator.
         """
 
@@ -75,11 +75,11 @@ class RandomNode(object):
         """
         Args:
 
-            mother_node (RandomNode, optional):
+            mother_node:
                 Mother node of this random node.
                 By default, nodes are considered to be roots.
 
-            seed (int, optional):
+            seed:
                 Random seed used to initialize the pseudo-random number generator.
         """
 

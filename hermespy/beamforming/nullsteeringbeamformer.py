@@ -23,7 +23,7 @@ class NullSteeringBeamformer(TransmitBeamformer, ReceiveBeamformer):
         TransmitBeamformer.__init__(self)
         ReceiveBeamformer.__init__(self)
 
-    def _num_transmit_input_streams(self, num_output_streams: int) -> int:
+    def num_transmit_input_streams(self, num_output_streams: int) -> int:
         # The null steering beamformer distirbutes a single stream
         # to an arbitrary number of antenna streams
         return 1

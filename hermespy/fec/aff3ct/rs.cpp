@@ -114,24 +114,17 @@ PYBIND11_MODULE(rs, m)
 
         .def(py::init<const int, const int>(), R"pbdoc(
             Args:
-
-                data_block_size (int):
-                    Number of data bits per block to be encoded.
-
-                correction power (int):
-                    Number of symbol errors the coding may correct.
+                data_block_size: Number of data bits per block to be encoded.
+                correction_power: Number of symbol errors the coding may correct.
         )pbdoc")
 
         .def("encode", &ReedSolomon::encode, R"pbdoc(
             Encode a block of data bits to code bits.
 
             Args:
+                data: The data bit block to be encoded.
 
-                data (numpy.ndarray):
-                    The data bit block to be encoded.
-
-            Returns:
-                The code bit block after encoding.
+            Returns: The code bit block after encoding.
         )pbdoc")
 
         .def("decode", &ReedSolomon::decode, R"pbdoc(
@@ -139,11 +132,9 @@ PYBIND11_MODULE(rs, m)
 
             Args:
 
-                code (numpy.ndarray):
-                    The code bit block to be decoded.
+                code: The code bit block to be decoded.
 
-            Returns:
-                The data bit block after decoding.
+            Returns: The data bit block after decoding.
         )pbdoc")
 
         .def_property("bit_block_size", &ReedSolomon::getDataBlockSize, &ReedSolomon::setDataBlockSize, R"pbdoc(

@@ -57,7 +57,7 @@ class NoiseLevel(ScalarDimension, Serializable):
 
         Args:
 
-            level (float): New noise level.
+            level: New noise level.
 
         Raises:
 
@@ -75,7 +75,7 @@ class N0(NoiseLevel):
     def __init__(self, power: float) -> None:
         """
         Args:
-            power (float): Noise power in Watt.
+            power: Noise power in Watt.
         """
 
         self.power = power
@@ -118,7 +118,7 @@ class N0(NoiseLevel):
 
         Args:
 
-            power (float): New noise power.
+            power: New noise power.
         """
 
         self.power = power
@@ -157,13 +157,13 @@ class SNR(NoiseLevel):
     ) -> None:
         """
         Args:
-            snr (float):
+            snr:
                 Expected signal-to-noise ratio.
 
-            reference (Device |Transmitter | Receiver):
-                Reference of the noise level, i.e. with which power / energy was the signal generated.
+            reference:
+                Reference of the noise level, i.e. with which power or energy was the signal generated.
 
-            channel (Channel, optional):
+            channel:
                 Channel instance over which the signal was propagated.
                 For channel models that consider propagation losses the noise power is scaled accordingly.
         """
@@ -183,7 +183,7 @@ class SNR(NoiseLevel):
         """Update the expected channel scale.
 
         Args:
-            sample (ChannelSample): Channel sample.
+            sample: Channel sample.
         """
 
         self.__expected_channel_scale = sample.expected_energy_scale

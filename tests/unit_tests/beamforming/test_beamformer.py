@@ -128,7 +128,7 @@ class TestSphericalFocus(_TestBeamFocus):
 class TransmitBeamformerMock(TransmitBeamformer):
     """Mock class to test transmitting beamformers"""
 
-    def _num_transmit_input_streams(self, num_output_streams: int) -> int:
+    def num_transmit_input_streams(self, num_output_streams: int) -> int:
         return num_output_streams
 
     @property

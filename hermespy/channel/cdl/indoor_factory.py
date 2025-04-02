@@ -87,35 +87,35 @@ class IndoorFactoryRealization(ClusterDelayLineRealization[LOSState]):
         """
         Args:
 
-            expected_state (O2IState | None):
+            expected_state:
                 Expected large-scale state of the channel.
                 If not specified, the large-scale state is randomly generated.
 
-            state_realization (ConsistentRealization):
+            state_realization:
                 Realization of a spatially consistent random number generator for the large-scale state.
 
-            los_realization (ConsistentRealization):
+            los_realization:
                 Realization of a spatially consistent random number generator for small-scale parameters in the LOS state.
 
-            nlos_realization (ConsistentRealization):
+            nlos_realization:
                 Realization of a spatially consistent random number generator for small-scale parameters in the NLOS state.
 
-            parameters (ClusterDelayLineRealizationParameters):
+            parameters:
                 General parameters of the cluster delay line realization.
 
-            volume (float):
+            volume:
                 Volume of the modeled factory hall in :math:`\\mathrm{m}^3`.
 
-            surface (float):
+            surface:
                 Surface area of the modeled factory hall in :math:`\\mathrm{m}^2`.
 
-            factory_type (FactoryType):
+            factory_type:
                 Type of the factory.
 
-            clutter_height (float):
+            clutter_height:
                 Height of the clutter in the factory hall in meters above the floor.
 
-            gain (float, optional):
+            gain:
                 Linear amplitude scaling factor if signals propagated over the channel.
         """
         # Initialize base class
@@ -212,9 +212,9 @@ class IndoorFactoryRealization(ClusterDelayLineRealization[LOSState]):
            y = a \\log_{10}(1 + f_c) + b
 
         Args:
-            carrier_frequency (float): Carrier frequency
-            factor (float): Factor scaling the logarithmic frequency dependency.
-            summand (float): Added constant.
+            carrier_frequency: Carrier frequency
+            factor: Factor scaling the logarithmic frequency dependency.
+            summand: Added constant.
 
         Returns: The result.
         """
@@ -435,25 +435,25 @@ class IndoorFactory(ClusterDelayLineBase[IndoorFactoryRealization, LOSState]):
         """
         Args:
 
-            volume (float):
+            volume:
                 Hall volume in :math:`\\mathrm{m}^3`.
 
-            surface (float):
+            surfac:
                 Total surface hall area in :math:`\\mathrm{m}^2`. (walls/floor/ceiling).
 
-            factory_type (FactoryType):
+            factory_type:
                 Type of the factory.
 
-            clutter_height (float, optional):
+            clutter_height:
                 Height of the clutter in the factory hall in meters above the floor.
                 Zero by default, meaning virtually no clutter.
 
-            gain (float, optional):
+            gain:
                 Linear channel energy gain factor.
-                Initializes the :meth:`gain<gain>` property.
+                Initializes the :meth:`gain<hermespy.channel.channel.Channel.gain>` property.
                 :math:`1.0` by default.
 
-            seed (int, optional):
+            seed:
                 Seed used to initialize the pseudo-random number generator.
         """
 

@@ -48,13 +48,13 @@ class PointDetection(Serializable):
         """
         Args:
 
-            position (numpy.ndarray):
+            position:
                 Cartesian position of the detection in cartesian coordinates.
 
-            velocity (numpy.ndarray):
+            velocity:
                 Velocity vector of the detection in m/s
 
-            power (float):
+            power:
                 Power of the detection.
 
         Raises:
@@ -90,19 +90,19 @@ class PointDetection(Serializable):
 
         Args:
 
-            zenith (float):
+            zenith:
                 Zenith angle in Radians.
 
-            azimuth (float):
+            azimuth:
                 Azimuth angle in Radians.
 
-            range (float):
+            range:
                 Point distance to coordiante system origin in m/s.
 
-            velocity (float):
+            velocity:
                 Velocity from / to the coordinate system origin in m/s.
 
-            power (float):
+            power:
                 Point power indicator.
         """
 
@@ -119,8 +119,7 @@ class PointDetection(Serializable):
     def position(self) -> np.ndarray:
         """Position of the detection.
 
-        Returns:
-            np.ndarray: Cartesian position in m.
+        Returns: Cartesian position in m.
         """
 
         return self.__position
@@ -129,8 +128,7 @@ class PointDetection(Serializable):
     def velocity(self) -> np.ndarray:
         """Velocity of the detection.
 
-        Returns:
-            np.ndarray: Velocity vector in m/s.
+        Returns: Velocity vector in m/s.
         """
 
         return self.__velocity
@@ -180,7 +178,7 @@ class RadarPointCloud(Serializable, Visualizable[ScatterVisualization]):
 
         Args:
 
-            max_range (float, optional):
+            max_range:
                 Maximal represented range.
                 Used for visualization.
 
@@ -225,9 +223,7 @@ class RadarPointCloud(Serializable, Visualizable[ScatterVisualization]):
     def num_points(self) -> int:
         """Number of points contained within this point cloud.
 
-        Returns:
-
-            The number of points.
+        Returns: The number of points.
         """
 
         return len(self.__points)
@@ -237,8 +233,7 @@ class RadarPointCloud(Serializable, Visualizable[ScatterVisualization]):
 
         Args:
 
-            point (PointDetection):
-                The detection to be added.
+            point: The detection to be added.
         """
 
         self.__points.append(point)
@@ -302,12 +297,9 @@ class RadarDetector(Serializable):
 
         Args:
 
-            cube (RadarCube):
-                The radar cube to be processed.
+            cube: The radar cube to be processed.
 
-        Returns:
-
-            The resulting (usually sparse) point cloud.
+        Returns: The resulting (usually sparse) point cloud.
         """
         ...  # pragma: no cover
 
@@ -325,15 +317,15 @@ class ThresholdDetector(RadarDetector):
         """
         Args:
 
-            min_power (float):
+            min_power:
                 Minmally required point power.
 
-            normalize (bool, optional):
+            normalize:
                 Normalize the power during detection, so that min_power
                 becomes a relative value betwee zero and one.
                 Enabled by default.
 
-            peak_detection (bool, optional):
+            peak_detection:
                 Run a peak detection algorithm to only extract points at power peaks.
                 Enabled by default.
         """
@@ -346,12 +338,9 @@ class ThresholdDetector(RadarDetector):
     def min_power(self) -> float:
         """Minimally required point power.
 
-        Returns:
-
-            Power (linear).
+        Returns: Power (linear).
 
         Raises:
-
             ValueError: On powers smaller or equal to zero.
         """
 
@@ -519,13 +508,13 @@ class CFARDetector(RadarDetector, Serializable):
 
         Args:
 
-            num_training_cells (tuple):
+            num_training_cells:
                 Number of training cells in a kernel slice. Must be a pair of even ints.
 
-            num_guard_cells (int):
+            num_guard_cells:
                 Number of guard cells in a kernel slice. Must be a pair of even ints.
 
-            pfa (float):
+            pfa:
                 Probability of False Alarm. Must be in the interval of [0, 1].
         """
 

@@ -45,7 +45,7 @@ class TestNullSteeringBeamformer(TestCase):
 
         self.assertEqual(3, self.beamformer.num_transmit_focus_points)
         self.assertEqual(3, self.beamformer.num_receive_focus_points)
-        self.assertEqual(1, self.beamformer._num_transmit_input_streams(5))
+        self.assertEqual(1, self.beamformer.num_transmit_input_streams(5))
         self.assertEqual(1, self.beamformer.num_receive_output_streams(10))
 
     def test_null_steering_effectiveness(self) -> None:

@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-==========
-UHD System
-==========
-"""
 
 from typing import Type
 from typing_extensions import override
@@ -44,8 +39,11 @@ class UsrpSystem(PhysicalScenario[UsrpDevice]):
 
         Args:
 
-            Device initialization parameters.
-            Refer to :class:.UsrpDevice for further details.
+            ip: IP address of the UHD server application.
+            port: Port number of the UHD server application.
+            args, kwargs:
+                Device initialization parameters.
+                Refer to :class:`UsrpDevice<hermespy.hardware_loop.uhd.usrp.UsrpDevice>` for further details.
 
         Returns: A handle to the initialized device.
         """
@@ -59,8 +57,7 @@ class UsrpSystem(PhysicalScenario[UsrpDevice]):
 
         Args:
 
-            device (UsrpDevice):
-                The device to be added.
+            device (UsrpDevice): The device to be added.
         """
 
         self.__system.addUsrp(usrpName=str(self.num_devices), client=device._client)

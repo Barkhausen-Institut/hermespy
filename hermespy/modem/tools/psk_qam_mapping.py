@@ -1,22 +1,4 @@
-"""Mapping between bits and PSK/QAM/PAM constellation
-
-
-This module provides a class for a PSK/QAM mapper/demapper.
-
-The following features are supported:
-- arbitrary 2D (complex) constellation mapping can be given
-- default Gray-coded constellations for BPSK, QPSK, 8-PSK, 4-, 8-, 16- PAM, 16-, 64-
-    and 256-QAM are provided
-- all default constellations follow 3GPP standards TS 36.211
-    (except 8-PSK, which is not defined in 3GPP)
-- hard and soft (LLR) output are available
-
-This implementation has currently the following limitations:
-- LLR available only for default BPSK, QPSK, 4-, 8-, 16- PAM, 16-, 64- and 256-QAM
-- only linear approximation of LLR is considered, similar to the one described in:
-    Tosato, Bisaglia, "Simplified Soft-Output Demapper for Binary Interleaved COFDM with
-    Application to HIPERLAN/2", Proceedings of IEEE International Commun. Conf. (ICC) 2002
-"""
+# -*- coding: utf-8 -*-
 
 from __future__ import annotations
 from typing_extensions import override
@@ -30,8 +12,8 @@ __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["André Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.4.0"
-__maintainer__ = "André Noll Barreto"
-__email__ = "andre.nollbarreto@barkhauseninstitut.org"
+__maintainer__ = "Jan Adler"
+__email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
@@ -39,16 +21,18 @@ class PskQamMapping(Serializable):
     """Implements the mapping of bits into complex numbers, following a PSK/QAM modulation.
 
     Attributes:
-        modulation_order(int): size of modulation constellation.
-        mapping_available(list of int, class level): list of available default constellations.
-        bits_per_symbol(int): number of bits in modulation symbol.
-        soft_output(bool):
+        modulation_order: size of modulation constellation.
+        bits_per_symbol: number of bits in modulation symbol.
+        soft_output:
             if True, then soft output (LLR) will be provided. #
             If False, then estimated bits are returned.
     """
 
     mapping_available = [2, 4, 8, 16, 64, 64, 256]
+    """List of available default constellations."""
+
     mapping_available_pam = [2, 4, 8, 16]
+    """List of available default constellations for PAM."""
 
     _psk8_map = np.exp(
         1j * np.array([0, 1 / 4, 3 / 4, 1 / 2, -1 / 4, -1 / 2, 1, -3 / 4]) * np.pi
@@ -63,9 +47,9 @@ class PskQamMapping(Serializable):
     ):
         """
         Args:
-            modulation_order (int):
+            modulation_order:
                 Number of points in the constellation. Must be a power of two.
-            mapping (numpy.ndarray, optional):
+            mapping:
                 Vector with length `modulation_order` defining the mapping between bits
                 and modulation symbols. At each symbol, bits are input MSB first.
                 For example, with a 32-point constellation, the bit sequence 01101
@@ -73,10 +57,10 @@ class PskQamMapping(Serializable):
                 13-th element in 'mapping' vector.
                 It is optional for certain modulation orders, which are given in
                 PskQamMapping.mapping_available, and for which a default mapping is provided.
-            soft_output(bool):
+            soft_output:
                 if True, then soft output (LLR) will be provided.
                 If False, then estimated bits (0 or 1) are returned.
-            is_complex(bool):
+            is_complex:
                 if True, then complex modulation is considered (PSK/QAM),
                 if False, then real-valued modulation is considered (PAM)
         """
@@ -124,13 +108,12 @@ class PskQamMapping(Serializable):
             The constellation is normalized, such that the mean symbol energy is unitary.
 
         Args:
-            bits (numpy.ndarray):
+            bits:
                 Vector with N elements,
                 corresponding to the bits to be modulated.
 
         Returns:
-            symbols(numpy.ndarray):
-                Vector of N/log2(modulation_order) elements with modulated symbols.
+            Vector of N/log2(modulation_order) elements with modulated symbols.
         """
 
         number_symbols = int(bits.size / self.bits_per_symbol)
@@ -193,15 +176,14 @@ class PskQamMapping(Serializable):
             rx_symbols(numpy.ndarray):
                 Vector of N received symbols, for which the bits/LLR will be estimated
 
-            noise_variance (float or np.ndarray, optional):
+            noise_variance:
                 vector with the noise variance in each received symbol. If a
                 scalar is given, then the same variance is assumed for all symbols.
                 This is only relevant if 'self.soft_output' is true.
 
         Returns:
-            bits(numpy.ndarray):
-                Vector of N * self.bits_per_symbol elements containing either the estimated
-                bits or the LLR values of each bit, depending on the value of 'self.soft_output'
+            Vector of N * self.bits_per_symbol elements containing either the estimated
+            bits or the LLR values of each bit, depending on the value of 'self.soft_output'
         """
         number_of_bits = rx_symbols.size * self.bits_per_symbol
         llr = np.zeros(number_of_bits)
@@ -275,7 +257,7 @@ class PskQamMapping(Serializable):
         return llr if self.soft_output else llr > 0
 
     @staticmethod
-    def generate_pam_symbol_3gpp(modulation_order, bits: np.ndarray) -> np.ndarray:
+    def generate_pam_symbol_3gpp(modulation_order: int, bits: np.ndarray) -> np.ndarray:
         """Returns 1D amplitudes following 3GPP modulation mapping.
 
         3GPP has defined in TS 36.211 mapping tables from bits into complex symbols.
@@ -284,14 +266,13 @@ class PskQamMapping(Serializable):
         amplitudes.
 
         Args:
-            modulation_order(int): modulation order M. M=2, 4, 8, 16 are supported
-            bits(numpy.ndarray): N x K array, with K the number of symbols
+            modulation_order: modulation order M. M=2, 4, 8, 16 are supported
+            bits: N x K array, with K the number of symbols
 
         Returns:
-            symbols(numpy.ndarray):
-                Vector of K real-valued symbols. Note that the symbols are not normalized,
-                and range from -(M-1) to (M+1) with step 2, e..g., for M=8,
-                values can be -7, -5, -3, -1, 1, 3, 5, 7.
+            Vector of K real-valued symbols. Note that the symbols are not normalized,
+            and range from -(M-1) to (M+1) with step 2, e..g., for M=8,
+            values can be -7, -5, -3, -1, 1, 3, 5, 7.
         """
 
         if modulation_order == 2:
@@ -330,15 +311,14 @@ class PskQamMapping(Serializable):
         LLR is returned considering unit-power Gaussian noise at all symbols.
 
         Args:
-            modulation_order(int): modulation order M. M=2, 4, 8, 16 are supported
-            rx_symbols(numpy.ndarray): array with K received symbols
-            noise_variance(numpy.ndarray): float or array with noise varaiance of K symbols
-            is_complex(bool):
+            modulation_order: modulation order M. M=2, 4, 8, 16 are supported
+            rx_symbols: array with K received symbols
+            noise_variance: float or array with noise varaiance of K symbols
+            is_complex:
                 if True, then complex modulation is considered (PSK/QAM),
                 If False, then real-valued modulation is considered (PAM)
 
-        Returns:
-            llr(numpy.ndarray): Vector of N x K elements with the LLR values.
+        Returns: Vector of N x K elements with the LLR values.
         """
 
         if is_complex:
@@ -513,9 +493,8 @@ class PskQamMapping(Serializable):
         """Returns current mapping table
 
         Returns:
-            mapping(numpy.ndarray):
-                array with M (modulation_order) elements containing all possible modulation symbols.
-                See specifications in "PskQamMapping.__init__"
+            array with M `modulation_order` elements containing all possible modulation symbols.
+            See specifications in "PskQamMapping.__init__"
         """
         if self.mapping is not None:
             mapping = self.mapping

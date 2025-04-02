@@ -131,8 +131,7 @@ class GridResource(Serializable):
     def repetitions(self) -> int:
         """Number of block repetitions along the frequency axis.
 
-        Returns:
-            int: Number of repetitions.
+        Returns: Number of repetitions.
         """
 
         return self.__repetitions
@@ -142,7 +141,7 @@ class GridResource(Serializable):
         """Modify the number of repetitions.
 
         Args:
-            reps (int): Number of repetitions.
+            reps: Number of repetitions.
 
         Raises:
             ValueError: If `reps` is smaller than one.
@@ -157,8 +156,7 @@ class GridResource(Serializable):
     def prefix_ratio(self) -> float:
         """Ratio between full block length and prefix length.
 
-        Returns:
-            float: The ratio between zero and one.
+        Ratio is between zero and one.
 
         Raises:
             ValueError: If ratio is less than zero or larger than one.
@@ -175,11 +173,7 @@ class GridResource(Serializable):
 
     @property
     def num_subcarriers(self) -> int:
-        """Number of occupied subcarriers.
-
-        Returns:
-            int: Number of occupied subcarriers.
-        """
+        """Number of occupied subcarriers."""
 
         num: int = 0
         for element in self.elements:
@@ -189,11 +183,7 @@ class GridResource(Serializable):
 
     @property
     def num_symbols(self) -> int:
-        """Number of data symbols this resource can modulate.
-
-        Return:
-            Number of modulated symbols.
-        """
+        """Number of data symbols this resource can modulate."""
 
         num: int = 0
         for element in self.elements:
@@ -204,11 +194,7 @@ class GridResource(Serializable):
 
     @property
     def num_references(self) -> int:
-        """Number of references symbols this resource can modulate.
-
-        Return:
-            Number of modulated symbols.
-        """
+        """Number of references symbols this resource can modulate."""
 
         num: int = 0
         for element in self.elements:
@@ -221,9 +207,7 @@ class GridResource(Serializable):
     def mask(self) -> np.ndarray:
         """Boolean mask selecting a specific type of element from the OFDM grid.
 
-        Returns:
-            np.ndarray:
-                Mask of dimension `num_element_types`x`num_subcarriers`.
+        Mask of dimension `num_element_types`x`num_subcarriers`.
         """
 
         # Initialize the base mask as all false
@@ -279,9 +263,9 @@ class GridSection(Generic[OWT], Serializable):
         """
         Args:
 
-            num_repetitions (int, optional): Number of times this section is repeated in time-domain.
-            sample_offset (int, optional): Offset in samples to the start of the section.
-            wave (OWT, optional): Waveform this section is associated with. Defaults to None.
+            num_repetitions: Number of times this section is repeated in time-domain.
+            sample_offset: Offset in samples to the start of the section.
+            wave: Waveform this section is associated with. Defaults to None.
         """
 
         # Initialize class attributes
@@ -315,11 +299,7 @@ class GridSection(Generic[OWT], Serializable):
 
     @property
     def num_repetitions(self) -> int:
-        """Number of section repetitions in the time-domain of an OFDM grid.
-
-        Returns:
-            int: The number of repetitions.
-        """
+        """Number of section repetitions in the time-domain of an OFDM grid."""
 
         return self.__num_repetitions
 
@@ -328,7 +308,7 @@ class GridSection(Generic[OWT], Serializable):
         """Number of section repetitions in the time-domain of an OFDM grid.
 
         Args:
-            value (int): The number of repetitions.
+            value: The number of repetitions.
 
         Raises:
             ValueError: If `value` is smaller than one.
@@ -341,41 +321,25 @@ class GridSection(Generic[OWT], Serializable):
 
     @property
     def num_symbols(self) -> int:
-        """Number of data symbols this section can modulate.
-
-        Returns:
-            int: The number of symbols
-        """
+        """Number of data symbols this section can modulate."""
 
         return 0
 
     @property
     def num_references(self) -> int:
-        """Number of data symbols this section can modulate.
-
-        Returns:
-            int: The number of symbols
-        """
+        """Number of data symbols this section can modulate."""
 
         return 0
 
     @property
     def num_words(self) -> int:
-        """Number of OFDM symbols, i.e. words of subcarrier symbols this section can modulate.
-
-        Returns:
-            int: The number of words.
-        """
+        """Number of OFDM symbols, i.e. words of subcarrier symbols this section can modulate."""
 
         return 0
 
     @property
     def num_subcarriers(self) -> int:
-        """Number of subcarriers this section requires.
-
-        Returns:
-            int: The number of subcarriers.
-        """
+        """Number of subcarriers this section requires."""
 
         return 0
 
@@ -386,11 +350,7 @@ class GridSection(Generic[OWT], Serializable):
     @property
     @abstractmethod
     def num_samples(self) -> int:
-        """Number of samples within this OFDM time-section.
-
-        Returns:
-            int: Number of samples
-        """
+        """Number of samples within this OFDM time-section."""
         ...  # pragma: no cover
 
     def place_symbols(self, data_symbols: np.ndarray, reference_symbols: np.ndarray) -> np.ndarray:
@@ -398,8 +358,8 @@ class GridSection(Generic[OWT], Serializable):
 
         Args:
 
-            data_symbols (numpy.ndarray): Data symbols to be placed. Numpy vector of size `num_symbols`.
-            reference_symbols (numpy.ndarray): Reference symbols to be placed. Numpy vector of size `num_references`.
+            data_symbols: Data symbols to be placed. Numpy vector of size `num_symbols`.
+            reference_symbols: Reference symbols to be placed. Numpy vector of size `num_references`.
 
         Returns: Two dimensional numpy array of size `num_words`x`num_subcarriers`.
         """
@@ -418,7 +378,7 @@ class GridSection(Generic[OWT], Serializable):
 
         Args:
 
-            grid (numpy.ndarray): Resource grid. Two dimensional numpy array of size `num_words`x`num_subcarriers`.
+            grid: Resource grid. Two dimensional numpy array of size `num_words`x`num_subcarriers`.
 
         Returns: Data symbols. Numpy vector of size `num_symbols`.
         """
@@ -446,7 +406,7 @@ class GridSection(Generic[OWT], Serializable):
 
         Args:
 
-            signal (numpy.ndarray): Time-domain signal to be placed. Numpy vector of size `num_samples`.
+            signal: Time-domain signal to be placed. Numpy vector of size `num_samples`.
 
         Returns: Time-domain signal with the section's samples placed.
         """
@@ -458,7 +418,7 @@ class GridSection(Generic[OWT], Serializable):
 
         Args:
 
-            signal (numpy.ndarray): Time-domain signal to be picked from. Numpy vector of size `num_samples`.
+            signal: Time-domain signal to be picked from. Numpy vector of size `num_samples`.
 
         Returns: Time-domain signal with the section's samples picked.
         """
@@ -474,10 +434,9 @@ class GridSection(Generic[OWT], Serializable):
         """Deserialize arguments from a serialization process.
 
         Args:
-            process (DeserializationProcess): Process to extract the arguments from.
+            process: Process to extract the arguments from.
 
-        Returns:
-            dict[str, Any]: Deserialized arguments.
+        Returns: Deserialized arguments.
         """
 
         return {
@@ -504,10 +463,10 @@ class SymbolSection(GridSection["OrthogonalWaveform"]):
     ) -> None:
         """
         Args:
-            num_repetitions (int, optional): Number of times this section is repeated in time-domain.
-            pattern (List[int], optional): Resource pattern within this symbol section.
-            sample_offset (int, optional): Offset in samples to the start of the section.
-            frame (OrthogonalWaveform | None, optional): _description_. Defaults to None.
+            num_repetitions: Number of times this section is repeated in time-domain.
+            pattern: Resource pattern within this symbol section.
+            sample_offset: Offset in samples to the start of the section.
+            wave: Waveform this section is associated with. Defaults to None.
         """
 
         # Initialize bae class
@@ -688,11 +647,7 @@ class GuardSection(GridSection["OrthogonalWaveform"], Serializable):
 
     @property
     def duration(self) -> float:
-        """Guard section duration in seconds.
-
-        Returns:
-            float: Duration in seconds.
-        """
+        """Guard section duration in seconds."""
 
         return self.__duration
 
@@ -701,7 +656,7 @@ class GuardSection(GridSection["OrthogonalWaveform"], Serializable):
         """Guard section duration in seconds.
 
         Args:
-            value (float): New duration.
+            value: New duration.
 
         Raises:
             ValueError: If `value` is smaller than zero.
@@ -750,11 +705,11 @@ class PilotSection(Generic[OWT], GridSection[OWT], Serializable):
         """
         Args:
 
-            pilot_elements (Symbols, optional):
+            pilot_elements:
                 Symbols with which the subcarriers within the pilot will be modulated.
                 By default, a pseudo-random sequence from the frame mapping will be generated.
 
-            wave (OWT, optional):
+            wave:
                 The waveform configuration this pilot section is associated with.
         """
 
@@ -815,12 +770,10 @@ class PilotSection(Generic[OWT], GridSection[OWT], Serializable):
     def pilot_elements(self) -> Symbols | None:
         """Symbols with which the orthogonal subcarriers within the pilot will be modulated.
 
-        Returns:
-            A stream of symbols.
-            `None`, if no pilot symbols were specified.
+        A stream of symbols.
+        `None`, if no pilot symbols were specified.
 
         Raises:
-
             ValueError: If the configured symbols contains multiple streams.
         """
 
@@ -848,13 +801,11 @@ class PilotSection(Generic[OWT], GridSection[OWT], Serializable):
 
         Args:
 
-            num_symbols (int, optional):
+            num_symbols:
                 The required number of symbols.
                 By default, a symbol for each subcarrier is generated.
 
-        Returns:
-
-            A sequence of symbols.
+        Returns: A sequence of symbols.
         """
 
         num_symbols = self.wave.num_subcarriers if num_symbols is None else num_symbols
@@ -884,10 +835,11 @@ class PilotSection(Generic[OWT], GridSection[OWT], Serializable):
         return signal
 
     def generate(self) -> np.ndarray:
+        """Generate the pilot section in time domain."""
+
         if self.wave is None:
             raise RuntimeError("Pilot section must be associated with a waveform")
 
-        """Generate the pilot section in time domain."""
         # Return the cached pilot signal if available and the relevant frame parameters haven't changed
         if (
             self.__cached_pilot is not None
@@ -924,7 +876,7 @@ class GridVisualization(VisualizableAttribute[ImageVisualization]):
         """
         Args:
 
-            wave (OrthogonalWaveform): Waveform this plot is associated with.
+            wave: Waveform this plot is associated with.
         """
 
         # Initialize base class
@@ -983,12 +935,12 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
         """
         Args:
 
-            num_subcarriers (int): Number of available orthogonal subcarriers per symbol.
-            grid_resources (Sequence[GridResource]): Grid resources available for modulation.
-            grid_structure (Sequence[GridSection]): Grid structure of the time-domain.
-            pilot_section (PilotSection, optional): Pilot section transmitted at the beginning of each frame.
-            pilot_sequence (PilotSymbolSequence, optional): Sequence of pilot / reference symbols.
-            repeat_pilot_sequence (bool, optional): Repeat the pilot sequence if it is shorter than the frame.
+            num_subcarriers: Number of available orthogonal subcarriers per symbol.
+            grid_resources: Grid resources available for modulation.
+            grid_structure: Grid structure of the time-domain.
+            pilot_section: Pilot section transmitted at the beginning of each frame.
+            pilot_sequence: Sequence of pilot / reference symbols.
+            repeat_pilot_sequence: Repeat the pilot sequence if it is shorter than the frame.
         """
 
         # Initialize base class
@@ -1014,7 +966,7 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
 
         Args:
 
-            symbol_grid (numpy.ndarray): The grid of modulated symbols to be transformed.
+            symbol_grid: The grid of modulated symbols to be transformed.
 
         Returns: The time-domain signal grid.
         """
@@ -1026,7 +978,7 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
 
         Args:
 
-            signal_grid (numpy.ndarray): The time-domain signal grid to be transformed.
+            signal_grid: The time-domain signal grid to be transformed.
 
         Returns: The grid of modulated symbols.
         """
@@ -1038,8 +990,8 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
 
         Args:
 
-            symbol_subgrid (numpy.ndarray): The symbol subgrid to be corrected.
-            sample_offset (int): The sample offset to be corrected.
+            symbol_subgrid: The symbol subgrid to be corrected.
+            sample_offset: The sample offset to be corrected.
 
         Returns: The corrected symbol subgrid.
         """

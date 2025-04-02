@@ -32,7 +32,7 @@ class TransmitStreamEncoderMock(TransmitStreamEncoder):
         tiled_streams = np.tile(stream, (num_output_streams, 1))
         return streams.from_ndarray(tiled_streams)
 
-    def _num_transmit_input_streams(self, num_output_streams: int) -> int:
+    def num_transmit_input_streams(self, num_output_streams: int) -> int:
         return 1
 
 

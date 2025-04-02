@@ -87,14 +87,14 @@ class IdealChannelEstimation(Generic[CWT], ChannelEstimation[CWT]):
 
         Args:
 
-            delay (float):
+            delay:
                 The considered frame's delay offset to the drop start in seconds.
 
-            sampling_rate (float, optional):
+            sampling_rate:
                 Sampling rate of the generated CSI.
                 If not provided, the waveform's sampling rate will be assumed.
 
-            num_samples (int, optional):
+            num_samples:
                 Number of samples within the generated CSI.
                 If not provided, the waveform's frame sample count will be assumed.
 
@@ -180,13 +180,13 @@ class OFDMIdealChannelEstimation(IdealChannelEstimation[OFDMWaveform], Serializa
         """
         Args:
 
-            transmitter (SimulatedDevice):
+            transmitter:
                 Device transmitting into the channel to be estimated.
 
-            receiver (SimulatedDevice):
+            receiver:
                 Device receiving from the channel to be estimated.
 
-            reference_position (ReferencPosition, optional):
+            reference_position:
                 Assumed location of the reference symbols within the ofdm frame.
         """
 

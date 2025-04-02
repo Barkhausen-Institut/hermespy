@@ -57,14 +57,14 @@ class SimulatedAntennaPort(AntennaPort["SimulatedAntenna", "SimulatedAntennaArra
         """
         Args:
 
-            antennas (Sequence[SimulatedAntenna], optional):
+            antennas:
                 Sequence of antennas connected to this antenna port.
                 If not specified, an empty sequence is assumed.
 
-            pose (Transformation, optional):
+            pose:
                 The antenna's position and orientation with respect to its array.
 
-            rf_chain (RfChain, optional):
+            rf_chain:
                 The antenna's RF chain.
                 If not specified, the connected device's default RF chain is assumed.
         """
@@ -110,14 +110,14 @@ class SimulatedAntenna(Antenna[SimulatedAntennaPort]):
         """
         Args:
 
-            mode (AntennaMode, optional):
+            mode:
                 Antenna's mode of operation.
                 By default, a full duplex antenna is assumed.
 
-            pose (Transformation, optional):
+            pose:
                 The antenna's position and orientation with respect to its array.
 
-            weight (complex, optional):
+            weight:
                 Phase and amplitude shift of signals transmitted and received by this antenna.
                 By default, no phase and amplitude shift is applied.
         """
@@ -145,7 +145,7 @@ class SimulatedAntenna(Antenna[SimulatedAntennaPort]):
 
         Args:
 
-            signal (Signal):
+            signal:
                 The signal model to be transmitted.
 
         Returns: The actually transmitted (distorted) signal model.
@@ -172,7 +172,7 @@ class SimulatedAntenna(Antenna[SimulatedAntennaPort]):
 
         Args:
 
-            signal (Signal):
+            signal:
                 The signal model to be received.
 
         Returns:
@@ -204,14 +204,14 @@ class SimulatedDipole(SimulatedAntenna, Dipole[SimulatedAntennaPort]):
         """
         Args:
 
-            mode (AntennaMode, optional):
+            mode:
                 Antenna's mode of operation.
                 By default, a full duplex antenna is assumed.
 
-            pose (Transformation, optional):
+            pose:
                 The antenna's position and orientation with respect to its array.
 
-            weight (complex, optional):
+            weight:
                 Phase and amplitude shift of signals transmitted and received by this antenna.
                 By default, no phase and amplitude shift is applied.
         """
@@ -233,14 +233,14 @@ class SimulatedIdealAntenna(SimulatedAntenna, IdealAntenna[SimulatedAntennaPort]
         """
         Args:
 
-            mode (AntennaMode, optional):
+            mode:
                 Antenna's mode of operation.
                 By default, a full duplex antenna is assumed.
 
-            pose (Transformation, optional):
+            pose:
                 The antenna's position and orientation with respect to its array.
 
-            weight (complex, optional):
+            weight:
                 Phase and amplitude shift of signals transmitted and received by this antenna.
                 By default, no phase and amplitude shift is applied.
         """
@@ -263,17 +263,17 @@ class SimulatedLinearAntenna(SimulatedAntenna, LinearAntenna[SimulatedAntennaPor
         """
         Args:
 
-            mode (AntennaMode, optional):
+            mode:
                 Antenna's mode of operation.
                 By default, a full duplex antenna is assumed.
 
-            slant (float, optional):
+            slant:
                 The antenna's slant angle in radians.
 
-            pose (Transformation, optional):
+            pose:
                 The antenna's position and orientation with respect to its array.
 
-            weight (complex, optional):
+            weight:
                 Phase and amplitude shift of signals transmitted and received by this antenna.
                 By default, no phase and amplitude shift is applied.
         """
@@ -295,14 +295,14 @@ class SimulatedPatchAntenna(SimulatedAntenna, PatchAntenna[SimulatedAntennaPort]
         """
         Args:
 
-            mode (AntennaMode, optional):
+            mode:
                 Antenna's mode of operation.
                 By default, a full duplex antenna is assumed.
 
-            pose (Transformation, optional):
+            pose:
                 The antenna's position and orientation with respect to its array.
 
-            weight (complex, optional):
+            weight:
                 Phase and amplitude shift of signals transmitted and received by this antenna.
                 By default, no phase and amplitude shift is applied.
         """
@@ -323,7 +323,7 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
         """
         Args:
 
-            pose (Transformation, optional):
+            pose:
                 The antenna array's position and orientation with respect to its device.
                 If not specified, the same orientation and position as the device is assumed.
         """
@@ -354,7 +354,7 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
 
         Args:
 
-            default_chain (RfChain):
+            default_chain:
                 The default RF chain to be used if no RF chain is specified for a port.
 
         Returns:
@@ -393,7 +393,7 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
 
         Args:
 
-            default_chain (RfChain):
+            default_chain:
                 The default RF chain to be used if no RF chain is specified for a port.
 
         Returns:
@@ -438,19 +438,19 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
 
         Args:
 
-            num_streams (int):
+            num_streams:
                 The number of signal streams to be combined.
 
-            sampling_rate (float):
+            sampling_rate:
                 The sampling rate of the signal model to be generated in Hz.
 
-            carrier_frequency (float):
+            carrier_frequency:
                 The carrier frequency of the signal model to be generated in Hz.
 
-            propagations (Sequence[Signal]):
+            propagations:
                 The RF chain propagations to be combined.
 
-            stream_indices (Sequence[Sequence[int]]):
+            stream_indices:
                 The indices of the signal streams to be combined for each RF chain propagation.
 
         Returns: The combined signal model.
@@ -484,13 +484,13 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
 
         Args:
 
-            signal (Signal):
+            signal:
                 The signal model to be transmitted.
 
-            default_rf_chain (RfChain):
+            default_rf_chain:
                 The default RF chain to be used if no RF chain is specified for a port.
 
-            isolation_model (Isolation, optional):
+            isolation_model:
                 Model of the signal leaking from the transmit chains to the receive chains.
                 If not specified, no leakage is assumed.
 
@@ -560,17 +560,17 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
 
         Args:
 
-            impinging_signal (Signal):
+            impinging_signal:
                 The signal model iminging onto the antenna array over the air.
 
-            default_rf_chain (RfChain):
+            default_rf_chain:
                 The default RF chain to be used if no RF chain is specified for a port.
 
-            leaking_signal (Signal, optional):
+            leaking_signal:
                 The signal model leaking from the antenna array's transmit chains.
                 If not specified, no leakage is assumed.
 
-            coupling_model (Coupling, optional):
+            coupling_model:
                 The coupling model to be used to simulate mutual coupling between the antenna elements.
                 If not specified, no mutual coupling is assumed.
 
@@ -630,13 +630,13 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
 
         Args:
 
-            rf_signal (Signal):
+            rf_signal:
                 The signal model received by the antenna array's RF chains.
 
-            default_rf_chain (RfChain):
+            default_rf_chain:
                 The default RF chain to be used if no RF chain is specified for a port.
 
-            frame_duration (float):
+            frame_duration:
                 The duration of the frame to be modeled in seconds.
 
         Returns: The base-band digital signal model after analog-digital conversion.
@@ -715,17 +715,17 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
 
         Args:
 
-            carrier_frequency (float):
+            carrier_frequency:
                 The carrier frequency of the signal to be transmitted / received in Hz.
 
-            mode (AntennaMode.TX | AntennaMode.RX):
+            mode:
                 The antenna mode to be plotted.
 
-            beamforming_weights (numpy.ndarray, optional):
+            beamforming_weights:
                 The beamforming weights to be used for beamforming.
                 If not specified, the weights are assumed to be :math:`1+0\\mathrm{j}`.
 
-            title (str, optional):
+            title:
                 The title of the plot.
                 If not specified, a default title is assumed.
         """
@@ -743,13 +743,13 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
 
         Args:
 
-            carrier_frequency (float):
+            carrier_frequency:
                 The carrier frequency of the signal to be transmitted / received in Hz.
 
-            beamformer (TransmitBeamformer | ReceiveBeamformer):
+            beamformer:
                 The beamformer to be used for beamforming.
 
-            title (str, optional):
+            title:
                 The title of the plot.
                 If not specified, a default title is assumed.
         """
@@ -848,7 +848,7 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
             port_responses = arg_0.encode_streams(
                 Signal.Create(
                     np.ones(
-                        (arg_0._num_transmit_input_streams(self.num_transmit_ports), 1),
+                        (arg_0.num_transmit_input_streams(self.num_transmit_ports), 1),
                         dtype=np.complex128,
                     ),
                     1.0,
@@ -942,7 +942,7 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
 
         Args:
 
-            base_pose (Transformation):
+            base_pose:
                 The base pose to be used as reference.
 
         Returns: The antenna array's state with respect to the base pose.
@@ -964,16 +964,16 @@ class SimulatedUniformArray(
         """
         Args:
 
-            element (Type[SimulatedAntenna] | SimulatedAntenna):
+            element:
                 The anntenna model this uniform array assumes.
 
-            spacing (float):
+            spacing:
                 Spacing between the antenna elements in m.
 
-            dimensions (Sequence[int]):
+            dimensions:
                 The number of antennas in x-, y-, and z-dimension.
 
-            pose (Transformation, optional):
+            pose:
                 The anntena array's transformation with respect to its device.
         """
 
@@ -996,12 +996,12 @@ class SimulatedCustomArray(
         """
         Args:
 
-            ports (Sequence[SimulatedAntennaPort | SimulatedAntenna], optional):
+            ports:
                 Sequence of antenna ports available within this array.
                 If antennas are passed instead of ports, the ports are automatically created.
                 If not specified, an empty array is assumed.
 
-            pose (Transformation, optional):
+            pose:
                 The anntena array's transformation with respect to its device.
         """
 

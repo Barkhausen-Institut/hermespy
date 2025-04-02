@@ -6,8 +6,7 @@ Channel
    :parts: 1
 
 
-The channel model represents the basic configuration of two linked :class:`SimulatedDevices<hermespy.simulation.simulated_device.SimulatedDevice>`
-:meth:`alpha_device<.alpha_device>` and :meth:`beta_device<.beta_device>` exchanging electromagnetic :class:`Signals<hermespy.core.signal_model.Signal>`.
+The channel model represents the basic physical propagation properties configuration of linked :class:`SimulatedDevices<hermespy.simulation.simulated_device.SimulatedDevice>` exchanging electromagnetic :class:`Signals<hermespy.core.signal_model.Signal>`.
 
 Each invokation of :meth:`realize<hermespy.channel.channel.Channel.realize>` will generate a new :class:`ChannelRealization<hermespy.channel.channel.ChannelRealization>` instance by internally calling :meth:`._realize<hermespy.channel.channel.Channel._realize>`.
 The channel model represents the matrix function of time :math:`t` and delay :math:`\tau`
@@ -26,6 +25,7 @@ distributions, so that a :class:`ChannelRealization<hermespy.channel.channel.Cha
    \mathbf{H}(t, \tau) \in \mathbb{C}^{N_{\mathrm{Rx}} \times N_{\mathrm{Tx}}} \ \text{.}
 
 .. autoclass:: hermespy.channel.channel.Channel
+   :private-members: _realize
 
 .. autoclass:: hermespy.channel.channel.ChannelSampleHook
 

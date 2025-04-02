@@ -68,22 +68,22 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
         """
         Args:
 
-            chirp_duration (float, optional):
+            chirp_duration:
                 Duration of a single chirp in seconds.
 
-            chirp_bandwidth (float, optional):
+            chirp_bandwidth:
                 Bandwidth of a single chirp in Hz.
 
-            freq_difference (float, optional):
+            freq_difference:
                 Frequency difference of two adjacent chirp symbols.
 
-            num_pilot_chirps (int, optional):
+            num_pilot_chirps:
                 Number of pilot symbols within a single frame.
 
-            num_data_chirps (int, optional):
+            num_data_chirps:
                 Number of data symbols within a single frame.
 
-            guard_interval (float, optional):
+            guard_interval:
                 Frame guard interval in seconds.
 
             \*\*kwargs:
@@ -104,11 +104,7 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
 
     @property
     def frame_duration(self) -> float:
-        """Length of one data frame in seconds.
-
-        Returns:
-            float: Frame length in seconds.
-        """
+        """Length of one data frame in seconds."""
 
         return (
             self.chirp_duration * (self.num_data_chirps + self.num_pilot_chirps)
@@ -119,9 +115,7 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
     def chirp_duration(self) -> float:
         """Duration of a single chirp within a frame.
 
-        Returns:
-            float:
-                Chirp duration in seconds.
+        Returns: Chirp duration in seconds.
 
         Raises:
             ValueError: If the duration is less or equal to zero.
@@ -141,9 +135,7 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
     def chirp_bandwidth(self) -> float:
         """Access the chirp bandwidth.
 
-        Returns:
-            float:
-                The chirp bandwidth in Hz.
+        Returns: The chirp bandwidth in Hz.
         """
 
         return self.__chirp_bandwidth
@@ -153,12 +145,11 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
         """Modify the chirp bandwidth.
 
         Args:
-            bandwidth (float):
+            bandwidth:
                 The new bandwidth in Hz.
 
         Raises:
-            ValueError:
-                If the bandwidth is les sor equal to zero.
+            ValueError: If the bandwidth is les sor equal to zero.
         """
 
         if bandwidth <= 0.0:
@@ -171,9 +162,7 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
     def freq_difference(self) -> float:
         """The frequency offset between neighbouring chirp symbols.
 
-        Returns:
-            float:
-                The frequency difference in Hz.
+        Returns: The frequency difference in Hz.
 
         Raises:
             ValueError: If `freq_difference` is smaller or equal to zero.
@@ -199,9 +188,7 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
     def num_pilot_chirps(self) -> int:
         """Access the number of pilot chirps.
 
-        Returns:
-            int:
-                The number of pilot chirps.
+        Returns: The number of pilot chirps.
         """
 
         return self.__num_pilot_chirps
@@ -211,12 +198,11 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
         """Modify the number of pilot chirps
 
         Args:
-            num (int):
+            num:
                 The new number of pilot chirps.
 
         Raises:
-            ValueError:
-                If the `num`ber of pilot chirps is less than zero.
+            ValueError: If the `num`ber of pilot chirps is less than zero.
         """
 
         if num < 0:
@@ -229,9 +215,7 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
     def num_data_chirps(self) -> int:
         """Access the number of data chirps.
 
-        Returns:
-            int:
-                The number of data chirps.
+        Returns: The number of data chirps.
         """
 
         return self.__num_data_chirps
@@ -241,12 +225,10 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
         """Modify the number of pilot chirps
 
         Args:
-            num (int):
-                The new number of data chirps.
+            num: The new number of data chirps.
 
         Raises:
-            ValueError:
-                If the `num`ber of data chirps is less than zero.
+            ValueError: If the `num`ber of data chirps is less than zero.
         """
 
         if num < 0:
@@ -258,9 +240,7 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
     def guard_interval(self) -> float:
         """Access the guard interval.
 
-        Returns:
-            float:
-                The guard interval in seconds.
+        Returns: The guard interval in seconds.
         """
 
         return self.__guard_interval
@@ -270,12 +250,10 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
         """Modify the guard interval.
 
         Args:
-            interval (float):
-                The new guard `interval` in seconds.
+            interval: The new guard `interval` in seconds.
 
         Raises:
-            ValueError:
-                If the frequency guard `interval` is less than zero.
+            ValueError: If the frequency guard `interval` is less than zero.
         """
 
         if interval < 0.0:
@@ -285,12 +263,7 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
 
     @property
     def bits_per_symbol(self) -> int:
-        """The number of bits per generated symbol.
-
-        Returns:
-            int:
-                The number of bits.
-        """
+        """The number of bits per generated symbol."""
 
         return int(np.log2(self.modulation_order))
 
@@ -301,23 +274,13 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
 
     @property
     def samples_in_chirp(self) -> int:
-        """The number of discrete samples per generated chirp.
-
-        Returns:
-            int:
-                The number of samples.
-        """
+        """The number of discrete samples per generated chirp."""
 
         return int(ceil(self.chirp_duration * self.sampling_rate))
 
     @property
     def chirps_in_frame(self) -> int:
-        """The number of chirps per generated frame.
-
-        Returns:
-            int:
-                The number of chirps.
-        """
+        """The number of chirps per generated frame."""
 
         return self.num_pilot_chirps + self.num_data_chirps
 
@@ -342,11 +305,7 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
     @property
     @override
     def bit_energy(self) -> float:
-        """Theoretical average bit energy of the modulated signal.
-
-        Returns:
-            The average bit energy in UNIT.
-        """
+        """Theoretical average bit energy of the modulated signal."""
 
         _, symbol_energy = self._prototypes()
         bit_energy = symbol_energy / self.bits_per_symbol
@@ -427,10 +386,9 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
         """Calculates the frequency offsets on frame creation.
 
         Args:
-            data_bits (numpy.ndarray): Data bits to calculate the offsets for.
+            data_bits: Data bits to calculate the offsets for.
 
-        Returns:
-            np.array: Array of length `number_data_chirps`.
+        Returns: Array of length `number_data_chirps`.
         """
         # convert bits to integer frequency offsets
         # e.g. [8, 4, 2, 1]
@@ -464,11 +422,7 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
 
         Since the computation is quite costly, the most recent output will be cached.
 
-        Returns: Tuple[np.array, np.array, float]
-            np.array:
-                Prototype.
-            float:
-                Symbol energy.
+        Returns: Tuple of waveform prototypes and symbol energy.
         """
 
         # Chirp parameter inference
@@ -507,11 +461,7 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
 
     @property
     def pilot_signal(self) -> Signal:
-        """Samples of the frame's pilot section.
-
-        Returns:
-            samples (numpy.ndarray): Pilot samples.
-        """
+        """Samples of the frame's pilot section."""
 
         # Generate single pilot chirp prototype
         prototypes, _ = self._prototypes()
@@ -570,7 +520,7 @@ class ChirpFSKSynchronization(Synchronization[ChirpFSKWaveform], Serializable):
         """
         Args:
 
-            waveform (CommunicationWaveform, optional):
+            waveform:
                 The waveform generator this synchronization routine is attached to.
         """
 

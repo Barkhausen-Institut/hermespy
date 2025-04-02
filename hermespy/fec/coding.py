@@ -106,8 +106,7 @@ class Encoder(ABC, Serializable):
         """
         Args:
 
-            manager (EncoderManager, optional):
-                The coding pipeline configuration this encoder is registered in.
+            manager: The coding pipeline configuration this encoder is registered in.
         """
 
         # Default settings
@@ -149,19 +148,13 @@ class Encoder(ABC, Serializable):
         encoding a block of :math:`K_n` input bits into a block of :math:`L_n` code bits.
 
         Args:
-
-            bits (numpy.ndarray):
+            bits:
                 A numpy vector of :math:`K_n` bits, representing a single bit block to be encoded.
 
-        Returns:
-
-            np.ndarray:
-                A numpy vector of :math:`L_n` bits, representing a single code block.
+        Returns: A numpy vector of :math:`L_n` bits, representing a single code block.
 
         Raises:
-
-            ValueError:
-                If the length of ``bits`` does not equal :meth:`bit_block_size`.
+            ValueError: If the length of ``bits`` does not equal :meth:`bit_block_size`.
         """
         ...  # pragma: no cover
 
@@ -174,18 +167,14 @@ class Encoder(ABC, Serializable):
 
         Args:
 
-            encoded_bits (numpy.ndarray):
+            encoded_bits:
                 A numpy vector of :math:`L_n` code bits, representing a single code block to be decoded.
 
-        Returns:
-
-            np.ndarray:
-                A numpy vector of :math:`K_n` bits, representing a single data block.
+        Returns: A numpy vector of :math:`K_n` bits, representing a single data block.
 
         Raises:
 
-            ValueError:
-                If the length of ``encoded_bits`` does not equal :meth:`code_block_size`.
+            ValueError: If the length of ``encoded_bits`` does not equal :meth:`code_block_size`.
         """
         ...  # pragma: no cover
 
@@ -197,8 +186,6 @@ class Encoder(ABC, Serializable):
         In other words, the number of input bits within a single code block during transmit encoding,
         or the number of output bits during receive decoding.
         Referred to as :math:`K_n` within the respective equations.
-
-        Returns: Number of bits :math:`K_n`.
         """
         ...  # pragma: no cover
 
@@ -210,8 +197,6 @@ class Encoder(ABC, Serializable):
         In other words, the number of input bits within a single code block during receive decoding,
         or the number of output bits during transmit encoding.
         Referred to as :math:`L_n` within the respective equations.
-
-        Returns: Number of bits :math:`L_n`.
         """
         ...  # pragma: no cover
 
@@ -226,11 +211,6 @@ class Encoder(ABC, Serializable):
            R_n = \\frac{K_n}{L_n}
 
         between the :meth:`.bit_block_size` :math:`K_n` and :meth:`code_block_size` :math:`L_n`.
-
-        Returns:
-
-            float:
-                The code rate :math:`R_n`
         """
 
         return self.bit_block_size / self.code_block_size
@@ -259,15 +239,15 @@ class EncoderManager(RandomNode, Serializable):
         """
         Args:
 
-            modem (BaseModem, optional):
+            modem:
                 Communication modem instance this coding pipeline configuration is attached to.
                 By default, the coding pipeline is considered to be floating.
 
-            allow_padding(bool, optional):
+            allow_padding:
                 Tolerate padding of data bit blocks during encoding.
                 Enabled by default.
 
-            allow_truncating(bool, optional):
+            allow_truncating:
                 Tolerate truncating of data code blocks during decoding.
                 Enabled by default.
         """
@@ -287,15 +267,8 @@ class EncoderManager(RandomNode, Serializable):
     def modem(self) -> BaseModem:
         """Communication modem instance this coding pipeline configuration is attached to.
 
-        Returns:
-
-            Modem:
-                Handle to the modem instance.
-
         Raises:
-
-            RuntimeError:
-                If the encoding configuration is floating, i.e. not attached to a modem.
+            RuntimeError: If the encoding configuration is floating, i.e. not attached to a modem.
         """
 
         if self.__modem is None:
@@ -312,8 +285,7 @@ class EncoderManager(RandomNode, Serializable):
         """Register a new encoder instance to this pipeline configuration.
 
         Args:
-            encoder (Encoder):
-                The new encoder to be added.
+            encoder: The new encoder to be added.
         """
 
         # Register this encoding configuration to the encoder
@@ -328,11 +300,9 @@ class EncoderManager(RandomNode, Serializable):
     def encoders(self) -> List[Encoder]:
         """List of encoders registered within  this pipeline.
 
-        Returns:
-            List[Encoder]:
-                List of :math:`N` :class:`Encoder` instances where the :math:`n`-th entry represents
-                the :math:`n`-th coding operation during transmit encoding, or, inversely,
-                the :math:`1 + N - n`-th coding operation during receive decoding.
+        List of :math:`N` :class:`Encoder` instances where the :math:`n`-th entry represents
+        the :math:`n`-th coding operation during transmit encoding, or, inversely,
+        the :math:`1 + N - n`-th coding operation during receive decoding.
         """
 
         return self._encoders
@@ -346,22 +316,13 @@ class EncoderManager(RandomNode, Serializable):
         The resulting code will be padded with zeros to match the requested `num_code_bits`.
 
         Args:
+            data_bits: Numpy vector of data bits to be encoded.
+            num_code_bits: The expected resulting number of code bits.
 
-            data_bits (numpy.ndarray):
-                Numpy vector of data bits to be encoded.
-
-            num_code_bits (int, optional):
-                The expected resulting number of code bits.
-
-        Returns:
-
-            np.ndarray:
-                Numpy vector of encoded bits.
+        Returns: Numpy vector of encoded bits.
 
         Raises:
-
-            ValueError:
-                If `num_code_bits` is smaller than the resulting code bits after encoding.
+            ValueError: If `num_code_bits` is smaller than the resulting code bits after encoding.
         """
 
         code_state = data_bits.copy()
@@ -431,24 +392,14 @@ class EncoderManager(RandomNode, Serializable):
         The resulting data might be cut to match the requested `num_data_bits`.
 
         Args:
-            encoded_bits (numpy.ndarray):
-                Numpy vector of code bits to be decoded to data bits.
+            encoded_bits: Numpy vector of code bits to be decoded to data bits.
+            num_data_bits: The expected number of resulting data bits.
 
-            num_data_bits (int, optional):
-                The expected number of resulting data bits.
-
-        Returns:
-
-            np.ndarray:
-                Numpy vector of the resulting data bit stream after decoding.
+        Returns: Numpy vector of the resulting data bit stream after decoding.
 
         Raises:
-
-            RuntimeError:
-                If `num_data_bits` is bigger than the resulting data bits after decoding.
-
-            RuntimeError:
-                If truncating is required but disabled by :meth:`.allow_truncating`.
+            RuntimeError: If `num_data_bits` is bigger than the resulting data bits after decoding.
+            RuntimeError: If truncating is required but disabled by `allow_truncating`.
         """
 
         bit_block_size = self.bit_block_size
@@ -506,13 +457,7 @@ class EncoderManager(RandomNode, Serializable):
 
         In other words, the number of input bits within a single code block during transmit encoding,
         or the number of output bits during receive decoding.
-        Referred to as :math:`K` within the respective equations.
-
-        Returns:
-
-            int:
-                Number of bits :math:`K`.
-        """
+        Referred to as :math:`K` within the respective equations."""
 
         if len(self._encoders) < 1:
             return 1
@@ -544,11 +489,6 @@ class EncoderManager(RandomNode, Serializable):
         In other words, the number of input bits within a single code block during receive decoding,
         or the number of output bits during transmit encoding.
         Referred to as :math:`L` within the respective equations.
-
-        Returns:
-
-            int:
-                Number of bits :math:`L`.
         """
 
         for encoder in reversed(self.encoders):
@@ -577,11 +517,6 @@ class EncoderManager(RandomNode, Serializable):
            R = \\frac{K}{L}
 
         between the :meth:`.bit_block_size` :math:`K` and :meth:`.code_block_size` :math:`L`.
-
-        Returns:
-
-            float:
-                The code rate :math:`R`.
         """
 
         code_rate = 1.0
@@ -595,10 +530,9 @@ class EncoderManager(RandomNode, Serializable):
         """Compute the number of input bits required to produce a certain number of output bits.
 
         Args:
-            num_code_bits (int): The expected number of output bits.
+            num_code_bits: The expected number of output bits.
 
-        Returns:
-            int: The required number of input bits.
+        Returns: The required number of input bits.
         """
 
         num_blocks = int(num_code_bits / self.code_block_size)
@@ -609,13 +543,9 @@ class EncoderManager(RandomNode, Serializable):
 
         Args:
 
-            item (int):
-                Index of the encoder within the chain.
+            item: Index of the encoder within the chain.
 
-        Returns:
-
-            Encoder:
-                The selected encoder.
+        Returns: The selected encoder.
         """
 
         return self._encoders[item]

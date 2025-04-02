@@ -42,36 +42,36 @@ class Exponential(MultipathFadingChannel):
         """
         Args:
 
-            tap_interval (float):
+            tap_interval:
                 Tap interval in seconds.
 
-            rms_delay (float):
+            rms_delay:
                 Root-Mean-Squared delay in seconds.
 
-            correlation_distance (float, optional):
+            correlation_distance:
                 Distance at which channel samples are considered to be uncorrelated.
                 :math:`\\infty` by default, i.e. the channel is considered to be fully correlated in space.
 
-            num_sinusoids (int, optional):
+            num_sinusoids:
                 Number of sinusoids used to sample the statistical distribution.
                 Denoted by :math:`N` within the respective equations.
 
-            los_angle (float, optional):
+            los_angle:
                 Angle phase of the line of sight component within the statistical distribution.
 
-            doppler_frequency (float, optional):
+            doppler_frequency:
                 Doppler frequency shift of the statistical distribution.
                 Denoted by :math:`\\omega_{\\ell}` within the respective equations.
 
-            antenna_correlation (AntennaCorrelation, optional):
+            antenna_correlation:
                 Antenna correlation model.
                 By default, the channel assumes ideal correlation, i.e. no cross correlations.
 
-            gain (float, optional):
+            gain:
                 Linear power gain factor a signal experiences when being propagated over this realization.
                 :math:`1.0` by default.
 
-            seed (int, optional):
+            seed:
                 Seed used to initialize the pseudo-random number generator.
 
         Raises:

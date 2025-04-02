@@ -122,7 +122,7 @@ class Alamouti(TransmitSymbolEncoder, ReceiveSymbolDecoder, Serializable):
             ),
         )
 
-    def _num_transmit_input_streams(self, num_output_streams: int) -> int:
+    def num_transmit_input_streams(self, num_output_streams: int) -> int:
         return 1 if num_output_streams == 2 else -1
 
     def num_receive_output_streams(self, num_input_streams: int) -> int:
@@ -338,7 +338,7 @@ class Ganesan(TransmitSymbolEncoder, ReceiveSymbolDecoder, Serializable):
         ideal_states = np.ones((num_rx, 1, decoded_symbols.shape[1], decoded_symbols.shape[2]))
         return StatedSymbols(decoded_symbols, ideal_states)
 
-    def _num_transmit_input_streams(self, num_output_streams: int) -> int:
+    def num_transmit_input_streams(self, num_output_streams: int) -> int:
         return 1 if num_output_streams == 4 else -1
 
     def num_receive_output_streams(self, num_input_streams: int) -> int:

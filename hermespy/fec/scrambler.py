@@ -140,7 +140,7 @@ class Scrambler3GPP(Encoder, Serializable):
         """
         Args:
 
-            seed (numpy.ndarray, optional):
+            seed:
                 Seed used to initialize the scrambling sequence generation.
                 Must contain a sequence of bits.
         """
@@ -198,7 +198,7 @@ class Scrambler80211a(Encoder, Serializable):
         """
         Args:
 
-            seed (numpy.ndarray, optional):
+            seed:
                 Seed used to initialize the scrambling sequence generation.
                 Must contain a sequence of 7 bits.
         """

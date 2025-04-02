@@ -46,28 +46,28 @@ class OFDMRadar(DuplexJCASOperator[OFDMWaveform], Serializable):
         """
         Args:
 
-            waveform (OFDMWaveform, optional):
+            waveform:
                 Communication waveform emitted by this operator.
 
-            receive_beamformer (ReceiveBeamformer, optional):
+            receive_beamformer:
                 Beamformer used to process the received signal.
 
-            detector (RadarDetector, optional):
+            detector:
                 Detector used to process the radar cube.
 
-            selected_transmit_ports (Sequence[int] | None):
-                Indices of antenna ports selected for transmission from the operated :class:`Device's<Device>` antenna array.
+            selected_transmit_ports:
+                Indices of antenna ports selected for transmission from the operated :class:`Device's<hermespy.core.device.Device>` antenna array.
                 If not specified, all available ports will be considered.
 
-            selected_receive_ports (Sequence[int] | None):
-                Indices of antenna ports selected for reception from the operated :class:`Device's<Device>` antenna array.
+            selected_receive_ports:
+                Indices of antenna ports selected for reception from the operated :class:`Device's<hermespy.core.device.Device>` antenna array.
                 If not specified, all available antenna ports will be considered.
 
-            carrier_frequency (float, optional):
+            carrier_frequency:
                 Central frequency of the mixed signal in radio-frequency transmission band.
                 If not specified, the operated device's default carrier frequency will be assumed during signal processing.
 
-            seed (int, optional):
+            seed:
                 Random seed used to initialize the pseudo-random number generator.
         """
 
@@ -149,11 +149,10 @@ class OFDMRadar(DuplexJCASOperator[OFDMWaveform], Serializable):
         """Estiamte the range-power profile of the received signal.
 
         Args:
-            transmitted_symbols (Symbols): The originally transmitted OFDM symbols.
-            received_signal (Signal): The received OFDM base-band signal samples.
+            transmitted_symbols: The originally transmitted OFDM symbols.
+            received_signal: The received OFDM base-band signal samples.
 
-        Returns:
-            np.ndarray: The range-power profile of the received signal.
+        Returns: The range-power profile of the received signal.
         """
 
         # Demodulate the signal received from an angle of interest

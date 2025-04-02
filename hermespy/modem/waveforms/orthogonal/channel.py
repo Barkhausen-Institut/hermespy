@@ -69,7 +69,7 @@ class OrthogonalChannelEqualization(ChannelEqualization[OrthogonalWaveform], ABC
         """
         Args:
 
-            waveform (CommunicationWaveform, optional):
+            waveform:
                 The waveform generator this equalization routine is attached to.
         """
 

@@ -41,22 +41,22 @@ class RfChain(Serializable):
         """
         Args:
 
-            phase_offset (float, optional):
+            phase_offset:
                 I/Q phase offset in radians.
 
-            amplitude_imbalance (float, optional):
+            amplitude_imbalance:
                 I/Q amplitude imbalance.
 
-            adc (AnalogDigitalConverter, optional):
+            adc:
                 The analog to digital converter at the end of the RF receive chain.
                 If not specified, ideal analog-to-digital conversion introducing no
                 additional noise is assumed.
 
-            power_amplifier (PowerAmplifier, optional):
+            power_amplifier:
                 The power amplifier at the beginning of the RF transmit chain.
                 If not specified, ideal linear power amplification is assumed.
 
-            phase_noise (PhaseNoise, optional):
+            phase_noise:
                 Phase noise model configuration.
                 If not specified, an ideal oscillator introducing no phase noise is assumed.
         """
@@ -135,13 +135,11 @@ class RfChain(Serializable):
         Notation taken from https://en.wikipedia.org/wiki/IQ_imbalance.
 
         Args:
-            input_signal (numpy.ndarray):
+            input_signal:
                 Signal to be deteriorated as a matrix in shape `#no_antennas x #no_samples`.
                 `#no_antennas` depends if on receiver or transmitter side.
 
-        Returns:
-            np.ndarray:
-                Deteriorated signal with the same shape as `input_signal`.
+        Returns: Deteriorated signal with the same shape as `input_signal`.
         """
         x = input_signal
         eps_delta = self.__phase_offset
@@ -170,11 +168,7 @@ class RfChain(Serializable):
 
     @property
     def power_amplifier(self) -> PowerAmplifier | None:
-        """Access the `PowerAmplifier` of the rf chain.
-
-        Returns:
-            A handle to the `PowerAmplifier`.
-        """
+        """Access the represented radio-frequency chain's power amplifier  A handle to the `PowerAmplifier`."""
 
         return self.__power_amplifier
 

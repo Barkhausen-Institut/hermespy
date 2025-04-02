@@ -53,38 +53,38 @@ class TDL(MultipathFadingChannel):
         """
         Args:
 
-            model_type (TYPE):
+            model_type:
                 The model type.
                 If not specified, the default model type A is assumed.
 
-            rms_delay (float):
+            rms_delay:
                 Root-Mean-Squared delay in seconds.
                 Initializes the :attr:`rms_delay` attribute.
 
-            correlation_distance (float, optional):
+            correlation_distance:
                 Distance at which channel samples are considered to be uncorrelated.
                 :math:`\\infty` by default, i.e. the channel is considered to be fully correlated in space.
 
-            num_sinusoids (int, optional):
+            num_sinusoids:
                 Number of sinusoids used to sample the statistical distribution.
                 Denoted by :math:`N` within the respective equations.
 
-            los_angle (float, optional):
+            los_angle:
                 Angle phase of the line of sight component within the statistical distribution.
 
-            doppler_frequency (float, optional):
+            doppler_frequency:
                 Doppler frequency shift of the statistical distribution.
                 Denoted by :math:`\\omega_{\\ell}` within the respective equations.
 
-            antenna_correlation (AntennaCorrelation, optional):
+            antenna_correlation:
                 Antenna correlation model.
                 By default, the channel assumes ideal correlation, i.e. no cross correlations.
 
-            gain (float, optional):
+            gain:
                 Linear power gain factor a signal experiences when being propagated over this realization.
                 :math:`1.0` by default.
 
-            seed (int, optional):
+            seed:
                 Seed used to initialize the pseudo-random number generator.
 
         Raises:
@@ -398,20 +398,13 @@ class TDL(MultipathFadingChannel):
 
     @property
     def model_type(self) -> TDLType:
-        """Access the configured model type.
-
-        Returns:
-            MultipathFading5gTDL.TYPE: The configured model type.
-        """
+        """Access the configured model type."""
 
         return self.__model_type
 
     @property
     def rms_delay(self) -> float:
-        """Root mean squared channel delay.
-
-        Returns: Delay in seconds.
-        """
+        """Root mean squared channel delay in seconds."""
 
         return self.__rms_delay
 

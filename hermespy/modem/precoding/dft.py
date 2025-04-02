@@ -42,7 +42,7 @@ class DFT(TransmitSymbolEncoder, ReceiveSymbolDecoder, Serializable):
         """
 
         Args:
-            fft_norm (DFTNorm, optional):
+            fft_norm:
                 The norm applied to the discrete fourier transform.
                 Defaults to DFTNorm.ORTHO.
                 See also numpy.fft.fft for details
@@ -68,7 +68,7 @@ class DFT(TransmitSymbolEncoder, ReceiveSymbolDecoder, Serializable):
 
         return decoded_symbols
 
-    def _num_transmit_input_streams(self, num_output_streams: int) -> int:
+    def num_transmit_input_streams(self, num_output_streams: int) -> int:
         return num_output_streams
 
     def num_receive_output_streams(self, num_input_streams: int) -> int:

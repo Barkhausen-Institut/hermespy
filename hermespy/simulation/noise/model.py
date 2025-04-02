@@ -34,8 +34,8 @@ class NoiseRealization(RandomRealization):
         """
         Args:
 
-            power (float): Power indicator of the noise model.
-            seed (int): Seed for the random number generator.
+            power: Power indicator of the noise model.
+            seed: Seed for the random number generator.
         """
 
         # Validate attributes
@@ -61,7 +61,7 @@ class NoiseRealization(RandomRealization):
     def add_to(self, signal: Signal) -> Signal:
         """
         Args:
-            signal (Signal):
+            signal:
                 The signal to which the noise should be added.
 
         Returns: Signal model with added noise.
@@ -100,7 +100,7 @@ class NoiseModel(Serializable, RandomNode, Generic[NRT]):
         """
         Args:
 
-            seed (int, optional):
+            seed:
                 Random seed for initializating the pseud-random number generator.
         """
 
@@ -112,7 +112,7 @@ class NoiseModel(Serializable, RandomNode, Generic[NRT]):
 
         Args:
 
-            power (float, optional):
+            power:
                 Power of the added noise in Watt.
 
         Returns: Noise model realization.
@@ -124,10 +124,10 @@ class NoiseModel(Serializable, RandomNode, Generic[NRT]):
 
         Args:
 
-            signal (Signal):
+            signal:
                 The signal to which the noise should be added.
 
-            power (float):
+            power:
                 Power of the added noise in Watt.
 
         Returns: Signal model with added noise.
@@ -163,7 +163,7 @@ class AWGN(NoiseModel[AWGNRealization]):
         """
         Args:
 
-            seed (int, optional):
+            seed:
                 Random seed for initializating the pseud-random number generator.
         """
 

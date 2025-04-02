@@ -10,6 +10,7 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+from __future__ import annotations
 import os
 from sys import path
 
@@ -55,6 +56,23 @@ autoclass_content = "both"
 add_module_names = False
 toc_object_entries = False
 
+# Nitpick configuration
+nitpicky = True
+nitpick_ignore = {
+    ('py:class', 'numpy.int32'),
+    ('py:class', 'numpy.int8'),
+    ('py:class', 'numpy.float64'),
+    ('py:class', 'numpy.complex128'),
+    ('py:class', 'numpy._typing._dtype_like._SupportsDType'),
+    ('py:class', 'numpy._typing._dtype_like._DTypeDict'),
+    ('py:class', 'h5py._hl.group.Group'),
+    ('py:class', 'pybind11_builtins.pybind11_object'),
+    ('py:class', 'sparse._sparse_array.SparseArray'),
+    ('py:class', 'rt.Scene'),
+    ('py:class', 'np.ndarray'),
+    ('py:class', 'hermespy.channel.quadriga.octave.QuadrigaOctaveInterface'),
+}
+
 # Bibtex
 bibtex_bibfiles = ['references.bib']
 bibtex_foot_reference_style = 'foot'
@@ -87,6 +105,10 @@ autodoc_default_options = {
     'inherited-members': False,
 }
 
+autodoc_type_aliases = {
+}
+
+
 # Inheritanze GraphVis configuration
 inheritance_graph_attrs = dict(
     rankdir="TB",
@@ -106,7 +128,14 @@ intersphinx_mapping = {
     'matplotlib': ('https://matplotlib.org/stable/', None),
     'numpy': ('https://numpy.org/doc/stable/', None),
     'scipy': ('https://docs.scipy.org/doc/scipy/', None),
+    'rich': ('https://rich.readthedocs.io/en/stable/', None),
+    'ray': ('https://docs.ray.io/en/latest/', None),
+    'sionna': ('https://jhoydis.github.io/sionna-0.19.2-doc/', None),
+    'pybind11': ('https://pybind11.readthedocs.io/en/stable/', None),
+    'sparse': ('https://sparse.pydata.org/en/stable/', None),
+    'scapy': ('https://scapy.readthedocs.io/en/latest/', None),
 }
+tls_verify = True  # Should only be disabled for local builds!!!
 
 nbsphinx_requirejs_path = ""
 nbsphinx_prolog = """

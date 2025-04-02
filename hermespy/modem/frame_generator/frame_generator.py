@@ -27,11 +27,10 @@ class FrameGenerator(ABC, Serializable):
         """Generate a frame of num_bits bits from the given bitsource.
 
         Args:
-            source (BitsSource): payload source.
-            num_bits (int): number of bits in the whole resulting frame.
+            source: Payload source.
+            num_bits: Number of bits in the whole resulting frame.
 
-        Return:
-            frame (numpy.ndarray): array of ints with each element beeing an individual bit.
+        Returns: Array of ints with each element beeing an individual bit.
         """
         ...  # pragma: no cover
 
@@ -40,10 +39,9 @@ class FrameGenerator(ABC, Serializable):
         """Extract the original payload from the frame generated with pack_frame.
 
         Args:
-            frame (numpy.ndarray): array of bits of a frame, generated with pack_frame.
+            frame: Array of bits of a frame, generated with pack_frame.
 
-        Return:
-            payload (numpy.ndarray): array of payload bits."""
+        Returns: Array of payload bits."""
         ...  # pragma: no cover
 
 

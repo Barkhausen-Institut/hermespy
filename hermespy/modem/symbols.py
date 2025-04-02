@@ -49,19 +49,17 @@ class _ConstellationPlot(VisualizableAttribute[ScatterVisualization]):
 
     Args:
 
-        axes (Optional[plt.Axes], optional):
+        axes:
             The axes to plot the graph to.
             By default, a new matplotlib figure is created.
 
-        title (str, optional):
+        title:
             Plot title.
             Only relevant if no axes were provided.
 
     Returns:
-
-        Optional[plt.Figure]:
-            Handle to the created matplotlib.pyplot figure object.
-            None if the axes were provided.
+        Handle to the created matplotlib.pyplot figure object.
+        None if the axes were provided.
     """
 
     __symbols: Symbols
@@ -70,7 +68,7 @@ class _ConstellationPlot(VisualizableAttribute[ScatterVisualization]):
         """
         Args:
 
-            symbols (Symbols): The symbols to be plotted.
+            symbols: The symbols to be plotted.
         """
 
         # Initialize the base class
@@ -123,10 +121,10 @@ class Symbol(object):
         """
         Args:
 
-            value (complex):
+            value:
                 Symbol value.
 
-            flag (SymbolType, optional):
+            flag:
                 Assumed symbol type.
                 Data is assumed by default.
         """
@@ -145,7 +143,7 @@ class Symbols(Serializable):
         """
         Args:
 
-            symbols (Iterable or numpy.ndarray, optional):
+            symbols:
                 A three-dimensional array of complex-valued communication symbols.
                 The first dimension denotes the number of streams,
                 the second dimension the number of symbol blocks per stream,
@@ -171,31 +169,19 @@ class Symbols(Serializable):
 
     @property
     def num_streams(self) -> int:
-        """Number of streams within this symbol series.
-
-        Returns:
-            int: Number of streams.
-        """
+        """Number of streams within this symbol series."""
 
         return self.__symbols.shape[0]
 
     @property
     def num_blocks(self) -> int:
-        """Number of symbol blocks within this symbol series.
-
-        Returns:
-            int: Number of symbols
-        """
+        """Number of symbol blocks within this symbol series."""
 
         return self.__symbols.shape[1]
 
     @property
     def num_symbols(self) -> int:
-        """Number of symbols per stream within this symbol series.
-
-        Returns:
-            int: Number of symbols
-        """
+        """Number of symbols per stream within this symbol series. """
 
         return self.__symbols.shape[2]
 
@@ -205,9 +191,7 @@ class Symbols(Serializable):
         Represents a matrix concatenation in the first dimensions.
 
         Args:
-
-            symbols (Symbols or numpy.ndarray):
-                Symbol stream to be appended to this symbol series.
+            symbols: Symbol stream to be appended to this symbol series.
 
         Raises:
 
@@ -244,9 +228,7 @@ class Symbols(Serializable):
         Represents a matrix concatenation in the second dimensions.
 
         Args:
-
-            symbols (Symbols or numpy.ndarray):
-                Symbol sequence to be appended to this symbol series.
+            symbols: Symbol sequence to be appended to this symbol series.
 
         Raises:
 
@@ -276,11 +258,7 @@ class Symbols(Serializable):
 
     @property
     def raw(self) -> np.ndarray:
-        """Access the raw symbol array.
-
-        Return:
-            np.ndarray: The raw symbol array
-        """
+        """Access the raw symbol array."""
 
         return self.__symbols
 
@@ -294,8 +272,7 @@ class Symbols(Serializable):
     def copy(self) -> Symbols:
         """Create a deep copy of this symbol sequence.
 
-        Returns:
-            Symbols: Copied sequence.
+        Returns: Copied sequence.
         """
 
         return Symbols(self.__symbols.copy())
@@ -304,12 +281,9 @@ class Symbols(Serializable):
         """Slice this symbol series.
 
         Args:
-            section (slice):
-                Slice symbol selection.
+            section: Slice symbol selection.
 
-        Returns:
-            Symbols:
-                New Symbols object representing the selected `section`.
+        Returns: New Symbols object representing the selected `section`.
         """
 
         return Symbols(self.__symbols[section])
@@ -318,11 +292,8 @@ class Symbols(Serializable):
         """Set symbols within this series.
 
         Args:
-            section (slice):
-                Slice pointing to the symbol positions to be updated.
-
-            value (Symbols or numpy.ndarray):
-                The symbols to be set.
+            section: Slice pointing to the symbol positions to be updated.
+            value: The symbols to be set.
         """
 
         if isinstance(value, Symbols):
@@ -356,13 +327,13 @@ class StatedSymbols(Symbols):
         """
         Args:
 
-            symbols (Union[Iterable, numpy.ndarray]):
+            symbols:
                 A three-dimensional array of complex-valued communication symbols.
                 The first dimension denotes the number of streams,
                 the second dimension the number of symbol blocks per stream,
                 the the dimension the number of symbols per block.
 
-            states (numpy.ndarray | SparseArray):
+            states:
                 Four-dimensional numpy array with the first two dimensions indicating the
                 MIMO receive and transmit streams, respectively and the last two dimensions
                 indicating the number of symbol blocks and symbols per block.
@@ -422,10 +393,7 @@ class StatedSymbols(Symbols):
 
     @property
     def num_transmit_streams(self) -> int:
-        """Number of impinging transmit streams.
-
-        Returns: Number of streams.
-        """
+        """Number of impinging transmit streams."""
 
         return self.__states.shape[1]
 

@@ -26,11 +26,10 @@ class Pipeline(Executable, Generic[ScenarioType, DeviceType]):
         """
         Args:
 
-            scenario (ScenarioType):
-                The simulated scenario.
+            scenario: The simulated scenario.
 
-            num_drops (int, optional):
-                Number of consecutive triggers occuring during :meth:`run`,
+            num_drops:
+                Number of consecutive triggers occuring during :meth:`run<hermespy.core.executable.Executable.run>`,
                 resulting in `num_drops` data drops being generated.
                 One by default.
         """
@@ -58,7 +57,6 @@ class Pipeline(Executable, Generic[ScenarioType, DeviceType]):
         Returns: The number of drops.
 
         Raises:
-
             ValueError: For `num_drops` smaller than one.
         """
 
@@ -77,12 +75,9 @@ class Pipeline(Executable, Generic[ScenarioType, DeviceType]):
         Convenience function pointing to :meth:`hermespy.core.scenario.Scenario.add_device`.
 
         Args:
-
-            device:
-                New device to be added to the scenario.
+            device: New device to be added to the scenario.
 
         Raises:
-
             ValueError: If the device already exists.
             RuntimeError: If the scenario is not in default mode.
             RuntimeError: If the scenario does not allow for the creation or addition of new devices.
@@ -98,7 +93,6 @@ class Pipeline(Executable, Generic[ScenarioType, DeviceType]):
         Returns: Handle to the created device.
 
         Raises:
-
             ValueError: If the device already exists.
             RuntimeError: If the scenario is not in default mode.
             RuntimeError: If the scenario does not allow for the creation or addition of new devices.
@@ -112,14 +106,11 @@ class Pipeline(Executable, Generic[ScenarioType, DeviceType]):
         Convenience function pointing to :meth:`hermespy.core.scenario.Scenario.device_index`.
 
         Args:
-
-            device:
-                Device to be searched for.
+            device: Device to be searched for.
 
         Returns: The index of the device.
 
         Raises:
-
             ValueError: If the device does not exist.
         """
 

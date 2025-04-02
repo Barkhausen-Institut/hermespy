@@ -33,12 +33,8 @@ class IdealChannelSample(ChannelSample):
     def __init__(self, gain: float, state: LinkState) -> None:
         """
         Args:
-
-            gain (float):
-                Linear channel power factor.
-
-            state (ChannelState):
-                State of the channel at the time of sampling.
+            gain: Linear channel power factor.
+            state: State of the channel at the time of sampling.
         """
 
         # Initialize base class

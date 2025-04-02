@@ -11,13 +11,13 @@ The subpackages may have interdependencies, but in general, the root of dependen
    :maxdepth: 1
    :glob:
 
-   modem
-   radar
-   channel/channel
-   simulation
-   hardware_loop
-   core/core
-   fec
-   jcas
-   beamforming
-   tools
+   modem/index
+   radar/index
+   channel/index
+   simulation/index
+   hardware_loop/index
+   core/index
+   fec/index
+   jcas/index
+   beamforming/index
+   tools/index

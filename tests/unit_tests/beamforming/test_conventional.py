@@ -36,7 +36,7 @@ class TestConventionalBeamformer(TestCase):
         self.assertEqual(1, self.beamformer.num_receive_focus_points)
         self.assertEqual(1, self.beamformer.num_receive_output_streams(10))
         self.assertEqual(1, self.beamformer.num_transmit_focus_points)
-        self.assertEqual(1, self.beamformer._num_transmit_input_streams(10))
+        self.assertEqual(1, self.beamformer.num_transmit_input_streams(10))
 
     def test_encode_decode(self) -> None:
         """Encoding and decoding towards identical angles should recover the signal"""

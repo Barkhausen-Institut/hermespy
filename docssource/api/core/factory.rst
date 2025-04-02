@@ -64,7 +64,17 @@ Matlab or JSON.
 
 .. autoclass:: hermespy.core.factory.SerializableType
 
+.. autoclass:: hermespy.core.factory.SerializationBackend
+
+.. autoclass:: hermespy.core.factory.UNDEF_TYPE
+
+.. autoclass:: hermespy.core.factory.UNDEF
+
 .. autoclass:: hermespy.core.factory.SET
+
+.. autoclass:: hermespy.core.factory._RT
+
+.. autoclass:: hermespy.core.factory._OT
 
 .. footbibliography::
 

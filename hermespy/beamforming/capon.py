@@ -29,7 +29,7 @@ class CaponBeamformer(ReceiveBeamformer):
         """
         Args:
 
-            loading (float, optional):
+            loading:
                 Diagonal covariance loading coefficient :math:`\\lambda`.
                 Defaults to zero.
         """

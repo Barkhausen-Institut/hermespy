@@ -48,7 +48,7 @@ class ChannelStateInformation(Serializable):
             The current format of the channel state information.
             The format may change depending on the most recent format requests.
 
-        __state (numpy.ndarray):
+        __state:
             The current channel state.
             A numpy tensor of dimension `num_receive_streams`x`num_transmit_streams`x`num_samples`x`state_information`.
 
@@ -59,11 +59,11 @@ class ChannelStateInformation(Serializable):
             `num_samples` discrete frequency domain bins and `state_information` is of length one, containing the
             respective Fourier weights.
 
-        __num_delay_taps (int):
+        __num_delay_taps:
             Number of delay taps in impulse-response mode.
             Recovers the 4th matrix dimension during conversions.
 
-        __num_frequency_bins (int):
+        __num_frequency_bins:
             Number of discrete frequency bins in frequency-selectivity mode.
             Recovers the 4th matrix dimension during conversions.
     """
@@ -83,18 +83,18 @@ class ChannelStateInformation(Serializable):
         """Channel State Information object initialization.
 
         Args:
-            state_format (ChannelStateFormat):
+            state_format:
                 Format of the `state` from which to initialize the channel state information.
 
-            state (numpy.ndarray | sparse.SparseArray, optional):
+            state:
                 Channel state matrix.
                 A numpy tensor of dimension
                 `num_receive_streams`x`num_transmit_streams`x`num_samples`x`state_information`.
 
-            num_delay_taps (int, optional):
+            num_delay_taps:
                 Number of delay taps in impulse-response mode.
 
-            num_frequency_bins (int):
+            num_frequency_bins:
                 Number of discrete frequency bins in frequency-selectivity mode..
 
         Raises:
@@ -108,19 +108,14 @@ class ChannelStateInformation(Serializable):
     def state_format(self) -> ChannelStateFormat:
         """Current channel state format.
 
-        Returns:
-            ChannelStateFormat: The current channel state format.
+        Returns: The current channel state format.
         """
 
         return self.__state_format
 
     @property
     def state(self) -> np.ndarray | SparseArray:
-        """Current channel state tensor.
-
-        Returns:
-            np.ndarray: The current channel state tensor.
-        """
+        """Current channel state tensor."""
 
         return self.__state
 
@@ -129,7 +124,7 @@ class ChannelStateInformation(Serializable):
         """Modify the channel state tensor.
 
         Args:
-            new_state (numpy.ndarray | SparseArray): The new channel state.
+            new_state: The new channel state.
 
         Raises:
             ValueError: On invalid state dimensions.
@@ -158,23 +153,22 @@ class ChannelStateInformation(Serializable):
         """Set a new channel state.
 
         Args:
-            state_format (ChannelStateFormat):
+            state_format:
                 Format of the `state` from which to initialize the channel state information.
 
-            state (numpy.ndarray | SparseArray, optional):
+            state:
                 Channel state matrix.
                 A numpy tensor of dimension
                 `num_receive_streams`x`num_transmit_streams`x`num_samples`x`state_information`.
 
-            num_delay_taps (int, optional):
+            num_delay_taps:
                 Number of delay taps.
 
-            num_frequency_bins (int, optional):
+            num_frequency_bins:
                 Number of discrete frequency bins.
 
         Raises:
-            ValueError:
-                If `state` dimensions are invalid.
+            ValueError: If `state` dimensions are invalid.
         """
 
         state = np.empty((0, 0, 0, 1), dtype=complex) if state is None else state
@@ -214,9 +208,8 @@ class ChannelStateInformation(Serializable):
         May convert the internal state format via FFT.
 
         Returns:
-            ChannelStateInformation:
-                The current channel tensor of dimensions
-                `num_receive_streams`x`num_transmit_streams`x`num_samples`x`num_delay_taps`.
+            The current channel tensor of dimensions
+            `num_receive_streams`x`num_transmit_streams`x`num_samples`x`num_delay_taps`.
         """
 
         if self.__state_format == ChannelStateFormat.FREQUENCY_SELECTIVITY:
@@ -231,15 +224,14 @@ class ChannelStateInformation(Serializable):
         May convert the internal state format via FFT.
 
         Args:
-            num_bins (int, optional):
+            num_bins:
                 Number of discrete frequency bins.
                 By default, this will be the number of time samples,
                 i.e. a FFT without zero-padding will be performed.
 
         Returns:
-            ChannelStateInformation:
-                The current channel tensor of dimensions
-                `num_receive_streams`x`num_transmit_streams`x`num_samples`x`num_frequency_bins`.
+            The current channel tensor of dimensions
+            `num_receive_streams`x`num_transmit_streams`x`num_samples`x`num_frequency_bins`.
         """
 
         if self.__state_format == ChannelStateFormat.IMPULSE_RESPONSE:
@@ -259,8 +251,7 @@ class ChannelStateInformation(Serializable):
     def num_receive_streams(self) -> int:
         """Number of receive streams within this channel state.
 
-        Returns:
-            int: Number of receive streams.
+        Returns: Number of receive streams.
         """
 
         return self.__state.shape[0]
@@ -269,8 +260,7 @@ class ChannelStateInformation(Serializable):
     def num_transmit_streams(self) -> int:
         """Number of transmit streams within this channel state.
 
-        Returns:
-            int: Number of transmit streams.
+        Returns: Number of transmit streams.
         """
 
         return self.__state.shape[1]
@@ -279,8 +269,7 @@ class ChannelStateInformation(Serializable):
     def num_samples(self) -> int:
         """Number of time-domain samples within this channel state.
 
-        Returns:
-            int: Number of samples.
+        Returns: Number of samples.
         """
 
         return self.__state.shape[2]
@@ -289,8 +278,7 @@ class ChannelStateInformation(Serializable):
     def num_symbols(self) -> int:
         """Number of symbols considered within this channel state.
 
-        Returns:
-            int: Number of symbols.
+        Returns: Number of symbols.
         """
 
         if self.__state_format == ChannelStateFormat.IMPULSE_RESPONSE:
@@ -303,8 +291,7 @@ class ChannelStateInformation(Serializable):
     def num_delay_taps(self) -> int:
         """Number of taps within the delay response of the channel state.
 
-        Returns:
-            int: Number of taps.
+        Returns: Number of taps.
         """
 
         return self.__num_delay_taps
@@ -326,11 +313,9 @@ class ChannelStateInformation(Serializable):
     def __impulse_response_transformation(self) -> SparseArray:
         """Convert a channel impulse response to a linear transformation tensor.
 
-
         Returns:
-            SparseArray:
-                Sparse linear transformation tensor of dimension N_Rx x N_Tx x T+L x T.
-                Note that the slice over the last two dimensions will form a lower triangular matrix.
+            Sparse linear transformation tensor of dimension N_Rx x N_Tx x T+L x T.
+            Note that the slice over the last two dimensions will form a lower triangular matrix.
         """
 
         num_rx = self.num_receive_streams
@@ -362,9 +347,8 @@ class ChannelStateInformation(Serializable):
 
 
         Returns:
-            COO:
-                Sparse linear transformation tensor of dimension N_Rx x N_Tx x F*T x F*T.
-                Note that the slice over the first and last dimension will be a diagonal matrix.
+            Sparse linear transformation tensor of dimension N_Rx x N_Tx x F*T x F*T.
+            Note that the slice over the first and last dimension will be a diagonal matrix.
         """
 
         num_rx = self.num_receive_streams
@@ -399,18 +383,16 @@ class ChannelStateInformation(Serializable):
 
         Args:
 
-            num_samples (int):
+            num_samples:
                 Number of timestamps at which the channel state has been sampled.
 
-            num_receive_streams (int, optional):
+            num_receive_streams:
                 Number of emerging data streams after channel propagation.
 
-            num_transmit_streams (int, optional):
+            num_transmit_streams:
                 Number of data streams feeding into the channel before propagation.
 
-        Returns:
-            ChannelStateInformation:
-                Ideal channel state information of a non-distorting channel.
+        Returns: Ideal channel state information of a non-distorting channel.
         """
 
         state = np.ones((num_receive_streams, num_transmit_streams, num_samples, 1), dtype=complex)
@@ -419,8 +401,7 @@ class ChannelStateInformation(Serializable):
     def received_streams(self) -> Generator[ChannelStateInformation, ChannelStateInformation, None]:
         """Iterate over the received streams slices within this channel state.
 
-        Returns:
-            Generator: Generator.
+        Returns: Generator iterating over the received streams.
         """
 
         for received_stream in self.__state:
@@ -429,8 +410,7 @@ class ChannelStateInformation(Serializable):
     def samples(self) -> Generator[ChannelStateInformation, ChannelStateInformation, None]:
         """Iterate over the sample slices within this channel state.
 
-        Returns:
-            Generator: Generator.
+        Returns: Generator iterating over the sample slices.
         """
 
         for sample_idx in range(self.num_samples):
@@ -447,12 +427,9 @@ class ChannelStateInformation(Serializable):
         """Slice the channel state information.
 
         Args:
-            section (slice):
-                Slice of the channel state.
+            section: Slice of the channel state.
 
-        Returns:
-            ChannelStateInformation:
-                New channel state with a section according to `value` slice.
+        Returns: New channel state with a section according to `value` slice.
         """
 
         state_section = self.__state[section]
@@ -475,15 +452,11 @@ class ChannelStateInformation(Serializable):
         """Update the channel state information.
 
         Args:
-            key (slice):
-                Section of the channel state to be set.
-
-            value (ChannelStateInformation):
-                The information to be set.
+            key: Section of the channel state to be set.
+            value: The information to be set.
 
         Raises:
-            NotImplementedError:
-                If the formats of `value` and this channel do not match.
+            NotImplementedError: If the formats of `value` and this channel do not match.
         """
 
         if value.state_format != self.__state_format:
@@ -521,13 +494,10 @@ class ChannelStateInformation(Serializable):
         """Propagate a single signal model over this channel state information.
 
         This method should generally be avoided, since it's computationally costly.
-        Instead, whenever there is access to a :class:`ChannelRealization`,
-        :meth:`ChannelRealization.propagate` should always be preferred.
 
         Args:
 
-            signal (Signal):
-                Signal model to be propagated.
+            signal: Signal model to be propagated.
 
         Returns: Propagated signal model.
         """

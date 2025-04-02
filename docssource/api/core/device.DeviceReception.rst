@@ -7,4 +7,6 @@ Device Reception
 
 .. autoclass:: hermespy.core.device.DeviceReception
 
+.. autoclass:: hermespy.core.device.DRT
+
 .. footbibliography::

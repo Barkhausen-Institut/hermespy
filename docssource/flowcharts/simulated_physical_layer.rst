@@ -24,10 +24,10 @@
    dbi -.-> cbb -.-> dbo
    dbi -.-> cba -.-> dao
 
-   click dai "/api/simulation.simulated_device.SimulatedDevice.html" "Simulated Device"
-   click dbi "/api/simulation.simulated_device.SimulatedDevice.html" "Simulated Device"
-   click dao "/api/simulation.simulated_device.SimulatedDevice.html" "Simulated Device"
-   click dbo "/api/simulation.simulated_device.SimulatedDevice.html" "Simulated Device"
+   click dai "/api/simulation.simulated_device.html" "Simulated Device"
+   click dbi "/api/simulation.simulated_device.html" "Simulated Device"
+   click dao "/api/simulation.simulated_device.html" "Simulated Device"
+   click dbo "/api/simulation.simulated_device.html" "Simulated Device"
    click caa "/api/channel/channel.Channel.html" "Channel Model"
    click cab "/api/channel/channel.Channel.html" "Channel Model"
    click cba "/api/channel/channel.Channel.html" "Channel Model"

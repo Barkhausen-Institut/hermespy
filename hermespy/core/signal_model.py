@@ -36,7 +36,7 @@ class _SignalVisualization(VisualizableAttribute[PlotVisualization]):
         """
         Args:
 
-            signal (Signal): The signal model to be visualized.
+            signal: The signal model to be visualized.
         """
 
         # Initialize base class
@@ -206,32 +206,32 @@ class _EyeVisualization(_SignalVisualization):
 
     Args:
 
-        symbol_duration (float):
+        symbol_duration:
             Assumed symbol repetition interval in seconds.
             Will be rounded to match the signal model's sampling rate.
 
-        line_width (float, optional):
+        line_width:
             Line width of a single plot line.
 
-        title (str, optional):
+        title:
             Title of the plotted figure.
             `Eye Diagram` by default.
 
-        domain (Literal["time", "complex"]):
+        domain:
             Plotting behaviour of the eye diagram.
             `time` by default.
             See above examples for rendered results.
 
-        legend (bool, optional):
+        legend:
             Display a plot legend.
             Enabled by default.
             Only considered when in `time` domain plotting mode.
 
-        linewidth (float, optional):
+        linewidth:
             Line width of the eye plot.
             :math:`.75` by default.
 
-        symbol_cutoff (float, optional):
+        symbol_cutoff:
             Relative amount of symbols ignored during plotting.
             :math:`0.1` by default.
             This is required to properly visualize intersymbol interferences within the communication frame,
@@ -369,10 +369,10 @@ class SignalBlock(np.ndarray, Serializable):
         """Create a new SignalBlock instance.
 
         Args:
-            samples (array_like):
+            samples:
                 The object to be converted to a 2D matrix. Arrays of higher dim count are not allowed. Uses np.asarray for conversion.
 
-            offset (int):
+            offset:
                 Integer offset of this block in a signal model
 
         Raises:
@@ -411,8 +411,7 @@ class SignalBlock(np.ndarray, Serializable):
     def num_streams(self) -> int:
         """The number of streams within this signal block.
 
-        Returns:
-            int: The number of streams.
+        Returns: The number of streams.
         """
 
         return self.shape[0]
@@ -421,8 +420,7 @@ class SignalBlock(np.ndarray, Serializable):
     def num_samples(self) -> int:
         """The number of samples within this signal block.
 
-        Returns:
-            int: The number of samples.
+        Returns: The number of samples.
         """
 
         return self.shape[1]
@@ -472,8 +470,7 @@ class SignalBlock(np.ndarray, Serializable):
         Args:
             order: Ignored.
 
-        Returns:
-            Signal: A copy of this signal model.
+        Returns: A copy of this signal model.
         """
 
         if order is not None:
@@ -487,19 +484,17 @@ class SignalBlock(np.ndarray, Serializable):
 
         Args:
 
-            sampling_rate_old (float):
+            sampling_rate_old:
                 Old sampling rate of the signal block in Hz.
 
-            sampling_rate_new (float):
+            sampling_rate_new:
                 New sampling rate of the signal block in Hz.
 
-            aliasing_filter (bool, optional):
+            aliasing_filter:
                 Apply an anti-aliasing filter during downsampling.
                 Enabled by default.
 
-        Returns:
-            SignalBlock:
-                The resampled signal block.
+        Returns: The resampled signal block.
 
         Raises:
             ValueError: If `sampling_rate_old` or `sampling_rate_new` are smaller or equal to zero.
@@ -560,16 +555,16 @@ class SignalBlock(np.ndarray, Serializable):
         """Internal subroutine to mix two sets of signal model samples.
 
         Args:
-            target_samples (numpy.ndarray):
+            target_samples:
                 Target samples onto which `added_samples` will be mixed.
 
-            added_samples (numpy.ndarray):
+            added_samples:
                 Samples to be mixed onto `target_samples`.
 
-            sampling_rate (float):
+            sampling_rate:
                 Sampling rate in Hz, which both `target_samples` and `added_samples` must share.
 
-            frequency_distance (float):
+            frequency_distance:
                 Distance between the carrier frequencies of `target_samples` and `added_samples` in Hz.
         """
 
@@ -587,11 +582,9 @@ class SignalBlock(np.ndarray, Serializable):
         """Internal subroutine for resampled method. Applies Butterworth filter to the given samples.
 
         Args:
-            samples (numpy.ndarray):
-                Samples to apply AA to.
-
-            N (Any) and Wn (Any):
-                The first two parameters of scipy.signal.butter."""
+            samples: Samples to apply AA to.
+            N: The first two parameters of scipy.signal.butter.
+        """
 
         aliasing_filter = butter(N, Wn, btype="low", output="sos")
         return sosfilt(aliasing_filter, samples, axis=1)
@@ -606,21 +599,19 @@ class SignalBlock(np.ndarray, Serializable):
         Uses sinc-interpolation, therefore `signal` is assumed to be band-limited.
 
         Arguments:
-
-            signal (numpy.ndarray):
+            signal:
                 TxM matrix of T signal-streams to be resampled, each containing M time-discrete samples.
 
-            input_sampling_rate (float):
+            input_sampling_rate:
                 Rate at which `signal` is sampled in Hz.
 
-            output_sampling_rate (float):
+            output_sampling_rate:
                 Rate at which the resampled signal will be sampled in Hz.
 
         Returns:
-            np.ndarray:
-                MxT' matrix of M resampled signal streams.
-                The number of samples T' depends on the sampling rate relations, e.i.
-                T' = T * output_sampling_rate / input_sampling_rate .
+            MxT' matrix of M resampled signal streams.
+            The number of samples T' depends on the sampling rate relations, e.i.
+            T' = T * output_sampling_rate / input_sampling_rate .
         """
 
         num_streams = signal.shape[0]
@@ -671,7 +662,7 @@ class Signal(ABC, Serializable):
 
     def from_ndarray(self, samples: np.ndarray):
         """Create a new signal using parameters from this signal.
-        Equivalent to `create(samples, **self.kwargs)`."""
+        Equivalent to `create(samples, \*\*self.kwargs)`."""
 
         return self.Create(samples, **self.kwargs)
 
@@ -690,21 +681,22 @@ class Signal(ABC, Serializable):
 
         Args:
 
-            samples (numpy.ndarray | Sequence[np.ndarray]):
+            samples:
                 Single or a sequence of 2D matricies with shapes MxT_i, where M - number of streams, T_i - number of samples in the matrix i.
                 Note that M for each entry of the sequence must be the same.
                 SignalBlock and Sequence[SignalBlock] can also be passed here.
 
-            sampling_rate (float):
+            sampling_rate:
                 Sampling rate of the signal in Hz.
 
-            offsets (List[int]):
+            offsets:
                 Integer offsets of the samples if given in a sequence.
                 Ignored if samples is not a Sequence of np.ndarray.
                 len(offsets) must be equal to len(samples).
                 Offset number i must be greater then offset i-1 + samples[i-1].shape[1].
 
-        Returns: SparseSignal if samples argument is a list of np.ndarrays. DenseSignal otherwise.
+        Returns:
+            SparseSignal if samples argument is a list of ndarrays. DenseSignal otherwise.
         """
 
         if isinstance(samples, list) and len(samples) != 1:
@@ -728,8 +720,10 @@ class Signal(ABC, Serializable):
         """Calculate new blocks offsets and ends for a union of 2 different signals.
 
         Returns:
-            b_offs (numpy.ndarray): a list of new blocks offsets
-            b_ends (numpy.ndarray): a list of new blocks ends"""
+            A tuple of two numpy arrays:
+            1. A list of new blocks offsets
+            2. a list of new blocks ends
+        """
 
         # Get nonzero column indices for both signals
         nonzero_bs1 = (
@@ -762,7 +756,8 @@ class Signal(ABC, Serializable):
     def __parse_slice(s: slice, dim_size: int) -> Tuple[int, int, int]:
         """Helper function for _parse_validate_itemkey.
         Given a slice and a size of the sliced dimension,
-        returns non-negative values for start, stop and step of the slice."""
+        returns non-negative values for start, stop and step of the slice.
+        """
 
         # Resolve None
         s0 = 0 if s.start is None else s.start
@@ -787,15 +782,15 @@ class Signal(ABC, Serializable):
             IndexError if the key is out of bounds of the signal model.
 
         Returns:
-            s00 (int): streams start
-            s01 (int): streams stop
-            s02 (int): streams step
-            s10 (int): samples start
-            s11 (int): samples stop
-            s12 (int): samples step
-            isboolmask (bool): True if key is a boolean mask, False otherwise.
-            should_flatten_streams (bool): True if numpy's getitem would flatten the streams (1) dimension with this key
-            should_flatten_samples (bool): True if numpy's getitem would flatten the samples (2) dimension with this key
+            s00: streams start
+            s01: streams stop
+            s02: streams step
+            s10: samples start
+            s11: samples stop
+            s12: samples step
+            isboolmask: True if key is a boolean mask, False otherwise.
+            should_flatten_streams: True if numpy's getitem would flatten the streams (1) dimension with this key
+            should_flatten_samples: True if numpy's getitem would flatten the samples (2) dimension with this key
 
             Note that if isboolmask is True, then all s?? take the following values:
             (0, self.num_streams, 1, 0, self.num_samples, 1).
@@ -916,12 +911,13 @@ class Signal(ABC, Serializable):
         """Find indices of blocks that are affected by the given samples slice.
 
         Arguments:
-            s10 (int): Start of the samples slice.
-            s11 (int): Stop of the samples slice.
+            s10: Start of the samples slice.
+            s11: Stop of the samples slice.
 
         Return:
-            b_start, b_stop (int, int):
-                Indices of the first and the last affected blocks."""
+            b_start, b_stop:
+                Indices of the first and the last affected blocks.
+        """
 
         # Done with a binary search algotrithm.
 
@@ -958,12 +954,12 @@ class Signal(ABC, Serializable):
         Works like np.ndarray.__getitem__, but de-sparsifies the signal.
 
         Arguments:
-            key (Any):
+            key:
                 an int, a slice,
                 a tuple (int, int), (int, slice), (slice, int), (slice, slice)
                 or a boolean mask.
                 Defaults to slice(None, None) (same as [:, :])
-            unflatten (bool):
+            unflatten:
                 Set to True to ensure the result ndim to be 2 even if only one stream is selected.
                 Set to False to allow the numpy-like degenerate dimensions reduction.
 
@@ -981,7 +977,7 @@ class Signal(ABC, Serializable):
                 Select streams 0, 1 and samples 50-99.
                 Same as samples_matrix[:2, 50:100]
 
-        Returns: np.ndarray with ndim 2 or less and  dtype dtype np.complex128"""
+        Returns: Array with ndim 2 or less and  dtype dtype np.complex128"""
 
         s00, s01, s02, s10, s11, s12, isboolmask, should_flatten_streams, should_flatten_samples = (
             self._parse_validate_itemkey(key)
@@ -1072,12 +1068,10 @@ class Signal(ABC, Serializable):
         """Create a new signal like this, but with only the selected streams.
 
         Args:
-            streams_key (int, slice, Sequence[int]):
+            streams_key:
                 Stream indices to select.
 
-        Return:
-            signal (Signal):
-                Signal of the same implementation as the caller, containing only the selected streams
+        Return: Signal of the same implementation as the caller, containing only the selected streams
         """
         blocks = [b[streams_key] for b in self]
         return self.Create(blocks, **self.kwargs)
@@ -1113,10 +1107,11 @@ class Signal(ABC, Serializable):
             3. samples windows with given offsets do not overlap.
 
         Returns:
-            samples (Sequence[np.ndarray]):
+            samples:
                 A python list if 2D matrices.
-            offsets (List[int]):
-                A list of valid offsets."""
+            offsets:
+                A list of valid offsets.
+        """
 
         # np.ndarray was given
         if isinstance(samples, np.ndarray):
@@ -1209,7 +1204,8 @@ class Signal(ABC, Serializable):
     @staticmethod
     def Empty(sampling_rate: float, num_streams: int = 0, num_samples: int = 0, **kwargs) -> Signal:
         """Creates an empty signal model instance. Initializes it with the given arguments.
-        If both num_streams and num_samples are not 0, then initilizes samples with np.empty."""
+        If both num_streams and num_samples are not 0, then initilizes samples with np.empty.
+        """
 
         return Signal.Create(np.empty((num_streams, num_samples)), sampling_rate, **kwargs)
 
@@ -1217,8 +1213,7 @@ class Signal(ABC, Serializable):
     def num_streams(self) -> int:
         """The number of streams within this signal model.
 
-        Returns:
-            int: The number of streams.
+        Returns: The number of streams.
         """
 
         return self._num_streams
@@ -1227,8 +1222,7 @@ class Signal(ABC, Serializable):
     def num_samples(self) -> int:
         """The number of samples within this signal model.
 
-        Returns:
-            int: The number of samples.
+        Returns: The number of samples.
         """
 
         if len(self._blocks) == 0:
@@ -1237,17 +1231,16 @@ class Signal(ABC, Serializable):
 
     @property
     def shape(self) -> tuple:
-        """Returns: (num_streams, num_samples)"""
+        """Two dimensional tuple of shape :math:`M \\times N`.
+
+        :math:`M` is the number of streams and :math:`N` is the number of samples.
+        """
 
         return (self.num_streams, self.num_samples)
 
     @property
     def sampling_rate(self) -> float:
-        """The rate at which the modeled signal was sampled.
-
-        Returns:
-            float: The sampling rate in Hz.
-        """
+        """The rate at which the modeled signal was sampled in Hz."""
 
         return self._sampling_rate
 
@@ -1256,7 +1249,7 @@ class Signal(ABC, Serializable):
         """Modify the rate at which the modeled signal was sampled.
 
         Args:
-            value (float): The sampling rate in Hz.
+            value: The sampling rate in Hz.
 
         Raises:
             ValueError: If `value` is smaller or equal to zero.
@@ -1271,12 +1264,7 @@ class Signal(ABC, Serializable):
 
     @property
     def carrier_frequency(self) -> float:
-        """The center frequency of the modeled signal in the radio-frequency
-        transmit band.
-
-        Returns:
-            float: The carrier frequency in Hz.
-        """
+        """The center frequency of the modeled signal in the radio-frequency transmit band in Hz."""
 
         return self._carrier_frequency
 
@@ -1285,7 +1273,7 @@ class Signal(ABC, Serializable):
         """Modify the center frequency of the modeled signal in the radio-frequency transmit band.
 
         Args:
-            value (float): he carrier frequency in Hz.
+            value: The carrier frequency in Hz.
 
         Raises:
             ValueError: If `value` is smaller than zero.
@@ -1302,12 +1290,7 @@ class Signal(ABC, Serializable):
     def noise_power(self) -> float:
         """Noise power of the superimposed noise signal.
 
-        Returns:
-
-            Noise power.
-
         Raises:
-
             ValueError: If the noise power is smaller than zero.
         """
 
@@ -1324,10 +1307,7 @@ class Signal(ABC, Serializable):
 
     @property
     def power(self) -> np.ndarray:
-        """Compute the power of the modeled signal.
-
-        Returns: The power of each modeled stream within a numpy vector.
-        """
+        """The power of each modeled stream within a numpy vector."""
 
         if self.num_samples < 1:
             return np.zeros(self.num_streams)
@@ -1335,10 +1315,7 @@ class Signal(ABC, Serializable):
 
     @property
     def energy(self) -> np.ndarray:
-        """Compute the energy of the modeled signal.
-
-        Returns: The energy of each modeled stream within a numpy vector.
-        """
+        """The energy of each modeled stream within a numpy vector."""
 
         return np.sum([b.energy for b in self], 0)
 
@@ -1346,8 +1323,7 @@ class Signal(ABC, Serializable):
     def timestamps(self) -> np.ndarray:
         """The sample-points of the signal block.
 
-        Returns:
-            np.ndarray: Vector of length T containing sample-timestamps in seconds.
+        Vector of length T containing sample-timestamps in seconds.
         """
 
         return np.arange(self.num_samples) / self.sampling_rate
@@ -1356,7 +1332,7 @@ class Signal(ABC, Serializable):
     def frequencies(self) -> np.ndarray:
         """The signal model's discrete sample points in frequcy domain.
 
-        Returns: Numpy vector of frequency bins.
+        Numpy vector of frequency bins.
         """
 
         return fftfreq(self.num_samples, 1 / self.sampling_rate)
@@ -1365,8 +1341,7 @@ class Signal(ABC, Serializable):
     def duration(self) -> float:
         """Signal model duration in time-domain.
 
-        Returns:
-            float: Duration in seconds.
+        Duration in seconds.
         """
 
         return self.num_samples / self.sampling_rate
@@ -1388,11 +1363,7 @@ class Signal(ABC, Serializable):
         return self._eye_visualization
 
     def copy(self) -> Signal:
-        """Copy this signal model to a new object.
-
-        Returns:
-            Signal: A copy of this signal model.
-        """
+        """Copy this signal model to a new object."""
 
         return deepcopy(self)
 
@@ -1401,16 +1372,14 @@ class Signal(ABC, Serializable):
 
         Args:
 
-            sampling_rate (float):
+            sampling_rate:
                 Sampling rate of the new signal model in Hz.
 
-            aliasing_filter (bool, optional):
+            aliasing_filter:
                 Apply an anti-aliasing filter during downsampling.
                 Enabled by default.
 
-        Returns:
-            Signal:
-                The resampled signal model.
+        Returns: The resampled signal model.
 
         Raises:
             ValueError: If `sampling_rate` is smaller or equal to zero.
@@ -1436,11 +1405,10 @@ class Signal(ABC, Serializable):
         Mixes `added_signal` according to the carrier-frequency distance.
 
         Args:
-
-            added_signal (Signal): The signal to be superimposed onto this one.
-            resample (bool): Allow for dynamic resampling during superposition.
-            aliasing_filter (bool, optional): Apply an anti-aliasing filter during mixing.
-            stream_indices (Sequence[int], optional): Indices of the streams to be mixed.
+            added_signal: The signal to be superimposed onto this one.
+            resample: Allow for dynamic resampling during superposition.
+            aliasing_filter: Apply an anti-aliasing filter during mixing.
+            stream_indices: Indices of the streams to be mixed.
 
         Raises:
 
@@ -1548,7 +1516,7 @@ class Signal(ABC, Serializable):
         """Append samples in time-domain to the signal model.
 
         Args:
-            signal (Signal): The signal to be appended.
+            signal: The signal to be appended.
 
         Raise:
             ValueError: If the number of streams don't align.
@@ -1559,7 +1527,7 @@ class Signal(ABC, Serializable):
         """Append streams to the signal model.
 
         Args:
-            signal (Signal): The signal to be appended.
+            signal: The signal to be appended.
 
         Raise:
             ValueError: If the number of samples don't align.
@@ -1571,16 +1539,15 @@ class Signal(ABC, Serializable):
 
         Args:
 
-            data_type (optional):
+            data_type:
                 Numpy resulting data type.
 
-            scale (bool, optional):
+            scale:
                 Scale the floating point values to stretch over the whole range of integers.
 
         Returns:
-            samples (numpy.ndarray):
-                Numpy array of interleaved samples.
-                Will contain double the samples in time-domain.
+            Numpy array of interleaved samples.
+            Will contain double the samples in time-domain.
         """
 
         # Get samples
@@ -1601,13 +1568,13 @@ class Signal(ABC, Serializable):
 
         Args:
 
-            interleaved_samples (numpy.ndarray):
+            interleaved_samples:
                 Numpy array of interleaved samples.
 
-            scale (bool, optional):
+            scale:
                 Scale the samples after interleaving
 
-            **kwargs:
+            \*\*kwargs:
                 Additional class initialization arguments.
         """
 
@@ -1624,8 +1591,8 @@ class Signal(ABC, Serializable):
         """Concatenate all the blocks in the signal into one block.
         Accounts for offsets. Warning - if offset values are to big, memory overflow is possible.
 
-        Returns:
-            signal (DenseSignal): Dense form for this signal"""
+        Returns: Dense form for this signal
+        """
 
         res_b = np.zeros(self.shape, dtype=np.complex128)
         for b in self:
@@ -1674,7 +1641,7 @@ class DenseSignal(Signal):
         """Signal model initialization.
 
         Args:
-            samples (numpy.ndarray | Sequence[np.ndarray] | Sequence[SignalBlock]):
+            samples:
                 A MxT matrix containing uniformly sampled base-band samples of the modeled signal.
                 M is the number of individual streams, T the number of available samples.
                 Note that you can pass here a 2D ndarray, a SignalBlock, a Sequence[np.ndarray] or a Sequence[SignalBlock].
@@ -1682,22 +1649,22 @@ class DenseSignal(Signal):
                 Given Sequence[np.ndarray], concatenates them all into one matrix sequentially.
                 Warning: do not pass sparse sequences of SignalBlocks here as it can lead to memory bloat. Consider SparseSignal instead.
 
-            sampling_rate (float):
+            sampling_rate:
                 Sampling rate of the modeled signal in Hz (in the base-band).
 
-            carrier_frequency (float, optional):
+            carrier_frequency:
                 Carrier-frequency of the modeled signal in the radio-frequency band in Hz.
                 Zero by default.
 
-            noise_power (float, optional):
+            noise_power:
                 Power of the noise superimposed to this signal model.
                 Zero by default.
 
-            delay (float, optional):
+            delay:
                 Delay of the signal in seconds.
                 Zero by default.
 
-            offsets (List[int], optional):
+            offsets:
                 If provided, must be of the same length as the samples argument.
                 If samples argument is not an Sequence[SignalBlock],
                 then offsets will be used to dislocate the blocks in the signal.
@@ -1732,7 +1699,8 @@ class DenseSignal(Signal):
     def getitem(self, key: Any = slice(None, None), unflatten: bool = True) -> np.ndarray:
         """Reroutes the argument to the single block of this model.
         Refer the numpy.ndarray.__getitem__ documentation.
-        The result is always a 2D ndarray."""
+        The result is always a 2D ndarray.
+        """
 
         res = self._blocks[0].view(np.ndarray)[key]
         # de-flatten
@@ -1863,7 +1831,8 @@ class SparseSignal(Signal):
     If at some point streams do not contain any recorded/transmitted signal, then fully zeroed columns appear in the matrix.
     This signal model contains a list of SignalBlocks, each representing non-zero regions of the original samples matrix.
     Thus, regions with only zeros are avoided.
-    Note, that SignalBlocks are sorted by their offset time and don't overlap."""
+    Note, that SignalBlocks are sorted by their offset time and don't overlap.
+    """
 
     def __init__(
         self,
@@ -1877,29 +1846,29 @@ class SparseSignal(Signal):
         """Signal model initialization.
 
         Args:
-            samples (numpy.ndarray | Sequence[SignalBlock]):
+            samples:
                 A MxT matrix containing uniformly sampled base-band samples of the modeled signal.
                 M is the number of individual streams, T the number of available samples.
                 Note that you can pass here a 2D ndarray, a SignalBlock, a Sequence[np.ndarray] or a Sequence[SignalBlock].
                 Given Sequence[SignalBlock], concatenates all signal blocks into one, accounting for their offsets.
                 Given Sequence[np.ndarray], concatenates them all into one matrix sequentially.
 
-            sampling_rate (float):
+            sampling_rate:
                 Sampling rate of the modeled signal in Hz (in the base-band).
 
-            carrier_frequency (float, optional):
+            carrier_frequency:
                 Carrier-frequency of the modeled signal in the radio-frequency band in Hz.
                 Zero by default.
 
-            noise_power (float, optional):
+            noise_power:
                 Power of the noise superimposed to this signal model.
                 Zero by default.
 
-            delay (float, optional):
+            delay:
                 Delay of the signal in seconds.
                 Zero by default.
 
-            offsets (List[int], optional):
+            offsets:
                 If provided, must be of the same length as the samples argument.
                 If samples argument is not an Sequence[SignalBlock],
                 then offsets will be used to dislocate the blocks in the signal.
@@ -2130,28 +2099,28 @@ class SparseSignal(Signal):
         """Sets given samples into this sparse signal model.
 
         Usage:
-            samples (numpy.ndarray):
+            samples:
                 In this case samples array (a 2D complex matrix) will be divided onto several non-zero blocks.
 
-            samples (Sequence[np.ndarray]):
+            samples:
                 In this case all entries (2D complex matrices) will be concatenated among the samples axis and sparsified.
 
-            samples (Sequence[np.ndarray]), offsets(Sequence[integer]):
+            samples:
                 In this case SignalBlocks will be constructed directly out of the samples entries, avoiding sparsification.
                 Note that number of offsets entries must equal to the number of samples entries.
                 Offsets must be sorted in an increasing order and samples entries must not overlap
                 (e.g. `offsets[i] + samples[i].shape[1] < offsets[i+1]`).
 
-            samples (SignalBlock):
+            samples:
                 In this case given SignalBlock will be resampled and sparcified.
                 The block's offset property will be preserved. Consider setting it to zero beforehand (`samples.offset= 0`).
 
-            samples (Sequence[SignalBlock]):
+            samples:
                 In this case each entry will be resampled and stored in the model, avoiding sparsification.
                 Note that the entries must be sorted by an offset in an increasing order and must not overlap
                 (e.g. `samples[i].offset+ samples[i].num_samples < samples[i+1].off`).
 
-            samples (List[SignalBlock]), offsets(Sequence[integer]):
+            samples:
                 In this case the same actions will be taken as in the previous case,
                 but given offsets will be set into the samples entries before resampling.
                 Note that number of offsets entries must equal to the number of samples entries.

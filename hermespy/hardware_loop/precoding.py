@@ -36,7 +36,7 @@ class IQSplitter(TransmitStreamEncoder):
 
         return streams.from_ndarray(split_samples)
 
-    def _num_transmit_input_streams(self, num_output_streams: int) -> int:
+    def num_transmit_input_streams(self, num_output_streams: int) -> int:
         return num_output_streams // 2
 
 

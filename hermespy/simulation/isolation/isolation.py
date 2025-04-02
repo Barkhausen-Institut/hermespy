@@ -28,7 +28,7 @@ class Isolation(Serializable):
         """
         Args:
 
-            device (SimulatedDevice, optional): Device the model is configured to.
+            device: Device the model is configured to.
         """
 
         self.device = device
@@ -54,7 +54,7 @@ class Isolation(Serializable):
 
         Args:
 
-            signal (Signal): The signal transmitted over the respective antenna RF chains.
+            signal: The signal transmitted over the respective antenna RF chains.
 
 
         Returns: The signal components leaking into receive chains.
@@ -68,7 +68,7 @@ class Isolation(Serializable):
 
         Args:
 
-            signal (Signal, None):
+            signal:
                 The signal transmitted over the respective antenna RF chains.
 
         Raises:
@@ -96,9 +96,8 @@ class Isolation(Serializable):
 
         Args:
 
-            signal (Signal, None):
+            signal:
                 The signal transmitted over the respective antenna RF chains.
-
 
         Returns: The signal components leaking into receive chains.
 

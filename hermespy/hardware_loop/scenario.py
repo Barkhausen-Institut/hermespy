@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-========================
-Physical Device Scenario
-========================
-"""
 
 from __future__ import annotations
 from abc import abstractmethod
@@ -96,26 +91,25 @@ class PhysicalScenario(Generic[PDT], Scenario[PDT, DeviceState, Drop]):
     ) -> Sequence[DeviceReception]:
         """Receive over all scenario devices.
 
-        Internally calls :meth:`Scenario.process_inputs` and :meth:`Scenario.receive_devices`.
+        Internally calls :meth:`Scenario.process_inputs<hermespy.core.scenario.Scenario.process_inputs>` and :meth:`Scenario.receive_devices<hermespy.core.scenario.Scenario.receive_devices>`.
 
         Args:
 
-            impinging_signals (Sequence[DeviceInput | Signal | Sequence[Signal]] | None, optional):
+            impinging_signals:
                 List of signals impinging onto the devices.
                 If not specified, the device will download the signal samples from its binding.
 
-            states (Sequence[DeviceState | None], optional):
+            states:
                 States of the transmitting devices.
-                If not specified, the current device states will be queried by calling :meth:`Device.state
+                If not specified, the current device states will be queried by calling :meth:`Device.state<hermespy.core.device.Device.state>`.
 
-            notify (bool, optional):
+            notify:
                 Notify the receiving DSP layer's callbacks about the reception results.
                 Enabled by default.
 
         Returns: List of the processed device input information.
 
         Raises:
-
             ValueError: If the number of `impinging_signals` does not match the number of registered devices.
         """
 

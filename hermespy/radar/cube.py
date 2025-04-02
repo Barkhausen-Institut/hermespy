@@ -1,11 +1,4 @@
 # -*- coding: utf-8 -*-
-"""
-==========
-Radar Cube
-==========
-
-Radar cubes represent the raw image create after the base-band processing of radar samples.
-"""
 
 from __future__ import annotations
 from typing import Literal, Type
@@ -187,27 +180,27 @@ class RadarCube(Serializable):
         """
         Args:
 
-            data (numpy.ndarray):
+            data:
                 Raw radar cube data.
                 Three-dimensional real-valued numpy tensor :math:`\\mathbb{R}^{A \\times B \\times C}`, where
                 :math:`A` denotes the number of discrete angle of arrival bins,
                 :math:`B` denotes the number of discrete doppler frequency bins,
                 and :math:`C` denotes the number of discrete range bins.
 
-            angle_bins (numpy.ndarray):
+            angle_bins:
                 Numpy matrix specifying the represented discrete angle of arrival bins.
                 Must be of dimension :math:`\\mathbb{R}^{A \\times 2}`,
                 the second dimension denoting azimuth and zenith of arrival in radians, respectively.
 
-            doppler_bins (numpy.ndarray):
+            doppler_bins:
                 Numpy vector specifying the represented discrete doppler frequency shift bins in Hz.
                 Must be of dimension :math:`\\mathbb{R}^{B}`.
 
-            range_bins (numpy.ndarray):
+            range_bins:
                 Numpy vector specifying the represented discrete range bins in :math:`\\mathrm{m}`.
                 Must be of dimension :math:`\\mathbb{R}^{C}`.
 
-            carrier_frequency (float, optional):
+            carrier_frequency:
                 Central carrier frequency of the radar in Hz.
                 Zero by default.
 
@@ -339,10 +332,10 @@ class RadarCube(Serializable):
 
         Args:
 
-            title (str, optional):
+            title:
                 Plot title.
 
-            scale (Literal['lin', 'log'], optional):
+            scale:
                 Plot the power axis in linear or logarithmic scale.
                 If not specified, linear scaling is preferred.
 
@@ -357,10 +350,10 @@ class RadarCube(Serializable):
 
         Args:
 
-            title (str, optional):
+            title:
                 Plot title.
 
-            scale (Literal['frequency', 'velocity'], optional):
+            scale:
                 Plot the velocity axis in frequency (Hz) or velocity units (m/s).
                 If not specified, plotting in velocity is preferred, if the carrier frequency is known.
 
@@ -375,7 +368,7 @@ class RadarCube(Serializable):
 
         Args:
 
-            title (str, optional):
+            title:
                 Plot title.
 
         Returns: The generated image plot.

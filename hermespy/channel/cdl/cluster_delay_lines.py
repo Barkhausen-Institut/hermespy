@@ -409,13 +409,13 @@ class ClusterDelayLineSample(ChannelSample):
 
         Args:
 
-            sampling_rate (float):
+           sampling_rate:
                 Sampling rate in Hertz.
 
-            num_samples (int):
+           num_samples:
                 Number of samples to generate.
 
-            center_frequency (float):
+           center_frequency:
                 Center frequency in Hertz.
         """
 
@@ -646,10 +646,10 @@ class ClusterDelayLineSample(ChannelSample):
 
         Args:
 
-            angles (numpy.ndarray):
+           angles:
                 Numpy array of angles in radians for all paths of propagation.
 
-            powers (numpy.ndarray):
+           powers:
                 Numpy angles of power for all paths of propagation.
 
         Returns: The angluar spread in radians.
@@ -721,7 +721,7 @@ class ClusterDelayLineSample(ChannelSample):
 
         Args:
 
-            state (ChannelState):
+           state:
                 State of the reciprocal sample.
 
         Returns: A reciprocal sample.
@@ -826,19 +826,19 @@ class ClusterDelayLineSampleParameters(object):
         """
         Args:
 
-            carrier_frequency (float):
+           carrier_frequency:
                 Carrier frequency in Hz.
 
-            distance_3d (float):
+           distance_3d:
                 Distance between the base station and the user terminal in meters.
 
-            distance_2d (float):
+           distance_2d:
                 Horizontal distance between the base station and the user terminal in meters.
 
-            base_height (float):
+           base_height:
                 Height of the base station in meters.
 
-            terminal_height (float):
+           terminal_height:
                 Height of the user terminal in meters.
         """
 
@@ -1054,20 +1054,20 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
         """
         Args:
 
-            expected_state (LSST | None):
+            expected_state:
                 Expected large-scale state of the channel.
                 If not specified, the large-scale state is randomly generated.
 
-            state_realization (ConsistentRealization):
+            state_realization:
                 Realization of the large scale state.
 
-            parameters (ClusterDelayLineRealizationParameters):
+            parameters:
                 General parameters of the cluster delay line realization.
 
-            sample_hooks (Set[ChannelSampleHook[ClusterDelayLineSample]]):
+            sample_hooks:
                 Hooks for callback functions during the sample generation.
 
-            gain (float, optional):
+            gain:
                 Linear amplitude scaling factor if signals propagated over the channel.
         """
 
@@ -1105,10 +1105,10 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
 
         Args:
 
-            state (LSST):
+            state:
                 Large scale state of the channel.
 
-            parameters (ClusterDelayLineSampleParameters):
+            parameters:
                 Parameters of the channel realization.
 
         Returns: Pathloss in dB.
@@ -1121,7 +1121,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
 
         Args:
 
-            state (LSST):
+            state:
                 Large scale state of the channel.
 
         Returns:
@@ -1135,8 +1135,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
     ) -> LSST:
         """Sample the large scale state of the channel.
 
-        Returns:
-            LSST: Large scale state of the channel.
+        Returns: Large scale state of the channel.
         """
         ...  # pragma: no cover
 
@@ -1147,8 +1146,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
         The spread realization and its mean are referred to as
         :math:`\\mathrm{DS}` and :math:`\\mu_{\\mathrm{lgDS}}` within the the standard, respectively.
 
-        Returns:
-            float: Mean delay spread in seconds.
+        Returns: Mean delay spread in seconds.
         """
         ...  # pragma: no cover
 
@@ -1159,8 +1157,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
         The spread realization and its standard deviation are referred to as
         :math:`\\mathrm{DS}` and :math:`\\sigma_{\\mathrm{lgDS}}` within the the standard, respectively.
 
-        Returns:
-            float: Delay spread standard deviation in seconds.
+        Returns: Delay spread standard deviation in seconds.
 
         Raises:
             ValueError: If the standard deviation is smaller than zero.
@@ -1174,8 +1171,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
         The spread realization and its mean are referred to as
         :math:`\\mathrm{ASD}` and :math:`\\mu_{\\mathrm{lgASD}}` within the the standard, respectively.
 
-        Returns:
-            float: Mean angle spread in seconds
+        Returns: Mean angle spread in seconds
         """
         ...  # pragma: no cover
 
@@ -1186,8 +1182,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
         The spread realization and its standard deviation are referred to as
         :math:`\\mathrm{ASD}` and :math:`\\sigma_{\\mathrm{lgASD}}` within the the standard, respectively.
 
-        Returns:
-            float: Angle spread standard deviation in seconds.
+        Returns: Angle spread standard deviation in seconds.
 
         Raises:
             ValueError: If the standard deviation is smaller than zero.
@@ -1201,8 +1196,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
         The spread realization and its mean are referred to as
         :math:`\\mathrm{ASA}` and :math:`\\mu_{\\mathrm{lgASA}}` within the the standard, respectively.
 
-        Returns:
-            float: Mean angle spread in seconds
+        Returns: Mean angle spread in seconds
         """
         ...  # pragma: no cover
 
@@ -1213,8 +1207,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
         The spread realization and its standard deviation are referred to as
         :math:`\\mathrm{ASA}` and :math:`\\sigma_{\\mathrm{lgASA}}` within the the standard, respectively.
 
-        Returns:
-            float: Angle spread standard deviation in seconds.
+        Returns: Angle spread standard deviation in seconds.
 
         Raises:
             ValueError: If the standard deviation is smaller than zero.
@@ -1228,8 +1221,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
         The spread realization and its mean are referred to as
         :math:`\\mathrm{ZSA}` and :math:`\\mu_{\\mathrm{lgZSA}}` within the the standard, respectively.
 
-        Returns:
-            float: Mean angle spread in seconds
+        Returns: Mean angle spread in seconds
         """
         ...  # pragma: no cover
 
@@ -1240,8 +1232,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
         The spread realization and its standard deviation are referred to as
         :math:`\\mathrm{ZSA}` and :math:`\\sigma_{\\mathrm{lgZSA}}` within the the standard, respectively.
 
-        Returns:
-            float: Angle spread standard deviation in seconds.
+        Returns: Angle spread standard deviation in seconds.
 
         Raises:
             ValueError: If the standard deviation is smaller than zero.
@@ -1259,8 +1250,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
         The rice factor realization and its mean are referred to as
         :math:`K` and :math:`\\mu_K` within the the standard, respectively.
 
-        Returns:
-            float: Rice factor mean in dB.
+        Returns: Rice factor mean in dB.
         """
         ...  # pragma: no cover
 
@@ -1271,8 +1261,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
         The rice factor realization and its standard deviation are referred to as
         :math:`K` and :math:`\\sigma_K` within the the standard, respectively.
 
-        Returns:
-            float: Rice factor standard deviation in dB.
+        Returns: Rice factor standard deviation in dB.
 
         Raises:
             ValueError: If the standard deviation is smaller than zero.
@@ -1285,8 +1274,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
 
         Referred to as :math:`r_{\\tau}` within the standard.
 
-        Returns:
-            float: Scaling factor.
+        Returns: Scaling factor.
 
         Raises:
             ValueError:
@@ -1301,8 +1289,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
         The cross-polarization power and its mean are referred to as
         :math:`\\mathrm{XPR}` and :math:`\\mu_{\\mathrm{XPR}}` within the the standard, respectively.
 
-        Returns:
-            float: Mean power in dB.
+        Returns: Mean power in dB.
         """
         ...  # pragma: no cover
 
@@ -1313,8 +1300,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
         The cross-polarization power and its standard deviation are referred to as
         :math:`\\mathrm{XPR}` and :math:`\\sigma_{\\mathrm{XPR}}` within the the standard, respectively.
 
-        Returns:
-            float: Power standard deviation in dB.
+        Returns: Power standard deviation in dB.
 
         Raises:
             ValueError: If the standard deviation is smaller than zero.
@@ -1332,8 +1318,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
 
         Referred to as :math:`c_{ASD}` within the standard.
 
-        Returns:
-            float: Angle spread in degrees.
+        Returns: Angle spread in degrees.
 
         Raises:
             ValueError: If spread is smaller than zero.
@@ -1346,8 +1331,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
 
         Referred to as :math:`c_{ASA}` within the standard.
 
-        Returns:
-            float: Angle spread in degrees.
+        Returns: Angle spread in degrees.
 
         Raises:
             ValueError: If spread is smaller than zero.
@@ -1360,8 +1344,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
 
         Referred to as :math:`c_{ZSA}` within the standard.
 
-        Returns:
-            float: Angle spread in degrees.
+        Returns: Angle spread in degrees.
 
         Raises:
             ValueError: If spread is smaller than zero.
@@ -1374,8 +1357,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
 
         Referred to as :math:`\\zeta` within the the standard.
 
-        Returns:
-            float: Cluster shadowing standard deviation.
+        Returns: Cluster shadowing standard deviation.
 
         Raises:
             ValueError: If the deviation is smaller than zero.
@@ -1398,8 +1380,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
 
         The offset is referred to as :math:`\\mu_{\\mathrm{offset,ZOD}}` within the standard.
 
-        Returns:
-            float: The offset in degrees.
+        Returns: The offset in degrees.
         """
         ...  # pragma: no cover
 
@@ -1412,8 +1393,8 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
 
         Args:
 
-            state (LSST): Large scale state of the channel.
-            parameters (ClusterDelayLineSampleParameters): Parameters of the channel realization.
+            state: Large scale state of the channel.
+            parameters: Parameters of the channel realization.
 
         Returns: Tuple of large-scale parameters.
         """
@@ -1471,20 +1452,20 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
 
         Args:
 
-            consistent_sample (ConsistentSample):
+            consistent_sample:
                 Sample of the consistent random process.
 
-            state (LSST):
+            state:
                 Large scale state of the channel.
 
-            line_of_sight (bool):
+            line_of_sight:
                 Is the realization line of sight?
 
-            delay_spread (float):
+            delay_spread:
                 Delay spread in seconds.
                 Denoted by :math:`\\mathrm{DS}` in the standard.
 
-            rice_factor (float):
+            rice_factor:
                 Rice factor K in dB.
                 Denoted by :math:`K` in the standard.
 
@@ -1534,28 +1515,25 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
 
         Args:
 
-            consistent_sample (ConsistentSample):
+            consistent_sample:
                 Sample of the consistent random process.
 
-            state (LSST):
+            state:
                 Large scale state of the channel.
 
-            delay_spread (float):
+            delay_spread:
                 Delay spread in seconds.
                 Denoted by :math:`\\mathrm{DS}` in the standard.
 
-            delays (numpy.ndarray):
+            delays:
                 Vector of cluster delays.
                 Denoted by :math:`\\tau` in the standard.
 
-            rice_factor (float):
+            rice_factor:
                 Rice factor in dB.
                 Denoted by :math:`K` in the standard.
 
-        Returns:
-
-            np.ndarray:
-                Vector of cluster power scales.
+        Returns: Vector of cluster power scales.
         """
 
         delay_scaling = self._delay_scaling(state)
@@ -1600,33 +1578,32 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
 
         Args:
 
-            consistent_sample (ConsistentSample):
+            consistent_sample:
                 Sample of the consistent random process.
 
-            state (LSST):
+            state:
                 Large scale state of the channel.
 
-            cluster_powers (numpy.ndarray):
+            cluster_powers:
                 Vector of cluster powers. The length determines the number of clusters.
 
-            spread (float):
+            spread:
                 Root-mean squared Azimuth spread in degrees.
                 Denoted by :math:`\\mathrm{ASD}` or :math:`\\mathrm{ASA}` in the standard.
 
-            rice_factor (float):
+            rice_factor
                 Rice factor in dB.
                 Denoted by :math:`K` in the standard.
 
-            los_azimuth (float):
+            los_azimuth:
                 Line of sight azimuth angle to the target in degrees.
 
-            direction (Literal["arrival", "departure"]):
+            direction:
                 Direction of the angles. Either "arrival" or "departure".
 
         Returns:
-            np.ndarray:
-                Matrix of angles in degrees.
-                The first dimension indicates the cluster index, the second dimension the ray index.
+            Matrix of angles in degrees.
+            The first dimension indicates the cluster index, the second dimension the ray index.
         """
 
         # Determine the closest scaling factor
@@ -1684,30 +1661,29 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
 
         Args:
 
-            consistent_sample (ConsistentSample):
+            consistent_sample:
                 Sample of the consistent random process.
 
-            state (LSST):
+            state:
                 Large scale state of the channel.
 
-            cluster_powers (numpy.ndarray):
+            cluster_powers:
                 Vector of cluster powers. The length determines the number of clusters.
 
-            spread (float):
+            spread:
                 Zenith of arrival angular spread in degrees.
                 Denoted by :math:`\\mathrm{ZSA}` in the standard.
 
-            rice_factor (float):
+            rice_factor:
                 Rice factor in dB.
                 Denoted by :math:`K` in the standard.
 
-            los_zenith (float):
+            los_zenith:
                 Line of sight zenith angle to the target in degrees.
 
         Returns:
-            np.ndarray:
-                Matrix of angles in degrees.
-                The first dimension indicates the cluster index, the second dimension the ray index.
+            Matrix of angles in degrees.
+            The first dimension indicates the cluster index, the second dimension the ray index.
         """
 
         # Equation 7.5-15 of TR 138.901 v17.0.0
@@ -1764,29 +1740,28 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
 
         Args:
 
-            consistent_sample (ConsistentSample):
+            consistent_sample:
                 Sample of the consistent random process.
 
-            state (LSST):
+            state:
                 Large scale state of the channel.
 
-            cluster_powers (numpy.ndarray):
+            cluster_powers:
                 Vector of cluster powers. The length determines the number of clusters.
 
-            spread (float):
+            spread:
                 Zenith of departure angular spread in degrees.
                 Denoted by :math:`\\mathrm{ZSD}` in the standard.
 
-            rice_factor (float):
+            rice_factor:
                 Rice factor in dB.
 
-            los_zenith (float):
+            los_zenith:
                 Line of sight zenith angle to the target in degrees.
 
         Returns:
-            np.ndarray:
-                Matrix of angles in degrees.
-                The first dimension indicates the cluster index, the second dimension the ray index.
+            Matrix of angles in degrees.
+            The first dimension indicates the cluster index, the second dimension the ray index.
         """
 
         # Equation 7.5-15 of TR 138.901 v17.0.0
@@ -2111,27 +2086,27 @@ class ClusterDelayLineBase(Channel[CDLRT, ClusterDelayLineSample], Generic[CDLRT
         """
         Args:
 
-            gain (float, optional):
+            gain:
                 Linear gain factor a signal amplitude experiences when being propagated over this realization.
                 :math:`1.0` by default.
 
-            delay_normalization (DelayNormalization, optional):
+            delay_normalization:
                 The delay normalization routine applied during channel sampling.
 
-            oxygen_absorption (bool, optional):
+            oxygen_absorption:
                 Model oxygen absorption in the channel.
                 Enabled by default.
 
-            expected_state (LSST, optional):
+            expected_state:
                 Expected large-scale state of the channel.
-                If `None`, the state is randomly generated during each sample of the channel's realization.
+                If :py:obj:`None`, the state is randomly generated during each sample of the channel's realization.
 
-            gain (float, optional):
+            gain:
                 Linear channel energy gain factor.
-                Initializes the :meth:`gain<gain>` property.
+                Initializes the :meth:`gain<hermespy.channel.channel.Channel.gain>` property.
                 :math:`1.0` by default.
 
-            seed (int, optional):
+            seed:
                 Seed used to initialize the pseudo-random number generator.
         """
 
@@ -2229,7 +2204,7 @@ class ClusterDelayLineBase(Channel[CDLRT, ClusterDelayLineSample], Generic[CDLRT
 
         Args:
 
-            state (int): Large scale state index of the channel.
+            state: Large scale state index of the channel.
 
         Returns: Lower-triangular root of the cross-correlation matrix.
         """

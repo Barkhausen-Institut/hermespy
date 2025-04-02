@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from enum import Enum
 from math import isclose
-from typing import Any, Callable, overload, List, Optional, Tuple, Type, Union
+from typing import Any, Callable, overload, List, Tuple, Type, Union
 
 import numpy as np
 
@@ -43,14 +43,14 @@ class Logarithmic(float):
         """
         Args:
 
-            value (Union[float, int]):
+            value:
                 Value of the logarithmic number.
 
-            value_type (ValueType, optional):
+            value_type:
                 Assumed type of `value`.
                 Decibels by default.
 
-            conversion (DbConversionType, optional):
+            conversion:
                 Conversion of logarithmic scale.
                 Power by default.
         """
@@ -82,14 +82,14 @@ class Logarithmic(float):
         """
         Args:
 
-            value (Union[float, int]):
+            value:
                 Value of the logarithmic number.
 
-            value_type (ValueType, optional):
+            value_type:
                 Assumed type of `value`.
                 Decibels by default.
 
-            conversion (DbConversionType, optional):
+            conversion:
                 Conversion of logarithmic scale.
                 Power by default.
         """
@@ -140,7 +140,7 @@ class Logarithmic(float):
 
         Args:
 
-            value (Union[Logarithmic, float, int]):
+            value:
                 Value to be added to the represented logarithmic number.
 
         Returns: Logarithmic sum representation.
@@ -158,7 +158,7 @@ class Logarithmic(float):
 
         Args:
 
-            value (Union[Logarithmic, float, int]):
+            value:
                 Value to be substracted from the represented logarithmic number.
 
         Returns: Logarithmic substraction representation.
@@ -176,7 +176,7 @@ class Logarithmic(float):
 
         Args:
 
-            value (Union[Logarithmic, float, int]):
+            value:
                 Value to be multiplied to the represented logarithmic number.
 
         Returns: Logarithmic multiplication representation.
@@ -194,7 +194,7 @@ class Logarithmic(float):
 
         Args:
 
-            value (Union[Logarithmic, float, int]):
+            value:
                 Value to be divided from the represented logarithmic number.
 
         Returns: Logarithmic division representation.
@@ -248,22 +248,22 @@ class LogarithmicSequence(np.ndarray):
 
     def __new__(
         cls: Type[LogarithmicSequence],
-        values: Optional[Sequence[Union[float, int]]] = None,
+        values: Sequence[Union[float, int]] | None = None,
         value_type: ValueType = ValueType.DB,
         conversion: DbConversionType = DbConversionType.POWER,
     ) -> LogarithmicSequence:
         """
         Args:
 
-            values (Sequence[Union[float, int]], optional):
+            values:
                 Initial content of the represented sequence.
                 If not provided, the sequence will be initialized as empty.
 
-            value_type (ValueType, optional):
+            value_type:
                 Assumed type of `value`.
                 Decibels by default.
 
-            conversion (DbConversionType, optional):
+            conversion:
                 Conversion of logarithmic scale.
                 Power by default.
         """
@@ -375,10 +375,10 @@ def dB(
 
     Args:
 
-        *values (Tuple[Union[int, float]]):
+        \*values:
             Value or sequence of values to be represented as logarithmic.
 
-        conversion (DbConversionType, optional):
+        conversion:
             Conversion of logarithmic scale.
             Power by default.
 

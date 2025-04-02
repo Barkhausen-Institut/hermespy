@@ -41,10 +41,10 @@ class PowerAmplifier(Serializable):
         """
         Args:
 
-            saturation_amplitude (float, optional):
+            saturation_amplitude:
                 Cut-off point for the linear behaviour of the amplification in Volt.
 
-            adjust_power (bool, optional):
+            adjust_power:
                 Power adjustment flag.
         """
 
@@ -59,12 +59,10 @@ class PowerAmplifier(Serializable):
 
         Referred to as :math:`s_\\mathrm{sat} \\ \\mathbb{R}_{+}` in equations.
 
-        Returns:
-            float: Saturation amplitude in Volt.
+        Returns: Saturation amplitude in Volt.
 
         Raises:
-            ValueError:
-                If amplitude is smaller than zero.
+            ValueError: If amplitude is smaller than zero.
         """
 
         return self.__saturation_amplitude
@@ -86,12 +84,9 @@ class PowerAmplifier(Serializable):
         Internally calls the model subroutine of power-amplifier models implementing this prototype-class.
 
         Args:
-            input_signal(numpy.ndarray):
-                Sample vector of the signal feeding into the power amplifier.
+            input_signal: Sample vector of the signal feeding into the power amplifier.
 
-        Returns:
-            np.ndarray:
-                Distorted signal after amplification modeling.
+        Returns: Distorted signal after amplification modeling.
         """
 
         distorted_signal = self.model(input_signal)
@@ -107,12 +102,9 @@ class PowerAmplifier(Serializable):
         """Model signal amplification characteristics.
 
         Args:
-            input_signal(numpy.ndarray):
-                Sample vector of the signal feeding into the power amplifier.
+            input_signal: Sample vector of the signal feeding into the power amplifier.
 
-        Returns:
-            np.ndarray:
-                Distorted signal after amplification modeling.
+        Returns: Distorted signal after amplification modeling.
         """
 
         # No modeling in the prototype, just return the non-distorted input signal
@@ -135,16 +127,18 @@ class PowerAmplifier(Serializable):
 
         Args:
 
-            axes (VAT, optional):
+            axes:
                 The axis object into which the information should be plotted.
                 If not specified, the routine will generate and return a new figure.
 
-            title (str, optional):
+            title:
                 Title of the generated plot.
 
-            samples (numpy.ndarray, optional):
+            samples:
                 Sample points at which to evaluate the characteristics.
                 In other words, the x-axis of the resulting characteristics plot.
+
+        Returns: Handle to the generated figure.
         """
 
         fig: plt.Figure
@@ -198,10 +192,10 @@ class ClippingPowerAmplifier(PowerAmplifier):
         """
         Args:
 
-            saturation_amplitude (float, optional):
+            saturation_amplitude:
                 Cut-off point for the linear behaviour of the amplification in Volt.
 
-            adjust_power (bool, optional):
+            adjust_power:
                 Power adjustment flag.
         """
 
@@ -229,10 +223,10 @@ class RappPowerAmplifier(PowerAmplifier):
         """
         Args:
 
-            smoothness_factor(float, optional):
+            smoothness_factor:
                 Smoothness factor of the amplification saturation characteristics.
 
-            \**kwargs (Any):
+            \*\*kwargs:
                 PowerAmplifier base class initialization arguments.
         """
 
@@ -247,8 +241,7 @@ class RappPowerAmplifier(PowerAmplifier):
 
         Also referred to as Rapp-factor :math:`p_\\mathrm{Rapp}`.
 
-        Returns:
-            float: Smoothness factor.
+        Returns: Smoothness factor.
 
         Raises:
             ValueError: If smoothness factor is smaller than one.
@@ -312,19 +305,19 @@ class SalehPowerAmplifier(PowerAmplifier):
         """
         Args:
 
-            amplitude_alpha (float):
+            amplitude_alpha:
                 Amplitude model factor alpha.
 
-            amplitude_beta (float):
+            amplitude_beta:
                 Amplitude model factor beta.
 
             phase_alpha (float)
                 Phase model factor alpha.
 
-            phase_beta (float):
+            phase_beta:
                 Phase model factor beta.
 
-            \**kwargs (Any):
+            \*\*kwargs:
                 PowerAmplifier base class initialization arguments.
         """
 
@@ -362,8 +355,7 @@ class SalehPowerAmplifier(PowerAmplifier):
     def amplitude_beta(self) -> float:
         """Amplitude model factor :math:`\\beta_\\mathrm{a}`.
 
-        Returns:
-            float: Amplitude factor.
+        Returns: Amplitude factor.
 
         Raises:
             ValueError: If the factor is smaller than zero.
@@ -421,11 +413,11 @@ class CustomPowerAmplifier(PowerAmplifier):
         """
         Args:
 
-            input (numpy.ndarray):
-            gain (numpy.ndarray):
-            phase (numpy.ndarray):
+            input:
+            gain:
+            phase:
 
-            \**kwargs (Any):
+            \*\*kwargs:
                 PowerAmplifier base class initialization arguments.
 
         Raises:

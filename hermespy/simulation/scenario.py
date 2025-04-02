@@ -52,6 +52,7 @@ __status__ = "Prototype"
 
 
 class ScenarioVisualization(Visualization):
+    """Visualization of a scenario's spatial configuration."""
 
     def __init__(
         self,
@@ -201,17 +202,20 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDeviceState, Simulat
         """
         Args:
 
-            default_channel (Channel, optional):
+            default_channel:
                 Default channel model to be assumed for all device links.
                 If not specified, the `default_channel` is set to an ideal distortionless channel model.
 
-            noise_level (NoiseLevel, optional):
+            noise_level:
                 Global noise level of the scenario assumed for all devices.
                 If not specified, the noise configuration is device-specific.
 
-            noise_model (NoiseModel, optional):
+            noise_model:
                 Global noise model of the scenario assumed for all devices.
                 If not specified, the noise configuration is device-specific.
+
+            \*args, \*\*kwargs:
+                Additional arguments passed to the base class constructor.
         """
 
         # Prepare channel matrices for device links
@@ -253,10 +257,10 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDeviceState, Simulat
 
         Args:
 
-            alpha_device (SimulatedDevice):
+            alpha_device:
                 First device linked by the requested channel.
 
-            beta_device (SimulatedDevice):
+            beta_device:
                 Second device linked by the requested channel.
 
         Returns:
@@ -281,10 +285,10 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDeviceState, Simulat
 
         Args:
 
-            device (SimulatedDevice):
+            device:
                 The device in question.
 
-            active_only (bool, optional):
+            active_only:
                 Consider only active channels.
                 A channel is considered active if its gain is greater than zero.
                 Disabled by default, so all channels are considered.
@@ -320,13 +324,13 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDeviceState, Simulat
 
         Args:
 
-            alpha_device (SimulatedDevice):
+            alpha_device:
                 First device to be linked by `channel`.
 
-            beta_device (SimulatedDevice):
+            beta_device:
                 Second device to be linked by `channel`.
 
-            channel (Channel):
+            channel:
                 The channel instance to link `alpha_device` and `beta_device`.
 
         Raises:
@@ -403,7 +407,7 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDeviceState, Simulat
 
         Args:
 
-            devices (Sequence[SimulatedDevice], optional):
+            devices:
                 The devices for which to realize the trigger models.
                 If not specified, all registered devices are considered.
 
@@ -442,14 +446,14 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDeviceState, Simulat
 
         Args:
 
-            transmissions (Sequence[Sequence[Transmission]]):
+            transmissions:
                 Results of all transmitting DSP algorithms.
 
-            states (Sequence[SimulatedDeviceState | None], optional):
+            states:
                 States of the transmitting devices.
-                If not specified, the current device states will be queried by calling :meth:`Device.state`.
+                If not specified, the current device states will be queried by calling :meth:`state<hermespy.simulation.simulated_device.SimulatedDevice.state>`.
 
-            trigger_realizations (Sequence[TriggerRealization], optional):
+            trigger_realizations:
                 Realizations of the device's trigger models.
 
         Returns: List of device outputs.
@@ -486,15 +490,15 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDeviceState, Simulat
 
         Args:
 
-            states (Sequence[SimulatedDeviceState | None], optional):
+            states:
                 States of the transmitting devices.
-                If not specified, the current device states will be queried by calling :meth:`Device.state`.
+                If not specified, the current device states will be queried by calling :meth:`state<hermespy.simulation.simulated_device.SimulatedDevice.state>`.
 
-            notify (bool, optional):
+            notify:
                 Notify the transmit DSP layer's callbacks about the transmission results.
                 Enabled by default.
 
-            trigger_realizations (Sequence[TriggerRealization], optional):
+            trigger_realizations:
                 Realizations of the device's trigger models.
                 If not spcified, new trigger realizations will be generated from all devices.
 
@@ -526,17 +530,17 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDeviceState, Simulat
 
         Args:
 
-            transmissions (Sequence[DeviceOutput])
+            transmissions:
                 Sequence of device transmissisons.
 
-            device_states (Sequence[SimulatedDeviceState], optional):
+            device_states:
                 Sequence of device states at the time of signal propagation.
                 If not specified, the device states are assumed to be at the initial state.
 
-            channel_realizations (Sequence[ChannelRealization], optional):
+            channel_realizations:
                 Sequence of channel realizations representing the scenario's channel random states.
 
-            interpolation_mode (InterpolationMode, optional):
+            interpolation_mode:
                 Interpolation mode for the channel samples.
                 Defaults to `InterpolationMode.NEAREST`.
 
@@ -615,18 +619,18 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDeviceState, Simulat
 
         Args:
 
-            impinging_signals (Sequence[DeviceInput | Signal | Sequence[Signal]] | Sequence[Sequence[Signal]]):
+            impinging_signals:
                 list of signals impinging onto the devices.
 
-            states (Sequence[SimulatedDeviceState], optional):
+            states:
                 Sequence of simulated device states at the time of signal impingement.
                 If not specified, the device states are assumed to be at the initial state.
 
-            trigger_realizations (Sequence[TriggerRealization], optional):
+            trigger_realizations:
                 Sequence of trigger realizations.
                 If not specified, ideal triggerings are assumed for all devices.
 
-            leaking_signals (Sequence[Signal] | Sequence[Sequence[Signal]], optional):
+            leaking_signals:
                 Signals leaking from transmit to receive chains within the individual devices.
                 If not specified, no leakage is assumed.
 
@@ -676,26 +680,26 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDeviceState, Simulat
     ) -> Sequence[SimulatedDeviceReception]:
         """Receive over all simulated scenario devices.
 
-        Internally calls :meth:`SimulationScenario.process_inputs` and :meth:`Scenario.receive_operators`.
+        Internally calls :meth:`process_inputs<.process_inputs>` and :meth:`Scenario.receive_operators<hermespy.core.scenario.Scenario.receive_operators>`.
 
         Args:
 
-            impinging_signals (list[Union[DeviceInput, Signal, Iterable[Signal]]]):
+            impinging_signals:
                 List of signals impinging onto the devices.
 
-            states (Sequence[SimulatedDeviceState | None], optional):
+            states:
                 Sequence of simulated device states at the time of signal impingement.
                 If not specified, the device states are assumed to be at the initial state.
 
-            notify (bool, optional):
+            notify:
                 Notify the receiving DSP layer's callbacks about the reception results.
                 Enabled by default.
 
-            trigger_realizations (Sequence[TriggerRealization], optional):
+            trigger_realizations):
                 Sequence of trigger realizations.
                 If not specified, ideal triggerings are assumed for all devices.
 
-            leaking_signals (Sequence[Signal] | Sequence[Sequence[Signal]], optional):
+            leaking_signals:
                 Signals leaking from transmit to receive chains within the individual devices.
                 If not specified, no leakage is assumed.
 
@@ -726,7 +730,7 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDeviceState, Simulat
         """Simulate a drop at the given time.
 
         Args:
-            timestamp (float, optional):
+            timestamp:
                 Time at which the drop is simulated.
                 In replay mode, setting the timestamp will lead to a new drop being generated at the given time instead of a replay.
 
@@ -742,7 +746,7 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDeviceState, Simulat
         """Simulate a drop at the given time.
 
         Args:
-            timestamp (float, optional):
+            timestamp:
                 Time at which the drop is simulated.
                 Defaults to 0.0.
 
