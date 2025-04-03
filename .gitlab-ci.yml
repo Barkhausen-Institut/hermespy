@@ -5,7 +5,7 @@ variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   GIT_SUBMODULE_STRATEGY: recursive
   HERMES_WHEEL_12: "hermespy-$HERMES_VERSION-cp312-cp312-linux_x86_64.whl"
-  HERMES_VERSION: "1.4.0"
+  HERMES_VERSION: "1.5.0"
   HERMES_WHEEL_11: "hermespy-$HERMES_VERSION-cp311-cp311-linux_x86_64.whl"
   HERMES_WHEEL_10: "hermespy-$HERMES_VERSION-cp310-cp310-linux_x86_64.whl"
   PYDEVD_DISABLE_FILE_VALIDATION: 1
@@ -167,8 +167,7 @@ Documentation:
     - apt -qq update && apt-get -qq install -y octave portaudio19-dev python-dev-is-python3 pandoc graphviz  # remove for docker
     - pip install -qq dist/$HERMES_WHEEL_11\[documentation,quadriga,uhd,audio,sionna,scapy\]
   script:
-    - let "N_PROC = $(grep -c ^processor /proc/cpuinfo)"  # Count the number of available processor cores
-    - sphinx-build -W -j $N_PROC ./docssource/ ./documentation/
+    - sphinx-build -W ./docssource/ ./documentation/
 
 pages:
   stage: deploy

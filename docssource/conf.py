@@ -59,6 +59,7 @@ toc_object_entries = False
 # Nitpick configuration
 nitpicky = True
 nitpick_ignore = {
+    ('py:class', 'numpy.int64'),
     ('py:class', 'numpy.int32'),
     ('py:class', 'numpy.int8'),
     ('py:class', 'numpy.float64'),
