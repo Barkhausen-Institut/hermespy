@@ -2,7 +2,7 @@
 set -e -u -x
 
 # Configure the python version
-version=1.4.0
+version=1.5.0
 
 # Configure environment to use all available cores while building
 export MAKEFLAGS="-j $(grep -c ^processor /proc/cpuinfo)"

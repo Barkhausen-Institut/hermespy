@@ -9,7 +9,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "hermespy"
-version = "1.4.0"
+version = "1.5.0"
 authors = [
     {name = "Jan Adler", email ="jan.adler@barkhauseninstitut.org"},
 ]
@@ -161,7 +161,7 @@ module = "numpy.*,scipy.*,oct2py.*,matlab.*,matplotlib.*,ruamel.*,numba.*,h5py.*
 ignore_missing_imports = true
 
 [bumpver]
-current_version = "1.4.0"
+current_version = "1.5.0"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message = "Bump to version {new_version}"
 commit = false
@@ -170,7 +170,6 @@ push = false
 
 [bumpver.file_patterns]
 # Root directory files
-"README.md" = [ "{version}" ]
 "pyproject.toml" = [ 'current_version = "{version}"', 'version = "{version}"' ]
 ".gitlab-ci.yml" = [ 'HERMES_VERSION: "{version}"' ]
 "scripts/docker/build_manylinux.sh" = [ 'version={version}' ]
@@ -209,7 +208,6 @@ push = false
 "tests/integration_tests/*.py" = [ '__version__ = "{version}"' ]
 "tests/integrity_tests/documentation/*.py" = [ '__version__ = "{version}"' ]
 "tests/integrity_tests/examples/*.py" = [ '__version__ = "{version}"' ]
-"tests/unit_tests/bin/*.py" = [ '__version__ = "{version}"' ]
 "tests/unit_tests/beamforming/*.py" = [ '__version__ = "{version}"' ]
 "tests/unit_tests/channel/*.py" = [ '__version__ = "{version}"' ]
 "tests/unit_tests/core/*.py" = [ '__version__ = "{version}"' ]
