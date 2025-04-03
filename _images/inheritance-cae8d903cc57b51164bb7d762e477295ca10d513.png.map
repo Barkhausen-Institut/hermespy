@@ -1,0 +1,7 @@
+<map id="inheritancee2f7b263fc" name="inheritancee2f7b263fc">
+<area shape="rect" id="node1" href="#hermespy.modem.bits_source.BitsSource" target="_top" title="Base Class for Arbitrary Streams of Communication Bits." alt="" coords="93,79,183,104"/>
+<area shape="rect" id="node4" href="#hermespy.modem.bits_source.RandomBitsSource" target="_top" title="Bit stream generator for pseudo&#45;random sequences of bits." alt="" coords="5,152,151,177"/>
+<area shape="rect" id="node5" href="#hermespy.modem.bits_source.StreamBitsSource" target="_top" title="Bit&#45;stream generator mapping representing file system streams as bit sources." alt="" coords="175,152,314,177"/>
+<area shape="rect" id="node2" href="../core/random_node.html#hermespy.core.random_node.RandomNode" target="_top" title="Random Node within a random dependency graph." alt="" coords="60,5,171,31"/>
+<area shape="rect" id="node3" href="../core/factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="195,5,294,31"/>
+</map>

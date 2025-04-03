@@ -1,0 +1,6 @@
+<map id="inheritance2bdf387ef1" name="inheritance2bdf387ef1">
+<area shape="rect" id="node1" href="#hermespy.simulation.animation.LinearTrajectory" target="_top" title="A helper class generating a linear trajectory between two poses." alt="" coords="5,152,132,177"/>
+<area shape="rect" id="node2" href="#hermespy.simulation.animation.Trajectory" target="_top" title="Base class for motion trajectories of moveable objects within simulation scenarios." alt="" coords="100,79,187,104"/>
+<area shape="rect" id="node4" href="#hermespy.simulation.animation.StaticTrajectory" target="_top" title="A helper class generating a static trajectory." alt="" coords="157,152,279,177"/>
+<area shape="rect" id="node3" href="../core/factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="94,5,193,31"/>
+</map>

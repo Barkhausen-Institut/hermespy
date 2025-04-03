@@ -1,9 +1,0 @@
-<map id="inheritance62080d4e30" name="inheritance62080d4e30">
-<area shape="rect" id="node1" href="https://docs.python.org/3/library/abc.html#abc.ABC" target="_top" title="Helper class that provides a standard way to create an ABC using" alt="" coords="16,5,88,31"/>
-<area shape="rect" id="node2" href="core/executable.html#hermespy.core.executable.Executable" target="_top" title="Base Class for HermesPy Entry Points." alt="" coords="5,79,99,104"/>
-<area shape="rect" id="node5" href="core/pipeline.html#hermespy.core.pipeline.Pipeline" target="_top" title="Base class of HermesPy simulation pipelines." alt="" coords="15,152,89,177"/>
-<area shape="rect" id="node3" href="https://docs.python.org/3/library/typing.html#typing.Generic" target="_top" title="Abstract base class for generic types." alt="" coords="125,79,197,104"/>
-<area shape="rect" id="node4" href="core/monte_carlo.html#hermespy.core.monte_carlo.MonteCarlo" target="_top" title="Grid of parameters over which to iterate the simulation." alt="" coords="114,152,211,177"/>
-<area shape="rect" id="node7" href="#hermespy.simulation.simulation.Simulation" target="_top" title="Executable HermesPy simulation configuration." alt="" coords="117,225,209,251"/>
-<area shape="rect" id="node6" href="core/factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="236,152,335,177"/>
-</map>

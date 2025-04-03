@@ -1,0 +1,4 @@
+<map id="inheritance7287f396f9" name="inheritance7287f396f9">
+<area shape="rect" id="node1" href="../core/antennas.html#hermespy.core.antennas.AntennaPort" target="_top" title="A single antenna port linking a set of antennas to an antenna array." alt="" coords="38,5,141,31"/>
+<area shape="rect" id="node2" href="#hermespy.simulation.antennas.SimulatedAntennaPort" target="_top" title="Port within a simulated antenna array." alt="" coords="5,79,173,104"/>
+</map>

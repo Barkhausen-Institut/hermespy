@@ -6,6 +6,7 @@ Channel Sample
    :parts: 1
 
 .. autoclass:: hermespy.channel.channel.ChannelSample
+   :private-members: _propagate
 
 .. autoclass:: hermespy.channel.channel.CST
 

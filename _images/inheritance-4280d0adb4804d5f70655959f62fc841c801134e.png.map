@@ -1,6 +1,0 @@
-<map id="inheritancedf6bcdb2df" name="inheritancedf6bcdb2df">
-<area shape="rect" id="node1" href="https://docs.python.org/3/library/abc.html#abc.ABC" target="_top" title="Helper class that provides a standard way to create an ABC using" alt="" coords="9,5,81,31"/>
-<area shape="rect" id="node2" href="simulation.isolation.isolation.html#hermespy.simulation.isolation.isolation.Isolation" target="_top" title="Base class for antenna isolation modeling." alt="" coords="5,79,84,104"/>
-<area shape="rect" id="node3" href="#hermespy.simulation.isolation.perfect.PerfectIsolation" target="_top" title="Perfect isolation model without leakage between RF chains." alt="" coords="44,152,168,177"/>
-<area shape="rect" id="node4" href="core/factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="109,79,207,104"/>
-</map>

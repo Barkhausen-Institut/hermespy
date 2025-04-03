@@ -1,0 +1,6 @@
+<map id="inheritanceaa54930383" name="inheritanceaa54930383">
+<area shape="rect" id="node1" href="https://docs.python.org/3/library/typing.html#typing.Generic" target="_top" title="Abstract base class for generic types." alt="" coords="5,5,77,31"/>
+<area shape="rect" id="node3" href="waveform.Synchronization.html#hermespy.modem.waveform.Synchronization" target="_top" title="Abstract base class for synchronization routines of waveform generators." alt="" coords="45,79,171,104"/>
+<area shape="rect" id="node2" href="#hermespy.modem.waveforms.orthogonal.ofdm.OFDMSynchronization" target="_top" title="Synchronization Routine for OFDM Waveforms." alt="" coords="25,152,191,177"/>
+<area shape="rect" id="node4" href="../core/factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="101,5,200,31"/>
+</map>

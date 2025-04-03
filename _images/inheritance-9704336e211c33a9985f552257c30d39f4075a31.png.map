@@ -1,0 +1,12 @@
+<map id="inheritance623b7e3032" name="inheritance623b7e3032">
+<area shape="rect" id="node1" href="https://docs.python.org/3/library/abc.html#abc.ABC" target="_top" title="Helper class that provides a standard way to create an ABC using" alt="" coords="85,5,157,31"/>
+<area shape="rect" id="node3" href="#hermespy.core.factory.ProcessBase" target="_top" title="Common base class for serialization and deserialization processes." alt="" coords="69,79,173,104"/>
+<area shape="rect" id="node2" href="#hermespy.core.factory.DeserializationProcess" target="_top" title="Base class for all deserialization processes." alt="" coords="25,152,195,177"/>
+<area shape="rect" id="node6" href="#hermespy.core.factory.HDFDeserializationProcess" target="_top" title="A process representation for deserializing objects from HDF5." alt="" coords="5,225,204,251"/>
+<area shape="rect" id="node8" href="#hermespy.core.factory.SerializationProcess" target="_top" title="Base class for all serialization processes." alt="" coords="233,152,387,177"/>
+<area shape="rect" id="node4" href="https://docs.python.org/3/library/enum.html#enum.Enum" target="_top" title="Create a collection of name/value pairs." alt="" coords="205,5,277,31"/>
+<area shape="rect" id="node10" href="#hermespy.core.factory.SerializableEnum" target="_top" title="Base class for serializable enumerations." alt="" coords="240,79,375,104"/>
+<area shape="rect" id="node5" href="#hermespy.core.factory.Factory" target="_top" title="Helper class to serialize Hermespy&#39;s runtime objects." alt="" coords="463,5,535,31"/>
+<area shape="rect" id="node7" href="#hermespy.core.factory.HDFSerializationProcess" target="_top" title="A process representation for serializing objects to HDF5." alt="" coords="228,225,408,251"/>
+<area shape="rect" id="node9" href="#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="301,5,399,31"/>
+</map>

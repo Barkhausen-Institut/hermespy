@@ -1,0 +1,6 @@
+<map id="inheritance52c034f08f" name="inheritance52c034f08f">
+<area shape="rect" id="node1" href="modem.BaseModem.html#hermespy.modem.modem.BaseModem" target="_top" title="Base class for wireless modems transmitting or receiving information over devices." alt="" coords="46,5,149,31"/>
+<area shape="rect" id="node4" href="#hermespy.modem.modem.TransmittingModemBase" target="_top" title="Base class of signal processing algorithms transmitting information." alt="" coords="5,79,189,104"/>
+<area shape="rect" id="node2" href="../core/device.Transmitter.html#hermespy.core.device.Transmitter" target="_top" title="Operator transmitting over a device." alt="" coords="213,79,309,104"/>
+<area shape="rect" id="node3" href="#hermespy.modem.modem.TransmittingModem" target="_top" title="Representation of a wireless modem exclusively transmitting." alt="" coords="103,152,255,177"/>
+</map>

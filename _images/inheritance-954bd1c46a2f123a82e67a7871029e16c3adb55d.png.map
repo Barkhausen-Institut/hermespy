@@ -1,7 +1,0 @@
-<map id="inheritance92013eb805" name="inheritance92013eb805">
-<area shape="rect" id="node1" href="https://docs.python.org/3/library/abc.html#abc.ABC" target="_top" title="Helper class that provides a standard way to create an ABC using" alt="" coords="5,5,77,31"/>
-<area shape="rect" id="node5" href="simulation.synchronization.TriggerModel.html#hermespy.simulation.simulated_device.TriggerModel" target="_top" title="Base class for all trigger models." alt="" coords="51,79,157,104"/>
-<area shape="rect" id="node2" href="core/random_node.html#hermespy.core.random_node.RandomNode" target="_top" title="Random Node within a random dependency graph." alt="" coords="102,5,213,31"/>
-<area shape="rect" id="node3" href="core/factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="181,79,280,104"/>
-<area shape="rect" id="node4" href="#hermespy.simulation.simulated_device.StaticTrigger" target="_top" title="Model of a trigger that&#39;s always perfectly synchronous with the drop start." alt="" coords="115,152,218,177"/>
-</map>

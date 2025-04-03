@@ -1,0 +1,6 @@
+<map id="inheritance08e1ccd7a7" name="inheritance08e1ccd7a7">
+<area shape="rect" id="node1" href="../channel.ChannelRealization.html#hermespy.channel.channel.ChannelRealization" target="_top" title="Realization of a wireless channel channel model." alt="" coords="47,79,195,104"/>
+<area shape="rect" id="node4" href="#hermespy.channel.fading.fading.MultipathFadingRealization" target="_top" title="Realization of a statistical multipath fading channel." alt="" coords="22,152,221,177"/>
+<area shape="rect" id="node2" href="../../core/factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="5,5,104,31"/>
+<area shape="rect" id="node3" href="https://docs.python.org/3/library/typing.html#typing.Generic" target="_top" title="Abstract base class for generic types." alt="" coords="128,5,200,31"/>
+</map>

@@ -1,0 +1,10 @@
+<map id="inheritancec078a1f530" name="inheritancec078a1f530">
+<area shape="rect" id="node1" href="#hermespy.modem.waveform_chirp_fsk.ChirpFSKCorrelationSynchronization" target="_top" title="Correlation&#45;based clock&#45;synchronization for Chirp&#45;FSK waveforms." alt="" coords="6,132,227,154"/>
+<area shape="rect" id="node2" href="waveform.correlation_synchronization.html#hermespy.modem.waveform_correlation_synchronization.CorrelationSynchronization" target="_top" title="Correlation&#45;based clock synchronization for arbitrary communication waveforms." alt="" coords="5,68,177,90"/>
+<area shape="rect" id="node3" href="#hermespy.modem.waveform_chirp_fsk.ChirpFSKSynchronization" target="_top" title="Synchronization for chirp&#45;based frequency shift keying communication waveforms." alt="" coords="199,68,358,90"/>
+<area shape="rect" id="node4" href="waveform.Synchronization.html#hermespy.modem.waveform.Synchronization" target="_top" title="Abstract base class for synchronization routines of waveform generators." alt="" coords="69,5,179,27"/>
+<area shape="rect" id="node5" href="../core/factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="236,5,321,27"/>
+<area shape="rect" id="node6" href="#hermespy.modem.waveform_chirp_fsk.ChirpFSKWaveform" target="_top" title="Chirp Frequency Shift Keying communication waveform &#160;description." alt="" coords="412,132,539,154"/>
+<area shape="rect" id="node7" href="waveform.html#hermespy.modem.waveform.PilotCommunicationWaveform" target="_top" title="Abstract base class of communication waveform generators generating a pilot signal." alt="" coords="379,68,571,90"/>
+<area shape="rect" id="node8" href="waveform.html#hermespy.modem.waveform.CommunicationWaveform" target="_top" title="Abstract base class for all communication waveform descriptions." alt="" coords="392,5,559,27"/>
+</map>

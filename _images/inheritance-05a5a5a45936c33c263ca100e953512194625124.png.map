@@ -1,0 +1,6 @@
+<map id="inheritance92013eb805" name="inheritance92013eb805">
+<area shape="rect" id="node1" href="../core/random_node.html#hermespy.core.random_node.RandomNode" target="_top" title="Random Node within a random dependency graph." alt="" coords="5,5,116,31"/>
+<area shape="rect" id="node4" href="synchronization.TriggerModel.html#hermespy.simulation.simulated_device.TriggerModel" target="_top" title="Base class for all trigger models." alt="" coords="71,79,178,104"/>
+<area shape="rect" id="node2" href="../core/factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="141,5,239,31"/>
+<area shape="rect" id="node3" href="#hermespy.simulation.simulated_device.StaticTrigger" target="_top" title="Model of a trigger that&#39;s always perfectly synchronous with the drop start." alt="" coords="73,152,176,177"/>
+</map>

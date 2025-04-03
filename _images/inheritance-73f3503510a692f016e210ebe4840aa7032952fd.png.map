@@ -1,0 +1,20 @@
+<map id="inheritance0eda9db478" name="inheritance0eda9db478">
+<area shape="rect" id="node1" href="https://docs.python.org/3/library/abc.html#abc.ABC" target="_top" title="Helper class that provides a standard way to create an ABC using" alt="" coords="115,72,181,95"/>
+<area shape="rect" id="node2" href="../core/antennas.html#hermespy.core.antennas.Antenna" target="_top" title="Base class for the model of a single antenna element within an antenna array." alt="" coords="204,139,273,163"/>
+<area shape="rect" id="node6" href="../core/antennas.html#hermespy.core.antennas.AntennaArrayBase" target="_top" title="Base class for all antenna array models." alt="" coords="51,139,182,163"/>
+<area shape="rect" id="node14" href="#hermespy.hardware_loop.audio.device.AudioPort" target="_top" title="Antenna port model for audio devices." alt="" coords="313,207,391,230"/>
+<area shape="rect" id="node16" href="../core/device.Device.html#hermespy.core.device.Device" target="_top" title="Physical device representation within HermesPy." alt="" coords="460,139,526,163"/>
+<area shape="rect" id="node9" href="#hermespy.hardware_loop.audio.device.AudioAntenna" target="_top" title="Antenna model for audio devices." alt="" coords="186,207,290,230"/>
+<area shape="rect" id="node3" href="https://docs.python.org/3/library/typing.html#typing.Generic" target="_top" title="Abstract base class for generic types." alt="" coords="27,72,93,95"/>
+<area shape="rect" id="node5" href="../core/antennas.html#hermespy.core.antennas.AntennaArray" target="_top" title="Base class of a model of a set of antennas." alt="" coords="30,207,131,230"/>
+<area shape="rect" id="node7" href="../core/antennas.html#hermespy.core.antennas.AntennaPort" target="_top" title="A single antenna port linking a set of antennas to an antenna array." alt="" coords="343,139,437,163"/>
+<area shape="rect" id="node4" href="../core/transformation.html#hermespy.core.transformation.Transformable" target="_top" title="Representation of a Coordinate Frame within a Kinematic Chain." alt="" coords="203,72,308,95"/>
+<area shape="rect" id="node12" href="#hermespy.hardware_loop.audio.device.AudioDeviceAntennas" target="_top" title="Antenna array information for audio devices." alt="" coords="5,274,157,297"/>
+<area shape="rect" id="node8" href="../core/factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="406,5,497,28"/>
+<area shape="rect" id="node10" href="#hermespy.hardware_loop.audio.device.AudioDevice" target="_top" title="HermesPy binding to an arbitrary audio device. Let&#39;s rock!" alt="" coords="476,274,571,297"/>
+<area shape="rect" id="node11" href="physical_device.PhysicalDevice.html#hermespy.hardware_loop.physical_device.PhysicalDevice" target="_top" title="Base representing any device controlling real hardware." alt="" coords="414,207,525,230"/>
+<area shape="rect" id="node13" href="#hermespy.hardware_loop.audio.device.AudioPlaybackPort" target="_top" title="Antenna transmit port model for audio devices." alt="" coords="180,274,312,297"/>
+<area shape="rect" id="node15" href="#hermespy.hardware_loop.audio.device.AudioRecordPort" target="_top" title="Antenna receive port model for audio devices." alt="" coords="334,274,454,297"/>
+<area shape="rect" id="node17" href="../core/random_node.html#hermespy.core.random_node.RandomNode" target="_top" title="Random Node within a random dependency graph." alt="" coords="377,72,479,95"/>
+<area shape="rect" id="node18" href="../core/transformation.html#hermespy.core.transformation.TransformableLink" target="_top" title="Abstract base class of kinetmatic chain links." alt="" coords="190,5,321,28"/>
+</map>

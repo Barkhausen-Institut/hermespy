@@ -1,7 +1,0 @@
-<map id="inheritance74ec4da5b7" name="inheritance74ec4da5b7">
-<area shape="rect" id="node1" href="https://docs.python.org/3/library/abc.html#abc.ABC" target="_top" title="Helper class that provides a standard way to create an ABC using" alt="" coords="7,5,79,31"/>
-<area shape="rect" id="node3" href="modem.waveforms.orthogonal.GridSection.html#hermespy.modem.waveforms.orthogonal.waveform.GridSection" target="_top" title="Description of a part of a grid&#39;s time domain." alt="" coords="5,79,103,104"/>
-<area shape="rect" id="node2" href="https://docs.python.org/3/library/typing.html#typing.Generic" target="_top" title="Abstract base class for generic types." alt="" coords="103,5,175,31"/>
-<area shape="rect" id="node5" href="#hermespy.modem.waveforms.orthogonal.waveform.SymbolSection" target="_top" title="SymbolSection" alt="" coords="59,152,177,177"/>
-<area shape="rect" id="node4" href="core/factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="127,79,226,104"/>
-</map>

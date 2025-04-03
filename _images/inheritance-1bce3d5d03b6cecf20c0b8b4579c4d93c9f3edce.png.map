@@ -1,0 +1,6 @@
+<map id="inheritance74ec4da5b7" name="inheritance74ec4da5b7">
+<area shape="rect" id="node1" href="https://docs.python.org/3/library/typing.html#typing.Generic" target="_top" title="Abstract base class for generic types." alt="" coords="5,5,77,31"/>
+<area shape="rect" id="node2" href="waveforms.orthogonal.GridSection.html#hermespy.modem.waveforms.orthogonal.waveform.GridSection" target="_top" title="Description of a part of a grid&#39;s time domain." alt="" coords="53,79,150,104"/>
+<area shape="rect" id="node4" href="#hermespy.modem.waveforms.orthogonal.waveform.SymbolSection" target="_top" title="Representation of a section of symbols within an OFDM&#45;grid&#39;s time&#45;domain." alt="" coords="42,152,161,177"/>
+<area shape="rect" id="node3" href="../core/factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="101,5,200,31"/>
+</map>

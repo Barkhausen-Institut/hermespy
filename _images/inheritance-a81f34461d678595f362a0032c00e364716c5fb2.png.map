@@ -1,0 +1,11 @@
+<map id="inheritanceb3e120a730" name="inheritanceb3e120a730">
+<area shape="rect" id="node1" href="https://docs.python.org/3/library/typing.html#typing.Generic" target="_top" title="Abstract base class for generic types." alt="" coords="47,152,119,177"/>
+<area shape="rect" id="node7" href="../core/device.Transmitter.html#hermespy.core.device.Transmitter" target="_top" title="Operator transmitting over a device." alt="" coords="47,225,143,251"/>
+<area shape="rect" id="node8" href="../core/device.Receiver.html#hermespy.core.device.Receiver" target="_top" title="Operator receiving from a device." alt="" coords="167,225,246,251"/>
+<area shape="rect" id="node2" href="../core/device.MixingOperator.html#hermespy.core.device.MixingOperator" target="_top" title="Base class for operators performing mixing operations." alt="" coords="143,152,265,177"/>
+<area shape="rect" id="node3" href="../core/device.Operator.html#hermespy.core.device.Operator" target="_top" title="Base class for operators of devices." alt="" coords="106,79,185,104"/>
+<area shape="rect" id="node4" href="../core/factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="5,5,104,31"/>
+<area shape="rect" id="node5" href="#hermespy.radar.radar.Radar" target="_top" title="Signal processing pipeline of a monostatic radar sensing its environment." alt="" coords="21,372,93,397"/>
+<area shape="rect" id="node6" href="#hermespy.radar.radar.RadarBase" target="_top" title="Base class class for radar sensing signal processing pipelines." alt="" coords="49,299,141,324"/>
+<area shape="rect" id="node9" href="../core/random_node.html#hermespy.core.random_node.RandomNode" target="_top" title="Random Node within a random dependency graph." alt="" coords="290,152,401,177"/>
+</map>

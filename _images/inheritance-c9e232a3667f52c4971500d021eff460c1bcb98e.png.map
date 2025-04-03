@@ -1,0 +1,10 @@
+<map id="inheritance111900d6f5" name="inheritance111900d6f5">
+<area shape="rect" id="node1" href="https://docs.python.org/3/library/abc.html#abc.ABC" target="_top" title="Helper class that provides a standard way to create an ABC using" alt="" coords="5,75,73,99"/>
+<area shape="rect" id="node4" href="../core/scenario.html#hermespy.core.scenario.Scenario" target="_top" title="A wireless scenario." alt="" coords="203,144,277,168"/>
+<area shape="rect" id="node2" href="https://docs.python.org/3/library/typing.html#typing.Generic" target="_top" title="Abstract base class for generic types." alt="" coords="96,75,164,99"/>
+<area shape="rect" id="node3" href="#hermespy.hardware_loop.scenario.PhysicalScenario" target="_top" title="Scenario of physical device bindings." alt="" coords="177,213,303,237"/>
+<area shape="rect" id="node5" href="../core/random_node.html#hermespy.core.random_node.RandomNode" target="_top" title="Random Node within a random dependency graph." alt="" coords="188,75,292,99"/>
+<area shape="rect" id="node6" href="../core/factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="316,75,409,99"/>
+<area shape="rect" id="node7" href="../core/transformation.html#hermespy.core.transformation.TransformableBase" target="_top" title="Base of kinematic chains." alt="" coords="432,75,571,99"/>
+<area shape="rect" id="node8" href="../core/transformation.html#hermespy.core.transformation.TransformableLink" target="_top" title="Abstract base class of kinetmatic chain links." alt="" coords="434,5,569,29"/>
+</map>

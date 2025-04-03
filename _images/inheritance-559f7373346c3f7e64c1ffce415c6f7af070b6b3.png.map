@@ -1,8 +1,0 @@
-<map id="inheritance767c210c2a" name="inheritance767c210c2a">
-<area shape="rect" id="node1" href="https://docs.python.org/3/library/abc.html#abc.ABC" target="_top" title="Helper class that provides a standard way to create an ABC using" alt="" coords="121,5,194,30"/>
-<area shape="rect" id="node3" href="core/monte_carlo.html#hermespy.core.monte_carlo.ScalarDimension" target="_top" title="Base class for objects that can be configured by scalar values." alt="" coords="5,76,310,100"/>
-<area shape="rect" id="node2" href="core/factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="334,76,571,100"/>
-<area shape="rect" id="node5" href="simulation.noise.html#hermespy.simulation.noise.level.NoiseLevel" target="_top" title="Base class for all noise level configuration classes." alt="" coords="138,147,437,171"/>
-<area shape="rect" id="node4" title="Base class for all communication noise level configuration classes." alt="" coords="80,218,496,242"/>
-<area shape="rect" id="node6" href="#hermespy.simulation.modem.noise.EBN0" target="_top" title="Fixed noise power configuration." alt="" coords="147,288,428,313"/>
-</map>

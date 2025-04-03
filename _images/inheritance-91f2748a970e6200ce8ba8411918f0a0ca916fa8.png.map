@@ -1,0 +1,12 @@
+<map id="inheritancec19bf3d91f" name="inheritancec19bf3d91f">
+<area shape="rect" id="node1" href="https://docs.python.org/3/library/abc.html#abc.ABC" target="_top" title="Helper class that provides a standard way to create an ABC using" alt="" coords="5,5,77,31"/>
+<area shape="rect" id="node2" href="../channel.Channel.html#hermespy.channel.channel.Channel" target="_top" title="Abstract base class of all channel models." alt="" coords="125,79,200,104"/>
+<area shape="rect" id="node7" href="delay.html#hermespy.channel.delay.delay.DelayChannelBase" target="_top" title="Base of delay channel models." alt="" coords="90,152,235,177"/>
+<area shape="rect" id="node3" href="../../core/random_node.html#hermespy.core.random_node.RandomNode" target="_top" title="Random Node within a random dependency graph." alt="" coords="102,5,213,31"/>
+<area shape="rect" id="node4" href="../../core/factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="237,5,336,31"/>
+<area shape="rect" id="node6" href="../channel.ChannelRealization.html#hermespy.channel.channel.ChannelRealization" target="_top" title="Realization of a wireless channel channel model." alt="" coords="317,79,465,104"/>
+<area shape="rect" id="node5" href="https://docs.python.org/3/library/typing.html#typing.Generic" target="_top" title="Abstract base class for generic types." alt="" coords="360,5,432,31"/>
+<area shape="rect" id="node8" href="delay.html#hermespy.channel.delay.delay.DelayChannelRealization" target="_top" title="Base class for delay channel realizations." alt="" coords="297,152,484,177"/>
+<area shape="rect" id="node9" href="#hermespy.channel.delay.spatial.SpatialDelayChannel" target="_top" title="Delay channel based on spatial relations between the linked devices." alt="" coords="83,225,242,251"/>
+<area shape="rect" id="node10" href="#hermespy.channel.delay.spatial.SpatialDelayChannelRealization" target="_top" title="Realization of a spatial delay channel." alt="" coords="275,225,506,251"/>
+</map>

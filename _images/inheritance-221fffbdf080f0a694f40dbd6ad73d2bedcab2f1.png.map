@@ -1,0 +1,12 @@
+<map id="inheritance2f553d4290" name="inheritance2f553d4290">
+<area shape="rect" id="node1" href="https://docs.python.org/3/library/abc.html#abc.ABC" target="_top" title="Helper class that provides a standard way to create an ABC using" alt="" coords="5,5,77,31"/>
+<area shape="rect" id="node2" href="../channel.Channel.html#hermespy.channel.channel.Channel" target="_top" title="Abstract base class of all channel models." alt="" coords="117,79,192,104"/>
+<area shape="rect" id="node7" href="cluster_delay_lines.html#hermespy.channel.cdl.cluster_delay_lines.ClusterDelayLineBase" target="_top" title="Base class for all 3GPP Cluster Delay Line channel models." alt="" coords="95,152,260,177"/>
+<area shape="rect" id="node3" href="../../core/random_node.html#hermespy.core.random_node.RandomNode" target="_top" title="Random Node within a random dependency graph." alt="" coords="102,5,213,31"/>
+<area shape="rect" id="node4" href="../../core/factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="240,5,339,31"/>
+<area shape="rect" id="node6" href="../channel.ChannelRealization.html#hermespy.channel.channel.ChannelRealization" target="_top" title="Realization of a wireless channel channel model." alt="" coords="217,79,365,104"/>
+<area shape="rect" id="node5" href="https://docs.python.org/3/library/typing.html#typing.Generic" target="_top" title="Abstract base class for generic types." alt="" coords="365,5,437,31"/>
+<area shape="rect" id="node8" href="cluster_delay_lines.html#hermespy.channel.cdl.cluster_delay_lines.ClusterDelayLineRealization" target="_top" title="Realization of a 3GPP Cluster Delay Line channel model." alt="" coords="295,152,502,177"/>
+<area shape="rect" id="node9" href="#hermespy.channel.cdl.indoor_factory.IndoorFactory" target="_top" title="3GPP cluster delay line preset modeling an indoor factory scenario." alt="" coords="122,225,233,251"/>
+<area shape="rect" id="node10" href="#hermespy.channel.cdl.indoor_factory.IndoorFactoryRealization" target="_top" title="Realization of the indoor factory channel model." alt="" coords="307,225,490,251"/>
+</map>

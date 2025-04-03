@@ -1,5 +1,0 @@
-<map id="inheritance681e559838" name="inheritance681e559838">
-<area shape="rect" id="node1" href="#hermespy.modem.modem.BaseModem" target="_top" title="Base class for wireless modems transmitting or receiving information over devices." alt="" coords="51,79,154,104"/>
-<area shape="rect" id="node2" href="https://docs.python.org/3/library/typing.html#typing.Generic" target="_top" title="Abstract base class for generic types." alt="" coords="5,5,77,31"/>
-<area shape="rect" id="node3" href="core/random_node.html#hermespy.core.random_node.RandomNode" target="_top" title="Random Node within a random dependency graph." alt="" coords="102,5,213,31"/>
-</map>

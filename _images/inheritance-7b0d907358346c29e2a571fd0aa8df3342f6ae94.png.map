@@ -1,0 +1,6 @@
+<map id="inheritanced258b9ce0f" name="inheritanced258b9ce0f">
+<area shape="rect" id="node1" href="#hermespy.simulation.rf_chain.phase_noise.NoPhaseNoise" target="_top" title="No phase noise considered within the device model." alt="" coords="67,152,183,177"/>
+<area shape="rect" id="node2" href="rf_chain.phase_noise.html#hermespy.simulation.rf_chain.phase_noise.PhaseNoise" target="_top" title="Base class of phase noise models." alt="" coords="75,79,174,104"/>
+<area shape="rect" id="node3" href="../core/random_node.html#hermespy.core.random_node.RandomNode" target="_top" title="Random Node within a random dependency graph." alt="" coords="5,5,116,31"/>
+<area shape="rect" id="node4" href="../core/factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="141,5,239,31"/>
+</map>

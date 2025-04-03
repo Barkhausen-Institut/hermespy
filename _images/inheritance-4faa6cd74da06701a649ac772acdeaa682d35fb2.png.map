@@ -1,0 +1,5 @@
+<map id="inheritance9a59b45dcc" name="inheritance9a59b45dcc">
+<area shape="rect" id="node1" href="#hermespy.simulation.rf_chain.analog_digital_converter.Gain" target="_top" title="Constant gain model." alt="" coords="35,152,107,177"/>
+<area shape="rect" id="node2" href="rf_chain.adc.GainControlBase.html#hermespy.simulation.rf_chain.analog_digital_converter.GainControlBase" target="_top" title="Base class for all ADC gain control models." alt="" coords="5,79,136,104"/>
+<area shape="rect" id="node3" href="../core/factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="21,5,120,31"/>
+</map>

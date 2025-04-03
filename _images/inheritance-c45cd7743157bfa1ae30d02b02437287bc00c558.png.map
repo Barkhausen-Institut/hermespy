@@ -1,0 +1,6 @@
+<map id="inheritancef4051ed258" name="inheritancef4051ed258">
+<area shape="rect" id="node1" href="../core/drop.html#hermespy.core.drop.Drop" target="_top" title="Drop containing the information transmitted and received by all devices" alt="" coords="65,79,137,104"/>
+<area shape="rect" id="node4" href="#hermespy.simulation.drop.SimulatedDrop" target="_top" title="Drop containing all information generated during a simulated wireless scenario transmission," alt="" coords="42,152,161,177"/>
+<area shape="rect" id="node2" href="https://docs.python.org/3/library/typing.html#typing.Generic" target="_top" title="Abstract base class for generic types." alt="" coords="5,5,77,31"/>
+<area shape="rect" id="node3" href="../core/factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="101,5,200,31"/>
+</map>

@@ -1,0 +1,8 @@
+<map id="inheritance853dc54c86" name="inheritance853dc54c86">
+<area shape="rect" id="node1" href="https://docs.python.org/3/library/abc.html#abc.ABC" target="_top" title="Helper class that provides a standard way to create an ABC using" alt="" coords="5,152,77,177"/>
+<area shape="rect" id="node6" href="waveforms.orthogonal.OrthogonalWaveform.html#hermespy.modem.waveforms.orthogonal.waveform.OrthogonalWaveform" target="_top" title="Base class for wavforms with orthogonal subcarrier modulation." alt="" coords="51,225,213,251"/>
+<area shape="rect" id="node2" href="waveform.html#hermespy.modem.waveform.CommunicationWaveform" target="_top" title="Abstract base class for all communication waveform descriptions." alt="" coords="105,5,297,31"/>
+<area shape="rect" id="node4" href="waveform.html#hermespy.modem.waveform.PilotCommunicationWaveform" target="_top" title="Abstract base class of communication waveform generators generating a pilot signal." alt="" coords="91,79,312,104"/>
+<area shape="rect" id="node3" href="waveform.html#hermespy.modem.waveform.ConfigurablePilotWaveform" target="_top" title="ConfigurablePilotWaveform" alt="" coords="101,152,301,177"/>
+<area shape="rect" id="node5" href="#hermespy.modem.waveforms.orthogonal.ocdm.OCDMWaveform" target="_top" title="Orthogonal Chirp Division Multiplexing waveform." alt="" coords="67,299,197,324"/>
+</map>

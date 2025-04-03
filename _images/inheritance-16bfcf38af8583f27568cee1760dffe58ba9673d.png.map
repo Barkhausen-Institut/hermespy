@@ -1,6 +1,0 @@
-<map id="inheritance08e1ccd7a7" name="inheritance08e1ccd7a7">
-<area shape="rect" id="node1" href="https://docs.python.org/3/library/abc.html#abc.ABC" target="_top" title="Helper class that provides a standard way to create an ABC using" alt="" coords="5,5,77,31"/>
-<area shape="rect" id="node2" href="../channel.ChannelRealization.html#hermespy.channel.channel.ChannelRealization" target="_top" title="Realization of a wireless channel channel model." alt="" coords="31,79,179,104"/>
-<area shape="rect" id="node4" href="#hermespy.channel.fading.fading.MultipathFadingRealization" target="_top" title="Realization of a statistical multipath fading channel." alt="" coords="6,152,205,177"/>
-<area shape="rect" id="node3" href="https://docs.python.org/3/library/typing.html#typing.Generic" target="_top" title="Abstract base class for generic types." alt="" coords="101,5,173,31"/>
-</map>

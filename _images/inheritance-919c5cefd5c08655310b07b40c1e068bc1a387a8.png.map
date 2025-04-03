@@ -1,4 +1,0 @@
-<map id="inheritanced87a812fb7" name="inheritanced87a812fb7">
-<area shape="rect" id="node1" href="core/factory.html#hermespy.core.factory.HDFSerializable" target="_top" title="Base class for object serializable to the HDF5 format." alt="" coords="12,5,137,31"/>
-<area shape="rect" id="node2" href="#hermespy.simulation.simulated_device.TriggerRealization" target="_top" title="Realization of a trigger model." alt="" coords="5,79,144,104"/>
-</map>
