@@ -6,6 +6,7 @@ from typing import Dict, List, overload, Sequence, Type, Literal
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
+import matplotlib.ticker as ticker
 import numpy as np
 from mpl_toolkits.mplot3d import Axes3D  # type: ignore
 from scipy.constants import pi
@@ -767,12 +768,191 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
         arg_1: np.ndarray | None = None,
         *,
         title: str | None = None,
+        slice_list: list[tuple[tuple, tuple]] | None = None,
     ) -> plt.Figure:
+        """Plot the antenna array's radiation pattern.
+
+        Args:
+
+            carrier_frequency:
+                The carrier frequency of the signal to be transmitted / received in Hz.
+
+            arg_0 :
+
+                mode : The antenna mode to be plotted.
+
+                OR
+
+                beamformer :The beamformer to be used for beamforming.
+
+            arg_1 : beamforming_weights.
+
+                The beamforming weights to be used for beamforming.
+                If not specified, the weights are assumed to be :math:`1+0\\mathrm{j}`.
+                Not required when arg_0 is a beamformer.
+
+            title:
+                The title of the plot.
+                If not specified, a default title is assumed.
+
+            slice_list :
+
+                A list that defines the parameterisation of the slicing planes to plot the radiation pattern in 2D.
+                Each element of the list is a tuple with two tuple elements.
+                The first tuple corrresponds to the starting point (azimuth,zenith) of the slicing circle.
+                The second tuple corresponds to the repective slicing directions of azimuth and zenith.
+                If slice_list is not specified, 3D pattern is plotted.
+        """
+
+        mode_str: str
+
+        if arg_0 == AntennaMode.TX or isinstance(arg_0, TransmitBeamformer):
+            mode_str = "Transmit"
+
+        elif arg_0 == AntennaMode.RX or isinstance(arg_0, ReceiveBeamformer):
+            mode_str = "Receive"
+
+        else:
+            raise ValueError("Unknown antenna mode encountered")
+
+        res_figure: plt.Figure
+
+        if slice_list is None:
+            # Collect angle candidates for 3D Plot
+            azimuth_angles = np.linspace(-pi, pi, 31)
+            zenith_angles = np.linspace(0, 0.5 * pi, 31)
+            zenith_samples, azimuth_samples = np.meshgrid(zenith_angles[1:], azimuth_angles)
+            aoi_3d = np.append(
+                np.array([azimuth_samples.flatten(), zenith_samples.flatten()]).T,
+                np.zeros((1, 2)),
+                axis=0,
+            )
+            power = self.calculate_power(
+                carrier_frequency=carrier_frequency, arg_0=arg_0, arg_1=arg_1, aoi=aoi_3d
+            )
+            axes_1: Axes3D
+            with Executable.style_context():
+                # Radiation Pattern in 3D
+                figure_1, axes_1 = plt.subplots(subplot_kw={"projection": "3d"})
+                figure_1.suptitle(
+                    f"Antenna Array {mode_str} Characteristics" if title is None else title
+                )
+                self.__visualize_pattern(axes_1, power, aoi_3d)
+            res_figure = figure_1
+
+        elif slice_list is not None:
+            # Create a list to store the power values for each (slice_start,slice_direction) pairs
+            power_list = []
+
+            for slice_start, slice_direction in slice_list:
+                # Obtain the Starting point and the directions
+                theta_s = slice_start[1]
+                phi_s = slice_start[0]
+                theta_d = slice_direction[1]
+                phi_d = slice_direction[0]
+
+                # Generate the Vectors for the slicing plane
+                v1 = np.array(
+                    [
+                        np.sin(theta_s) * np.cos(phi_s),
+                        np.sin(theta_s) * np.sin(phi_s),
+                        np.cos(theta_s),
+                    ]
+                )  # Unit Vector in the direction of r slected as the first vector for the slicing plane
+
+                theta_cap = np.array(
+                    [
+                        np.cos(theta_s) * np.cos(phi_s),
+                        np.cos(theta_s) * np.sin(phi_s),
+                        -np.sin(theta_s),
+                    ]
+                )  # Unit Vector in the direction of inclination (theta)
+
+                phi_cap = np.array(
+                    [-np.sin(phi_s), np.cos(phi_s), 0]
+                )  # Unit Vector in the direction of azimuth (phi)
+
+                v2 = theta_d * theta_cap + phi_d * phi_cap  # Second vector for the slicing plane
+
+                # Compute the Circle for the Slice
+                num_sample_points = 1000
+                angles = np.linspace(0, 2 * np.pi, num_sample_points)
+
+                cv1 = np.outer(np.cos(angles), v1)
+                cv2 = np.outer(np.sin(angles), v2)
+
+                carthesian_circle_samples = cv1 + cv2  # Circle in Cartesian Coordinates
+
+                # Obtain the angle candidates to calculate the Power.
+                zenith_samples = np.arccos(carthesian_circle_samples[:, 2])
+                azimuth_samples = np.arctan2(
+                    carthesian_circle_samples[:, 1], carthesian_circle_samples[:, 0]
+                )
+
+                aoi_circ = np.array([azimuth_samples, zenith_samples]).T
+
+                # Calculate the Power and store in the list
+                power_list.append(
+                    self.calculate_power(
+                        carrier_frequency=carrier_frequency, arg_0=arg_0, arg_1=arg_1, aoi=aoi_circ
+                    )
+                )
+
+            # Plot the pattern in 2D
+            with Executable.style_context():
+                # Radiation Pattern in 3D
+                figure_2, axes_2 = plt.subplots()
+                figure_2.suptitle(
+                    f"Antenna Array {mode_str} Characteristics in 2D "
+                    if title is None
+                    else f"Radiation Pattern in 2D for {title}"
+                )
+                self.__visualize_pattern_sliced(axes_2, power_list, slice_list)
+            res_figure = figure_2
+
+        return res_figure
+
+    def calculate_power(  # type: ignore[misc]
+        self,
+        carrier_frequency: float,
+        arg_0: (
+            Literal[AntennaMode.TX]
+            | Literal[AntennaMode.RX]
+            | TransmitBeamformer
+            | ReceiveBeamformer
+        ),
+        arg_1: np.ndarray | None = None,
+        *,
+        aoi: np.ndarray,
+    ) -> np.ndarray:
+        """Calculate antenna array's radiated or received power.
+
+        Args:
+
+            carrier_frequency:
+                The carrier frequency of the signal to be transmitted / received in Hz.
+
+            arg_0 :
+
+                mode : The antenna mode of the array (Transmission or Reception).
+
+                OR
+
+                beamformer :The beamformer to be used for beamforming.
+
+            arg_1 : beamforming_weights.
+
+                The beamforming weights to be used for beamforming.
+                If not specified, the weights are assumed to be :math:`1+0\\mathrm{j}`.
+                Not required when arg_0 is a beamformer.
+
+            aoi :
+                An array that contains the angles of interest.
+        """
         num_ports: int
         ports: Sequence[AntennaPort]
         antennas: Sequence[SimulatedAntenna]
         num_antenna_attr: str
-        mode_str: str
         antenna_mode: AntennaMode
 
         if arg_0 == AntennaMode.TX or isinstance(arg_0, TransmitBeamformer):
@@ -780,7 +960,6 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
             ports = self.transmit_ports
             antennas = self.transmit_antennas
             num_antenna_attr = "num_transmit_antennas"
-            mode_str = "Transmit"
             antenna_mode = AntennaMode.TX
 
         elif arg_0 == AntennaMode.RX or isinstance(arg_0, ReceiveBeamformer):
@@ -788,21 +967,10 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
             ports = self.receive_ports
             antennas = self.receive_antennas
             num_antenna_attr = "num_receive_antennas"
-            mode_str = "Receive"
             antenna_mode = AntennaMode.RX
 
         else:
             raise ValueError("Unknown antenna mode encountered")
-
-        # Collect angle candidates
-        zenith_angles = np.linspace(0, 0.5 * pi, 31)
-        azimuth_angles = np.linspace(-pi, pi, 31)
-        zenith_samples, azimuth_samples = np.meshgrid(zenith_angles[1:], azimuth_angles)
-        aoi = np.append(
-            np.array([azimuth_samples.flatten(), zenith_samples.flatten()]).T,
-            np.zeros((1, 2)),
-            axis=0,
-        )
 
         # Collect sensor array response for each angle candidate
         antenna_responses = np.array(
@@ -894,13 +1062,7 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
                 )
                 power[p] = np.abs(s.getitem()) ** 2
 
-        axes: Axes3D
-        with Executable.style_context():
-            figure, axes = plt.subplots(subplot_kw={"projection": "3d"})
-            figure.suptitle(f"Antenna Array {mode_str} Characteristics" if title is None else title)
-            self.__visualize_pattern(axes, power, aoi)
-
-        return figure
+        return power
 
     @staticmethod
     def __visualize_pattern(axes: Axes3D, power: np.ndarray, aoi: np.ndarray) -> None:
@@ -937,12 +1099,41 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
         axes.set_xlabel("X")
         axes.set_ylabel("Y")
 
+    @staticmethod
+    def __visualize_pattern_sliced(
+        axes, power_list: list, slice_list: list[tuple[tuple, tuple]]
+    ) -> None:
+
+        # Generate angle Candidates for the plot
+        angles = np.linspace(0, 2 * pi, power_list[0].shape[0])
+
+        # Plot the pattern
+        for (slice_start, slice_direction), power in zip(slice_list, power_list):
+            axes.semilogy(
+                angles,
+                power,
+                label=f"Slice start = ({int(slice_start[0]/np.pi) if slice_start[0]%np.pi == 0 else slice_start[0]/np.pi:.2g}π ,{int(slice_start[1]/np.pi) if slice_start[1]%np.pi == 0 else slice_start[1]/np.pi:.2g}π ),Slice Direction = {slice_direction}",
+            )
+        axes.set_xlabel("Angles (radians)")
+        axes.set_ylabel("Power")
+        axes.grid(color="grey")
+        axes.legend(loc="upper right")
+
+        # Set X-axis ticks to show multiples of π
+        axes.xaxis.set_major_locator(ticker.MultipleLocator(base=np.pi / 2))  # π/2 increments
+        axes.xaxis.set_minor_locator(ticker.MultipleLocator(base=np.pi / 6))  # π/6 increments
+
+        # Format tick labels as π fractions
+        axes.xaxis.set_major_formatter(
+            ticker.FuncFormatter(lambda x, _: f"{int(x/np.pi) if x%np.pi == 0 else x/np.pi:.2g}π")
+        )
+
     def antenna_state(self, base_pose: Transformation) -> AntennaArrayState:
         """Return the antenna array's state with respect to a base pose.
 
         Args:
 
-            base_pose:
+            base_pose (Transformation):
                 The base pose to be used as reference.
 
         Returns: The antenna array's state with respect to the base pose.
