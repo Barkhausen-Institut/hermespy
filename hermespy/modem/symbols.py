@@ -181,7 +181,7 @@ class Symbols(Serializable):
 
     @property
     def num_symbols(self) -> int:
-        """Number of symbols per stream within this symbol series. """
+        """Number of symbols per stream within this symbol series."""
 
         return self.__symbols.shape[2]
 

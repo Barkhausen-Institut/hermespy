@@ -320,6 +320,11 @@ class TestDocumentationExamples(TestCase):
         """Test example snippet for animation"""
 
         self.__run_example("simulation_animation.py")
+    
+    def test_simulation_evaluation_sidelobe(self) -> None:
+        """Test example snippet for sidelobe evaluation"""
+
+        self.__run_example("simulation_evaluation_sidelobe.py")
 
     def test_simulation_isolation(self) -> None:
         """Test example snippet for isolation"""
