@@ -310,7 +310,7 @@ class Visualizable(Generic[VT], ABC):
                 Axes to plot into.
                 The dimensions must match the result of :meth:`Visualizable._axes_dimensions`.
 
-            \**kwargs:
+            \*\*kwargs:
                 Additional arguments to be passed to :meth:`Visualizable._new_axes`.
 
         Returns: Newly generated visualization.

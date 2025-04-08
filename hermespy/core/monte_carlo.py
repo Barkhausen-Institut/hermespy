@@ -10,18 +10,7 @@ from functools import reduce
 from math import exp, sqrt
 from os import path
 from time import perf_counter
-from typing import (
-    Any,
-    Callable,
-    Generic,
-    List,
-    Mapping,
-    Type,
-    TypeVar,
-    Tuple,
-    Union,
-    SupportsFloat,
-)
+from typing import Any, Callable, Generic, List, Mapping, Type, TypeVar, Tuple, Union, SupportsFloat
 from warnings import catch_warnings, simplefilter
 
 import matplotlib.pyplot as plt

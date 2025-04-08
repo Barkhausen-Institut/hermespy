@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from .beamforming import SidelobeEvaluator
 from .interference import SI, SSINR
 
 __author__ = "Jan Adler"
@@ -12,4 +13,4 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-__all__ = ["SI", "SSINR"]
+__all__ = ["SidelobeEvaluator", "SI", "SSINR"]
