@@ -76,6 +76,21 @@ class TestDocumentationExamples(TestCase):
 
         self.__run_example("beamforming_capon.py")
 
+    def test_core_evaluators_papr(self) -> None:
+        """Test example snippet for PAPR evaluation"""
+
+        self.__run_example("core_evaluators_papr.py")
+        
+    def test_core_evaluators_rxpow(self) -> None:
+        """Test example snippet for receive power evaluation"""
+
+        self.__run_example("core_evaluators_rxpow.py")
+        
+    def test_core_evaluators_txpow(self) -> None:
+        """Test example snippet for transmit power evaluation"""
+
+        self.__run_example("core_evaluators_txpow.py")
+
     def test_channel_cdl_indoor_factory(self) -> None:
         """Test example snippet for indoor channel factory with LOS"""
 
