@@ -15,6 +15,7 @@ from .antennas import (
 )
 from .definitions import ConsoleMode, Verbosity, FloatingError
 from .evaluators import (
+    PAPR,
     ReceivePowerEvaluator,
     PowerResult,
     PowerArtifact,
@@ -125,6 +126,7 @@ __all__ = [
     "CustomAntennaArray",
     "UniformArray",
     "SNRType",
+    "PAPR",
     "ReceivePowerEvaluator",
     "PowerResult",
     "PowerArtifact",

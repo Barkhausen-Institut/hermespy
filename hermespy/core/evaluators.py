@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-
-from __future__ import annotations
 from collections.abc import Sequence
-import matplotlib.pyplot as plt
+from typing_extensions import override
 
+import matplotlib.pyplot as plt
 import numpy as np
 
-from .device import Receiver, Reception, Transmitter, Transmission
+from .antennas import AntennaMode
+from .device import Device, DeviceOutput, ProcessedDeviceInput, Receiver, Reception, Transmitter, Transmission
 from .hooks import Hook
 from .monte_carlo import Artifact, Evaluation, ScalarEvaluationResult, Evaluator, GridDimension
-from .visualize import StemVisualization, VAT
+from .signal_model import Signal
+from .visualize import PlotVisualization, StemVisualization, VAT
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -67,6 +68,7 @@ class PowerResult(ScalarEvaluationResult):
 
         return self.__average_powers
 
+    @override
     def to_array(self) -> np.ndarray:
         return self.__average_powers
 
@@ -98,10 +100,12 @@ class PowerArtifact(Artifact):
 
         return self.__power
 
+    @override
     def __str__(self) -> str:
         power_db = 10 * np.log10(np.sum(self.__power))
         return f"{power_db:.2} dB"
 
+    @override
     def to_scalar(self) -> float:
         return float(np.sum(self.__power))
 
@@ -133,13 +137,16 @@ class PowerEvaluation(Evaluation[StemVisualization]):
 
         return self.__power
 
+    @override
     def artifact(self) -> PowerArtifact:
         return PowerArtifact(self.__power)
 
     @property
+    @override
     def title(self) -> str:
         return "Received Power"
 
+    @override
     def _prepare_visualization(
         self, figure: plt.Figure | None, axes: VAT, **kwargs
     ) -> StemVisualization:
@@ -150,6 +157,7 @@ class PowerEvaluation(Evaluation[StemVisualization]):
         container = ax.stem(np.zeros_like(self.__power))
         return StemVisualization(figure, axes, container)
 
+    @override
     def _update_visualization(self, visualization: StemVisualization, **kwargs) -> None:
         visualization.container.markerline.set_ydata(self.__power)
 
@@ -185,6 +193,7 @@ class ReceivePowerEvaluator(Evaluator):
 
         self.__reception = reception
 
+    @override
     def evaluate(self) -> PowerEvaluation:
         if self.__reception is None:
             raise RuntimeError(
@@ -195,13 +204,16 @@ class ReceivePowerEvaluator(Evaluator):
         return PowerEvaluation(power)
 
     @property
+    @override
     def abbreviation(self) -> str:
         return "RxPwr"
 
     @property
+    @override
     def title(self) -> str:
         return "Receive Power"
 
+    @override
     def generate_result(self, grid: Sequence[GridDimension], artifacts: np.ndarray) -> PowerResult:
         # Find the maximum number of receive ports over all artifacts
         max_ports = max(
@@ -254,6 +266,7 @@ class TransmitPowerEvaluator(Evaluator):
 
         self.__transmission = transmission
 
+    @override
     def evaluate(self) -> PowerEvaluation:
         if self.__transmission is None:
             raise RuntimeError(
@@ -263,13 +276,16 @@ class TransmitPowerEvaluator(Evaluator):
         return PowerEvaluation(self.__transmission.signal.power)
 
     @property
+    @override
     def abbreviation(self) -> str:
         return "TxPwr"
 
     @property
+    @override
     def title(self) -> str:
         return "Transmit Power"
 
+    @override
     def generate_result(self, grid: Sequence[GridDimension], artifacts: np.ndarray) -> PowerResult:
         # Find the maximum number of receive ports over all artifacts
         max_ports = max(
@@ -289,3 +305,198 @@ class TransmitPowerEvaluator(Evaluator):
 
     def __del__(self) -> None:
         self.__transmit_hook.remove()
+
+
+class PAPRArtifact(Artifact):
+    """Artifact of a peak-to-average power ratio evaluation."""
+
+    __papr: float
+
+    def __init__(self, stream_papars: np.ndarray) -> None:
+        """
+        Args:
+
+            stream_papars: PAPRs of each antenna stream.
+        """
+
+        # Initialize the base class
+        Artifact.__init__(self)
+
+        # Initialize class members
+        self.__papr = float(np.mean(stream_papars, keepdims=False))
+
+    @override
+    def __str__(self) -> str:
+        power_db = 10 * np.log10(self.__papr)
+        return f"{power_db:.2} dB"
+
+    @override
+    def to_scalar(self) -> float:
+        return self.__papr
+
+
+class PAPREvaluation(Evaluation[PlotVisualization]):
+    """Peak-to-average power ratio (*PAPR*) evaluation."""
+
+    __instantaneous_power: np.ndarray
+
+    def __init__(self, instantaneous_power: np.ndarray) -> None:
+        """
+        Args:
+
+            instantaneous_power: The instantaneous power in :math:`V^2` for each antenna stream.
+        """
+
+        # Initialize the base class
+        super().__init__()
+
+        # Initialize class members
+        self.__instantaneous_power = instantaneous_power
+
+    @property
+    def instantaneous_power(self) -> np.ndarray:
+        """The instantaneous power in :math:`V^2` for each antenna stream."""
+
+        return self.__instantaneous_power
+
+    @override
+    def artifact(self) -> PAPRArtifact:
+        # Peak-to-average power ratio per stream
+        average_power = np.mean(self.instantaneous_power, axis=1, keepdims=False)
+        peak_power = np.max(self.instantaneous_power, axis=1, keepdims=False)
+        stream_paprs = peak_power / average_power
+
+        return PAPRArtifact(stream_paprs)
+
+    @property
+    @override
+    def title(self) -> str:
+        return "Instantaneous Power"
+
+    @override
+    def _prepare_visualization(
+        self, figure: plt.Figure | None, axes: VAT, **kwargs
+    ) -> PlotVisualization:
+        ax: plt.Axes = axes.flat[0]
+        ax.set_xlabel("Sample Index")
+        ax.set_ylabel("Power [V^2]")
+
+        lines = np.empty_like(axes, dtype=object)
+        lines.flat[0] = []
+        zeros = np.zeros(self.__instantaneous_power.shape[1], dtype=np.float64)
+        indices = np.arange(self.__instantaneous_power.shape[1])
+        for s in range(self.__instantaneous_power.shape[0]):
+            lines.flat[0].append(ax.plot(indices, zeros, label=f"Stream #{s}")[0])
+
+        ax.legend()
+
+        return PlotVisualization(figure, axes, lines)
+
+    @override
+    def _update_visualization(self, visualization: PlotVisualization, **kwargs) -> None:
+        # Update the y-data of each line in the plot
+        for line, power in zip(visualization.lines.flat[0], self.__instantaneous_power):
+            line.set_ydata(power)
+
+        visualization.axes[0, 0].relim()
+        visualization.axes[0, 0].autoscale_view(True, True, True)
+
+
+class PAPR(Evaluator):
+    """Peak-to-average power ratio (*PAPR*) evaluator.
+
+    Computes the average *PAPR* of radio-frequency band signals transmitted and received by devices during evaluation runtime.
+    """
+
+    __direction: AntennaMode
+    __output_hook: Hook[DeviceOutput] | None
+    __input_hook: Hook[ProcessedDeviceInput] | None
+    __output: DeviceOutput | None
+    __input: ProcessedDeviceInput | None
+
+    def __init__(self, device: Device, direction: AntennaMode) -> None:
+        """
+        Args:
+
+            device: The device to evaluate the *PAPR* of.
+
+            direction:
+                The direction of the *PAPR* evaluation. Can be ``AntennaMode.TX`` or ``AntennaMode.RX``.
+        """
+
+        # Assert antenn mode validity
+        if direction not in (AntennaMode.TX, AntennaMode.RX):
+            raise ValueError("PAPR evaluator only supports TX and RX antenna modes")
+
+        # Initialize the base class
+        Evaluator.__init__(self)
+
+        # Initialize class members
+        self.__direction = direction
+
+        # Register hooks
+        if direction == AntennaMode.TX:
+            self.__output_hook = device.output_callbacks.add_callback(self.__output_callback)
+            self.__input_hook = None
+
+        elif direction == AntennaMode.RX:
+            self.__output_hook = None
+            self.__input_hook = device.input_callbacks.add_callback(self.__input_callback)
+
+    def __output_callback(self, output: DeviceOutput) -> None:
+        """Callback function notifying the evaluator of a new output."""
+
+        self.__output = output
+
+    def __input_callback(self, input: ProcessedDeviceInput) -> None:
+        """Callback function notifying the evaluator of a new input."""
+
+        self.__input = input
+
+    @property
+    @override
+    def abbreviation(self) -> str:
+        return "PAPR"
+
+    @property
+    @override
+    def title(self) -> str:
+        return "Peak-to-Average Power Ratio"
+
+    @override
+    def evaluate(self) -> PAPREvaluation:
+
+        # Fetch the output or input signal
+        signal: Signal
+        if self.__direction == AntennaMode.TX:
+            if self.__output is None:
+                raise RuntimeError(
+                    "PAPR evaluator could not fetch output. Has the assigned device transmitted data?"
+                )
+            signal = self.__output.mixed_signal
+
+        elif self.__direction == AntennaMode.RX:
+            if self.__input is None:
+                raise RuntimeError(
+                    "PAPR evaluator could not fetch input. Has the assigned device received data?"
+                )
+            signal = self.__input.impinging_signals[0]
+
+        else:
+            raise RuntimeError("Invalid direction flag for PAPR evaluator")
+
+        # Compute the instantaneous power of the signal as an intermediate result
+        signal_samples = signal.getitem((slice(None)))
+        instantaneous_power = signal_samples.real**2 + signal_samples.imag**2
+
+        return PAPREvaluation(instantaneous_power)
+
+    @override
+    def generate_result(self, grid: Sequence[GridDimension], artifacts: np.ndarray) -> ScalarEvaluationResult:
+        return ScalarEvaluationResult.From_Artifacts(grid, artifacts, self, plot_surface=False)
+
+    def __del__(self) -> None:
+        if self.__output_hook is not None:
+            self.__output_hook.remove()
+        if self.__input_hook is not None:
+            self.__input_hook.remove()

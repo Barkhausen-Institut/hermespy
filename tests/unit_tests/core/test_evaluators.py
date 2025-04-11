@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from unittest import TestCase
-from unittest.mock import Mock, patch, PropertyMock
+from unittest.mock import Mock
 
 import numpy as np
 from numpy.testing import assert_almost_equal
 
-from hermespy.core import Signal, SignalTransmitter, SignalReceiver
-from hermespy.core.evaluators import PowerArtifact, PowerEvaluation, ReceivePowerEvaluator, TransmitPowerEvaluator, PowerResult
+from hermespy.core import AntennaMode, ScalarEvaluationResult, Signal, SignalTransmitter, SignalReceiver
+from hermespy.core.evaluators import PAPRArtifact, PowerArtifact, PowerEvaluation, ReceivePowerEvaluator, TransmitPowerEvaluator, PowerResult, PAPR, PAPREvaluation
 from hermespy.simulation import SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
 
 __author__ = "Jan Adler"
@@ -200,3 +200,82 @@ class TestTransmitPowerEvaluator(TestCase):
         # Generate result
         result = self.evaluator.generate_result(grid, artifacts)
         assert_almost_equal(result.average_powers[0, :], expected_powers)
+
+class TestPAPREvaluation(TestCase):
+    """Test PAPR evaluation"""
+
+    def setUp(self) -> None:
+        self.rng = np.random.default_rng(42)
+        self.instantaneous_powers = self.rng.rayleigh(1.0, (3, 10))
+        self.evaluation = PAPREvaluation(self.instantaneous_powers)
+
+    def test_properties(self) -> None:
+        """Test static properties"""
+        
+        self.assertIs(self.instantaneous_powers, self.evaluation.instantaneous_power)
+        self.assertEqual("Instantaneous Power", self.evaluation.title)
+
+    def test_artifact(self) -> None:
+        """Artifact function should return a correct artifact"""
+
+        artifact = self.evaluation.artifact()
+        self.assertIsInstance(artifact, PAPRArtifact)
+
+    def test_plot(self) -> None:
+        """Plot function should return a correct plot"""
+
+        axes = Mock()
+        axes.plot.return_value = [Mock()]
+        axes_array = np.empty((1, 1), dtype=np.object_)
+        axes_array[0, 0] = axes
+        self.evaluation.visualize(axes_array)
+        axes.plot.assert_called()
+
+
+class TestPAPR(TestCase):
+    """Test the PAPR evaluator"""
+    
+    def setUp(self) -> None:
+        self.rng = np.random.default_rng(42)
+        self.num_samples = 100
+        self.sampling_rate = 1e6
+        self.num_antennas = 2
+
+        self.transmitted_signal = Signal.Create(self.rng.standard_normal((self.num_antennas, self.num_samples)) + 1j * self.rng.standard_normal((self.num_antennas, self.num_samples)), self.sampling_rate, 0, 0, 0)
+
+        self.device = SimulatedDevice(antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1.0, [self.num_antennas, 1, 1]))
+        
+        self.transmitter = SignalTransmitter(self.transmitted_signal)
+        self.device.transmitters.add(self.transmitter)
+
+        self.tx_papr = PAPR(self.device, AntennaMode.TX)
+        self.rx_papr = PAPR(self.device, AntennaMode.RX)
+
+        # Cache a signal
+        self.device.receive(self.device.transmit())
+        
+    def test_init_validation(self) -> None:
+        """Test initialization validation"""
+        
+        with self.assertRaises(ValueError):
+            PAPR(Mock(), AntennaMode.DUPLEX)
+
+    def test_properties(self) -> None:
+        """Test static properties"""
+        
+        self.assertEqual("PAPR", self.tx_papr.abbreviation)
+        self.assertEqual("Peak-to-Average Power Ratio", self.tx_papr.title)
+
+    def test_evaluation(self) -> None:
+        """Test evaluation and result generation"""
+
+        tx_artifact = self.tx_papr.evaluate().artifact()
+        rx_artifact = self.rx_papr.evaluate().artifact()
+
+        # Collect drop artifacts
+        grid = []
+        artifacts = np.empty(1, dtype=np.object_)
+        artifacts[0] = [tx_artifact, rx_artifact]
+
+        result = self.tx_papr.generate_result(grid, artifacts)
+        self.assertIsInstance(result, ScalarEvaluationResult)
