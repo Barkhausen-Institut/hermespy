@@ -33,7 +33,6 @@ author = 'Barkhausen Institut gGmbH'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx_carousel.carousel',                 # Image slideshows
     'nbsphinx',                                 # Integrate jupyter notebooks
     'sphinxcontrib.mermaid',                    # Smooth flowcahrts
     'sphinxcontrib.bibtex',                     # Latex bibliography support
@@ -47,7 +46,7 @@ extensions = [
     'matplotlib.sphinxext.plot_directive',      # Directly rendering plots as images
     'sphinx.ext.mathjax',                       # Rendering math equations for nbsphinx
     'sphinx.ext.intersphinx',                   # Linking to other documentations
-    'sphinx.ext.viewcode',                      # Link to source code
+    'sphinx.ext.linkcode',                      # Link to source code
     'sphinx.ext.graphviz',                      # Graphviz support
     'sphinx.ext.inheritance_diagram',           # Automatic section labels
 ]
@@ -108,6 +107,15 @@ autodoc_default_options = {
 
 autodoc_type_aliases = {
 }
+
+
+# Linkcode configuration to github repository github.com/barkhausen-institut/hermespy
+def linkcode_resolve(domain, info):
+    if domain != 'py' or not info['module']:
+        return None
+
+    filename = info['module'].replace('.', '/')
+    return f"https://github.com/Barkhausen-Institut/hermespy/blob/master/{filename}.py"
 
 
 # Inheritanze GraphVis configuration
