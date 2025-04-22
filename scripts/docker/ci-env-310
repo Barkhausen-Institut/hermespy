@@ -1,0 +1,19 @@
+# Base image for the HermesPy CI environment
+# See https://github.com/pypa/manylinux for more information
+FROM quay.io/pypa/manylinux_2_28_x86_64:latest
+
+# Install external dependencies
+RUN dnf -y install pandoc octave graphviz llvm-compat-libs
+RUN dnf -y clean all
+
+# Point drjit to the correct libLLVM
+ENV DRJIT_LIBLLVM_PATH="/usr/lib64/llvm17/lib/libLLVM-17.so"
+
+# Copy requirements files
+COPY ci-requirements.txt /tmp/ci-requirements.txt
+
+# Add python binary folder to PATH
+ENV PATH="/opt/python/cp310-cp310/bin:${PATH}"
+
+# Install all Python dependencies for HermesPy
+RUN python -m pip install --upgrade --no-cache-dir -r /tmp/ci-requirements.txt

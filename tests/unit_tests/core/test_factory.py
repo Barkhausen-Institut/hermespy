@@ -3,10 +3,8 @@
 
 from __future__ import annotations
 from inspect import getmembers
-from typing import Set
 from unittest import TestCase
 from unittest.mock import Mock
-from core.factory import SerializationProcess
 
 import numpy as np
 from h5py import File
@@ -222,10 +220,10 @@ class TestFactory(TestCase):
 
 
 class TestSerializationProcess(object):
-    
+
     serialization: SerializationProcess
     deserialization: DeserializationProcess
-    
+
     def test_range_serialization(self) -> None:
         """Test serialization of ranges"""
 
@@ -235,17 +233,17 @@ class TestSerializationProcess(object):
         self.serialization.serialize_range(scalar_value, "scalar_range")
         self.serialization.serialize_range(range_value, "range")
         self.serialization.serialize_range(None, "missing_value")
-        
+
         with self.assertRaises(ValueError):
             self.serialization.serialize_range(Mock(), "wrong_type")
-        
+
         deserialize_scalar_value = self.deserialization.deserialize_range("scalar_range")
         deserialize_range_value = self.deserialization.deserialize_range("range")
         deserialized_default_value = self.deserialization.deserialize_range("missing_value", 4.0)
         self.assertEqual(scalar_value, deserialize_scalar_value)
         self.assertSequenceEqual(deserialize_range_value, range_value)
         self.assertEqual(deserialized_default_value, 4.0)
-        
+
         with self.assertRaises(RuntimeError):
             self.deserialization.deserialize_range("missing_value")
 
