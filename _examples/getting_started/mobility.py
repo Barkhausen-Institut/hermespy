@@ -8,7 +8,7 @@ from hermespy.simulation import LinearTrajectory, Simulation, StaticTrajectory, 
 from hermespy.modem import BitErrorEvaluator, RootRaisedCosineWaveform, SingleCarrierLeastSquaresChannelEstimation, SingleCarrierZeroForcingChannelEqualization, SimplexLink
 
 # Create a new HermesPy simulation scenario
-simulation = Simulation(seed=42)
+simulation = Simulation(seed=42, num_samples=1000)
 
 # Create two devices representing base station and terminal
 # in a downlink scenario
@@ -51,7 +51,6 @@ simulation.add_evaluator(ber)
 
 # Run a simulation generating drops every 1 second
 simulation.drop_interval = 1
-simulation.num_drops = 1000
 
 # Sweep over the receive SNR
 simulation.new_dimension('noise_level', dB(100, 20, 16, 12, 8, 4, 0), terminal)
