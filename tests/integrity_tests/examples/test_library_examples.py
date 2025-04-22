@@ -74,7 +74,7 @@ class TestGettingStartedExamples(TestCase):
     def test_getting_started_mobility(self) -> None:
         """Test getting started library mobility example execution"""
 
-        with SimulationTestContext(patch_plot=True):
+        with SimulationTestContext(patch_plot=True), patch('hermespy.simulation.animation.LinearTrajectory.max_timestamp', new_callable=PropertyMock, return_value=0.0):
             try:
                 import mobility  # type: ignore  # noqa: F401
             except Exception as e:
