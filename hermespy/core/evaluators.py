@@ -8,7 +8,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from .antennas import AntennaMode
-from .device import Device, DeviceOutput, ProcessedDeviceInput, Receiver, Reception, Transmitter, Transmission
+from .device import (
+    Device,
+    DeviceOutput,
+    ProcessedDeviceInput,
+    Receiver,
+    Reception,
+    Transmitter,
+    Transmission,
+)
 from .hooks import Hook
 from .monte_carlo import Artifact, Evaluation, ScalarEvaluationResult, Evaluator, GridDimension
 from .signal_model import Signal
@@ -492,7 +500,9 @@ class PAPR(Evaluator):
         return PAPREvaluation(instantaneous_power)
 
     @override
-    def generate_result(self, grid: Sequence[GridDimension], artifacts: np.ndarray) -> ScalarEvaluationResult:
+    def generate_result(
+        self, grid: Sequence[GridDimension], artifacts: np.ndarray
+    ) -> ScalarEvaluationResult:
         return ScalarEvaluationResult.From_Artifacts(grid, artifacts, self, plot_surface=False)
 
     def __del__(self) -> None:

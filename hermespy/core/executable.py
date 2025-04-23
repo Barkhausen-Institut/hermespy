@@ -73,7 +73,7 @@ class Executable(ABC):
         # Default parameters
         self.results_dir = results_dir
         self.verbosity = verbosity if isinstance(verbosity, Verbosity) else Verbosity[verbosity]
-        self.__console = Console(record=False) if console is None else console
+        self.__console = Console(record=False, log_path=False) if console is None else console
         self.console_mode = console_mode
         self.__debug = debug
 

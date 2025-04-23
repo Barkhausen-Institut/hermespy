@@ -99,6 +99,9 @@ scapy = [
     "scapy>=2.5.0",
 ]
 
+[project.scripts]
+shermes = "hermespy.tools.shermes:sHermes"
+
 [tool.scikit-build]
 cmake.build-type = "Release"  # "Debug" or "Release"
 cmake.args = [

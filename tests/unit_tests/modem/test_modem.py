@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """HermesPy testing for modem base class."""
 
-from os import path
-from tempfile import TemporaryDirectory
 from typing import Type
 from unittest import TestCase
 from unittest.mock import Mock
@@ -11,7 +9,7 @@ import numpy as np
 from numpy import random as rnd
 from numpy.testing import assert_array_almost_equal
 
-from hermespy.core import Signal, Device
+from hermespy.core import Signal
 from hermespy.fec import EncoderManager
 from hermespy.modem import Symbols, CommunicationReceptionFrame, CommunicationTransmission, CommunicationTransmissionFrame, CommunicationReception, BaseModem, TransmittingModem, ReceivingModem, DuplexModem, SimplexLink, RandomBitsSource
 from hermespy.simulation import SimulatedDevice
