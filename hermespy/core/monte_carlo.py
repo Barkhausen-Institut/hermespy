@@ -11,7 +11,6 @@ from math import exp, sqrt
 from os import path
 from time import perf_counter
 from typing import Any, Callable, Generic, List, Mapping, Type, TypeVar, Tuple, Union, SupportsFloat
-from warnings import catch_warnings, simplefilter
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
@@ -1827,6 +1826,7 @@ class MonteCarlo(Generic[MO]):
     runtime_env: bool
     # Catch exceptions occuring during simulation runtime
     catch_exceptions: bool
+    __manage_ray: bool
 
     def __init__(
         self,
@@ -1839,6 +1839,7 @@ class MonteCarlo(Generic[MO]):
         console_mode: ConsoleMode = ConsoleMode.INTERACTIVE,
         section_block_size: int | None = None,
         ray_address: str | None = None,
+        ray_port: int = 6379,
         cpus_per_actor: int = 1,
         runtime_env: bool = False,
         catch_exceptions: bool = True,
@@ -1895,30 +1896,31 @@ class MonteCarlo(Generic[MO]):
 
         self.runtime_env = runtime_env
 
-        # Initialize ray if it hasn't been initialized yet. Required to query ideal number of actors
-        if not ray.is_initialized():
-            runtime_env_info = {"py_modules": self._py_modules(), "pip": self._pip_packages()}
-
-            with catch_warnings():
-                simplefilter("ignore")
-                ray.init(
-                    address=ray_address,
-                    runtime_env=runtime_env_info if self.runtime_env else None,
-                    logging_level=logging.ERROR,
-                )
-
         self.__dimensions = []
         self.__investigated_object = investigated_object
         self.__evaluators = [] if evaluators is None else list(evaluators)
         self.num_samples = num_samples
         self.min_num_samples = min_num_samples if min_num_samples >= 0 else int(0.5 * num_samples)
-        self.__console = Console() if console is None else console
+        self.__console = Console(log_path=False) if console is None else console
         self.__console_mode = console_mode
         self.section_block_size = section_block_size
         self.cpus_per_actor = cpus_per_actor
         self.num_actors = num_actors
         self.catch_exceptions = catch_exceptions
         self.__progress_log_interval = progress_log_interval
+
+        # Launch ray if not already running
+        if not ray.is_initialized():
+            ray.init(
+                address=f"{ray_address}:{ray_port}" if ray_address is not None else None,
+                runtime_env=(
+                    {"py_modules": self._py_modules(), "pip": self._pip_packages()}
+                    if self.runtime_env
+                    else None
+                ),
+                logging_level=logging.ERROR,
+                include_dashboard=False,
+            )
 
     def simulate(
         self,
