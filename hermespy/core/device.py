@@ -1054,7 +1054,7 @@ class Transmitter(Generic[TransmissionType], RandomNode, MixingOperator):
 
         # Notify the registered callbacks if the respective flag is enabled
         if notify:
-            self.__transmit_callbacks.notify(transmission)
+            self.notify_transmit_callbacks(transmission)
 
         return transmission
 

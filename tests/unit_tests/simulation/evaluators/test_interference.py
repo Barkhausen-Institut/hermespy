@@ -33,7 +33,7 @@ class TestSI(TestCase):
         self.device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 1e-2, (2, 1, 1))
 
         self.evaluator = SI(self.device)
-        
+
         self.transmitter = SignalTransmitter(Signal.Create(
             2**-.5 * (self.rng.standard_normal((2, 1000)) + 1j * self.rng.standard_normal((2, 1000))),
             1e6,
@@ -46,14 +46,14 @@ class TestSI(TestCase):
         
         self.assertEqual(self.evaluator.abbreviation, "SI")
         self.assertEqual(self.evaluator.title, "Self-Interference")
-        
+
     def test_evaluate(self) -> None:
         """Test SI evaluation routine"""
 
         _ = self.scenario.drop()
         evaluation = self.evaluator.evaluate()
         self.assertAlmostEqual(np.mean(evaluation.power), 2 / self.isolation, places=4)
-        
+
     def test_generate_result(self) -> None:
         """Test generation of SI evaluation results"""
 
@@ -67,7 +67,7 @@ class TestSI(TestCase):
 
     def test_serialization(self) -> None:
         """Test serialization and deserialization of SI evaluators"""
-        
+
         test_roundtrip_serialization(self, self.evaluator)
 
 
@@ -86,7 +86,7 @@ class TestSSINR(TestCase):
         self.device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 1e-2, (2, 1, 1))
 
         self.evaluator = SSINR(self.device)
-        
+
         self.transmitter = SignalTransmitter(Signal.Create(
             2**-.5 * (self.rng.standard_normal((2, 1000)) + 1j * self.rng.standard_normal((2, 1000))),
             1e6,
@@ -120,5 +120,5 @@ class TestSSINR(TestCase):
 
     def test_serialization(self) -> None:
         """Test serialization and deserialization of SSINR evaluators"""
-        
+
         test_roundtrip_serialization(self, self.evaluator)

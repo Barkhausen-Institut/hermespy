@@ -487,6 +487,7 @@ class Scenario(
         self,
         file: str | None = None,
         campaign: str | None = None,
+        drop_offset: int = 0,
         backend: SerializationBackend = SerializationBackend.HDF,
     ) -> int:
         """Replay the scenario from and HDF5 savefile.
@@ -500,6 +501,9 @@ class Scenario(
             campaign:
                 Identifier of the campaign to replay.
 
+            drop_offset:
+                Index of the first drop to be replayed.
+
             backend:
                 Serialization backend to be used for deserialization.
                 Default is HDF5.
@@ -508,6 +512,7 @@ class Scenario(
 
             RuntimeError: If `file` is not specified and scenario is not in replay mode.
             ValueError: If `campaign` is specified and is not contained within the savefile.
+            ValueError: If `drop_offset` is bigger or equal to the number of available drops.
 
         Returns: Number of recorded drops to be replayed.
         """
@@ -521,26 +526,35 @@ class Scenario(
         else:
             _file = file
 
+        # Start a new deserialization process
+        deserialization_process = Factory().deserialize(_file, campaign, backend)
+
+        # Get the overall number of drops
+        num_available_drops = deserialization_process.sequence_length("drops")
+        if drop_offset >= num_available_drops:
+            raise ValueError("Drop offset is not smaller than the number of available drops")
+
         # Stop any action and close file handles if required
         self.stop()
 
-        # Start a new deserialization process
-        self.__deserialization_process = Factory().deserialize(_file, campaign, backend)
+        self.__deserialization_process = deserialization_process
         self.__replay_file = _file
-        self.__drop_counter = 0
+        self.__drop_counter = drop_offset
         self.__campaign = campaign
 
         # Switch mode flag
         self.__mode = ScenarioMode.REPLAY
 
         # Return the number of recorded drops
-        return self.__deserialization_process.sequence_length("drops")
+        # The previous check ensures that more than zero drops are available
+        return num_available_drops - drop_offset
 
     @classmethod
     def Replay(
         cls: Type[Scenario],
         file: str,
         campaign: str | None = None,
+        drop_offset: int = 0,
         backend: SerializationBackend = SerializationBackend.HDF,
     ) -> tuple[Scenario, int]:
         """Replay a scenario from an HDF5 save file.
@@ -557,6 +571,9 @@ class Scenario(
             campaign:
                 Identifier of the campaign to replay.
 
+            drop_offset:
+                Index of the first drop to be replayed.
+
             backend:
                 Serialization backend to be used for deserialization.
                 Default is HDF5.
@@ -570,7 +587,7 @@ class Scenario(
         deserialization_process.finalize()
 
         # Enable the replay mode
-        num_drops = scenario.replay(file, campaign, backend)
+        num_drops = scenario.replay(file, campaign, drop_offset, backend)
 
         # Return the scenario (initialized and in replay mode)
         return scenario, num_drops

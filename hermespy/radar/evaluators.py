@@ -949,6 +949,8 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
         operator: Radar,
         h0_campaign: str = "h0",
         h1_campaign: str = "h1",
+        drop_offset: int = 0,
+        num_drops: int = 0,
         backend: SerializationBackend = SerializationBackend.HDF,
         console: Console | None = None,
     ) -> RocEvaluationResult:
@@ -959,6 +961,8 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
             operator: Radar operator to be evaluated.
             h0_campaign: Campaign identifier of the null hypothesis measurements.
             h1_campaign: Campaign identifier of the alternative hypothesis measurements.
+            drop_offset: Index of the first drop to be replayed.
+            num_drops: Number of drops to be replayed.
             backend: Serialization backend to be used for the evaluation.
             console: Rich console to be used for progress tracking.
 
@@ -995,9 +999,10 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
             ["null hypothesis", "alt hypothesis"],
             [null_receptions, alt_receptions],
         ):
-            scenario.replay(campaign=campaign, backend=backend)
+            num_available_drops = scenario.replay(campaign=campaign, drop_offset=drop_offset, backend=backend)
+            num_replayed_drops = min(num_drops, num_available_drops)
             for _ in track(
-                range(scenario.num_drops), description="Replaying " + hypothesis, console=_console
+                range(num_replayed_drops), description="Replaying " + hypothesis, console=_console
             ):
                 drop = scenario.drop()
                 receptions.append(
@@ -1020,6 +1025,8 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
         h0_campaign="h0_measurements",
         h1_campaign="h1_measurements",
         num_thresholds: int = 101,
+        drop_offset: int = 0,
+        num_drops: int | None = None,
         backend: SerializationBackend = SerializationBackend.HDF,
     ) -> RocEvaluationResult:
         """Compute an ROC evaluation result from a savefile.
@@ -1040,6 +1047,14 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
 
             num_thresholds:
                 Number of different thresholds to be considered in ROC curve
+                By default, 101 is assumed.
+
+            drop_offset:
+                Index of the first drop to be replayed.
+
+            num_drops:
+                Number of drops to be replayed.
+                If not provided, all available drops will be replayed.
 
             backend:
                 Serialization backend to be used for the evaluation.
@@ -1049,15 +1064,17 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
         """
 
         # Load scenarios from the savefile
-        h0_scenario, h0_num_drops = Scenario.Replay(file, h0_campaign, backend)
-        h1_scenario, h1_num_drops = Scenario.Replay(file, h1_campaign, backend)
+        h0_scenario, h0_num_drops = Scenario.Replay(file, h0_campaign, drop_offset, backend)
+        h1_scenario, h1_num_drops = Scenario.Replay(file, h1_campaign, drop_offset, backend)
 
         # Ensure that the number of drops is the same for both scenarios
-        num_drops = min(h0_num_drops, h1_num_drops)
+        _num_drops = min(h0_num_drops, h1_num_drops)
+        if num_drops is not None:
+            _num_drops = min(num_drops, _num_drops)
 
         # Resort to the from scenarios routine for computing the evaluation result
         result = cls.FromScenarios(
-            h0_scenario, h1_scenario, num_drops, num_thresholds=num_thresholds
+            h0_scenario, h1_scenario, _num_drops, num_thresholds=num_thresholds
         )
 
         # Close the scenarios properly

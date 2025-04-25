@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
+from math import ceil
 from typing import Sequence
 from typing_extensions import override
 
@@ -50,6 +51,7 @@ class MatchedFilterJcas(DuplexJCASOperator[CommunicationWaveform], Serializable)
         waveform: CommunicationWaveform | None = None,
         receive_beamformer: ReceiveBeamformer | None = None,
         detector: RadarDetector | None = None,
+        min_range: float = DuplexJCASOperator._DEFAULT_MIN_RANGE,
         selected_transmit_ports: Sequence[int] | None = None,
         selected_receive_ports: Sequence[int] | None = None,
         carrier_frequency: float | None = None,
@@ -73,6 +75,10 @@ class MatchedFilterJcas(DuplexJCASOperator[CommunicationWaveform], Serializable)
                 Detector routine configured to generate point clouds from radar cubes.
                 If not specified, no point cloud will be generated during reception.
 
+            min_range:
+                Minimal range considered for the generated radar cubes.
+                Zero by default, but can be adjusted to ignore, for example, self-interference.
+
             selected_transmit_ports:
                 Indices of antenna ports selected for transmission from the operated :class:`Device's<hermespy.core.device.Device>` antenna array.
                 If not specified, all available ports will be considered.
@@ -95,6 +101,7 @@ class MatchedFilterJcas(DuplexJCASOperator[CommunicationWaveform], Serializable)
             waveform,
             receive_beamformer,
             detector,
+            min_range,
             selected_transmit_ports,
             selected_receive_ports,
             carrier_frequency,
@@ -110,11 +117,20 @@ class MatchedFilterJcas(DuplexJCASOperator[CommunicationWaveform], Serializable)
     def power(self) -> float:
         return 0.0 if self.waveform is None else self.waveform.power
 
-    def _transmit(self, device: TransmitState, duration: float) -> JCASTransmission:
-        communication_transmission = TransmittingModemBase._transmit(self, device, duration)
-        self.__last_transmission = JCASTransmission(communication_transmission)
-        return self.__last_transmission
+    @override
+    def notify_transmit_callbacks(self, transmission: JCASTransmission) -> None:
+        # Cache the transmission
+        # This is required to replay the matched filtering algorithm from datasets
+        self.__last_transmission = transmission
 
+        # Propagate to the base notify routine
+        super().notify_transmit_callbacks(transmission)
+
+    @override
+    def _transmit(self, device: TransmitState, duration: float) -> JCASTransmission:
+        return JCASTransmission(TransmittingModemBase._transmit(self, device, duration))
+
+    @override
     def _receive(self, signal: Signal, device: ReceiveState) -> JCASReception:
         # There must be a recent transmission being cached in order to correlate
         if self.__last_transmission is None:
@@ -177,14 +193,13 @@ class MatchedFilterJcas(DuplexJCASOperator[CommunicationWaveform], Serializable)
             beamformed_samples.shape[1], transmitted_samples.shape[1], mode="valid"
         )
 
-        # Append zeros for correct depth estimation
-        # num_appended_zeros = max(0, num_samples - resampled_signal.num_samples)
-        # correlation = np.append(correlation, np.zeros(num_appended_zeros))
+        # Filter range for the minimum range
+        min_range_bin = ceil(2 * self.min_range / resolution)
 
         # Create the cube object
         velocity_bins = np.array([0.0])
-        range_bins = 0.5 * lags[:num_propagated_samples] * resolution
-        cube_data = correlation[:, None, :num_propagated_samples]
+        range_bins = 0.5 * lags[min_range_bin:num_propagated_samples] * resolution
+        cube_data = correlation[:, None, min_range_bin:num_propagated_samples]
         cube = RadarCube(cube_data, angle_bins, velocity_bins, range_bins, device.carrier_frequency)
 
         # Infer the point cloud, if a detector has been configured
