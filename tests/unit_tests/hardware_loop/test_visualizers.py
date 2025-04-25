@@ -39,7 +39,7 @@ class _HardwareLoopPlotTest(TestCase):
 
         self._test_context = SimulationTestContext(patch_plot=True)
         with self._test_context, Executable.style_context():
-            self.figure, self.axes = self.plot.prepare_plot()
+            _, self.axes, self.figure = self.plot.prepare_plot()
 
     def test_visualization(self) -> None:
         """Test the visualization of the hardware loop plot"""

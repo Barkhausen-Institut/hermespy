@@ -1,14 +1,19 @@
 # -*- coding: utf-8 -*-
+"""
+=============
+Hardware Loop
+=============
+"""
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from threading import Event, Thread
+from threading import Thread, Condition, Lock
 from contextlib import AbstractContextManager, ExitStack
 from os import path
 from signal import signal, SIGINT
 from types import TracebackType
 from typing import Any, Callable, Generic, List, Sequence, Tuple, Type
-from warnings import catch_warnings, simplefilter
+from warnings import catch_warnings
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -184,24 +189,39 @@ class HardwareLoopPlot(ABC, Generic[VT]):
 
     __hardware_loop: HardwareLoop | None
     __title: str
-    __figure: plt.Figure | None
+    __canvas: plt.FigureCanvasBase | None
     __axes: VAT | None
+    __figure: plt.FigureBase | None
     __visualization: VT | None
 
-    def __init__(self, title: str | None = None) -> None:
+    def __init__(
+        self,
+        title: str | None = None,
+        canvas: plt.FigureCanvasBase | None = None,
+        axes: VAT | None = None,
+    ) -> None:
         """
         Args:
 
             title:
                 Title of the hardware loop plot.
                 If not specified, resorts to the default title of the plot.
+
+            canvas:
+                Canvas to plot into.
+                If not specified, a new canvas is created.
+
+            axes:
+                Visualization axes to plot into.
+                If not specified, a new figure is created.
         """
 
         # Initialize class attributes
         self.__hardware_loop = None
         self.__title = title
+        self.__canvas = canvas
+        self.__axes = axes
         self.__figure = None
-        self.__axes = None
         self.__visualization = None
 
     @property
@@ -231,16 +251,20 @@ class HardwareLoopPlot(ABC, Generic[VT]):
 
         return self.__title if self.__title else self._default_title
 
-    def prepare_plot(self) -> Tuple[plt.Figure, VAT]:
+    def prepare_plot(self) -> Tuple[plt.FigureCanvasBase, VAT, plt.FigureBase]:
         """Prepare the figure for the hardware loop plot.
 
-        Returns: The prepared figure and axes to be plotted into.
+        Returns: The prepared figure canvas, axes and fiugure to be plotted into.
         """
+
+        if self.__canvas is not None and self.__axes is not None:
+            return self.__canvas, self.__axes, self.__figure
 
         self.__figure, self.__axes = self._prepare_plot()
         self.__figure.suptitle(self.title)
+        self.__canvas = self.__figure.canvas
 
-        return self.__figure, self.__axes
+        return self.__canvas, self.__axes, self.__figure
 
     @abstractmethod
     def _prepare_plot(self) -> Tuple[plt.Figure, VAT]:
@@ -257,37 +281,38 @@ class HardwareLoopPlot(ABC, Generic[VT]):
 
         Args:
 
-            sample:
-                Hardware loop sample to be plotted.
-
-        Raises:
-
-            RuntimeError: If the hardware loop is not set.
+            sample: Hardware loop sample to be plotted.
         """
 
-        # Assert correct state
-        if self.hardware_loop is None:
-            raise RuntimeError("Unable plot if hardware loop is not set")
-
         # Prepare the plot if not done yet
-        _axes: VAT
-        if self.__axes is None or self.__figure is None:
-            figure, _axes = self.prepare_plot()
-        else:
-            figure = self.__figure
-            _axes = self.__axes
+        if self.__axes is None or self.__canvas is None:
+            self.__canvas, self.__axes, self.__figure = self.prepare_plot()
 
         # If the visualizable has not been plotted yet, prepare the plot
         if self.__visualization is None:
-            self.__visualization = self._initial_plot(sample, _axes)
+            self.__visualization = self._initial_plot(sample, self.__axes)
 
         # Otherwise, update the plot data
         else:
             self._update_plot(sample, self.__visualization)
 
         # Re-draw the plot
-        figure.canvas.draw()
-        figure.canvas.flush_events()
+        self.__canvas.draw()
+
+        # Flush the events
+        if self.__figure is not None:
+            self.__canvas.flush_events()
+
+    def close_plot(self) -> None:
+        """Close the hardware loop plot."""
+
+        if self.__figure is not None:
+            plt.close(self.__figure)  # type: ignore
+
+        self.__axes = None
+        self.__canvas = None
+        self.__figure = None
+        self.__visualization = None
 
     @abstractmethod
     def _initial_plot(self, sample: HardwareLoopSample, axes: VAT) -> VT:
@@ -313,7 +338,6 @@ class HardwareLoopPlot(ABC, Generic[VT]):
         Args:
 
             sample: Hardware loop sample to be plotted.
-
             visualization: The visualization to be updated.
         """
         ...  # pragma: no cover
@@ -322,58 +346,95 @@ class HardwareLoopPlot(ABC, Generic[VT]):
 class PlotThread(Thread):
     """Thread for parallel plotting during hardware loop runtime."""
 
-    __plot: HardwareLoopPlot
+    __plots: Sequence[HardwareLoopPlot]
     __sample: HardwareLoopSample | None = None
-    __update_plot: Event
+    __new_sample: Condition
+    __sample_lock: Lock
     __alive: bool
     __rc_params: mpl.RcParams
 
-    def __init__(self, rc_params: mpl.RcParams, plot: HardwareLoopPlot, **kwargs) -> None:
+    def __init__(
+        self,
+        rc_params: mpl.RcParams,
+        plots: HardwareLoopPlot | Sequence[HardwareLoopPlot],
+        **kwargs,
+    ) -> None:
         """
         Args:
-
             rc_params: Matplotlib style parameters.
             plot: Plot to be visualized by the thread.
-            \**kwargs: Additional keyword arguments to be passed to the base class.
+            \*\*kwargs: Additional keyword arguments to be passed to the base class.
         """
 
         # Initialize class attributes
-        self.__plot = plot
+        self.__plots = [plots] if isinstance(plots, HardwareLoopPlot) else plots
         self.__sample = None
-        self.__update_plot = Event()
         self.__alive = True
         self.__rc_params = rc_params
+        self.__new_sample = Condition()
+        self.__sample_lock = Lock()
 
         # Initialize base class
         Thread.__init__(self, **kwargs)
 
-    def run(self) -> None:
-        with mpl.rc_context(self.__rc_params), plt.ion():
-            # Prepare the plot
-            with catch_warnings():
-                simplefilter("ignore")
-                figure, _ = self.__plot.prepare_plot()
+    def run(self, interactive: bool = True) -> None:
+        """Run the plot thread.
+
+        Args:
+
+            interactive:
+                Run the plot in interactive mode.
+                This will make the thread responsible for drawing.
+                Enabled by default.
+        """
+
+        # Initialize figures and plots managed by this thread
+        with ExitStack() as stack:
+
+            # Set the correct matplotlib style parameters
+            stack.enter_context(mpl.rc_context(rc=self.__rc_params))
+
+            # Ignore the matlotlib user warnings for starting GUIs outside the main thread
+            stack.enter_context(catch_warnings(
+                category=UserWarning,
+                action="ignore",
+            ))
+
+            if interactive:
+                stack.enter_context(plt.ion())
+
+            for plot in self.__plots:
+                plot.prepare_plot()
+
+            stack.enter_context(self.__new_sample)
 
             while self.__alive:
-                if self.__update_plot.wait(0.1):
-                    self.__plot.update_plot(self.__sample)
-                    self.__update_plot.clear()
+                while not self.__new_sample.wait(1.0) and self.__alive:
+                    pass
 
-        # Close the plot
+                with self.__sample_lock:
+                    for plot in self.__plots:
+                        plot.update_plot(self.__sample)
+
+        # Close the plots
         # This is required as to not confuse the matplotlib backend which thread to use
         # in upcoming plots
-        plt.close(figure)
+        for plot in self.__plots:
+            plot.close_plot()
 
     def update_plot(self, sample: HardwareLoopSample) -> None:
         """Update the plot with a new sample.
 
         Args:
 
-            sample: Sample to be plotted.
+            sample (HardwareLoopSample): Sample to be plotted.
         """
 
-        self.__sample = sample
-        self.__update_plot.set()
+        with self.__sample_lock:
+            self.__sample = sample
+
+        with self.__new_sample:
+            self.__new_sample.notify()
 
     def stop(self) -> None:
         self.__alive = False
@@ -419,7 +480,7 @@ class ThreadContextManager(AbstractContextManager):
 
         # Wait for the threads to finish
         for thread in self.__threads:
-            thread.join(timeout=1.0)
+            thread.join(None)  # Might require a timeout
 
         return super().__exit__(__exc_type, __exc_value, __traceback)
 
@@ -732,7 +793,21 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
 
         # Save results if a directory was provided
         if self.results_dir:
+
+            # Save the results to a file
             result.save_to_matlab(path.join(self.results_dir, "results.mat"))
+
+            # Generate result plots
+            result_visualizations = result.plot()
+
+            for idx, (visualization, evaluator) in enumerate(
+                zip(result_visualizations, self.__evaluators)
+            ):
+                if visualization.figure is not None:
+                    visualization.figure.savefig(
+                        path.join(self.results_dir, f"result_{idx}_{evaluator.abbreviation}.png"),
+                        format="png",
+                    )
 
         # Return the result
         return result
@@ -779,7 +854,7 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
         drop = self.scenario.drop()
 
         # Generate evaluations and artifacts
-        evaluations = [e.evaluate() for e in self.__evaluators]
+        evaluations = [e.evaluate() for e in self.evaluators]
         artifacts = [e.artifact() for e in evaluations]
 
         # Return sample
@@ -795,7 +870,10 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
         self.__interrupt_run = True
 
     def __run(self) -> MonteCarloResult:
-        """Internal run method executing drops"""
+        """Internal run method executing drops.
+
+        Returns: The result of the hardware loop.
+        """
 
         # Reset variables
         self.__interrupt_run = False
@@ -952,17 +1030,9 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
                 progress.update(loop_drop_progress, completed=indices[drop_selector])
                 progress.update(total_progress, completed=total)
 
-        # Ensure all plots are closed
-        for thread in plot_threads:
-            try:
-                thread.join(10.0)
-            except RuntimeError:
-                pass
-
         # Compute the evaluation results
         result: MonteCarloResult = MonteCarloResult(
             self.__dimensions, self.__evaluators, sample_grid, 0.0
         )
 
-        # Return the result
         return result
