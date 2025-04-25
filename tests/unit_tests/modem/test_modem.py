@@ -166,7 +166,6 @@ class TestBaseModem(TestCase):
         self.modem.encoder_manager = encoder_manager
 
         self.assertIs(encoder_manager, self.modem.encoder_manager)
-        self.assertIs(encoder_manager.modem, self.modem)
 
     def test_waveform_setget(self) -> None:
         """Waveform generator property getter should return setter argument"""

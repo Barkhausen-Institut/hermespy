@@ -539,7 +539,6 @@ class BaseModem(Generic[CWT], RandomNode, Serializable):
     def encoder_manager(self, new_manager: EncoderManager) -> None:
         self.__encoder_manager = new_manager
         self.__encoder_manager.random_mother = self
-        new_manager.modem = self
 
     @property
     def waveform(self) -> CWT | None:
