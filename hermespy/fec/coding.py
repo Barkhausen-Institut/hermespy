@@ -1,77 +1,16 @@
 # -*- coding: utf-8 -*-
-"""
-===============
-Coding Pipeline
-===============
-
-This module introduces the concept of bit :class:`.Encoder` steps,
-which form single chain link within a channel coding processing chain.
-
-Considering an arbitrary coding scheme consisting of multiple steps,
-the process of encoding bit streams during transmission and decoding them during
-subsequent reception is modeled by a chain of :class:`.Encoder` instances:
-
-.. mermaid::
-
-   %%{init: {'theme': 'dark'}}%%
-   flowchart LR
-
-      input([Input Bits]) --> n_i[...]
-      n_i --> n_a[Encoder N-1] --> n_b[Encoder N] --> n_c[Encoder N+1]  --> n_o[...]
-      n_o --> output([Coded Bits])
-
-During transmission encoding the processing chain is sequentially executed from left to right,
-during reception decoding in reverse order.
-
-Within bit streams, :class:`.Encoder` instances sequentially encode block sections of :math:`K_n` bits into
-code sections of :math:`L_n` bits.
-Therefore, the rate of the :math:`n`-th :class:`.Encoder`
-
-.. math::
-
-   R_n = \\frac{K_n}{L_n}
-
-is defined as the relation between input and output block length.
-The pipeline configuration as well as the encoding step execution is managed by the :class:`.EncoderManager`.
-Provided with a frame of :math:`K` input bits, the manager will generate a coded frame of :math:`L` bits by
-sequentially executing all :math:`N` configured encoders.
-Considering a frame of :math:`K_{\\mathrm{Frame}, n}` input bits to the :math:`n`-th encoder within the pipeline,
-the manager will split the frame into
-
-.. math::
-
-   M_n(K_{\\mathrm{Frame}, n}) = \\left\\lceil \\frac{K_{\\mathrm{Frame}, n}}{K_n} \\right\\rceil
-
-blocks to be encoded independently.
-The last block will be padded with zeros should it not contain sufficient bits.
-While this may not be exactly standard-compliant behaviour, it is a necessary simplification to enable
-arbitrary combinations of encoders.
-Therefore, the coding rate of the whole pipeline
-
-.. math::
-
-   R = \\frac{K}{L} = \\frac{K}{M_N \\cdot R_N}
-
-can only be defined recursively considering the number of input blocks :math:`M_N` and rate :math:`R_N` of the last
-encoder with in the pipeline, respectively.
-"""
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from math import ceil
-from typing import TYPE_CHECKING, List
 from typing_extensions import override
 
 import numpy as np
 
 from hermespy.core import Serializable, RandomNode, SerializationProcess, DeserializationProcess
 
-if TYPE_CHECKING:
-    from hermespy.modem.modem import BaseModem  # pragma: no cover
-
-
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -225,23 +164,17 @@ class EncoderManager(RandomNode, Serializable):
     allow_truncating: bool
     """Tolerate truncating of data code blocks during decoding."""
 
-    # Communication modem instance this coding pipeline configuration is attached to
-    __modem: BaseModem | None
     # List of encoding steps defining the internal pipeline configuration
-    _encoders: List[Encoder]
+    _encoders: list[Encoder]
 
     def __init__(
         self,
-        modem: BaseModem | None = None,
         allow_padding: bool = True,
         allow_truncating: bool = True,
+        seed: int | None = None,
     ) -> None:
         """
         Args:
-
-            modem:
-                Communication modem instance this coding pipeline configuration is attached to.
-                By default, the coding pipeline is considered to be floating.
 
             allow_padding:
                 Tolerate padding of data bit blocks during encoding.
@@ -250,36 +183,19 @@ class EncoderManager(RandomNode, Serializable):
             allow_truncating:
                 Tolerate truncating of data code blocks during decoding.
                 Enabled by default.
+
+            seed:
+                Seed for the random number generator.
+                By default, a random seed is used.
         """
+
+        # Initialize base class
+        RandomNode.__init__(self, seed=seed)
 
         # Default parameters
-        self.__modem = None
-        self._encoders: List[Encoder] = []
+        self._encoders: list[Encoder] = []
         self.allow_padding = allow_padding
         self.allow_truncating = allow_truncating
-
-        if modem is not None:
-            self.modem = modem
-
-        RandomNode.__init__(self)
-
-    @property
-    def modem(self) -> BaseModem:
-        """Communication modem instance this coding pipeline configuration is attached to.
-
-        Raises:
-            RuntimeError: If the encoding configuration is floating, i.e. not attached to a modem.
-        """
-
-        if self.__modem is None:
-            raise RuntimeError("Trying to access the modem of a floating encoding configuration")
-
-        return self.__modem
-
-    @modem.setter
-    def modem(self, modem: BaseModem) -> None:
-        if self.__modem is not modem:
-            self.__modem = modem
 
     def add_encoder(self, encoder: Encoder) -> None:
         """Register a new encoder instance to this pipeline configuration.
@@ -297,10 +213,10 @@ class EncoderManager(RandomNode, Serializable):
         self._encoders = self.__execution_order()
 
     @property
-    def encoders(self) -> List[Encoder]:
-        """List of encoders registered within  this pipeline.
+    def encoders(self) -> list[Encoder]:
+        """list of encoders registered within  this pipeline.
 
-        List of :math:`N` :class:`Encoder` instances where the :math:`n`-th entry represents
+        list of :math:`N` :class:`Encoder` instances where the :math:`n`-th entry represents
         the :math:`n`-th coding operation during transmit encoding, or, inversely,
         the :math:`1 + N - n`-th coding operation during receive decoding.
         """
@@ -497,11 +413,11 @@ class EncoderManager(RandomNode, Serializable):
 
         return 1
 
-    def __execution_order(self) -> List[Encoder]:
+    def __execution_order(self) -> list[Encoder]:
         """Sort the encoders into an order of execution.
 
         Returns:
-            List[Encoder]: A list of encoders in order of transmit execution (reversed receive execution).
+            list[Encoder]: A list of encoders in order of transmit execution (reversed receive execution).
         """
 
         return sorted(self._encoders, key=lambda encoder: encoder.bit_block_size)

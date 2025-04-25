@@ -77,33 +77,17 @@ class TestEncoderManager(TestCase):
     """Test the `EncoderManager`, responsible for configuring arbitrary channel encodings"""
 
     def setUp(self) -> None:
-        self.modem = Mock()
         self.encoder_alpha = StubEncoder(Mock(), 64)
         self.encoder_beta = StubEncoder(Mock(), 16)
-        self.encoder_manager = EncoderManager(self.modem)
+        self.encoder_manager = EncoderManager()
         self.rng = np.random.default_rng(42)
 
     def test_init(self) -> None:
         """Test the object initialization behaviour"""
 
-        self.assertIs(self.modem, self.encoder_manager.modem, "Modem not properly initialized")
         self.assertIs(0, len(self.encoder_manager.encoders), "Encoder list not properly initialized")
         self.assertEqual(True, self.encoder_manager.allow_truncating, "Truncating flag not properly initialized")
         self.assertEqual(True, self.encoder_manager.allow_padding, "Padding flag not properly initialized")
-
-    def test_modem(self) -> None:
-        """Modem getter must return setter value"""
-
-        modem = Mock()
-        self.encoder_manager.modem = modem
-        self.assertIs(modem, self.encoder_manager.modem, "Modem getter does not return setter value")
-
-    def test_modem_getter_assert(self) -> None:
-        """Modem getter must throw `RuntimeError` if manager is floating"""
-
-        self.encoder_manager.modem = None
-        with self.assertRaises(RuntimeError):
-            self.assertEqual(self.encoder_manager.modem, None, "This assert is never called")
 
     def test_encode_validation(self) -> None:
         """Encodinge should raise RuntimeErrors for invalid internal states"""
