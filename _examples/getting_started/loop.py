@@ -1,5 +1,7 @@
 from os.path import join
 
+import matplotlib.pyplot as plt
+
 from hermespy.channel import TDL
 from hermespy.hardware_loop import HardwareLoop, PhysicalDeviceDummy, PhysicalScenarioDummy, ReceivedConstellationPlot, DeviceTransmissionPlot, DeviceReceptionPlot
 from hermespy.modem import BitErrorEvaluator, SimplexLink, RootRaisedCosineWaveform, SingleCarrierLeastSquaresChannelEstimation, SingleCarrierZeroForcingChannelEqualization

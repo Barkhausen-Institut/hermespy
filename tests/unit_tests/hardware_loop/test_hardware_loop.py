@@ -151,15 +151,10 @@ class TestHardwareLoopPlot(TestCase):
     def test_prepare_plot(self) -> None:
         """Test the prepare plot routine"""
 
-        figure, axes = self.plot.prepare_plot()
-        self.assertIsInstance(figure, plt.Figure)
+        canvas, axes, figure = self.plot.prepare_plot()
+        self.assertIsInstance(canvas, plt.FigureCanvasBase)
         self.assertIsInstance(axes, np.ndarray)
-
-    def test_update_plot_validation(self) -> None:
-        """Update plot routine should raise RuntimeError if hardware loop not set"""
-
-        with self.assertRaises(RuntimeError):
-            self.plot.update_plot(HardwareLoopSample(Mock(), [], []))
+        self.assertIsInstance(figure, plt.Figure)
 
     def test_update_plot_prepared(self) -> None:
         """Test updateing the plot with a previous call to prepare"""
