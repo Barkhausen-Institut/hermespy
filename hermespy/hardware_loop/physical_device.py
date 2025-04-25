@@ -816,6 +816,7 @@ class DelayCalibrationBase(Calibration, Serializable):
         # Remove samples from the signal to account for positive delays
         delay_in_samples = round(self.delay * signal.sampling_rate)
         signal.set_samples(signal.getitem((slice(None, None), slice(delay_in_samples, None))))
+        signal.delay = self.delay
 
         return signal
 

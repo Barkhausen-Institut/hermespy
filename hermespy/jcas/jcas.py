@@ -93,6 +93,7 @@ class DuplexJCASOperator(
         waveform: CWT | None = None,
         receive_beamformer: ReceiveBeamformer | None = None,
         detector: RadarDetector | None = None,
+        min_range: float = RadarBase._DEFAULT_MIN_RANGE,
         selected_transmit_ports: Sequence[int] | None = None,
         selected_receive_ports: Sequence[int] | None = None,
         carrier_frequency: float | None = None,
@@ -110,6 +111,10 @@ class DuplexJCASOperator(
             detector:
                 Detector routine configured to generate point clouds from radar cubes.
                 If not specified, no point cloud will be generated during reception.
+
+            min_range:
+                Minimal range considered for the generated radar cubes.
+                Zero by default, but can be adjusted to ignore, for example, self-interference.
 
             selected_transmit_ports:
                 Indices of antenna ports selected for transmission from the operated :class:`Device's<hermespy.core.device.Device>` antenna array.
@@ -134,6 +139,7 @@ class DuplexJCASOperator(
             self,
             receive_beamformer,
             detector,
+            min_range,
             selected_transmit_ports,
             selected_receive_ports,
             carrier_frequency,

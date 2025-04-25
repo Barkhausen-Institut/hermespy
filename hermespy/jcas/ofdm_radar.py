@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
+from math import ceil
 from typing import Sequence, Type
 from typing_extensions import override
 
@@ -38,6 +39,7 @@ class OFDMRadar(DuplexJCASOperator[OFDMWaveform], Serializable):
         waveform: OFDMWaveform | None = None,
         receive_beamformer: ReceiveBeamformer | None = None,
         detector: RadarDetector | None = None,
+        min_range: float = DuplexJCASOperator._DEFAULT_MIN_RANGE,
         selected_transmit_ports: Sequence[int] | None = None,
         selected_receive_ports: Sequence[int] | None = None,
         carrier_frequency: float | None = None,
@@ -54,6 +56,10 @@ class OFDMRadar(DuplexJCASOperator[OFDMWaveform], Serializable):
 
             detector:
                 Detector used to process the radar cube.
+
+            min_range:
+                Minimal range considered for the generated radar cubes.
+                Zero by default, but can be adjusted to ignore, for example, self-interference.
 
             selected_transmit_ports:
                 Indices of antenna ports selected for transmission from the operated :class:`Device's<hermespy.core.device.Device>` antenna array.
@@ -77,6 +83,7 @@ class OFDMRadar(DuplexJCASOperator[OFDMWaveform], Serializable):
             waveform,
             receive_beamformer,
             detector,
+            min_range,
             selected_transmit_ports,
             selected_receive_ports,
             carrier_frequency,
@@ -188,8 +195,12 @@ class OFDMRadar(DuplexJCASOperator[OFDMWaveform], Serializable):
             - self.max_relative_doppler
         )
 
+        # Filter range for the minimum range
+        min_range_index = ceil(self.min_range / self.range_resolution)
+        selected_range_bins = range_bins[min_range_index:]
+
         cube_data = np.empty(
-            (len(angles_of_interest), len(doppler_bins), len(range_bins)), dtype=float
+            (len(angles_of_interest), len(doppler_bins), len(selected_range_bins)), dtype=float
         )
 
         for angle_idx, line in enumerate(beamformed_samples):
@@ -197,11 +208,11 @@ class OFDMRadar(DuplexJCASOperator[OFDMWaveform], Serializable):
             line_signal = signal.from_ndarray(line)
             line_estimate = self.__estimate_range(transmitted_symbols, line_signal)
 
-            cube_data[angle_idx, ::] = line_estimate
+            cube_data[angle_idx, ::] = line_estimate[min_range_index:]
 
         # Create radar cube object
         cube = RadarCube(
-            cube_data, angles_of_interest, doppler_bins, range_bins, device.carrier_frequency
+            cube_data, angles_of_interest, doppler_bins, selected_range_bins, device.carrier_frequency
         )
 
         # Infer the point cloud, if a detector has been configured

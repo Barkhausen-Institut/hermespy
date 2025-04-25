@@ -300,13 +300,17 @@ RRT = TypeVar("RRT", bound=RadarReception)
 class RadarBase(Generic[RTT, RRT], Transmitter[RTT], Receiver[RRT]):
     """Base class class for radar sensing signal processing pipelines."""
 
+    _DEFAULT_MIN_RANGE: float = 0.0
+
     __receive_beamformer: ReceiveBeamformer | None
     __detector: RadarDetector | None
+    __min_range: float
 
     def __init__(
         self,
         receive_beamformer: ReceiveBeamformer | None = None,
         detector: RadarDetector | None = None,
+        min_range: float = _DEFAULT_MIN_RANGE,
         selected_transmit_ports: Sequence[int] | None = None,
         selected_receive_ports: Sequence[int] | None = None,
         carrier_frequency: float | None = None,
@@ -322,6 +326,10 @@ class RadarBase(Generic[RTT, RRT], Transmitter[RTT], Receiver[RRT]):
             detector:
                 Detector routine configured to generate point clouds from radar cubes.
                 If not specified, no point cloud will be generated during reception.
+
+            min_range:
+                Minimal range considered for the generated radar cubes.
+                Zero by default, but can be adjusted to ignore, for example, self-interference.
 
             selected_transmit_ports:
                 Indices of antenna ports selected for transmission from the operated :class:`Device's<hermespy.core.device.Device>` antenna array.
@@ -346,6 +354,7 @@ class RadarBase(Generic[RTT, RRT], Transmitter[RTT], Receiver[RRT]):
         # Initialize class attributes
         self.receive_beamformer = receive_beamformer
         self.detector = detector
+        self.min_range = min_range
 
     @property
     def receive_beamformer(self) -> ReceiveBeamformer | None:
@@ -377,6 +386,26 @@ class RadarBase(Generic[RTT, RRT], Transmitter[RTT], Receiver[RRT]):
     @detector.setter
     def detector(self, value: RadarDetector | None) -> None:
         self.__detector = value
+
+    @property
+    def min_range(self) -> float:
+        """Minimum detection range.
+
+        Can be adjusted to ignore, for example, self-interference.
+
+        Raises:
+
+            ValueError: For negative values.
+        """
+
+        return self.__min_range
+
+    @min_range.setter
+    def min_range(self, value: float) -> None:
+        if value < 0.0:
+            raise ValueError("Minimum range must be non-negative")
+
+        self.__min_range = value
 
     def _receive_beamform(
         self, signal: Signal, device: ReceiveState
@@ -439,6 +468,7 @@ class RadarBase(Generic[RTT, RRT], Transmitter[RTT], Receiver[RRT]):
             process.serialize_object(self.receive_beamformer, "receive_beamformer")
         if self.detector is not None:
             process.serialize_object(self.detector, "detector")
+        process.serialize_floating(self.min_range, "min_range")
 
     @classmethod
     @override
@@ -451,6 +481,7 @@ class RadarBase(Generic[RTT, RRT], Transmitter[RTT], Receiver[RRT]):
                     "receive_beamformer", ReceiveBeamformer, None
                 ),
                 "detector": process.deserialize_object("detector", RadarDetector, None),
+                "min_range": process.deserialize_floating("min_range", cls._DEFAULT_MIN_RANGE)
             }
         )
         return params
@@ -551,6 +582,7 @@ class Radar(RadarBase[RadarTransmission, RadarReception], Serializable):
         waveform: RadarWaveform | None = None,
         receive_beamformer: ReceiveBeamformer | None = None,
         detector: RadarDetector | None = None,
+        min_range: float = RadarBase._DEFAULT_MIN_RANGE,
         selected_transmit_ports: Sequence[int] | None = None,
         selected_receive_ports: Sequence[int] | None = None,
         carrier_frequency: float | None = None,
@@ -571,6 +603,10 @@ class Radar(RadarBase[RadarTransmission, RadarReception], Serializable):
             detector:
                 Detector routine configured to generate point clouds from radar cubes.
                 If not specified, no point cloud will be generated during reception.
+
+            min_range:
+                Minimal range considered for the generated radar cubes.
+                Zero by default, but can be adjusted to ignore, for example, self-interference.
 
             selected_transmit_ports:
                 Indices of antenna ports selected for transmission from the operated :class:`Device's<hermespy.core.device.Device>` antenna array.
@@ -593,6 +629,7 @@ class Radar(RadarBase[RadarTransmission, RadarReception], Serializable):
             self,
             receive_beamformer,
             detector,
+            min_range,
             selected_transmit_ports,
             selected_receive_ports,
             carrier_frequency,
@@ -704,8 +741,12 @@ class Radar(RadarBase[RadarTransmission, RadarReception], Serializable):
         range_bins = self.waveform.range_bins
         doppler_bins = self.waveform.relative_doppler_bins
 
+        # Filter the cube data to only contain the range bins outside the considered minimal range
+        selected_range_idxs = np.where(range_bins >= self.min_range)[0]
+        selected_range_bins = range_bins[selected_range_idxs]
+
         cube_data = np.empty(
-            (len(angles_of_interest), len(doppler_bins), len(range_bins)), dtype=float
+            (len(angles_of_interest), len(doppler_bins), len(selected_range_bins)), dtype=float
         )
 
         for angle_idx, line in enumerate(beamformed_samples):
@@ -713,11 +754,11 @@ class Radar(RadarBase[RadarTransmission, RadarReception], Serializable):
             line_signal = signal.from_ndarray(line)
             line_estimate = self.waveform.estimate(line_signal)
 
-            cube_data[angle_idx, ::] = line_estimate
+            cube_data[angle_idx, ::] = line_estimate[:, selected_range_idxs]
 
         # Create radar cube object
         cube = RadarCube(
-            cube_data, angles_of_interest, doppler_bins, range_bins, device.carrier_frequency
+            cube_data, angles_of_interest, doppler_bins, selected_range_bins, device.carrier_frequency
         )
 
         # Infer the point cloud, if a detector has been configured
