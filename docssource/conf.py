@@ -139,7 +139,7 @@ intersphinx_mapping = {
     'scipy': ('https://docs.scipy.org/doc/scipy/', None),
     'rich': ('https://rich.readthedocs.io/en/stable/', None),
     'ray': ('https://docs.ray.io/en/latest/', None),
-    'sionna': ('https://jhoydis.github.io/sionna-0.19.2-doc/', None),
+    'sionna': ('https://nvlabs.github.io/sionna/', None),
     'pybind11': ('https://pybind11.readthedocs.io/en/stable/', None),
     'sparse': ('https://sparse.pydata.org/en/stable/', None),
     'scapy': ('https://scapy.readthedocs.io/en/latest/', None),
