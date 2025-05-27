@@ -17,7 +17,7 @@ beta_device = simulation.new_device(
     carrier_frequency=24e9, pose=Transformation.From_Translation(np.array([45., 90., 1.5])))
 
 # Load the desired scene
-scene = rt.load_scene(rt.scene.munich)
+scene = rt.scene.munich
 
 # Create a channel between the two devices
 channel = SionnaRTChannel(scene=scene, gain=1., seed=42)

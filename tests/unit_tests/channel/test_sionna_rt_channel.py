@@ -10,7 +10,12 @@ from scipy.constants import speed_of_light
 
 from hermespy.channel.sionna_rt_channel import rt, SionnaRTChannel
 from hermespy.core import Signal, Transformation
-from hermespy.simulation import SimulatedDevice, SimulatedUniformArray, SimulatedIdealAntenna, StaticTrajectory
+from hermespy.simulation import (
+    SimulatedDevice,
+    SimulatedUniformArray,
+    SimulatedIdealAntenna,
+    StaticTrajectory,
+)
 from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Egor Achkasov"
@@ -29,21 +34,24 @@ class TestSionnaRTChannel(unittest.TestCase):
         # Properties
         self.seed = 42
         self.rng = np.random.default_rng(self.seed)
-        self.sampling_rate = 3*1e9
+        self.sampling_rate = 3 * 1e9
         self.carrier_freq = 2.14e9
 
         # Devices
-        self.distance_to_target = 10.
-        self.device_position = np.asarray([0., 0., self.distance_to_target])
-        self.device_trajectory = StaticTrajectory(Transformation.From_Translation(self.device_position))
+        self.distance_to_target = 10.0
+        self.device_position = np.asarray([0.0, 0.0, self.distance_to_target])
+        self.device_trajectory = StaticTrajectory(
+            Transformation.From_Translation(self.device_position)
+        )
         self.alpha_device = SimulatedDevice(
             sampling_rate=self.sampling_rate,
             antennas=SimulatedUniformArray(SimulatedIdealAntenna, 3e-3, [3, 1, 1]),
-            carrier_frequency=self.carrier_freq)
+            carrier_frequency=self.carrier_freq,
+        )
         self.alpha_device.trajectory = self.device_trajectory
         self.beta_device = SimulatedDevice(
-            sampling_rate=self.sampling_rate,
-            carrier_frequency=self.carrier_freq)
+            sampling_rate=self.sampling_rate, carrier_frequency=self.carrier_freq
+        )
         self.beta_device.trajectory = self.device_trajectory
 
         # Channel
@@ -54,15 +62,11 @@ class TestSionnaRTChannel(unittest.TestCase):
 
         # Samples
         self.sample_forward = self.realization.sample(
-            self.alpha_device,
-            self.beta_device,
-            self.carrier_freq,
-            self.sampling_rate)
+            self.alpha_device, self.beta_device, self.carrier_freq, self.sampling_rate
+        )
         self.sample_backward = self.realization.sample(
-            self.beta_device,
-            self.alpha_device,
-            self.carrier_freq,
-            self.sampling_rate)
+            self.beta_device, self.alpha_device, self.carrier_freq, self.sampling_rate
+        )
         self.channel_samples = [self.sample_forward, self.sample_backward]
 
     def test_init(self) -> None:
@@ -79,7 +83,9 @@ class TestSionnaRTChannel(unittest.TestCase):
         """
 
         for sample in self.channel_samples:
-            self.assertEqual(sample.expected_energy_scale, np.abs(np.sum(sample._SionnaRTChannelSample__a)))
+            self.assertEqual(
+                sample.expected_energy_scale, np.abs(np.sum(sample._SionnaRTChannelSample__a))
+            )
 
     def test_propagate(self) -> None:
         """Propagate a signal with a spike and check if the spike is still there"""
@@ -94,7 +100,9 @@ class TestSionnaRTChannel(unittest.TestCase):
             x = np.arange(signal_shape[1])
             mu = x[x.size // 2]
             sigma = 0.05
-            spike = np.exp(-0.5*((x-mu)/sigma)**2) / (sigma * np.sqrt(2*np.pi))  # normal distribution pdf
+            spike = np.exp(-0.5 * ((x - mu) / sigma) ** 2) / (
+                sigma * np.sqrt(2 * np.pi)
+            )  # normal distribution pdf
             signal_samples *= spike + 1.0
             signal_orig = Signal.Create(signal_samples, self.sampling_rate, self.carrier_freq)
 
@@ -108,15 +116,19 @@ class TestSionnaRTChannel(unittest.TestCase):
             assert_array_almost_equal(signal_prop.getitem(), signal_state_prop.getitem())
 
             # Assert the delays
-            delay_expected = int(2. * self.distance_to_target / speed_of_light * self.sampling_rate)
+            delay_expected = int(
+                2.0 * self.distance_to_target / speed_of_light * self.sampling_rate
+            )
             delay_actual = np.min(signal_prop.getitem().nonzero()[1])
             self.assertAlmostEqual(delay_actual, delay_expected, delta=1)
 
             # simple_reflector should cause a phase shift
             samples_expected = np.sum(signal_orig.getitem(), axis=0)
-            samples_restored = signal_prop.getitem((0, slice(delay_expected, delay_expected + signal_orig.num_samples)))
+            samples_restored = signal_prop.getitem(
+                (0, slice(delay_expected, delay_expected + signal_orig.num_samples))
+            )
             phase_shift = np.angle(samples_expected) - np.angle(samples_restored)
-            samples_restored *= np.exp(1.j * phase_shift)
+            samples_restored *= np.exp(1.0j * phase_shift)
 
             # Check whether the spike is still on the same place
             self.assertEqual(np.argmax(samples_restored), np.argmax(samples_expected))
@@ -125,15 +137,13 @@ class TestSionnaRTChannel(unittest.TestCase):
         """Test state and porpagation when no path hit arrives at a receiver"""
 
         # Init sample with Rx in a dead zone
-        device_position = np.array([0., 0., 0.])
+        device_position = np.array([0.0, 0.0, 0.0])
         device_trajectory = StaticTrajectory(Transformation.From_Translation(device_position))
         self.alpha_device.trajectory = device_trajectory
         self.beta_device.trajectory = device_trajectory
         sample = self.realization.sample(
-            self.alpha_device,
-            self.beta_device,
-            self.carrier_freq,
-            self.sampling_rate)
+            self.alpha_device, self.beta_device, self.carrier_freq, self.sampling_rate
+        )
 
         # Init test signal
         signal_shape = (self.alpha_device.num_transmit_antennas, 150)
@@ -142,11 +152,11 @@ class TestSionnaRTChannel(unittest.TestCase):
 
         # Test state
         state = sample.state(signal_orig.num_samples, 1)
-        self.assertTrue(np.all(state.state == 0.))
+        self.assertTrue(np.all(state.state == 0.0))
 
         # Test propagate
         signal_prop = sample.propagate(signal_orig)
-        self.assertTrue(np.all(signal_prop.getitem() == 0.))
+        self.assertTrue(np.all(signal_prop.getitem() == 0.0))
         self.assertEqual(signal_prop.num_streams, self.beta_device.num_receive_antennas)
 
     def test_reciprocal_sample(self) -> None:
@@ -159,16 +169,28 @@ class TestSionnaRTChannel(unittest.TestCase):
                 self.beta_device,
                 0,
                 self.carrier_freq,
-                self.sampling_rate)
+                self.sampling_rate,
+            )
             self.assertEqual(rSample.carrier_frequency, self.carrier_freq)
             self.assertEqual(rSample.bandwidth, self.sampling_rate)
 
     def test_model_serialization(self) -> None:
         """Test Sionna RT channel model serialization"""
-        
+
         test_roundtrip_serialization(self, self.channel)
 
     def test_realization_serialization(self) -> None:
         """Test Sionna RT channel realization serialization"""
-        
+
         test_roundtrip_serialization(self, self.realization)
+
+    def test_getstate(self) -> None:
+        """Test the overrided method __getstate__()"""
+        state = self.channel.__getstate__()
+        self.assertNotIn("_SionnaRTChannel__scene", state)
+
+    def test_setstate(self) -> None:
+        """Test the overrided method __setstate__()"""
+        state = self.channel.__getstate__()
+        self.channel.__setstate__(state=state)
+        self.assertIn("_SionnaRTChannel__scene", state)

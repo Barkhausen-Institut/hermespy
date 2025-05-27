@@ -34,8 +34,9 @@ classifiers = [
     "Topic :: Scientific/Engineering",
     "Intended Audience :: Science/Research",
 ]
+requires-python = ">=3.8"
 dependencies = [
-    "numpy<=1.26.4",  # <2.1 required for numba compatibility, <2.0 required for Sionna's tensorflow compatibility, pybind11 compatibility only up to 1.26.4
+    "numpy(>=1.26, <2.0)",  # <2.1 required for numba compatibility, <2.0 required for Sionna's tensorflow compatibility, pybind11 compatibility only up to 1.26.4
     "matplotlib>=3.10.0",
     "h5py>=3.8.0",
     "scipy>=1.14.1",
@@ -73,7 +74,7 @@ documentation = [
     "sphinx-copybutton>=0.5.2",
     "sphinx-carousel>=1.2.0",
     "nbsphinx>=0.9.7",
-    "ipywidgets==8.0.5",  # Required for sionna 0.19.1 compatibility, which requires jupyterlab-widgets==3.0.5
+    "ipywidgets==8.1.6",  # Required for sionna 0.19.1 compatibility, which requires jupyterlab-widgets==3.0.5
 ]
 uhd = [
     "usrp-uhd-client==1.7.3",
@@ -92,8 +93,9 @@ develop = [
     "mypy>=1.13.0",
 ]
 sionna = [
-    "mitsuba<=3.5.2",
-    "sionna==0.19.1",
+    "mitsuba<=3.6.2",
+    "sionna-rt ==1.0.2",
+    "tensorflow(>=2.14, !=2.16, !=2.17)",
 ]
 scapy = [
     "scapy>=2.5.0",
