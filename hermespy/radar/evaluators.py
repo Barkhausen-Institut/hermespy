@@ -52,6 +52,7 @@ from abc import ABC
 from collections.abc import Sequence
 from itertools import product
 from typing import Type
+from typing_extensions import override
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -59,6 +60,7 @@ from rich import get_console
 from rich.console import Console
 from rich.progress import track
 from scipy.stats import uniform
+from scipy.integrate import simpson
 
 from hermespy.core import (
     Executable,
@@ -530,6 +532,7 @@ class RocEvaluationResult(EvaluationResult):
         self.__detection_probabilities = detection_probabilities
         self.__false_alarm_probabilities = false_alarm_probabilities
 
+    @override
     def _prepare_visualization(
         self, figure: plt.Figure | None, axes: VAT, **kwargs
     ) -> PlotVisualization:
@@ -562,6 +565,7 @@ class RocEvaluationResult(EvaluationResult):
         lines[0, 0] = line_list
         return PlotVisualization(figure, axes, lines)
 
+    @override
     def _update_visualization(self, visualization: PlotVisualization, **kwargs) -> None:
         section_magnitudes = tuple(s.num_sample_points for s in self.grid)
         for section_indices, line in zip(np.ndindex(section_magnitudes), visualization.lines[0, 0]):
@@ -572,8 +576,17 @@ class RocEvaluationResult(EvaluationResult):
             # Update the respective line
             line.set_data(x_axis, y_axis)
 
+    @override
     def to_array(self) -> np.ndarray:
         return np.stack((self.__detection_probabilities, self.__false_alarm_probabilities), axis=-1)
+
+    @override
+    def to_str(self, grid_coordinates: Sequence[int]) -> str:
+        false_alarm_probabilities = self.__false_alarm_probabilities[grid_coordinates]
+        detection_probabilities = self.__detection_probabilities[grid_coordinates]
+
+        integration = 2 * np.abs(simpson(detection_probabilities, false_alarm_probabilities)) - 1.0
+        return f"{int(np.round(100*integration))}%"
 
 
 class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
@@ -999,7 +1012,9 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
             ["null hypothesis", "alt hypothesis"],
             [null_receptions, alt_receptions],
         ):
-            num_available_drops = scenario.replay(campaign=campaign, drop_offset=drop_offset, backend=backend)
+            num_available_drops = scenario.replay(
+                campaign=campaign, drop_offset=drop_offset, backend=backend
+            )
             num_replayed_drops = min(num_drops, num_available_drops)
             for _ in track(
                 range(num_replayed_drops), description="Replaying " + hypothesis, console=_console

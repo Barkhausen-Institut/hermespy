@@ -395,10 +395,7 @@ class PlotThread(Thread):
             stack.enter_context(mpl.rc_context(rc=self.__rc_params))
 
             # Ignore the matlotlib user warnings for starting GUIs outside the main thread
-            stack.enter_context(catch_warnings(
-                category=UserWarning,
-                action="ignore",
-            ))
+            stack.enter_context(catch_warnings(category=UserWarning, action="ignore"))
 
             if interactive:
                 stack.enter_context(plt.ion())

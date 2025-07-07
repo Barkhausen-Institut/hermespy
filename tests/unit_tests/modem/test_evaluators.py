@@ -319,8 +319,8 @@ class TestThroughputEvaluator(TestCase):
         self.num_frames = 10
 
         self.waveform = RootRaisedCosineWaveform(symbol_rate=1e9, num_preamble_symbols=0, num_data_symbols=100)
-        self.receiver = ReceivingModem(waveform=self.waveform)
-        self.transmitter = TransmittingModem(waveform=self.waveform)
+        self.receiver = ReceivingModem(waveform=self.waveform, seed=42)
+        self.transmitter = TransmittingModem(waveform=self.waveform, seed=42)
         self.device = SimulatedDevice()
         self.device.transmitters.add(self.transmitter)
         self.device.receivers.add(self.receiver)

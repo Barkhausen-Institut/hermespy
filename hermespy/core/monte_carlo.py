@@ -240,9 +240,6 @@ class EvaluationResult(Visualizable[PlotVisualization], ABC):
 
         _console = Console() if console is None else console
 
-        # Query the array representation of this evaluation result
-        results = self.to_array()
-
         # Render results into a rich table
         table = Table()
 
@@ -252,24 +249,31 @@ class EvaluationResult(Visualizable[PlotVisualization], ABC):
 
         for grid_section in np.ndindex(*[d.num_sample_points for d in self.grid]):
             columns = [g.sample_points[s].title for s, g in zip(grid_section, self.grid)]
-
-            result = results[grid_section]
-            result_str: str
-
-            if isinstance(result, np.ndarray):
-                if result.size == 1:
-                    result_str = self.__result_to_str(result.flat[0])
-                else:
-                    result_str = ""
-                    for value in result.flat:
-                        result_str += self.__result_to_str(value) + ", "
-                    result_str = result_str[:-2]
-            else:
-                result_str = self.__result_to_str(result)
-
-            table.add_row(*columns, result_str)
+            columns.append(self.to_str(grid_section))
 
         _console.print(table)
+
+    def to_str(self, grid_coordinates: Sequence[int]) -> str:
+        """Convert the evaluation result at the specified grid coordinates to a string representation.
+
+        Args:
+            grid_coordinates: Coordinates of the grid section to be converted.
+
+        Returns: The string representation of the evaluation result.
+        """
+
+        results = self.to_array()
+        result = results[tuple(grid_coordinates)]
+
+        if isinstance(result, np.ndarray):
+            result_str = ""
+            for value in result.flat:
+                result_str += self.__result_to_str(value) + ", "
+            result_str = result_str[:-2]
+        else:
+            result_str = self.__result_to_str(result)
+
+        return result_str
 
     @abstractmethod
     def to_array(self) -> np.ndarray:
@@ -1309,8 +1313,29 @@ class MonteCarloResult(object):
 
         _console = Console() if console is None else console
 
-        for result in self.evaluation_results:
-            result.print(_console)
+        # Render results into a rich table
+        table = Table()
+
+        # Generate columns
+        for dimension in self.__grid:
+            table.add_column(dimension.title, style="cyan")
+        for evaluator in self.__evaluators:
+            table.add_column(evaluator.abbreviation)
+
+        # Generate a row for each sweep grid point
+        for grid_coordinates in np.ndindex(*[d.num_sample_points for d in self.__grid]):
+
+            # The initial row values are occupied by the grid values for the respective coordinates
+            row_values = [g.sample_points[s].title for s, g in zip(grid_coordinates, self.__grid)]
+
+            # The final row values are occupied by the evaluation results
+            for result in self.evaluation_results:
+                row_values.append(result.to_str(grid_coordinates))
+
+            # Append the row to the table
+            table.add_row(*row_values)
+
+        _console.print(table)
 
     @property
     def evaluation_results(self) -> Sequence[EvaluationResult]:
@@ -1991,6 +2016,10 @@ class MonteCarlo(Generic[MO]):
                 section_str = ""
                 for sample_point in dimension.sample_points:
                     section_str += sample_point.title + " "
+
+                # Truncate the section string to the console width
+                if (len(section_str) > self.console.width - 20) and dimension.num_sample_points > 3:
+                    section_str = f"{dimension.sample_points[0].title} {dimension.sample_points[1].title} ... {dimension.sample_points[-1].title}"
 
                 dimension_table.add_row(dimension.title, section_str)
 

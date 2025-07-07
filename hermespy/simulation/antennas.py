@@ -1112,7 +1112,7 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
             axes.semilogy(
                 angles,
                 power,
-                label=f"Slice start = ({int(slice_start[0]/np.pi) if slice_start[0]%np.pi == 0 else slice_start[0]/np.pi:.2g}π ,{int(slice_start[1]/np.pi) if slice_start[1]%np.pi == 0 else slice_start[1]/np.pi:.2g}π ),Slice Direction = {slice_direction}",
+                label=f"Slice start = ({int(slice_start[0]/np.pi) if slice_start[0] % np.pi == 0 else slice_start[0]/np.pi:.2g}π ,{int(slice_start[1]/np.pi) if slice_start[1] % np.pi == 0 else slice_start[1]/np.pi:.2g}π ),Slice Direction = {slice_direction}",
             )
         axes.set_xlabel("Angles (radians)")
         axes.set_ylabel("Power")
@@ -1125,7 +1125,7 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntennaPort, SimulatedAntenna]
 
         # Format tick labels as π fractions
         axes.xaxis.set_major_formatter(
-            ticker.FuncFormatter(lambda x, _: f"{int(x/np.pi) if x%np.pi == 0 else x/np.pi:.2g}π")
+            ticker.FuncFormatter(lambda x, _: f"{int(x/np.pi) if x % np.pi == 0 else x/np.pi:.2g}π")
         )
 
     def antenna_state(self, base_pose: Transformation) -> AntennaArrayState:
