@@ -212,7 +212,11 @@ class OFDMRadar(DuplexJCASOperator[OFDMWaveform], Serializable):
 
         # Create radar cube object
         cube = RadarCube(
-            cube_data, angles_of_interest, doppler_bins, selected_range_bins, device.carrier_frequency
+            cube_data,
+            angles_of_interest,
+            doppler_bins,
+            selected_range_bins,
+            device.carrier_frequency,
         )
 
         # Infer the point cloud, if a detector has been configured

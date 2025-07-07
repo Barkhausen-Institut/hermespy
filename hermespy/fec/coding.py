@@ -168,10 +168,7 @@ class EncoderManager(RandomNode, Serializable):
     _encoders: list[Encoder]
 
     def __init__(
-        self,
-        allow_padding: bool = True,
-        allow_truncating: bool = True,
-        seed: int | None = None,
+        self, allow_padding: bool = True, allow_truncating: bool = True, seed: int | None = None
     ) -> None:
         """
         Args:
