@@ -2180,10 +2180,15 @@ class MonteCarlo(Generic[MO]):
                 # Abort exectuion loop prematurely if all sections are flagged inactive
                 # Some results might be lost, but who cares? Speed! Speed! Speed!
                 # if absolute_progress >= self.max_num_samples:
-                #    break"""
+                #    break
+                
+            # Make the console pretty upon exit
+            if self.__console_mode == ConsoleMode.INTERACTIVE:
+                status_group.renderables[0] = ""
+                progress.update(task1, completed=max_num_samples)
 
         # Fetch all remote samples at the controller#
-        with self.console.status("Collecting samples...", spinner="dots") if self.__console_mode == ConsoleMode.INTERACTIVE else nullcontext():  # type: ignore
+        with self.console.status("Collecting samples ...", spinner="dots") if self.__console_mode == ConsoleMode.INTERACTIVE else nullcontext():  # type: ignore
             raw_grid =  np.empty(
             [dimension.num_sample_points for dimension in self.__dimensions], dtype=object)
             
@@ -2196,7 +2201,7 @@ class MonteCarlo(Generic[MO]):
         performance_time = stop_time - start_time
                 
         # Compute the final result
-        with self.console.status("Computing final results...", spinner="dots") if self.__console_mode == ConsoleMode.INTERACTIVE else nullcontext():  # type: ignore
+        with self.console.status("Computing final results ...", spinner="dots") if self.__console_mode == ConsoleMode.INTERACTIVE else nullcontext():  # type: ignore
             result = MonteCarloResult(
                 self.__dimensions, self.__evaluators, raw_grid, performance_time
             )
