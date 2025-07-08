@@ -270,6 +270,8 @@ class Simulation(Pipeline[SimulationScenario, SimulatedDevice], MonteCarlo[Simul
         verbosity: str | Verbosity = Verbosity.INFO,
         seed: int | None = None,
         num_actors: int | None = None,
+        section_block_size: int | None = None,
+        premature_stopping: bool = False,
     ) -> None:
         """
         Args:
@@ -316,6 +318,16 @@ class Simulation(Pipeline[SimulationScenario, SimulatedDevice], MonteCarlo[Simul
             num_actors:
                 Number of actors to be deployed for parallel execution.
                 If None is provided, the number of actors will be set to the number of available CPU cores.
+
+            section_block_size:
+                Number of samples per simulation section block.
+                Sometimes referred to as batch size.
+                By default, the size of the simulation grid is selected.
+
+            premature_stopping:
+                If enabled, the simulation will stop as soon as all confidence thresholds for configured evaluators are met.
+                This is useful for long-running simulations where the results are already satisfactory.
+                Currently disabled by default, since it might lead to performance issues on large clusters.
         """
 
         scenario = SimulationScenario() if scenario is None else scenario
@@ -335,6 +347,8 @@ class Simulation(Pipeline[SimulationScenario, SimulatedDevice], MonteCarlo[Simul
             console_mode=console_mode,
             ray_address=ray_address,
             num_actors=num_actors,
+            section_block_size=section_block_size,
+            premature_stopping=premature_stopping,
         )
 
         # Initialize class attributes
