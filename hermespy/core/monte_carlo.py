@@ -2128,10 +2128,8 @@ class MonteCarlo(Generic[MO]):
                 if progress_plot_time - last_progress_plot_time > self.__progress_log_interval:
                     last_progress_plot_time = progress_plot_time
 
-                    # Compute absolute progress
-                    absolute_progress = 0
-                    for section in sample_grid:
-                        absolute_progress += section.num_samples
+                    # Approximate the absolute progress by summing all running and completed tasks
+                    absolute_progress = np.sum(np.invert(grid_active_mask)) * self.num_samples + np.sum(grid_task_count[grid_active_mask])
 
                     # Update progress bar visualization
                     if self.__console_mode == ConsoleMode.INTERACTIVE:
@@ -2181,7 +2179,7 @@ class MonteCarlo(Generic[MO]):
                 # Some results might be lost, but who cares? Speed! Speed! Speed!
                 # if absolute_progress >= self.max_num_samples:
                 #    break
-                
+
             # Make the console pretty upon exit
             if self.__console_mode == ConsoleMode.INTERACTIVE:
                 status_group.renderables[0] = ""
@@ -2297,9 +2295,9 @@ class MonteCarlo(Generic[MO]):
             task_count += 1
             grid_task_count[section_coordinates] = task_count
 
-            if task_count + grid[section_coordinates].num_samples >= self.num_samples:
+            #if task_count + grid[section_coordinates].num_samples >= self.#num_samples:
+            if task_count >= self.num_samples:
                 grid_active_mask[section_coordinates] = False
-                break
 
             # ToDo: Enhance routine to always submit section_block_size amount of indices per program
 
