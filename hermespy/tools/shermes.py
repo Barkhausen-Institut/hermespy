@@ -114,7 +114,7 @@ def sHermes(args: Sequence[str] | None = None) -> None:
 
         # Initialize the batch script
         temp_file.write(batch_script.encode("utf-8"))
-        temp_file.close()
+        temp_file.flush()
 
         # Submit the job
         run(f"sbatch {temp_file.name}", shell=True, check=True)

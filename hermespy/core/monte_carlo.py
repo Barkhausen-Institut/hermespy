@@ -19,9 +19,8 @@ import ray
 from matplotlib.axis import Axis
 from matplotlib.lines import Line2D
 from mpl_toolkits.mplot3d import Axes3D  # type: ignore
-from ray.util import ActorPool
 from rich.console import Console, Group
-from rich.progress import Progress, SpinnerColumn, TimeElapsedColumn
+from rich.progress import BarColumn, Progress, SpinnerColumn, TimeElapsedColumn
 from rich.live import Live
 from rich.table import Table
 from scipy.constants import pi
@@ -1915,6 +1914,7 @@ class MonteCarlo(Generic[MO]):
         catch_exceptions: bool = True,
         progress_log_interval: float = 5.0,
         premature_stopping: bool = False,
+        debug: bool = False,
     ) -> None:
         """
         Args:
@@ -1968,6 +1968,10 @@ class MonteCarlo(Generic[MO]):
                 If enabled, the simulation will stop as soon as all confidence thresholds for configured evaluators are met.
                 This is useful for long-running simulations where the results are already satisfactory.
                 Currently disabled by default, since it might lead to performance issues on large clusters.
+
+            debug:
+                Enables debug mode during simulation runtime.
+                Debug mode will add performance-related information to the output and enable the ray dashboard.
         """
 
         self.runtime_env = runtime_env
@@ -1985,10 +1989,11 @@ class MonteCarlo(Generic[MO]):
         self.catch_exceptions = catch_exceptions
         self.__progress_log_interval = progress_log_interval
         self.premature_stopping = premature_stopping
+        self.__debug = debug
 
         # Launch ray if not already running
         if not ray.is_initialized():
-            ray.init(
+            ray_context = ray.init(
                 address=f"{ray_address}:{ray_port}" if ray_address is not None else None,
                 runtime_env=(
                     {"py_modules": self._py_modules(), "pip": self._pip_packages()}
@@ -1996,8 +2001,11 @@ class MonteCarlo(Generic[MO]):
                     else None
                 ),
                 logging_level=logging.ERROR,
-                include_dashboard=False,
+                include_dashboard=debug,
             )
+
+            if debug:
+                self.console.log(f"Ray dashboard available at {ray_context.dashboard_url}")
 
     def simulate(
         self,
@@ -2110,15 +2118,26 @@ class MonteCarlo(Generic[MO]):
         last_progress_plot_time = 0.0
         num_result_rows = min(10, self.section_block_size)
 
+        # Initialize debug information if the respective flag is enabled
+        load_tracker = Progress(BarColumn())
+        load_tracker_task = load_tracker.add_task("Controller load", total=1.0, start=False)
+        wait_times: list[float] = []
+
         # Display results in a live table
         status_group = Group("", progress)
+        if self.__debug:
+            status_group.renderables.append(load_tracker)
+
         with Live(status_group, console=self.console) if self.__console_mode == ConsoleMode.INTERACTIVE else nullcontext():  # type: ignore
             # Keep executing until all samples are computed
+
             while len(run_futures) > 0:
+
                 # Receive samples from the queue
-                result = self.__receive_next(
+                result, wait_time = self.__receive_next(
                     idle_actors, run_futures, run_futures_map, sample_grid, grid_active_mask, grid_task_count
                 )
+                wait_times.append(wait_time)
 
                 # Queue next task and compute retrieve progress
                 self.__queue_next(idle_actors, run_futures, run_futures_map, sample_grid, grid_active_mask, grid_task_count)
@@ -2133,7 +2152,9 @@ class MonteCarlo(Generic[MO]):
 
                     # Update progress bar visualization
                     if self.__console_mode == ConsoleMode.INTERACTIVE:
+                        
                         progress.update(task1, completed=absolute_progress)
+                        load_tracker.update(load_tracker_task, completed=1-min(1.0, np.mean(wait_times)))
 
                         result_rows: List[List[str]] = []
                         
@@ -2224,10 +2245,12 @@ class MonteCarlo(Generic[MO]):
         grid: SampleGrid,
         grid_active_mask: np.ndarray,
         grid_task_count: np.ndarray,
-    ) -> ActorRunResult:
-        # Retrieve result from pool
+    ) -> tuple[ActorRunResult, float]:
+        # Retrieve result from pool and measure the elapsed wait time
+        initial_time = perf_counter()
         result_reference: ray.ObjectRef[ActorRunResult] = ray.wait(run_futures, num_returns=1, timeout=None)[0][0]
-        
+        wait_time = perf_counter() - initial_time
+
         # Pop the future from the queue and map
         run_futures.remove(result_reference)
         actor = run_futures_map.pop(result_reference, None)
@@ -2266,7 +2289,7 @@ class MonteCarlo(Generic[MO]):
                         self.__evaluators
                     )"""
 
-        return result
+        return result, wait_time
 
     def __queue_next(
         self,

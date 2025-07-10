@@ -272,6 +272,7 @@ class Simulation(Pipeline[SimulationScenario, SimulatedDevice], MonteCarlo[Simul
         num_actors: int | None = None,
         section_block_size: int | None = None,
         premature_stopping: bool = False,
+        debug: bool = False,
     ) -> None:
         """
         Args:
@@ -328,6 +329,10 @@ class Simulation(Pipeline[SimulationScenario, SimulatedDevice], MonteCarlo[Simul
                 If enabled, the simulation will stop as soon as all confidence thresholds for configured evaluators are met.
                 This is useful for long-running simulations where the results are already satisfactory.
                 Currently disabled by default, since it might lead to performance issues on large clusters.
+
+            debug:
+                Enables debug mode during simulation runtime.
+                Debug mode will add performance-related information to the output and enable the ray dashboard.
         """
 
         scenario = SimulationScenario() if scenario is None else scenario
@@ -337,7 +342,7 @@ class Simulation(Pipeline[SimulationScenario, SimulatedDevice], MonteCarlo[Simul
 
         # Initialize base classes
         Pipeline.__init__(
-            self, scenario, results_dir=results_dir, verbosity=verbosity, console_mode=console_mode
+            self, scenario, results_dir=results_dir, verbosity=verbosity, console_mode=console_mode, debug=debug
         )
         MonteCarlo.__init__(
             self,
@@ -349,6 +354,7 @@ class Simulation(Pipeline[SimulationScenario, SimulatedDevice], MonteCarlo[Simul
             num_actors=num_actors,
             section_block_size=section_block_size,
             premature_stopping=premature_stopping,
+            debug=debug,
         )
 
         # Initialize class attributes

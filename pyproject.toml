@@ -91,6 +91,7 @@ develop = [
     "flake8>=7.1.1",
     "coverage>=7.6.9",
     "mypy>=1.13.0",
+    "ray[default]>=2.40.0",
 ]
 sionna = [
     "mitsuba<=3.6.2",
