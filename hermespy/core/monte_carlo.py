@@ -20,7 +20,7 @@ from matplotlib.axis import Axis
 from matplotlib.lines import Line2D
 from mpl_toolkits.mplot3d import Axes3D  # type: ignore
 from rich.console import Console, Group
-from rich.progress import BarColumn, Progress, SpinnerColumn, TimeElapsedColumn
+from rich.progress import BarColumn, Progress, SpinnerColumn, TaskProgressColumn, TextColumn, TimeElapsedColumn
 from rich.live import Live
 from rich.table import Table
 from scipy.constants import pi
@@ -2095,7 +2095,7 @@ class MonteCarlo(Generic[MO]):
             # Generate the actor pool
             actors: list[MonteCarloActor] = [actor.options(num_cpus=self.cpus_per_actor).remote((self.__investigated_object, self.__dimensions, self.__evaluators), a, stage_arguments, self.catch_exceptions) for a in range(self.num_actors)]  # type: ignore[attr-defined]
             idle_actors = actors.copy()
-            
+
             # Generate section sample containers and meta-information
             grid_task_count = np.zeros(
                 [dimension.num_sample_points for dimension in self.__dimensions], dtype=int
@@ -2106,7 +2106,7 @@ class MonteCarlo(Generic[MO]):
 
             run_futures: list[ray.ObjectRef[ActorRunResult]] = []
             run_futures_map: dict[ray.ObjectRef[ActorRunResult], MonteCarloActor] = {}
-            
+
             for _ in range(self.num_actors):
                 _ = self.__queue_next(idle_actors, run_futures, run_futures_map, sample_grid, grid_active_mask, grid_task_count)
 
@@ -2119,7 +2119,7 @@ class MonteCarlo(Generic[MO]):
         num_result_rows = min(10, self.section_block_size)
 
         # Initialize debug information if the respective flag is enabled
-        load_tracker = Progress(BarColumn())
+        load_tracker = Progress(TextColumn("[progress.description]{task.description}"), BarColumn(), TaskProgressColumn())
         load_tracker_task = load_tracker.add_task("Controller load", total=1.0, start=False)
         wait_times: list[float] = []
 
@@ -2129,8 +2129,8 @@ class MonteCarlo(Generic[MO]):
             status_group.renderables.append(load_tracker)
 
         with Live(status_group, console=self.console) if self.__console_mode == ConsoleMode.INTERACTIVE else nullcontext():  # type: ignore
-            # Keep executing until all samples are computed
 
+            # Keep executing until all samples are computed
             while len(run_futures) > 0:
 
                 # Receive samples from the queue
@@ -2150,14 +2150,18 @@ class MonteCarlo(Generic[MO]):
                     # Approximate the absolute progress by summing all running and completed tasks
                     absolute_progress = np.sum(np.invert(grid_active_mask)) * self.num_samples + np.sum(grid_task_count[grid_active_mask])
 
+                    # Approximate the load by averaging the wait times
+                    load_estimate = (1.0 - min(1.0, np.mean(wait_times))) if len(wait_times) > 0 else 0.0
+                    wait_times.clear()
+
                     # Update progress bar visualization
                     if self.__console_mode == ConsoleMode.INTERACTIVE:
-                        
+
                         progress.update(task1, completed=absolute_progress)
-                        load_tracker.update(load_tracker_task, completed=1-min(1.0, np.mean(wait_times)))
+                        load_tracker.update(load_tracker_task, completed=load_estimate)
 
                         result_rows: List[List[str]] = []
-                        
+
                         for section_index, sample_list_reference in result.samples.items():
                             samples = ray.get(sample_list_reference)
                             for sample in samples:
@@ -2174,6 +2178,9 @@ class MonteCarlo(Generic[MO]):
                                     results_row.append(str(artifact))
 
                                 result_rows.append(results_row)
+                                if len(result_rows) >= num_result_rows:
+                                    break
+
                             if len(result_rows) >= num_result_rows:
                                 break
 
@@ -2194,7 +2201,7 @@ class MonteCarlo(Generic[MO]):
                         status_group.renderables[0] = results_table
 
                     elif self.__console_mode == ConsoleMode.LINEAR:
-                        self.console.log(f"Progress: {100*absolute_progress/max_num_samples:.3f}")
+                        self.console.log(f"Progress: {100*absolute_progress/max_num_samples:.3f}, Load: {100*load_estimate:.3f}%")
 
                 # Abort exectuion loop prematurely if all sections are flagged inactive
                 # Some results might be lost, but who cares? Speed! Speed! Speed!
@@ -2208,9 +2215,8 @@ class MonteCarlo(Generic[MO]):
 
         # Fetch all remote samples at the controller#
         with self.console.status("Collecting samples ...", spinner="dots") if self.__console_mode == ConsoleMode.INTERACTIVE else nullcontext():  # type: ignore
-            raw_grid =  np.empty(
-            [dimension.num_sample_points for dimension in self.__dimensions], dtype=object)
-            
+            raw_grid = np.empty([dimension.num_sample_points for dimension in self.__dimensions], dtype=object)
+
             for section_index in np.ndindex(*[d.num_sample_points for d in self.__dimensions]):
                 sample_list: list[MonteCarloSample] = sum(ray.get(sample_grid[section_index].samples), [])
                 raw_grid[section_index] = sample_list
@@ -2218,7 +2224,7 @@ class MonteCarlo(Generic[MO]):
         # Measure elapsed time
         stop_time = perf_counter()
         performance_time = stop_time - start_time
-                
+
         # Compute the final result
         with self.console.status("Computing final results ...", spinner="dots") if self.__console_mode == ConsoleMode.INTERACTIVE else nullcontext():  # type: ignore
             result = MonteCarloResult(
@@ -2305,29 +2311,30 @@ class MonteCarlo(Generic[MO]):
 
         # Query active sections and respective task counts
         active_sections = np.argwhere(grid_active_mask)
-        active_sections_task_count = grid_task_count[grid_active_mask]
+        num_active_sections = active_sections.shape[0]
 
         program: List[Tuple[int, ...]] = []
-        for section_coordinates, task_count in zip(
-            active_sections[: self.section_block_size, :],
-            active_sections_task_count.flat[: self.section_block_size],
-        ):
-            section_coordinates = tuple(section_coordinates)
+        for t in range(self.section_block_size):
+            active_section_index = t % num_active_sections
+
+            # Add the section to the program
+            section_coordinates = tuple(active_sections[active_section_index])
             program.append(section_coordinates)
 
-            task_count += 1
+            # Increment the task count for the section
+            task_count = grid_task_count[section_coordinates] + 1
             grid_task_count[section_coordinates] = task_count
 
-            #if task_count + grid[section_coordinates].num_samples >= self.#num_samples:
+            # Disable the section if the number of tasks is expected to be met
             if task_count >= self.num_samples:
                 grid_active_mask[section_coordinates] = False
-
-            # ToDo: Enhance routine to always submit section_block_size amount of indices per program
+                num_active_sections -= 1
+                active_sections = np.delete(active_sections, active_section_index, axis=0)
 
         if len(program) > 0:
             actor = idle_actors.pop(0)
             run_future = actor.run.remote(program)
-            
+
             run_futures.append(run_future)
             run_futures_map[run_future] = actor
 
@@ -2340,7 +2347,7 @@ class MonteCarlo(Generic[MO]):
     @property
     def premature_stopping(self) -> bool:
         """Flag indicating whether the simulation should compute evaluator confidences and stop prematurely once all sections are considered confident.
-        
+
         .. warning:: This feature may currently lead to performance bottlenecks on large clusters.
         """
 
