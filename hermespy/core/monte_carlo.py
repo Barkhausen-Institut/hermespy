@@ -2054,10 +2054,17 @@ class MonteCarlo(Generic[MO]):
         self.__dimensions.sort(key=sort)
 
         max_num_samples = self.num_samples
+        min_batch_size = 0
         dimension_str = f"{max_num_samples}"
         for dimension in self.__dimensions:
+            min_batch_size += dimension.num_sample_points
             max_num_samples *= dimension.num_sample_points
             dimension_str += f" x {dimension.num_sample_points}"
+
+        # The maximum batch size is the number of overall samples
+        # divided by the number of available actors
+        max_batch_size: int = max_num_samples // self.num_actors
+        batch_size = min_batch_size + int(.2 * (max_batch_size - min_batch_size))
 
         if self.__console_mode != ConsoleMode.SILENT:
             self.console.log(
@@ -2107,9 +2114,6 @@ class MonteCarlo(Generic[MO]):
             run_futures: list[ray.ObjectRef[ActorRunResult]] = []
             run_futures_map: dict[ray.ObjectRef[ActorRunResult], MonteCarloActor] = {}
 
-            for _ in range(self.num_actors):
-                _ = self.__queue_next(idle_actors, run_futures, run_futures_map, sample_grid, grid_active_mask, grid_task_count)
-
         # Initialize progress bar
         progress = Progress(
             SpinnerColumn(), *Progress.get_default_columns(), TimeElapsedColumn(), transient=True
@@ -2130,6 +2134,9 @@ class MonteCarlo(Generic[MO]):
 
         with Live(status_group, console=self.console) if self.__console_mode == ConsoleMode.INTERACTIVE else nullcontext():  # type: ignore
 
+            # Queue next tasks and compute retrieve progress
+            self.__queue_next(idle_actors, run_futures, run_futures_map, batch_size, grid_active_mask, grid_task_count)
+
             # Keep executing until all samples are computed
             while len(run_futures) > 0:
 
@@ -2139,8 +2146,8 @@ class MonteCarlo(Generic[MO]):
                 )
                 wait_times.append(wait_time)
 
-                # Queue next task and compute retrieve progress
-                self.__queue_next(idle_actors, run_futures, run_futures_map, sample_grid, grid_active_mask, grid_task_count)
+                # Queue next tasks and compute retrieve progress
+                self.__queue_next(idle_actors, run_futures, run_futures_map, batch_size, grid_active_mask, grid_task_count)
 
                 # Update result log if enough time has passed
                 progress_plot_time = perf_counter()
@@ -2302,7 +2309,7 @@ class MonteCarlo(Generic[MO]):
         idle_actors: list[MonteCarloActor],
         run_futures: list[ray.ObjectRef[ActorRunResult]],
         run_futures_map: dict[ray.ObjectRef[ActorRunResult], MonteCarloActor],
-        grid: SampleGrid,
+        batch_size: int,
         grid_active_mask: np.ndarray,
         grid_task_count: np.ndarray,
     ):
@@ -2313,30 +2320,41 @@ class MonteCarlo(Generic[MO]):
         active_sections = np.argwhere(grid_active_mask)
         num_active_sections = active_sections.shape[0]
 
-        program: List[Tuple[int, ...]] = []
-        for t in range(self.section_block_size):
-            active_section_index = t % num_active_sections
+        # Skip if no active sections available
+        if num_active_sections < 1:
+            return
+        
+        for _ in range(len(idle_actors)):
 
-            # Add the section to the program
-            section_coordinates = tuple(active_sections[active_section_index])
-            program.append(section_coordinates)
+            program: List[Tuple[int, ...]] = []
+            for t in range(batch_size):
+                active_section_index = t % num_active_sections
 
-            # Increment the task count for the section
-            task_count = grid_task_count[section_coordinates] + 1
-            grid_task_count[section_coordinates] = task_count
+                # Add the section to the program
+                section_coordinates = tuple(active_sections[active_section_index])
+                program.append(section_coordinates)
 
-            # Disable the section if the number of tasks is expected to be met
-            if task_count >= self.num_samples:
-                grid_active_mask[section_coordinates] = False
-                num_active_sections -= 1
-                active_sections = np.delete(active_sections, active_section_index, axis=0)
+                # Increment the task count for the section
+                task_count = grid_task_count[section_coordinates] + 1
+                grid_task_count[section_coordinates] = task_count
 
-        if len(program) > 0:
+                # Disable the section if the number of tasks is expected to be met
+                if task_count >= self.num_samples:
+                    grid_active_mask[section_coordinates] = False
+
+                    num_active_sections -= 1
+                    if num_active_sections < 1:
+                        break
+
+                    active_sections = np.delete(active_sections, active_section_index, axis=0)
+
             actor = idle_actors.pop(0)
             run_future = actor.run.remote(program)
-
             run_futures.append(run_future)
             run_futures_map[run_future] = actor
+
+            if num_active_sections < 1:
+                break
 
     @property
     def investigated_object(self) -> Any:
