@@ -989,57 +989,8 @@ class GridSection(object):
             self.__evaluator_confidences[e] = 1.0 - min(1.0, confidence_bound)
 
 
-class SampleGrid(object):
-    """Grid of simulation samples."""
-
-    __sections: np.ndarray
-
-    def __init__(
-        self, grid_configuration: List[GridDimension], evaluators: Sequence[Evaluator]
-    ) -> None:
-        """
-        Args:
-            grid_configuration: The simulation grid configuration.
-            evaluators: The evaluators generating the artifacts.
-        """
-
-        self.__sections = np.empty(
-            [dimension.num_sample_points for dimension in grid_configuration], dtype=np.object_
-        )
-        num_evaluators = len(evaluators)
-
-        for coordinates in np.ndindex(
-            *[dimension.num_sample_points for dimension in grid_configuration]
-        ):
-            coordinate_tuple = tuple(coordinates)
-            self.__sections[coordinate_tuple] = GridSection(coordinate_tuple, num_evaluators)
-            
-    def stash_result(self, result: ActorRunResult) -> None:
-        """Stash the result of a remote actor run into the sample grid.
-
-        Args:
-            result: Result of the remote actor run.
-        """
-
-        for section_coordinates, samples_ref in result.samples.items():
-            # Get the section from the grid
-            section: GridSection = self.__sections[section_coordinates]
-
-            # Add the samples to the section
-            section.stash_samples(samples_ref)
-
-    def __getitem__(self, coordinates: Tuple[int, ...]) -> GridSection:
-        return self.__sections[coordinates]
-
-    def __iter__(self):
-        """Iterating over the sample grid is equivalent to iterating over the sections tree"""
-
-        return iter(self.__sections.flat)
-
-
 class UnmatchableException(Exception):
     """An exception that can never get caught."""
-
     ...
 
 
