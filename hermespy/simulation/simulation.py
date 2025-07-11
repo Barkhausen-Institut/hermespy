@@ -188,6 +188,7 @@ class SimulationActor(MonteCarloActor[SimulationScenario], SimulationRunner):
 
     def __init__(
         self,
+        queue_manager,
         argument_tuple: Any,
         index: int,
         stage_arguments: Mapping[str, Sequence[tuple]] | None = None,
@@ -213,7 +214,7 @@ class SimulationActor(MonteCarloActor[SimulationScenario], SimulationRunner):
         """
 
         # Initialize base classes
-        MonteCarloActor.__init__(self, argument_tuple, index, stage_arguments, catch_exceptions)
+        MonteCarloActor.__init__(self, queue_manager, argument_tuple, index, stage_arguments, catch_exceptions)
         SimulationRunner.__init__(self, self._investigated_object)
 
         # Update the internal random seed pseudo-deterministically for each actor instance
