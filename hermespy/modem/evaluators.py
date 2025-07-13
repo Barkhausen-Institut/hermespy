@@ -47,6 +47,8 @@ class CommunicationEvaluator(Evaluator, Serializable):
 
     __transmitting_modem: TransmittingModem
     __receiving_modem: ReceivingModem
+    __confidence_bound: float
+    __required_confidence: float
     __transmit_hook: Hook[CommunicationTransmission]
     __receive_hook: Hook[CommunicationReception]
     __transmission: CommunicationTransmission | None
@@ -57,6 +59,8 @@ class CommunicationEvaluator(Evaluator, Serializable):
         self,
         transmitting_modem: TransmittingModem,
         receiving_modem: ReceivingModem,
+        confidence_bound: float = 0.0,
+        required_confidence: float = 1.0,
         plot_surface: bool = _DEFAULT_PLOT_SURFACE,
     ) -> None:
         """
@@ -79,6 +83,8 @@ class CommunicationEvaluator(Evaluator, Serializable):
         # Initialize class attributes
         self.__transmitting_modem = transmitting_modem
         self.__receiving_modem = receiving_modem
+        self.__confidence_bound = confidence_bound
+        self.__required_confidence = required_confidence
         self.__transmission = None
         self.__reception = None
         self.__plot_surface = plot_surface
@@ -130,6 +136,9 @@ class CommunicationEvaluator(Evaluator, Serializable):
             )
 
         return self.__transmission, self.__reception
+    
+    def initialize_result(self, grid) -> ScalarEvaluationResult:
+        return ScalarEvaluationResult(grid, self, self.__confidence_bound, self.__required_confidence, self.__plot_surface)
 
     def generate_result(
         self, grid: Sequence[GridDimension], artifacts: np.ndarray
@@ -242,6 +251,8 @@ class BitErrorEvaluator(CommunicationEvaluator, Serializable):
         self,
         transmitting_modem: TransmittingModem,
         receiving_modem: ReceivingModem,
+        confidence_bound: float = 0.0,
+        required_confidence: float = 1.0,
         plot_surface: bool = True,
     ) -> None:
         """
@@ -258,7 +269,7 @@ class BitErrorEvaluator(CommunicationEvaluator, Serializable):
                 Defaults to True.
         """
 
-        CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem, plot_surface)
+        CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem, confidence_bound, required_confidence, plot_surface)
         self.plot_scale = "log"  # Plot logarithmically by default
 
     def evaluate(self) -> BitErrorEvaluation:

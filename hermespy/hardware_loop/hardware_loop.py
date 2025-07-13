@@ -36,7 +36,7 @@ from hermespy.core import (
     VAT,
     Verbosity,
 )
-from hermespy.core.monte_carlo import GridDimension, SampleGrid, MonteCarloSample, VT
+from hermespy.core.monte_carlo import GridDimension, MonteCarloSample, VT
 from hermespy.tools import tile_figures
 from .physical_device import PDT
 from .physical_device_dummy import PhysicalScenarioDummy

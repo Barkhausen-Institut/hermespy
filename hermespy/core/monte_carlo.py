@@ -9,8 +9,8 @@ from contextlib import nullcontext
 from functools import reduce
 from math import exp, sqrt
 from os import path
-from time import perf_counter
-from typing import Any, Callable, Generic, List, Mapping, Type, TypeVar, Tuple, Union, SupportsFloat
+from time import perf_counter, sleep
+from typing import Any, Callable, Generic, List, Mapping, Type, TypeVar, SupportsFloat
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
@@ -211,6 +211,30 @@ class EvaluationResult(Visualizable[PlotVisualization], ABC):
         """Evaluator that generated this result."""
 
         return self.__evaluator
+
+    @abstractmethod
+    def add_artifact(
+        self,
+        coordinates: tuple[int, ...],
+        artifact: Artifact,
+        compute_confidence: bool = True,
+    ) -> bool:
+        """Add an artifact to this evaluation result.
+
+        Args:
+            coordinates: Coordinates of the grid section to which the artifact belongs.
+            artifact: Artifact to be added.
+            compute_confidence: Whether to compute the confidence level of the evaluation result for the given section coordinates.
+
+        Returns:
+            Can the result be trusted?
+            Always :py:obj:`False` if `compute_confidence` is set to :py:obj:`False`.
+        """
+        ...  # pragma: no cover
+
+    @abstractmethod
+    def runtime_estimates(self) -> None | tuple[np.ndarray, np.ndarray]:
+        ...
 
     def __result_to_str(self, value: Any) -> str:
         """Convert a single result value to its string representation.
@@ -426,33 +450,63 @@ class EvaluationResult(Visualizable[PlotVisualization], ABC):
 class ScalarEvaluationResult(EvaluationResult):
     """Base class for scalar evaluation results."""
 
-    plot_surface: bool
+    # Berry-Esseen constants ToDo: Check the proper selection here
+    __C_0: float = 0.4785
+    __C_1: float = 30.2338
 
-    __scalar_results: np.ndarray
+    __confidence_bound: float
+    __required_confidence: float
+    __artifact_sums: np.ndarray
+    __artifact_count: np.ndarray
+    plot_surface: bool
     __base_dimension_index: int
 
     def __init__(
         self,
         grid: Sequence[GridDimension],
-        scalar_results: np.ndarray,
         evaluator: Evaluator,
+        confidence_bound: float = 0.0,
+        required_confidence: float = 1.0,
         plot_surface: bool = True,
     ) -> None:
         """
         Args:
             grid: Simulation grid.
             scalar_results: Scalar results generated from collecting samples over the simulation grid.
-            evaluator:  The evaluator generating the results.
+            tolerance:
             plot_surface:
                 Enable surface plotting for two-dimensional grids.
                 Enabled by default.
         """
 
+        # Ensure that the confidence bound is between zero and one
+        if required_confidence > 1.0 or required_confidence < 0.0:
+            raise ValueError("Coinfidence requirement must be between zero and one")
+        
+        # Ensure the confidence bound is non-negative
+        if confidence_bound < 0.0:
+            raise ValueError("Confidence bound must be non-negative")
+
         # Initialize base class
         EvaluationResult.__init__(self, grid, evaluator)
+        
+        # Initialize confidence parameters
+        grid_dimensions = [d.num_sample_points for d in grid]
+        
+        # Confidence parameters are the grid dimensions plus an additional dimension of
+        # magnitude five
+        # [A x B x ... x [confidence, second_moment, third_moment, third_moment_abs, fourth_moment]]
+        self.__confidence_parameters = np.zeros(grid_dimensions + [5], dtype=float)
+
+        # In the beggining, the estimated confidence bound is set to infinity,
+        # indicating that there is no confidence in the result
+        self.__confidence_parameters[::, 0] = float('inf')
 
         # Initialize class attributes
-        self.__scalar_results = scalar_results
+        self.__confidence_bound = confidence_bound
+        self.__required_confidence = required_confidence
+        self.__artifact_sums = np.zeros(grid_dimensions, dtype=float)
+        self.__artifact_count = np.zeros(grid_dimensions, dtype=int)
         self.plot_surface = plot_surface
         self.__base_dimension_index = 0
 
@@ -461,7 +515,122 @@ class ScalarEvaluationResult(EvaluationResult):
         # The plotting title should resolve to the represented evaluator's title
         return self.evaluator.title
 
-    def create_figure(self, **kwargs) -> Tuple[plt.FigureBase, VAT]:
+    def add_artifact(self, coordinates: tuple[int, ...], artifact: Artifact, compute_confidence: bool = True) -> bool:
+        
+        confident = False
+        scalar = artifact.to_scalar()
+        
+        if scalar is not None:
+            sum = self.__artifact_sums[coordinates] + scalar
+            count = self.__artifact_count[coordinates] + 1
+            self.__artifact_sums[coordinates] = sum
+            self.__artifact_count[coordinates] = count
+
+            if compute_confidence:
+                confident = self.__update_confidence(coordinates, scalar, sum, count)
+
+        return confident
+                
+    def __update_confidence(
+        self,
+        coordinates: tuple[int, ...],
+        scalar: float,
+        sum: float,
+        count: int,
+    ) -> bool:
+        """Update the confidence estimates for this grid section.
+        """
+
+        # Return zero if the evaluator tolerance is set to zero
+        #if self.__confidence_bound == 0.0:
+        #    return False
+
+        mean = sum / count  # Current mean
+        second_moment, third_moment, third_moment_abs, fourth_moment = self.__confidence_parameters[*coordinates, 1:].flatten()
+
+
+        n = count - 1  # Current number of samples
+        nn = count  # New number of samples
+
+        # Update the moment estimates
+        delta = scalar - mean
+        updated_second_moment = second_moment + delta**2 * (n) / nn
+        updated_third_moment = (
+            third_moment + delta**3 * (n**2 - n) / nn**2 - 3 * second_moment * delta / nn
+        )
+        updated_third_moment_abs = third_moment_abs + abs(
+            delta**3 * (n**2 - n) / nn**2 - 3 * second_moment * delta / nn
+        )
+        updated_fourth_moment = (
+            fourth_moment
+            + delta**4 * (n**3 - n**2 + n) / nn**3
+            + 6 * delta**2 * second_moment / nn**2
+            - 4 * delta * third_moment / nn
+        )
+
+        # Store the updated moment estimates for the next update
+        self.__confidence_parameters[*coordinates, 1:] = (
+            updated_second_moment,
+            updated_third_moment,
+            updated_third_moment_abs,
+            updated_fourth_moment,
+        )
+
+        # Abort if the second moment indicates no variance or not enough samples have been collected
+        if updated_second_moment == 0.0 or nn < 2:
+            #self.__evaluator_confidences[e] = 1.0
+            return False
+
+        # Compute moments (equation 4.1)
+        deviance = sqrt(updated_second_moment / nn)
+        beta_bar_moment = third_moment / (nn * deviance**3)
+        beta_hat_moment = third_moment_abs / (nn * deviance**3)
+        kappa_moment = fourth_moment / (nn * deviance**4) - 3
+
+        # Estimate the confidence
+        sample_sqrt = sqrt(nn)
+        sigma_tolerance = sample_sqrt * self.__required_confidence / deviance
+        sigma_tolerance_squared = sigma_tolerance**2
+        kappa_term = 4 * (2 / (nn - 1) + kappa_moment / nn)
+
+        confidence_bound = 2 * (1 - self._scalar_cdf(sigma_tolerance)) + 2 * min(
+            self.__C_0, self.__C_1 / (1 + abs(sigma_tolerance)) ** 3
+        ) * beta_bar_moment / sample_sqrt * min(1.0, kappa_term)
+
+        # This is necessary to preventa  math overflow from the exponential denominator
+        if kappa_term < 1.0 and sigma_tolerance_squared < 1418.0:
+            confidence_bound += (
+                (1 - kappa_term)
+                * abs(sigma_tolerance_squared - 1)
+                * abs(beta_hat_moment)
+                / (exp(0.5 * sigma_tolerance_squared) * 3 * sqrt(2 * pi * n) * deviance**3)
+            )
+
+        # Store the current confidence estimate
+        print(confidence_bound)
+        confidence_bound = abs(confidence_bound)
+        self.__confidence_parameters[*coordinates, 0] = confidence_bound
+        
+        # If the confidence bound is smaller than the required confidence bound, we can trust the result
+        return confidence_bound < self.__confidence_bound
+
+    @staticmethod
+    def _scalar_cdf(scalar: float) -> float:
+        """Assumed cumulative probability of the scalar representation.
+
+        Args:
+            scalar: The scalar value.
+
+        Returns: Cumulative probability between zero and one.
+        """
+
+        return norm.cdf(scalar)
+
+    def runtime_estimates(self) -> None | tuple[np.ndarray, np.ndarray]:
+        scalar_results = self.to_array()
+        return scalar_results, self.__confidence_parameters[::, 0]
+
+    def create_figure(self, **kwargs) -> tuple[plt.FigureBase, VAT]:
         if len(self.grid) == 2 and self.plot_surface:
             return plt.subplots(1, 1, squeeze=False, subplot_kw={"projection": "3d"})
 
@@ -488,7 +657,7 @@ class ScalarEvaluationResult(EvaluationResult):
         # Shuffle grid and respective scalar results so that the selected base dimension is always the first entry
         grid = list(self.grid).copy()
         grid.insert(0, grid.pop(self.__base_dimension_index))
-        scalars = np.moveaxis(self.__scalar_results, self.__base_dimension_index, 0)
+        scalars = np.moveaxis(self.to_array(), self.__base_dimension_index, 0)
 
         if len(grid) == 2 and self.plot_surface:
             return self._update_surface_visualization(scalars, visualization)
@@ -498,7 +667,9 @@ class ScalarEvaluationResult(EvaluationResult):
             self._update_multidim_visualization(scalars, visualization)
 
     def to_array(self) -> np.ndarray:
-        return self.__scalar_results
+        with np.errstate(divide='ignore'):
+            means = self.__artifact_sums / self.__artifact_count
+        return means
 
     @classmethod
     def From_Artifacts(
@@ -661,18 +832,6 @@ class Evaluator(ABC):
 
         return self.abbreviation
 
-    @staticmethod
-    def _scalar_cdf(scalar: float) -> float:
-        """Assumed cumulative probability of the scalar representation.
-
-        Args:
-            scalar: The scalar value.
-
-        Returns: Cumulative probability between zero and one.
-        """
-
-        return norm.cdf(scalar)
-
     @property
     def plot_scale(self) -> str:
         """Scale of the scalar evaluation plot.
@@ -689,6 +848,10 @@ class Evaluator(ABC):
     @plot_scale.setter
     def plot_scale(self, value: str) -> None:
         self.__plot_scale = value
+
+    @abstractmethod
+    def initialize_result(self, grid: Sequence[GridDimension]) -> EvaluationResult:
+        ...  # pragma: no cover
 
     @abstractmethod
     def generate_result(
@@ -710,11 +873,11 @@ class MonteCarloSample:
 
     __sample_index: int  # Index of the sample
     # Grid section from which the sample was generated
-    __grid_section: Tuple[int, ...]
+    __grid_section: tuple[int, ...]
     __artifacts: Sequence[Artifact]  # Artifacts of evaluation
 
     def __init__(
-        self, grid_section: Tuple[int, ...], sample_index: int, artifacts: Sequence[Artifact]
+        self, grid_section: tuple[int, ...], sample_index: int, artifacts: Sequence[Artifact]
     ) -> None:
         """
         Args:
@@ -735,7 +898,7 @@ class MonteCarloSample:
         self.__artifacts = artifacts
 
     @property
-    def grid_section(self) -> Tuple[int, ...]:
+    def grid_section(self) -> tuple[int, ...]:
         """Grid section from which this sample was generated."""
 
         return self.__grid_section
@@ -774,12 +937,12 @@ class GridSection(object):
     __C_1: float = 30.2338
 
     # Section indices within the simulation grid
-    __coordinates: Tuple[int, ...]
+    __coordinates: tuple[int, ...]
     __samples: list[ray.ObjectRef[MonteCarloSample]]  # Set of references to samples generated within this section
     # Confidence level for each evaluator
     __evaluator_confidences: np.ndarray
 
-    def __init__(self, coordinates: Tuple[int, ...], num_evaluators: int) -> None:
+    def __init__(self, coordinates: tuple[int, ...], num_evaluators: int) -> None:
         """
         Args:
             coordinates: Section indices within the simulation grid.
@@ -797,7 +960,7 @@ class GridSection(object):
         self.__fourth_moments = np.zeros(num_evaluators, dtype=float)
 
     @property
-    def coordinates(self) -> Tuple[int, ...]:
+    def coordinates(self) -> tuple[int, ...]:
         """Grid section coordinates within the simulation grid."""
 
         return self.__coordinates
@@ -881,144 +1044,38 @@ class GridSection(object):
 
         return True
 
-    def __update_confidences(
-        self, artifact_scalars: np.ndarray, evaluators: Sequence[Evaluator]
-    ) -> None:
-        """Update the confidence estimates for this grid section.
-
-        Args:
-            artifact_scalars: Scalar representations of the artifacts generated by the sample.
-            evaluators: Evaluators generating the artifacts.
-
-        Raises:
-            ValueError: If the artifact scalars argument is not a vector.
-            ValueError: If the number of artifact scalars does not match the number of configured evaluators.
-        """
-
-        # Raise a value error if the scalars argument is not a vector
-        if artifact_scalars.ndim != 1:
-            raise ValueError("Artifact scalars must be a vector (on-dimensional array)")
-
-        if len(artifact_scalars) != self.__num_evaluators:
-            raise ValueError(
-                "Number of artifact scalars does not match the number of configured evaluators"
-            )
-
-        for e, (
-            scalar,
-            evaluator,
-            mean,
-            second_moment,
-            third_moment,
-            third_moment_abs,
-            fourth_moment,
-        ) in enumerate(
-            zip(
-                artifact_scalars,
-                evaluators,
-                self.__means,
-                self.__second_moments,
-                self.__third_moments,
-                self.__third_moments_abs,
-                self.__fourth_moments,
-            )
-        ):
-            # Return zero if the evaluator tolerance is set to zero
-            if evaluator.tolerance == 0.0:
-                self.__evaluator_confidences[e] = 0.0
-                continue
-
-            n = self.num_samples  # Current number of samples
-            nn = 1 + self.num_samples  # New number of samples
-
-            # Update the moment estimates
-            delta = scalar - mean
-            updated_mean = (n * mean) / nn
-            updated_second_moment = second_moment + delta**2 * (n) / nn
-            updated_third_moment = (
-                third_moment + delta**3 * (n**2 - n) / nn**2 - 3 * second_moment * delta / nn
-            )
-            updated_third_moment_abs = third_moment_abs + abs(
-                delta**3 * (n**2 - n) / nn**2 - 3 * second_moment * delta / nn
-            )
-            updated_fourth_moment = (
-                fourth_moment
-                + delta**4 * (n**3 - n**2 + n) / nn**3
-                + 6 * delta**2 * second_moment / nn**2
-                - 4 * delta * third_moment / nn
-            )
-
-            # Store the updated moment estimates for the next update
-            self.__means[e] = updated_mean
-            self.__second_moments[e] = updated_second_moment
-            self.__third_moments[e] = updated_third_moment
-            self.__third_moments_abs[e] = updated_third_moment_abs
-            self.__fourth_moments[e] = updated_fourth_moment
-
-            # Abort if the second moment indicates no variance or not enough samples have been collected
-            if updated_second_moment == 0.0 or nn < 2:
-                self.__evaluator_confidences[e] = 1.0
-                continue
-
-            # Compute moments (equation 4.1)
-            deviance = sqrt(updated_second_moment / nn)
-            beta_bar_moment = third_moment / (nn * deviance**3)
-            beta_hat_moment = third_moment_abs / (nn * deviance**3)
-            kappa_moment = fourth_moment / (nn * deviance**4) - 3
-
-            # Estimate the confidence
-            sample_sqrt = sqrt(nn)
-            sigma_tolerance = sample_sqrt * evaluator.tolerance / deviance
-            sigma_tolerance_squared = sigma_tolerance**2
-            kappa_term = 4 * (2 / (nn - 1) + kappa_moment / nn)
-
-            confidence_bound = 2 * (1 - evaluator._scalar_cdf(sigma_tolerance)) + 2 * min(
-                self.__C_0, self.__C_1 / (1 + abs(sigma_tolerance)) ** 3
-            ) * beta_bar_moment / sample_sqrt * min(1.0, kappa_term)
-
-            # This is necessary to preventa math overflow from the exponential denominator
-            if kappa_term < 1.0 and sigma_tolerance_squared < 1418.0:
-                confidence_bound += (
-                    (1 - kappa_term)
-                    * abs(sigma_tolerance_squared - 1)
-                    * abs(beta_hat_moment)
-                    / (exp(0.5 * sigma_tolerance_squared) * 3 * sqrt(2 * pi * n) * deviance**3)
-                )
-
-            # Store the current confidence estimate
-            self.__evaluator_confidences[e] = 1.0 - min(1.0, confidence_bound)
-
 
 class UnmatchableException(Exception):
     """An exception that can never get caught."""
     ...
 
 
-@ray.remote(num_cpus=0)
+@ray.remote
 class MonteCarloQueueManager(object):
 
     def __init__(self, grid: Sequence[GridDimension], num_samples: int, batch_size: int | None = None) -> None:
 
+        self.__num_grid_sections = np.prod([d.num_sample_points for d in grid], dtype=int)
         self.__num_samples = num_samples
-        self.__batch_size = np.prod([d.num_sample_points for d in grid], dtype=int) if batch_size is None else batch_size
-        self.__max_num_samples = np.prod([d.num_sample_points for d in grid], dtype=int) * num_samples
+        
+        self.__batch_size = self.__num_grid_sections if batch_size is None else batch_size
+        self.__max_num_samples = self.__num_grid_sections * num_samples
 
         # Generate section sample containers and meta-information
         self.__grid_task_count = np.zeros(
             [d.num_sample_points for d in grid], dtype=int
         )
-        
+
         self.__active_section_coordinates = np.empty(
-            [d.num_sample_points for d in grid] + [len(grid)], dtype=int
+            [self.__num_grid_sections, len(grid)], dtype=int
         )
         for c, coordinates in enumerate(np.ndindex(
             *[d.num_sample_points for d in grid]
         )):
             # Store the section coordinates
             self.__active_section_coordinates[c, :] = coordinates
-        
-        self.__num_sections = np.prod([d.num_sample_points for d in grid], dtype=int)
-        self.__num_active_sections = self.__num_sections
+
+        self.__num_active_sections = self.__num_grid_sections
 
     def next_batch(self) -> list[tuple[int, ...]]:
         """Get the next batch of simulation grid sections to run.
@@ -1047,24 +1104,135 @@ class MonteCarloQueueManager(object):
 
             # Disable the section if the number of tasks is expected to be met
             if task_count >= self.__num_samples:
-
-                self.__num_active_sections -= 1
+                self.disable_section(section_coordinates)
                 skip_offset += 1
                 if self.__num_active_sections < 1:
                     break
 
-                self.__active_section_coordinates = np.delete(self.__active_section_coordinates, active_section_index, axis=0)
-
         return batch
 
-    def query_progress(self) -> float:
+    def disable_section(self, coordinates: tuple[int, ...]) -> None:
+        """Disable a section from being processed in the future.
 
+        Once a section is disabled, its respective coordinates will not be returned by the :meth:`next_batch` method anymore.
+        
+        Args:
+            coordinates: Coordinates of the section to disable.
+        """
+
+        # Find the index of the section to disable
+        section_index = np.where(
+            (self.__active_section_coordinates == coordinates).all(axis=1)
+        )[0]
+
+        # Abort if the section indices do not exist
+        # This might happend if the section was already disabled
+        if len(section_index) < 1:
+            return
+
+        # Remove the section from the list of currently active sections
+        self.__active_section_coordinates = np.delete(
+            self.__active_section_coordinates, section_index[0], axis=0
+        )
+        self.__num_active_sections -= 1
+
+    def query_progress(self) -> float:
+        """Query the current absolute progress of the managed simulation.
+        
+        Returns: A floating point value between zero and one indicating the progress of the simulation.
+        """
+        
+        # No active sections left, return 100% progress
         if self.__num_active_sections < 1:
-            # No active sections left, return 100% progress
             return 1.0
 
-        return ((self.__num_sections - self.__num_active_sections) * self.__num_samples + np.sum(self.__grid_task_count[self.__active_section_coordinates])) / self.__max_num_samples
+        return ((self.__num_grid_sections - self.__num_active_sections) * self.__num_samples + np.sum(self.__grid_task_count[self.__active_section_coordinates])) / self.__max_num_samples
 
+@ray.remote
+class MonteCarloCollector(object):
+    """Collects samples from actors during simulation runtime."""
+    
+    __queue_manager: ray.ObjectRef[MonteCarloQueueManager]
+    __actors: list[ray.ObjectRef[MonteCarloActor]]
+    __results: list[EvaluationResult]
+    __active: bool = True  # Whether the collector is still running
+
+    def __init__(
+        self,
+        queue_manager: ray.ObjectRef[MonteCarloQueueManager],
+        actors: list[ray.ObjectRef[MonteCarloActor]],
+        grid: Sequence[GridDimension],
+        evaluators: list[Evaluator],
+    ) -> None:
+
+        self.__queue_manager = queue_manager
+        self.__actors = actors
+        self.__results = [e.initialize_result(grid) for e in evaluators]
+        self.__active = False
+        self.__future_map: dict[Any, ray.ObjectRef[MonteCarloActor]] = {}
+
+    def run(self) -> None:
+        """Start up the collector, collecting samples from all actors."""
+
+        self.__future_map = {a.fetch_results.remote(): a for a in self.__actors}
+        self.__active = True
+
+        while(self.__active):
+            # Wait for the next sample to be available
+            ready_future = ray.wait(list(self.__future_map.keys()), num_returns=1)[0][0]
+
+            # Process the samples received from the actor
+            self.__process_samples(ready_future, True)
+
+            # Re-queue the request for the next result
+            actor = self.__future_map.pop(ready_future)
+            self.__future_map[actor.fetch_results.remote()] = actor
+
+    def __process_samples(self, ready_future: ray.ObjectRef[list[ray.ObjectRef[list[MonteCarloSample]]]], compute_confidence: bool) -> None:
+
+        sample_references: list[ray.ObjectRef[list[MonteCarloSample]]] = ray.get(ready_future)
+            
+        for sample_reference in sample_references:
+            # Get the sample from the actor
+            samples: list[MonteCarloSample] = ray.get(sample_reference)
+
+            for sample in samples:
+
+                # Get the grid section coordinates from the sample
+                section_coordinates = sample.grid_section
+
+                # Update all evaluation results with their respective sample artifacts
+                for evaluation_result, artifact in zip(
+                    self.__results, sample.artifacts
+                ):
+                    confident = evaluation_result.add_artifact(section_coordinates, artifact, compute_confidence)
+                    
+                    # If the confidence threshold is reached, disable the section
+                    if compute_confidence and confident:
+                        self.__queue_manager.disable_section.remote(section_coordinates)
+
+
+    def query_estimates(self) -> tuple[np.ndarray, np.ndarray]:
+        return [r.runtime_estimates() for r in self.__results]
+    
+    def fetch_results(self) -> list[EvaluationResult]:
+        """Fetch the results of the collector run.
+
+        Returns: List of evaluation results from the collector run.
+        """
+
+        # Stop the collector
+        self.__active = False
+
+        # Process the last results within the queue
+        query_futures = list(self.__future_map.keys())
+        futures = ray.wait(query_futures, num_returns=len(query_futures))[0]
+
+        for future in futures:
+            self.__process_samples(future, False)
+
+        return self.__results
+    
 
 class MonteCarloActor(Generic[MO]):
     """Monte Carlo Simulation Actor.
@@ -1087,7 +1255,7 @@ class MonteCarloActor(Generic[MO]):
     def __init__(
         self,
         queue_manager: ray.ObjectRef[MonteCarloQueueManager],
-        argument_tuple: Tuple[MO, Sequence[GridDimension], Sequence[Evaluator]],
+        argument_tuple: tuple[MO, Sequence[GridDimension], Sequence[Evaluator]],
         index: int,
         stage_arguments: Mapping[str, Sequence[tuple]] | None = None,
         catch_exceptions: bool = True,
@@ -1177,7 +1345,9 @@ class MonteCarloActor(Generic[MO]):
         Returns: List of results from the actor run.
         """
 
-        return self.__results.copy()
+        results = self.__results.copy()
+        self.__results.clear()  # Clear the results after fetching
+        return results
 
     def __run_batch(self, batch: list[tuple[int, ...]]) -> list[MonteCarloSample]:
         """Run the simulation actor.
@@ -1294,35 +1464,25 @@ class MonteCarloResult(object):
         self,
         grid: Sequence[GridDimension],
         evaluators: Sequence[Evaluator],
-        sample_grid: np.ndarray,
+        results: Sequence[EvaluationResult],
         performance_time: float,
     ) -> None:
         """
         Args:
             grid: Dimensions over which the simulation has swept.
             evaluators: Evaluators used to evaluated the simulation artifacts.
-            sample_grid: Grid containing evaluation artifacts collected over the grid iterations.
+            results: Evaluation results generated by the evaluators.
             performance_time: Time required to compute the simulation.
 
         Raises:
             ValueError: If the dimensions of `samples` do not match the supplied sweeping dimensions and evaluators.
         """
 
+        # Store init arguments as attributes
         self.__grid = grid
         self.__evaluators = evaluators
+        self.__results = results
         self.__performance_time = performance_time
-
-        self.__results = []
-        for evaluator_idx, evaluator in enumerate(evaluators):
-            # Collect artifacts for the respective evaluator
-            evaluator_artifacts = np.empty(tuple([d.num_sample_points for d in grid]), dtype=object)
-
-            for section_coordinates in np.ndindex(*[d.num_sample_points for d in grid]):
-                evaluator_artifacts[section_coordinates] = [
-                    sample.artifacts[evaluator_idx] for sample in sample_grid[section_coordinates]
-                ]
-
-            self.__results.append(evaluator.generate_result(grid, evaluator_artifacts))
 
     @property
     def performance_time(self) -> float:
@@ -1499,11 +1659,11 @@ class GridDimension(object):
     :class:`SamplePoints<.SamplePoint>`.
     """
 
-    __considered_objects: Tuple[Any, ...]
+    __considered_objects: tuple[Any, ...]
     __dimension: str
     __sample_points: List[SamplePoint]
     __title: str | None
-    __setter_lambdas: Tuple[Callable, ...]
+    __setter_lambdas: tuple[Callable, ...]
     __plot_scale: str
     __tick_format: ValueType
     __first_impact: str | None
@@ -1511,7 +1671,7 @@ class GridDimension(object):
 
     def __init__(
         self,
-        considered_objects: Any | Tuple[Any, ...],
+        considered_objects: Any | tuple[Any, ...],
         dimension: str,
         sample_points: Sequence[SamplePoint | Any],
         title: str | None = None,
@@ -1643,7 +1803,7 @@ class GridDimension(object):
                 )
 
     @property
-    def considered_objects(self) -> Tuple[Any, ...]:
+    def considered_objects(self) -> tuple[Any, ...]:
         """Considered objects of this grid section."""
 
         return self.__considered_objects
@@ -1889,29 +2049,17 @@ def register(*args, **kwargs) -> Callable[[Any], RegisteredDimension]:
 class MonteCarlo(Generic[MO]):
     """Grid of parameters over which to iterate the simulation."""
 
-    # Interval between result logs in seconds
     __progress_log_interval: float
-
-    # Maximum number of samples per grid element
     __num_samples: int
-    # Minimum number of samples per grid element
     __min_num_samples: int
-    # Number of dedicated actors spawned during simulation
     __num_actors: int
-    __investigated_object: MO  # The object to be investigated
-    # Simulation grid dimensions which make up the grid
+    __investigated_object: MO
     __dimensions: List[GridDimension]
-    # Evaluators used to process the investigated object sample state
     __evaluators: List[Evaluator]
-    __console: Console  # Console the simulation writes to
-    # Printing behaviour of the simulation during runtime
+    __console: Console
     __console_mode: ConsoleMode
-    # Number of samples per section block
-    __section_block_size: int | None
-    # Number of CPUs reserved for a single actor
     __cpus_per_actor: int
     runtime_env: bool
-    # Catch exceptions occuring during simulation runtime
     catch_exceptions: bool
 
     def __init__(
@@ -1923,13 +2071,12 @@ class MonteCarlo(Generic[MO]):
         num_actors: int | None = None,
         console: Console | None = None,
         console_mode: ConsoleMode = ConsoleMode.INTERACTIVE,
-        section_block_size: int | None = None,
         ray_address: str | None = None,
         ray_port: int = 6379,
         cpus_per_actor: int = 1,
         runtime_env: bool = False,
         catch_exceptions: bool = True,
-        progress_log_interval: float = 1.0,
+        progress_log_interval: float = 2.0,
         premature_stopping: bool = False,
         debug: bool = False,
     ) -> None:
@@ -1997,10 +2144,9 @@ class MonteCarlo(Generic[MO]):
         self.__investigated_object = investigated_object
         self.__evaluators = [] if evaluators is None else list(evaluators)
         self.num_samples = num_samples
-        self.min_num_samples = min_num_samples if min_num_samples >= 0 else int(0.5 * num_samples)
+        self.min_num_samples = min_num_samples if min_num_samples >= 0 else int(0.1 * num_samples)
         self.__console = Console(log_path=False) if console is None else console
         self.__console_mode = console_mode
-        self.section_block_size = section_block_size
         self.cpus_per_actor = cpus_per_actor
         self.num_actors = num_actors
         self.catch_exceptions = catch_exceptions
@@ -2093,8 +2239,8 @@ class MonteCarlo(Generic[MO]):
         # Render simulation grid table
         if self.__console_mode != ConsoleMode.SILENT and len(self.__dimensions) > 0:
             dimension_table = Table(title="Simulation Grid", title_justify="left")
-            dimension_table.add_column("Dimension", style="cyan")
-            dimension_table.add_column("Sections", style="green")
+            dimension_table.add_column("Dimension")
+            dimension_table.add_column("Sections", style="cyan")
 
             for dimension in self.__dimensions:
                 section_str = ""
@@ -2110,151 +2256,119 @@ class MonteCarlo(Generic[MO]):
             self.console.print(dimension_table)
             self.console.print()
 
-        # Launch actors and queue the first tasks
+        # Launch actors, actor manager and 
         with self.console.status("Launching Actors ...", spinner="dots") if self.__console_mode == ConsoleMode.INTERACTIVE else nullcontext():  # type: ignore
-            
-            # Initialize queue manager
-            queue_manager = MonteCarloQueueManager.remote(self.dimensions, self.num_samples)
 
-            # Generate the actor pool
-            actors: list[MonteCarloActor] = [actor.options(num_cpus=self.cpus_per_actor).remote(queue_manager, (self.__investigated_object, self.__dimensions, self.__evaluators), a, stage_arguments, self.catch_exceptions) for a in range(self.num_actors)]  # type: ignore[attr-defined]
+            # Initialize queue manager
+            queue_manager = MonteCarloQueueManager.options(num_cpus=0, enable_task_events=self.__debug).remote(self.dimensions, self.num_samples)
+
+            # Initialize actor pool
+            actors: list[MonteCarloActor] = [actor.options(num_cpus=self.cpus_per_actor, max_concurrency=2, enable_task_events=self.__debug).remote(queue_manager, (self.__investigated_object, self.__dimensions, self.__evaluators), a, stage_arguments, self.catch_exceptions) for a in range(self.num_actors)]  # type: ignore[attr-defined]
+
+            # Initialize collector
+            collector = MonteCarloCollector.options(num_cpus=0, max_concurrency=2, enable_task_events=self.__debug).remote(queue_manager, actors, self.dimensions, self.evaluators)
 
         # Initialize progress bar
         progress = Progress(
             SpinnerColumn(), *Progress.get_default_columns(), TimeElapsedColumn(), transient=True
         )
         task1 = progress.add_task("Computing", total=1.0)
-        last_progress_plot_time = 0.0
-        num_result_rows = min(10, self.section_block_size)
-
-        # Initialize debug information if the respective flag is enabled
-        load_tracker = Progress(TextColumn("[progress.description]{task.description}"), BarColumn(), TaskProgressColumn())
-        load_tracker_task = load_tracker.add_task("Controller load", total=1.0, start=False)
-        wait_times: list[float] = []
+        num_result_rows = min(10, min_batch_size)
 
         # Display results in a live table
         status_group = Group("", progress)
-        if self.__debug:
-            status_group.renderables.append(load_tracker)
 
         with Live(status_group, console=self.console) if self.__console_mode == ConsoleMode.INTERACTIVE else nullcontext():  # type: ignore
-            
+
             # Start running the actors
             for a in actors:
-                a.run.remote()
+                _ = a.run.remote()
 
-            from time import sleep
-            progress_estimate: float = 0.0
+            # Start the collector
+            _ = collector.run.remote()
 
             # Keep executing until all samples are computed
-            while progress_estimate < 1.0:
-                
-                sleep(self.__progress_log_interval)
-                
-                # Fetch a progress estimate from the queue manager
-                progress_estimate = ray.get(queue_manager.query_progress.remote())
+            queue_progress: float = 0.0
+            while queue_progress < 1.0:
 
-                # Approximate the load by averaging the wait times
-                load_estimate = 0.0 # (1.0 - min(1.0, np.mean(wait_times))) if len(wait_times) > 0 else 0.0
-                #wait_times.clear()
+                sleep(self.__progress_log_interval)
+
+                # Fetch a progress estimate from the queue manager
+                queue_progress = ray.get(queue_manager.query_progress.remote())
 
                 # Update progress bar visualization
                 if self.__console_mode == ConsoleMode.INTERACTIVE:
 
-                    progress.update(task1, completed=progress_estimate)
-                    load_tracker.update(load_tracker_task, completed=load_estimate)
+                    progress.update(task1, completed=queue_progress)
+                    
+                    if collector is not None:
+                     
+                        # Fetch an intermediate parameter estimate from the collector
+                        intermediate_estimates: list[None | tuple[np.ndarray, np.ndarray]] = ray.get(collector.query_estimates.remote())
+                        
+                        results_table = Table(min_width=self.console.measure(progress).minimum)
 
-                    result_rows: List[List[str]] = []
+                        # Add columns for parameter dimensions
+                        for dimension in self.__dimensions:
+                            results_table.add_column(dimension.title,  style="cyan")
 
-                    """for section_index, sample_list_reference in result.samples.items():
-                        samples = ray.get(sample_list_reference)
-                        for sample in samples:
+                        # Add columns for available intermediate estimates
+                        for evaluator, estimate in zip(self.__evaluators, intermediate_estimates):
+                            if estimate is not None:
+                                results_table.add_column(evaluator.abbreviation)
+
+                        # Add rows for each parameter estimate
+                        for section_index in np.ndindex(*[d.num_sample_points for d in self.__dimensions]):
                             results_row: List[str] = []
 
-                            for dimension, section_idx in zip(
-                                self.__dimensions, sample.grid_section
-                            ):
+                            # Add dimension sample points
+                            for dimension, section_idx in zip(self.__dimensions, section_index):
                                 results_row.append(dimension.sample_points[section_idx].title)
 
-                            results_row.append(str(sample_grid[sample.grid_section].num_samples))
+                            # Add intermediate estimates
+                            for estimate in intermediate_estimates:
+                                if estimate is not None:
+                                    results_row.append(f"{estimate[0][section_index]:.2f} ± {estimate[1][section_index]:.2f}")
 
-                            for artifact in sample.artifacts:
-                                results_row.append(str(artifact))
-
-                            result_rows.append(results_row)
-                            if len(result_rows) >= num_result_rows:
-                                break
-
-                        if len(result_rows) >= num_result_rows:
-                            break
-
-                    # Render results table
-                    results_table = Table(min_width=self.console.measure(progress).minimum)
-
-                    for dimension in self.__dimensions:
-                        results_table.add_column(dimension.title, style="cyan")
-
-                    results_table.add_column("#", style="blue")
-
-                    for evaluator in self.__evaluators:
-                        results_table.add_column(evaluator.abbreviation, style="green")
-
-                    for result_row in result_rows:
-                        results_table.add_row(*result_row)
-
-                    status_group.renderables[0] = results_table"""
+                            results_table.add_row(*results_row)
+    
+                        status_group.renderables[0] = results_table
 
                 elif self.__console_mode == ConsoleMode.LINEAR:
-                    self.console.log(f"Progress: {100*absolute_progress/max_num_samples:.3f}, Load: {100*load_estimate:.3f}%")
-
-                # Abort exectuion loop prematurely if all sections are flagged inactive
-                # Some results might be lost, but who cares? Speed! Speed! Speed!
-                # if absolute_progress >= self.max_num_samples:
-                #    break
+                    self.console.log(f"Progress: {100*progress/max_num_samples:.0f}%")
 
             # Make the console pretty upon exit
             if self.__console_mode == ConsoleMode.INTERACTIVE:
-                status_group.renderables[0] = ""
                 progress.update(task1, completed=max_num_samples)
 
         # Fetch all remote samples at the controller#
         with self.console.status("Collecting remote results ...", spinner="dots") if self.__console_mode == ConsoleMode.INTERACTIVE else nullcontext():  # type: ignore
-            
-            raw_grid = np.empty([dimension.num_sample_points for dimension in self.__dimensions], dtype=object)
-            for raw_grid_section in np.ndindex(*[d.num_sample_points for d in self.__dimensions]):
-                raw_grid[raw_grid_section] = []
 
-            results_futures = [a.fetch_results.remote() for a in actors]
-            while len(results_futures) > 0:
-                results_reference = ray.wait(results_futures, num_returns=1, timeout=None)[0][0]
-                results_futures.remove(results_reference)
-
-                results: list[ray.ObjectRef[list[MonteCarloSample]]] = ray.get(results_reference)
-                for run_results_reference in results:
-                    for sample in ray.get(run_results_reference):
-                        raw_grid[sample.grid_section].append(sample)
+            evaluation_results: list[EvaluationResult] = ray.get(collector.fetch_results.remote())
 
         # Measure elapsed time
         stop_time = perf_counter()
         performance_time = stop_time - start_time
 
         # Compute the final result
-        with self.console.status("Computing final results ...", spinner="dots") if self.__console_mode == ConsoleMode.INTERACTIVE else nullcontext():  # type: ignore
-            result = MonteCarloResult(
-                self.__dimensions, self.__evaluators, raw_grid, performance_time
-            )
+        simulation_result = MonteCarloResult(
+            self.__dimensions,
+            self.__evaluators,
+            evaluation_results,
+            0.0,
+        )
+
+        # Print results
+        if self.__console_mode == ConsoleMode.LINEAR:
+            self.console.print("")
+            simulation_result.print(self.console)
 
         # Print finish notifier
         if self.__console_mode != ConsoleMode.SILENT:
             self.console.print()
             self.console.log(f"Simulation finished after {performance_time:.2f} seconds")
 
-        # Print results
-        if self.__console_mode != ConsoleMode.SILENT:
-            self.console.print("")
-            result.print(self.console)
-
-        return result
+        return simulation_result
 
     @property
     def investigated_object(self) -> Any:
@@ -2485,12 +2599,12 @@ class MonteCarlo(Generic[MO]):
 
     @property
     def console_mode(self) -> ConsoleMode:
-        """Console mode during simulation runtime."""
+        """Console output behaviour during simulation runtime."""
 
         return self.__console_mode
 
     @console_mode.setter
-    def console_mode(self, value: Union[ConsoleMode, str]) -> None:
+    def console_mode(self, value: ConsoleMode | str) -> None:
         # Convert string arguments to iterable
         if isinstance(value, str):
             value = ConsoleMode[value]
