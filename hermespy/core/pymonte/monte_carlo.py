@@ -439,7 +439,7 @@ class MonteCarlo(Generic[MO]):
                         status_group.renderables[0] = results_table
 
                 elif self.__console_mode == ConsoleMode.LINEAR:
-                    self.console.log(f"Progress: {100*queue_progress}%")
+                    self.console.log(f"Progress: {100*queue_progress:.2f}%")
 
             # Make the console pretty upon exit
             if self.__console_mode == ConsoleMode.INTERACTIVE:

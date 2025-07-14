@@ -170,7 +170,7 @@ class ScalarEvaluationResult(EvaluationResult):
             self._update_multidim_visualization(scalars, visualization)
 
     def to_array(self) -> np.ndarray:
-        with catch_warnings(action='ignore'):
+        with catch_warnings(record=False):
             return self.__artifact_sums / self.__artifact_count
         
     @classmethod

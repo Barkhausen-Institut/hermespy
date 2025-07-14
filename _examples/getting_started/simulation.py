@@ -7,7 +7,7 @@ from hermespy.modem import BitErrorEvaluator, SimplexLink, RootRaisedCosineWavef
 
 # Create a new simulation
 from hermespy.core import ConsoleMode
-simulation = Simulation(console_mode=ConsoleMode.INTERACTIVE, num_samples=10000)
+simulation = Simulation(console_mode=ConsoleMode.LINEAR, num_samples=1000000)
 
 # Add two dedicated devices to the simulation
 tx_device = simulation.new_device()
@@ -48,11 +48,11 @@ drop.device_transmissions[0].mixed_signal.plot(title='Tx Signal')
 drop.device_receptions[1].operator_receptions[0].equalized_symbols.plot_constellation(title='Rx Constellation')
 
 # Add a bit error rate evaluation to the simulation
-ber = BitErrorEvaluator(link, link,  1e-4, .95)
+ber = BitErrorEvaluator(link, link, 1e-6, .999)
 
 # Iterate over the receiving device's SNR and estimate the respective bit error rates
 import numpy as np
-simulation.new_dimension('noise_level', dB(*np.linspace(32, -16, 13, endpoint=True)), rx_device)
+simulation.new_dimension('noise_level', dB(*np.linspace(100, -16, 117, endpoint=True)), rx_device)
 simulation.add_evaluator(ber)
 
 simulation.results_dir = simulation.default_results_dir()
