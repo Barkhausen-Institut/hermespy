@@ -205,7 +205,7 @@ class MonteCarloCollector(object):
             self.__process_samples(future, False)
 
         return self.__results
-    
+
 
 class MonteCarloActor(Generic[MO]):
     """Monte Carlo Simulation Actor.
@@ -216,7 +216,7 @@ class MonteCarloActor(Generic[MO]):
 
     __queue_manager: ObjectRef[MonteCarloQueueManager]
     __results: list[ObjectRef[list[MonteCarloSample]]]
-    
+
     catch_exceptions: bool  # Catch exceptions during run.
     __investigated_object: MO  # Copy of the object to be investigated
     __grid: Sequence[GridDimension]  # Simulation grid dimensions
@@ -301,17 +301,17 @@ class MonteCarloActor(Generic[MO]):
 
             # Get the next batch of sections to run
             batch = get(self.__queue_manager.next_batch.remote())
-            
+
             # If the batch is empty, i.e. no more sections to run, break the loop
             if len(batch) < 1:
                 break
 
             # Run the batch and stash the result
             result = self.__run_batch(batch)
-            
+
             if len(result) > 0:
                 self.__results.append(put(result))
-            
+
     def fetch_results(self) -> list[ObjectRef[list[MonteCarloSample]]]:
         """Fetch the results of the actor run.
 
@@ -391,7 +391,7 @@ class MonteCarloActor(Generic[MO]):
 
                 # Update the recent section for the next iteration
                 recent_section_indices = section_index_array
-                
+
             # Convert the samples dictionary to ray object references
             return samples
 

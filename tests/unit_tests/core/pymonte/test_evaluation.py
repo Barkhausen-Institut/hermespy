@@ -15,7 +15,6 @@ from hermespy.core.pymonte.grid import GridDimension
 from hermespy.core.pymonte.scalar import ScalarEvaluationResult
 from ...utils import SimulationTestContext
 from .object import TestObjectMock
-from .test_evaluation import EvaluatorMock, EvaluationMock
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
@@ -25,6 +24,30 @@ __version__ = "1.5.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
+
+
+class EvaluationMock(EvaluationTemplate[float, Visualization]):
+    def artifact(self) -> ArtifactTemplate[float]:
+        return ArtifactTemplate[float](self.evaluation)
+
+    def _prepare_visualization(self, figure: plt.Figure | None, axes: VAT, **kwargs) -> Visualization:
+        return MagicMock(spec=Visualization)
+
+    def _update_visualization(self, visualization: Visualization, **kwargs) -> None:
+        pass
+
+
+class EvaluationResultMock(EvaluationResult):
+    """Mock of an evaluation result"""
+
+    def to_array(self) -> np.ndarray:
+        return np.random.standard_normal([d.num_sample_points for d in self.grid])
+
+    def _prepare_visualization(self, figure: plt.Figure | None, axes: VAT, **kwargs) -> PlotVisualization:
+        return MagicMock(spec=PlotVisualization)
+
+    def _update_visualization(self, visualization: Visualization, **kwargs) -> None:
+        pass
 
 
 class SumEvaluator(Evaluator):
@@ -156,30 +179,6 @@ class TestEvaluator(TestCase):
         self.evaluator.plot_scale = plot_scale
 
         self.assertEqual(plot_scale, self.evaluator.plot_scale)
-
-
-class EvaluationMock(EvaluationTemplate[float, Visualization]):
-    def artifact(self) -> ArtifactTemplate[float]:
-        return ArtifactTemplate[float](self.evaluation)
-
-    def _prepare_visualization(self, figure: plt.Figure | None, axes: VAT, **kwargs) -> Visualization:
-        return MagicMock(spec=Visualization)
-
-    def _update_visualization(self, visualization: Visualization, **kwargs) -> None:
-        pass
-
-
-class EvaluationResultMock(EvaluationResult):
-    """Mock of an evaluation result"""
-
-    def to_array(self) -> np.ndarray:
-        return np.random.standard_normal([d.num_sample_points for d in self.grid])
-
-    def _prepare_visualization(self, figure: plt.Figure | None, axes: VAT, **kwargs) -> PlotVisualization:
-        return MagicMock(spec=PlotVisualization)
-
-    def _update_visualization(self, visualization: Visualization, **kwargs) -> None:
-        pass
 
 
 class TestEvaluationResult(TestCase):

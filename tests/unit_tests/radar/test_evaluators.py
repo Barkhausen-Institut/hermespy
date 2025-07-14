@@ -11,7 +11,7 @@ from numpy.random import default_rng
 from numpy.testing import assert_array_equal
 
 from hermespy.channel import SingleTargetRadarChannel
-from hermespy.core.monte_carlo import Evaluation, GridDimension, ScalarEvaluationResult
+from hermespy.core.pymonte import Evaluation, GridDimension, ScalarEvaluationResult
 from hermespy.core.scenario import ScenarioMode, Scenario
 from hermespy.radar import DetectionProbEvaluator, FMCW, PointDetection, Radar, RadarPointCloud, ReceiverOperatingCharacteristic, ThresholdDetector
 from hermespy.radar.evaluators import RadarEvaluator, RocArtifact, RocEvaluation, RocEvaluationResult, RootMeanSquareArtifact, RootMeanSquareError, RootMeanSquareErrorResult, RootMeanSquareEvaluation

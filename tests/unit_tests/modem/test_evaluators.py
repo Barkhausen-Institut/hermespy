@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy.random import default_rng
 
-from hermespy.core.monte_carlo import ScalarEvaluationResult, ArtifactTemplate
+from hermespy.core.pymonte import ScalarEvaluationResult, ArtifactTemplate
 from hermespy.modem import TransmittingModem, ReceivingModem, RootRaisedCosineWaveform
 from hermespy.modem.evaluators import BitErrorEvaluation, BitErrorEvaluator, BlockErrorEvaluation, BlockErrorEvaluator, CommunicationEvaluator, FrameErrorEvaluation, FrameErrorEvaluator, ThroughputEvaluation, ThroughputEvaluator, ConstellationEVM, EVMEvaluation
 from hermespy.simulation import SimulatedDevice
