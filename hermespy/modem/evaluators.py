@@ -138,7 +138,7 @@ class CommunicationEvaluator(Evaluator, Serializable):
         return self.__transmission, self.__reception
     
     def initialize_result(self, grid) -> ScalarEvaluationResult:
-        return ScalarEvaluationResult(grid, self, self.__confidence_bound, self.__required_confidence, self.__plot_surface)
+        return ScalarEvaluationResult(grid, self, self.__confidence_bound, self.__required_confidence, 32, self.__plot_surface)
 
     def generate_result(
         self, grid: Sequence[GridDimension], artifacts: np.ndarray

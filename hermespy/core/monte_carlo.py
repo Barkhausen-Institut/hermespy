@@ -11,6 +11,8 @@ from math import exp, sqrt
 from os import path
 from time import perf_counter, sleep
 from typing import Any, Callable, Generic, List, Mapping, Type, TypeVar, SupportsFloat
+from typing_extensions import override
+from warnings import catch_warnings
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
@@ -233,7 +235,7 @@ class EvaluationResult(Visualizable[PlotVisualization], ABC):
         ...  # pragma: no cover
 
     @abstractmethod
-    def runtime_estimates(self) -> None | tuple[np.ndarray, np.ndarray]:
+    def runtime_estimates(self) -> None | np.ndarray:
         ...
 
     def __result_to_str(self, value: Any) -> str:
@@ -450,12 +452,8 @@ class EvaluationResult(Visualizable[PlotVisualization], ABC):
 class ScalarEvaluationResult(EvaluationResult):
     """Base class for scalar evaluation results."""
 
-    # Berry-Esseen constants ToDo: Check the proper selection here
-    __C_0: float = 0.4785
-    __C_1: float = 30.2338
-
-    __confidence_bound: float
-    __required_confidence: float
+    __accuracy_tolerance: float
+    __confidence: float
     __artifact_sums: np.ndarray
     __artifact_count: np.ndarray
     plot_surface: bool
@@ -465,8 +463,9 @@ class ScalarEvaluationResult(EvaluationResult):
         self,
         grid: Sequence[GridDimension],
         evaluator: Evaluator,
-        confidence_bound: float = 0.0,
-        required_confidence: float = 1.0,
+        accuracy_tolerance: float = 0.0,
+        confidence: float = 1.0,
+        min_num_samples: int = 32,
         plot_surface: bool = True,
     ) -> None:
         """
@@ -480,12 +479,15 @@ class ScalarEvaluationResult(EvaluationResult):
         """
 
         # Ensure that the confidence bound is between zero and one
-        if required_confidence > 1.0 or required_confidence < 0.0:
+        if confidence > 1.0 or confidence < 0.0:
             raise ValueError("Coinfidence requirement must be between zero and one")
         
         # Ensure the confidence bound is non-negative
-        if confidence_bound < 0.0:
+        if accuracy_tolerance < 0.0:
             raise ValueError("Confidence bound must be non-negative")
+        
+        if min_num_samples < 2:
+            raise ValueError("Minimum number of samples must be at least two")
 
         # Initialize base class
         EvaluationResult.__init__(self, grid, evaluator)
@@ -493,19 +495,12 @@ class ScalarEvaluationResult(EvaluationResult):
         # Initialize confidence parameters
         grid_dimensions = [d.num_sample_points for d in grid]
         
-        # Confidence parameters are the grid dimensions plus an additional dimension of
-        # magnitude five
-        # [A x B x ... x [confidence, second_moment, third_moment, third_moment_abs, fourth_moment]]
-        self.__confidence_parameters = np.zeros(grid_dimensions + [5], dtype=float)
-
-        # In the beggining, the estimated confidence bound is set to infinity,
-        # indicating that there is no confidence in the result
-        self.__confidence_parameters[::, 0] = float('inf')
-
         # Initialize class attributes
-        self.__confidence_bound = confidence_bound
-        self.__required_confidence = required_confidence
+        self.__accuracy_tolerance = accuracy_tolerance
+        self.__confidence = confidence
+        self.__min_num_samples = min_num_samples
         self.__artifact_sums = np.zeros(grid_dimensions, dtype=float)
+        self.__artifact_squared_sums = np.zeros(grid_dimensions, dtype=float)
         self.__artifact_count = np.zeros(grid_dimensions, dtype=int)
         self.plot_surface = plot_surface
         self.__base_dimension_index = 0
@@ -515,6 +510,7 @@ class ScalarEvaluationResult(EvaluationResult):
         # The plotting title should resolve to the represented evaluator's title
         return self.evaluator.title
 
+    @override
     def add_artifact(self, coordinates: tuple[int, ...], artifact: Artifact, compute_confidence: bool = True) -> bool:
         
         confident = False
@@ -522,97 +518,20 @@ class ScalarEvaluationResult(EvaluationResult):
         
         if scalar is not None:
             sum = self.__artifact_sums[coordinates] + scalar
+            squared_sum = self.__artifact_squared_sums[coordinates] + scalar**2
             count = self.__artifact_count[coordinates] + 1
+            
             self.__artifact_sums[coordinates] = sum
+            self.__artifact_squared_sums[coordinates] = squared_sum
             self.__artifact_count[coordinates] = count
 
-            if compute_confidence:
-                confident = self.__update_confidence(coordinates, scalar, sum, count)
+            if compute_confidence and (count % self.__min_num_samples) == 0:
+                std = ((squared_sum - (sum**2 / count)) / (count - 1))**.5
+                if std > 0.0:
+                    confidence = 2 * (1 - self._scalar_cdf(count**.5 * self.__accuracy_tolerance / std))
+                    confident = confidence <= self.__confidence
 
         return confident
-                
-    def __update_confidence(
-        self,
-        coordinates: tuple[int, ...],
-        scalar: float,
-        sum: float,
-        count: int,
-    ) -> bool:
-        """Update the confidence estimates for this grid section.
-        """
-
-        # Return zero if the evaluator tolerance is set to zero
-        #if self.__confidence_bound == 0.0:
-        #    return False
-
-        mean = sum / count  # Current mean
-        second_moment, third_moment, third_moment_abs, fourth_moment = self.__confidence_parameters[*coordinates, 1:].flatten()
-
-
-        n = count - 1  # Current number of samples
-        nn = count  # New number of samples
-
-        # Update the moment estimates
-        delta = scalar - mean
-        updated_second_moment = second_moment + delta**2 * (n) / nn
-        updated_third_moment = (
-            third_moment + delta**3 * (n**2 - n) / nn**2 - 3 * second_moment * delta / nn
-        )
-        updated_third_moment_abs = third_moment_abs + abs(
-            delta**3 * (n**2 - n) / nn**2 - 3 * second_moment * delta / nn
-        )
-        updated_fourth_moment = (
-            fourth_moment
-            + delta**4 * (n**3 - n**2 + n) / nn**3
-            + 6 * delta**2 * second_moment / nn**2
-            - 4 * delta * third_moment / nn
-        )
-
-        # Store the updated moment estimates for the next update
-        self.__confidence_parameters[*coordinates, 1:] = (
-            updated_second_moment,
-            updated_third_moment,
-            updated_third_moment_abs,
-            updated_fourth_moment,
-        )
-
-        # Abort if the second moment indicates no variance or not enough samples have been collected
-        if updated_second_moment == 0.0 or nn < 2:
-            #self.__evaluator_confidences[e] = 1.0
-            return False
-
-        # Compute moments (equation 4.1)
-        deviance = sqrt(updated_second_moment / nn)
-        beta_bar_moment = third_moment / (nn * deviance**3)
-        beta_hat_moment = third_moment_abs / (nn * deviance**3)
-        kappa_moment = fourth_moment / (nn * deviance**4) - 3
-
-        # Estimate the confidence
-        sample_sqrt = sqrt(nn)
-        sigma_tolerance = sample_sqrt * self.__required_confidence / deviance
-        sigma_tolerance_squared = sigma_tolerance**2
-        kappa_term = 4 * (2 / (nn - 1) + kappa_moment / nn)
-
-        confidence_bound = 2 * (1 - self._scalar_cdf(sigma_tolerance)) + 2 * min(
-            self.__C_0, self.__C_1 / (1 + abs(sigma_tolerance)) ** 3
-        ) * beta_bar_moment / sample_sqrt * min(1.0, kappa_term)
-
-        # This is necessary to preventa  math overflow from the exponential denominator
-        if kappa_term < 1.0 and sigma_tolerance_squared < 1418.0:
-            confidence_bound += (
-                (1 - kappa_term)
-                * abs(sigma_tolerance_squared - 1)
-                * abs(beta_hat_moment)
-                / (exp(0.5 * sigma_tolerance_squared) * 3 * sqrt(2 * pi * n) * deviance**3)
-            )
-
-        # Store the current confidence estimate
-        print(confidence_bound)
-        confidence_bound = abs(confidence_bound)
-        self.__confidence_parameters[*coordinates, 0] = confidence_bound
-        
-        # If the confidence bound is smaller than the required confidence bound, we can trust the result
-        return confidence_bound < self.__confidence_bound
 
     @staticmethod
     def _scalar_cdf(scalar: float) -> float:
@@ -626,9 +545,9 @@ class ScalarEvaluationResult(EvaluationResult):
 
         return norm.cdf(scalar)
 
-    def runtime_estimates(self) -> None | tuple[np.ndarray, np.ndarray]:
-        scalar_results = self.to_array()
-        return scalar_results, self.__confidence_parameters[::, 0]
+    @override
+    def runtime_estimates(self) -> None | np.ndarray:
+        return self.to_array()
 
     def create_figure(self, **kwargs) -> tuple[plt.FigureBase, VAT]:
         if len(self.grid) == 2 and self.plot_surface:
@@ -667,10 +586,9 @@ class ScalarEvaluationResult(EvaluationResult):
             self._update_multidim_visualization(scalars, visualization)
 
     def to_array(self) -> np.ndarray:
-        with np.errstate(divide='ignore'):
-            means = self.__artifact_sums / self.__artifact_count
-        return means
-
+        with catch_warnings(action='ignore'):
+            return self.__artifact_sums / self.__artifact_count
+        
     @classmethod
     def From_Artifacts(
         cls: Type[SERT],
@@ -931,120 +849,6 @@ class MonteCarloSample:
         return np.array([artifact.to_scalar() for artifact in self.artifacts], dtype=float)
 
 
-class GridSection(object):
-    # Berry-Esseen constants ToDo: Check the proper selection here
-    __C_0: float = 0.4785
-    __C_1: float = 30.2338
-
-    # Section indices within the simulation grid
-    __coordinates: tuple[int, ...]
-    __samples: list[ray.ObjectRef[MonteCarloSample]]  # Set of references to samples generated within this section
-    # Confidence level for each evaluator
-    __evaluator_confidences: np.ndarray
-
-    def __init__(self, coordinates: tuple[int, ...], num_evaluators: int) -> None:
-        """
-        Args:
-            coordinates: Section indices within the simulation grid.
-        """
-
-        self.__coordinates = coordinates
-        self.__samples = list()
-        self.__num_evaluators = num_evaluators
-
-        self.__evaluator_confidences = np.zeros(num_evaluators, dtype=float)
-        self.__means = np.zeros(num_evaluators, dtype=float)
-        self.__second_moments = np.zeros(num_evaluators, dtype=float)
-        self.__third_moments = np.zeros(num_evaluators, dtype=float)
-        self.__third_moments_abs = np.zeros(num_evaluators, dtype=float)
-        self.__fourth_moments = np.zeros(num_evaluators, dtype=float)
-
-    @property
-    def coordinates(self) -> tuple[int, ...]:
-        """Grid section coordinates within the simulation grid."""
-
-        return self.__coordinates
-
-    @property
-    def num_samples(self) -> int:
-        """Number of already generated samples within this section."""
-
-        return len(self.__samples)
-
-    @property
-    def samples(self) -> list[MonteCarloSample]:
-        """The collected evaluation samples within this grid section."""
-
-        return self.__samples.copy()
-
-    def stash_samples(
-        self,
-        samples: ray.ObjectRef[list[MonteCarloSample]]
-    ) -> None:
-
-        self.__samples.append(samples)
-
-    def add_samples(
-        self,
-        samples: ray.ObjectRef[MonteCarloSample] | Sequence[ray.ObjectRef[MonteCarloSample]],
-        evaluators: Sequence[Evaluator],
-        update_confidences: bool = True,
-    ) -> None:
-        """Add a new sample to this grid section collection.
-
-        Args:
-            samples: Samples to be added to this section.
-            evaluators: References to the evaluators generating the sample artifacts.
-            update_confidences: Whether to update the confidence estimates for this grid section.
-
-        Raises:
-            ValueError: If the number of artifacts in `sample` does not match the initialization.
-        """
-        
-        self.__samples.append(samples)
-
-#        _samples = samples if isinstance(samples, Sequence) else [samples]
-#
-#        for sample in _samples:
-#            # Make sure the provided number of artifacts is correct
-#            if sample.num_artifacts != self.__num_evaluators:
-#                raise ValueError(
-#                    f"Number of sample artifacts ({sample.num_artifacts}) does not match the "
-#                    f"configured number of evaluators ({self.__num_evaluators})"
-#                )
-#
-#            # Update confidences
-#            if update_confidences:
-#                self.__update_confidences(sample.artifact_scalars, evaluators)
-#
-#            # Append sample to the stored list
-#            self.__samples.append(sample)
-
-    @property
-    def confidences(self) -> np.ndarray:
-        """Confidence in the estimated evaluations."""
-
-        return self.__evaluator_confidences
-
-    def confidence_status(self, evaluators: Sequence[Evaluator]) -> bool:
-        """Check if each evaluator has reached its required confidence thershold.
-
-        Conidence indicates that the simulation for the parameter combination this grid section represents
-        may be aborted, i.e. no more samples are required.
-
-        Args:
-            evaluators: Evaluators giving feedback about their cofidence status.
-
-        Returns: Confidence indicator.
-        """
-
-        for evaluator, confidence in zip(evaluators, self.__evaluator_confidences):
-            if confidence < evaluator.confidence:
-                return False
-
-        return True
-
-
 class UnmatchableException(Exception):
     """An exception that can never get caught."""
     ...
@@ -1148,6 +952,7 @@ class MonteCarloQueueManager(object):
 
         return ((self.__num_grid_sections - self.__num_active_sections) * self.__num_samples + np.sum(self.__grid_task_count[self.__active_section_coordinates])) / self.__max_num_samples
 
+
 @ray.remote
 class MonteCarloCollector(object):
     """Collects samples from actors during simulation runtime."""
@@ -1212,7 +1017,7 @@ class MonteCarloCollector(object):
                         self.__queue_manager.disable_section.remote(section_coordinates)
 
 
-    def query_estimates(self) -> tuple[np.ndarray, np.ndarray]:
+    def query_estimates(self) -> list[None | np.ndarray]:
         return [r.runtime_estimates() for r in self.__results]
     
     def fetch_results(self) -> list[EvaluationResult]:
@@ -2304,7 +2109,7 @@ class MonteCarlo(Generic[MO]):
                     if collector is not None:
                      
                         # Fetch an intermediate parameter estimate from the collector
-                        intermediate_estimates: list[None | tuple[np.ndarray, np.ndarray]] = ray.get(collector.query_estimates.remote())
+                        intermediate_estimates: list[None | np.ndarray] = ray.get(collector.query_estimates.remote())
                         
                         results_table = Table(min_width=self.console.measure(progress).minimum)
 
@@ -2328,18 +2133,18 @@ class MonteCarlo(Generic[MO]):
                             # Add intermediate estimates
                             for estimate in intermediate_estimates:
                                 if estimate is not None:
-                                    results_row.append(f"{estimate[0][section_index]:.2f} ± {estimate[1][section_index]:.2f}")
+                                    results_row.append(f"{estimate[section_index]:.2f}")
 
                             results_table.add_row(*results_row)
     
                         status_group.renderables[0] = results_table
 
                 elif self.__console_mode == ConsoleMode.LINEAR:
-                    self.console.log(f"Progress: {100*progress/max_num_samples:.0f}%")
+                    self.console.log(f"Progress: {100*queue_progress}%")
 
             # Make the console pretty upon exit
             if self.__console_mode == ConsoleMode.INTERACTIVE:
-                progress.update(task1, completed=max_num_samples)
+                progress.update(task1, completed=1.0)
 
         # Fetch all remote samples at the controller#
         with self.console.status("Collecting remote results ...", spinner="dots") if self.__console_mode == ConsoleMode.INTERACTIVE else nullcontext():  # type: ignore
