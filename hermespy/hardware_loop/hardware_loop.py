@@ -36,7 +36,7 @@ from hermespy.core import (
     VAT,
     Verbosity,
 )
-from hermespy.core.monte_carlo import GridDimension, MonteCarloSample, VT
+from hermespy.core import GridDimension, MonteCarloSample, VT
 from hermespy.tools import tile_figures
 from .physical_device import PDT
 from .physical_device_dummy import PhysicalScenarioDummy
@@ -879,7 +879,7 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
         signal(SIGINT, self.__sigint_handler)
 
         # Initialize the sample grid
-        sample_grid = SampleGrid(self.__dimensions, self.__evaluators)
+        results = [e.initialize_result(self.__dimensions) for e in self.__evaluators]
 
         # Print indicator that the simulation is starting
         if (
@@ -985,8 +985,8 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
                         section_indices, sample_index, loop_sample.artifacts
                     )
 
-                    # Save sample
-                    sample_grid[section_indices].add_samples(grid_sample, self.__evaluators)
+                    for result, artifact in zip(results, loop_sample.artifacts):
+                        result.add_artifact(section_indices, artifact)
 
                     # Print results
                     if (
@@ -1029,7 +1029,7 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
 
         # Compute the evaluation results
         result: MonteCarloResult = MonteCarloResult(
-            self.__dimensions, self.__evaluators, sample_grid, 0.0
+            self.__dimensions, self.__evaluators, results, 0.0
         )
 
         return result

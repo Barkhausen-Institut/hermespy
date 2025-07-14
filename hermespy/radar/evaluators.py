@@ -72,8 +72,6 @@ from hermespy.core import (
     Serializable,
     SerializationBackend,
     VAT,
-)
-from hermespy.core.monte_carlo import (
     Evaluator,
     Evaluation,
     EvaluationResult,

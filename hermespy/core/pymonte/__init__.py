@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from .artifact import Artifact, ArtifactTemplate, FAT
-from .actors import MonteCarloActor
+from .actors import MonteCarloActor, MonteCarloSample
 from .evaluation import Evaluation, EvaluationTemplate, EvaluationResult, Evaluator
 from .grid import GridDimension, RegisteredDimension, register, ScalarDimension
 from .monte_carlo import MonteCarlo, MonteCarloResult
@@ -21,6 +21,7 @@ __all__ = [
     "ArtifactTemplate",
     "FAT",
     "MonteCarloActor",
+    "MonteCarloSample",
     "Evaluation",
     "EvaluationTemplate",
     "EvaluationResult",
