@@ -48,7 +48,7 @@ drop.device_transmissions[0].mixed_signal.plot(title='Tx Signal')
 drop.device_receptions[1].operator_receptions[0].equalized_symbols.plot_constellation(title='Rx Constellation')
 
 # Add a bit error rate evaluation to the simulation
-ber = BitErrorEvaluator(link, link)
+ber = BitErrorEvaluator(link, link,  1e-4, .95)
 
 # Iterate over the receiving device's SNR and estimate the respective bit error rates
 import numpy as np

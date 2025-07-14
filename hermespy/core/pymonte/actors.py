@@ -36,7 +36,7 @@ class MonteCarloQueueManager(object):
         self.__grid_task_count = np.zeros(
             [d.num_sample_points for d in grid], dtype=int
         )
-
+        self.__active_section_flags = np.ones_like(self.__grid_task_count, dtype=bool)
         self.__active_section_coordinates = np.empty(
             [self.__num_grid_sections, len(grid)], dtype=int
         )
@@ -105,9 +105,10 @@ class MonteCarloQueueManager(object):
         self.__active_section_coordinates = np.delete(
             self.__active_section_coordinates, section_index[0], axis=0
         )
+        self.__active_section_flags[coordinates] = False
         self.__num_active_sections -= 1
 
-    def query_progress(self) -> float:
+    def query_progress(self) -> tuple[float, np.ndarray]:
         """Query the current absolute progress of the managed simulation.
         
         Returns: A floating point value between zero and one indicating the progress of the simulation.
@@ -115,9 +116,9 @@ class MonteCarloQueueManager(object):
         
         # No active sections left, return 100% progress
         if self.__num_active_sections < 1:
-            return 1.0
+            return 1.0, self.__active_section_flags
 
-        return ((self.__num_grid_sections - self.__num_active_sections) * self.__num_samples + np.sum(self.__grid_task_count[self.__active_section_coordinates])) / self.__max_num_samples
+        return ((self.__num_grid_sections - self.__num_active_sections) * self.__num_samples + np.sum(self.__grid_task_count[self.__active_section_coordinates])) / self.__max_num_samples, self.__active_section_flags
 
 
 @remote

@@ -32,7 +32,7 @@ SERT = TypeVar("SERT", bound="ScalarEvaluationResult")
 class ScalarEvaluationResult(EvaluationResult):
     """Base class for scalar evaluation results."""
 
-    __accuracy_tolerance: float
+    __accuracy: float
     __confidence: float
     __artifact_sums: np.ndarray
     __artifact_count: np.ndarray
@@ -43,16 +43,18 @@ class ScalarEvaluationResult(EvaluationResult):
         self,
         grid: Sequence[GridDimension],
         evaluator: Evaluator,
-        accuracy_tolerance: float = 0.0,
+        accuracy: float = 0.0,
         confidence: float = 1.0,
-        min_num_samples: int = 32,
+        min_num_samples: int = 1024,
         plot_surface: bool = True,
     ) -> None:
         """
         Args:
             grid: Simulation grid.
             scalar_results: Scalar results generated from collecting samples over the simulation grid.
-            tolerance:
+            accuracy: Acceptable bound around the mean value of the estimated scalar performance indicator.
+            tolerance: Required confidence level for the given `accuracy`.
+            min_num_samples: Minimum number of samples required to compute the confidence bound.
             plot_surface:
                 Enable surface plotting for two-dimensional grids.
                 Enabled by default.
@@ -63,7 +65,7 @@ class ScalarEvaluationResult(EvaluationResult):
             raise ValueError("Coinfidence requirement must be between zero and one")
         
         # Ensure the confidence bound is non-negative
-        if accuracy_tolerance < 0.0:
+        if accuracy < 0.0:
             raise ValueError("Confidence bound must be non-negative")
         
         if min_num_samples < 2:
@@ -76,7 +78,7 @@ class ScalarEvaluationResult(EvaluationResult):
         grid_dimensions = [d.num_sample_points for d in grid]
         
         # Initialize class attributes
-        self.__accuracy_tolerance = accuracy_tolerance
+        self.__accuracy = accuracy
         self.__confidence = confidence
         self.__min_num_samples = min_num_samples
         self.__artifact_sums = np.zeros(grid_dimensions, dtype=float)
@@ -106,10 +108,12 @@ class ScalarEvaluationResult(EvaluationResult):
             self.__artifact_count[coordinates] = count
 
             if compute_confidence and (count % self.__min_num_samples) == 0:
+                # The confidence is an implementation of Algorithm 1
+                # from ON NON-ASYMPTOTIC OPTIMAL STOPPING CRITERIA IN MONTE CARLO SIMULATIONS by Bayer et al.
                 std = ((squared_sum - (sum**2 / count)) / (count - 1))**.5
                 if std > 0.0:
-                    confidence = 2 * (1 - self._scalar_cdf(count**.5 * self.__accuracy_tolerance / std))
-                    confident = confidence <= self.__confidence
+                    confidence = 2 * (1 - self._scalar_cdf(count**.5 * self.__accuracy / std))
+                    confident = confidence < self.__confidence
 
         return confident
 

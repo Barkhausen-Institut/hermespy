@@ -395,7 +395,7 @@ class MonteCarlo(Generic[MO]):
                 sleep(self.__progress_log_interval)
 
                 # Fetch a progress estimate from the queue manager
-                queue_progress = ray.get(queue_manager.query_progress.remote())
+                queue_progress, active_map = ray.get(queue_manager.query_progress.remote())
 
                 # Update progress bar visualization
                 if self.__console_mode == ConsoleMode.INTERACTIVE:
@@ -421,6 +421,8 @@ class MonteCarlo(Generic[MO]):
                         # Add rows for each parameter estimate
                         for section_index in np.ndindex(*[d.num_sample_points for d in self.__dimensions]):
                             results_row: list[str] = []
+                            
+                            section_active: bool = active_map[section_index]
 
                             # Add dimension sample points
                             for dimension, section_idx in zip(self.__dimensions, section_index):
@@ -429,7 +431,8 @@ class MonteCarlo(Generic[MO]):
                             # Add intermediate estimates
                             for estimate in intermediate_estimates:
                                 if estimate is not None:
-                                    results_row.append(f"{estimate[section_index]:.2f}")
+                                    color_tag = "[orange3]" if section_active else "[green]"
+                                    results_row.append(f"{color_tag}{estimate[section_index]:.2f}")
 
                             results_table.add_row(*results_row)
     
