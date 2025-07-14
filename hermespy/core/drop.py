@@ -7,7 +7,7 @@ from typing import Generic, Type, TypeVar
 from .device import DeviceReception, DeviceTransmission, DRT, DTT
 from .factory import Serializable, SerializationProcess, DeserializationProcess
 from .signal_model import Signal
-from .monte_carlo import Artifact
+from .pymonte import Artifact
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"

@@ -18,7 +18,7 @@ from .device import (
     Transmission,
 )
 from .hooks import Hook
-from .monte_carlo import Artifact, Evaluation, ScalarEvaluationResult, Evaluator, GridDimension
+from .pymonte import Artifact, Evaluation, ScalarEvaluationResult, Evaluator, GridDimension
 from .signal_model import Signal
 from .visualize import PlotVisualization, StemVisualization, VAT
 
