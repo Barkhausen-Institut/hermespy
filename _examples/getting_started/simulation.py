@@ -7,7 +7,7 @@ from hermespy.modem import BitErrorEvaluator, SimplexLink, RootRaisedCosineWavef
 
 # Create a new simulation
 from hermespy.core import ConsoleMode
-simulation = Simulation(console_mode=ConsoleMode.LINEAR, num_samples=1000000)
+simulation = Simulation(console_mode=ConsoleMode.INTERACTIVE, num_samples=10000)
 
 # Add two dedicated devices to the simulation
 tx_device = simulation.new_device()

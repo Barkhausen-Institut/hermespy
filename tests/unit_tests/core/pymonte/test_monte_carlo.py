@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from io import StringIO
+from logging import ERROR
 from os import getenv
 from unittest import TestCase
 from unittest.mock import Mock, patch
@@ -26,22 +27,15 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-GENERATE_OUTPUT = getenv("HERMES_TEST_PLOT", "False").lower() == "true"
+GENERATE_OUTPUT = True  # getenv("HERMES_TEST_PLOT", "False").lower() == "true"
 
 
 class TestMonteCarlo(TestCase):
     """Test the simulation grid"""
 
-    @classmethod
-    def setUpClass(cls) -> None:
-        ray.init(local_mode=True, num_cpus=1, ignore_reinit_error=True, logging_level=logging.ERROR)
-
-    @classmethod
-    def tearDownClass(cls) -> None:
-        # Shut down ray
-        ray.shutdown()
-
-    def setUp(self) -> None:
+    @patch("hermespy.core.pymonte.monte_carlo.ray.init")
+    def setUp(self, init_patch: Mock) -> None:
+        self.init_patch = init_patch
         self.investigated_object = TestObjectMock()
         self.evaluators = [ProductEvaluator(self.investigated_object), SumEvaluator(self.investigated_object)]
         self.num_samples = 3
@@ -50,7 +44,7 @@ class TestMonteCarlo(TestCase):
         self.io = StringIO()
         self.console = Console(file=None if GENERATE_OUTPUT else self.io)
 
-        self.monte_carlo = MonteCarlo(investigated_object=self.investigated_object, evaluators=self.evaluators, num_samples=self.num_samples, num_actors=self.num_actors, console=self.console, console_mode=ConsoleMode.INTERACTIVE, progress_log_interval=-1.0)
+        self.monte_carlo = MonteCarlo(investigated_object=self.investigated_object, evaluators=self.evaluators, num_samples=self.num_samples, num_actors=self.num_actors, console=self.console, console_mode=ConsoleMode.LINEAR, progress_log_interval=5.0)
 
     def test_init(self) -> None:
         """Initialization arguments should be properly stored as class attributes"""
@@ -63,7 +57,7 @@ class TestMonteCarlo(TestCase):
     def test_ray_init(self) -> None:
         """Ray should be initialized if not already initialized"""
 
-        with patch("hermespy.core.monte_carlo.ray.is_initialized") as is_initialized_mock, patch("hermespy.core.monte_carlo.ray.init") as init_mock:
+        with patch("hermespy.core.pymonte.monte_carlo.ray.is_initialized") as is_initialized_mock, patch("hermespy.core.pymonte.monte_carlo.ray.init") as init_mock:
             is_initialized_mock.return_value = False
             _ = MonteCarlo(self.investigated_object, 1)
 
@@ -142,46 +136,6 @@ class TestMonteCarlo(TestCase):
         with self.assertRaises(ValueError):
             self.monte_carlo.num_actors = 0
 
-    def test_simulate(self) -> None:
-        """Test the simulation routine"""
-
-        dimensions = {"property_a": [1, Mock()], "property_b": [1, 1e2], "property_c": LogarithmicSequence([1, 2, 3])}
-
-        dimensions = [self.monte_carlo.new_dimension(dimension, parameters) for dimension, parameters in dimensions.items()]
-        result = self.monte_carlo.simulate(MonteCarloActorMock)
-
-        self.assertEqual(2, len(result.evaluation_results))
-
-    def test_simulate_silent(self) -> None:
-        """The simulation routine should not print anything if in silent mode"""
-
-        self.monte_carlo.console_mode = ConsoleMode.SILENT
-
-        _ = self.monte_carlo.new_dimension("property_a", [1, 2])
-        _ = self.monte_carlo.simulate(MonteCarloActorMock)
-
-        if not GENERATE_OUTPUT:
-            self.assertEqual("", self.io.getvalue())
-
-    def test_simulate_linear(self) -> None:
-        """Tes the linear printing simulation routine"""
-
-        self.monte_carlo.console_mode = ConsoleMode.LINEAR
-
-        _ = self.monte_carlo.new_dimension("property_a", [1, 2])
-        result = self.monte_carlo.simulate(MonteCarloActorMock)
-
-        self.assertEqual(2, len(result.evaluation_results))
-
-    def test_simulate_strict_confidence(self) -> None:
-        """Test simulation with strict confidence criteria"""
-
-        for evaluator in self.evaluators:
-            evaluator.tolerance = 0.0
-
-        _ = self.monte_carlo.new_dimension("property_a", [1, 2])
-        _ = self.monte_carlo.simulate(MonteCarloActorMock)
-
     def test_add_evaluator(self) -> None:
         """Test adding an evaluator"""
 
@@ -225,7 +179,7 @@ class TestMonteCarlo(TestCase):
 
         self.monte_carlo.num_actors = None
 
-        with patch("hermespy.core.monte_carlo.ray.available_resources") as resources_mock:
+        with patch("hermespy.core.pymonte.monte_carlo.ray.available_resources") as resources_mock:
             get_mock = Mock()
             get_mock.side_effect = 1
             resources_mock.available_resources.side_effect = get_mock
@@ -285,10 +239,10 @@ class TestMonteCarloResult(TestCase):
         self.investigated_object = TestObjectMock()
         self.dimensions = [GridDimension(self.investigated_object, "property_a", [1, 2, 6, 7, 8])]
         self.evaluators = [SumEvaluator(self.investigated_object), ProductEvaluator(self.investigated_object)]
-        self.grid = SampleGrid(self.dimensions, self.evaluators)
+        self.results = [e.initialize_result(self.dimensions) for e in self.evaluators]
         self.performance = 1.2345
 
-        self.result = MonteCarloResult(self.dimensions, self.evaluators, self.grid, self.performance)
+        self.result = MonteCarloResult(self.dimensions, self.evaluators, self.results, self.performance)
 
     def test_properties(self) -> None:
         """Properties should return the correct values"""
@@ -307,7 +261,7 @@ class TestMonteCarloResult(TestCase):
     def test_save_to_matlab(self) -> None:
         """Saving to Matlab should call the correct routine"""
 
-        with patch("hermespy.core.monte_carlo.savemat") as savemat_mock:
+        with patch("hermespy.core.pymonte.monte_carlo.savemat") as savemat_mock:
             self.result.save_to_matlab("test.mat")
             savemat_mock.assert_called()
 

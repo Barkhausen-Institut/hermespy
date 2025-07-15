@@ -3,20 +3,20 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Generic, Sequence, TypeVar
+from typing_extensions import override
 
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
 import numpy as np
 from matplotlib.axis import Axis
 from matplotlib.lines import Line2D
-from mpl_toolkits.mplot3d import Axes3D  # type: ignore
+import matplotlib.ticker as ticker
 from rich.console import Console
 from rich.table import Table
 
 from ..logarithmic import lin2db, ValueType
-from ..visualize import PlotVisualization, Visualizable, VT
+from ..visualize import PlotVisualization, Visualizable, VAT, VT
 from .artifact import Artifact
-from .grid import GridDimension
+from .grid import GridDimensionInfo
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
@@ -77,7 +77,6 @@ class EvaluationTemplate(Generic[ET, VT], Evaluation[VT], ABC):
         return self.__evaluation
 
 
-
 class EvaluationResult(Visualizable[PlotVisualization], ABC):
     """Result of an evaluation routine iterating over a parameter grid.
 
@@ -85,10 +84,16 @@ class EvaluationResult(Visualizable[PlotVisualization], ABC):
     step within the evaluation routine.
     """
 
-    __grid: Sequence[GridDimension]
+    __grid: Sequence[GridDimensionInfo]
     __evaluator: Evaluator | None
+    __base_dimension_index: int
 
-    def __init__(self, grid: Sequence[GridDimension], evaluator: Evaluator | None = None) -> None:
+    def __init__(
+        self,
+        grid: Sequence[GridDimensionInfo],
+        evaluator: Evaluator | None = None,
+        base_dimension_index: int = 0,
+    ) -> None:
         """
         Args:
 
@@ -106,9 +111,10 @@ class EvaluationResult(Visualizable[PlotVisualization], ABC):
         # Initialize class attributes
         self.__grid = grid
         self.__evaluator = evaluator
+        self.__base_dimension_index = base_dimension_index
 
     @property
-    def grid(self) -> Sequence[GridDimension]:
+    def grid(self) -> Sequence[GridDimensionInfo]:
         """Paramter grid over which the simulation iterated."""
 
         return self.__grid
@@ -118,6 +124,12 @@ class EvaluationResult(Visualizable[PlotVisualization], ABC):
         """Evaluator that generated this result."""
 
         return self.__evaluator
+
+    @property
+    def base_dimension_index(self) -> int:
+        """Index of the base dimension used for plotting."""
+
+        return self.__base_dimension_index
 
     @abstractmethod
     def add_artifact(
@@ -141,7 +153,11 @@ class EvaluationResult(Visualizable[PlotVisualization], ABC):
 
     @abstractmethod
     def runtime_estimates(self) -> None | np.ndarray:
-        ...
+        """Extract a runtime estimate for this evaluation result.
+        
+        Returns: A numpy array containing the runtime estimates for each grid section. If no estimates are available, :py:obj:`None` is returned.
+        """
+        ...  # pragma: no cover
 
     def __result_to_str(self, value: object) -> str:
         """Convert a single result value to its string representation.
@@ -215,6 +231,30 @@ class EvaluationResult(Visualizable[PlotVisualization], ABC):
         """
         ...  # pragma: no cover
 
+    @override
+    def _prepare_visualization(
+        self, figure: plt.Figure | None, axes: VAT, **kwargs
+    ) -> PlotVisualization:
+
+        lines = self._prepare_multidim_visualization(axes[0, 0])
+        line_array = np.empty_like(axes, dtype=np.object_)
+        line_array[0, 0] = lines
+    
+        return PlotVisualization(figure, axes, line_array)
+
+    @override
+    def _update_visualization(self, visualization: PlotVisualization, **kwargs) -> None:
+        # If the grid contains no data, dont plot anything
+        if len(self.grid) < 1:
+            return self._plot_empty(visualization)
+
+        # Shuffle grid and respective scalar results so that the selected base dimension is always the first entry
+        grid = list(self.grid).copy()
+        grid.insert(0, grid.pop(self.base_dimension_index))
+        scalars = np.moveaxis(self.to_array(), self.base_dimension_index, 0)
+    
+        self._update_multidim_visualization(scalars, visualization)
+
     @staticmethod
     def _configure_axis(axis: Axis, tick_format: ValueType = ValueType.LIN) -> None:
         """Subroutine to configure an axis.
@@ -226,35 +266,6 @@ class EvaluationResult(Visualizable[PlotVisualization], ABC):
 
         if tick_format is ValueType.DB:
             axis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"{lin2db(x):.2g}dB"))
-
-    def _prepare_surface_visualization(self, ax: Axes3D) -> list[Line2D]:
-        # Configure axes labels and scales
-        ax.set(
-            xlabel=self.grid[0].title, ylabel=self.grid[1].title, zlabel=self.evaluator.abbreviation
-        )
-
-        EvaluationResult._configure_axis(ax.xaxis, self.grid[0].tick_format)
-        EvaluationResult._configure_axis(ax.yaxis, self.grid[1].tick_format)
-        if self.evaluator is not None:
-            EvaluationResult._configure_axis(ax.zaxis, self.evaluator.tick_format)
-
-        # x_points = np.asarray([s.value for s in self.grid[0].sample_points])
-        # y_points = np.asarray([s.value for s in self.grid[1].sample_points])
-        # y, x = np.meshgrid(y_points, x_points)
-
-        # ax.plot_surface(x.astype(float), y.astype(float), np.zeros_like(y, dtype=np.float64))
-        return []  # 3D plotting returns a poly3d collection that is not supported
-
-    def _update_surface_visualization(
-        self, data: np.ndarray, visualization: PlotVisualization
-    ) -> None:
-        """Plot two-dimensional simulation results into a three-dimensional axes system."""
-
-        x_points = np.asarray([s.value for s in self.grid[0].sample_points])
-        y_points = np.asarray([s.value for s in self.grid[1].sample_points])
-        y, x = np.meshgrid(y_points, x_points)
-
-        visualization.axes[0, 0].plot_surface(x.astype(float), y.astype(float), data)
 
     def _prepare_multidim_visualization(self, ax: plt.Axes) -> list[Line2D]:
         # Abort if the grid contains no data
@@ -275,9 +286,9 @@ class EvaluationResult(Visualizable[PlotVisualization], ABC):
         ax.set_xscale(self.grid[x_dimension].plot_scale)
 
         # Configure axes ticks
-        EvaluationResult._configure_axis(ax.xaxis, self.grid[x_dimension].tick_format)
+        self._configure_axis(ax.xaxis, self.grid[x_dimension].tick_format)
         if self.evaluator is not None:
-            EvaluationResult._configure_axis(ax.yaxis, self.evaluator.tick_format)
+            self._configure_axis(ax.yaxis, self.evaluator.tick_format)
 
         subgrid = list(self.grid).copy()
         del subgrid[x_dimension]
@@ -353,47 +364,24 @@ class EvaluationResult(Visualizable[PlotVisualization], ABC):
         for ax in visualization.axes.flat:
             ax.text(0.5, 0.5, "NO DATA AVAILABLE", horizontalalignment="center")
 
+
 class Evaluator(ABC):
     """Evaluation routine for investigated object states, extracting performance indicators of interest.
 
     Evaluators represent the process of extracting arbitrary performance indicator samples :math:`X_m` in the form of
     :class:`.Artifact` instances from investigated object states.
-    Once a :class:`.MonteCarloActor` has set its investigated object to a new random state,
-    it calls the :meth:`evaluate<hermespy.core.monte_carlo.Evaluator.evaluate>` routines of all configured evaluators,
-    collecting the resulting respective :class:`.Artifact` instances.
-
-    For a given set of :class:`.Artifact` instances,
-    evaluators are expected to report a :meth:`.confidence` which may result in a premature abortion of the
-    sample collection routine for a single :class:`.GridSection`.
-    By default, the routine suggested by :footcite:t:`2014:bayer` is applied:
-    Considering a tolerance :math:`\\mathrm{TOL} \\in \\mathbb{R}_{++}` the confidence in the mean performance indicator
-
-    .. math::
-
-        \\bar{X}_M = \\frac{1}{M} \\sum_{m = 1}^{M} X_m
-
-    is considered  sufficient if a threshold :math:`\\delta \\in \\mathbb{R}_{++}`, defined as
-
-    .. math::
-
-        \\mathrm{P}\\left(\\left\\| \\bar{X}_M - \\mathrm{E}\\left[ X \\right] \\right\\| > \\mathrm{TOL} \\right) \\leq \\delta
-
-    has been crossed.
-    The number of collected actually collected artifacts per :class:`.GridSection` :math:`M \\in [M_{\\mathrm{min}}, M_{\\mathrm{max}}]`
-    is between a minimum number of required samples :math:`M_{\\mathrm{min}} \\in \\mathbb{R}_{+}` and an upper limit of
-    :math:`M_{\\mathrm{max}} \\in \\mathbb{R}_{++}`.
     """
 
     tick_format: ValueType
-    __confidence: float
-    __tolerance: float
     __plot_scale: str  # Plot axis scaling
 
-    def __init__(self) -> None:
-        self.confidence = 1.0
-        self.tolerance = 0.0
-        self.plot_scale = "linear"
-        self.tick_format = ValueType.LIN
+    def __init__(
+        self,
+        plot_scale: str = "linear",
+        tick_format: ValueType = ValueType.LIN,
+    ) -> None:
+        self.plot_scale = plot_scale
+        self.tick_format = tick_format
 
     @abstractmethod
     def evaluate(self) -> Evaluation:
@@ -424,60 +412,6 @@ class Evaluator(ABC):
         """
         ...  # pragma: no cover
 
-    @property
-    def confidence(self) -> float:
-        """Confidence threshold required for premature simulation abortion.
-
-        The confidence threshold :math:`\\delta \\in [0, 1]` is the upper bound to the
-        confidence level
-
-        .. math::
-
-            \\mathrm{P}\\left(\\left\\| \\bar{X}_M - \\mathrm{E}\\left[ X \\right] \\right\\| > \\mathrm{TOL} \\right)
-
-        at which the sample collection for a single :class:`.GridSection` may be prematurely aborted :footcite:p:`2014:bayer`.
-
-        Raises:
-            ValueError: If confidence is lower than zero or greater than one.
-        """
-
-        return self.__confidence
-
-    @confidence.setter
-    def confidence(self, value: float) -> None:
-        if value < 0.0 or value > 1.0:
-            raise ValueError("Confidence level must be in the interval between zero and one")
-
-        self.__confidence = value
-
-    @property
-    def tolerance(self) -> float:
-        """Tolerance level required for premature simulation abortion.
-
-        The tolerance :math:`\\mathrm{TOL} \\in \\mathbb{R}_{++}` is the upper bound to the interval
-
-        .. math::
-
-           \\left\\| \\bar{X}_M - \\mathrm{E}\\left[ X \\right] \\right\\|
-
-        by which the performance indicator estimation :math:`\\bar{X}_M` may diverge from the actual expected
-        value :math:`\\mathrm{E}\\left[ X \\right]`.
-
-        Returns: Non-negative tolerance :math:`\\mathrm{TOL}`.
-
-        Raises:
-            ValueError: If tolerance is negative.
-        """
-
-        return self.__tolerance
-
-    @tolerance.setter
-    def tolerance(self, value: float) -> None:
-        if value < 0.0:
-            raise ValueError("Tolerance must be greater or equal to zero")
-
-        self.__tolerance = value
-
     def __str__(self) -> str:
         """String object representation.
 
@@ -504,12 +438,19 @@ class Evaluator(ABC):
         self.__plot_scale = value
 
     @abstractmethod
-    def initialize_result(self, grid: Sequence[GridDimension]) -> EvaluationResult:
+    def initialize_result(self, grid: Sequence[GridDimensionInfo]) -> EvaluationResult:
+        """Initialize the respective result object for this evaluator.
+        
+        Args:
+            grid: The parameter grid over which the simulation iterates.
+            
+        Returns: The initialized evaluation result.
+        """
         ...  # pragma: no cover
 
     @abstractmethod
     def generate_result(
-        self, grid: Sequence[GridDimension], artifacts: np.ndarray
+        self, grid: Sequence[GridDimensionInfo], artifacts: np.ndarray
     ) -> EvaluationResult:
         """Generates an evaluation result from the artifacts collected over the whole simulation grid.
 

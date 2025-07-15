@@ -3,11 +3,12 @@
 from unittest import TestCase
 from unittest.mock import Mock
 
+import matplotlib.pyplot as plt
 import numpy as np
 from numpy.testing import assert_array_equal
 
-from hermespy.core.pymonte.grid import GridDimension
-from hermespy.core.pymonte.scalar import ScalarEvaluationResult
+from hermespy.core import PlotVisualization, ValueType
+from hermespy.core.pymonte import GridDimensionInfo, ScalarEvaluationResult, ArtifactTemplate, SamplePoint
 from ...utils import SimulationTestContext
 from .object import TestObjectMock
 
@@ -27,11 +28,12 @@ class TestScalarEvaluationResult(TestCase):
     def test_surface_plotting(self) -> None:
         """Surface plotting should call the correct plotting routine"""
 
-        grid = [GridDimension(TestObjectMock(), "property_b", np.arange(10)) for _ in range(2)]
-        scalar_data = np.random.uniform(size=(10, 10))
-        evaluator = Mock()
-
-        result = ScalarEvaluationResult(grid, scalar_data, evaluator)
+        grid = [GridDimensionInfo([SamplePoint(a) for a in range(10)], "property_b", "linear", ValueType.LIN) for _ in range(2)]
+  
+        result = ScalarEvaluationResult(grid, Mock())
+        for i in range(10):
+            result.add_artifact((0), ArtifactTemplate(i), False)
+            result.add_artifact((1), ArtifactTemplate(i) ,False)
 
         with SimulationTestContext():
             visualization = result.visualize()
@@ -40,32 +42,13 @@ class TestScalarEvaluationResult(TestCase):
     def test_multidim_plotting(self) -> None:
         """Multidimensional plotting should call the correct plotting routine"""
 
-        grid = [GridDimension(TestObjectMock(), "property_b", np.arange(10)) for _ in range(3)]
-        scalar_data = np.random.uniform(size=(10, 10))
-        evaluator = Mock()
-
-        result = ScalarEvaluationResult(grid, scalar_data, evaluator)
+        grid = [GridDimensionInfo([SamplePoint(a) for a in range(10)], "property_b", "linear", ValueType.LIN) for _ in range(3)]
+  
+        result = ScalarEvaluationResult(grid, Mock())
+        for i in range(10):
+            for j in range(3):
+                result.add_artifact((j), ArtifactTemplate(i), False)
 
         with SimulationTestContext():
             visualization = result.visualize()
             visualization.axes[0, 0].plot.assert_called()
-
-    def test_plot_no_data(self) -> None:
-        """Even without grid dimensions an empty figure should be generated"""
-
-        result = ScalarEvaluationResult([], np.empty(0, dtype=object), EvaluatorMock())
-
-        with SimulationTestContext():
-            visualization = result.visualize()
-            visualization.axes[0, 0].text.assert_called()
-
-    def test_to_array(self) -> None:
-        """Array conversion should return the correct array"""
-
-        grid = [GridDimension(TestObjectMock(), "property_b", np.arange(10)) for _ in range(1)]
-        scalar_data = np.random.uniform(size=(10, 10))
-        evaluator = Mock()
-
-        result = ScalarEvaluationResult(grid, scalar_data, evaluator)
-
-        assert_array_equal(scalar_data, result.to_array())

@@ -4,11 +4,11 @@ from abc import abstractmethod
 from typing import Callable, Generic, Sequence
 
 import numpy as np
-from ray import get, put, ObjectRef, remote, wait
+from ray import get, put, ObjectRef, wait
 
 from .definitions import MO, UnmatchableException
 from .evaluation import Evaluator, EvaluationResult
-from .grid import GridDimension
+from .grid import GridDimension, GridDimensionInfo
 from .artifact import Artifact, MonteCarloSample
 
 __author__ = "Jan Adler"
@@ -21,10 +21,27 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-@remote
 class MonteCarloQueueManager(object):
+    """Queue management actor for monte carlo simulations.
+    
+    The queue manager is responsible for distributing section indices of the
+    simulation grid to individual actors.
+    """
+    
+    __num_grid_sections: int
+    __num_samples: int
+    __batch_size: int
+    __max_num_samples: int
+    __grid_task_count: np.ndarray
+    __active_section_flags: np.ndarray
 
-    def __init__(self, grid: Sequence[GridDimension], num_samples: int, batch_size: int | None = None) -> None:
+    def __init__(self, grid: Sequence[GridDimensionInfo], num_samples: int, batch_size: int | None = None) -> None:
+        """
+        Args:
+            grid: The grid to be simulated.
+            num_samples: The number of samples to collect for each section.
+            batch_size: The number of individual section index tuples to return when calling :meth:`next_batch`.
+        """
 
         self.__num_grid_sections = np.prod([d.num_sample_points for d in grid], dtype=int)
         self.__num_samples = num_samples
@@ -50,9 +67,9 @@ class MonteCarloQueueManager(object):
 
     def next_batch(self) -> list[tuple[int, ...]]:
         """Get the next batch of simulation grid sections to run.
-        
+
         This function gets called remotely by actors once they are ready to run a new batch of simulation tasks.
-        
+
         Returns: A list of tuples containing the coordinates of the sections to run in this batch.
         """
 
@@ -86,7 +103,7 @@ class MonteCarloQueueManager(object):
         """Disable a section from being processed in the future.
 
         Once a section is disabled, its respective coordinates will not be returned by the :meth:`next_batch` method anymore.
-        
+
         Args:
             coordinates: Coordinates of the section to disable.
         """
@@ -110,8 +127,8 @@ class MonteCarloQueueManager(object):
 
     def query_progress(self) -> tuple[float, np.ndarray]:
         """Query the current absolute progress of the managed simulation.
-        
-        Returns: A floating point value between zero and one indicating the progress of the simulation.
+
+        Returns: A floating point value between zero and one indicating the progress of the simulation as well as a boolean array indicating which sections are still actively being processed.
         """
         
         # No active sections left, return 100% progress
@@ -121,10 +138,9 @@ class MonteCarloQueueManager(object):
         return ((self.__num_grid_sections - self.__num_active_sections) * self.__num_samples + np.sum(self.__grid_task_count[self.__active_section_coordinates])) / self.__max_num_samples, self.__active_section_flags
 
 
-@remote
 class MonteCarloCollector(object):
     """Collects samples from actors during simulation runtime."""
-    
+
     __queue_manager: ObjectRef[MonteCarloQueueManager]
     __actors: list[ObjectRef[MonteCarloActor]]
     __results: list[EvaluationResult]
@@ -134,9 +150,16 @@ class MonteCarloCollector(object):
         self,
         queue_manager: ObjectRef[MonteCarloQueueManager],
         actors: list[ObjectRef[MonteCarloActor]],
-        grid: Sequence[GridDimension],
+        grid: Sequence[GridDimensionInfo],
         evaluators: list[Evaluator],
     ) -> None:
+        """
+        Args:
+            queue_manager: Reference to the queue management actor.
+            actors: References to invidual monte carlo simulation actors.
+            grid: The grid to be simulated.
+            evaluators: The evaluators to be used for collecting processing the simulation results.
+        """
 
         self.__queue_manager = queue_manager
         self.__actors = actors
@@ -145,7 +168,10 @@ class MonteCarloCollector(object):
         self.__future_map: dict[ObjectRef, ObjectRef[MonteCarloActor]] = {}
 
     def run(self) -> None:
-        """Start up the collector, collecting samples from all actors."""
+        """Start up the collector, collecting samples from all actors.
+
+        This method will block and keep running until :meth:`fetch_results` is called.
+        """
 
         self.__future_map = {a.fetch_results.remote(): a for a in self.__actors}
         self.__active = True
@@ -161,7 +187,10 @@ class MonteCarloCollector(object):
             actor = self.__future_map.pop(ready_future)
             self.__future_map[actor.fetch_results.remote()] = actor
 
-    def __process_samples(self, ready_future: ObjectRef[list[ObjectRef[list[MonteCarloSample]]]], compute_confidence: bool) -> None:
+    def __process_samples(
+        self,
+        ready_future: ObjectRef[list[ObjectRef[list[MonteCarloSample]]]], compute_confidence: bool,
+    ) -> None:
 
         sample_references: list[ObjectRef[list[MonteCarloSample]]] = get(ready_future)
             
@@ -184,8 +213,13 @@ class MonteCarloCollector(object):
                     if compute_confidence and confident:
                         self.__queue_manager.disable_section.remote(section_coordinates)
 
-
     def query_estimates(self) -> list[None | np.ndarray]:
+        """Query intermediate estimates during simulation runtime.
+
+        Returns: A list with the length of the number of evaluators, each containing the runtime estimates for the respective evaluator.
+        If no estimates are available, the entry will be :py:obj:`None`.
+        """
+ 
         return [r.runtime_estimates() for r in self.__results]
     
     def fetch_results(self) -> list[EvaluationResult]:
@@ -396,8 +430,13 @@ class MonteCarloActor(Generic[MO]):
             return samples
 
         # Catch any exception during actor running
-        except Exception if self.catch_exceptions else UnmatchableException as e:
-            print(e)
+        except Exception as e:
+            if self.catch_exceptions:
+                print(e)
+            else:
+                raise UnmatchableException(
+                    f"Actor #{self.index} encountered an error during run: {e}"
+                ) from e
 
         return []
 

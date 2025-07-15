@@ -185,7 +185,67 @@ class SamplePoint(object):
         return self.__value.__class__.__name__
 
 
-class GridDimension(object):
+class GridDimensionInfo(object):
+    """Basic information about a grid dimension."""
+
+    __sample_points:list[SamplePoint]
+    __title: str | None
+    __plot_scale: str
+    __tick_format: ValueType
+
+    def __init__(
+        self,
+        sample_points: list[SamplePoint],
+        title: str,
+        plot_scale: str,
+        tick_format: ValueType,
+    ) -> None:
+        
+        self.__sample_points = sample_points
+        self.__title = title
+        self.__plot_scale = plot_scale
+        self.__tick_format = tick_format
+
+    @property
+    def sample_points(self) -> list[SamplePoint]:
+        """Sample points of this grid dimension."""
+
+        return self.__sample_points
+
+    @property
+    def num_sample_points(self) -> int:
+        """Number of dimension sample points.
+
+        Returns: Number of sample points.
+        """
+
+        return len(self.__sample_points)
+
+    @property
+    def title(self) -> str:
+        """Title of this grid dimension."""
+
+        return self.__title
+
+    @property
+    def plot_scale(self) -> str:
+        """Scale of the scalar evaluation plot.
+
+        Refer to the `Matplotlib`_ documentation for a list of a accepted values.
+
+        .. _Matplotlib: https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_yscale.html
+        """
+
+        return self.__plot_scale
+
+    @property
+    def tick_format(self) -> ValueType:
+        """Axis tick format of the scalar evaluation plot."""
+
+        return self.__tick_format
+
+
+class GridDimension(GridDimensionInfo):
     """Single axis within the simulation grid.
 
     A grid dimension represents a single simulation parameter that is to
@@ -197,11 +257,7 @@ class GridDimension(object):
 
     __considered_objects: tuple[object, ...]
     __dimension: str
-    __sample_points: list[SamplePoint]
-    __title: str | None
     __setter_lambdas: tuple[Callable, ...]
-    __plot_scale: str
-    __tick_format: ValueType
     __first_impact: str | None
     __last_impact: str | None
 
@@ -251,33 +307,31 @@ class GridDimension(object):
         property_name = property_path[-1]
 
         # Infer plot scale of the x-axis
+        _plot_scale: str
         if plot_scale is None:
             if isinstance(sample_points, LogarithmicSequence):
-                self.plot_scale = "log"
+                _plot_scale = "log"
 
             else:
-                self.plot_scale = "linear"
+                _plot_scale = "linear"
 
         else:
-            self.plot_scale = plot_scale
+            _plot_scale = plot_scale
 
         # Infer tick format of the x-axis
+        _tick_format: ValueType
         if tick_format is None:
             if isinstance(sample_points, LogarithmicSequence):
-                self.tick_format = ValueType.DB
+                _tick_format = ValueType.DB
 
             else:
-                self.tick_format = ValueType.LIN
+                _tick_format = ValueType.LIN
 
         else:
-            self.tick_format = tick_format
+            _tick_format = tick_format
 
         self.__setter_lambdas = tuple()
         self.__dimension = dimension
-        self.__sample_points = [
-            s if isinstance(s, SamplePoint) else SamplePoint(s) for s in sample_points
-        ]
-        self.__title = title
         self.__first_impact = None
         self.__last_impact = None
 
@@ -297,7 +351,7 @@ class GridDimension(object):
                     "Dimension '" + dimension + "' does not exist within the investigated object"
                 )
 
-            if len(self.__sample_points) < 1:
+            if len(sample_points) < 1:
                 raise ValueError("A simulation grid dimension must have at least one sample point")
 
             # Update impacts if the dimension is registered as a PyMonte simulation dimension
@@ -320,7 +374,7 @@ class GridDimension(object):
 
                 # Updated the depicted title if the dimension offers an option and it wasn't exactly specified
                 if title is None and dimension_registration.title is not None:
-                    self.__title = dimension_registration.title
+                    title = dimension_registration.title
 
             self.__considered_objects += (considered_object,)
 
@@ -330,13 +384,22 @@ class GridDimension(object):
                 np.vectorize(np.isscalar)(sample_points)
             ):
                 self.__setter_lambdas += (dimension_value.__lshift__,)
-                self.__title = dimension_value.title
+                title = dimension_value.title
 
             # Otherwise, the dimension value is a regular attribute and we need to create a setter lambda
             else:
                 self.__setter_lambdas += (
                     self.__create_setter_lambda(considered_object, dimension),
                 )
+
+        # Initialize base class
+        GridDimensionInfo.__init__(
+            self,
+            [s if isinstance(s, SamplePoint) else SamplePoint(s) for s in sample_points],
+            dimension if title is None else title,
+            _plot_scale,
+            _tick_format,
+        )
 
     @property
     def considered_objects(self) -> tuple[object, ...]:
@@ -350,21 +413,6 @@ class GridDimension(object):
 
         return self.__dimension
 
-    @property
-    def sample_points(self) -> list[SamplePoint]:
-        """Points at which this grid dimension is sampled."""
-
-        return self.__sample_points
-
-    @property
-    def num_sample_points(self) -> int:
-        """Number of dimension sample points.
-
-        Returns: Number of sample points.
-        """
-
-        return len(self.__sample_points)
-
     def configure_point(self, point_index: int) -> None:
         """Configure a specific sample point.
 
@@ -375,13 +423,13 @@ class GridDimension(object):
             ValueError: For invalid indexes.
         """
 
-        if point_index < 0 or point_index >= len(self.__sample_points):
+        if point_index < 0 or point_index >= len(self.sample_points):
             raise ValueError(
                 f"Index {point_index} is out of the range for grid dimension '{self.title}'"
             )
 
         for setter_lambda in self.__setter_lambdas:
-            setter_lambda(self.__sample_points[point_index].value)
+            setter_lambda(self.sample_points[point_index].value)
 
     @property
     def first_impact(self) -> str | None:
@@ -400,45 +448,6 @@ class GridDimension(object):
         """
 
         return self.__last_impact
-
-    @property
-    def title(self) -> str:
-        """Title of the dimension."""
-
-        return self.__dimension if self.__title is None else self.__title
-
-    @title.setter
-    def title(self, value: str) -> None:
-        if value is None or len(value) == 0:
-            self.__title = None
-
-        else:
-            self.__title = value
-
-    @property
-    def plot_scale(self) -> str:
-        """Scale of the scalar evaluation plot.
-
-        Refer to the `Matplotlib`_ documentation for a list of a accepted values.
-
-        .. _Matplotlib: https://matplotlib.org/stable/api/_as_gen/matplotlib.axes.Axes.set_yscale.html
-        """
-
-        return self.__plot_scale
-
-    @plot_scale.setter
-    def plot_scale(self, value: str) -> None:
-        self.__plot_scale = value
-
-    @property
-    def tick_format(self) -> ValueType:
-        """Axis tick format of the scalar evaluation plot."""
-
-        return self.__tick_format
-
-    @tick_format.setter
-    def tick_format(self, value: ValueType) -> None:
-        self.__tick_format = value
 
     @staticmethod
     def __create_setter_lambda(considered_object: object, dimension: str) -> Callable:

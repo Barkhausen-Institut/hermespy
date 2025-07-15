@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from typing_extensions import override
 from unittest import TestCase
 from unittest.mock import Mock, MagicMock, patch
 
@@ -12,7 +13,7 @@ from hermespy.core import ValueType, PlotVisualization, VAT, Visualization
 from hermespy.core.pymonte.artifact import ArtifactTemplate
 from hermespy.core.pymonte.evaluation import Evaluator, EvaluationResult, EvaluationTemplate
 from hermespy.core.pymonte.grid import GridDimension
-from hermespy.core.pymonte.scalar import ScalarEvaluationResult
+from hermespy.core.pymonte.scalar import ScalarEvaluationResult, ScalarEvaluator
 from ...utils import SimulationTestContext
 from .object import TestObjectMock
 
@@ -50,135 +51,73 @@ class EvaluationResultMock(EvaluationResult):
         pass
 
 
-class SumEvaluator(Evaluator):
+class SumEvaluator(ScalarEvaluator):
     """An evaluator summing up object properties"""
 
     __investigated_object: TestObjectMock
 
-    def __init__(self, investigated_object: TestObjectMock) -> None:
+    def __init__(
+        self,
+        investigated_object: TestObjectMock,
+    ) -> None:
         self.__investigated_object = investigated_object
-        Evaluator.__init__(self)
+        ScalarEvaluator.__init__(self)
 
+    @override
     def evaluate(self) -> EvaluationMock:
         summed = self.__investigated_object.property_a + self.__investigated_object.property_b + self.__investigated_object.property_c
         return EvaluationMock(summed)
 
     @property
+    @override
     def abbreviation(self) -> str:
         return "SUM"
 
     @property
+    @override
     def title(self) -> str:
         return "Sum Evaluator"
+    
+    @override
+    def initialize_result(self, grid: list[GridDimension]) -> ScalarEvaluationResult:
+        return ScalarEvaluationResult(grid, self, self.tolerance, self.confidence)
 
     def generate_result(self, grid: list[GridDimension], artifacts: np.ndarray) -> EvaluationResult:
         return ScalarEvaluationResult.From_Artifacts(grid, artifacts, self)
 
 
-class ProductEvaluator(Evaluator):
+class ProductEvaluator(ScalarEvaluator):
     """An evaluator multiplying object properties"""
 
     __investigated_object: TestObjectMock
 
     def __init__(self, investigated_object: TestObjectMock) -> None:
         self.__investigated_object = investigated_object
-        Evaluator.__init__(self)
+        ScalarEvaluator.__init__(self)
 
+    @override
     def evaluate(self) -> EvaluationMock:
         product = self.__investigated_object.property_a * self.__investigated_object.property_b * self.__investigated_object.property_c
         return EvaluationMock(product)
 
     @property
+    @override
     def abbreviation(self) -> str:
         return "Product"
 
     @property
+    @override
     def title(self) -> str:
         return "Product Evaluator"
+    
+    @override
+    def initialize_result(self, grid: list[GridDimension]) -> ScalarEvaluationResult:
+        return ScalarEvaluationResult(grid, self, self.tolerance, self.confidence)
 
+
+    @override
     def generate_result(self, grid: list[GridDimension], artifacts: np.ndarray) -> EvaluationResult:
         return ScalarEvaluationResult.From_Artifacts(grid, artifacts, self)
-
-
-class TestEvaluator(TestCase):
-    """Test base class for all evaluators"""
-
-    def setUp(self) -> None:
-        self.rng = default_rng(42)
-        self.evaluator = EvaluatorMock()
-        self.evaluator.tolerance = 0.2
-
-    def test_init(self) -> None:
-        """Initialization should set the proper default attributes"""
-
-        self.assertEqual(1.0, self.evaluator.confidence)
-        self.assertEqual(0.2, self.evaluator.tolerance)
-
-    def test_confidence_setget(self) -> None:
-        """Confidence property getter should return setter argument"""
-
-        confidence = 0.5
-        self.evaluator.confidence = confidence
-
-        self.assertEqual(confidence, self.evaluator.confidence)
-
-    def test_confidence_validation(self) -> None:
-        """Confidence property setter should raise ValueError on invalid arguments"""
-
-        with self.assertRaises(ValueError):
-            self.evaluator.confidence = -1.0
-
-        with self.assertRaises(ValueError):
-            self.evaluator.confidence = 1.5
-
-        try:
-            self.evaluator.confidence = 0.0
-            self.evaluator.confidence = 1.0
-
-        except ValueError:
-            self.fail()
-
-    def test_tolerance_setget(self) -> None:
-        """Tolerance property getter should return setter argument"""
-
-        tolerance = 0.5
-        self.evaluator.tolerance = tolerance
-
-        self.assertEqual(tolerance, self.evaluator.tolerance)
-
-    def test_tolerance_validation(self) -> None:
-        """Confidence margin property setter should raise ValueError on invalid arguments"""
-
-        with self.assertRaises(ValueError):
-            self.evaluator.tolerance = -1.0
-
-        try:
-            self.evaluator.tolerance = 0.0
-            self.evaluator.tolerance = 1.0
-
-        except ValueError:
-            self.fail()
-
-    def test_str(self) -> None:
-        """Evaluator string representation should return a string"""
-
-        self.assertEqual(self.evaluator.abbreviation, self.evaluator.__str__())
-
-    def test_scalar_cdf(self) -> None:
-        """Scalar cumulitive distribution function should return the cumulative probability"""
-
-        cdf_low = self.evaluator._scalar_cdf(0.0)
-        cdf_high = self.evaluator._scalar_cdf(1.0)
-
-        self.assertTrue(cdf_low < cdf_high)
-
-    def test_plot_scale_setget(self) -> None:
-        """Plot scale property getter should return setter argument"""
-
-        plot_scale = "abce"
-        self.evaluator.plot_scale = plot_scale
-
-        self.assertEqual(plot_scale, self.evaluator.plot_scale)
 
 
 class TestEvaluationResult(TestCase):
@@ -186,8 +125,15 @@ class TestEvaluationResult(TestCase):
 
     def setUp(self) -> None:
         self.grid = [GridDimension(TestObjectMock(), "property_b", np.arange(10), tick_format=ValueType.DB)]
-        self.evaluator = EvaluatorMock()
-        self.result = EvaluationResultMock(self.grid, self.evaluator)
+        self.object = TestObjectMock()
+        self.evaluator = ProductEvaluator(self.object)
+        self.result = self.evaluator.initialize_result(self.grid)
+        
+    def test_properties(self) -> None:
+        """Test the properties of the evaluation result"""
+
+        self.assertIs(self.grid, self.result.grid)
+        self.assertIs(self.evaluator, self.result.evaluator)
 
     def test_print(self) -> None:
         """Printing should call the correct printing routine"""
@@ -229,55 +175,15 @@ class TestEvaluationResult(TestCase):
             console.print.assert_called()
             console.print.reset_mock()
 
-    def test_surface_plotting(self) -> None:
-        """Surface plotting should call the correct plotting routine"""
 
-        grid = [GridDimension(TestObjectMock(), "property_b", np.arange(10)) for _ in range(2)]
-        self.result = EvaluationResultMock(grid, self.evaluator)
+class TestEvaluator(TestCase):
+    """Test base class for all evaluators"""
 
-        scalar_data = np.random.uniform(size=(10, 10))
+    def setUp(self) -> None:
+        self.evaluator = ProductEvaluator(TestObjectMock())
 
-        with SimulationTestContext():
-            figure, axes = plt.subplots(1, 1, squeeze=False)
+    def test_init(self) -> None:
+        """Initialization should set the proper default attributes"""
 
-            # Prepare plot
-            lines = self.result._prepare_surface_visualization(axes[0, 0])
-
-            lines_array = np.empty((1, 1), dtype=np.object_)
-            lines_array[0, 0] = lines
-            visualization = PlotVisualization(figure, axes, lines_array)
-
-            # Update plot
-            self.result._update_surface_visualization(scalar_data, visualization)
-            axes[0, 0].plot_surface.assert_called()
-
-    def test_multidim_plotting(self) -> None:
-        """Multidimensional plotting should call the correct plotting routine"""
-
-        scalar_data = np.random.uniform(size=(10))
-
-        with SimulationTestContext():
-            figure, axes = plt.subplots(1, 1, squeeze=False)
-
-            # Prepare plot
-            lines = self.result._prepare_multidim_visualization(axes[0, 0])
-            axes[0, 0].plot.assert_called()
-
-            lines_array = np.empty((1, 1), dtype=np.object_)
-            lines_array[0, 0] = lines
-            visualization = PlotVisualization(figure, axes, lines_array)
-
-            # Update plot
-            self.result._update_multidim_visualization(scalar_data, visualization)
-            lines[0].set_ydata.assert_called()
-
-    def test_empty_plotting(self) -> None:
-        """Empty plotting should call the correct plotting routine"""
-
-        visualization = MagicMock(spec=PlotVisualization)
-        axes = Mock()
-        axes_collection = np.array([[axes]], dtype=np.object_)
-        visualization.axes = axes_collection
-
-        self.result._plot_empty(visualization)
-        axes.text.assert_called_once()
+        self.assertEqual("linear", self.evaluator.plot_scale)
+        self.assertEqual(ValueType.LIN, self.evaluator.tick_format)

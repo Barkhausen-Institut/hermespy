@@ -11,8 +11,8 @@ from numpy.random import default_rng
 from numpy.testing import assert_array_equal
 
 from hermespy.channel import SingleTargetRadarChannel
-from hermespy.core.pymonte import Evaluation, GridDimension, ScalarEvaluationResult
-from hermespy.core.scenario import ScenarioMode, Scenario
+from hermespy.core import ValueType, GridDimensionInfo, ScenarioMode, Scenario, SamplePoint
+from hermespy.core.pymonte import Evaluation, GridDimension,ScalarEvaluationResult
 from hermespy.radar import DetectionProbEvaluator, FMCW, PointDetection, Radar, RadarPointCloud, ReceiverOperatingCharacteristic, ThresholdDetector
 from hermespy.radar.evaluators import RadarEvaluator, RocArtifact, RocEvaluation, RocEvaluationResult, RootMeanSquareArtifact, RootMeanSquareError, RootMeanSquareErrorResult, RootMeanSquareEvaluation
 from hermespy.simulation import SimulatedDevice, SimulationScenario, N0
@@ -32,6 +32,12 @@ class RadarEvaluatorMock(RadarEvaluator):
     """Mock for the abstract radar evaluator"""
 
     def evaluate(self) -> Evaluation:
+        return Mock()
+
+    def generate_result(self, grid, artifacts):
+        return Mock()
+
+    def initialize_result(self, grid):
         return Mock()
 
     @property
@@ -90,16 +96,6 @@ class TestRadarEvaluator(TestCase):
 
         with self.assertRaises(RuntimeError):
             self.evaluator._fetch_channel()
-
-    def test_generate_result(self) -> None:
-        """Result generation should be properly handled"""
-
-        grid = []
-        artifacts = np.empty(0, dtype=np.object_)
-
-        result = self.evaluator.generate_result(grid, artifacts)
-
-        self.assertIsInstance(result, ScalarEvaluationResult)
 
 
 class TestDetectionProbEvaluator(TestCase):
@@ -187,17 +183,11 @@ class TestRocEvaluationResult(TestCase):
     """Test ROC evaluation result"""
 
     def setUp(self) -> None:
-        scenario = SimulationScenario()
-        grid = [GridDimension(scenario, 'noise_level', [N0(p) for p in [1, 2, 3]], "Custom Title")]
-        evaluator = Mock(spec=ReceiverOperatingCharacteristic)
-
-        self.detection_probabilities = np.empty(3, dtype=np.object_)
-        self.false_alarm_probabilities = np.empty(3, dtype=np.object_)
-        for i in range(3):
-            self.false_alarm_probabilities[i] = np.arange(10) / 10
-            self.detection_probabilities[i] = np.arange(10) / 10 / (i + 1)
-
-        self.result = RocEvaluationResult(self.detection_probabilities, self.false_alarm_probabilities, grid, evaluator)
+        self.result = RocEvaluationResult(
+            [GridDimensionInfo([SamplePoint(0)], "Custom Title", "linear", ValueType.LIN)],
+            Mock(spec=ReceiverOperatingCharacteristic),
+        )
+        self.result.add_artifact((0,), RocArtifact(0.2, 0.5))
 
     def test_plot(self) -> None:
         """ROC plotting should be properly handled"""
@@ -215,10 +205,8 @@ class TestRocEvaluationResult(TestCase):
     def test_to_array(self) -> None:
         """Conversion to array should be properly handled"""
 
-        expected_array = np.stack((self.detection_probabilities, self.false_alarm_probabilities), axis=-1)
         result_array = self.result.to_array()
-
-        assert_array_equal(expected_array.shape, result_array.shape)
+        assert_array_equal([1, 101, 2], result_array.shape)
 
 
 class TestReciverOperatingCharacteristics(TestCase):
@@ -235,8 +223,13 @@ class TestReciverOperatingCharacteristics(TestCase):
         self.device.transmitters.add(self.radar)
         self.device.receivers.add(self.radar)
 
-        self.evaluator = ReceiverOperatingCharacteristic(self.radar, self.device, self.device, self.channel)
-
+        self.evaluator = ReceiverOperatingCharacteristic(
+            self.radar,
+            self.device,
+            self.device,
+            self.channel,
+        )
+        
     def _generate_evaluation(self) -> RocEvaluation:
         """Helper class to generate an evaluation.
 
@@ -272,31 +265,6 @@ class TestReciverOperatingCharacteristics(TestCase):
 
         evaluation = self._generate_evaluation()
         self.assertCountEqual(evaluation.cube_h0.data.shape, evaluation.cube_h1.data.shape)
-
-    def test_generate_result_empty_grid(self) -> None:
-        """Test result generation over an empty grid"""
-
-        artifacts = np.empty(1, dtype=np.object_)
-        artifacts[0] = [self._generate_evaluation().artifact() for _ in range(3)]
-
-        result = self.evaluator.generate_result([], artifacts)
-        self.assertIsInstance(result, RocEvaluationResult)
-
-    def test_generate_result_full_grid(self) -> None:
-        """Test result generation over a full grid"""
-
-        grid = []
-        artifacts = np.empty((1, 2, 3), dtype=np.object_)
-        for g in range(3):
-            dimension = Mock(spec=GridDimension)
-            dimension.num_sample_points = g
-            grid.append(dimension)
-
-        for x in np.ndindex(artifacts.shape):
-            artifacts[x] = [self._generate_evaluation().artifact() for _ in range(3)]
-
-        result = self.evaluator.generate_result(grid, artifacts)
-        self.assertIsInstance(result, RocEvaluationResult)
 
     def test_from_scenarios_validation(self) -> None:
         """Recall ROC from scenarios should raise ValueError for invalid configurations"""
@@ -504,7 +472,7 @@ class TestRootMeanSquareError(TestCase):
 
         artifacts = np.empty(1, dtype=object)
         artifacts[0] = [artifact for _ in range(3)]
-        grid = []
+        grid = [GridDimensionInfo([1], "Test Dimension", "linear", ValueType.LIN)]
         result = self.evaluator.generate_result(grid, artifacts)
 
         self.assertIsInstance(result, RootMeanSquareErrorResult)

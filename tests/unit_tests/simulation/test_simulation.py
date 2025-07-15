@@ -10,15 +10,13 @@ from unittest.mock import Mock, patch
 import ray
 from rich.console import Console
 
-from hermespy.channel import IdealChannel
-from hermespy.core import ConsoleMode, Factory, MonteCarloResult, SignalTransmitter, SignalReceiver, Signal
+from hermespy.core import ConsoleMode, MonteCarloResult, SignalTransmitter, SignalReceiver, Signal
 from hermespy.modem import DuplexModem, BitErrorEvaluator, RRCWaveform
 from hermespy.simulation import N0
 from hermespy.simulation.simulation import SimulatedDevice, Simulation, SimulationActor, SimulationRunner, SimulationScenario
-from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -232,7 +230,7 @@ class TestSimulation(TestCase):
         mock_visualization = Mock()
         mock_visualization.figure = Mock()
 
-        with patch("hermespy.core.monte_carlo.MonteCarloResult.plot", return_value=[mock_visualization]), TemporaryDirectory() as temp:
+        with patch("hermespy.core.pymonte.monte_carlo.MonteCarloResult.plot", return_value=[mock_visualization]), TemporaryDirectory() as temp:
             self.simulation.results_dir = temp
             result = self.simulation.run()
 

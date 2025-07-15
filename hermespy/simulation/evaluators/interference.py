@@ -8,13 +8,14 @@ import numpy as np
 
 from hermespy.core import (
     DeserializationProcess,
-    Evaluator,
+    ScalarEvaluator,
+    ScalarEvaluationResult,
     GridDimension,
     Hook,
     PowerEvaluation,
-    PowerResult,
     Serializable,
     SerializationProcess,
+    ValueType,
 )
 from ..simulated_device import ProcessedSimulatedDeviceInput, SimulatedDevice
 
@@ -28,23 +29,34 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class SI(Evaluator, Serializable):
+class SI(ScalarEvaluator, Serializable):
     """Evaluate a simulated device's self-interference power."""
 
     __device: SimulatedDevice
     _input_hook: Hook[ProcessedSimulatedDeviceInput]
     _input: ProcessedSimulatedDeviceInput | None
 
-    def __init__(self, device: SimulatedDevice) -> None:
+    def __init__(
+        self,
+        device: SimulatedDevice,
+        confidence: float = 1.0,
+        tolerance: float = 0.0,
+        plot_scale: str = "log",
+        tick_format: ValueType = ValueType.LIN,
+        plot_surface: bool = True,
+    ) -> None:
         """
         Args:
-
             device: The device to evaluate.
+            confidence: Required confidence level for the given `tolerance` between zero and one.
+            tolerance: Acceptable non-negative bound around the mean value of the estimated scalar performance indicator.
+            plot_scale: Scale of the plot. Can be ``'linear'`` or ``'log'``.
+            tick_format: Tick format of the plot.
+            plot_surface: Enable surface plotting for two-dimensional grids. Enabled by default.
         """
 
         # Initialize the base class
-        Evaluator.__init__(self)
-        self.plot_scale = "log"
+        ScalarEvaluator.__init__(self, confidence, tolerance, plot_scale, tick_format, plot_surface)
 
         # Register input hook
         self.__device = device
@@ -75,7 +87,7 @@ class SI(Evaluator, Serializable):
         return PowerEvaluation(self._input.leaking_signal.power)
 
     @override
-    def generate_result(self, grid: Sequence[GridDimension], artifacts: np.ndarray) -> PowerResult:
+    def generate_result(self, grid: Sequence[GridDimension], artifacts: np.ndarray) -> ScalarEvaluationResult:
         # Find the maximum number of receive ports over all artifacts
         max_ports = max(
             max(artifact.power.size for artifact in artifacts) for artifacts in artifacts.flat
@@ -90,7 +102,7 @@ class SI(Evaluator, Serializable):
             if num_artifacts > 0:
                 mean_powers[grid_index] /= len(artifacts)
 
-        return PowerResult(mean_powers, grid, self)
+        return ScalarEvaluationResult(mean_powers, grid, self)
 
     def __del__(self) -> None:
         self._input_hook.remove()

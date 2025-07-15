@@ -6,8 +6,8 @@ from unittest.mock import Mock
 import numpy as np
 from numpy.testing import assert_almost_equal
 
-from hermespy.core import AntennaMode, ScalarEvaluationResult, Signal, SignalTransmitter, SignalReceiver
-from hermespy.core.evaluators import PAPRArtifact, PowerArtifact, PowerEvaluation, ReceivePowerEvaluator, TransmitPowerEvaluator, PowerResult, PAPR, PAPREvaluation
+from hermespy.core import AntennaMode, ScalarEvaluationResult, Signal, SignalTransmitter, SignalReceiver, GridDimensionInfo, SamplePoint, ValueType
+from hermespy.core.evaluators import PAPRArtifact, PowerArtifact, PowerEvaluation, ReceivePowerEvaluator, TransmitPowerEvaluator, PAPR, PAPREvaluation
 from hermespy.simulation import SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
 
 __author__ = "Jan Adler"
@@ -72,28 +72,6 @@ class TestReceivePowerEvaluation(TestCase):
         axes.stem.assert_called_once()
 
 
-class TestPowerResult(TestCase):
-    """Test the received power result"""
-
-    def setUp(self) -> None:
-        self.average_powers = np.array([[1, 2, 4, 5]])
-        self.receiver = SignalReceiver(10, 1e7)
-        self.grid = Mock()
-        self.evaluator = ReceivePowerEvaluator(Mock())
-
-        self.result = PowerResult(self.average_powers, self.grid, self.evaluator)
-
-    def test_average_powers(self) -> None:
-        """Average powers property should be properly initialized"""
-
-        assert_almost_equal(self.result.average_powers, self.average_powers)
-
-    def test_to_array(self) -> None:
-        """To array conversion should return average powers"""
-
-        assert_almost_equal(self.result.to_array(), self.average_powers)
-
-
 class TestReceivePowerEvaluator(TestCase):
     """Test received power evaluator"""
 
@@ -128,7 +106,9 @@ class TestReceivePowerEvaluator(TestCase):
     def test_evaluation(self) -> None:
         num_drops = 10
         signal_scales = self.rng.random(num_drops)
-        expected_powers = self.transmitted_signal.power * np.sum(signal_scales**2) / num_drops
+        result = self.evaluator.initialize_result([GridDimensionInfo([SamplePoint(0)], 'x', 'linear', ValueType.LIN)])
+        
+        expected_mean_power = np.sum(self.transmitted_signal.power * np.sum(signal_scales**2)) / num_drops
 
         # Collect drop artifacts
         grid = []
@@ -141,11 +121,14 @@ class TestReceivePowerEvaluator(TestCase):
                 block *= signal_scale
 
             _ = self.device.receive(signal)
-            artifacts[0].append(self.evaluator.evaluate().artifact())
+            
+            evaluation = self.evaluator.evaluate()
+            result.add_artifact((0,), evaluation.artifact())
+            expected_powers = self.transmitted_signal.power * signal_scale**2
+            assert_almost_equal(evaluation.power, expected_powers)
 
         # Generate result
-        result = self.evaluator.generate_result(grid, artifacts)
-        assert_almost_equal(result.average_powers[0, :], expected_powers)
+        assert_almost_equal(result.to_array()[0], expected_mean_power)
 
 
 class TestTransmitPowerEvaluator(TestCase):
@@ -181,25 +164,27 @@ class TestTransmitPowerEvaluator(TestCase):
     def test_evaluation(self) -> None:
         num_drops = 10
         signal_scales = self.rng.random(num_drops)
-        expected_powers = self.transmitted_signal.power * np.sum(signal_scales**2) / num_drops
-
-        # Collect drop artifacts
-        grid = []
-        artifacts = np.empty(1, dtype=np.object_)
-        artifacts[0] = list()
+        result = self.evaluator.initialize_result([GridDimensionInfo([SamplePoint(0)], 'x', 'linear', ValueType.LIN)])
+        
+        expected_mean_power = np.sum(self.transmitted_signal.power * np.sum(signal_scales**2)) / num_drops
 
         for signal_scale in signal_scales:
+            expected_power = self.transmitted_signal.power * signal_scale**2
+            
+            
             signal = self.transmitted_signal.copy()
             for block in signal:
                 block *= signal_scale
 
             _ = self.transmitter.signal = signal
             self.device.transmit()
-            artifacts[0].append(self.evaluator.evaluate().artifact())
+            
+            evaluation = self.evaluator.evaluate()
+            result.add_artifact((0,), self.evaluator.evaluate().artifact())
 
-        # Generate result
-        result = self.evaluator.generate_result(grid, artifacts)
-        assert_almost_equal(result.average_powers[0, :], expected_powers)
+            assert_almost_equal(evaluation.power, expected_power)
+    
+        assert_almost_equal(result.to_array()[0], expected_mean_power)
 
 class TestPAPREvaluation(TestCase):
     """Test PAPR evaluation"""
@@ -273,9 +258,9 @@ class TestPAPR(TestCase):
         rx_artifact = self.rx_papr.evaluate().artifact()
 
         # Collect drop artifacts
-        grid = []
-        artifacts = np.empty(1, dtype=np.object_)
-        artifacts[0] = [tx_artifact, rx_artifact]
+        tx_result = self.tx_papr.initialize_result([GridDimensionInfo([SamplePoint(0)], 'x', 'linear', ValueType.LIN)])
+        rx_result = self.rx_papr.initialize_result([GridDimensionInfo([SamplePoint(0)], 'x', 'linear', ValueType.LIN)])
+        
+        tx_result.add_artifact((0,), tx_artifact)
+        rx_result.add_artifact((0,), rx_artifact)
 
-        result = self.tx_papr.generate_result(grid, artifacts)
-        self.assertIsInstance(result, ScalarEvaluationResult)

@@ -3,9 +3,9 @@
 from .artifact import Artifact, ArtifactTemplate, FAT
 from .actors import MonteCarloActor, MonteCarloSample
 from .evaluation import Evaluation, EvaluationTemplate, EvaluationResult, Evaluator
-from .grid import GridDimension, RegisteredDimension, register, ScalarDimension
+from .grid import GridDimension, GridDimensionInfo, RegisteredDimension, register, SamplePoint, ScalarDimension
 from .monte_carlo import MonteCarlo, MonteCarloResult
-from .scalar import ScalarEvaluationResult
+from .scalar import ScalarEvaluationResult, ScalarEvaluator
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
@@ -27,10 +27,13 @@ __all__ = [
     "EvaluationResult",
     "Evaluator",
     "GridDimension",
+    "GridDimensionInfo",
     "RegisteredDimension",
     "register",
+    "SamplePoint",
     "ScalarDimension",
     "MonteCarlo",
     "MonteCarloResult",
     "ScalarEvaluationResult",
+    "ScalarEvaluator",
 ]

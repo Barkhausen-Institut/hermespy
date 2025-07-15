@@ -182,7 +182,6 @@ class SimulationRunner(object):
         _ = self.__scenario.receive_operators(self.__processed_inputs, self.__device_states, True)
 
 
-@remote
 class SimulationActor(MonteCarloActor[SimulationScenario], SimulationRunner):
     """Remote ray actor generated from the simulation runner class."""
 

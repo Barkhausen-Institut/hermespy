@@ -78,7 +78,7 @@ class EvaluatorPlotMode(SerializableEnum):
     """Plot the series of generated scalar artifacts during hardware loop runtime."""
 
 
-class EvaluatorRegistration(Evaluator):
+class EvaluatorRegistration(object):
     """Evaluator registration for the hardware loop.
 
     Created by the :meth:`HardwareLoop.add_evaluator` method.
@@ -981,10 +981,6 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
 
                     # Generate a new samples
                     loop_sample = self.__generate_sample(section_indices, sample_index)
-                    grid_sample = MonteCarloSample(
-                        section_indices, sample_index, loop_sample.artifacts
-                    )
-
                     for result, artifact in zip(results, loop_sample.artifacts):
                         result.add_artifact(section_indices, artifact)
 

@@ -361,13 +361,16 @@ class MonteCarlo(Generic[MO]):
         with self.console.status("Launching Actors ...", spinner="dots") if self.__console_mode == ConsoleMode.INTERACTIVE else nullcontext():  # type: ignore
 
             # Initialize queue manager
-            queue_manager = MonteCarloQueueManager.options(num_cpus=0, enable_task_events=self.__debug).remote(self.dimensions, self.num_samples)
+            remote_queue_manager_class = ray.remote(MonteCarloQueueManager)
+            queue_manager = remote_queue_manager_class.options(num_cpus=0, enable_task_events=self.__debug).remote(self.dimensions, self.num_samples)
 
             # Initialize actor pool
-            actors: list[MonteCarloActor] = [actor.options(num_cpus=self.cpus_per_actor, max_concurrency=2, enable_task_events=self.__debug).remote(queue_manager, (self.__investigated_object, self.__dimensions, self.__evaluators), a, stage_arguments, self.catch_exceptions) for a in range(self.num_actors)]  # type: ignore[attr-defined]
+            remote_actor_class = ray.remote(actor)
+            actors: list[ray.ObjectRef[MonteCarloActor]] = [remote_actor_class.options(num_cpus=self.cpus_per_actor, max_concurrency=2, enable_task_events=self.__debug).remote(queue_manager, (self.__investigated_object, self.__dimensions, self.__evaluators), a, stage_arguments, self.catch_exceptions) for a in range(self.num_actors)]  # type: ignore[attr-defined]
 
             # Initialize collector
-            collector = MonteCarloCollector.options(num_cpus=0, max_concurrency=2, enable_task_events=self.__debug).remote(queue_manager, actors, self.dimensions, self.evaluators)
+            remote_collector_class = ray.remote(MonteCarloCollector)
+            collector = remote_collector_class.options(num_cpus=0, max_concurrency=2, enable_task_events=self.__debug).remote(queue_manager, actors, self.dimensions, self.evaluators)
 
         # Initialize progress bar
         progress = Progress(

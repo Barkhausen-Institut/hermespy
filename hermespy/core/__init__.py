@@ -18,7 +18,6 @@ from .pymonte import *
 from .evaluators import (
     PAPR,
     ReceivePowerEvaluator,
-    PowerResult,
     PowerArtifact,
     PowerEvaluation,
     TransmitPowerEvaluator,
@@ -112,7 +111,6 @@ __all__ = [
     "SNRType",
     "PAPR",
     "ReceivePowerEvaluator",
-    "PowerResult",
     "PowerArtifact",
     "PowerEvaluation",
     "TransmitPowerEvaluator",
