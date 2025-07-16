@@ -3,6 +3,7 @@
 from __future__ import annotations
 import logging
 from io import StringIO
+from os import getenv
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import Mock, patch
@@ -25,7 +26,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-GENERATE_OUTPUT = True  # getenv("HERMES_TEST_PLOT", "False").lower() == "true"
+GENERATE_OUTPUT = getenv("HERMES_TEST_PLOT", "False").lower() == "true"
 
 
 class TestSimulationRunner(TestCase):
@@ -171,7 +172,7 @@ class TestSimulation(TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        ray.init(local_mode=True, num_cpus=1, ignore_reinit_error=True, logging_level=logging.ERROR)
+        ray.init(ignore_reinit_error=True, logging_level=logging.ERROR)
 
     @classmethod
     def tearDownClass(cls) -> None:
