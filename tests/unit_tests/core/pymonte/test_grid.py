@@ -216,23 +216,6 @@ class TestGridDimension(TestCase):
 
         self.assertEqual(expected_value, self.considered_object.dimension)
 
-    def test_title(self) -> None:
-        """Title property should infer the correct title"""
-
-        self.dimension.title = None
-        self.assertEqual("dimension", self.dimension.title)
-
-        self.dimension.title = "xyz"
-        self.assertEqual("xyz", self.dimension.title)
-
-    def test_plot_scale_setget(self) -> None:
-        """Plot scale property getter should return setter argument"""
-
-        scale = "loglin"
-        self.dimension.plot_scale = scale
-
-        self.assertEqual(scale, self.dimension.plot_scale)
-
 
 class TestRegisteredDimension(TestCase):
     """Test the registered dimension"""

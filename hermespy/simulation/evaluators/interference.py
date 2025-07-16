@@ -41,7 +41,8 @@ class SI(ScalarEvaluator, Serializable):
         device: SimulatedDevice,
         confidence: float = 1.0,
         tolerance: float = 0.0,
-        plot_scale: str = "log",
+        min_num_samples: int = 1024,
+        plot_scale: str = "linear",
         tick_format: ValueType = ValueType.LIN,
         plot_surface: bool = True,
     ) -> None:
@@ -50,13 +51,14 @@ class SI(ScalarEvaluator, Serializable):
             device: The device to evaluate.
             confidence: Required confidence level for the given `tolerance` between zero and one.
             tolerance: Acceptable non-negative bound around the mean value of the estimated scalar performance indicator.
+            min_num_samples: Minimum number of samples required to compute the confidence bound.
             plot_scale: Scale of the plot. Can be ``'linear'`` or ``'log'``.
             tick_format: Tick format of the plot.
             plot_surface: Enable surface plotting for two-dimensional grids. Enabled by default.
         """
 
         # Initialize the base class
-        ScalarEvaluator.__init__(self, confidence, tolerance, plot_scale, tick_format, plot_surface)
+        ScalarEvaluator.__init__(self, confidence, tolerance, min_num_samples, plot_scale, tick_format, plot_surface)
 
         # Register input hook
         self.__device = device

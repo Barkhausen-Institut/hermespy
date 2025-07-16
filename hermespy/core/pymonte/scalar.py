@@ -266,7 +266,7 @@ class ScalarEvaluator(Evaluator):
             tick_format: Tick format of the plot.
             plot_surface: Enable surface plotting for two-dimensional grids. Enabled by default.
         """
-        
+
         # Initialize base class
         Evaluator.__init__(self, plot_scale, tick_format)
 

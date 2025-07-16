@@ -133,22 +133,25 @@ class ReceivePowerEvaluator(ScalarEvaluator):
         target: Receiver,
         confidence: float = 1.0,
         tolerance: float = 0.0,
-        plot_scale: str = "log",
+        min_num_samples: int = 1024,
+        plot_scale: str = "linear",
         tick_format: ValueType = ValueType.LIN,
         plot_surface: bool = True,
     ) -> None:
         """
         Args:
             target: The device or receiver to measure the received power of.
-            confidence: Required confidence level for the given `tolerance` between zero and one.
-            tolerance: Acceptable non-negative bound around the mean value of the estimated scalar performance indicator.
-            plot_scale: Scale of the plot. Can be ``'linear'`` or ``'log'``.
-            tick_format: Tick format of the plot.
-            plot_surface: Enable surface plotting for two-dimensional grids. Enabled by default.
+            accuracy: Acceptable bound around the mean value of the estimated scalar performance indicator.
+            tolerance: Required confidence level for the given `accuracy`.
+            min_num_samples: Minimum number of samples required to compute the confidence bound.
+            plot_surface:
+                Enable surface plotting for two-dimensional grids.
+                Enabled by default.
+            base_dimension_index: Index of the base dimension used for plotting.
         """
 
         # Initialize the base class
-        ScalarEvaluator.__init__(self, confidence, tolerance, plot_scale, tick_format, plot_surface)
+        ScalarEvaluator.__init__(self, confidence, tolerance, min_num_samples, plot_scale, tick_format, plot_surface)
 
         # Initialize class members
         self.__receive_hook = target.add_receive_callback(self.__receive_callback)
@@ -181,7 +184,7 @@ class ReceivePowerEvaluator(ScalarEvaluator):
         return "Receive Power"
 
     @override
-    def generate_result(self, grid: Sequence[GridDimensionInfo], artifacts: np.ndarray) -> PowerResult:
+    def generate_result(self, grid: Sequence[GridDimensionInfo], artifacts: np.ndarray) -> ScalarEvaluationResult:
         # Find the maximum number of receive ports over all artifacts
         max_ports = max(
             max(artifact.power.size for artifact in artifacts) for artifacts in artifacts.flat
@@ -196,7 +199,7 @@ class ReceivePowerEvaluator(ScalarEvaluator):
             if num_artifacts > 0:
                 average_powers[grid_index] /= len(artifacts)
 
-        return PowerResult(average_powers, grid, self)
+        return ScalarEvaluationResult(average_powers, grid, self)
 
     def __del__(self) -> None:
         self.__receive_hook.remove()
@@ -213,20 +216,24 @@ class TransmitPowerEvaluator(ScalarEvaluator):
         target: Transmitter,
         confidence: float = 1.0,
         tolerance: float = 0.0,
+        min_num_samples: int = 1024,
         plot_scale: str = "linear",
         tick_format: ValueType = ValueType.LIN,
+        plot_surface: bool = True,
     ) -> None:
         """
         Args:
             target: The device or transmitter to measure the received power of.
             confidence: Required confidence level for the given `tolerance` between zero and one.
             tolerance: Acceptable non-negative bound around the mean value of the estimated scalar performance indicator.
+            min_num_samples: Minimum number of samples required to compute the confidence bound.
             plot_scale: Scale of the plot. Can be ``'linear'`` or ``'log'``.
             tick_format: Tick format of the plot.
+            plot_surface: Enable surface plotting for two-dimensional grids. Enabled by default.
         """
 
         # Initialize the base class
-        ScalarEvaluator.__init__(self, confidence, tolerance, plot_scale, tick_format)
+        ScalarEvaluator.__init__(self, confidence, tolerance, min_num_samples, plot_scale, tick_format, plot_surface)
 
         # Initialize class members
         self.__transmit_hook = target.add_transmit_callback(self.__transmit_callback)
@@ -273,7 +280,7 @@ class TransmitPowerEvaluator(ScalarEvaluator):
             if num_artifacts > 0:
                 average_powers[grid_index] /= len(artifacts)
 
-        return PowerResult(average_powers, grid, self)
+        return ScalarEvaluationResult(average_powers, grid, self)
 
     def __del__(self) -> None:
         self.__transmit_hook.remove()
@@ -392,8 +399,10 @@ class PAPR(ScalarEvaluator):
         direction: AntennaMode,
         confidence: float = 1.0,
         tolerance: float = 0.0,
+        min_num_samples: int = 1024,
         plot_scale: str = "linear",
         tick_format: ValueType = ValueType.LIN,
+        plot_surface: bool = True,
     ) -> None:
         """
         Args:
@@ -402,8 +411,10 @@ class PAPR(ScalarEvaluator):
                 The direction of the *PAPR* evaluation. Can be ``AntennaMode.TX`` or ``AntennaMode.RX``.
             confidence: Required confidence level for the given `tolerance` between zero and one.
             tolerance: Acceptable non-negative bound around the mean value of the estimated scalar performance indicator.
+            min_num_samples: Minimum number of samples required to compute the confidence bound.
             plot_scale: Scale of the plot. Can be ``'linear'`` or ``'log'``.
             tick_format: Tick format of the plot.
+            plot_surface: Enable surface plotting for two-dimensional grids. Enabled by default.
         """
 
         # Assert antenn mode validity
@@ -411,7 +422,7 @@ class PAPR(ScalarEvaluator):
             raise ValueError("PAPR evaluator only supports TX and RX antenna modes")
 
         # Initialize the base class
-        ScalarEvaluator.__init__(self, confidence, tolerance, plot_scale, tick_format)
+        ScalarEvaluator.__init__(self, confidence, tolerance, min_num_samples, plot_scale, tick_format, plot_surface)
 
         # Initialize class members
         self.__direction = direction

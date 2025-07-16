@@ -8,7 +8,6 @@ from hermespy.core import Signal, SignalTransmitter
 from hermespy.simulation import SI, SimulationScenario, SSINR, SpecificIsolation, SimulatedUniformArray, SimulatedIdealAntenna
 from unit_tests.core.test_factory import test_roundtrip_serialization
 
-
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]

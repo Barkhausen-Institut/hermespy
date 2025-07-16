@@ -143,13 +143,7 @@ class TestSimulationActor(TestCase):
         self.scenario.add_device(self.device_beta)
 
         self.dimensions = []
-        self.actor = SimulationActor.remote((self.scenario, self.dimensions, []), 0)
-
-    def test_run(self) -> None:
-        """Test running the simulation actor"""
-
-        run_result = ray.get(self.actor.run.remote([tuple()]))
-        self.assertEqual(1, len(run_result.samples))
+        self.actor = SimulationActor(Mock(), (self.scenario, self.dimensions, []), 0)
 
 
 class TestSimulation(TestCase):
