@@ -25,7 +25,7 @@ class TestDocumentationExamples(TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        ray.init(local_mode=True, num_cpus=1, ignore_reinit_error=True, logging_level=logging.ERROR)
+        ray.init(ignore_reinit_error=True, logging_level=logging.ERROR)
 
     @classmethod
     def tearDownClass(cls) -> None:

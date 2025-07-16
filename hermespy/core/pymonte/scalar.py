@@ -8,10 +8,9 @@ from warnings import catch_warnings
 
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
-from mpl_toolkits.mplot3d import Axes3D  # type: ignoreimport numpy as np
+from mpl_toolkits.mplot3d import Axes3D  # type: ignore
 import numpy as np
 from scipy.stats import norm
-
 
 from ..logarithmic import ValueType
 from ..visualize import PlotVisualization, Visualizable, VAT
@@ -68,20 +67,20 @@ class ScalarEvaluationResult(EvaluationResult):
         # Ensure that the confidence bound is between zero and one
         if confidence > 1.0 or confidence < 0.0:
             raise ValueError("Coinfidence requirement must be between zero and one")
-        
+
         # Ensure the confidence bound is non-negative
         if accuracy < 0.0:
             raise ValueError("Confidence bound must be non-negative")
-        
+
         if min_num_samples < 2:
             raise ValueError("Minimum number of samples must be at least two")
 
         # Initialize base class
         EvaluationResult.__init__(self, grid, evaluator, base_dimension_index)
-        
+
         # Initialize confidence parameters
         grid_dimensions = [d.num_sample_points for d in grid]
-        
+
         # Initialize class attributes
         self.__accuracy = accuracy
         self.__confidence = confidence
@@ -98,16 +97,18 @@ class ScalarEvaluationResult(EvaluationResult):
         return self.evaluator.title
 
     @override
-    def add_artifact(self, coordinates: tuple[int, ...], artifact: Artifact, compute_confidence: bool = True) -> bool:
-        
+    def add_artifact(
+        self, coordinates: tuple[int, ...], artifact: Artifact, compute_confidence: bool = True
+    ) -> bool:
+
         confident = False
         scalar = artifact.to_scalar()
-        
+
         if scalar is not None:
             sum = self.__artifact_sums[coordinates] + scalar
             squared_sum = self.__artifact_squared_sums[coordinates] + scalar**2
             count = self.__artifact_count[coordinates] + 1
-            
+
             self.__artifact_sums[coordinates] = sum
             self.__artifact_squared_sums[coordinates] = squared_sum
             self.__artifact_count[coordinates] = count
@@ -115,9 +116,9 @@ class ScalarEvaluationResult(EvaluationResult):
             if compute_confidence and (count % self.__min_num_samples) == 0:
                 # The confidence is an implementation of Algorithm 1
                 # from ON NON-ASYMPTOTIC OPTIMAL STOPPING CRITERIA IN MONTE CARLO SIMULATIONS by Bayer et al.
-                std = ((squared_sum - (sum**2 / count)) / (count - 1))**.5
+                std = ((squared_sum - (sum**2 / count)) / (count - 1)) ** 0.5
                 if std > 0.0:
-                    confidence = 2 * (1 - self._scalar_cdf(count**.5 * self.__accuracy / std))
+                    confidence = 2 * (1 - self._scalar_cdf(count**0.5 * self.__accuracy / std))
                     confident = confidence < self.__confidence
 
         return confident
@@ -211,7 +212,7 @@ class ScalarEvaluationResult(EvaluationResult):
 
         visualization.axes[0, 0].plot_surface(x.astype(float), y.astype(float), data)
 
-    
+
 class ScalarEvaluator(Evaluator):
     """Evaluation routine for investigated object states, extracting scalar performance indicators of interest.
 
@@ -278,15 +279,9 @@ class ScalarEvaluator(Evaluator):
 
     @override
     def initialize_result(self, grid: Sequence[GridDimensionInfo]) -> ScalarEvaluationResult:
-        return ScalarEvaluationResult(grid, self, self.tolerance, self.confidence, self.min_num_samples, self.plot_surface)
-
-    @override
-    def generate_result(self, grid: Sequence[GridDimensionInfo], artifacts: np.ndarray) -> ScalarEvaluationResult:
-        result = self.initialize_result(grid)
-        for coordinates, artifact_list in np.ndenumerate(artifacts):
-            for artifact in artifact_list:
-                result.add_artifact(coordinates, artifact, False)
-        return result
+        return ScalarEvaluationResult(
+            grid, self, self.tolerance, self.confidence, self.min_num_samples, self.plot_surface
+        )
 
     @property
     def confidence(self) -> float:

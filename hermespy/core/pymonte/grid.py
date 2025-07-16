@@ -33,7 +33,7 @@ class RegisteredDimension(property):
 
     def __init__(
         self,
-        _property: property,
+        _property: object,
         first_impact: str | None = None,
         last_impact: str | None = None,
         title: str | None = None,
@@ -188,19 +188,15 @@ class SamplePoint(object):
 class GridDimensionInfo(object):
     """Basic information about a grid dimension."""
 
-    __sample_points:list[SamplePoint]
+    __sample_points: list[SamplePoint]
     __title: str | None
     __plot_scale: str
     __tick_format: ValueType
 
     def __init__(
-        self,
-        sample_points: list[SamplePoint],
-        title: str,
-        plot_scale: str,
-        tick_format: ValueType,
+        self, sample_points: list[SamplePoint], title: str, plot_scale: str, tick_format: ValueType
     ) -> None:
-        
+
         self.__sample_points = sample_points
         self.__title = title
         self.__plot_scale = plot_scale
@@ -477,7 +473,7 @@ class GridDimension(GridDimensionInfo):
         # Return a setting lambda if the reference is not callable
         # Implicitly we assume that every non-callable reference is an attribute
         return lambda args: setattr(object_reference, stages[-1], args)
-    
+
 
 class ScalarDimension(ABC):
     """Base class for objects that can be configured by scalar values.

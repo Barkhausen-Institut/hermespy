@@ -275,7 +275,7 @@ class MonteCarlo(Generic[MO]):
         self,
         actor: Type[MonteCarloActor],
         additional_dimensions: set[GridDimension] | None = None,
-        stage_arguments: map[str, object] | None = None,
+        stage_arguments: dict[str, object] | None = None,
     ) -> MonteCarloResult:
         """Launch the Monte Carlo simulation.
 
@@ -315,20 +315,15 @@ class MonteCarlo(Generic[MO]):
 
             return actor.stage_identifiers().index(dimension.first_impact)
 
-        self.__dimensions.sort(key=sort)
+        _dimensions.sort(key=sort)
 
         max_num_samples = self.num_samples
         min_batch_size = 0
         dimension_str = f"{max_num_samples}"
-        for dimension in self.__dimensions:
+        for dimension in _dimensions:
             min_batch_size += dimension.num_sample_points
             max_num_samples *= dimension.num_sample_points
             dimension_str += f" x {dimension.num_sample_points}"
-
-        # The maximum batch size is the number of overall samples
-        # divided by the number of available actors
-        max_batch_size: int = max_num_samples // self.num_actors
-        batch_size = min_batch_size + int(.2 * (max_batch_size - min_batch_size))
 
         if self.__console_mode != ConsoleMode.SILENT:
             self.console.log(
@@ -338,12 +333,12 @@ class MonteCarlo(Generic[MO]):
             )
 
         # Render simulation grid table
-        if self.__console_mode != ConsoleMode.SILENT and len(self.__dimensions) > 0:
+        if self.__console_mode != ConsoleMode.SILENT and len(_dimensions) > 0:
             dimension_table = Table(title="Simulation Grid", title_justify="left")
             dimension_table.add_column("Dimension")
             dimension_table.add_column("Sections", style="cyan")
 
-            for dimension in self.__dimensions:
+            for dimension in _dimensions:
                 section_str = ""
                 for sample_point in dimension.sample_points:
                     section_str += sample_point.title + " "
@@ -357,20 +352,24 @@ class MonteCarlo(Generic[MO]):
             self.console.print(dimension_table)
             self.console.print()
 
-        # Launch actors, actor manager and 
+        # Launch actors, actor manager and
         with self.console.status("Launching Actors ...", spinner="dots") if self.__console_mode == ConsoleMode.INTERACTIVE else nullcontext():  # type: ignore
 
             # Initialize queue manager
             remote_queue_manager_class = ray.remote(MonteCarloQueueManager)
-            queue_manager = remote_queue_manager_class.options(num_cpus=0, enable_task_events=self.__debug).remote(self.dimensions, self.num_samples)
+            queue_manager = remote_queue_manager_class.options(
+                num_cpus=0, enable_task_events=self.__debug
+            ).remote(self.dimensions, self.num_samples)
 
             # Initialize actor pool
             remote_actor_class = ray.remote(actor)
-            actors: list[ray.ObjectRef[MonteCarloActor]] = [remote_actor_class.options(num_cpus=self.cpus_per_actor, max_concurrency=2, enable_task_events=self.__debug).remote(queue_manager, (self.__investigated_object, self.__dimensions, self.__evaluators), a, stage_arguments, self.catch_exceptions) for a in range(self.num_actors)]  # type: ignore[attr-defined]
+            actors: list[MonteCarloActor] = [remote_actor_class.options(num_cpus=self.cpus_per_actor, max_concurrency=2, enable_task_events=self.__debug).remote(queue_manager, (self.__investigated_object, _dimensions, self.__evaluators), a, stage_arguments, self.catch_exceptions) for a in range(self.num_actors)]  # type: ignore[attr-defined]
 
             # Initialize collector
             remote_collector_class = ray.remote(MonteCarloCollector)
-            collector = remote_collector_class.options(num_cpus=0, max_concurrency=2, enable_task_events=self.__debug).remote(queue_manager, actors, self.dimensions, self.evaluators)
+            collector = remote_collector_class.options(
+                num_cpus=0, max_concurrency=2, enable_task_events=self.__debug
+            ).remote(queue_manager, actors, self.dimensions, self.evaluators)
 
         # Initialize progress bar
         progress = Progress(
@@ -386,10 +385,10 @@ class MonteCarlo(Generic[MO]):
 
             # Start running the actors
             for a in actors:
-                _ = a.run.remote()
+                _ = a.run.remote()  # type: ignore[attr-defined]
 
             # Start the collector
-            _ = collector.run.remote()
+            _ = collector.run.remote()  # type: ignore[attr-defined]
 
             # Keep executing until all samples are computed
             queue_progress: float = 0.0
@@ -398,23 +397,23 @@ class MonteCarlo(Generic[MO]):
                 sleep(self.__progress_log_interval)
 
                 # Fetch a progress estimate from the queue manager
-                queue_progress, active_map = ray.get(queue_manager.query_progress.remote())
+                queue_progress, active_map = ray.get(queue_manager.query_progress.remote())  # type: ignore[attr-defined]
 
                 # Update progress bar visualization
                 if self.__console_mode == ConsoleMode.INTERACTIVE:
 
                     progress.update(task1, completed=queue_progress)
-                    
+
                     if collector is not None:
-                     
+
                         # Fetch an intermediate parameter estimate from the collector
-                        intermediate_estimates: list[None | np.ndarray] = ray.get(collector.query_estimates.remote())
-                        
+                        intermediate_estimates: list[None | np.ndarray] = ray.get(collector.query_estimates.remote())  # type: ignore[attr-defined]
+
                         results_table = Table(min_width=self.console.measure(progress).minimum)
 
                         # Add columns for parameter dimensions
-                        for dimension in self.__dimensions:
-                            results_table.add_column(dimension.title,  style="cyan")
+                        for dimension in _dimensions:
+                            results_table.add_column(dimension.title, style="cyan")
 
                         # Add columns for available intermediate estimates
                         for evaluator, estimate in zip(self.__evaluators, intermediate_estimates):
@@ -422,13 +421,15 @@ class MonteCarlo(Generic[MO]):
                                 results_table.add_column(evaluator.abbreviation)
 
                         # Add rows for each parameter estimate
-                        for section_index in np.ndindex(*[d.num_sample_points for d in self.__dimensions]):
+                        for section_index in np.ndindex(
+                            *[d.num_sample_points for d in _dimensions]
+                        ):
                             results_row: list[str] = []
-                            
+
                             section_active: bool = active_map[section_index]
 
                             # Add dimension sample points
-                            for dimension, section_idx in zip(self.__dimensions, section_index):
+                            for dimension, section_idx in zip(_dimensions, section_index):
                                 results_row.append(dimension.sample_points[section_idx].title)
 
                             # Add intermediate estimates
@@ -438,7 +439,7 @@ class MonteCarlo(Generic[MO]):
                                     results_row.append(f"{color_tag}{estimate[section_index]:.2f}")
 
                             results_table.add_row(*results_row)
-    
+
                         status_group.renderables[0] = results_table
 
                 elif self.__console_mode == ConsoleMode.LINEAR:
@@ -451,7 +452,7 @@ class MonteCarlo(Generic[MO]):
         # Fetch all remote samples at the controller#
         with self.console.status("Collecting remote results ...", spinner="dots") if self.__console_mode == ConsoleMode.INTERACTIVE else nullcontext():  # type: ignore
 
-            evaluation_results: list[EvaluationResult] = ray.get(collector.fetch_results.remote())
+            evaluation_results: list[EvaluationResult] = ray.get(collector.fetch_results.remote())  # type: ignore[attr-defined]
 
         # Measure elapsed time
         stop_time = perf_counter()
@@ -459,10 +460,7 @@ class MonteCarlo(Generic[MO]):
 
         # Compute the final result
         simulation_result = MonteCarloResult(
-            self.__dimensions,
-            self.__evaluators,
-            evaluation_results,
-            0.0,
+            _dimensions, self.__evaluators, evaluation_results, 0.0
         )
 
         # Print results

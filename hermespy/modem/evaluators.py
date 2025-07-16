@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
 from typing_extensions import override
 
 import matplotlib.pyplot as plt
@@ -15,12 +14,9 @@ from hermespy.core import (
     ScalarEvaluator,
     Serializable,
     SerializationProcess,
-    Evaluator,
     EvaluationTemplate,
-    GridDimension,
     Hook,
     PlotVisualization,
-    ScalarEvaluationResult,
     StemVisualization,
     VAT,
     ValueType,
@@ -80,7 +76,9 @@ class CommunicationEvaluator(ScalarEvaluator, Serializable):
         """
 
         # Initialize base class
-        ScalarEvaluator.__init__(self, confidence, tolerance, min_num_samples, plot_scale, tick_format, plot_surface)
+        ScalarEvaluator.__init__(
+            self, confidence, tolerance, min_num_samples, plot_scale, tick_format, plot_surface
+        )
 
         # Initialize class attributes
         self.__transmitting_modem = transmitting_modem

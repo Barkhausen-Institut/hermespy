@@ -13,10 +13,9 @@ from hermespy.core import (
     DeserializationProcess,
     Evaluator,
     Evaluation,
-    GridDimension,
+    GridDimensionInfo,
     Hook,
     ScalarEvaluationResult,
-    ScalarEvaluator,
     Serializable,
     SerializationProcess,
     ArtifactTemplate,
@@ -237,14 +236,8 @@ class SidelobeEvaluator(Evaluator, Serializable):
         return SidelobeEvaluation(beamformed_power[1:], beamformed_power[0])
 
     @override
-    def initialize_result(self, grid: list[GridDimension]) -> ScalarEvaluationResult:
+    def initialize_result(self, grid: Sequence[GridDimensionInfo]) -> ScalarEvaluationResult:
         return ScalarEvaluationResult(grid, self)
-
-    @override
-    def generate_result(
-        self, grid: Sequence[GridDimension], artifacts: np.ndarray
-    ) -> ScalarEvaluationResult:
-        return ScalarEvaluationResult.From_Artifacts(grid, artifacts, self, self.__plot_surface)
 
     @override
     def serialize(self, process: SerializationProcess) -> None:

@@ -48,17 +48,14 @@ class TestEvaluators(TestCase):
     def _test_evaluator(self, evaluator: Evaluator) -> None:
         """Generate a result from a given evaluator and test its plotting routine."""
 
+        result = evaluator.initialize_result([self.dimension])
+
         transmission = self.device.transmit()
         self.device.receive(transmission)
 
         try:
             evaluation = evaluator.evaluate()
-
-            artifact = evaluation.artifact()
-            artifact_grid = np.empty(1, dtype=object)
-            artifact_grid[0] = [artifact, artifact]
-
-            result = evaluator.generate_result([self.dimension], artifact_grid)
+            result.add_artifact((0,), evaluation.artifact(), False)
 
             with SimulationTestContext():
                 _ = result.visualize()

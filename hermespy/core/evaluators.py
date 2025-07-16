@@ -19,7 +19,13 @@ from .device import (
 )
 from .hooks import Hook
 from .logarithmic import ValueType
-from .pymonte import Artifact, Evaluation, ScalarEvaluationResult, ScalarEvaluator, GridDimensionInfo
+from .pymonte import (
+    Artifact,
+    Evaluation,
+    ScalarEvaluationResult,
+    ScalarEvaluator,
+    GridDimensionInfo,
+)
 from .signal_model import Signal
 from .visualize import PlotVisualization, StemVisualization, VAT
 
@@ -151,7 +157,9 @@ class ReceivePowerEvaluator(ScalarEvaluator):
         """
 
         # Initialize the base class
-        ScalarEvaluator.__init__(self, confidence, tolerance, min_num_samples, plot_scale, tick_format, plot_surface)
+        ScalarEvaluator.__init__(
+            self, confidence, tolerance, min_num_samples, plot_scale, tick_format, plot_surface
+        )
 
         # Initialize class members
         self.__receive_hook = target.add_receive_callback(self.__receive_callback)
@@ -182,24 +190,6 @@ class ReceivePowerEvaluator(ScalarEvaluator):
     @override
     def title(self) -> str:
         return "Receive Power"
-
-    @override
-    def generate_result(self, grid: Sequence[GridDimensionInfo], artifacts: np.ndarray) -> ScalarEvaluationResult:
-        # Find the maximum number of receive ports over all artifacts
-        max_ports = max(
-            max(artifact.power.size for artifact in artifacts) for artifacts in artifacts.flat
-        )
-
-        average_powers = np.zeros((*artifacts.shape, max_ports), dtype=np.float64)
-        for grid_index, artifacts in np.ndenumerate(artifacts):
-            for artifact in artifacts:
-                average_powers[grid_index] += artifact.power
-
-            num_artifacts = len(artifacts)
-            if num_artifacts > 0:
-                average_powers[grid_index] /= len(artifacts)
-
-        return ScalarEvaluationResult(average_powers, grid, self)
 
     def __del__(self) -> None:
         self.__receive_hook.remove()
@@ -233,7 +223,9 @@ class TransmitPowerEvaluator(ScalarEvaluator):
         """
 
         # Initialize the base class
-        ScalarEvaluator.__init__(self, confidence, tolerance, min_num_samples, plot_scale, tick_format, plot_surface)
+        ScalarEvaluator.__init__(
+            self, confidence, tolerance, min_num_samples, plot_scale, tick_format, plot_surface
+        )
 
         # Initialize class members
         self.__transmit_hook = target.add_transmit_callback(self.__transmit_callback)
@@ -263,24 +255,6 @@ class TransmitPowerEvaluator(ScalarEvaluator):
     @override
     def title(self) -> str:
         return "Transmit Power"
-
-    @override
-    def generate_result(self, grid: Sequence[GridDimensionInfo], artifacts: np.ndarray) -> ScalarEvaluationResult:
-        # Find the maximum number of receive ports over all artifacts
-        max_ports = max(
-            max(artifact.power.size for artifact in artifacts) for artifacts in artifacts.flat
-        )
-
-        average_powers = np.zeros((*artifacts.shape, max_ports), dtype=np.float64)
-        for grid_index, artifacts in np.ndenumerate(artifacts):
-            for artifact in artifacts:
-                average_powers[grid_index] += artifact.power
-
-            num_artifacts = len(artifacts)
-            if num_artifacts > 0:
-                average_powers[grid_index] /= len(artifacts)
-
-        return ScalarEvaluationResult(average_powers, grid, self)
 
     def __del__(self) -> None:
         self.__transmit_hook.remove()
@@ -422,7 +396,9 @@ class PAPR(ScalarEvaluator):
             raise ValueError("PAPR evaluator only supports TX and RX antenna modes")
 
         # Initialize the base class
-        ScalarEvaluator.__init__(self, confidence, tolerance, min_num_samples, plot_scale, tick_format, plot_surface)
+        ScalarEvaluator.__init__(
+            self, confidence, tolerance, min_num_samples, plot_scale, tick_format, plot_surface
+        )
 
         # Initialize class members
         self.__direction = direction
@@ -486,12 +462,6 @@ class PAPR(ScalarEvaluator):
     @override
     def initialize_result(self, grid: Sequence[GridDimensionInfo]) -> ScalarEvaluationResult:
         return ScalarEvaluationResult(grid, self, self.tolerance, self.confidence)
-
-    @override
-    def generate_result(
-        self, grid: Sequence[GridDimensionInfo], artifacts: np.ndarray
-    ) -> ScalarEvaluationResult:
-        return ScalarEvaluationResult.From_Artifacts(grid, artifacts, self, plot_surface=False)
 
     def __del__(self) -> None:
         if self.__output_hook is not None:

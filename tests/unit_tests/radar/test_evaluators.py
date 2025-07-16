@@ -137,16 +137,6 @@ class TestDetectionProbEvaluator(TestCase):
         with self.assertRaises(RuntimeError):
             self.evaluator.evaluate()
 
-    def test_generate_result(self) -> None:
-        """Result generation should be properly handled"""
-
-        grid = []
-        artifacts = np.empty(0, dtype=np.object_)
-
-        result = self.evaluator.generate_result(grid, artifacts)
-
-        self.assertIsInstance(result, ScalarEvaluationResult)
-
     def test_evaluate(self) -> None:
         """Evaluator should compute the proper detection evaluation"""
 
@@ -462,17 +452,3 @@ class TestRootMeanSquareError(TestCase):
         evaluation = self.evaluator.evaluate()
         self.assertIsInstance(evaluation, RootMeanSquareEvaluation)
 
-    def test_generate_result(self) -> None:
-        """Result generation should be properly handled"""
-
-        propagation = self.channel.propagate(self.device.transmit(), self.device, self.device)
-        self.device.receive(propagation)
-
-        artifact = self.evaluator.evaluate().artifact()
-
-        artifacts = np.empty(1, dtype=object)
-        artifacts[0] = [artifact for _ in range(3)]
-        grid = [GridDimensionInfo([1], "Test Dimension", "linear", ValueType.LIN)]
-        result = self.evaluator.generate_result(grid, artifacts)
-
-        self.assertIsInstance(result, RootMeanSquareErrorResult)

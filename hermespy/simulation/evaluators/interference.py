@@ -58,7 +58,9 @@ class SI(ScalarEvaluator, Serializable):
         """
 
         # Initialize the base class
-        ScalarEvaluator.__init__(self, confidence, tolerance, min_num_samples, plot_scale, tick_format, plot_surface)
+        ScalarEvaluator.__init__(
+            self, confidence, tolerance, min_num_samples, plot_scale, tick_format, plot_surface
+        )
 
         # Register input hook
         self.__device = device
@@ -87,24 +89,6 @@ class SI(ScalarEvaluator, Serializable):
             )
 
         return PowerEvaluation(self._input.leaking_signal.power)
-
-    @override
-    def generate_result(self, grid: Sequence[GridDimension], artifacts: np.ndarray) -> ScalarEvaluationResult:
-        # Find the maximum number of receive ports over all artifacts
-        max_ports = max(
-            max(artifact.power.size for artifact in artifacts) for artifacts in artifacts.flat
-        )
-
-        mean_powers = np.zeros((*artifacts.shape, max_ports), dtype=np.float64)
-        for grid_index, artifacts in np.ndenumerate(artifacts):
-            for artifact in artifacts:
-                mean_powers[grid_index] += artifact.power
-
-            num_artifacts = len(artifacts)
-            if num_artifacts > 0:
-                mean_powers[grid_index] /= len(artifacts)
-
-        return ScalarEvaluationResult(mean_powers, grid, self)
 
     def __del__(self) -> None:
         self._input_hook.remove()

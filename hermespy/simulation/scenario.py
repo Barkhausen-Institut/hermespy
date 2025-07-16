@@ -367,7 +367,7 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDeviceState, Simulat
 
         return [channel.realize() for channel in self.channels]
 
-    @register(first_impact="receive_devices", title="Scenario Noise Level")  # type: ignore[misc]
+    @register(first_impact="receive_devices", title="Scenario Noise Level")  # type: ignore
     @property
     def noise_level(self) -> NoiseLevel | None:
         """Global noise level of the scenario.
@@ -381,7 +381,7 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDeviceState, Simulat
     def noise_level(self, value: NoiseLevel | None) -> None:
         self.__noise_level = value
 
-    @register(first_impact="receive_devices", title="Noise Model")  # type: ignore[misc]
+    @register(first_impact="receive_devices", title="Noise Model")  # type: ignore
     @property
     def noise_model(self) -> NoiseModel | None:
         """Global noise model of the scenario.

@@ -3,11 +3,10 @@
 from __future__ import annotations
 from collections.abc import Sequence
 from sys import maxsize
-from typing import Any, Callable, List, Mapping
+from typing import Any, Callable
 
 import numpy as np
 from os import path
-from ray import remote
 from rich.console import Console
 
 from hermespy.core import (
@@ -190,7 +189,7 @@ class SimulationActor(MonteCarloActor[SimulationScenario], SimulationRunner):
         queue_manager,
         argument_tuple: Any,
         index: int,
-        stage_arguments: Mapping[str, Sequence[tuple]] | None = None,
+        stage_arguments: dict[str, Sequence[tuple]] | None = None,
         catch_exceptions: bool = True,
     ) -> None:
         """
@@ -213,7 +212,9 @@ class SimulationActor(MonteCarloActor[SimulationScenario], SimulationRunner):
         """
 
         # Initialize base classes
-        MonteCarloActor.__init__(self, queue_manager, argument_tuple, index, stage_arguments, catch_exceptions)
+        MonteCarloActor.__init__(
+            self, queue_manager, argument_tuple, index, stage_arguments, catch_exceptions
+        )
         SimulationRunner.__init__(self, self._investigated_object)
 
         # Update the internal random seed pseudo-deterministically for each actor instance
@@ -222,7 +223,7 @@ class SimulationActor(MonteCarloActor[SimulationScenario], SimulationRunner):
         self._investigated_object.seed = individual_seed
 
     @staticmethod
-    def stage_identifiers() -> List[str]:
+    def stage_identifiers() -> list[str]:
         return [
             "realize_channels",
             "sample_states",
@@ -233,7 +234,7 @@ class SimulationActor(MonteCarloActor[SimulationScenario], SimulationRunner):
             "receive_operators",
         ]
 
-    def stage_executors(self) -> List[Callable]:
+    def stage_executors(self) -> list[Callable]:
         return [
             self.realize_channels,
             self.sample_states,
@@ -336,7 +337,12 @@ class Simulation(Pipeline[SimulationScenario, SimulatedDevice], MonteCarlo[Simul
 
         # Initialize base classes
         Pipeline.__init__(
-            self, scenario, results_dir=results_dir, verbosity=verbosity, console_mode=console_mode, debug=debug
+            self,
+            scenario,
+            results_dir=results_dir,
+            verbosity=verbosity,
+            console_mode=console_mode,
+            debug=debug,
         )
         MonteCarlo.__init__(
             self,
@@ -485,5 +491,5 @@ class Simulation(Pipeline[SimulationScenario, SimulatedDevice], MonteCarlo[Simul
         self.scenario.set_channel(alpha, beta, channel)
 
     @staticmethod
-    def _pip_packages() -> List[str]:
+    def _pip_packages() -> list[str]:
         return MonteCarlo._pip_packages() + ["sparse", "protobuf", "numba"]

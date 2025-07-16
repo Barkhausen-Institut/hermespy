@@ -59,8 +59,6 @@ import numpy as np
 from rich import get_console
 from rich.console import Console
 from rich.progress import track
-from scipy.stats import uniform
-from scipy.integrate import simpson
 
 from hermespy.core import (
     Executable,
@@ -78,7 +76,6 @@ from hermespy.core import (
     Evaluation,
     EvaluationResult,
     EvaluationTemplate,
-    GridDimension,
     GridDimensionInfo,
     ArtifactTemplate,
     Artifact,
@@ -358,7 +355,9 @@ class DetectionProbEvaluator(ScalarEvaluator, Serializable):
         """
 
         # Initialize base class
-        ScalarEvaluator.__init__(self,  confidence, tolerance, min_num_samples, plot_scale, tick_format, plot_surface)
+        ScalarEvaluator.__init__(
+            self, confidence, tolerance, min_num_samples, plot_scale, tick_format, plot_surface
+        )
 
         # Initialize class attributes
         self.__cloud = None
@@ -391,11 +390,6 @@ class DetectionProbEvaluator(ScalarEvaluator, Serializable):
     @override
     def title(self) -> str:
         return "Probability of Detection Evaluation"
-
-    @staticmethod
-    @override
-    def _scalar_cdf(scalar: float) -> float:
-        return uniform.cdf(scalar)
 
     @override
     def evaluate(self) -> DetectionProbabilityEvaluation:
@@ -510,9 +504,9 @@ class RocEvaluation(Evaluation[PlotVisualization]):
         _lines[1].set_ydata(self.__cube_h1.data)
 
 
-class RocEvaluationResult(EvaluationResult):
+class RocEvaluationResult(EvaluationResult[RocArtifact]):
     """Final result of an receive operating characteristcs evaluation."""
-    
+
     __artifacts: np.ndarray
     __num_thresholds: int
 
@@ -549,10 +543,7 @@ class RocEvaluationResult(EvaluationResult):
 
     @override
     def add_artifact(
-        self,
-        coordinates: tuple[int, ...],
-        artifact: RocArtifact,
-        compute_confidence: bool = True,
+        self, coordinates: tuple[int, ...], artifact: RocArtifact, compute_confidence: bool = True
     ) -> bool:
         self.__artifacts[coordinates].append(artifact)
         return False
@@ -560,7 +551,7 @@ class RocEvaluationResult(EvaluationResult):
     @override
     def runtime_estimates(self) -> None | np.ndarray:
         return None
-    
+
     @override
     def _prepare_visualization(
         self, figure: plt.Figure | None, axes: VAT, **kwargs
@@ -600,8 +591,8 @@ class RocEvaluationResult(EvaluationResult):
         section_magnitudes = tuple(s.num_sample_points for s in self.grid)
         for section_indices, line in zip(np.ndindex(section_magnitudes), visualization.lines[0, 0]):
             # Select the graph line scalars
-            x_axis = probabilities[section_indices, :, 0]
-            y_axis = probabilities[section_indices, :, 1]
+            x_axis = probabilities[*section_indices, :, 1]  # type: ignore[arg-type]
+            y_axis = probabilities[*section_indices, :, 0]  # type: ignore[arg-type]
 
             # Update the respective line
             line.set_data(x_axis, y_axis)
@@ -618,24 +609,21 @@ class RocEvaluationResult(EvaluationResult):
             for t, threshold in enumerate(
                 np.linspace(roc_data.min(), roc_data.max(), self.__num_thresholds, endpoint=True)
             ):
-                #threshold_coordinates = grid_coordinates + (t,)
-                pd = np.mean(
-                    roc_data[:, 1] >= threshold
-                )
-                pfa = np.mean(
-                    roc_data[:, 0] >= threshold
-                )
-                probabilities[*grid_coordinates, t, :] = (pd, pfa)
+                # threshold_coordinates = grid_coordinates + (t,)
+                pd = np.mean(roc_data[:, 1] >= threshold)
+                pfa = np.mean(roc_data[:, 0] >= threshold)
+                probabilities[*grid_coordinates, t, :] = (pd, pfa)  # type: ignore[arg-type]
 
         return probabilities
 
-    @override
-    def to_str(self, grid_coordinates: Sequence[int]) -> str:
-        false_alarm_probabilities = self.__false_alarm_probabilities[grid_coordinates]
-        detection_probabilities = self.__detection_probabilities[grid_coordinates]
 
-        integration = 2 * np.abs(simpson(detection_probabilities, false_alarm_probabilities)) - 1.0
-        return f"{int(np.round(100*integration))}%"
+#    @override
+#    def to_str(self, grid_coordinates: Sequence[int]) -> str:
+#        false_alarm_probabilities = self.__false_alarm_probabilities[grid_coordinates]
+#        detection_probabilities = self.__detection_probabilities[grid_coordinates]
+#
+#        integration = 2 * np.abs(simpson(detection_probabilities, false_alarm_probabilities)) - 1.0
+#        return f"{int(np.round(100*integration))}%"
 
 
 class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
@@ -799,25 +787,6 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
     def initialize_result(self, grid: Sequence[GridDimensionInfo]) -> RocEvaluationResult:
         return RocEvaluationResult(grid, self)
 
-    @override
-    def generate_result(
-        self, grid: Sequence[GridDimension], artifacts: np.ndarray
-    ) -> RocEvaluationResult:
-        """Generate a new receiver operating characteristics evaluation result.
-
-        Args:
-
-            grid:
-                Grid dimensions of the evaluation result.
-
-            artifacts:
-                Artifacts of the evaluation result.
-
-        Returns: The generated result.
-        """
-
-        return self.GenerateResult(grid, artifacts, self.__num_thresholds, self)
-
     @staticmethod
     def FromScenarios(
         h0_scenario: Scenario,
@@ -932,7 +901,7 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
             raise ValueError(
                 "Could not detect devices and operators within the provided scenarios."
             )
-            
+
         result = RocEvaluationResult(
             [GridDimensionInfo([SamplePoint(0)], "Scenario", "linear", ValueType.LIN)],
             None,
@@ -1027,8 +996,7 @@ class ReceiverOperatingCharacteristic(RadarEvaluator, Serializable):
 
         # Generate the evaluation result
         result = RocEvaluationResult(
-            [GridDimensionInfo([SamplePoint(0)], "Scenario", "linear", ValueType.LIN)],
-            None,
+            [GridDimensionInfo([SamplePoint(0)], "Scenario", "linear", ValueType.LIN)], None
         )
         artifacts = np.empty(1, dtype=object)
         artifacts[0] = [
@@ -1174,17 +1142,13 @@ class RootMeanSquareEvaluation(Evaluation[ScatterVisualization]):
         self.__pcl._update_visualization(visualization, **kwargs)
 
 
-class RootMeanSquareErrorResult(EvaluationResult):
+class RootMeanSquareErrorResult(EvaluationResult[RootMeanSquareArtifact]):
     """Result of a root mean square error evaluation."""
-    
+
     __cummulative_errors: np.ndarray
     __num_errors: np.ndarray
-    
-    def __init__(
-        self,
-        grid: Sequence[GridDimensionInfo],
-        evaluator: RootMeanSquareError,
-    ) -> None:
+
+    def __init__(self, grid: Sequence[GridDimensionInfo], evaluator: RootMeanSquareError) -> None:
         """
         Args:
             grid: Simulation grid.
@@ -1205,7 +1169,7 @@ class RootMeanSquareErrorResult(EvaluationResult):
         coordinates: tuple[int, ...],
         artifact: RootMeanSquareArtifact,
         compute_confidence: bool = True,
-    ) -> None:
+    ) -> bool:
         self.__cummulative_errors[coordinates] += artifact.cummulation
         self.__num_errors[coordinates] += artifact.num_errors
         return False  # No confidence computation for RMSE
@@ -1258,12 +1222,3 @@ class RootMeanSquareError(RadarEvaluator, Serializable):
     @override
     def abbreviation(self) -> str:
         return "RMSE"
-
-    @override
-    def generate_result(self, grid: Sequence[GridDimensionInfo], artifacts: np.ndarray) -> RootMeanSquareErrorResult:
-        result = self.initialize_result(grid)
-        for coordinates, artifact_sequence in np.ndenumerate(artifacts):
-            for artifact in artifact_sequence:
-                result.add_artifact(coordinates, artifact)
-
-        return result

@@ -14,7 +14,27 @@ from .antennas import (
     UniformArray,
 )
 from .definitions import ConsoleMode, Verbosity, FloatingError
-from .pymonte import *
+from .pymonte import (
+    Artifact,
+    ArtifactTemplate,
+    FAT,
+    MonteCarloActor,
+    MonteCarloSample,
+    Evaluation,
+    EvaluationTemplate,
+    EvaluationResult,
+    Evaluator,
+    GridDimension,
+    GridDimensionInfo,
+    RegisteredDimension,
+    register,
+    SamplePoint,
+    ScalarDimension,
+    MonteCarlo,
+    MonteCarloResult,
+    ScalarEvaluationResult,
+    ScalarEvaluator,
+)
 from .evaluators import (
     PAPR,
     ReceivePowerEvaluator,
@@ -160,6 +180,7 @@ __all__ = [
     "EvaluationResult",
     "EvaluationTemplate",
     "GridDimension",
+    "GridDimensionInfo",
     "SamplePoint",
     "ScalarDimension",
     "ScalarEvaluationResult",
@@ -168,7 +189,10 @@ __all__ = [
     "MonteCarloResult",
     "MonteCarloSample",
     "register",
+    "RegisteredDimension",
     "Factory",
+    "FAT",
+    "ScalarEvaluator",
     "Serializable",
     "SerializableEnum",
     "SerializationBackend",

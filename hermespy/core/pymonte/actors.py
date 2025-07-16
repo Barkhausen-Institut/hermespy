@@ -1,10 +1,10 @@
-
 from __future__ import annotations
 from abc import abstractmethod
 from typing import Callable, Generic, Sequence
 
 import numpy as np
 from ray import get, put, ObjectRef, wait
+from ray.actor import ActorClass
 
 from .definitions import MO, UnmatchableException
 from .evaluation import Evaluator, EvaluationResult
@@ -23,11 +23,11 @@ __status__ = "Prototype"
 
 class MonteCarloQueueManager(object):
     """Queue management actor for monte carlo simulations.
-    
+
     The queue manager is responsible for distributing section indices of the
     simulation grid to individual actors.
     """
-    
+
     __num_grid_sections: int
     __num_samples: int
     __batch_size: int
@@ -35,7 +35,9 @@ class MonteCarloQueueManager(object):
     __grid_task_count: np.ndarray
     __active_section_flags: np.ndarray
 
-    def __init__(self, grid: Sequence[GridDimensionInfo], num_samples: int, batch_size: int | None = None) -> None:
+    def __init__(
+        self, grid: Sequence[GridDimensionInfo], num_samples: int, batch_size: int | None = None
+    ) -> None:
         """
         Args:
             grid: The grid to be simulated.
@@ -43,25 +45,33 @@ class MonteCarloQueueManager(object):
             batch_size: The number of individual section index tuples to return when calling :meth:`next_batch`.
         """
 
-        self.__num_grid_sections = np.prod([d.num_sample_points for d in grid], dtype=int)
         self.__num_samples = num_samples
-        
-        self.__batch_size = self.__num_grid_sections if batch_size is None else batch_size
-        self.__max_num_samples = self.__num_grid_sections * num_samples
 
-        # Generate section sample containers and meta-information
-        self.__grid_task_count = np.zeros(
-            [d.num_sample_points for d in grid], dtype=int
-        )
-        self.__active_section_flags = np.ones_like(self.__grid_task_count, dtype=bool)
-        self.__active_section_coordinates = np.empty(
-            [self.__num_grid_sections, len(grid)], dtype=int
-        )
-        for c, coordinates in enumerate(np.ndindex(
-            *[d.num_sample_points for d in grid]
-        )):
-            # Store the section coordinates
-            self.__active_section_coordinates[c, :] = coordinates
+        if len(grid) > 0:
+            self.__num_grid_sections = np.prod([d.num_sample_points for d in grid], dtype=int)
+
+            self.__batch_size = self.__num_grid_sections if batch_size is None else batch_size
+            self.__max_num_samples = self.__num_grid_sections * num_samples
+
+            # Generate section sample containers and meta-information
+            self.__grid_task_count = np.zeros([d.num_sample_points for d in grid], dtype=int)
+            self.__active_section_flags = np.ones_like(self.__grid_task_count, dtype=bool)
+            self.__active_section_coordinates = np.empty(
+                [self.__num_grid_sections, len(grid)], dtype=int
+            )
+            for c, coordinates in enumerate(np.ndindex(*[d.num_sample_points for d in grid])):
+                # Store the section coordinates
+                self.__active_section_coordinates[c, :] = coordinates
+
+        # Treat the special case of an empty grid
+        # The simulation should still collect samples without reconfiguring the investigated object
+        else:
+            self.__num_grid_sections = 1
+            self.__batch_size = 1
+            self.__max_num_samples = num_samples
+            self.__grid_task_count = np.zeros((1), dtype=int)
+            self.__active_section_flags = np.array([True], dtype=bool)
+            self.__active_section_coordinates = np.empty((1, 0), dtype=int)
 
         self.__num_active_sections = self.__num_grid_sections
 
@@ -109,9 +119,7 @@ class MonteCarloQueueManager(object):
         """
 
         # Find the index of the section to disable
-        section_index = np.where(
-            (self.__active_section_coordinates == coordinates).all(axis=1)
-        )[0]
+        section_index = np.where((self.__active_section_coordinates == coordinates).all(axis=1))[0]
 
         # Abort if the section indices do not exist
         # This might happend if the section was already disabled
@@ -130,26 +138,29 @@ class MonteCarloQueueManager(object):
 
         Returns: A floating point value between zero and one indicating the progress of the simulation as well as a boolean array indicating which sections are still actively being processed.
         """
-        
+
         # No active sections left, return 100% progress
         if self.__num_active_sections < 1:
             return 1.0, self.__active_section_flags
 
-        return ((self.__num_grid_sections - self.__num_active_sections) * self.__num_samples + np.sum(self.__grid_task_count[self.__active_section_coordinates])) / self.__max_num_samples, self.__active_section_flags
+        return (
+            (self.__num_grid_sections - self.__num_active_sections) * self.__num_samples
+            + np.sum(self.__grid_task_count[self.__active_section_coordinates])
+        ) / self.__max_num_samples, self.__active_section_flags
 
 
 class MonteCarloCollector(object):
     """Collects samples from actors during simulation runtime."""
 
-    __queue_manager: ObjectRef[MonteCarloQueueManager]
-    __actors: list[ObjectRef[MonteCarloActor]]
+    __queue_manager: MonteCarloQueueManager
+    __actors: list[MonteCarloActor]
     __results: list[EvaluationResult]
     __active: bool = True  # Whether the collector is still running
 
     def __init__(
         self,
-        queue_manager: ObjectRef[MonteCarloQueueManager],
-        actors: list[ObjectRef[MonteCarloActor]],
+        queue_manager: MonteCarloQueueManager,
+        actors: list[MonteCarloActor],
         grid: Sequence[GridDimensionInfo],
         evaluators: list[Evaluator],
     ) -> None:
@@ -165,7 +176,7 @@ class MonteCarloCollector(object):
         self.__actors = actors
         self.__results = [e.initialize_result(grid) for e in evaluators]
         self.__active = False
-        self.__future_map: dict[ObjectRef, ObjectRef[MonteCarloActor]] = {}
+        self.__future_map: dict[ObjectRef, MonteCarloActor] = {}
 
     def run(self) -> None:
         """Start up the collector, collecting samples from all actors.
@@ -173,10 +184,10 @@ class MonteCarloCollector(object):
         This method will block and keep running until :meth:`fetch_results` is called.
         """
 
-        self.__future_map = {a.fetch_results.remote(): a for a in self.__actors}
+        self.__future_map = {a.fetch_results.remote(): a for a in self.__actors}  # type: ignore[attr-defined]
         self.__active = True
 
-        while(self.__active):
+        while self.__active:
             # Wait for the next sample to be available
             ready_future = wait(list(self.__future_map.keys()), num_returns=1)[0][0]
 
@@ -185,15 +196,16 @@ class MonteCarloCollector(object):
 
             # Re-queue the request for the next result
             actor = self.__future_map.pop(ready_future)
-            self.__future_map[actor.fetch_results.remote()] = actor
+            self.__future_map[actor.fetch_results.remote()] = actor  # type: ignore[attr-defined]
 
     def __process_samples(
         self,
-        ready_future: ObjectRef[list[ObjectRef[list[MonteCarloSample]]]], compute_confidence: bool,
+        ready_future: ObjectRef[list[ObjectRef[list[MonteCarloSample]]]],
+        compute_confidence: bool,
     ) -> None:
 
         sample_references: list[ObjectRef[list[MonteCarloSample]]] = get(ready_future)
-            
+
         for sample_reference in sample_references:
             # Get the sample from the actor
             samples: list[MonteCarloSample] = get(sample_reference)
@@ -204,14 +216,14 @@ class MonteCarloCollector(object):
                 section_coordinates = sample.grid_section
 
                 # Update all evaluation results with their respective sample artifacts
-                for evaluation_result, artifact in zip(
-                    self.__results, sample.artifacts
-                ):
-                    confident = evaluation_result.add_artifact(section_coordinates, artifact, compute_confidence)
-                    
+                for evaluation_result, artifact in zip(self.__results, sample.artifacts):
+                    confident = evaluation_result.add_artifact(
+                        section_coordinates, artifact, compute_confidence
+                    )
+
                     # If the confidence threshold is reached, disable the section
                     if compute_confidence and confident:
-                        self.__queue_manager.disable_section.remote(section_coordinates)
+                        self.__queue_manager.disable_section.remote(section_coordinates)  # type: ignore[attr-defined]
 
     def query_estimates(self) -> list[None | np.ndarray]:
         """Query intermediate estimates during simulation runtime.
@@ -219,9 +231,9 @@ class MonteCarloCollector(object):
         Returns: A list with the length of the number of evaluators, each containing the runtime estimates for the respective evaluator.
         If no estimates are available, the entry will be :py:obj:`None`.
         """
- 
+
         return [r.runtime_estimates() for r in self.__results]
-    
+
     def fetch_results(self) -> list[EvaluationResult]:
         """Fetch the results of the collector run.
 
@@ -248,23 +260,20 @@ class MonteCarloActor(Generic[MO]):
     The result of each individual simulation task is a simulation sample.
     """
 
-    __queue_manager: ObjectRef[MonteCarloQueueManager]
+    __queue_manager: MonteCarloQueueManager
     __results: list[ObjectRef[list[MonteCarloSample]]]
-
-    catch_exceptions: bool  # Catch exceptions during run.
-    __investigated_object: MO  # Copy of the object to be investigated
-    __grid: Sequence[GridDimension]  # Simulation grid dimensions
-    __evaluators: Sequence[
-        Evaluator
-    ]  # Evaluators used to process the investigated object sample state
-    __stage_arguments: map[str, Sequence[tuple]]
+    catch_exceptions: bool
+    __investigated_object: MO
+    __grid: Sequence[GridDimension]
+    __evaluators: Sequence[Evaluator]
+    __stage_arguments: dict[str, Sequence[tuple]]
 
     def __init__(
         self,
-        queue_manager: ObjectRef[MonteCarloQueueManager],
+        queue_manager: MonteCarloQueueManager,
         argument_tuple: tuple[MO, Sequence[GridDimension], Sequence[Evaluator]],
         index: int,
-        stage_arguments: map[str, Sequence[tuple]] | None = None,
+        stage_arguments: dict[str, Sequence[tuple]] | None = None,
         catch_exceptions: bool = True,
     ) -> None:
         """
@@ -334,7 +343,7 @@ class MonteCarloActor(Generic[MO]):
         while True:
 
             # Get the next batch of sections to run
-            batch = get(self.__queue_manager.next_batch.remote())
+            batch = get(self.__queue_manager.next_batch.remote())  # type: ignore[attr-defined]
 
             # If the batch is empty, i.e. no more sections to run, break the loop
             if len(batch) < 1:
@@ -371,13 +380,13 @@ class MonteCarloActor(Generic[MO]):
             recent_section_indices = np.array(batch[0], dtype=int)
             for d, i in enumerate(recent_section_indices):
                 self.__grid[d].configure_point(i)
-                
+
             # Initialize the result dictionary
             samples: list[MonteCarloSample] = []
 
             # Run through the program steps
             for section_indices in batch:
-                
+
                 # Detect the grid dimensions where sections changed, i.e. which require re-configuration
                 section_index_array = np.asarray(section_indices, dtype=int)
                 reconfigured_dimensions = np.argwhere(
@@ -421,7 +430,10 @@ class MonteCarloActor(Generic[MO]):
                 artifacts: list[list[Artifact]] = []
                 self.__execute_stages(first_impact, last_impact, artifacts)
 
-                samples.extend(MonteCarloSample(section_indices, a, artifact) for a, artifact in enumerate(artifacts))
+                samples.extend(
+                    MonteCarloSample(section_indices, a, artifact)
+                    for a, artifact in enumerate(artifacts)
+                )
 
                 # Update the recent section for the next iteration
                 recent_section_indices = section_index_array

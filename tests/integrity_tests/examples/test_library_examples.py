@@ -48,7 +48,7 @@ class TestGettingStartedExamples(TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        ray.init(local_mode=True, num_cpus=1, ignore_reinit_error=True, logging_level=logging.ERROR)
+        ray.init(ignore_reinit_error=True, logging_level=logging.ERROR)
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -99,7 +99,7 @@ class TestGettingStartedExamples(TestCase):
 
     # Test deactivated because patching the matplotlib backend
     # Causes Ray's cloudpickle to throw an exception
-    def __test_getting_started_simulation(self) -> None:
+    def test_getting_started_simulation(self) -> None:
         """Test getting started library simulation example execution"""
 
         with SimulationTestContext(patch_plot=True):
@@ -113,7 +113,7 @@ class TestAdvancedExamples(TestCase):
     """Test advanced example execution"""
 
     test_blacklist: set[str] = {
-        'audio.py',
+        'audio.py',  # No audio support in CI
         'ofdm_5g.py',  # Execution time is too long
         'interference.py',  # Execution time is too long
         'usrp.py',  # Not supported in CI

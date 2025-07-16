@@ -6,7 +6,7 @@ from hermespy.modem import TransmittingModem, ReceivingModem, BitErrorEvaluator,
 from hermespy.fec import RepetitionEncoder
 
 # Create a new HermesPy simulation scenario
-simulation = Simulation()
+simulation = Simulation(num_samples=1000)
 
 # Create two devices representing base station and terminal
 # in a downlink scenario
@@ -34,13 +34,10 @@ simulation.add_evaluator(BitErrorEvaluator(transmitter, receiver, plot_surface=F
 simulation.add_evaluator(ThroughputEvaluator(transmitter, receiver, plot_surface=True))
 
 # Configure simulation sweep dimensions
-snr_dimension = simulation.new_dimension('noise_level', dB(12, 10, 8, 6, 5, 4, 3, 2, 1, 0), terminal)
-rep_dimension = simulation.new_dimension('repetitions', [1, 3, 5, 7, 9], transmitter.encoder_manager[0], receiver.encoder_manager[0])
-snr_dimension.title = 'SNR'
-rep_dimension.title = 'Code Repetitions'
+snr_dimension = simulation.new_dimension('noise_level', dB(12, 10, 8, 6, 5, 4, 3, 2, 1, 0), terminal, title='SNR')
+rep_dimension = simulation.new_dimension('repetitions', [1, 3, 5, 7, 9], transmitter.encoder_manager[0], receiver.encoder_manager[0], title='Repetitions')
 
 # Run the simulation
-simulation.num_samples = 1000
 result = simulation.run()
 
 # Plot simulation results

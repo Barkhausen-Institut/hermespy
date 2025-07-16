@@ -2,7 +2,7 @@
 Power Evaluators
 =================
 
-.. inheritance-diagram:: hermespy.core.evaluators.PowerEvaluation hermespy.core.evaluators.PowerArtifact hermespy.core.evaluators.PowerResult
+.. inheritance-diagram:: hermespy.core.evaluators.PowerEvaluation hermespy.core.evaluators.PowerArtifact
    :parts: 1
 
 Power evaluators collect basic information about the power of signals at devices.
@@ -23,8 +23,6 @@ The following implementations are available:
 .. autoclass:: hermespy.core.evaluators.PowerEvaluation
 
 .. autoclass:: hermespy.core.evaluators.PowerArtifact
-
-.. autoclass:: hermespy.core.evaluators.PowerResult
 
 .. toctree::
    :hidden:

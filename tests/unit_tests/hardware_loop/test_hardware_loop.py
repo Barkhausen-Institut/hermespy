@@ -90,14 +90,6 @@ class TestEvaluatorRegistration(TestCase):
         self.registration.evaluate()
         mock_evaluate.assert_called_once()
 
-    @patch("hermespy.modem.evaluators.BitErrorEvaluator.generate_result")
-    def test_generate_result(self, mock_generate: MagicMock) -> None:
-        """Test the generate result routine"""
-
-        self.registration.generate_result(Mock(), Mock())
-        mock_generate.assert_called_once()
-
-
 class TestHardwareLoopSample(TestCase):
     """Test the hardware loop sample container class."""
 

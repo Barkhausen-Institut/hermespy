@@ -27,16 +27,16 @@ from hermespy.core import (
     ConsoleMode,
     Drop,
     Evaluation,
-    EvaluationResult,
     Evaluator,
+    GridDimension,
     MonteCarloResult,
     Pipeline,
     Serializable,
     SerializableEnum,
     VAT,
     Verbosity,
+    VT,
 )
-from hermespy.core import GridDimension, MonteCarloSample, VT
 from hermespy.tools import tile_figures
 from .physical_device import PDT
 from .physical_device_dummy import PhysicalScenarioDummy
@@ -124,27 +124,6 @@ class EvaluatorRegistration(object):
     @property
     def title(self) -> str:
         return self.__evaluator.title
-
-    @property
-    def confidence(self) -> float:
-        return self.__evaluator.confidence
-
-    @confidence.setter
-    def confidence(self, value: float) -> None:
-        self.__evaluator.confidence = value
-
-    @property
-    def tolerance(self) -> float:
-        return self.__evaluator.tolerance
-
-    @tolerance.setter
-    def tolerance(self, value: float) -> None:
-        self.__evaluator.tolerance = value
-
-    def generate_result(
-        self, grid: Sequence[GridDimension], artifacts: np.ndarray
-    ) -> EvaluationResult:
-        return self.__evaluator.generate_result(grid, artifacts)
 
 
 class HardwareLoopSample(object):
@@ -981,8 +960,8 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
 
                     # Generate a new samples
                     loop_sample = self.__generate_sample(section_indices, sample_index)
-                    for result, artifact in zip(results, loop_sample.artifacts):
-                        result.add_artifact(section_indices, artifact)
+                    for evaluation_result, artifact in zip(results, loop_sample.artifacts):
+                        evaluation_result.add_artifact(section_indices, artifact)
 
                     # Print results
                     if (
@@ -1024,8 +1003,4 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
                 progress.update(total_progress, completed=total)
 
         # Compute the evaluation results
-        result: MonteCarloResult = MonteCarloResult(
-            self.__dimensions, self.__evaluators, results, 0.0
-        )
-
-        return result
+        return MonteCarloResult(self.__dimensions, self.__evaluators, results, 0.0)

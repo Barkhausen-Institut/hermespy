@@ -3,7 +3,14 @@
 from .artifact import Artifact, ArtifactTemplate, FAT
 from .actors import MonteCarloActor, MonteCarloSample
 from .evaluation import Evaluation, EvaluationTemplate, EvaluationResult, Evaluator
-from .grid import GridDimension, GridDimensionInfo, RegisteredDimension, register, SamplePoint, ScalarDimension
+from .grid import (
+    GridDimension,
+    GridDimensionInfo,
+    RegisteredDimension,
+    register,
+    SamplePoint,
+    ScalarDimension,
+)
 from .monte_carlo import MonteCarlo, MonteCarloResult
 from .scalar import ScalarEvaluationResult, ScalarEvaluator
 

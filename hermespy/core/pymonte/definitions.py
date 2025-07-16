@@ -18,4 +18,5 @@ MO = TypeVar("MO")
 
 class UnmatchableException(Exception):
     """An exception that can never get caught."""
+
     ...  # pragma: no cover
