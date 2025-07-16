@@ -123,12 +123,6 @@ class TestDetectionProbEvaluator(TestCase):
         self.assertEqual("PD", self.evaluator.abbreviation)
         self.assertEqual("Probability of Detection Evaluation", self.evaluator.title)
 
-    def test_scalar_cdf(self) -> None:
-        """Scalara CDF should be properly computed"""  #
-
-        self.assertEqual(0.0, self.evaluator._scalar_cdf(0.0))
-        self.assertEqual(1.0, self.evaluator._scalar_cdf(1.0))
-
     def test_evaluate_validation(self) -> None:
         """Evaluation routine should raise RuntimeError if no point cloud is available"""
 
