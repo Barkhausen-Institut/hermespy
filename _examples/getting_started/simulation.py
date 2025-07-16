@@ -6,7 +6,7 @@ from hermespy.simulation import Simulation, SNR
 from hermespy.modem import BitErrorEvaluator, SimplexLink, RootRaisedCosineWaveform, SingleCarrierLeastSquaresChannelEstimation, SingleCarrierZeroForcingChannelEqualization
 
 # Create a new simulation
-simulation = Simulation(num_samples=100000)
+simulation = Simulation()
 
 # Add two dedicated devices to the simulation
 tx_device = simulation.new_device()
