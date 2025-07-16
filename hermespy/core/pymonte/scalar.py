@@ -219,7 +219,7 @@ class ScalarEvaluator(Evaluator):
     Evaluators represent the process of extracting arbitrary performance indicator samples :math:`X_m` in the form of
     :class:`.Artifact` instances from investigated object states.
     Once a :class:`.MonteCarloActor` has set its investigated object to a new random state,
-    it calls the :meth:`evaluate<hermespy.core.monte_carlo.Evaluator.evaluate>` routines of all configured evaluators,
+    it calls the :meth:`evaluate<hermespy.core.pymonte.evaluation.Evaluator.evaluate>` routines of all configured evaluators,
     collecting the resulting respective :class:`.Artifact` instances.
 
     For a given set of :class:`.Artifact` instances,
@@ -372,7 +372,7 @@ class ScalarEvaluator(Evaluator):
 class ScalarDimension(ABC):
     """Base class for objects that can be configured by scalar values.
 
-    When a property of type :class:`ScalarDimension` is defined as a simulation parameter :class:`GridDimension`,
+    When a property of type :class:`ScalarDimension` is defined as a simulation parameter :class:`GridDimension<hermespy.core.pymonte.grid.GridDimension>`,
     the simulation will automatically configure the object with the scalar value of the sample point
     during simulation runtime.
 

@@ -4,7 +4,7 @@ Throughput
 
 .. inheritance-diagram:: hermespy.modem.evaluators.ThroughputEvaluator hermespy.modem.evaluators.ThroughputArtifact hermespy.modem.evaluators.ThroughputEvaluation
    :parts: 1
-   :top-classes: hermespy.core.monte_carlo.Evaluator, hermespy.core.monte_carlo.Evaluation, hermespy.core.monte_carlo.Artifact
+   :top-classes: hermespy.core.pymonte.evaluation.Evaluator, hermespy.core.monte_carlo.Evaluation, hermespy.core.monte_carlo.Artifact
     
 Considering two linked modems denoted by :math:`(\alpha)` and :math:`(\beta)`,
 with modem :math:`(\alpha)` transmitting a bit stream

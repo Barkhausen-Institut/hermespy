@@ -105,9 +105,9 @@ __status__ = "Prototype"
 class RadarEvaluator(Evaluator, ABC):
     """Bastract base class for evaluating sensing performance.
 
-    Inherits from the abstract :class:`Evaluator<hermespy.core.monte_carlo.Evaluator>` base class.
-    Expects the abstract method :meth:`evaluate<hermespy.core.monte_carlo.Evaluator.evaluate>` as well as the abstract properties
-    :attr:`abbreviation<hermespy.core.monte_carlo.Evaluator.abbreviation>` and :attr:`title<hermespy.core.monte_carlo.Evaluator.title>` to be implemented.
+    Inherits from the abstract :class:`Evaluator<hermespy.core.pymonte.evaluation.Evaluator>` base class.
+    Expects the abstract method :meth:`evaluate<hermespy.core.pymonte.evaluation.Evaluator.evaluate>` as well as the abstract properties
+    :attr:`abbreviation<hermespy.core.pymonte.evaluation.Evaluator.abbreviation>` and :attr:`title<hermespy.core.pymonte.evaluation.Evaluator.title>` to be implemented.
 
     There are currently three different :class:`RadarEvaluators<.RadarEvaluator>` implemented:
 

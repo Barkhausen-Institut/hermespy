@@ -135,7 +135,7 @@ class SamplePoint(object):
     """Sample point of a single grid dimension.
 
     A single :class:`.GridDimension` holds a sequence of sample points
-    accesible by the :attr:`sample_points<.GridDimension.sample_points>` property.
+    accesible by the :attr:`sample_points<.GridDimensionInfo.sample_points>` property.
     During simulation runtime, the simulation will dynamically reconfigure
     the scenario selecting a single sample point out of each :class:`.GridDimension`
     per generated simulation sample.

@@ -516,7 +516,7 @@ class MonteCarlo(Generic[MO]):
                 but may be an attribute or sub-attribute of the investigated object.
 
             \*\*kwargs:
-                Additional initialization arguments passed to :class:`GridDimension`.
+                Additional initialization arguments passed to :class:`GridDimension<hermespy.core.pymonte.grid.GridDimension>`.
 
         Returns: The newly created dimension object.
         """

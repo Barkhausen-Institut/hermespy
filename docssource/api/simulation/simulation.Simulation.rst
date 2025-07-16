@@ -6,7 +6,7 @@ Simulation
    :parts: 1
 
 The :class:`Simulation<hermespy.simulation.simulation.Simulation>` class extends
-HermesPy's core distributed :class:`MonteCarlo<hermespy.core.monte_carlo.MonteCarlo>`
+HermesPy's core distributed :class:`MonteCarlo<hermespy.core.pymonte.monte_carlo.MonteCarlo>`
 simulation framework to support parameterized physical layer simulations of wireless
 communication and sensing scenarios.
 It manages the configuration of the physical layer description represented by

@@ -551,7 +551,7 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
 
             \*\*kwargs:
                 Additional keyword arguments to be passed to the dimension.
-                See :class:`GridDimension<hermespy.core.monte_carlo.GridDimension>` for more information.
+                See :class:`GridDimension<hermespy.core.pymonte.grid.GridDimension>` for more information.
 
         Returns: The newly created dimension object.
         """
