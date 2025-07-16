@@ -216,7 +216,7 @@ The generated information is collected in :doc:`SimulatedDrops<api/simulation/dr
    :lines: 44-47
 
 After the generation of a new :doc:`SimulatedDrop<api/simulation/drop.SimulatedDrop>`,
-:class:`Evaluators<hermespy.core.monte_carlo.Evaluator>` may be used to conveniently extract performance information.
+:class:`Evaluators<hermespy.core.pymonte.evaluation.Evaluator>` may be used to conveniently extract performance information.
 For instance, the bit error rate of the generated drop may be extracted by a :doc:`BitErrorEvaluator<api/modem/evaluators.ber>`:
 
 .. literalinclude:: ../_examples/getting_started/simulation.py
@@ -327,7 +327,7 @@ However, instead of multiple drops being generated in parallel, the hardware loo
 the configured :doc:`PhysicalDevices<api/hardware_loop/physical_device.PhysicalDevice>`.
 
 After the generation of a new :doc:`Drop<api/core/drop>`,
-:class:`Evaluators<hermespy.core.monte_carlo.Evaluator>` may be used to conveniently extract performance information.
+:class:`Evaluators<hermespy.core.pymonte.evaluation.Evaluator>` may be used to conveniently extract performance information.
 For instance, the bit error rate of the generated drop may be extracted by a :doc:`BitErrorEvaluator<api/modem/evaluators.ber>`:
 
 .. literalinclude:: ../_examples/getting_started/loop.py

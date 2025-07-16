@@ -8,7 +8,6 @@ from hermespy.core import Signal, SignalTransmitter
 from hermespy.simulation import SI, SimulationScenario, SSINR, SpecificIsolation, SimulatedUniformArray, SimulatedIdealAntenna
 from unit_tests.core.test_factory import test_roundtrip_serialization
 
-
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
@@ -54,17 +53,6 @@ class TestSI(TestCase):
         evaluation = self.evaluator.evaluate()
         self.assertAlmostEqual(np.mean(evaluation.power), 2 / self.isolation, places=4)
 
-    def test_generate_result(self) -> None:
-        """Test generation of SI evaluation results"""
-
-        _ = self.scenario.drop()
-        evaluation = self.evaluator.evaluate()
-        grid = []
-        artifacts = np.empty((1, 1), dtype=object)
-        artifacts[0, 0] = [evaluation.artifact(),]
-        result = self.evaluator.generate_result(grid, artifacts)
-        np.testing.assert_array_almost_equal(result.average_powers, 2 / self.isolation, decimal=4)
-
     def test_serialization(self) -> None:
         """Test serialization and deserialization of SI evaluators"""
 
@@ -96,29 +84,13 @@ class TestSSINR(TestCase):
 
     def test_properties(self) -> None:
         """Test static properties of SSINR evaluators"""
-        
+
         self.assertEqual(self.evaluator.abbreviation, "SSINR")
         self.assertEqual(self.evaluator.title, "Signal to Self-Interference plus Noise Power Ratio")
-        
+
     def test_evaluate(self) -> None:
         """Test SSINR evaluation routine"""
 
         _ = self.scenario.drop()
         evaluation = self.evaluator.evaluate()
         self.assertAlmostEqual(np.mean(evaluation.power), self.isolation / 2, delta=100)
-        
-    def test_generate_result(self) -> None:
-        """Test generation of SSINR evaluation results"""
-
-        _ = self.scenario.drop()
-        evaluation = self.evaluator.evaluate()
-        grid = []
-        artifacts = np.empty((1, 1), dtype=object)
-        artifacts[0, 0] = [evaluation.artifact(),]
-        result = self.evaluator.generate_result(grid, artifacts)
-        np.testing.assert_array_almost_equal(self.isolation / 2, result.average_powers, decimal=-3)
-
-    def test_serialization(self) -> None:
-        """Test serialization and deserialization of SSINR evaluators"""
-
-        test_roundtrip_serialization(self, self.evaluator)

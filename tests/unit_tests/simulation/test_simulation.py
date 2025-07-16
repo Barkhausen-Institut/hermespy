@@ -3,6 +3,7 @@
 from __future__ import annotations
 import logging
 from io import StringIO
+from os import getenv
 from tempfile import TemporaryDirectory
 from unittest import TestCase
 from unittest.mock import Mock, patch
@@ -10,15 +11,13 @@ from unittest.mock import Mock, patch
 import ray
 from rich.console import Console
 
-from hermespy.channel import IdealChannel
-from hermespy.core import ConsoleMode, Factory, MonteCarloResult, SignalTransmitter, SignalReceiver, Signal
+from hermespy.core import ConsoleMode, MonteCarloResult, SignalTransmitter, SignalReceiver, Signal
 from hermespy.modem import DuplexModem, BitErrorEvaluator, RRCWaveform
 from hermespy.simulation import N0
 from hermespy.simulation.simulation import SimulatedDevice, Simulation, SimulationActor, SimulationRunner, SimulationScenario
-from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -27,7 +26,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-GENERATE_OUTPUT = True  # getenv("HERMES_TEST_PLOT", "False").lower() == "true"
+GENERATE_OUTPUT = getenv("HERMES_TEST_PLOT", "False").lower() == "true"
 
 
 class TestSimulationRunner(TestCase):
@@ -145,13 +144,7 @@ class TestSimulationActor(TestCase):
         self.scenario.add_device(self.device_beta)
 
         self.dimensions = []
-        self.actor = SimulationActor.remote((self.scenario, self.dimensions, []), 0)
-
-    def test_run(self) -> None:
-        """Test running the simulation actor"""
-
-        run_result = ray.get(self.actor.run.remote([tuple()]))
-        self.assertEqual(1, len(run_result.samples))
+        self.actor = SimulationActor(Mock(), (self.scenario, self.dimensions, []), 0)
 
 
 class TestSimulation(TestCase):
@@ -179,7 +172,7 @@ class TestSimulation(TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-        ray.init(local_mode=True, num_cpus=1, ignore_reinit_error=True, logging_level=logging.ERROR)
+        ray.init(ignore_reinit_error=True, logging_level=logging.ERROR)
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -232,7 +225,7 @@ class TestSimulation(TestCase):
         mock_visualization = Mock()
         mock_visualization.figure = Mock()
 
-        with patch("hermespy.core.monte_carlo.MonteCarloResult.plot", return_value=[mock_visualization]), TemporaryDirectory() as temp:
+        with patch("hermespy.core.pymonte.monte_carlo.MonteCarloResult.plot", return_value=[mock_visualization]), TemporaryDirectory() as temp:
             self.simulation.results_dir = temp
             result = self.simulation.run()
 

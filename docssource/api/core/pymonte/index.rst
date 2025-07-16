@@ -1,6 +1,6 @@
-=======
+=========
 PyMonte
-=======
+=========
 
 PyMonte is a stand-alone core module of HermesPy,
 enabling efficient and flexible Monte Carlo simulations over arbitrary configuration parameter combinations.
@@ -36,11 +36,10 @@ campaign.
    object ---> evaluator_b ---> artifact_b
    object ---> evaluator_c ---> artifact_c
 
-
 Monte Carlo simulations usually sweep over multiple combinations of multiple parameters settings,
 configuring the underlying system model and generating simulation samples from independent realizations
 of the model state.
-PyMonte refers to a single parameter combination as :class:`GridSection<hermespy.core.monte_carlo.GridSection>`,
+PyMonte refers to a single parameter combination as a grid section,
 with the set of all parameter combinations making up the simulation grid.
 Each settable property of the investigated object is treated as a potential simulation parameter within the grid,
 i.e. each settable property can be represented by an axis within the multidimensional simulation grid.
@@ -82,12 +81,16 @@ Refer to :footcite:t:`2014:bayer` for a detailed description of the implemented 
 The actual simulation workload distribution is visualized in the previous flowchart.
 Using `Ray`_, PyMonte spawns a number of :class:`.MonteCarloActor` containers,
 with the number of actors depending on the available resources (i.e. number of CPU cores) detected.
-A central simulation controller schedules the workload by assigning :class:`GridSection<hermespy.core.monte_carlo.GridSection>` indices as tasks
-to the actors, which return the resulting simulation Samples after the simulation iteration is completed.
+A central simulation controller schedules the workload by assigning grid section index tuples as tasks to the actors, which return the resulting simulation Samples after the simulation iteration is completed.
 
 .. _Ray: https://www.ray.io/
 .. _pickle: https://docs.python.org/3/library/pickle.html
 
-.. automodule:: hermespy.core.monte_carlo
+.. toctree::
+   :glob:
+   :hidden:
+   :maxdepth: 1
+
+   *
 
 .. footbibliography::

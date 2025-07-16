@@ -91,16 +91,7 @@ class TestSidelobeEvaluator(TestCase):
         
         rx_evaluation = self.rx_evaluator.evaluate()
         self.assertGreater(1.0, rx_evaluation.artifact().to_scalar())
-        
-    def test_generate_result(self) -> None:
-        """Test the generate_result method"""
 
-        artifacts = np.empty((1,), dtype=object)
-        artifacts[0] = [ArtifactTemplate(.5) for _ in range(4)]
-
-        result = self.tx_evaluator.generate_result([], artifacts)
-        self.assertEqual(.5, result.to_array().flat[0])
-        
     def test_serialization(self) -> None:
         """Test side lobe evaluator serialization"""
 

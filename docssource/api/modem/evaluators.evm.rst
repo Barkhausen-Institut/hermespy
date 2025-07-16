@@ -4,7 +4,7 @@ Error Vector Magnitude
 
 .. inheritance-diagram:: hermespy.modem.evaluators.ConstellationEVM hermespy.modem.evaluators.EVMArtifact hermespy.modem.evaluators.EVMEvaluation
    :parts: 1
-   :top-classes: hermespy.core.monte_carlo.Evaluator, hermespy.core.monte_carlo.Evaluation, hermespy.core.monte_carlo.Artifact
+   :top-classes: hermespy.core.pymonte.evaluation.Evaluator, hermespy.core.monte_carlo.Evaluation, hermespy.core.monte_carlo.Artifact
 
 Considering two linked modems denoted by :math:`(\alpha)` and :math:`(\beta)`,
 with modem :math:`(\alpha)` transmitting a symbol sequence

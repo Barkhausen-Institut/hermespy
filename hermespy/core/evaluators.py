@@ -18,7 +18,14 @@ from .device import (
     Transmission,
 )
 from .hooks import Hook
-from .monte_carlo import Artifact, Evaluation, ScalarEvaluationResult, Evaluator, GridDimension
+from .logarithmic import ValueType
+from .pymonte import (
+    Artifact,
+    Evaluation,
+    ScalarEvaluationResult,
+    ScalarEvaluator,
+    GridDimensionInfo,
+)
 from .signal_model import Signal
 from .visualize import PlotVisualization, StemVisualization, VAT
 
@@ -30,55 +37,6 @@ __version__ = "1.5.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
-
-
-class PowerResult(ScalarEvaluationResult):
-    """The result of a received power evaluation.
-
-    Final result of power evaluations after all evaluation artifacts have been collected.
-    """
-
-    __average_powers: np.ndarray
-
-    def __init__(
-        self,
-        average_powers: np.ndarray,
-        grid: Sequence[GridDimension],
-        evaluator: Evaluator,
-        plot_surface: bool = False,
-    ) -> None:
-        """
-        Args:
-
-            average_powers (numpy.ndarray):
-                The received power in Watts for each antenna stream.
-
-            grid (Sequence[GridDimension]):
-                The grid dimensions of the evaluation.
-
-            evaluator (Evaluator):
-                The evaluator that generated this result.
-
-            plot_surface (bool):
-                Whether two-dimensional evaluations should be plotted as surface plots.
-        """
-
-        # Initialize the base class
-        scalars = np.sum(average_powers, axis=-1, keepdims=False)
-        ScalarEvaluationResult.__init__(self, grid, scalars, evaluator, plot_surface)
-
-        # Initialize class members
-        self.__average_powers = average_powers
-
-    @property
-    def average_powers(self) -> np.ndarray:
-        """The received power in Watts for each antenna stream."""
-
-        return self.__average_powers
-
-    @override
-    def to_array(self) -> np.ndarray:
-        return self.__average_powers
 
 
 class PowerArtifact(Artifact):
@@ -170,26 +128,38 @@ class PowerEvaluation(Evaluation[StemVisualization]):
         visualization.container.markerline.set_ydata(self.__power)
 
 
-class ReceivePowerEvaluator(Evaluator):
+class ReceivePowerEvaluator(ScalarEvaluator):
     """Estimates the signal power received receivers."""
 
     __receive_hook: Hook[Reception]
     __reception: Reception | None
 
-    def __init__(self, target: Receiver, plot_scale: str = "log") -> None:
+    def __init__(
+        self,
+        target: Receiver,
+        confidence: float = 1.0,
+        tolerance: float = 0.0,
+        min_num_samples: int = 1024,
+        plot_scale: str = "linear",
+        tick_format: ValueType = ValueType.LIN,
+        plot_surface: bool = True,
+    ) -> None:
         """
-
         Args:
-
-            target (Receiver):
-                The device or receiver to measure the received power of.
-
-            plot_scale (str):
-                The scale of the plot. Can be ``'linear'`` or ``'log'``.
+            target: The device or receiver to measure the received power of.
+            accuracy: Acceptable bound around the mean value of the estimated scalar performance indicator.
+            tolerance: Required confidence level for the given `accuracy`.
+            min_num_samples: Minimum number of samples required to compute the confidence bound.
+            plot_surface:
+                Enable surface plotting for two-dimensional grids.
+                Enabled by default.
+            base_dimension_index: Index of the base dimension used for plotting.
         """
 
         # Initialize the base class
-        Evaluator.__init__(self)
+        ScalarEvaluator.__init__(
+            self, confidence, tolerance, min_num_samples, plot_scale, tick_format, plot_surface
+        )
 
         # Initialize class members
         self.__receive_hook = target.add_receive_callback(self.__receive_callback)
@@ -221,48 +191,41 @@ class ReceivePowerEvaluator(Evaluator):
     def title(self) -> str:
         return "Receive Power"
 
-    @override
-    def generate_result(self, grid: Sequence[GridDimension], artifacts: np.ndarray) -> PowerResult:
-        # Find the maximum number of receive ports over all artifacts
-        max_ports = max(
-            max(artifact.power.size for artifact in artifacts) for artifacts in artifacts.flat
-        )
-
-        average_powers = np.zeros((*artifacts.shape, max_ports), dtype=np.float64)
-        for grid_index, artifacts in np.ndenumerate(artifacts):
-            for artifact in artifacts:
-                average_powers[grid_index] += artifact.power
-
-            num_artifacts = len(artifacts)
-            if num_artifacts > 0:
-                average_powers[grid_index] /= len(artifacts)
-
-        return PowerResult(average_powers, grid, self)
-
     def __del__(self) -> None:
         self.__receive_hook.remove()
 
 
-class TransmitPowerEvaluator(Evaluator):
+class TransmitPowerEvaluator(ScalarEvaluator):
     """Estimates the signal power transmitted by transmitters."""
 
     __transmit_hook: Hook[Transmission]
     __transmission: Transmission | None
 
-    def __init__(self, target: Transmitter, plot_scale: str = "log") -> None:
+    def __init__(
+        self,
+        target: Transmitter,
+        confidence: float = 1.0,
+        tolerance: float = 0.0,
+        min_num_samples: int = 1024,
+        plot_scale: str = "linear",
+        tick_format: ValueType = ValueType.LIN,
+        plot_surface: bool = True,
+    ) -> None:
         """
-
         Args:
-
-            target (Transmitter):
-                The device or receiver to measure the received power of.
-
-            plot_scale (str):
-                The scale of the plot. Can be ``'linear'`` or ``'log'``.
+            target: The device or transmitter to measure the received power of.
+            confidence: Required confidence level for the given `tolerance` between zero and one.
+            tolerance: Acceptable non-negative bound around the mean value of the estimated scalar performance indicator.
+            min_num_samples: Minimum number of samples required to compute the confidence bound.
+            plot_scale: Scale of the plot. Can be ``'linear'`` or ``'log'``.
+            tick_format: Tick format of the plot.
+            plot_surface: Enable surface plotting for two-dimensional grids. Enabled by default.
         """
 
         # Initialize the base class
-        Evaluator.__init__(self)
+        ScalarEvaluator.__init__(
+            self, confidence, tolerance, min_num_samples, plot_scale, tick_format, plot_surface
+        )
 
         # Initialize class members
         self.__transmit_hook = target.add_transmit_callback(self.__transmit_callback)
@@ -292,24 +255,6 @@ class TransmitPowerEvaluator(Evaluator):
     @override
     def title(self) -> str:
         return "Transmit Power"
-
-    @override
-    def generate_result(self, grid: Sequence[GridDimension], artifacts: np.ndarray) -> PowerResult:
-        # Find the maximum number of receive ports over all artifacts
-        max_ports = max(
-            max(artifact.power.size for artifact in artifacts) for artifacts in artifacts.flat
-        )
-
-        average_powers = np.zeros((*artifacts.shape, max_ports), dtype=np.float64)
-        for grid_index, artifacts in np.ndenumerate(artifacts):
-            for artifact in artifacts:
-                average_powers[grid_index] += artifact.power
-
-            num_artifacts = len(artifacts)
-            if num_artifacts > 0:
-                average_powers[grid_index] /= len(artifacts)
-
-        return PowerResult(average_powers, grid, self)
 
     def __del__(self) -> None:
         self.__transmit_hook.remove()
@@ -410,7 +355,7 @@ class PAPREvaluation(Evaluation[PlotVisualization]):
         visualization.axes[0, 0].autoscale_view(True, True, True)
 
 
-class PAPR(Evaluator):
+class PAPR(ScalarEvaluator):
     """Peak-to-average power ratio (*PAPR*) evaluator.
 
     Computes the average *PAPR* of radio-frequency band signals transmitted and received by devices during evaluation runtime.
@@ -422,14 +367,28 @@ class PAPR(Evaluator):
     __output: DeviceOutput | None
     __input: ProcessedDeviceInput | None
 
-    def __init__(self, device: Device, direction: AntennaMode) -> None:
+    def __init__(
+        self,
+        device: Device,
+        direction: AntennaMode,
+        confidence: float = 1.0,
+        tolerance: float = 0.0,
+        min_num_samples: int = 1024,
+        plot_scale: str = "linear",
+        tick_format: ValueType = ValueType.LIN,
+        plot_surface: bool = True,
+    ) -> None:
         """
         Args:
-
             device: The device to evaluate the *PAPR* of.
-
             direction:
                 The direction of the *PAPR* evaluation. Can be ``AntennaMode.TX`` or ``AntennaMode.RX``.
+            confidence: Required confidence level for the given `tolerance` between zero and one.
+            tolerance: Acceptable non-negative bound around the mean value of the estimated scalar performance indicator.
+            min_num_samples: Minimum number of samples required to compute the confidence bound.
+            plot_scale: Scale of the plot. Can be ``'linear'`` or ``'log'``.
+            tick_format: Tick format of the plot.
+            plot_surface: Enable surface plotting for two-dimensional grids. Enabled by default.
         """
 
         # Assert antenn mode validity
@@ -437,7 +396,9 @@ class PAPR(Evaluator):
             raise ValueError("PAPR evaluator only supports TX and RX antenna modes")
 
         # Initialize the base class
-        Evaluator.__init__(self)
+        ScalarEvaluator.__init__(
+            self, confidence, tolerance, min_num_samples, plot_scale, tick_format, plot_surface
+        )
 
         # Initialize class members
         self.__direction = direction
@@ -473,7 +434,6 @@ class PAPR(Evaluator):
 
     @override
     def evaluate(self) -> PAPREvaluation:
-
         # Fetch the output or input signal
         signal: Signal
         if self.__direction == AntennaMode.TX:
@@ -500,10 +460,8 @@ class PAPR(Evaluator):
         return PAPREvaluation(instantaneous_power)
 
     @override
-    def generate_result(
-        self, grid: Sequence[GridDimension], artifacts: np.ndarray
-    ) -> ScalarEvaluationResult:
-        return ScalarEvaluationResult.From_Artifacts(grid, artifacts, self, plot_surface=False)
+    def initialize_result(self, grid: Sequence[GridDimensionInfo]) -> ScalarEvaluationResult:
+        return ScalarEvaluationResult(grid, self, self.tolerance, self.confidence)
 
     def __del__(self) -> None:
         if self.__output_hook is not None:

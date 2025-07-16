@@ -213,7 +213,7 @@ class TestLogarithmic(TestCase):
 class TestLogarithmicSequence(TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        ray.init(local_mode=True, num_cpus=1, logging_level=logging.ERROR)
+        ray.init(local_mode=True, num_cpus=1, logging_level=logging.ERROR, ignore_reinit_error=True)
 
     @classmethod
     def tearDownClass(cls):

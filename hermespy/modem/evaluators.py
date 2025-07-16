@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
 from typing_extensions import override
 
 import matplotlib.pyplot as plt
@@ -12,16 +11,15 @@ from scipy.stats import uniform
 from hermespy.core import (
     ArtifactTemplate,
     DeserializationProcess,
+    ScalarEvaluator,
     Serializable,
     SerializationProcess,
-    Evaluator,
     EvaluationTemplate,
-    GridDimension,
     Hook,
     PlotVisualization,
-    ScalarEvaluationResult,
     StemVisualization,
     VAT,
+    ValueType,
 )
 from .modem import (
     CommunicationReception,
@@ -40,7 +38,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class CommunicationEvaluator(Evaluator, Serializable):
+class CommunicationEvaluator(ScalarEvaluator, Serializable):
     """Base class for evaluating communication processes between two modems."""
 
     _DEFAULT_PLOT_SURFACE: bool = True
@@ -57,31 +55,36 @@ class CommunicationEvaluator(Evaluator, Serializable):
         self,
         transmitting_modem: TransmittingModem,
         receiving_modem: ReceivingModem,
-        plot_surface: bool = _DEFAULT_PLOT_SURFACE,
+        confidence: float = 1.0,
+        tolerance: float = 0.0,
+        min_num_samples: int = 1024,
+        plot_scale: str = "log",
+        tick_format: ValueType = ValueType.LIN,
+        plot_surface: bool = True,
     ) -> None:
         """
         Args:
 
-            transmitting_modem:
-                Communication modem transmitting information.
-
-            receiving_modem:
-                Communication modem receiving information.
-
-            plot_surface:
-                Plot the surface of the evaluation result in two-dimensional grids.
-                Defaults to True.
+            transmitting_modem: Communication modem transmitting information.
+            receiving_modem: Communication modem receiving information.
+            confidence: Required confidence level for the given `tolerance` between zero and one.
+            tolerance: Acceptable non-negative bound around the mean value of the estimated scalar performance indicator.
+            min_num_samples: Minimum number of samples required to compute the confidence bound.
+            plot_scale: Scale of the plot. Can be ``'linear'`` or ``'log'``.
+            tick_format: Tick format of the plot.
+            plot_surface: Enable surface plotting for two-dimensional grids. Enabled by default.
         """
 
         # Initialize base class
-        Evaluator.__init__(self)
+        ScalarEvaluator.__init__(
+            self, confidence, tolerance, min_num_samples, plot_scale, tick_format, plot_surface
+        )
 
         # Initialize class attributes
         self.__transmitting_modem = transmitting_modem
         self.__receiving_modem = receiving_modem
         self.__transmission = None
         self.__reception = None
-        self.__plot_surface = plot_surface
 
         # Register callbacks for new transmissions and receptions
         self.__transmit_hook = transmitting_modem.add_transmit_callback(self.__transmit_callback)
@@ -130,11 +133,6 @@ class CommunicationEvaluator(Evaluator, Serializable):
             )
 
         return self.__transmission, self.__reception
-
-    def generate_result(
-        self, grid: Sequence[GridDimension], artifacts: np.ndarray
-    ) -> ScalarEvaluationResult:
-        return ScalarEvaluationResult.From_Artifacts(grid, artifacts, self, self.__plot_surface)
 
     def __del__(self) -> None:
         """Destructor of the communication evaluator.
@@ -238,29 +236,6 @@ class BitErrorEvaluation(ErrorEvaluation):
 class BitErrorEvaluator(CommunicationEvaluator, Serializable):
     """Evaluate bit errors between two modems exchanging information."""
 
-    def __init__(
-        self,
-        transmitting_modem: TransmittingModem,
-        receiving_modem: ReceivingModem,
-        plot_surface: bool = True,
-    ) -> None:
-        """
-        Args:
-
-            transmitting_modem:
-                Modem transmitting information.
-
-            receiving_modem:
-                Modem receiving information.
-
-            plot_surface:
-                Plot the surface of the evaluation result in two-dimensional grids.
-                Defaults to True.
-        """
-
-        CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem, plot_surface)
-        self.plot_scale = "log"  # Plot logarithmically by default
-
     def evaluate(self) -> BitErrorEvaluation:
         # Retrieve transmitted and received bits
         transmission, reception = self._fetch_dsp_results()
@@ -321,29 +296,6 @@ class BlockErrorEvaluation(ErrorEvaluation):
 
 class BlockErrorEvaluator(CommunicationEvaluator, Serializable):
     """Evaluate block errors between two modems exchanging information."""
-
-    def __init__(
-        self,
-        transmitting_modem: TransmittingModem,
-        receiving_modem: ReceivingModem,
-        plot_surface: bool = True,
-    ) -> None:
-        """
-        Args:
-
-            transmitting_modem:
-                Modem transmitting information.
-
-            receiving_modem:
-                Modem receiving information.
-
-            plot_surface:
-                Plot the surface of the evaluation result in two-dimensional grids.
-                Defaults to True.
-        """
-
-        CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem, plot_surface)
-        self.plot_scale = "log"  # Plot logarithmically by default
 
     def evaluate(self) -> BlockErrorEvaluation:
         # Retrieve transmittend and received data
@@ -411,29 +363,6 @@ class FrameErrorEvaluation(ErrorEvaluation):
 
 class FrameErrorEvaluator(CommunicationEvaluator, Serializable):
     """Evaluate frame errors between two modems exchanging information."""
-
-    def __init__(
-        self,
-        transmitting_modem: TransmittingModem,
-        receiving_modem: ReceivingModem,
-        plot_surface: bool = True,
-    ) -> None:
-        """
-        Args:
-
-            transmitting_modem:
-                Modem transmitting information.
-
-            receiving_modem:
-                Modem receiving information.
-
-            plot_surface:
-                Plot the surface of the evaluation result in two-dimensional grids.
-                Defaults to True.
-        """
-
-        CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem, plot_surface)
-        self.plot_scale = "log"  # Plot logarithmically by default
 
     def evaluate(self) -> FrameErrorEvaluation:
         # Retrieve transmitted and received information

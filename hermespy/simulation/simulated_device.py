@@ -1190,7 +1190,7 @@ class SimulatedDevice(Device[SimulatedDeviceState], Moveable):
 
         return self.__scenario is not None
 
-    @register(first_impact="receive_devices", title="Device Noise Level")  # type: ignore[misc]
+    @register(first_impact="receive_devices", title="Device Noise Level")  # type: ignore
     @property
     def noise_level(self) -> NoiseLevel:
         """Level of the simulated hardware noise."""
@@ -1201,7 +1201,7 @@ class SimulatedDevice(Device[SimulatedDeviceState], Moveable):
     def noise_level(self, value: NoiseLevel) -> None:
         self.__noise_level = value
 
-    @register(first_impact="receive_devices", title="Device Noise Model")  # type: ignore[misc]
+    @register(first_impact="receive_devices", title="Device Noise Model")  # type: ignore
     @property
     def noise_model(self) -> NoiseModel:
         """Model of the simulated hardware noise."""
@@ -1213,7 +1213,7 @@ class SimulatedDevice(Device[SimulatedDeviceState], Moveable):
         self.__noise_model = value
         self.__noise_model.random_mother = self
 
-    # @register(first_impact="receive_devices", title="Device Noise Level")  # type: ignore[misc]
+    # @register(first_impact="receive_devices", title="Device Noise Level")  # type: ignore
     @property
     def noise(self) -> float:
         """Shorthand property for accessing the noise level of the device.

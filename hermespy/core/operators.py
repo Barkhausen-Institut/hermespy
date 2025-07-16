@@ -161,10 +161,6 @@ class SignalTransmitter(StaticOperator, Transmitter[Transmission], Serializable)
         return transmission
 
     @override
-    def _recall_transmission(self, group):
-        return super()._recall_transmission(group)
-
-    @override
     def serialize(self, process: SerializationProcess) -> None:
         process.serialize_object(self.__signal, "signal")
 

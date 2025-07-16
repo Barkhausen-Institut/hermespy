@@ -41,7 +41,7 @@ dependencies = [
     "h5py>=3.8.0",
     "scipy>=1.14.1",
     "pybind11>=2.10.4",
-    "ray>=2.40.0",
+    "ray>=2.47.1",
     "sparse>=0.15.5",
     "numba>=0.60.0",
     "rich>=13.9.4",
@@ -56,9 +56,10 @@ Issues = "https://github.com/Barkhausen-Institut/hermespy/issues"
 test = [
     "pytest>=7.4.2",
     "coverage>=7.5.1",
-    "mypy>=1.13.0",
+    "mypy>=1.17.0",
     "nbformat",
     "nbconvert",
+    "flake8>=7.3.0",
 ]
 quadriga = [
     "oct2py>=5.6.0",
@@ -87,10 +88,10 @@ develop = [
     "scikit-build-core>=0.10.7",
     "cmake>=3.31.2",
     "wheel>=0.45.1",
-    "black>=24.10.0",
-    "flake8>=7.1.1",
+    "black>=25.10.0",
+    "flake8>=7.3.0",
     "coverage>=7.6.9",
-    "mypy>=1.13.0",
+    "mypy>=1.17.0",
 ]
 sionna = [
     "mitsuba<=3.6.2",

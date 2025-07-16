@@ -113,14 +113,14 @@ class TestNotebooks(TestCase):
         """Test the beamforming implemntation example notebook"""
 
         notebook = self.__load_notebook("beamforming_implementation.ipynb")
-        self.__patch_notebook(notebook, 8, inserts={2: "import ray as ray\n", 9: "ray.init(local_mode=True)"}, patches={9: "simulation = Simulation(console_mode=ConsoleMode.SILENT, num_actors=1)", 24: "simulation.num_samples = 1"})
+        self.__patch_notebook(notebook, 8, inserts={2: "import ray as ray\n", 9: "ray.init(ignore_reinit_error=True)"}, patches={9: "simulation = Simulation(console_mode=ConsoleMode.SILENT)", 24: "simulation.num_samples = 1"})
         self.__test_notebook(notebook)
 
     def test_beamforming_usage(self) -> None:
         """Test beamforming usage notebook"""
 
         notebook = self.__load_notebook("beamforming_usage.ipynb")
-        self.__patch_notebook(notebook, 8, inserts={0: "import ray as ray\n", 7: "ray.init(local_mode=True)"}, patches={8: "simulation = Simulation(console_mode=ConsoleMode.SILENT, num_actors=1, num_samples=1)"})
+        self.__patch_notebook(notebook, 8, inserts={0: "import ray as ray\n", 7: "ray.init(ignore_reinit_error=True)"}, patches={8: "simulation = Simulation(console_mode=ConsoleMode.SILENT, num_samples=1)"})
         self.__patch_notebook(notebook, 25, patches={21: "simulation.num_drops = 1"})
         self.__patch_notebook(notebook, 31, patches={14: "simulation.num_drops = 1"})
         self.__test_notebook(notebook)
@@ -129,12 +129,12 @@ class TestNotebooks(TestCase):
         """Test the channel implementation example notebook"""
 
         notebook = self.__load_notebook("channel.ipynb")
-        self.__patch_notebook(notebook, 4, 
-            patches= {
-                8: "simulation = Simulation(console_mode=ConsoleMode.SILENT, num_actors=1)",
+        self.__patch_notebook(notebook, 4,
+            patches={
+                8: "simulation = Simulation(console_mode=ConsoleMode.SILENT)",
                 34: "simulation.num_samples = 1",
             },
-            inserts={1: "import ray as ray", 8: "ray.init(local_mode=True)"},
+            inserts={1: "import ray as ray", 8: "ray.init(ignore_reinit_error=True)"},
         )
         self.__test_notebook(notebook)
 
@@ -150,9 +150,9 @@ class TestNotebooks(TestCase):
         notebook = self.__load_notebook("evaluator.ipynb")
         self.__patch_notebook(
             notebook, 4,
-            inserts={0: "import ray as ray\n", 6: "ray.init(local_mode=True)"},
+            inserts={0: "import ray as ray\n", 6: "ray.init(ignore_reinit_error=True)"},
             patches={
-                6: "simulation = Simulation(console_mode=ConsoleMode.SILENT, num_actors=1)",
+                6: "simulation = Simulation(console_mode=ConsoleMode.SILENT)",
             },
         )
         self.__test_notebook(notebook)
@@ -161,21 +161,21 @@ class TestNotebooks(TestCase):
         """Test the forward error correction implementation example notebook"""
 
         notebook = self.__load_notebook("fec_coding.ipynb")
-        self.__patch_notebook(notebook, 8, inserts={0: "import ray as ray\n", 5: "ray.init(local_mode=True)"}, patches={5: "simulation = Simulation(console_mode=ConsoleMode.SILENT, num_actors=1)", 17: "simulation.num_samples = 1"})
+        self.__patch_notebook(notebook, 8, inserts={0: "import ray as ray\n", 5: "ray.init(ignore_reinit_error=True)"}, patches={5: "simulation = Simulation(console_mode=ConsoleMode.SILENT)", 17: "simulation.num_samples = 1"})
         self.__test_notebook(notebook)
 
     def test_precoding(self) -> None:
         """Test the MIMO precoding implementation example notebook"""
 
         notebook = self.__load_notebook("precoding.ipynb")
-        self.__patch_notebook(notebook, 4, inserts={0: "import ray as ray\n", 5: "ray.init(local_mode=True)"}, patches={5: "simulation = Simulation(console_mode=ConsoleMode.SILENT, num_actors=1, num_samples=1)"})
+        self.__patch_notebook(notebook, 4, inserts={0: "import ray as ray\n", 5: "ray.init(ignore_reinit_error=True)"}, patches={5: "simulation = Simulation(console_mode=ConsoleMode.SILENT, num_samples=1)"})
         self.__test_notebook(notebook)
 
     def test_roc(self) -> None:
         """Test the receiver operation characteristics example notebook"""
 
         notebook = self.__load_notebook("roc.ipynb")
-        self.__patch_notebook(notebook, 2, inserts={0: "import ray as ray\n", 16: "ray.init(local_mode=True)"})
+        self.__patch_notebook(notebook, 2, inserts={0: "import ray as ray\n", 16: "ray.init(ignore_reinit_error=True)"})
         self.__patch_notebook(notebook, 6, patches={22: "simulation.num_samples = 1"})
         self.__patch_notebook(notebook, 8, patches={10: "hardware_loop.num_samples = 1"})
         self.__test_notebook(notebook)
@@ -184,5 +184,5 @@ class TestNotebooks(TestCase):
         """Test the communication waveform implementation example notebook"""
 
         notebook = self.__load_notebook("waveform.ipynb")
-        self.__patch_notebook(notebook, 10, patches={3: "simulation = Simulation(console_mode=ConsoleMode.SILENT, num_actors=1)", 11: "simulation.num_samples = 1"}, inserts={0: "import ray as ray", 3: "ray.init(local_mode=True)"})
+        self.__patch_notebook(notebook, 10, patches={3: "simulation = Simulation(console_mode=ConsoleMode.SILENT)", 11: "simulation.num_samples = 1"}, inserts={0: "import ray as ray", 3: "ray.init(ignore_reinit_error=True)"})
         self.__test_notebook(notebook)

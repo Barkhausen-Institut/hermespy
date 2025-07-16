@@ -70,8 +70,6 @@ class TestEvaluatorRegistration(TestCase):
 
         self.assertEqual(self.evaluator.abbreviation, self.registration.abbreviation)
         self.assertEqual(self.evaluator.title, self.registration.title)
-        self.assertEqual(self.evaluator.confidence, self.registration.confidence)
-        self.assertEqual(self.evaluator.tolerance, self.registration.tolerance)
 
     def test_confidence_setget(self) -> None:
         """Confidence property getter should return setter argument"""
@@ -91,14 +89,6 @@ class TestEvaluatorRegistration(TestCase):
 
         self.registration.evaluate()
         mock_evaluate.assert_called_once()
-
-    @patch("hermespy.modem.evaluators.BitErrorEvaluator.generate_result")
-    def test_generate_result(self, mock_generate: MagicMock) -> None:
-        """Test the generate result routine"""
-
-        self.registration.generate_result(Mock(), Mock())
-        mock_generate.assert_called_once()
-
 
 class TestHardwareLoopSample(TestCase):
     """Test the hardware loop sample container class."""
@@ -369,8 +359,8 @@ class TestHardwareLoop(TestCase):
             def raiseError():
                 raise RuntimeError()
 
-            add_samples_patch = stack.enter_context(patch("hermespy.core.monte_carlo.GridSection.add_samples"))
-            add_samples_patch.side_effect = raiseError
+            add_artifact_patch = stack.enter_context(patch.object(self.hardware_loop, "_HardwareLoop__generate_sample"))
+            add_artifact_patch.side_effect = raiseError
 
             exception_patch = stack.enter_context(patch.object(self.hardware_loop, "_handle_exception"))
 

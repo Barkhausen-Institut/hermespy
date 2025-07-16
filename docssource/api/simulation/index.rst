@@ -124,7 +124,7 @@ In this example, one of the most basic performance indicators is the signal powe
 
 The simulation can be executed by calling the :meth:`run<hermespy.simulation.simulation.Simulation.run>` method.
 All configured performance indicators will be evaluated for each parameter combination and the results
-returned in a :class:`MonteCarloResult<hermespy.core.monte_carlo.MonteCarloResult>`.
+returned in a :class:`MonteCarloResult<hermespy.core.pymonte.monte_carlo.MonteCarloResult>`.
 From there, the result can be printed to the console, plotted, or saved to the drive.
 
 .. literalinclude:: /scripts/examples/simulation.py

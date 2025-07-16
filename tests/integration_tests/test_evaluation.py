@@ -6,7 +6,7 @@ import numpy as np
 from hermespy.modem import DuplexModem, RootRaisedCosineWaveform, BitErrorEvaluator, BlockErrorEvaluator, FrameErrorEvaluator, ThroughputEvaluator
 from hermespy.simulation import SimulatedDevice
 from hermespy.core.evaluators import ReceivePowerEvaluator
-from hermespy.core.monte_carlo import Evaluator, GridDimension
+from hermespy.core.pymonte import Evaluator, GridDimension
 from unit_tests.utils import SimulationTestContext
 
 __author__ = "Jan Adler"
@@ -48,17 +48,14 @@ class TestEvaluators(TestCase):
     def _test_evaluator(self, evaluator: Evaluator) -> None:
         """Generate a result from a given evaluator and test its plotting routine."""
 
+        result = evaluator.initialize_result([self.dimension])
+
         transmission = self.device.transmit()
         self.device.receive(transmission)
 
         try:
             evaluation = evaluator.evaluate()
-
-            artifact = evaluation.artifact()
-            artifact_grid = np.empty(1, dtype=object)
-            artifact_grid[0] = [artifact, artifact]
-
-            result = evaluator.generate_result([self.dimension], artifact_grid)
+            result.add_artifact((0,), evaluation.artifact(), False)
 
             with SimulationTestContext():
                 _ = result.visualize()

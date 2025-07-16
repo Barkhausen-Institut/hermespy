@@ -8,7 +8,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy.random import default_rng
 
-from hermespy.core.monte_carlo import ScalarEvaluationResult, ArtifactTemplate
+from hermespy.core.pymonte import GridDimensionInfo, ScalarEvaluationResult, ArtifactTemplate
+from hermespy.core import ValueType
 from hermespy.modem import TransmittingModem, ReceivingModem, RootRaisedCosineWaveform
 from hermespy.modem.evaluators import BitErrorEvaluation, BitErrorEvaluator, BlockErrorEvaluation, BlockErrorEvaluator, CommunicationEvaluator, FrameErrorEvaluation, FrameErrorEvaluator, ThroughputEvaluation, ThroughputEvaluator, ConstellationEVM, EVMEvaluation
 from hermespy.simulation import SimulatedDevice
@@ -52,15 +53,6 @@ class TestCommunicationEvaluator(TestCase):
 
         self.assertIs(self.transmitter, self.evaluator.transmitting_modem)
         self.assertIs(self.receiver, self.evaluator.receiving_modem)
-
-    def test_generate_result(self) -> None:
-        """Result should be properly generated"""
-
-        artifacts = np.empty(1, dtype=np.object_)
-        artifacts[0] = [ArtifactTemplate(n) for n in range(10)]
-
-        result = self.evaluator.generate_result([], artifacts)
-        self.assertIsInstance(result, ScalarEvaluationResult)
 
 
 class TestBitErrorEvaluation(TestCase):
