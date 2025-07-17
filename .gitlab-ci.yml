@@ -8,6 +8,12 @@ variables:
   HERMES_WHEEL_10: "hermespy-$HERMES_VERSION-cp310-cp310-linux_x86_64.whl"
   PYDEVD_DISABLE_FILE_VALIDATION: 1
 
+# Run pipeline only on merge requests or on the default branch
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
 stages:
   - build
   - test

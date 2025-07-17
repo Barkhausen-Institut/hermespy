@@ -3,7 +3,7 @@
 from __future__ import annotations
 from collections.abc import Sequence
 from contextlib import nullcontext
-from logging import ERROR
+from logging import INFO, ERROR
 from os import path
 from time import perf_counter, sleep
 from typing import Generic, Type
@@ -152,7 +152,6 @@ class MonteCarlo(Generic[MO]):
 
     __progress_log_interval: float
     __num_samples: int
-    __min_num_samples: int
     __num_actors: int
     __investigated_object: MO
     __dimensions: list[GridDimension]
@@ -168,7 +167,7 @@ class MonteCarlo(Generic[MO]):
         investigated_object: MO,
         num_samples: int,
         evaluators: Sequence[Evaluator] | None = None,
-        min_num_samples: int = -1,
+        batch_size: int | None = None,
         num_actors: int | None = None,
         console: Console | None = None,
         console_mode: ConsoleMode = ConsoleMode.INTERACTIVE,
@@ -177,8 +176,7 @@ class MonteCarlo(Generic[MO]):
         cpus_per_actor: int = 1,
         runtime_env: bool = False,
         catch_exceptions: bool = True,
-        progress_log_interval: float = 2.0,
-        premature_stopping: bool = False,
+        progress_log_interval: float = 4.0,
         debug: bool = False,
     ) -> None:
         """
@@ -192,8 +190,9 @@ class MonteCarlo(Generic[MO]):
             evaluators:
                 Evaluators used to process the investigated object sample state.
 
-            min_num_samples:
-                Minimum number of generated samples per grid element.
+            batch_size:
+                Number of samples collected by inidividual actors.
+                Refer to :attr:`.batch_size` for more information.
 
             num_actors:
                 Number of dedicated actors spawned during simulation.
@@ -205,7 +204,7 @@ class MonteCarlo(Generic[MO]):
             console_mode:
                 The printing behaviour of the simulation during runtime.
 
-            section_block_size:
+            batch_size:
                 Number of samples per section block.
                 By default, the size of the simulation grid is selected.
 
@@ -229,11 +228,6 @@ class MonteCarlo(Generic[MO]):
                 Interval between result logs in seconds.
                 1 second by default.
 
-            premature_stopping:
-                If enabled, the simulation will stop as soon as all confidence thresholds for configured evaluators are met.
-                This is useful for long-running simulations where the results are already satisfactory.
-                Currently disabled by default, since it might lead to performance issues on large clusters.
-
             debug:
                 Enables debug mode during simulation runtime.
                 Debug mode will add performance-related information to the output and enable the ray dashboard.
@@ -245,14 +239,13 @@ class MonteCarlo(Generic[MO]):
         self.__investigated_object = investigated_object
         self.__evaluators = [] if evaluators is None else list(evaluators)
         self.num_samples = num_samples
-        self.min_num_samples = min_num_samples if min_num_samples >= 0 else int(0.1 * num_samples)
         self.__console = Console(log_path=False) if console is None else console
         self.__console_mode = console_mode
         self.cpus_per_actor = cpus_per_actor
+        self.batch_size = batch_size
         self.num_actors = num_actors
         self.catch_exceptions = catch_exceptions
         self.__progress_log_interval = progress_log_interval
-        self.premature_stopping = premature_stopping
         self.__debug = debug
 
         # Launch ray if not already running
@@ -264,7 +257,7 @@ class MonteCarlo(Generic[MO]):
                     if self.runtime_env
                     else None
                 ),
-                logging_level=ERROR,
+                logging_level=INFO if debug else ERROR,
                 include_dashboard=debug,
             )
 
@@ -317,19 +310,23 @@ class MonteCarlo(Generic[MO]):
 
         _dimensions.sort(key=sort)
 
-        max_num_samples = self.num_samples
+        num_sections = 1
         min_batch_size = 0
-        dimension_str = f"{max_num_samples}"
+        dimension_str = f"{self.num_samples}"
         for dimension in _dimensions:
             min_batch_size += dimension.num_sample_points
-            max_num_samples *= dimension.num_sample_points
+            num_sections *= dimension.num_sample_points
             dimension_str += f" x {dimension.num_sample_points}"
+        max_num_samples = num_sections * self.num_samples
+
+        _batch_size = max(min_batch_size, self.batch_size)
 
         if self.__console_mode != ConsoleMode.SILENT:
             self.console.log(
                 f"Generating a maximum of {max_num_samples} = "
                 + dimension_str
                 + f" samples inspected by {len(self.__evaluators)} evaluators\n"
+                + f"Collecting batches of {_batch_size} samples\n"
             )
 
         # Render simulation grid table
@@ -344,7 +341,9 @@ class MonteCarlo(Generic[MO]):
                     section_str += sample_point.title + " "
 
                 # Truncate the section string to the console width
-                if (len(section_str) > self.console.width - 20) and dimension.num_sample_points > 3:
+                if (
+                    (len(section_str) > self.console.width - 20) and dimension.num_sample_points > 3
+                ) or dimension.num_sample_points >= 10:
                     section_str = f"{dimension.sample_points[0].title} {dimension.sample_points[1].title} ... {dimension.sample_points[-1].title}"
 
                 dimension_table.add_row(dimension.title, section_str)
@@ -376,7 +375,6 @@ class MonteCarlo(Generic[MO]):
             SpinnerColumn(), *Progress.get_default_columns(), TimeElapsedColumn(), transient=True
         )
         task1 = progress.add_task("Computing", total=1.0)
-        num_result_rows = min(10, min_batch_size)
 
         # Display results in a live table
         status_group = Group("", progress)
@@ -390,9 +388,18 @@ class MonteCarlo(Generic[MO]):
             # Start the collector
             _ = collector.run.remote()  # type: ignore[attr-defined]
 
+            # Compute parameters for displaying interemediate results
+            page_counter = 0
+            max_num_entries_per_page = 8
+            num_pages = num_sections // max_num_entries_per_page + 1
+            entries_per_page = num_sections // num_pages + 1
+
             # Keep executing until all samples are computed
             queue_progress: float = 0.0
             while queue_progress < 1.0:
+
+                page_index = page_counter % num_pages
+                page_counter += 1
 
                 sleep(self.__progress_log_interval)
 
@@ -421,9 +428,16 @@ class MonteCarlo(Generic[MO]):
                                 results_table.add_column(evaluator.abbreviation)
 
                         # Add rows for each parameter estimate
-                        for section_index in np.ndindex(
-                            *[d.num_sample_points for d in _dimensions]
+                        for s, section_index in enumerate(
+                            np.ndindex(*[d.num_sample_points for d in _dimensions])
                         ):
+                            # Skip rows not belonging to the current page
+                            if (
+                                s < page_index * entries_per_page
+                                or s >= (page_index + 1) * entries_per_page
+                            ):
+                                continue
+
                             results_row: list[str] = []
 
                             section_active: bool = active_map[section_index]
@@ -439,6 +453,11 @@ class MonteCarlo(Generic[MO]):
                                     results_row.append(f"{color_tag}{estimate[section_index]:.2f}")
 
                             results_table.add_row(*results_row)
+
+                        # Add additional empty rows to fill the page
+                        # This keeps the table layout consistent
+                        for _ in range(entries_per_page - results_table.row_count):
+                            results_table.add_row(*[""] * len(results_table.columns))
 
                         status_group.renderables[0] = results_table
 
@@ -480,19 +499,6 @@ class MonteCarlo(Generic[MO]):
         """The object to be investigated during the simulation runtime."""
 
         return self.__investigated_object
-
-    @property
-    def premature_stopping(self) -> bool:
-        """Flag indicating whether the simulation should compute evaluator confidences and stop prematurely once all sections are considered confident.
-
-        .. warning:: This feature may currently lead to performance bottlenecks on large clusters.
-        """
-
-        return self.__premature_stopping
-
-    @premature_stopping.setter
-    def premature_stopping(self, value: bool) -> None:
-        self.__premature_stopping = value
 
     def new_dimension(
         self, dimension: str, sample_points: list[object], *args: object, **kwargs
@@ -580,7 +586,10 @@ class MonteCarlo(Generic[MO]):
 
     @property
     def num_samples(self) -> int:
-        """Number of samples per simulation grid element.
+        """Number of samples per simulation grid section.
+
+        This represents the maximum number of samples a parameter combination will be sampled.
+        The final number of collected samples may be smaller if the configured evaluators report confidence in their results before the maximum number of samples is reached.
 
         Raises:
             ValueError: If number of samples is smaller than one.
@@ -594,33 +603,6 @@ class MonteCarlo(Generic[MO]):
             raise ValueError("Number of samples must be greater than zero")
 
         self.__num_samples = value
-
-    @property
-    def min_num_samples(self) -> int:
-        """Minimum number of samples per simulation grid element.
-
-        Raises:
-            ValueError: If number of samples is smaller than zero.
-        """
-
-        return self.__min_num_samples
-
-    @min_num_samples.setter
-    def min_num_samples(self, value: int) -> None:
-        if value < 0.0:
-            raise ValueError("Number of samples must be greater or equal to zero")
-
-        self.__min_num_samples = value
-
-    @property
-    def max_num_samples(self) -> int:
-        """Maximum number of samples over the whole simulation."""
-
-        num_samples = self.num_samples
-        for dimension in self.__dimensions:
-            num_samples *= dimension.num_sample_points
-
-        return num_samples
 
     @property
     def num_actors(self) -> int:
@@ -662,15 +644,15 @@ class MonteCarlo(Generic[MO]):
         self.__console = value
 
     @property
-    def section_block_size(self) -> int:
-        """Number of generated samples per section block.
+    def batch_size(self) -> int:
+        """Number of discrete samples generated by
 
         Raises:
             ValueError: If the block size is smaller than one.
         """
 
-        if self.__section_block_size is not None:
-            return self.__section_block_size
+        if self.__batch_size is not None:
+            return self.__batch_size
 
         size = 1
         for dimension in self.__dimensions:
@@ -678,12 +660,12 @@ class MonteCarlo(Generic[MO]):
 
         return size
 
-    @section_block_size.setter
-    def section_block_size(self, value: int | None) -> None:
+    @batch_size.setter
+    def batch_size(self, value: int | None) -> None:
         if value is not None and value < 1:
             raise ValueError("Section block size must be greater or equal to one")
 
-        self.__section_block_size = value
+        self.__batch_size = value
 
     @property
     def cpus_per_actor(self) -> int:

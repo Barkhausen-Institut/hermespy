@@ -144,34 +144,6 @@ class TestMonteCarlo(TestCase):
 
         self.assertIn(evaluator, self.monte_carlo.evaluators)
 
-    def test_min_num_samples_validation(self) -> None:
-        """Minimum number of samples property setter should raise ValueError on negative arguments"""
-
-        with self.assertRaises(ValueError):
-            self.monte_carlo.min_num_samples = -1
-
-    def test_min_num_samples_setget(self) -> None:
-        """Minimum number of samples property getter should return setter argument"""
-
-        min_num_samples = 10
-        self.monte_carlo.min_num_samples = min_num_samples
-
-        self.assertEqual(min_num_samples, self.monte_carlo.min_num_samples)
-
-    def test_max_num_samples(self) -> None:
-        """Maximum number of samples should return the correct value"""
-
-        _ = self.monte_carlo.new_dimension("property_a", [1, 2])
-        self.assertEqual(6, self.monte_carlo.max_num_samples)
-
-    def test_section_block_size_setget(self) -> None:
-        """Section block size property getter should return setter argument"""
-
-        section_block_size = 10
-        self.monte_carlo.section_block_size = section_block_size
-
-        self.assertEqual(section_block_size, self.monte_carlo.section_block_size)
-
     def test_num_actors(self) -> None:
         """Number of actors property should return the correct number of actors"""
 
@@ -194,14 +166,21 @@ class TestMonteCarlo(TestCase):
 
         self.assertIs(console, self.monte_carlo.console)
 
-    def test_section_block_size_validation(self) -> None:
-        """Section block size property setter should raise ValueError on arguments smaller than one"""
+    def test_batch_size_setget(self) -> None:
+        """The batch size property getter should return setter argument"""
+
+        batch_size = 10
+        self.monte_carlo.batch_size = batch_size
+        self.assertEqual(batch_size, self.monte_carlo.batch_size)
+
+    def test_batch_size_validation(self) -> None:
+        """Section batch size property setter should raise ValueError on arguments smaller than one"""
 
         with self.assertRaises(ValueError):
-            self.monte_carlo.section_block_size = -1
+            self.monte_carlo.batch_size = -1
 
         with self.assertRaises(ValueError):
-            self.monte_carlo.section_block_size = 0
+            self.monte_carlo.batch_size = 0
 
     def test_cpus_per_actor_validation(self) -> None:
         """CPUs per actor property setter should raise ValueError on arguments smaller than one"""
