@@ -606,6 +606,11 @@ class RocEvaluationResult(EvaluationResult[RocArtifact]):
             artifact_line: list[RocArtifact] = self.__artifacts[grid_coordinates]
             roc_data = np.array([[a.h0_value, a.h1_value] for a in artifact_line])
 
+            # Skip if there is no data
+            if roc_data.size == 0:
+                probabilities[grid_coordinates, :, :] = np.nan
+                continue
+
             for t, threshold in enumerate(
                 np.linspace(roc_data.min(), roc_data.max(), self.__num_thresholds, endpoint=True)
             ):

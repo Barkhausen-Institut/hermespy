@@ -51,10 +51,9 @@ simulation_init = Simulation.__init__
 
 def monte_carlo_init_mock(cls: MonteCarlo, *args, **kwargs) -> None:
     args = list(args)
-    args[1] = 1
-    kwargs["num_actors"] = 1  # Only spawn a single actor
+    args[1] = 1  # Only generate a single sample
+    kwargs["num_actors"] = 3  # Only spawn a few actors to speed up tests
     kwargs["catch_exceptions"] = False  # Don't catch exceptions during runtime
-    kwargs["min_num_samples"] = 1  # Only generate a single sample
 
     monte_carlo_init(cls, *args, **kwargs)
 

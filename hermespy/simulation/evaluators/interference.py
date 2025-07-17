@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from typing import Sequence
 from typing_extensions import override
 
 import numpy as np
@@ -9,8 +8,6 @@ import numpy as np
 from hermespy.core import (
     DeserializationProcess,
     ScalarEvaluator,
-    ScalarEvaluationResult,
-    GridDimension,
     Hook,
     PowerEvaluation,
     Serializable,

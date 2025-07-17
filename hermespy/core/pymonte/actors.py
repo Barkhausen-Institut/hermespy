@@ -4,7 +4,6 @@ from typing import Callable, Generic, Sequence
 
 import numpy as np
 from ray import get, put, ObjectRef, wait
-from ray.actor import ActorClass
 
 from .definitions import MO, UnmatchableException
 from .evaluation import Evaluator, EvaluationResult

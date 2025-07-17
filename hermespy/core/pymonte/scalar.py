@@ -4,7 +4,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Sequence, TypeVar
 from typing_extensions import override
-from warnings import catch_warnings
+from warnings import catch_warnings, simplefilter
 
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
@@ -181,6 +181,7 @@ class ScalarEvaluationResult(EvaluationResult):
     @override
     def to_array(self) -> np.ndarray:
         with catch_warnings(record=False):
+            simplefilter("ignore", RuntimeWarning)
             return self.__artifact_sums / self.__artifact_count
 
     def _prepare_surface_visualization(self, ax: Axes3D) -> list[Line2D]:
