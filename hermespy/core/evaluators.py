@@ -566,25 +566,22 @@ class ExtractedSignals(EvaluationResult[SignalExtraction]):
         # Find the maximum number of samples in the signal stash
         max_samples = 0
         max_streams = 0
+        max_signals = 0
         signals: list[Signal]
         for signals in self.__signal_stash.flat:
+            max_signals = max(max_signals, len(signals))
             for signal in signals:
-                num_samples = 0
-                for block in signal._blocks:
-                    num_samples += block.shape[1]
-                max_samples = max(max_samples, num_samples)
+                max_samples = max(max_samples, signal.num_samples)
                 max_streams = max(max_streams, signal.num_streams)
 
         # Create an array to hold the signals
-        samples_array = np.zeros(([d.num_sample_points for d in self.grid] + [max_streams, max_samples]), dtype=complex)
+        samples_array = np.zeros(([d.num_sample_points for d in self.grid] + [max_signals, max_streams, max_samples]), dtype=complex)
 
         # Fill the array with the signals
         for grid_coordinates, signals in np.ndenumerate(self.__signal_stash):
             sample_offset = 0
-            for signal in signals:
-                for block in signal._blocks:
-                    samples_array[grid_coordinates + (slice(0, block.shape[0]), slice(sample_offset, sample_offset + block.shape[1]))] = block.view(np.ndarray)
-                    sample_offset += block.shape[1]
+            for s, signal in enumerate(signals):
+                samples_array[grid_coordinates + (s, slice(0, signal.num_streams), slice(sample_offset, sample_offset + signal.num_samples))] = signal.getitem((slice(None), slice(None)))
 
         return samples_array
 
