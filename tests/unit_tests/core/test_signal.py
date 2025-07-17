@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """Test the HermesPy Signal Model"""
 
+from abc import abstractmethod
 from contextlib import nullcontext
 from os import getenv
+from pickle import dumps, loads
 from unittest import TestCase
 from unittest.mock import patch
 from typing import List
-from abc import abstractmethod
 
 import numpy as np
 from numpy.random import default_rng
@@ -77,11 +78,25 @@ class TestSignalBlock(TestCase):
             self.block.copy('K')
 
     def test_validate_append_samples(self) -> None:
-        """A ValueError should be raised on different num_streams."""
+        """A ValueError should be raised on different num_streams"""
 
         with self.assertRaises(ValueError):
             samples_add = np.concatenate((self.samples, self.samples), axis=0)
             self.block.append_samples(samples_add)
+
+    def test_pickle_unpickle(self) -> None:
+        """Test pickling and unpickling of signal blocks"""
+
+        # Pickle the block
+        pickled_block = dumps(self.block)
+
+        # Unpickle the block
+        unpickled_block: SignalBlock = loads(pickled_block)
+
+        # Ensure the data has not been corrupted
+        self.assertEqual(unpickled_block.shape, self.block.shape)
+        assert_array_equal(unpickled_block, self.block)
+        self.assertEqual(unpickled_block.offset, self.block.offset)    
 
 
 class TestSignal():
