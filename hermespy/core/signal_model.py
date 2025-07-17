@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
+from abc import ABC
 from copy import deepcopy
 from typing import Literal, List, Sequence, Tuple, Type, Any
-from abc import ABC
+from typing_extensions import override
 
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
@@ -644,6 +645,10 @@ class SignalBlock(np.ndarray, Serializable):
         samples = process.deserialize_array("samples", np.complex128)
         offset = process.deserialize_integer("offset", 0)
         return cls(samples, offset)
+
+    @override
+    def __reduce__(self) -> tuple:
+        return SignalBlock.__new__, (SignalBlock, self.view(np.ndarray), self.offset)
 
 
 class Signal(ABC, Serializable):
