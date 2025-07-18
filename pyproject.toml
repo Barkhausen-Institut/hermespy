@@ -2,7 +2,7 @@
 requires = [
     "setuptools>=75.6.0",
     "wheel>=0.45.1",
-    "pybind11>=2.13.6",
+    "pybind11>=3.0.0",
     "scikit-build-core>=0.10.7",
 ]
 build-backend = "scikit_build_core.build"
@@ -36,14 +36,14 @@ classifiers = [
 ]
 requires-python = ">=3.8"
 dependencies = [
-    "numpy(>=1.26, <2.0)",  # <2.1 required for numba compatibility, <2.0 required for Sionna's tensorflow compatibility, pybind11 compatibility only up to 1.26.4
+    "numpy(>=2.1.3, <2.3.0)",  # <2.3 required for numba 0.61 compatibility compatibility
     "matplotlib>=3.10.0",
     "h5py>=3.8.0",
     "scipy>=1.14.1",
-    "pybind11>=2.10.4",
+    "pybind11>=3.0.0",
     "ray>=2.47.1",
     "sparse>=0.15.5",
-    "numba>=0.60.0",
+    "numba>=0.61.0",
     "rich>=13.9.4",
 ]
 
@@ -95,7 +95,7 @@ develop = [
 ]
 sionna = [
     "mitsuba<=3.6.2",
-    "sionna-rt ==1.0.2",
+    "sionna-rt>=1.1.0",
     "tensorflow(>=2.14, !=2.16, !=2.17)",
 ]
 scapy = [
