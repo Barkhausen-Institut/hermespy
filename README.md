@@ -33,7 +33,7 @@ Detailed installation instructions as well as a list of optional feature flags c
 ## Quick Start
 
 The following examples provide a starting point for understanding HermesPy's high-level API.
-There are three modules providing digital signal processing algorithms: [Modem for communications](https://hermespy.org/api/modem.html), [radar for sensing](https://hermespy.org/api/radar.html) and [jcas for joint applications](https://hermespy.org/api/jcas.html).
+There are three modules providing digital signal processing algorithms: [Modem for communications](https://hermespy.org/api/modem/index.html), [radar for sensing](https://hermespy.org/api/radar/index.html) and [jcas for joint applications](https://hermespy.org/api/jcas/index.html).
 
 ```python
 from hermespy.modem import ReceivingModem, RRCWaveform, BitErrorEvaluator

@@ -135,7 +135,7 @@ intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
     'h5py': ('https://docs.h5py.org/en/latest/', None),
     'matplotlib': ('https://matplotlib.org/stable/', None),
-    'numpy': ('https://numpy.org/doc/stable/', None),
+    'numpy': ('https://numpy.org/doc/2.1/', None),
     'scipy': ('https://docs.scipy.org/doc/scipy/', None),
     'rich': ('https://rich.readthedocs.io/en/stable/', None),
     'ray': ('https://docs.ray.io/en/latest/', None),
