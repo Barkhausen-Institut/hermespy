@@ -40,6 +40,7 @@ from .evaluators import (
     ReceivePowerEvaluator,
     PowerArtifact,
     PowerEvaluation,
+    SignalExtractor,
     TransmitPowerEvaluator,
 )
 from .logarithmic import dB, Logarithmic, LogarithmicSequence, ValueType
@@ -133,6 +134,7 @@ __all__ = [
     "ReceivePowerEvaluator",
     "PowerArtifact",
     "PowerEvaluation",
+    "SignalExtractor",
     "TransmitPowerEvaluator",
     "dB",
     "Logarithmic",
