@@ -11,7 +11,7 @@ carrier_frequency = 1e9
 sampling_rate = 1e8
 adc_bits_no = 16
 
-simulation = Simulation(num_samples=10)
+simulation = Simulation(num_samples=1000)
 
 tx_device = simulation.new_device(
     carrier_frequency=carrier_frequency,
@@ -36,7 +36,7 @@ rx_device.rf_chain.phase_noise = OscillatorPhaseNoise()
 channel = IdealChannel()
 simulation.set_channel(tx_device, rx_device, channel)
 
-data_iq = np.random.standard_normal(1000) + 1j * np.random.standard_normal(1000)
+data_iq = np.random.standard_normal(100000) + 1j * np.random.standard_normal(100000)
 
 signal_transmitter = SignalTransmitter(
     Signal.Create(

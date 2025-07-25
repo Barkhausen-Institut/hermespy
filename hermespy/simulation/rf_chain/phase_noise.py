@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 from abc import abstractmethod
+from functools import cache
 from typing_extensions import override
 
 import numpy as np
+from numba import jit
 from scipy.signal import lfilter
 from scipy.constants import pi
 
@@ -148,6 +150,22 @@ class OscillatorPhaseNoise(PhaseNoise, Serializable):
             raise ValueError("K3 must be non-negative")
         self.__K3 = value
 
+    @staticmethod
+    @jit(nopython=True, cache=True)
+    def __w3_filter_coefficients(filter_order: int) -> np.ndarray:
+        """Generate coefficients for the 3rd order flicker noise filter.
+
+        Args:
+
+            filter_order: Number of filter coefficients to generate.
+
+        Returns: Coefficients for the 3rd order flicker noise filter.
+        """
+        h = np.ones(filter_order, dtype=float)
+        for k in range(1, filter_order):
+            h[k] = (1.5 + k - 1) * h[k - 1] / k
+        return h
+
     def _get_noise_samples(
         self, num_samples: int, num_streams: int, sampling_rate: float
     ) -> np.ndarray:
@@ -190,10 +208,8 @@ class OscillatorPhaseNoise(PhaseNoise, Serializable):
         w3 = self._rng.normal(0.0, var_w3**0.5, (num_streams, num_samples))
 
         w3_filter_order = num_samples
-        h = np.ones(w3_filter_order, dtype=float)
-        for k in range(1, w3_filter_order):
-            h[k] = (1.5 + k - 1) * h[k - 1] / k
-        phi3 = lfilter(h, 1, w3)
+        w3_filter_coefficients = OscillatorPhaseNoise.__w3_filter_coefficients(w3_filter_order)
+        phi3 = lfilter(w3_filter_coefficients, 1, w3)
 
         pn = phi0 + phi2 + phi3
         return pn
