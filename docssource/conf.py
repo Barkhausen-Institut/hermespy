@@ -58,19 +58,15 @@ toc_object_entries = False
 # Nitpick configuration
 nitpicky = True
 nitpick_ignore = {
-    ('py:class', 'numpy.int64'),
-    ('py:class', 'numpy.int32'),
-    ('py:class', 'numpy.int8'),
-    ('py:class', 'numpy.float64'),
-    ('py:class', 'numpy.complex128'),
-    ('py:class', 'numpy._typing._dtype_like._SupportsDType'),
-    ('py:class', 'numpy._typing._dtype_like._DTypeDict'),
     ('py:class', 'h5py._hl.group.Group'),
     ('py:class', 'pybind11_builtins.pybind11_object'),
     ('py:class', 'sparse._sparse_array.SparseArray'),
     ('py:class', 'rt.Scene'),
     ('py:class', 'np.ndarray'),
     ('py:class', 'hermespy.channel.quadriga.octave.QuadrigaOctaveInterface'),
+}
+nitpick_ignore_regex = {
+    ('py:class', r'numpy.*'),
 }
 
 # Bibtex
