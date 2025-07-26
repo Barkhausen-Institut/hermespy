@@ -65,6 +65,7 @@ nitpick_ignore = {
     ('py:class', 'numpy.complex128'),
     ('py:class', 'numpy._typing._dtype_like._SupportsDType'),
     ('py:class', 'numpy._typing._dtype_like._DTypeDict'),
+    ('py:class', 'numpy.typing.NDArray'),
     ('py:class', 'h5py._hl.group.Group'),
     ('py:class', 'pybind11_builtins.pybind11_object'),
     ('py:class', 'sparse._sparse_array.SparseArray'),
