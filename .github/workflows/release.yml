@@ -34,7 +34,7 @@ jobs:
         pip install -q -e .[test,documentation,quadriga,uhd,audio,scapy,sionna]
 
     - name: Build documentation
-      run: sphinx-build docssource/ documentation/
+      run: sphinx-build -v -j auto docssource/ documentation/
 
     # ToDo: Execute this action only on the highest tag
     - name: Create github pages
