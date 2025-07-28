@@ -58,19 +58,15 @@ toc_object_entries = False
 # Nitpick configuration
 nitpicky = True
 nitpick_ignore = {
-    ('py:class', 'numpy.int64'),
-    ('py:class', 'numpy.int32'),
-    ('py:class', 'numpy.int8'),
-    ('py:class', 'numpy.float64'),
-    ('py:class', 'numpy.complex128'),
-    ('py:class', 'numpy._typing._dtype_like._SupportsDType'),
-    ('py:class', 'numpy._typing._dtype_like._DTypeDict'),
     ('py:class', 'h5py._hl.group.Group'),
     ('py:class', 'pybind11_builtins.pybind11_object'),
     ('py:class', 'sparse._sparse_array.SparseArray'),
     ('py:class', 'rt.Scene'),
     ('py:class', 'np.ndarray'),
     ('py:class', 'hermespy.channel.quadriga.octave.QuadrigaOctaveInterface'),
+}
+nitpick_ignore_regex = {
+    ('py:class', r'numpy.*'),
 }
 
 # Bibtex
@@ -135,7 +131,7 @@ intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
     'h5py': ('https://docs.h5py.org/en/latest/', None),
     'matplotlib': ('https://matplotlib.org/stable/', None),
-    'numpy': ('https://numpy.org/doc/stable/', None),
+    'numpy': ('https://numpy.org/doc/2.1/', None),
     'scipy': ('https://docs.scipy.org/doc/scipy/', None),
     'rich': ('https://rich.readthedocs.io/en/stable/', None),
     'ray': ('https://docs.ray.io/en/latest/', None),

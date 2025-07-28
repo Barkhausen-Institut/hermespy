@@ -591,8 +591,8 @@ class RocEvaluationResult(EvaluationResult[RocArtifact]):
         section_magnitudes = tuple(s.num_sample_points for s in self.grid)
         for section_indices, line in zip(np.ndindex(section_magnitudes), visualization.lines[0, 0]):
             # Select the graph line scalars
-            x_axis = probabilities[*section_indices, :, 1]  # type: ignore[arg-type]
-            y_axis = probabilities[*section_indices, :, 0]  # type: ignore[arg-type]
+            x_axis = probabilities[section_indices + (None, 1,)]  # type: ignore[arg-type]
+            y_axis = probabilities[section_indices + (None, 0,)]  # type: ignore[arg-type]
 
             # Update the respective line
             line.set_data(x_axis, y_axis)
@@ -608,16 +608,16 @@ class RocEvaluationResult(EvaluationResult[RocArtifact]):
 
             # Skip if there is no data
             if roc_data.size == 0:
-                probabilities[grid_coordinates, :, :] = np.nan
+                probabilities[grid_coordinates + (None, None,)] = np.nan
                 continue
 
             for t, threshold in enumerate(
                 np.linspace(roc_data.min(), roc_data.max(), self.__num_thresholds, endpoint=True)
             ):
-                # threshold_coordinates = grid_coordinates + (t,)
+                threshold_coordinates = grid_coordinates + (t, None,)
                 pd = np.mean(roc_data[:, 1] >= threshold)
                 pfa = np.mean(roc_data[:, 0] >= threshold)
-                probabilities[*grid_coordinates, t, :] = (pd, pfa)  # type: ignore[arg-type]
+                probabilities[threshold_coordinates] = (pd, pfa)  # type: ignore[arg-type]
 
         return probabilities
 
