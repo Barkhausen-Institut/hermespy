@@ -5,7 +5,7 @@ import numpy as np
 
 from hermespy.modem import DuplexModem, RootRaisedCosineWaveform, BitErrorEvaluator, BlockErrorEvaluator, FrameErrorEvaluator, ThroughputEvaluator
 from hermespy.simulation import SimulatedDevice
-from hermespy.core.evaluators import ReceivePowerEvaluator
+from hermespy.core.evaluators import ReceivePowerEvaluator, SignalExtractor
 from hermespy.core.pymonte import Evaluator, GridDimension
 from unit_tests.utils import SimulationTestContext
 
@@ -92,3 +92,9 @@ class TestEvaluators(TestCase):
 
         pow = ReceivePowerEvaluator(self.modem)
         self._test_evaluator(pow)
+
+    def test_signal_extractor(self) -> None:
+        """Test signal extraction"""
+
+        extractor = SignalExtractor(self.modem)
+        self._test_evaluator(extractor)

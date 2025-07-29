@@ -11,6 +11,7 @@ from .antennas import AntennaMode
 from .device import (
     Device,
     DeviceOutput,
+    OperationResult,
     ProcessedDeviceInput,
     Receiver,
     Reception,
@@ -22,6 +23,8 @@ from .logarithmic import ValueType
 from .pymonte import (
     Artifact,
     Evaluation,
+    EvaluationResult,
+    Evaluator,
     ScalarEvaluationResult,
     ScalarEvaluator,
     GridDimensionInfo,
@@ -468,3 +471,202 @@ class PAPR(ScalarEvaluator):
             self.__output_hook.remove()
         if self.__input_hook is not None:
             self.__input_hook.remove()
+
+
+class SignalExtraction(Evaluation, Artifact):
+
+    __signal: Signal
+
+    def __init__(self, signal: Signal) -> None:
+        """
+        Args:
+            signal: The base-band signal to extract.
+        """
+
+        # Initialize the base class
+        Evaluation.__init__(self)
+        Artifact.__init__(self)
+
+        # Initialize attributes
+        self.__signal = signal
+
+    @property
+    def signal(self) -> Signal:
+        """The extracted base-band signal."""
+
+        return self.__signal
+
+    @override
+    def artifact(self) -> SignalExtraction:
+        """Returns the signal extraction as an artifact.
+
+        For signal extraction, the artifact is the same as the evaluation.
+        """
+
+        return self
+
+    @override
+    def __str__(self) -> str:
+        return ""
+
+    @override
+    def to_scalar(self) -> None:
+        """Scalar representation of the signal extraction.
+
+        Not available, therefore always returns :py:obj:`None`.
+        """
+        return None
+
+    @override
+    def _prepare_visualization(self, figure, axes, **kwargs):
+        return self.__signal._prepare_visualization(figure, axes, **kwargs)
+
+    @override
+    def _update_visualization(self, visualization, **kwargs):
+        self.__signal._update_visualization(visualization, **kwargs)
+
+
+class ExtractedSignals(EvaluationResult[SignalExtraction]):
+    """Result of a signal extraction evaluation.
+
+    Stores the extracted signal samples in a grid structure.
+    """
+
+    __signal_stash: np.ndarray
+
+    def __init__(
+        self,
+        grid: Sequence[GridDimensionInfo],
+        evaluator: Evaluator | None = None,
+        base_dimension_index: int = 0,
+    ) -> None:
+        """
+        Args:
+            grid: The grid of the evaluation result.
+            evaluator: The evaluator that produced this result.
+            base_dimension_index: The index of the base dimension used for plotting.
+        """
+
+        # Initialize the base class
+        EvaluationResult.__init__(self, grid, evaluator, base_dimension_index)
+
+        # Initialize signal stash
+        self.__signal_stash = np.empty([d.num_sample_points for d in grid], dtype=object)
+        for grid_coordinates in np.ndindex(self.__signal_stash.shape):
+            self.__signal_stash[grid_coordinates] = []
+
+    @override
+    def add_artifact(
+        self,
+        coordinates: tuple[int, ...],
+        artifact: SignalExtraction,
+        compute_confidence: bool = True,
+    ) -> bool:
+        self.__signal_stash[coordinates].append(artifact.signal)
+        return False
+
+    @override
+    def runtime_estimates(self) -> None:
+        return None
+
+    @override
+    def to_array(self) -> np.ndarray:
+        # Find the maximum number of samples in the signal stash
+        max_samples = 0
+        max_streams = 0
+        max_signals = 0
+        signals: list[Signal]
+        for signals in self.__signal_stash.flat:
+            max_signals = max(max_signals, len(signals))
+            for signal in signals:
+                max_samples = max(max_samples, signal.num_samples)
+                max_streams = max(max_streams, signal.num_streams)
+
+        # Create an array to hold the signals
+        samples_array = np.zeros(
+            ([d.num_sample_points for d in self.grid] + [max_signals, max_streams, max_samples]),
+            dtype=complex,
+        )
+
+        # Fill the array with the signals
+        for grid_coordinates, signals in np.ndenumerate(self.__signal_stash):
+            sample_offset = 0
+            for s, signal in enumerate(signals):
+                samples_array[
+                    grid_coordinates
+                    + (
+                        s,
+                        slice(0, signal.num_streams),
+                        slice(sample_offset, sample_offset + signal.num_samples),
+                    )
+                ] = signal.getitem((slice(None), slice(None)))
+
+        return samples_array
+
+
+class SignalExtractor(Evaluator):
+    """Evaluator extracting base-band sample sequences from DSP layour input or output streams.
+
+    .. warning::
+       Depending on the setup, this evaluator will create an
+       enormous amount of data, which may lead to memory issues.
+       If possible, signals should not be extracted from simulation runtimes.
+    """
+
+    __cached_signal: Signal | None
+    __hook: Hook[OperationResult]
+
+    def __init__(self, target: Transmitter | Receiver) -> None:
+        """
+
+        Args:
+            target: The DSP layer to extract signals from.
+
+        Raises:
+            TypeError: If the target is not a transmitter or receiver instance.
+        """
+
+        # Init base class
+        Evaluator.__init__(self)
+
+        # Initialize attributes
+        self.__cached_signal = None
+
+        # Hook into the target's operation result
+        if isinstance(target, Transmitter):
+            self.__hook = target.add_transmit_callback(self.__operation_callback)
+        elif isinstance(target, Receiver):
+            self.__hook = target.add_receive_callback(self.__operation_callback)
+        else:
+            raise TypeError("Target must be a Transmitter or Receiver instance")
+
+    def __operation_callback(self, operation_result: OperationResult) -> None:
+        """Callback function notifying the evaluator of a new signal."""
+
+        self.__cached_signal = operation_result.signal
+
+    @override
+    def evaluate(self) -> SignalExtraction:
+        """Extracts the base-band sample sequences from the DSP layout input or output streams."""
+
+        if self.__cached_signal is None:
+            raise RuntimeError(
+                "Signal extractor could not fetch signal. Has the target transmitted or received data?"
+            )
+
+        # Create a signal extraction artifact
+        return SignalExtraction(self.__cached_signal)
+
+    @override
+    def initialize_result(self, grid: Sequence[GridDimensionInfo]) -> ExtractedSignals:
+        return ExtractedSignals(grid, self)
+
+    @override
+    @property
+    def abbreviation(self) -> str:
+        return "SigExt"
+
+    @override
+    @property
+    def title(self) -> str:
+        return "Signal Extractor"
