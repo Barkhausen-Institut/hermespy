@@ -602,6 +602,14 @@ class SignalExtractor(Evaluator):
     __hook: Hook[OperationResult]
     
     def __init__(self, target: Transmitter | Receiver) -> None:
+        """
+
+        Args:
+            target: The DSP layer to extract signals from.
+
+        Raises:
+            TypeError: If the target is not a transmitter or receiver instance.
+        """
         
         # Init base class
         Evaluator.__init__(self)

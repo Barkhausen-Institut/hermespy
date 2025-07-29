@@ -80,7 +80,12 @@ class TestDocumentationExamples(TestCase):
         """Test example snippet for PAPR evaluation"""
 
         self.__run_example("core_evaluators_papr.py")
-        
+
+    def test_core_evaluators_extraction(self) -> None:
+        """Test example snippet for signal extraction"""
+
+        self.__run_example("core_evaluators_extraction.py")
+
     def test_core_evaluators_rxpow(self) -> None:
         """Test example snippet for receive power evaluation"""
 
