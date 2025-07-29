@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 import numpy as np
 from numba import jit, complex128
-from numpy.core._internal import _reconstruct
 from scipy.constants import pi
 from scipy.fft import fft, fftshift, fftfreq
 from scipy.ndimage import convolve1d

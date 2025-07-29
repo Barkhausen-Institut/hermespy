@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 from abc import abstractmethod
-from functools import cache
 from typing_extensions import override
 
 import numpy as np

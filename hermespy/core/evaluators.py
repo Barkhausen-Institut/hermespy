@@ -474,9 +474,9 @@ class PAPR(ScalarEvaluator):
 
 
 class SignalExtraction(Evaluation, Artifact):
-    
+
     __signal: Signal
-    
+
     def __init__(self, signal: Signal) -> None:
         """
         Args:
@@ -556,7 +556,12 @@ class ExtractedSignals(EvaluationResult[SignalExtraction]):
             self.__signal_stash[grid_coordinates] = []
 
     @override
-    def add_artifact(self, coordinates: tuple[int, ...], artifact: SignalExtraction, compute_confidence:bool = True) -> bool:
+    def add_artifact(
+        self,
+        coordinates: tuple[int, ...],
+        artifact: SignalExtraction,
+        compute_confidence: bool = True,
+    ) -> bool:
         self.__signal_stash[coordinates].append(artifact.signal)
         return False
 
@@ -578,20 +583,30 @@ class ExtractedSignals(EvaluationResult[SignalExtraction]):
                 max_streams = max(max_streams, signal.num_streams)
 
         # Create an array to hold the signals
-        samples_array = np.zeros(([d.num_sample_points for d in self.grid] + [max_signals, max_streams, max_samples]), dtype=complex)
+        samples_array = np.zeros(
+            ([d.num_sample_points for d in self.grid] + [max_signals, max_streams, max_samples]),
+            dtype=complex,
+        )
 
         # Fill the array with the signals
         for grid_coordinates, signals in np.ndenumerate(self.__signal_stash):
             sample_offset = 0
             for s, signal in enumerate(signals):
-                samples_array[grid_coordinates + (s, slice(0, signal.num_streams), slice(sample_offset, sample_offset + signal.num_samples))] = signal.getitem((slice(None), slice(None)))
+                samples_array[
+                    grid_coordinates
+                    + (
+                        s,
+                        slice(0, signal.num_streams),
+                        slice(sample_offset, sample_offset + signal.num_samples),
+                    )
+                ] = signal.getitem((slice(None), slice(None)))
 
         return samples_array
 
 
 class SignalExtractor(Evaluator):
     """Evaluator extracting base-band sample sequences from DSP layour input or output streams.
-    
+
     .. warning::
        Depending on the setup, this evaluator will create an
        enormous amount of data, which may lead to memory issues.
@@ -600,7 +615,7 @@ class SignalExtractor(Evaluator):
 
     __cached_signal: Signal | None
     __hook: Hook[OperationResult]
-    
+
     def __init__(self, target: Transmitter | Receiver) -> None:
         """
 
@@ -610,10 +625,10 @@ class SignalExtractor(Evaluator):
         Raises:
             TypeError: If the target is not a transmitter or receiver instance.
         """
-        
+
         # Init base class
         Evaluator.__init__(self)
-    
+
         # Initialize attributes
         self.__cached_signal = None
 
@@ -627,7 +642,7 @@ class SignalExtractor(Evaluator):
 
     def __operation_callback(self, operation_result: OperationResult) -> None:
         """Callback function notifying the evaluator of a new signal."""
-        
+
         self.__cached_signal = operation_result.signal
 
     @override
@@ -635,7 +650,9 @@ class SignalExtractor(Evaluator):
         """Extracts the base-band sample sequences from the DSP layout input or output streams."""
 
         if self.__cached_signal is None:
-            raise RuntimeError("Signal extractor could not fetch signal. Has the target transmitted or received data?")
+            raise RuntimeError(
+                "Signal extractor could not fetch signal. Has the target transmitted or received data?"
+            )
 
         # Create a signal extraction artifact
         return SignalExtraction(self.__cached_signal)
