@@ -4,10 +4,10 @@ from unittest import TestCase
 from unittest.mock import Mock
 
 import numpy as np
-from numpy.testing import assert_almost_equal
+from numpy.testing import assert_almost_equal, assert_array_equal
 
 from hermespy.core import AntennaMode, ScalarEvaluationResult, Signal, SignalTransmitter, SignalReceiver, GridDimensionInfo, SamplePoint, ValueType
-from hermespy.core.evaluators import PAPRArtifact, PowerArtifact, PowerEvaluation, ReceivePowerEvaluator, TransmitPowerEvaluator, PAPR, PAPREvaluation
+from hermespy.core.evaluators import PAPRArtifact, PowerArtifact, PowerEvaluation, ReceivePowerEvaluator, TransmitPowerEvaluator, PAPR, PAPREvaluation, SignalExtractor, SignalExtraction, ExtractedSignals
 from hermespy.simulation import SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
 
 __author__ = "Jan Adler"
@@ -264,3 +264,53 @@ class TestPAPR(TestCase):
         tx_result.add_artifact((0,), tx_artifact)
         rx_result.add_artifact((0,), rx_artifact)
 
+
+class TestSignalExtraction(TestCase):
+    """Test signal extraction from simulation runtimes"""
+
+    def setUp(self) -> None:
+        self.rng = np.random.default_rng(42)
+        self.signal = Signal.Create(self.rng.standard_normal((1, 10)), 1e6, 1e8)
+        self.device_state = SimulatedDevice().state()
+        
+        self.transmit_target = SignalTransmitter(self.signal)
+        self.receive_target = SignalReceiver(self.signal.num_samples, self.signal.sampling_rate)
+        
+        self.transmit_extractor = SignalExtractor(self.transmit_target)
+        self.receive_extractor = SignalExtractor(self.receive_target)
+
+        self.grid = [GridDimensionInfo([0], 'random_dimensions', 'linear', ValueType.LIN)]
+        self.transmit_result = self.transmit_extractor.initialize_result(self.grid)
+        self.receive_result = self.receive_extractor.initialize_result(self.grid)
+
+    def test_init_validation(self) -> None:
+        """Test initialization validation"""
+
+        with self.assertRaises(TypeError):
+            _ = SignalExtractor(Mock())
+
+    def test_evaluation(self) -> None:
+        """Test the evaluation workflow"""
+
+        # Generate transmission and reception
+        transmission = self.transmit_target.transmit(self.device_state)
+        reception = self.receive_target.receive(transmission.signal, self.device_state)
+
+        # Generate extractions
+        transamit_extraction = self.transmit_extractor.evaluate()
+        receive_extraction = self.receive_extractor.evaluate()
+    
+        # Add extractions to results
+        num_artifacts = 3
+        for i in range(num_artifacts):
+            self.transmit_result.add_artifact((0,), transamit_extraction.artifact())
+            self.receive_result.add_artifact((0,), receive_extraction.artifact())
+
+        # Compile results to array
+        transmit_array = self.transmit_result.to_array()
+        receive_array = self.receive_result.to_array()
+
+        # Assert the arrays are not empty
+        expected_array_dimensions = (1, num_artifacts, self.signal.num_streams, self.signal.num_samples)
+        self.assertCountEqual(transmit_array.shape, expected_array_dimensions)
+        self.assertCountEqual(receive_array.shape, expected_array_dimensions)

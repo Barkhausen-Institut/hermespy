@@ -524,10 +524,13 @@ class SignalExtraction(Evaluation, Artifact):
     @override
     def _update_visualization(self, visualization, **kwargs):
         self.__signal._update_visualization(visualization, **kwargs)
-        
 
 
 class ExtractedSignals(EvaluationResult[SignalExtraction]):
+    """Result of a signal extraction evaluation.
+
+    Stores the extracted signal samples in a grid structure.
+    """
 
     __signal_stash: np.ndarray
 
@@ -553,7 +556,7 @@ class ExtractedSignals(EvaluationResult[SignalExtraction]):
             self.__signal_stash[grid_coordinates] = []
 
     @override
-    def add_artifact(self, coordinates: Sequence[GridDimensionInfo], artifact: SignalExtraction, compute_confidence:bool = True) -> bool:
+    def add_artifact(self, coordinates: tuple[int, ...], artifact: SignalExtraction, compute_confidence:bool = True) -> bool:
         self.__signal_stash[coordinates].append(artifact.signal)
         return False
 
@@ -590,7 +593,7 @@ class SignalExtractor(Evaluator):
     """Evaluator extracting base-band sample sequences from DSP layour input or output streams.
     
     .. warning::
-       Depending on the simulation setup, this evaluator will create an
+       Depending on the setup, this evaluator will create an
        enormous amount of data, which may lead to memory issues.
        If possible, signals should not be extracted from simulation runtimes.
     """

@@ -122,8 +122,10 @@ class _PowerDelayVisualization(VisualizableAttribute[StemVisualization]):
 
         # Update axes limits
         axes: plt.Axes = visualization.axes[0, 0]
-        axes.set_xlim(0, max(self.__sample.max_delay, axes.get_xlim()[1]))
-        axes.set_ylim(min(self.__sample.cluster_powers.min(), axes.get_ylim()[0]), 1.0)
+        try:
+            axes.set_xlim(0, max(self.__sample.max_delay, axes.get_xlim()[1]))
+            axes.set_ylim(min(self.__sample.cluster_powers.min(), axes.get_ylim()[0]), 1.0)
+        except ValueError: ...
 
     @property
     def title(self) -> str:
