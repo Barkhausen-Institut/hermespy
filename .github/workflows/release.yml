@@ -21,10 +21,10 @@ jobs:
         lfs: true
         submodules: recursive
 
-    - name: Setup python 3.11
+    - name: Setup python 3.12
       uses: actions/setup-python@v2
       with:
-        python-version: '3.11'
+        python-version: '3.12'
 
     - name: Install doc dependencies
       run: |
