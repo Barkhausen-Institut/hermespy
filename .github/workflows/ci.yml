@@ -24,10 +24,10 @@ jobs:
         lfs: true
         submodules: recursive
 
-    - name: Set up Python 3.11
+    - name: Set up Python 3.12
       uses: actions/setup-python@v2
       with:
-        python-version: '3.11'
+        python-version: '3.12'
 
     - name: Install dependencies
       run: |
@@ -68,10 +68,10 @@ jobs:
         lfs: true
         submodules: recursive
 
-    - name: Setup python 3.11
+    - name: Setup python 3.12
       uses: actions/setup-python@v2
       with:
-        python-version: '3.11'
+        python-version: '3.12'
 
     # Note: Sionna dependencies crash with hermespy[documentation] due to outdated ipywidgets requirement on Sionna's side
     - name: Install doc dependencies
