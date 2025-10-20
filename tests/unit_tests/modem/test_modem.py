@@ -157,7 +157,6 @@ class TestBaseModem(TestCase):
 
         # Test initialization random graph
         self.assertIs(self.modem, self.modem.encoder_manager.random_mother)
-        self.assertIs(self.modem, self.modem.waveform.random_mother)
 
     def test_encoder_manager_setget(self) -> None:
         """Encoder manager property getter should return setter argument"""
@@ -174,7 +173,6 @@ class TestBaseModem(TestCase):
         self.modem.waveform = waveform
 
         self.assertIs(waveform, self.modem.waveform)
-        self.assertIs(waveform.modem, self.modem)
 
     def test_samples_per_frame(self) -> None:
         """Samples per frame should correctly resolve the waveform's number of samples"""

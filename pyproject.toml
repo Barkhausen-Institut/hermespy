@@ -53,14 +53,7 @@ Homepage = "https://github.com/Barkhausen-Institut/hermespy.git"
 Issues = "https://github.com/Barkhausen-Institut/hermespy/issues"
 
 [project.optional-dependencies]
-test = [
-    "pytest>=7.4.2",
-    "coverage>=7.5.1",
-    "mypy>=1.17.0",
-    "nbformat",
-    "nbconvert",
-    "flake8>=7.3.0",
-]
+
 quadriga = [
     "oct2py>=5.6.0",
 ]
@@ -83,7 +76,7 @@ audio = [
     "sounddevice>=0.4.6",
 ]
 develop = [
-    "pybind11>=2.13.6",
+    "pybind11>=3.0.0",
     "scikit-build-core>=0.10.7",
     "cmake>=3.31.2",
     "wheel>=0.45.1",
@@ -91,6 +84,8 @@ develop = [
     "flake8>=7.3.0",
     "coverage>=7.6.9",
     "mypy>=1.18.0",
+    "nbformat",
+    "nbconvert",
 ]
 sionna = [
     "sionna-rt>=1.2.1",
