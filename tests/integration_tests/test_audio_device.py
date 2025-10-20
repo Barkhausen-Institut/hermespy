@@ -38,8 +38,8 @@ class TestAudioDevice(TestCase):
         reception = self.device.receive().operator_receptions[0]
 
         # Assert the transmit and receive spectra
-        transmit_spectrum = fftshift(fft(transmission.signal.getitem(0)))
-        receive_spectrum = fftshift(fft(reception.signal.getitem(0)))
+        transmit_spectrum = fftshift(fft(transmission.signal))
+        receive_spectrum = fftshift(fft(reception.signal))
         left_bin = int(0.375 * transmit_spectrum.shape[0])
         right_bin = int(0.625 * transmit_spectrum.shape[0])
         assert_array_almost_equal(transmit_spectrum[left_bin:right_bin], receive_spectrum[left_bin:right_bin])
@@ -48,7 +48,7 @@ class TestAudioDevice(TestCase):
     def test_single_carrier(self) -> None:
         """Test single carrier data transmission over audio devices"""
 
-        waveform = RootRaisedCosineWaveform(symbol_rate=1.2e4, pilot_rate=10, num_preamble_symbols=1, num_data_symbols=100, oversampling_factor=4)
+        waveform = RootRaisedCosineWaveform(pilot_rate=10, num_preamble_symbols=1, num_data_symbols=100)
         self.modem.waveform = waveform
 
         self.propagate()
@@ -56,10 +56,16 @@ class TestAudioDevice(TestCase):
     def test_ofdm(self) -> None:
         """Test OFDM data transmission over audio devices"""
 
-        resources = [GridResource(12, 0.01, elements=[GridElement(ElementType.DATA, 9), GridElement(ElementType.REFERENCE, 1)])]
+        resources = [GridResource(12, prefix_ratio=0.0, elements=[GridElement(ElementType.DATA, 9), GridElement(ElementType.REFERENCE, 1)])]
         structure = [SymbolSection(3, [0])]
 
-        waveform = OFDMWaveform(subcarrier_spacing=1e2, num_subcarriers=120, dc_suppression=True, grid_resources=resources, grid_structure=structure, oversampling_factor=4)
+        waveform = OFDMWaveform(
+            num_subcarriers=128,
+            dc_suppression=True,
+            grid_resources=resources,
+            grid_structure=structure,
+            modulation_order=4,
+        )
         self.modem.waveform = waveform
 
         self.propagate()

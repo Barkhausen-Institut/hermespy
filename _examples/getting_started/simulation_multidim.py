@@ -10,8 +10,8 @@ simulation = Simulation(num_samples=1000)
 
 # Create two devices representing base station and terminal
 # in a downlink scenario
-base_station = simulation.scenario.new_device()
-terminal = simulation.scenario.new_device()
+base_station = simulation.scenario.new_device(oversampling_factor=8)
+terminal = simulation.scenario.new_device(oversampling_factor=8)
 
 # Specify the hardware noise model
 base_station.noise_level = SNR(dB(20), base_station)
@@ -19,13 +19,13 @@ terminal.noise_level = SNR(dB(20), base_station)
 
 # Configure a transmitting modem at the base station
 transmitter = TransmittingModem()
-transmitter.waveform = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=100, oversampling_factor=8, roll_off=.9)
+transmitter.waveform = RootRaisedCosineWaveform(num_preamble_symbols=0, num_data_symbols=100, roll_off=.9)
 transmitter.encoder_manager.add_encoder(RepetitionEncoder(repetitions=3))
 base_station.transmitters.add(transmitter)
 
 # Configure a receiving modem at the terminal
 receiver = ReceivingModem()
-receiver.waveform = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=100, oversampling_factor=8, roll_off=.9)
+receiver.waveform = RootRaisedCosineWaveform(num_preamble_symbols=0, num_data_symbols=100, roll_off=.9)
 receiver.encoder_manager.add_encoder(RepetitionEncoder(repetitions=3))
 terminal.receivers.add(receiver)
 

@@ -7,9 +7,10 @@ from numpy.testing import assert_array_equal
 
 from hermespy.core import FloatingError, Signal
 from hermespy.simulation import Isolation, SimulatedDevice
+from unit_tests.utils import assert_signals_equal
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -48,7 +49,8 @@ class TestIsolation(TestCase):
     def test_leak(self) -> None:
         """Leak routine should be properly called"""
 
-        expected_signal = Signal.Create(self.rng.normal(size=10) + 1j * self.rng.normal(size=10), self.device.antennas.num_receive_antennas, carrier_frequency=0.0)
+        expected_signal = Signal.Create(self.rng.normal(size=(1,10)) + 1j * self.rng.normal(size=(1,10)), self.device.antennas.num_receive_antennas, carrier_frequency=0.0)
         leaked_signal = self.isolation.leak(expected_signal)
 
-        assert_array_equal(expected_signal, leaked_signal)
+        assert_signals_equal(self, expected_signal, leaked_signal)
+        

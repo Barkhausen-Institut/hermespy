@@ -64,6 +64,7 @@ nitpick_ignore = {
     ('py:class', 'rt.Scene'),
     ('py:class', 'np.ndarray'),
     ('py:class', 'hermespy.channel.quadriga.octave.QuadrigaOctaveInterface'),
+    ('py:class', 'ray.ObjectRef'),
 }
 nitpick_ignore_regex = {
     ('py:class', r'numpy.*'),
@@ -100,7 +101,7 @@ autodoc_default_options = {
     'exclude-members': '__weakref__',
     'inherited-members': False,
 }
-
+always_use_bars_union = True
 autodoc_type_aliases = {
 }
 

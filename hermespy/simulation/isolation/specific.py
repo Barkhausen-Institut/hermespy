@@ -10,6 +10,7 @@ from hermespy.core import (
     register,
     ScalarDimension,
     Signal,
+    SignalBlock,
     SerializationProcess,
     DeserializationProcess,
 )
@@ -31,10 +32,13 @@ __status__ = "Prototype"
 class SpecificIsolation(ScalarDimension, Isolation):
     """Specific leakage between RF chains."""
 
-    __leakage_factors: np.ndarray | None
+    __leakage_factors: np.ndarray[tuple[int, int], np.dtype[np.float64]] | None
+    __isolation: np.ndarray[tuple[int, int], np.dtype[np.float64]] | None
 
     def __init__(
-        self, isolation: np.ndarray | float | int = None, device: SimulatedDevice | None = None
+        self,
+        isolation: np.ndarray[tuple[int, int], np.dtype[np.float64]] | float | None = None,
+        device: SimulatedDevice | None = None,
     ) -> None:
         """
 
@@ -52,7 +56,7 @@ class SpecificIsolation(ScalarDimension, Isolation):
 
     @register(title="Isolation")  # type: ignore
     @property
-    def isolation(self) -> np.ndarray:
+    def isolation(self) -> np.ndarray[tuple[int, int], np.dtype[np.float64]] | None:
         """Linear power isolation between transmit and receive chains.
 
         Returns: Numpy matrix (two-dimensional array).
@@ -61,7 +65,9 @@ class SpecificIsolation(ScalarDimension, Isolation):
         return self.__isolation
 
     @isolation.setter
-    def isolation(self, value: None | np.ndarray | float | int) -> None:
+    def isolation(
+        self, value: None | np.ndarray[tuple[int, int], np.dtype[np.float64]] | float
+    ) -> None:
         if value is None:
             self.__isolation = None
             return
@@ -72,7 +78,7 @@ class SpecificIsolation(ScalarDimension, Isolation):
                     "Scalar isolation definition is only allowed for devices with a single antenna"
                 )
 
-            value = np.array([[value]], dtype=float)
+            value = np.full((1, 1), float(value), dtype=np.float64)
 
         if value.ndim != 2:
             raise ValueError("Isolation specification must be a two dimensional array")
@@ -80,10 +86,12 @@ class SpecificIsolation(ScalarDimension, Isolation):
         self.__isolation = value
 
         # The leaking power is the square root of the inverse isolation
-        self.__leakage_factors = np.power(value, -0.5)
+        self.__leakage_factors = np.power(self.__isolation, -0.5).reshape(
+            (self.__isolation.shape[0], self.__isolation.shape[1])
+        )
 
     def __lshift__(self, scalar: float) -> None:
-        self.isolation = scalar  # type: ignore[operator]
+        self.isolation = scalar  # type: ignore
 
     @property
     def title(self) -> str:
@@ -107,15 +115,29 @@ class SpecificIsolation(ScalarDimension, Isolation):
                 f"don't match the antenna array ({self.device.antennas.num_receive_antennas})"
             )
 
-        leaked_samples = self.__leakage_factors @ signal.getitem()
-        return signal.from_ndarray(leaked_samples)
+        leaking_blocks = [(self.__leakage_factors @ b).view(SignalBlock) for b in signal.blocks]
+        return Signal.Create(
+            leaking_blocks,
+            signal.sampling_rate,
+            signal.carrier_frequency,
+            signal.noise_power,
+            signal.delay,
+            [b.offset for b in signal.blocks],
+        )
 
     @override
-    def serialize(self, serialization_process: SerializationProcess) -> None:
-        if self.isolation is not None:  # type: ignore[operator]
-            serialization_process.serialize_array(self.__isolation, "isolation")
+    def serialize(self, process: SerializationProcess) -> None:
+        if self.__isolation is not None:
+            process.serialize_array(self.__isolation, "isolation")
 
     @override
     @classmethod
     def Deserialize(cls, process: DeserializationProcess) -> SpecificIsolation:
-        return cls(process.deserialize_array("isolation", np.float64, None))
+        isolation = process.deserialize_array("isolation", np.float64, None)
+        return cls(
+            isolation=(
+                None
+                if isolation is None
+                else isolation.reshape((isolation.shape[0], isolation.shape[1]))
+            )
+        )

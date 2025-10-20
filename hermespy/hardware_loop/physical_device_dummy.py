@@ -27,7 +27,7 @@ from hermespy.simulation import (
     NoiseLevel,
     NoiseModel,
     ProcessedSimulatedDeviceInput,
-    RfChain,
+    RFChain,
     Isolation,
     SimulatedAntennaArray,
     SimulatedDevice,
@@ -79,12 +79,13 @@ class PhysicalDeviceDummy(SimulatedDevice, PhysicalDevice, Serializable):
         receive_transmission: bool = True,
         scenario: PhysicalScenarioDummy | None = None,
         antennas: SimulatedAntennaArray | None = None,
-        rf_chain: RfChain | None = None,
+        rf: RFChain | None = None,
         isolation: Isolation | None = None,
         coupling: Coupling | None = None,
         trigger_model: TriggerModel | None = None,
-        sampling_rate: float = SimulatedDevice._DEFAULT_SAMPLING_RATE,
         carrier_frequency: float = SimulatedDevice._DEFAULT_CARRIER_FREQUENCY,
+        bandwidth: float = SimulatedDevice._DEFAULT_BANDWIDTH,
+        oversampling_factor: int = SimulatedDevice._DEFAULT_OVERSAMPLING_FACTOR,
         operator_separation: bool = SimulatedDevice._DEFAULT_OPERATOR_SEPARATION,
         noise_level: NoiseLevel | None = None,
         noise_model: NoiseModel | None = None,
@@ -110,12 +111,13 @@ class PhysicalDeviceDummy(SimulatedDevice, PhysicalDevice, Serializable):
             self,
             scenario,
             antennas,
-            rf_chain,
+            rf,
             isolation,
             coupling,
             trigger_model,
-            sampling_rate,
             carrier_frequency,
+            bandwidth,
+            oversampling_factor,
             operator_separation,
             noise_level,
             noise_model,
@@ -158,10 +160,14 @@ class PhysicalDeviceDummy(SimulatedDevice, PhysicalDevice, Serializable):
             id(self),
             trajectory_sample,
             self.carrier_frequency,
-            self.sampling_rate,
-            self.num_digital_transmit_ports,
-            self.num_digital_receive_ports,
+            self.bandwidth,
+            self.oversampling_factor,
+            self.rf.realize(self.bandwidth, self.oversampling_factor, self.carrier_frequency),
             self.antennas.state(trajectory_sample.pose),
+            self.num_transmit_dsp_ports,
+            self.num_receive_dsp_ports,
+            self.num_transmit_rf_ports,
+            self.num_receive_rf_ports,
         )
 
     @property
@@ -237,7 +243,7 @@ class PhysicalDeviceDummy(SimulatedDevice, PhysicalDevice, Serializable):
             self.__downloaded_signal = self.__uploaded_signal
 
         else:
-            samples = np.zeros(self.__uploaded_signal.shape)
+            samples = np.zeros(self.__uploaded_signal.shape, dtype=np.complex128)
             self.__downloaded_signal = Signal.Create(
                 samples, self.sampling_rate, self.carrier_frequency
             )
@@ -350,7 +356,7 @@ class PhysicalScenarioDummy(
                 None,
                 True,
                 trigger,
-                [np.arange(device.num_digital_transmit_ports).tolist()],
+                [np.arange(device.num_transmit_rf_ports).tolist()],
             )
             for device, transmission, trigger in zip(devices, transmissions, triggers)
         ]

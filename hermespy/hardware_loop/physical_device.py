@@ -416,14 +416,13 @@ class PhysicalDevice(Generic[PDST], Device[PDST]):
         """
 
         silent_signal = Signal.Create(
-            np.zeros((self.antennas.num_transmit_ports, num_samples)),
+            np.zeros((self.num_transmit_rf_ports, num_samples), dtype=np.complex128),
             self.sampling_rate,
             self.carrier_frequency,
         )
         noise_signal = self.trigger_direct(silent_signal)
 
         noise_power = noise_signal.power
-
         if cache:
             self.noise_power = noise_power
 
@@ -443,6 +442,7 @@ class PhysicalDevice(Generic[PDST], Device[PDST]):
         # The default routine is a stub
         return signal
 
+    @override
     def transmit(self, state: PDST | None = None, notify: bool = True) -> DeviceTransmission:
         _state = self.state() if state is None else state
 
@@ -516,10 +516,16 @@ class PhysicalDevice(Generic[PDST], Device[PDST]):
                 f"Sampling rate of the transmitted signal does not match the device's sampling rate ({signal.sampling_rate} != {self.sampling_rate})"
             )
 
+        # Apply antenna calibration
         if calibrate:
-            signal = signal.copy()
-            for block in signal._blocks:
-                block = self.antenna_calibration.correct_transmission(block)
+            signal = Signal.Create(
+                [self.antenna_calibration.correct_transmission(b) for b in signal.blocks],
+                signal.sampling_rate,
+                signal.carrier_frequency,
+                signal.noise_power,
+                signal.delay,
+                [b.offset for b in signal.blocks],
+            )
 
         # Upload signal to the device's memory
         uploaded_samples = self._upload(signal)
@@ -539,6 +545,7 @@ class PhysicalDevice(Generic[PDST], Device[PDST]):
 
         return corrected_signal
 
+    @override
     def process_input(
         self,
         impinging_signals: DeviceInput | Signal | Sequence[Signal] | None = None,
@@ -558,7 +565,13 @@ class PhysicalDevice(Generic[PDST], Device[PDST]):
                     filter_cutoff = 0.5 * self.lowpass_bandwidth
 
                 filter = butter(5, filter_cutoff, output="sos", fs=self.sampling_rate)
-                filtered_signal.set_samples(sosfilt(filter, filtered_signal.getitem(), axis=1))
+                filtered_signal = Signal.Create(
+                    sosfilt(filter, filtered_signal, axis=1),
+                    filtered_signal.sampling_rate,
+                    filtered_signal.carrier_frequency,
+                    filtered_signal.noise_power,
+                    filtered_signal.delay,
+                )
 
             _impinging_signals = filtered_signal
 
@@ -571,7 +584,7 @@ class PhysicalDevice(Generic[PDST], Device[PDST]):
         else:
             _impinging_signals = impinging_signals
 
-        if _impinging_signals.num_streams != self.num_receive_antenna_ports:
+        if _impinging_signals.num_streams != self.num_receive_rf_ports:
             raise ValueError(
                 "Number of received signal streams does not match number of configured antennas"
             )
@@ -598,6 +611,7 @@ class PhysicalDevice(Generic[PDST], Device[PDST]):
         # Defer to the default device input processing routine
         return Device.process_input(self, corrected_signal, state)
 
+    @override
     def receive(
         self,
         impinging_signals: DeviceInput | Signal | Sequence[Signal] | None = None,
@@ -788,17 +802,22 @@ class DelayCalibrationBase(Calibration, Serializable):
 
         # Prepend zeros to the signal to account for negative delays
         delay_in_samples = round(-self.delay * signal.sampling_rate)
-        signal.set_samples(
-            np.concatenate(
-                (
-                    np.zeros((signal.num_streams, delay_in_samples), dtype=np.complex128),
-                    signal.getitem(),
-                ),
-                axis=1,
-            )
+        corrected_signal = Signal.Create(
+            [
+                np.concatenate(
+                    (np.zeros((signal.num_streams, delay_in_samples), dtype=np.complex128), b),
+                    axis=1,
+                ).view(SignalBlock)
+                for b in signal.blocks
+            ],
+            signal.sampling_rate,
+            signal.carrier_frequency,
+            signal.noise_power,
+            signal.delay,
+            [b.offset for b in signal.blocks],
         )
 
-        return signal
+        return corrected_signal
 
     def correct_receive_delay(self, signal: Signal) -> Signal:
         """Apply the delay calibration to a received signal.
@@ -815,10 +834,9 @@ class DelayCalibrationBase(Calibration, Serializable):
 
         # Remove samples from the signal to account for positive delays
         delay_in_samples = round(self.delay * signal.sampling_rate)
-        signal.set_samples(signal.getitem((slice(None, None), slice(delay_in_samples, None))))
-        signal.delay = self.delay
-
-        return signal
+        corrected_signal = signal[:, delay_in_samples:]
+        corrected_signal.delay = self.delay
+        return corrected_signal
 
 
 class NoDelayCalibration(DelayCalibrationBase):
@@ -890,9 +908,7 @@ class NoLeakageCalibration(LeakageCalibrationBase):
 
     @override
     def predict_leakage(self, transmitted_signal: Signal) -> Signal:
-        return Signal.Empty(
-            transmitted_signal.sampling_rate, self.device.num_digital_receive_ports, 0
-        )
+        return Signal.Empty(transmitted_signal.sampling_rate, self.device.num_transmit_rf_ports, 0)
 
     @override
     def remove_leakage(self, transmitted_signal: Signal, received_signal: Signal) -> Signal:
@@ -922,22 +938,26 @@ class AntennaCalibration(Calibration):
         device.antenna_calibration = NoAntennaCalibration() if value is None else value
 
     @abstractmethod
-    def correct_transmission(self, transmission: SignalBlock) -> None:
+    def correct_transmission(self, transmission: SignalBlock) -> SignalBlock:
         """Correct a transmitted signal block in-place.
 
         Args:
 
             transmission: The signal block to be corrected.
+
+        Returns: The corrected signal block.
         """
         ...  # pragma: no cover
 
     @abstractmethod
-    def correct_reception(self, reception: SignalBlock) -> None:
+    def correct_reception(self, reception: SignalBlock) -> SignalBlock:
         """Correct a received signal block in-place.
 
         Args:
 
             reception: The signal block to be corrected.
+
+        Returns: The corrected signal block.
         """
         ...  # pragma: no cover
 
@@ -947,11 +967,11 @@ class NoAntennaCalibration(AntennaCalibration):
 
     @override
     def correct_transmission(self, transmission: SignalBlock):
-        pass  # Do nothing, since this is a stub
+        return transmission  # Do nothing, since this is a stub
 
     @override
     def correct_reception(self, reception: SignalBlock):
-        pass  # Do nothing, since this is a stub
+        return reception  # Do nothing, since this is a stub
 
     @override
     def serialize(self, process: SerializationProcess) -> None:

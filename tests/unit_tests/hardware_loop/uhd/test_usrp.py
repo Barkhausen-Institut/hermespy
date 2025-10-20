@@ -3,17 +3,18 @@
 from unittest import TestCase
 from unittest.mock import MagicMock, patch
 
+import numpy as np
 from numpy.random import default_rng
-from numpy.testing import assert_array_equal
 from uhd_wrapper.utils.config import MimoSignal
 from zerorpc.exceptions import LostRemote, RemoteError
 
 from hermespy.core import Signal, SignalTransmitter, SignalReceiver
 from hermespy.hardware_loop.uhd import UsrpAntennas, UsrpDevice
 from unit_tests.core.test_factory import test_roundtrip_serialization
+from unit_tests.utils import assert_signals_equal
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -27,38 +28,26 @@ class TestUsrpAntennas(TestCase):
 
     def setUp(self) -> None:
         self.device = MagicMock(spec=UsrpDevice)
-        self.device.num_digital_transmit_ports = 3
-        self.device.num_digital_receive_ports = 4
+        self.device.num_transmit_rf_ports = 3
+        self.device.num_receive_rf_ports = 4
         self.antennas = UsrpAntennas(self.device)
 
     def test_init(self) -> None:
         """Test initialization routine"""
 
         self.assertEqual(self.device, self.antennas.device)
-        self.assertEqual(self.device.num_digital_transmit_ports, self.antennas.num_transmit_ports)
-        self.assertEqual(self.device.num_digital_receive_ports, self.antennas.num_receive_ports)
+        self.assertEqual(self.device.num_transmit_rf_ports, self.antennas.num_transmit_antennas)
+        self.assertEqual(self.device.num_receive_rf_ports, self.antennas.num_receive_antennas)
 
-    def test_receive_ports(self) -> None:
-        """Receive ports property should return the correct number of ports"""
+    def test_transmit_antennas(self) -> None:
+        """Transmit antennas property should return the correct number of antennas"""
 
-        self.assertEqual(4, len(self.antennas.receive_ports))
+        self.assertEqual(self.device.num_transmit_rf_ports, len(self.antennas.transmit_antennas))
 
-    def test_transmit_ports(self) -> None:
-        """Transmit ports property should return the correct number of ports"""
+    def test_receive_antennas(self) -> None:
+        """Receive antennas property should return the correct number of antennas"""
 
-        self.assertEqual(3, len(self.antennas.transmit_ports))
-
-    def test_ports(self) -> None:
-        """Ports property should return the correct number of ports"""
-
-        self.assertEqual(7, len(self.antennas.ports))
-
-    def test_num_ports(self) -> None:
-        """Port count properties should return the correct number of ports"""
-
-        self.assertEqual(4, self.antennas.num_receive_ports)
-        self.assertEqual(3, self.antennas.num_transmit_ports)
-        self.assertEqual(7, self.antennas.num_ports)
+        self.assertEqual(self.device.num_receive_rf_ports, len(self.antennas.receive_antennas))
 
 
 class TestUsrpDevice(TestCase):
@@ -123,7 +112,7 @@ class TestUsrpDevice(TestCase):
         # Enable transmission scaling for increased coverage
         self.usrp.scale_transmission = True
 
-        transmitted_signal = Signal.Create(self.rng.normal(size=(self.usrp.num_digital_transmit_ports, 11)), sampling_rate=self.usrp.sampling_rate, carrier_frequency=self.usrp.carrier_frequency)
+        transmitted_signal = Signal.Create(self.rng.normal(size=(self.usrp.num_transmit_rf_ports, 11)), sampling_rate=self.usrp.sampling_rate, carrier_frequency=self.usrp.carrier_frequency)
 
         self.usrp._upload(transmitted_signal)
 
@@ -133,18 +122,19 @@ class TestUsrpDevice(TestCase):
     def test_transmit(self) -> None:
         """Test transmitting operator behaviour"""
 
-        transmitted_signal = Signal.Create(self.rng.normal(size=(self.usrp.num_digital_transmit_ports, 11)), sampling_rate=self.usrp.sampling_rate, carrier_frequency=self.usrp.carrier_frequency)
+        transmitted_signal = Signal.Create(self.rng.normal(size=(self.usrp.num_transmit_rf_ports, 11)), sampling_rate=self.usrp.sampling_rate, carrier_frequency=self.usrp.carrier_frequency)
         transmitter = SignalTransmitter(transmitted_signal)
         self.usrp.transmitters.add(transmitter)
+        self.usrp.scale_transmission = False
 
-        receiver = SignalReceiver(16, self.usrp.sampling_rate)
+        receiver = SignalReceiver(16)
         self.usrp.receivers.add(receiver)
 
         transmission = self.usrp.transmit()
 
         self.client_mock.configureTx.assert_called_once()
         self.client_mock.configureRx.assert_called_once()
-        assert_array_equal(transmitted_signal.getitem(), transmission.mixed_signal.getitem())
+        assert_signals_equal(self, transmitted_signal, transmission.mixed_signal)
 
     def test_receive_no_collection(self) -> None:
         """Test reception without enabled collection"""
@@ -161,13 +151,13 @@ class TestUsrpDevice(TestCase):
     def test_download(self) -> None:
         """Test the device download subroutine"""
 
-        received_signal = Signal.Create(self.rng.normal(size=(self.usrp.num_digital_receive_ports, 11)), sampling_rate=self.usrp.sampling_rate, carrier_frequency=self.usrp.carrier_frequency)
+        received_signal = Signal.Create(self.rng.normal(size=(self.usrp.num_receive_rf_ports, 11)), sampling_rate=self.usrp.sampling_rate, carrier_frequency=self.usrp.carrier_frequency)
 
         self.usrp._UsrpDevice__collection_enabled = True
-        self.client_mock.collect.return_value = [MimoSignal([s for s in received_signal.getitem()])]
+        self.client_mock.collect.return_value = [MimoSignal([s for s in received_signal.view(np.ndarray)])]
         signal = self.usrp._download()
 
-        assert_array_equal(received_signal.getitem(), signal.getitem())
+        assert_signals_equal(self, received_signal, signal)
 
     def test_client(self) -> None:
         """Test access to the UHD client"""

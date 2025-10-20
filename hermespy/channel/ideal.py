@@ -47,6 +47,7 @@ class IdealChannelSample(ChannelSample):
     def expected_energy_scale(self) -> float:
         return self.__gain
 
+    @override
     def state(
         self,
         num_samples: int,
@@ -70,7 +71,7 @@ class IdealChannelSample(ChannelSample):
         else:
             spatial_response = np.eye(
                 self.num_receive_antennas, self.num_transmit_antennas, dtype=np.complex128
-            )
+            )  # type: ignore
 
         # Scale response by channel gain
         spatial_response *= np.sqrt(self.__gain)
@@ -80,6 +81,7 @@ class IdealChannelSample(ChannelSample):
         )
         return ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE, sampled_state)
 
+    @override
     def _propagate(self, signal: SignalBlock, interpolation: InterpolationMode) -> SignalBlock:
         # Single antenna transmitter case
         if self.num_transmit_antennas == 1:
@@ -111,7 +113,12 @@ class IdealChannelSample(ChannelSample):
 
         # Apply channel gain
         propagated_samples *= np.sqrt(self.__gain)
-        return SignalBlock(propagated_samples, signal._offset)
+        return SignalBlock(
+            self.num_receive_antennas,
+            signal.num_samples,
+            signal._offset,
+            propagated_samples.tobytes(),
+        )
 
 
 class IdealChannelRealization(ChannelRealization[IdealChannelSample]):

@@ -1,15 +1,15 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from typing import Sequence
+from functools import cache
+from typing_extensions import override
 
 import numpy as np
 
-from ...waveform import PilotSymbolSequence
-from .waveform import GridResource, GridSection, OrthogonalWaveform, PilotSection
+from .waveform import OrthogonalWaveform
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -21,75 +21,52 @@ __status__ = "Prototype"
 class OCDMWaveform(OrthogonalWaveform):
     """Orthogonal Chirp Division Multiplexing waveform."""
 
-    __bandwidth: float
+    @cache
+    @staticmethod
+    def __DFnT(num_subcarriers: int, oversampling_factor: int) -> np.ndarray:
+        """Discrete Fresenl Transform matrix.
 
-    def __init__(
-        self,
-        bandwidth: float,
-        num_subcarriers: int,
-        grid_resources: Sequence[GridResource],
-        grid_structure: Sequence[GridSection],
-        pilot_section: PilotSection | None = None,
-        pilot_sequence: PilotSymbolSequence | None = None,
-        repeat_pilot_sequence: bool = True,
-        **kwargs,
-    ) -> None:
-        # Initialize base class
-        OrthogonalWaveform.__init__(
-            self,
-            num_subcarriers,
-            grid_resources,
-            grid_structure,
-            pilot_section,
-            pilot_sequence,
-            repeat_pilot_sequence,
-            **kwargs,
-        )
+        Args:
+            num_subcarriers: Number of subcarriers in the waveform.
+            oversampling_factor: Oversampling factor for the waveform.
 
-        # Initialize class attributes
-        self.bandwidth = bandwidth
+        Returns:
+            The Discrete Fresnel Transform matrix.
+        """
 
-    @property
-    def __DFnT(self) -> np.ndarray:
-        """Discrete Fresenl Transform matrix."""
-
-        N = self.num_subcarriers
+        N = num_subcarriers
         correction = 0.0 if N % 2 == 0 else 0.5
 
         # Discrete Fresnel Transform
-        transform = np.zeros((N, N * self.oversampling_factor), dtype=np.complex128)
-        for m, n in np.ndindex(N, N * self.oversampling_factor):
+        transform = np.zeros((N, N * oversampling_factor), dtype=np.complex128)
+        for m, n in np.ndindex(N, N * oversampling_factor):
             transform[m, n] = N**-0.5 * np.exp(
-                1j * np.pi * ((m + correction - n / self.oversampling_factor) ** 2 / N - 0.25)
+                1j * np.pi * ((m + correction - n / oversampling_factor) ** 2 / N - 0.25)
             )
 
         return transform
 
-    @property
-    def bandwidth(self) -> float:
-        return self.__bandwidth
+    @override
+    def _forward_transformation(
+        self, symbol_grid: np.ndarray, oversampling_factor: int
+    ) -> np.ndarray:
+        return symbol_grid @ OCDMWaveform.__DFnT(self.num_subcarriers, oversampling_factor)
 
-    @bandwidth.setter
-    def bandwidth(self, value: float) -> None:
-        if value <= 0.0:
-            raise ValueError("Bandwidth must be gerater than zero")
-
-        self.__bandwidth = value
-
-    @property
-    def sampling_rate(self) -> float:
-        return self.bandwidth * self.oversampling_factor
-
-    def _forward_transformation(self, symbol_grid: np.ndarray) -> np.ndarray:
-        return symbol_grid @ self.__DFnT
-
-    def _backward_transformation(self, sample_sections: np.ndarray) -> np.ndarray:
+    @override
+    def _backward_transformation(
+        self, sample_sections: np.ndarray, oversampling_factor: int
+    ) -> np.ndarray:
         return (
             sample_sections
-            @ self.__DFnT[:, : sample_sections.shape[-1]].T.conj()
-            / self.oversampling_factor
+            @ OCDMWaveform.__DFnT(self.num_subcarriers, oversampling_factor)[
+                :, : sample_sections.shape[-1]
+            ].T.conj()
+            / oversampling_factor
         )
 
-    def _correct_sample_offset(self, symbol_subgrid: np.ndarray, sample_offset: int) -> np.ndarray:
+    @override
+    def _correct_sample_offset(
+        self, symbol_subgrid: np.ndarray, sample_offset: int, oversampling_factor: int
+    ) -> np.ndarray:
         # This is a stub for now
         return symbol_subgrid  # pragma: no cover

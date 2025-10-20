@@ -377,8 +377,8 @@ class MonteCarloActor(Generic[MO]):
         try:
             # Intially, re-configure the full grid
             recent_section_indices = np.array(batch[0], dtype=int)
-            for d, i in enumerate(recent_section_indices):
-                self.__grid[d].configure_point(i)
+            for sd, i in enumerate(recent_section_indices):
+                self.__grid[sd].configure_point(i)
 
             # Initialize the result dictionary
             samples: list[MonteCarloSample] = []
@@ -395,13 +395,13 @@ class MonteCarloActor(Generic[MO]):
                 # Reconfigure the dimensions
                 # Note that for the first grid_section this has already been done
                 for d in reconfigured_dimensions:
-                    self.__grid[d].configure_point(section_index_array[d])
+                    self.__grid[int(d)].configure_point(section_index_array[d])
 
                 # Detect the first and last impacted simulation stage depending on the reconfigured dimensions
                 first_impact = self.__num_stages
                 last_impact = 0
                 for d in reconfigured_dimensions:
-                    grid_dimension = self.__grid[d]
+                    grid_dimension = self.__grid[int(d)]
 
                     if grid_dimension.first_impact is None:
                         first_impact = 0

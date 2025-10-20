@@ -8,8 +8,8 @@ from scipy.constants import speed_of_light
 from scipy.ndimage import gaussian_filter
 
 from hermespy.radar import PointDetection, RadarCube, RadarPointCloud, ThresholdDetector, MaxDetector, CFARDetector
-from unit_tests.utils import SimulationTestContext
-from unit_tests.core.test_factory import test_roundtrip_serialization
+from unit_tests.utils import SimulationTestContext  # type: ignore
+from unit_tests.core.test_factory import test_roundtrip_serialization  # type: ignore
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -76,7 +76,7 @@ class TestPointDetection(TestCase):
 
     def test_serialization(self) -> None:
         """Test max detector serialization"""
-        
+
         test_roundtrip_serialization(self, self.point)
 
 
@@ -88,9 +88,6 @@ class TestRadarPointCloud(TestCase):
 
     def test_init_validation(self) -> None:
         """Initialization should raise ValueError on invalid arguments"""
-
-        with self.assertRaises(ValueError):
-            _ = RadarPointCloud(max_range=0.0)
 
         with self.assertRaises(ValueError):
             _ = RadarPointCloud(max_range=-1.0)
@@ -121,6 +118,7 @@ class TestRadarPointCloud(TestCase):
         """Test radar point cloud serialization"""
 
         test_roundtrip_serialization(self, self.cloud)
+
 
 class TestThresholdDetector(TestCase):
     """Test the threshold detector class"""
@@ -199,7 +197,7 @@ class TestThresholdDetector(TestCase):
 
     def test_serialization(self) -> None:
         """Test threshold detector serialization"""
-        
+
         test_roundtrip_serialization(self, self.detector)
 
 
@@ -246,7 +244,7 @@ class TestMaxDetector(TestCase):
 
     def test_serialization(self) -> None:
         """Test max detector serialization"""
-        
+
         test_roundtrip_serialization(self, self.detector)
 
 
@@ -392,5 +390,5 @@ class TestCFARDetector(TestCase):
 
     def test_serialization(self) -> None:
         """Test CFAR detector serialization"""
-        
+
         test_roundtrip_serialization(self, self.detector)

@@ -54,17 +54,20 @@ from itertools import product
 from typing import Type
 from typing_extensions import override
 
-import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 from rich import get_console
 from rich.console import Console
 from rich.progress import track
 
 from hermespy.core import (
+    DeserializationProcess,
     Executable,
     Hook,
     PlotVisualization,
     SamplePoint,
+    SerializationProcess,
     ScalarEvaluator,
     ScatterVisualization,
     Scenario,
@@ -297,7 +300,7 @@ class DetectionProbabilityEvaluation(EvaluationTemplate[bool, ScatterVisualizati
 
     @override
     def _prepare_visualization(
-        self, figure: plt.Figure | None, axes: VAT, **kwargs
+        self, figure: Figure | None, axes: VAT, **kwargs
     ) -> ScatterVisualization:  # pragma: no cover
         raise NotImplementedError("Detection probability evaluation does not support visualization")
 
@@ -336,9 +339,9 @@ class DetectionProbEvaluator(ScalarEvaluator, Serializable):
     def __init__(
         self,
         radar: Radar,
-        confidence: float = 0.0,
-        tolerance: float = 1.0,
-        min_num_samples: int = 1024,
+        confidence: float = ScalarEvaluator._DEFAULT_CONFIDENCE,
+        tolerance: float = ScalarEvaluator._DEFAULT_TOLERANCE,
+        min_num_samples: int = ScalarEvaluator._DEFAULT_MIN_NUM_SAMPLES,
         plot_scale: str = "log",
         tick_format: ValueType = ValueType.LIN,
         plot_surface: bool = True,
@@ -404,6 +407,27 @@ class DetectionProbEvaluator(ScalarEvaluator, Serializable):
 
     def __del__(self) -> None:
         self.__hook.remove()
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_object(self.__radar, "radar")
+        process.serialize_floating(self.confidence, "confidence")
+        process.serialize_floating(self.tolerance, "tolerance")
+        process.serialize_integer(self.min_num_samples, "min_num_samples")
+
+    @classmethod
+    @override
+    def Deserialize(
+        cls: Type[DetectionProbEvaluator], process: DeserializationProcess
+    ) -> DetectionProbEvaluator:
+        return DetectionProbEvaluator(
+            radar=process.deserialize_object("radar", Radar),
+            confidence=process.deserialize_floating("confidence", cls._DEFAULT_CONFIDENCE),
+            tolerance=process.deserialize_floating("tolerance", cls._DEFAULT_TOLERANCE),
+            min_num_samples=process.deserialize_integer(
+                "min_num_samples", cls._DEFAULT_MIN_NUM_SAMPLES
+            ),
+        )
 
 
 class RocArtifact(Artifact):
@@ -484,9 +508,9 @@ class RocEvaluation(Evaluation[PlotVisualization]):
 
     @override
     def _prepare_visualization(
-        self, figure: plt.Figure | None, axes: VAT, **kwargs
+        self, figure: Figure | None, axes: VAT, **kwargs
     ) -> PlotVisualization:
-        lines = np.empty_like(axes, dtype=np.object_)
+        lines = np.empty((axes.shape[0], axes.shape[1]), dtype=np.object_)
         h0_lines = axes[0, 0].plot(
             self.__cube_h0.range_bins, np.zeros_like(self.__cube_h0.range_bins)
         )
@@ -554,9 +578,9 @@ class RocEvaluationResult(EvaluationResult[RocArtifact]):
 
     @override
     def _prepare_visualization(
-        self, figure: plt.Figure | None, axes: VAT, **kwargs
+        self, figure: Figure | None, axes: VAT, **kwargs
     ) -> PlotVisualization:
-        ax: plt.Axes = axes.flat[0]
+        ax: Axes = axes.flat[0]
 
         # Configure axes labels
         ax.set_xlabel("False Alarm Probability")
@@ -581,7 +605,7 @@ class RocEvaluationResult(EvaluationResult[RocArtifact]):
             with Executable.style_context():
                 ax.legend()
 
-        lines = np.empty_like(axes, dtype=np.object_)
+        lines = np.empty((axes.shape[0], axes.shape[1]), dtype=np.object_)
         lines[0, 0] = line_list
         return PlotVisualization(figure, axes, lines)
 
@@ -1139,7 +1163,7 @@ class RootMeanSquareEvaluation(Evaluation[ScatterVisualization]):
         return RootMeanSquareArtifact(num_errors, cummulative_square_error)
 
     def _prepare_visualization(
-        self, figure: plt.Figure | None, axes: VAT, **kwargs
+        self, figure: Figure | None, axes: VAT, **kwargs
     ) -> ScatterVisualization:
         return self.__pcl._prepare_visualization(figure, axes, **kwargs)
 

@@ -70,22 +70,24 @@ class ScalarAntennaCalibration(AntennaCalibration):
         return self.__receive_correction_weights
 
     @override
-    def correct_transmission(self, transmission: SignalBlock) -> None:
+    def correct_transmission(self, transmission: SignalBlock) -> SignalBlock:
         if transmission.num_streams != self.__transmit_correction_weights.size:
             raise ValueError(
                 "The number of streams in the transmission does not match the number of transmit weights."
             )
 
         np.copyto(transmission, self.__transmit_correction_weights[:, None] * transmission, "safe")
+        return transmission
 
     @override
-    def correct_reception(self, reception: SignalBlock) -> None:
+    def correct_reception(self, reception: SignalBlock) -> SignalBlock:
         if reception.num_streams != self.__receive_correction_weights.size:
             raise ValueError(
                 "The number of streams in the reception does not match the number of receive weights."
             )
 
         np.copyto(reception, self.__receive_correction_weights[:, None] * reception, "safe")
+        return reception
 
     @staticmethod
     def Estimate(
@@ -137,69 +139,45 @@ class ScalarAntennaCalibration(AntennaCalibration):
 
         # Probe the transmit chain
         tx_probes = np.empty(
-            (
-                device.num_digital_transmit_ports,
-                reference_device.num_digital_receive_ports,
-                num_samples,
-            ),
+            (device.num_transmit_rf_ports, reference_device.num_receive_rf_ports, num_samples),
             np.complex128,
         )
         transmit_zeros = np.zeros(
-            (reference_device.num_digital_receive_ports, num_samples), dtype=np.complex128
+            (reference_device.num_transmit_rf_ports, num_samples), dtype=np.complex128
         )
-        for n in range(device.num_digital_transmit_ports):
+        for n in range(device.num_transmit_rf_ports):
             calibration_waveform = np.zeros(
-                (device.num_digital_transmit_ports, num_samples), dtype=np.complex128
+                (device.num_transmit_rf_ports, num_samples), dtype=np.complex128
             )
             calibration_waveform[n, :] = calibration_pulse
             _, reference_reception = scenario.trigger_direct(
                 [
-                    Signal.Create(
-                        calibration_waveform, device.sampling_rate, device.carrier_frequency
-                    ),
-                    Signal.Create(
-                        transmit_zeros,
-                        reference_device.sampling_rate,
-                        reference_device.carrier_frequency,
-                    ),
+                    Signal.Create(calibration_waveform, device.sampling_rate),
+                    Signal.Create(transmit_zeros, reference_device.sampling_rate),
                 ],
                 [device, reference_device],
             )
-            tx_probes[n, :, :] = reference_reception.getitem(
-                (slice(None), slice(num_samples)), unflatten=True
-            )
+            tx_probes[n, :, :] = reference_reception[:, :num_samples].to_dense()
 
         # Probe the receive chain
         rx_probes = np.empty(
-            (
-                reference_device.num_digital_transmit_ports,
-                device.num_digital_receive_ports,
-                num_samples,
-            ),
+            (reference_device.num_transmit_rf_ports, device.num_receive_rf_ports, num_samples),
             np.complex128,
         )
-        transmit_zeros = np.zeros(
-            (device.num_digital_transmit_ports, num_samples), dtype=np.complex128
-        )
-        for n in range(reference_device.num_digital_transmit_ports):
+        transmit_zeros = np.zeros((device.num_transmit_rf_ports, num_samples), dtype=np.complex128)
+        for n in range(reference_device.num_transmit_rf_ports):
             calibration_waveform = np.zeros(
-                (reference_device.num_digital_transmit_ports, num_samples), dtype=np.complex128
+                (reference_device.num_transmit_rf_ports, num_samples), dtype=np.complex128
             )
             calibration_waveform[n, :] = calibration_pulse
             device_reception, _ = scenario.trigger_direct(
                 [
-                    Signal.Create(transmit_zeros, device.sampling_rate, device.carrier_frequency),
-                    Signal.Create(
-                        calibration_waveform,
-                        device.sampling_rate,
-                        reference_device.carrier_frequency,
-                    ),
+                    Signal.Create(transmit_zeros, device.sampling_rate),
+                    Signal.Create(calibration_waveform, device.sampling_rate),
                 ],
                 [device, reference_device],
             )
-            rx_probes[n, :, :] = device_reception.getitem(
-                (slice(None), slice(num_samples)), unflatten=True
-            )
+            rx_probes[n, :, :] = device_reception[:, :num_samples].view(np.ndarray)
 
         # Compute the correction weights
         phase_response_tx = np.mean(tx_probes / calibration_pulse, axis=2)

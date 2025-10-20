@@ -86,12 +86,15 @@ It requires some additional dependencies which may be installed from PyPi via
 
    pip install -e ".[documentation]"
 
-The documentation source files are located under `/docssource/`, however,
-most API information should be directly inserted into the source code files and inserted
-by the `autodocs <https://www.sphinx-doc.org/en/master/usage/extensions/autodoc.html>`_
-extension.
-A reference example can be found in `/hermespy/simulation/rf_chain/power_amplifier.py`.
-See :doc:`api/simulation/rf_chain.amplifier.PowerAmplifier` for the rendered results.
+The documentation source files are located under `/docssource/`.
+The api reference documentation follows the source code's folder structure,
+representing most module source files by a corresponding documentation file.
+
+General API information usefule in inline documentation should be added to Python source files.
+Additional module-level information and example snippets may be added to the respective
+documentation source files under `/docssource/api/`.
+A reference example can be found in `/hermespy/simulation/rf/blocks/amps.py`.
+See :doc:`api/simulation/rf/blocks/amps` for the rendered results.
 
 Sphinx with serveral extensions is used to generate the documentation.
 Build the documentation by executing

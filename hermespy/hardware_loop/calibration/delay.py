@@ -95,7 +95,9 @@ class DelayCalibration(DelayCalibrationBase):
 
             # Infer the implicit delay by estimating the sample index of the propagated dirac
             propagated_signals.append(propagated_signal)
-            propagated_dirac_indices[n] = np.max([np.argmax(b[0]) for b in propagated_signal])
+            propagated_dirac_indices[n] = np.argmax(
+                propagated_signal.blocks[0].view(np.ndarray)[0, :]
+            )
 
             # Wait the configured amount of time between iterations
             sleep(wait)

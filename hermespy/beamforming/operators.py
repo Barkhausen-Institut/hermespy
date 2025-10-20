@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
+from typing import Sequence
 from typing_extensions import override
+
+import numpy as np
 
 from hermespy.core import (
     DeserializationProcess,
@@ -18,7 +21,7 @@ from hermespy.core import (
 from .beamformer import TransmitBeamformer, ReceiveBeamformer
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -63,13 +66,13 @@ class BeamformingTransmitter(SignalTransmitter):
         self.__beamformer = value
 
     @override
-    def _transmit(self, device: TransmitState, duration: float) -> Transmission:
+    def _transmit(self, state: TransmitState, duration: float) -> Transmission:
         # Generate base transmission
-        base_transmission = SignalTransmitter._transmit(self, device, duration)
+        base_transmission = SignalTransmitter._transmit(self, state, duration)
 
         # Apply beamforming to the resulting port streams
         beamformed_signal = self.beamformer.encode_streams(
-            base_transmission.signal, device.antennas.num_transmit_antennas, device
+            base_transmission.signal, state.antennas.num_transmit_antennas, state
         )
 
         # Return transmission
@@ -97,27 +100,20 @@ class BeamformingReceiver(SignalReceiver, Serializable):
         self,
         beamformer: ReceiveBeamformer,
         num_samples: int,
-        sampling_rate: float,
+        selected_receive_ports: Sequence[int] | None = None,
         expected_power: float = 0.0,
     ) -> None:
         """
         Args:
 
-            beamformer (ReceiveBeamformer):
-                Beamformer to be used.
-
-            num_samples (int):
-                Number of samples per reception.
-
-            sampling_rate (float):
-                Required sampling rate in Hz.
-
-            expected_power (float):
-                Expected power of the received signal in W.
+            beamformer: Beamformer to be used.
+            num_samples: Number of samples to be received.
+            selected_receive_ports: Ports to be used for reception. If None, all ports are used.
+            expected_power: Expected power of the received signal.
         """
 
         # Initialize base class
-        SignalReceiver.__init__(self, num_samples, sampling_rate, expected_power)
+        SignalReceiver.__init__(self, num_samples, selected_receive_ports, expected_power)
 
         # Initialize class attributes
         self.beamformer = beamformer
@@ -136,15 +132,15 @@ class BeamformingReceiver(SignalReceiver, Serializable):
         self.__beamformer = value
 
     @override
-    def _receive(self, signal: Signal, device: ReceiveState) -> Reception:
+    def _receive(self, signal: Signal, state: ReceiveState) -> Reception:
         # Receive base reception
-        base_reception = SignalReceiver._receive(self, signal, device)
+        base_reception = SignalReceiver._receive(self, signal, state)
 
         # Apply beamforming to the resulting port streams
         beamformed_signal = self.beamformer.decode_streams(
             base_reception.signal,
             self.beamformer.num_receive_output_streams(signal.num_streams),
-            device,
+            state,
         )
 
         # Return reception
@@ -158,9 +154,14 @@ class BeamformingReceiver(SignalReceiver, Serializable):
     @classmethod
     @override
     def Deserialize(cls, process: DeserializationProcess) -> BeamformingReceiver:
+        selected_receive_ports = process.deserialize_array("selected_receive_ports", np.int64, None)
         return BeamformingReceiver(
             process.deserialize_object("beamformer"),
             process.deserialize_integer("num_samples"),
-            process.deserialize_floating("sampling_rate"),
+            (
+                selected_receive_ports.flatten().tolist()
+                if selected_receive_ports is not None
+                else None
+            ),
             process.deserialize_floating("expected_power"),
         )

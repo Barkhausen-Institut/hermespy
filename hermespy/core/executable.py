@@ -9,7 +9,7 @@ from contextlib import contextmanager
 from glob import glob
 from os import getcwd, mkdir, makedirs
 from sys import exit
-from typing import Any, Generator, List, Union
+from typing import Any, Generator, List
 
 import matplotlib.pyplot as plt
 from rich.console import Console
@@ -43,7 +43,7 @@ class Executable(ABC):
     def __init__(
         self,
         results_dir: str | None = None,
-        verbosity: Union[Verbosity, str] = Verbosity.INFO,
+        verbosity: Verbosity | str = Verbosity.INFO,
         console: Console | None = None,
         console_mode: ConsoleMode = ConsoleMode.INTERACTIVE,
         debug: bool = False,
@@ -138,7 +138,7 @@ class Executable(ABC):
         return self.__verbosity
 
     @verbosity.setter
-    def verbosity(self, new_verbosity: Union[str, Verbosity]) -> None:
+    def verbosity(self, new_verbosity: str | Verbosity) -> None:
         """Modify the information output behaviour during execution.
 
         Args:
@@ -299,7 +299,7 @@ class Executable(ABC):
         return self.__console_mode
 
     @console_mode.setter
-    def console_mode(self, value: Union[ConsoleMode, str]) -> None:
+    def console_mode(self, value: ConsoleMode | str) -> None:
         # Convert string arguments to iterable
         if isinstance(value, str):
             value = ConsoleMode[value]

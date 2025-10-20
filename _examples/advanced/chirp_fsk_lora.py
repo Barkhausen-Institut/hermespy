@@ -31,11 +31,11 @@ from hermespy.simulation import (
 from hermespy.channel import (
     MultipathFadingChannel,
     StandardAntennaCorrelation,
-    CorrelationType,    
+    CorrelationType,
 )
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "André Noll-Barreto", "Tobias Kronauer"]
 __license__ = "AGPLv3"
 __version__ = "1.4.0"
@@ -47,8 +47,9 @@ __status__ = "Prototype"
 # Initialize a simulation considering two devices operating at 865 MHz
 simulation = Simulation()
 cf = 865e6
-tx_device = simulation.new_device(carrier_frequency=cf)
-rx_device = simulation.new_device(carrier_frequency=cf)
+bandwidth = 500e3
+tx_device = simulation.new_device(carrier_frequency=cf, bandwidth=bandwidth)
+rx_device = simulation.new_device(carrier_frequency=cf, bandwidth=bandwidth)
 
 # The channel model is a classical Rayleigh fading
 simulation.set_channel(tx_device, rx_device, MultipathFadingChannel(
@@ -60,7 +61,6 @@ simulation.set_channel(tx_device, rx_device, MultipathFadingChannel(
 
 # Connect the devices with a simplex link
 link = SimplexLink(waveform=ChirpFSKWaveform(
-    chirp_bandwidth=500e3,
     chirp_duration=512e-6,
     freq_difference=1953.125,
     num_data_chirps=20,

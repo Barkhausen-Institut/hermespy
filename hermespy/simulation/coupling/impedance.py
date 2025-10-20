@@ -6,14 +6,14 @@ from typing_extensions import override
 
 import numpy as np
 
-from hermespy.core import DeserializationProcess, SerializationProcess, Signal
+from hermespy.core import DeserializationProcess, SerializationProcess, SignalBlock
 from .coupling import Coupling
 
 if TYPE_CHECKING:
-    from hermespy.simulation import SimulatedDevice  # pragma: no cover
+    from hermespy.simulation import SimulatedDeviceState  # pragma: no cover
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -33,7 +33,6 @@ class ImpedanceCoupling(Coupling):
 
     def __init__(
         self,
-        device: SimulatedDevice | None = None,
         transmit_correlation: np.ndarray | None = None,
         receive_correlation: np.ndarray | None = None,
         transmit_impedance: np.ndarray | None = None,
@@ -66,8 +65,10 @@ class ImpedanceCoupling(Coupling):
                 Defaults to the identity matrix.
         """
 
-        Coupling.__init__(self, device=device)
+        # Initialize base class
+        Coupling.__init__(self)
 
+        # Initialize properties
         self.transmit_correlation = transmit_correlation
         self.receive_correlation = receive_correlation
         self.transmit_impedance = transmit_impedance
@@ -93,7 +94,7 @@ class ImpedanceCoupling(Coupling):
         self.__transmit_correlation = value
 
     @property
-    def receive_correlation(self) -> np.ndarray:
+    def receive_correlation(self) -> np.ndarray | None:
         return self.__receive_correlation
 
     @receive_correlation.setter
@@ -164,36 +165,40 @@ class ImpedanceCoupling(Coupling):
 
         self.__matching_impedance = value
 
-    def _transmit(self, signal: Signal) -> Signal:
+    @override
+    def _transmit(self, signal: SignalBlock, state: SimulatedDeviceState) -> SignalBlock:
         transmit_impedance = (
-            np.eye(self.device.antennas.num_transmit_antennas)
+            np.eye(state.antennas.num_transmit_antennas)
             if self.transmit_impedance is None
             else self.transmit_impedance
         )
         transmit_correlation = (
-            np.eye(self.device.antennas.num_transmit_antennas)
+            np.eye(state.antennas.num_transmit_antennas)
             if self.transmit_correlation is None
             else self.transmit_correlation
         )
 
         transmit_coupling = transmit_impedance.real**-0.5 @ transmit_correlation**0.5
-        transmitted_samples = transmit_coupling @ signal.getitem()
+        transmitted_samples = transmit_coupling @ signal
 
-        return signal.from_ndarray(transmitted_samples)
+        return SignalBlock(
+            signal.num_streams, signal.num_samples, signal.offset, bytearray(transmitted_samples)
+        )
 
-    def _receive(self, signal: Signal) -> Signal:
+    @override
+    def _receive(self, signal: SignalBlock, state: SimulatedDeviceState) -> SignalBlock:
         receive_impedance = (
-            np.eye(self.device.antennas.num_receive_antennas)
+            np.eye(state.antennas.num_receive_antennas)
             if self.receive_impedance is None
             else self.receive_impedance
         )
         receive_correlation = (
-            np.eye(self.device.antennas.num_receive_antennas)
+            np.eye(state.antennas.num_receive_antennas)
             if self.receive_correlation is None
             else self.receive_correlation
         )
         matching_impedance = (
-            np.eye(self.device.antennas.num_receive_antennas)
+            np.eye(state.antennas.num_receive_antennas)
             if self.matching_impedance is None
             else self.matching_impedance
         )
@@ -205,40 +210,33 @@ class ImpedanceCoupling(Coupling):
             @ np.linalg.inv(matching_impedance + receive_correlation)
             @ receive_correlation**0.5
         )
-        received_samples = receive_coupling @ signal.getitem()
-
-        return signal.from_ndarray(received_samples)
+        received_samples = receive_coupling @ signal
+        return SignalBlock(
+            signal.num_streams, signal.num_samples, signal.offset, bytearray(received_samples)
+        )
 
     @override
-    def serialize(self, serialization_process: SerializationProcess) -> None:
+    def serialize(self, process: SerializationProcess) -> None:
         if self.transmit_correlation is not None:
-            serialization_process.serialize_array(self.transmit_correlation, "transmit_correlation")
+            process.serialize_array(self.transmit_correlation, "transmit_correlation")
         if self.receive_correlation is not None:
-            serialization_process.serialize_array(self.receive_correlation, "receive_correlation")
+            process.serialize_array(self.receive_correlation, "receive_correlation")
         if self.transmit_impedance is not None:
-            serialization_process.serialize_array(self.transmit_impedance, "transmit_impedance")
+            process.serialize_array(self.transmit_impedance, "transmit_impedance")
         if self.receive_impedance is not None:
-            serialization_process.serialize_array(self.receive_impedance, "receive_impedance")
+            process.serialize_array(self.receive_impedance, "receive_impedance")
         if self.matching_impedance is not None:
-            serialization_process.serialize_array(self.matching_impedance, "matching_impedance")
+            process.serialize_array(self.matching_impedance, "matching_impedance")
 
     @override
     @classmethod
-    def Deserialize(cls, deserialization_process: DeserializationProcess) -> ImpedanceCoupling:
+    def Deserialize(cls, process: DeserializationProcess) -> ImpedanceCoupling:
         return cls(
-            transmit_correlation=deserialization_process.deserialize_array(
+            transmit_correlation=process.deserialize_array(
                 "transmit_correlation", np.float64, None
             ),
-            receive_correlation=deserialization_process.deserialize_array(
-                "receive_correlation", np.float64, None
-            ),
-            transmit_impedance=deserialization_process.deserialize_array(
-                "transmit_impedance", np.float64, None
-            ),
-            receive_impedance=deserialization_process.deserialize_array(
-                "receive_impedance", np.float64, None
-            ),
-            matching_impedance=deserialization_process.deserialize_array(
-                "matching_impedance", np.float64, None
-            ),
+            receive_correlation=process.deserialize_array("receive_correlation", np.float64, None),
+            transmit_impedance=process.deserialize_array("transmit_impedance", np.float64, None),
+            receive_impedance=process.deserialize_array("receive_impedance", np.float64, None),
+            matching_impedance=process.deserialize_array("matching_impedance", np.float64, None),
         )

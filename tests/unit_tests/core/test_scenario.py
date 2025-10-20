@@ -13,7 +13,7 @@ from hermespy.core import ScenarioMode, Signal, SignalReceiver, SilentTransmitte
 from hermespy.simulation import SimulatedDevice, SimulationScenario
 
 __author__ = "Tobias Kronauer"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -36,10 +36,10 @@ class TestScenario(TestCase):
         self.device_alpha = self.scenario.new_device()
         self.device_beta = self.scenario.new_device()
 
-        self.transmitter_alpha = SilentTransmitter(10, 1.0)
-        self.transmitter_beta = SilentTransmitter(10, 1.0)
-        self.receiver_alpha = SignalReceiver(10, 1.0)
-        self.receiver_beta = SignalReceiver(10, 1.0)
+        self.transmitter_alpha = SilentTransmitter(60)
+        self.transmitter_beta = SilentTransmitter(60)
+        self.receiver_alpha = SignalReceiver(60)
+        self.receiver_beta = SignalReceiver(60)
         self.device_alpha.transmitters.add(self.transmitter_alpha)
         self.device_beta.transmitters.add(self.transmitter_beta)
         self.device_alpha.receivers.add(self.receiver_alpha)
@@ -124,31 +124,6 @@ class TestScenario(TestCase):
 
         self.assertEqual(drop_duration, self.scenario.drop_duration)
 
-    def test_drop_duration_validation(self) -> None:
-        """The drop duration property setter should raise a ValueError on negative arguments"""
-
-        with self.assertRaises(ValueError):
-            self.scenario.drop_duration = -1
-
-        try:
-            self.scenario.drop_duration = 0.0
-
-        except ValueError:
-            self.fail("Setting a drop duration of zero should not result in an error throw")
-
-        with self.assertRaises(RuntimeError), patch("hermespy.core.scenario.Scenario.mode", new_callable=PropertyMock) as mode_mock:
-            mode_mock.return_value = ScenarioMode.RECORD
-            self.scenario.drop_duration = 1.0
-
-    def test_drop_duration_computation(self) -> None:
-        """If the drop duration is set to zero,
-        the property getter should return the maximum frame duration as drop duration"""
-
-        max_frame_duration = 10.0  # Results from the setUp transmit mock
-        self.scenario.drop_duration = 0.0
-
-        self.assertEqual(max_frame_duration, self.scenario.drop_duration)
-
     def test_campaign_validation(self) -> None:
         """The campaign property setter should raise a ValueError on invalid calls"""
 
@@ -228,9 +203,7 @@ class TestScenario(TestCase):
         """Transmit operators should return the correct list of operators"""
 
         mock_alpha = MagicMock()
-        mock_alpha.sampling_rate = 1.0
         mock_beta = MagicMock()
-        mock_beta.sampling_rate = 1.0
         self.device_alpha.transmitters.add(mock_alpha)
         self.device_beta.transmitters.add(mock_beta)
 
@@ -271,7 +244,9 @@ class TestScenario(TestCase):
             _ = self.scenario.process_inputs([])
 
     def test_process_inputs(self) -> None:
-        impinging_signals = [Signal.Create(self.rng.random((1, 10)), 1.0, 0.0) for _ in range(self.scenario.num_devices)]
+        """Process inputs should return the correct list of processed inputs"""
+        
+        impinging_signals = [Signal.Create(self.rng.random((1, 60)), d.sampling_rate, d.carrier_frequency) for d in self.scenario.devices]
         processed_inputs = self.scenario.process_inputs(impinging_signals)
 
         self.assertEqual(2, len(processed_inputs))
@@ -283,7 +258,7 @@ class TestScenario(TestCase):
             _ = self.scenario.receive_operators([])
 
     def test_receive_operators(self) -> None:
-        impinging_signals = [Signal.Create(self.rng.random((1, 10)), 1.0, 0.0) for _ in range(self.scenario.num_devices)]
+        impinging_signals = [Signal.Create(self.rng.random((1, 60)), d.sampling_rate, d.carrier_frequency) for d in self.scenario.devices]
         processed_inputs = self.scenario.process_inputs(impinging_signals)
         receptions = self.scenario.receive_operators(processed_inputs)
 
@@ -293,7 +268,6 @@ class TestScenario(TestCase):
         """Number of drops should be correctly returned by the respective property"""
 
         with TemporaryDirectory() as tmp_dir:
-            self.scenario.drop_duration = 1e-3
             file_path = join(tmp_dir, "test.hdf")
 
             self.scenario.record(file_path)
@@ -303,7 +277,7 @@ class TestScenario(TestCase):
 
             replayed_scenario, num_replayed_drops = SimulationScenario.Replay(file_path)
             self.assertEqual(1, num_replayed_drops)
-            
+
             _ = replayed_scenario.drop()
             self.assertEqual(1, replayed_scenario.num_drops)
             replayed_scenario.stop()
@@ -322,4 +296,3 @@ class TestReplayScenario(TestCase):
 
         with self.assertRaises(RuntimeError):
             self.scenario.drop()
-

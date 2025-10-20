@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from unittest import TestCase
-from unittest.mock import Mock, patch, PropertyMock
+from unittest.mock import Mock
 
 import numpy as np
 from numpy.random import default_rng
 
 from hermespy.channel import Cost259Type, Cost259
-from hermespy.modem import(
+from hermespy.modem import (
     CustomPilotSymbolSequence,
     SimplexLink,
     CommunicationWaveform,
@@ -39,8 +39,8 @@ __status__ = "Prototype"
 class MockIdealChannelEstimation(IdealChannelEstimation[CommunicationWaveform]):
     """Mock ideal channel estimation for testing purposes."""
 
-    def estimate_channel(self, symbols: Symbols, delay: float = 0) -> StatedSymbols:
-        csi = self._csi(delay, 1, 10)
+    def estimate_channel(self, symbols: Symbols, bandwidth: float, oversampling_factor: int, delay: float = 0) -> StatedSymbols:
+        csi = self._csi(delay, bandwidth, oversampling_factor, 10)
         return Mock()
 
 
@@ -60,15 +60,15 @@ class TestIdealChannelEstimation(TestCase):
 
         self.estimation.waveform = None
         with self.assertRaises(RuntimeError):
-            self.estimation.estimate_channel(Mock())
+            self.estimation.estimate_channel(Mock(), 1.0, 1)
         self.estimation.waveform = self.waveform
 
         with self.assertRaises(RuntimeError):
-            self.estimation.estimate_channel(Mock())
+            self.estimation.estimate_channel(Mock(), 1.0, 1)
 
         self.waveform.modem = None
         with self.assertRaises(RuntimeError):
-            self.estimation.estimate_channel(Mock())
+            self.estimation.estimate_channel(Mock(), 1.0, 1)
 
 
 class _TestIdealChannelEstimation(TestCase):
@@ -76,6 +76,7 @@ class _TestIdealChannelEstimation(TestCase):
 
     estimation: IdealChannelEstimation
     waveform: CommunicationWaveform
+    link: SimplexLink
 
     def setUp(self) -> None:
         self.rng = default_rng(42)
@@ -100,16 +101,20 @@ class _TestIdealChannelEstimation(TestCase):
     def test_estimate_channel(self) -> None:
         """Ideal channel estimation should correctly fetch the channel estimate"""
 
-        transmission = self.alpha_device.transmit()
-        propagation = self.channel.propagate(transmission, self.alpha_device, self.beta_device)
-        self.beta_device.receive(propagation)
+        alpha_state = self.alpha_device.state()
+        beta_state = self.beta_device.state()
 
-        symbols = self.link.waveform.demodulate(propagation.getitem(0).flatten())
-        stated_symbols = self.estimation.estimate_channel(symbols)
+        transmission = self.alpha_device.transmit(alpha_state)
+        propagation = self.channel.propagate(transmission, self.alpha_device, self.beta_device)
+        self.beta_device.receive(propagation, beta_state)
+
+        symbols = self.link.waveform.demodulate(propagation[0].view(np.ndarray).flatten(), beta_state.bandwidth, beta_state.oversampling_factor)
+        stated_symbols = self.estimation.estimate_channel(symbols, beta_state.bandwidth, beta_state.oversampling_factor)
         picked_symbols = self.waveform.pick(stated_symbols)
 
         # ToDo: How could this be tested?
         return
+
 
 class TestOFDMIdealChannelEstimation(_TestIdealChannelEstimation):
     """Test ideal channel estimation for multicarrier waveforms."""
@@ -117,9 +122,7 @@ class TestOFDMIdealChannelEstimation(_TestIdealChannelEstimation):
     def setUp(self) -> None:
         super().setUp()
 
-        self.subcarrier_spacing = 1e3
         self.num_subcarriers = 100
-        self.oversampling_factor = 2
 
         self.repetitions_a = 2
         self.prefix_type_a = PrefixType.CYCLIC
@@ -141,18 +144,17 @@ class TestOFDMIdealChannelEstimation(_TestIdealChannelEstimation):
         self.sections = [self.section_a, self.section_b, self.section_c]
 
         self.waveform = OFDMWaveform(
-            subcarrier_spacing=self.subcarrier_spacing,
-            modem=self.link,
             grid_resources=self.resources,
             grid_structure=self.sections,
             num_subcarriers=self.num_subcarriers,
-            oversampling_factor=self.oversampling_factor,
         )
         self.waveform.pilot_symbol_sequence = CustomPilotSymbolSequence(np.arange(1, 200))
         self.waveform.pilot_section = SchmidlCoxPilotSection()
 
         self.estimation = OFDMIdealChannelEstimation(self.channel, self.alpha_device, self.beta_device)
         self.waveform.channel_estimation = self.estimation
+
+        self.link.waveform = self.waveform
 
 
 class TestSingleCarrierIdealChannelEstimation(_TestIdealChannelEstimation):
@@ -161,9 +163,11 @@ class TestSingleCarrierIdealChannelEstimation(_TestIdealChannelEstimation):
     def setUp(self) -> None:
         super().setUp()
 
-        self.waveform = MockSingleCarrierWaveform(symbol_rate=1e6, num_preamble_symbols=3, num_postamble_symbols=3, num_data_symbols=100, pilot_rate=10, modem=self.link)
+        self.waveform = MockSingleCarrierWaveform(num_preamble_symbols=3, num_postamble_symbols=3, num_data_symbols=100, pilot_rate=10)
         self.estimation = SingleCarrierIdealChannelEstimation(self.channel, self.alpha_device, self.beta_device)
         self.waveform.channel_estimation = self.estimation
+
+        self.link.waveform = self.waveform
 
 
 del _TestIdealChannelEstimation

@@ -32,17 +32,21 @@ class TestSCMatchedFilterJcas(TestCase):
         self.max_range = 10
         self.channel = SingleTargetRadarChannel(target_range=self.target_range, radar_cross_section=1.0)
 
+        self.bandwidth = 1e6
         self.oversampling_factor = 16
 
         self.operator = MatchedFilterJcas(self.max_range)
-        self.operator.waveform = RootRaisedCosineWaveform(oversampling_factor=self.oversampling_factor, modulation_order=4, num_preamble_symbols=20, num_data_symbols=100, pilot_rate=10, symbol_rate=1e6)
+        self.operator.waveform = RootRaisedCosineWaveform(modulation_order=4, num_preamble_symbols=20, num_data_symbols=100, pilot_rate=10)
         self.operator.waveform.pilot_symbol_sequence = CustomPilotSymbolSequence(np.array([1, -1, 1j, -1j]))
         self.operator.waveform.synchronization = SingleCarrierCorrelationSynchronization()
         self.operator.waveform.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
         self.operator.waveform.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
 
-        self.device = SimulatedDevice()
-        self.device.carrier_frequency = 1e9
+        self.device = SimulatedDevice(
+            bandwidth=self.bandwidth,
+            oversampling_factor=self.oversampling_factor,
+            carrier_frequency=1e9,
+        )
         self.device.add_dsp(self.operator)
 
     def test_jcas(self) -> None:

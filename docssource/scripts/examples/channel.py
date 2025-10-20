@@ -23,8 +23,7 @@ alpha_device.transmitters.add(link)
 beta_device.receivers.add(link)
 
 # Specify the waveform and postprocessing to be used by the link
-link.waveform = RootRaisedCosineWaveform(symbol_rate=1e8, oversampling_factor=2,
-                                         num_data_symbols=1000, num_preamble_symbols=10, pilot_rate=10)
+link.waveform = RootRaisedCosineWaveform(num_data_symbols=1000, num_preamble_symbols=10, pilot_rate=10)
 link.waveform.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
 link.waveform.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
 

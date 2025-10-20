@@ -43,7 +43,7 @@ from .physical_device_dummy import PhysicalScenarioDummy
 from .scenario import PhysicalScenarioType
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -342,7 +342,7 @@ class PlotThread(Thread):
         Args:
             rc_params: Matplotlib style parameters.
             plot: Plot to be visualized by the thread.
-            \*\*kwargs: Additional keyword arguments to be passed to the base class.
+            kwargs: Additional keyword arguments to be passed to the base class.
         """
 
         # Initialize class attributes
@@ -544,12 +544,12 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
                 List points at which the dimension will be sampled into a grid.
                 The type of points must be identical to the grid arguments / type.
 
-            \*args:
+            args:
                 References to the object the imension belongs to.
                 Resolved to the investigated object by default,
                 but may be an attribute or sub-attribute of the investigated object.
 
-            \*\*kwargs:
+            kwargs:
                 Additional keyword arguments to be passed to the dimension.
                 See :class:`GridDimension<hermespy.core.pymonte.grid.GridDimension>` for more information.
 
@@ -733,7 +733,8 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
                     for device in self.scenario.devices:
                         state.new_device(
                             carrier_frequency=device.carrier_frequency,
-                            sampling_rate=device.sampling_rate,
+                            bandwidth=device.bandwidth,
+                            oversampling_factor=device.oversampling_factor,
                         )
                         for transmitter in device.transmitters:
                             device.transmitters.add(transmitter)

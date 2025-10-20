@@ -103,10 +103,10 @@ class TestEBN0(TestCase):
         """Power should be the bit energy divided by the noise level"""
 
         bit_energy = 0.123
-        self.reference.bit_energy = 0.123
-        expected_power = bit_energy / self.level
+        self.reference.bit_energy.return_value = 0.123
 
-        self.assertEqual(expected_power, self.ebn0.get_power())
+        expected_power = bit_energy / self.level
+        self.assertEqual(expected_power, self.ebn0.get_power(1.0))
 
 
 class TestESN0(TestCase):
@@ -127,7 +127,7 @@ class TestESN0(TestCase):
         """Power should be the symbol energy divided by the noise level"""
 
         symbol_energy = 0.123
-        self.reference.symbol_energy = 0.123
-        expected_power = symbol_energy / self.level
+        self.reference.symbol_energy.return_value = symbol_energy
 
-        self.assertEqual(expected_power, self.esn0.get_power())
+        expected_power = symbol_energy / self.level
+        self.assertEqual(expected_power, self.esn0.get_power(1.0))

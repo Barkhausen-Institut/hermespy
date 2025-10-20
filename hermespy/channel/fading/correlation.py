@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from typing import Union
 
 import numpy as np
 
@@ -49,12 +48,11 @@ class StandardAntennaCorrelation(AntennaCorrelation):
 
     __correlation: CorrelationType  # The assumed correlation
 
-    def __init__(self, correlation: Union[CorrelationType, str], **kwargs) -> None:
+    def __init__(self, correlation: CorrelationType | str, **kwargs) -> None:
         """
         Args:
 
-            correlation (Union[CorrelationType, str]):
-                The assumed correlation.
+            correlation: The assumed correlation.
         """
 
         self.correlation = CorrelationType.from_parameters(correlation)

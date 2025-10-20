@@ -128,7 +128,12 @@ class RadarChannelSample(ChannelSample):
         # Apply the channel gain
         propagated_samples *= self.gain**0.5
 
-        return SignalBlock(propagated_samples, signal._offset)
+        return SignalBlock(
+            self.num_receive_antennas,
+            signal.num_samples + max_delay_in_samples,
+            signal._offset,
+            propagated_samples.tobytes(),
+        )
 
     def state(
         self,

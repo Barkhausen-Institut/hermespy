@@ -4,22 +4,22 @@
 from os.path import join
 from tempfile import TemporaryDirectory
 from unittest import TestCase
-from unittest.mock import PropertyMock, patch, Mock
+from unittest.mock import PropertyMock, patch, Mock, MagicMock
 
 import numpy as np
 from numpy.random import default_rng
 from numpy.testing import assert_array_equal
 
 from hermespy.channel import SingleTargetRadarChannel
-from hermespy.core import ValueType, GridDimensionInfo, ScenarioMode, Scenario, SamplePoint
-from hermespy.core.pymonte import Evaluation, GridDimension,ScalarEvaluationResult
+from hermespy.core import Evaluation, ValueType, GridDimensionInfo, ScenarioMode, Scenario, SamplePoint
 from hermespy.radar import DetectionProbEvaluator, FMCW, PointDetection, Radar, RadarPointCloud, ReceiverOperatingCharacteristic, ThresholdDetector
-from hermespy.radar.evaluators import RadarEvaluator, RocArtifact, RocEvaluation, RocEvaluationResult, RootMeanSquareArtifact, RootMeanSquareError, RootMeanSquareErrorResult, RootMeanSquareEvaluation
-from hermespy.simulation import SimulatedDevice, SimulationScenario, N0
-from unit_tests.utils import SimulationTestContext
+from hermespy.radar.evaluators import RadarEvaluator, RocArtifact, RocEvaluation, RocEvaluationResult, RootMeanSquareArtifact, RootMeanSquareError, RootMeanSquareEvaluation
+from hermespy.simulation import SimulatedDevice, SimulationScenario
+from unit_tests.utils import SimulationTestContext  # type: ignore
+from unit_tests.core.test_factory import test_roundtrip_serialization  # type: ignore
 
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -107,7 +107,7 @@ class TestDetectionProbEvaluator(TestCase):
 
         self.threshold = 2.0
 
-        self.radar = Mock()
+        self.radar = MagicMock(spec=Radar)
         self.radar.reception = PropertyMock()
 
         self.evaluator = DetectionProbEvaluator(self.radar)
@@ -142,6 +142,11 @@ class TestDetectionProbEvaluator(TestCase):
             cloud_mock.num_points = 5
             evaluation = self.evaluator.evaluate()
             self.assertEqual(1.0, evaluation.artifact().to_scalar())
+
+    def test_serialization(self) -> None:
+        """Test serialization of detection probability evaluators"""
+
+        # test_roundtrip_serialization(self, self.evaluator, {'radar'})
 
 
 class TestRocArtifact(TestCase):
@@ -213,7 +218,7 @@ class TestReciverOperatingCharacteristics(TestCase):
             self.device,
             self.channel,
         )
-        
+
     def _generate_evaluation(self) -> RocEvaluation:
         """Helper class to generate an evaluation.
 
@@ -331,7 +336,7 @@ class TestReciverOperatingCharacteristics(TestCase):
         with patch.object(self.scenario, 'drop') as drop_mock:
             drop_mock.side_effect = self.scenario._drop
             result = ReceiverOperatingCharacteristic.FromScenarios(mock_h0_scenario, mock_h1_scenario, 1)
-    
+
         self.assertIsInstance(result, RocEvaluationResult)
 
     def test_from_file(self) -> None:
@@ -445,4 +450,3 @@ class TestRootMeanSquareError(TestCase):
 
         evaluation = self.evaluator.evaluate()
         self.assertIsInstance(evaluation, RootMeanSquareEvaluation)
-

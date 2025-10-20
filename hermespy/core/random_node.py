@@ -144,7 +144,7 @@ class RandomNode(object):
         return self.__mother_node
 
     @random_mother.setter
-    def random_mother(self, value: RandomNode) -> None:
+    def random_mother(self, value: RandomNode | None) -> None:
         """Set the mother node of this random number generator."""
 
         self.__generator = default_rng(self.seed) if value is None else None

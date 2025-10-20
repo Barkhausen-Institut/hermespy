@@ -27,18 +27,19 @@ class TestPerfectCoupling(TestCase):
         self.rng = default_rng(42)
 
         self.device = SimulatedDevice()
-        self.coupling = PerfectCoupling(self.device)
+        self.coupling = PerfectCoupling()
+        self.state = self.device.state()
 
     def test_transmit_receive(self) -> None:
         """Transmit and receive methods should return the same signal"""
 
-        some_signal = Signal.Create(self.rng.normal(size=10) + 1j * self.rng.normal(size=10), self.device.antennas.num_receive_antennas, carrier_frequency=0.0)
-        transmitted_signal = self.coupling.transmit(some_signal)
-        received_signal = self.coupling.receive(transmitted_signal)
+        some_signal = Signal.Create(self.rng.normal(size=(1, 10)) + 1j * self.rng.normal(size=(1, 10)), self.device.antennas.num_receive_antennas, carrier_frequency=0.0)
+        transmitted_signal = self.coupling.transmit(some_signal, self.state)
+        received_signal = self.coupling.receive(transmitted_signal, self.state)
         
-        assert_array_almost_equal(np.abs(some_signal.getitem()), np.abs(received_signal.getitem()))
+        assert_array_almost_equal(np.abs(some_signal.view(np.ndarray)), np.abs(received_signal.view(np.ndarray)))
 
     def test_serialization(self) -> None:
         """Test serialization"""
 
-        test_roundtrip_serialization(self, self.coupling, {'device'})
+        test_roundtrip_serialization(self, self.coupling)

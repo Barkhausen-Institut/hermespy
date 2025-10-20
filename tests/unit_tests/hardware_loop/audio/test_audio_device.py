@@ -8,11 +8,12 @@ from numpy.testing import assert_array_almost_equal
 
 from hermespy.core import Reception, Receiver, ReceiveState, Signal, Transmission, TransmitState, Transmitter
 from hermespy.hardware_loop.audio import AudioDevice
-from hermespy.hardware_loop.audio.device import AudioAntenna, AudioDeviceAntennas, AudioPlaybackPort, AudioRecordPort
+from hermespy.hardware_loop.audio.device import AudioAntenna, AudioDeviceAntennas
 from unit_tests.core.test_factory import test_roundtrip_serialization
+from unit_tests.utils import assert_signals_equal
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -37,20 +38,16 @@ class SineOperator(Transmitter[Transmission], Receiver[Reception]):
     def power(self) -> float:
         return 1.0
 
-    def _transmit(self, device: TransmitState, duration: float) -> Transmission:
-        sine = np.exp(2j * np.pi * np.arange(int(self.__duration * self.sampling_rate)) / self.sampling_rate * self.__frequency)
-        signal = Signal.Create(sine[np.newaxis, :], device.sampling_rate, device.carrier_frequency)
+    def _transmit(self, state: TransmitState, duration: float) -> Transmission:
+        sine = np.exp(2j * np.pi * np.arange(int(self.__duration * state.sampling_rate)) / state.sampling_rate * self.__frequency)
+        signal = Signal.Create(sine[np.newaxis, :], state.sampling_rate, state.carrier_frequency)
 
         transmission = Transmission(signal)
         return transmission
 
-    def _receive(self, signal: Signal, device: ReceiveState) -> Reception:
+    def _receive(self, signal: Signal, state: ReceiveState) -> Reception:
         reception = Reception(signal)
         return reception
-
-    @property
-    def sampling_rate(self) -> float:
-        return 40e3
 
     @property
     def frame_duration(self) -> float:
@@ -63,11 +60,8 @@ class SineOperator(Transmitter[Transmission], Receiver[Reception]):
     def _noise_power(self, strength: float, snr_type=...) -> float:
         return strength
 
-    def _recall_transmission(self, group) -> Transmission:
-        return Transmission.from_HDF(group)
-
-    def _recall_reception(self, group) -> Reception:
-        return Reception.from_HDF(group)
+    def samples_per_frame(self, bandwidth: float, oversampling_factor: int) -> int:
+        return int(self.frame_duration * bandwidth * oversampling_factor)
 
 
 class TestAudioAntenna(TestCase):
@@ -89,43 +83,6 @@ class TestAudioAntenna(TestCase):
         self.assertCountEqual(np.array([2**0.5, 2**0.5], dtype=float), self.antenna.local_characteristics(0.0, 0.0))
 
 
-class TestAudioPlaybackPort(TestCase):
-    """Test audio playback port model."""
-
-    def setUp(self) -> None:
-        self.device = Mock()
-        self.device.playback_channels = [1, 2, 3, 4, 5]
-        self.device.record_channels = [1, 2, 3, 4, 5]
-        self.antennas = AudioDeviceAntennas(self.device)
-
-        self.channel = 5
-        self.port = AudioPlaybackPort(self.antennas, self.channel)
-
-    def test_properties(self) -> None:
-        """Test audio playback port properties"""
-
-        self.assertEqual(self.channel, self.port.channel)
-
-
-class TestAudioRecordPort(TestCase):
-    """Test audio record port model."""
-
-    def setUp(self) -> None:
-
-        self.device = Mock()
-        self.device.playback_channels = [1, 2, 3, 4, 5]
-        self.device.record_channels = [1, 2, 3, 4, 5]
-        self.antennas = AudioDeviceAntennas(self.device)
-
-        self.channel = 5
-        self.port = AudioRecordPort(self.antennas, self.channel)
-
-    def test_properties(self) -> None:
-        """Test audio record port properties"""
-
-        self.assertEqual(self.channel, self.port.channel)
-
-
 class TestAudioDeviceAntennas(TestCase):
     def setUp(self) -> None:
         self.device = Mock()
@@ -133,12 +90,6 @@ class TestAudioDeviceAntennas(TestCase):
         self.device.record_channels = [1, 2, 3, 4, 5]
 
         self.antennas = AudioDeviceAntennas(self.device)
-
-    def test_new_port(self) -> None:
-        """Adding a new port should raise a RuntimeError"""
-
-        with self.assertRaises(RuntimeError):
-            self.antennas._new_port()
 
     def test_num_antennas(self) -> None:
         """Test numbero of transmit antennas calcualtion"""
@@ -159,16 +110,6 @@ class TestAudioDeviceAntennas(TestCase):
         """Antennas property should alwys return a list of antenna instances"""
 
         self.assertEqual(10, len(self.antennas.antennas))
-
-    def test_transmit_ports(self) -> None:
-        """Transmit ports property should return the correct list of transmit ports"""
-
-        self.assertEqual(5, len(self.antennas.transmit_ports))
-
-    def test_receive_ports(self) -> None:
-        """Receive ports property should return the correct list of receive ports"""
-
-        self.assertEqual(5, len(self.antennas.receive_ports))
 
 
 class TestAudioDevice(TestCase):
@@ -243,7 +184,7 @@ class TestAudioDevice(TestCase):
         self.assertEqual(1.0, self.device.max_sampling_rate)
 
     def test_transmit_receive(self) -> None:
-        """Test all device stages."""
+        """Test all device stages"""
 
         def side_effect(*args, **kwargs):
             self.device._AudioDevice__reception = args[0]
@@ -263,7 +204,7 @@ class TestAudioDevice(TestCase):
             processed_input = self.device.process_input(state=state)
             reception = self.device.receive(processed_input.operator_inputs[0], state)
 
-        assert_array_almost_equal(transmission.operator_transmissions[0].signal.getitem(), reception.operator_inputs[0].getitem())
+        assert_signals_equal(self, transmission.operator_transmissions[0].signal, reception.operator_inputs[0])
 
     def test_serialization(self) -> None:
         """Test audio device serialization"""

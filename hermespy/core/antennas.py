@@ -3,14 +3,15 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
-from copy import deepcopy
 from math import cos, sin, exp, sqrt
-from typing import Generic, List, Literal, overload, Tuple, Type, TypeVar
+from typing import Generic, Literal, overload, Type, TypeVar
+from typing_extensions import override
 
 import matplotlib.colors as colors
 import matplotlib.pyplot as plt
 import matplotlib.tri as tri
 import numpy as np
+from matplotlib.figure import Figure
 from mpl_toolkits.mplot3d import Axes3D  # type: ignore
 from scipy.constants import pi, speed_of_light
 
@@ -20,7 +21,7 @@ from .transformation import Direction, Transformable, Transformation
 from .visualize import VAT
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -45,15 +46,11 @@ class AntennaMode(SerializableEnum):
 AAT = TypeVar("AAT", bound="AntennaArray")
 """Type of antenna array."""
 
-APT = TypeVar("APT", bound="AntennaPort")
-"""Type of antenna port."""
 
-
-class Antenna(ABC, Generic[APT], Transformable):
+class Antenna(ABC, Transformable):
     """Base class for the model of a single antenna element within an antenna array."""
 
     __mode: AntennaMode  # The mode this antenna is operating in, i.e. DUPLEX, TX or RX
-    __port: APT | None  # Antenna port this antenna belongs to
 
     def __init__(
         self, mode: AntennaMode = AntennaMode.DUPLEX, pose: Transformation | None = None
@@ -75,7 +72,6 @@ class Antenna(ABC, Generic[APT], Transformable):
 
         # Initialize attributes
         self.__mode = mode
-        self.__port = None
 
     @property
     def mode(self) -> AntennaMode:
@@ -91,32 +87,6 @@ class Antenna(ABC, Generic[APT], Transformable):
 
         # Update the antenna's mode
         self.__mode = value
-
-        # Notify the port that the antenna's mode has changed
-        if self.port is not None:
-            self.port.antennas_updated()
-
-    @property
-    def port(self) -> APT | None:
-        """Antenna port this antenna is connected to."""
-
-        return self.__port
-
-    @port.setter
-    def port(self, value: APT | None) -> None:
-        # Do nothing if the port does not change
-        if self.__port == value:
-            return
-
-        # Update this antenna's port reference and make it its reference coordinate frame
-        self.__port = value
-
-        if value is None:
-            self.set_base(None)
-
-        else:
-            self.port.add_antenna(self)
-            self.set_base(self.__port)
 
     @abstractmethod
     def copy(self: AT) -> AT:
@@ -239,7 +209,7 @@ class Antenna(ABC, Generic[APT], Transformable):
         # We're finally done
         return global_antenna_character
 
-    def plot_polarization(self, angle_resolution: int = 180) -> plt.Figure:
+    def plot_polarization(self, angle_resolution: int = 180) -> Figure:
         """Visualize the antenna polarization depending on the angles of interest.
 
         Args:
@@ -334,7 +304,7 @@ class Antenna(ABC, Generic[APT], Transformable):
 
             return figure
 
-    def plot_gain(self, angle_resolution: int = 180) -> plt.Figure:
+    def plot_gain(self, angle_resolution: int = 180) -> Figure:
         """Visualize the antenna gain depending on the angles of interest.
 
         Args:
@@ -419,7 +389,7 @@ AT = TypeVar("AT", bound=Antenna)
 """Type of antenna."""
 
 
-class IdealAntenna(Generic[APT], Antenna[APT], Serializable):
+class IdealAntenna(Antenna, Serializable):
     """Theoretic model of an ideal antenna.
 
     .. figure:: /images/api_antenna_idealantenna_gain.png
@@ -474,7 +444,7 @@ class IdealAntenna(Generic[APT], Antenna[APT], Serializable):
         return cls(mode, pose)
 
 
-class LinearAntenna(Generic[APT], Antenna[APT], Serializable):
+class LinearAntenna(Antenna, Serializable):
     """Model of a linearly polarized ideal antenna.
 
     The assumed characteristic is
@@ -550,7 +520,7 @@ class LinearAntenna(Generic[APT], Antenna[APT], Serializable):
         return cls(mode, slant, pose)
 
 
-class PatchAntenna(Generic[APT], Antenna[APT], Serializable):
+class PatchAntenna(Antenna, Serializable):
     """Realistic model of a vertically polarized patch antenna.
 
     .. figure:: /images/api_antenna_patchantenna_gain.png
@@ -598,7 +568,7 @@ class PatchAntenna(Generic[APT], Antenna[APT], Serializable):
         return cls(mode, pose)
 
 
-class Dipole(Generic[APT], Antenna[APT], Serializable):
+class Dipole(Antenna, Serializable):
     """Model of vertically polarized half-wavelength dipole antenna.
 
     .. figure:: /images/api_antenna_dipole_gain.png
@@ -652,205 +622,8 @@ class Dipole(Generic[APT], Antenna[APT], Serializable):
         return cls(mode, pose)
 
 
-class AntennaPort(Generic[AT, AAT], Transformable, Serializable):
-    """A single antenna port linking a set of antennas to an antenna array."""
-
-    __antennas: List[AT]  # Antennas connected to this port
-    __transmit_antennas: List[AT]  # Transmitting antennas connected to this port
-    __receive_antennas: List[AT]  # Receiving antennas connected to this port
-    __array: AAT | None  # Array this antenna port belongs to
-
-    def __init__(
-        self,
-        antennas: Sequence[AT] | None = None,
-        pose: Transformation | None = None,
-        array: AAT | None = None,
-    ) -> None:
-        """
-        Args:
-
-            antennas:
-                Sequence of antennas to be connected to this port.
-                If not specified, no antennas are connected by default.
-
-            pose:
-                The antenna port's position and orientation with respect to its array.
-
-            array:
-                Antenna array this port belongs to.
-        """
-
-        # Initialize base class
-        Transformable.__init__(self, pose)
-
-        # Initialize class attributes
-        self.__antennas = []
-        self.__transmit_antennas = []
-        self.__receive_antennas = []
-        self.__array = None
-        self.array = array
-
-        _antennas = [] if antennas is None else antennas
-        for antenna in _antennas:
-            self.add_antenna(antenna)
-
-    @property
-    def antennas(self) -> Sequence[AT]:
-        """Antennas connected to this port."""
-
-        return self.__antennas.copy()
-
-    @property
-    def num_antennas(self) -> int:
-        """Number of antenna elements connected to this port."""
-
-        return len(self.antennas)
-
-    def antennas_updated(self) -> None:
-        """Callback that is called whenever the list of connected antennas is updated.
-
-        Should also be called after a connected antenna's mode has changed.
-        """
-
-        self.__transmit_antennas = []
-        self.__receive_antennas = []
-
-        for antenna in self.antennas:
-            if antenna.mode == AntennaMode.DUPLEX:
-                self.__transmit_antennas.append(antenna)
-                self.__receive_antennas.append(antenna)
-            elif antenna.mode == AntennaMode.TX:
-                self.__transmit_antennas.append(antenna)
-            elif antenna.mode == AntennaMode.RX:
-                self.__receive_antennas.append(antenna)
-            else:
-                # This exception should never be raised
-                raise RuntimeError("Unknow antenna mode encountered")
-
-    def add_antenna(self, antenna: AT) -> None:
-        """Add a new antenna to this port.
-
-        Args:
-
-            antenna:
-                The antenna to be added.
-
-        Raises:
-
-            ValueError: If the antenna is already connected to a different port.
-        """
-
-        if antenna.port is not None and antenna.port != self:
-            raise ValueError("Antenna is already connected to a different port")
-
-        if antenna not in self.antennas:
-            self.__antennas.append(antenna)
-
-            # Update the internal antenna lists
-            self.antennas_updated()
-
-        # Update the antenna's port reference
-        antenna.port = self
-
-    def remove_antenna(self, antenna: AT) -> None:
-        """Remove an antenna from this port.
-
-        Args:
-
-            antenna:
-                The antenna to be removed.
-        """
-
-        if antenna in self.antennas:
-            self.__antennas.remove(antenna)
-
-            # Update the internal antenna lists
-            self.antennas_updated()
-
-        # Update the antenna's port reference
-        if antenna.port is not None:
-            antenna.port = None
-
-    @property
-    def num_transmit_antennas(self) -> int:
-        """Number of transmitting antenna elements connected to this port."""
-
-        return len(self.__transmit_antennas)
-
-    @property
-    def num_receive_antennas(self) -> int:
-        """Number of receiving antenna elements connected to this port."""
-
-        return len(self.__receive_antennas)
-
-    @property
-    def transmitting(self) -> bool:
-        """Is this port connected to a transmitting antenna?"""
-
-        return self.num_transmit_antennas > 0
-
-    @property
-    def receiving(self) -> bool:
-        """Is this port connected to a receiving antenna?"""
-
-        return self.num_receive_antennas > 0
-
-    @property
-    def transmit_antennas(self) -> Sequence[AT]:
-        """Transmitting antennas connected to this port."""
-
-        return self.__transmit_antennas.copy()
-
-    @property
-    def receive_antennas(self) -> Sequence[AT]:
-        """Receiving antennas connected to this port."""
-
-        return self.__receive_antennas.copy()
-
-    @property
-    def array(self) -> AAT | None:
-        """Antenna array this antenna port belongs to."""
-
-        return self.__array
-
-    @array.setter
-    def array(self, value: AAT | None) -> None:
-        # Do nothing if the state does not change
-        if self.__array == value:
-            return
-
-        self.__array = value
-        self.set_base(self.__array)
-
-    def copy(self) -> AntennaPort:
-        """Create a deep copy of the antenna port.
-
-        The copy will not be connected to any array.
-
-        Returns: The copy.
-        """
-
-        return AntennaPort([antenna.copy() for antenna in self.antennas], deepcopy(self.pose), None)
-
-    def serialize(self, process: SerializationProcess) -> None:
-        Transformable.serialize(self, process)
-        process.serialize_object_sequence(self.antennas, "antennas")
-
-    @classmethod
-    def Deserialize(cls: Type[AntennaPort], process: DeserializationProcess) -> AntennaPort:
-        pose = process.deserialize_array("pose", np.float64).view(Transformation)
-        antennas = process.deserialize_object_sequence("antennas", Antenna)
-        return cls(antennas, pose)
-
-
-class AntennaArrayBase(ABC, Generic[APT], Transformable):
+class AntennaArrayBase(ABC, Transformable):
     """Base class for all antenna array models."""
-
-    @property
-    @abstractmethod
-    def ports(self) -> Sequence[APT]:
-        """Sequence of all antenna ports within this array."""
-        ...  # pragma: no cover
 
     @property
     @abstractmethod
@@ -869,36 +642,6 @@ class AntennaArrayBase(ABC, Generic[APT], Transformable):
     def receive_antennas(self) -> Sequence[Antenna]:
         """All receiving antenna elements within this array."""
         ...  # pragma: no cover
-
-    @property
-    def num_ports(self) -> int:
-        """Number of antenna ports within this array."""
-
-        return len(self.ports)
-
-    @property
-    def transmit_ports(self) -> Sequence[APT]:
-        """Sequence of all transmitting ports within this array."""
-
-        return [port for port in self.ports if port.transmitting]
-
-    @property
-    def receive_ports(self) -> Sequence[APT]:
-        """Sequence of all receiving ports within this array."""
-
-        return [port for port in self.ports if port.receiving]
-
-    @property
-    def num_transmit_ports(self) -> int:
-        """Number of transmitting antenna ports within this array."""
-
-        return len(self.transmit_ports)
-
-    @property
-    def num_receive_ports(self) -> int:
-        """Number of receiving antenna ports within this array."""
-
-        return len(self.receive_ports)
 
     @property
     def num_antennas(self) -> int:
@@ -1092,7 +835,7 @@ class AntennaArrayBase(ABC, Generic[APT], Transformable):
 
         return antenna_characteristics
 
-    def plot_topology(self, mode: AntennaMode = AntennaMode.DUPLEX) -> Tuple[plt.Figure, VAT]:
+    def plot_topology(self, mode: AntennaMode = AntennaMode.DUPLEX) -> tuple[Figure, VAT]:
         """Plot a scatter representation of the array topology.
 
         Args:
@@ -1404,13 +1147,12 @@ class AntennaArrayState(Sequence, AntennaArrayBase):
     Returned by the :meth:`state<AntennaArray.state>` of an antenna array.
     """
 
-    __ports: Sequence[AntennaPort]
-    __elements: list[Antenna]
+    __antennas: list[Antenna]
 
-    def __init__(self, ports: Sequence[AntennaPort], global_pose: Transformation) -> None:
+    def __init__(self, antennas: Sequence[Antenna], global_pose: Transformation) -> None:
         """
         Args:
-            ports: Physical ports of the represented antenna array.
+            antennas: Phyiscal antenna elements within this array state.
             global_pose: Global pose of the represented antenna array.
         """
 
@@ -1418,35 +1160,27 @@ class AntennaArrayState(Sequence, AntennaArrayBase):
         AntennaArrayBase.__init__(self, global_pose)
 
         # Initialize class attributes
-        self.__ports = ports
-        self.__elements = []
-        for port in self.__ports:
-            port.set_base(self)
-            self.__elements.extend(port.antennas)
+        self.__antennas = list(antennas)
+        for antenna in self.__antennas:
+            antenna.set_base(self)
 
     @property
-    def ports(self) -> Sequence[AntennaPort]:
-        """All physical ports of the represented antenna array."""
-
-        return self.__ports
-
-    @property
-    def antennas(self) -> Sequence[Antenna]:
+    def antennas(self) -> list[Antenna]:
         """All individual antenna elements within this array."""
 
-        return self.__elements
+        return self.__antennas
 
     @property
     def transmit_antennas(self) -> Sequence[Antenna]:
         """All transmitting antenna elements within this array."""
 
-        return [antenna for antenna in self.antennas if antenna.mode != AntennaMode.RX]
+        return [a for a in self.antennas if a.mode != AntennaMode.RX]
 
     @property
     def receive_antennas(self) -> Sequence[Antenna]:
         """All receiving antenna elements within this array."""
 
-        return [antenna for antenna in self.antennas if antenna.mode != AntennaMode.TX]
+        return [a for a in self.antennas if a.mode != AntennaMode.TX]
 
     def select_subarray(
         self, indices: int | slice | Sequence[int], mode: AntennaMode = AntennaMode.DUPLEX
@@ -1463,35 +1197,27 @@ class AntennaArrayState(Sequence, AntennaArrayBase):
         """
 
         # Select the correct susbet of candidate ports depending on the AntennaMode
+        considered_antennas: Sequence[Antenna]
         if mode == AntennaMode.DUPLEX:
-            considered_ports = self.ports
+            considered_antennas = self.antennas
         elif mode == AntennaMode.TX:
-            considered_ports = self.transmit_ports
+            considered_antennas = self.transmit_antennas
         elif mode == AntennaMode.RX:
-            considered_ports = self.receive_ports
+            considered_antennas = self.receive_antennas
         else:
             raise ValueError("Invalid AntennaMode provided")
 
         # Select a subset of antenna ports depending on the provided indices
-        subarray_ports: list[AntennaPort]
+        subarray_antennas: list[Antenna]
         if isinstance(indices, int):
-            subarray_ports = [considered_ports[indices]]
+            subarray_antennas = [considered_antennas[indices]]
         elif isinstance(indices, slice):
-            subarray_ports = list(considered_ports[indices])
+            subarray_antennas = list(considered_antennas[indices])
         else:
-            subarray_ports = [considered_ports[i] for i in indices]
-
-        # Collect all antenna elements within the selected ports
-        subarray_antennas: list[Antenna] = []
-        for port in subarray_ports:
-            subarray_antennas.extend(port.antennas)
+            subarray_antennas = [considered_antennas[i] for i in indices]
 
         # Create a new state object
-        # A little hacky, but does the trick
-        state = AntennaArrayState([], self.pose)
-        state.__elements = subarray_antennas
-        state.__ports = subarray_ports
-        return state
+        return AntennaArrayState(subarray_antennas, self.pose)
 
     def __getitem__(self, indices: int | slice | Sequence[int]) -> AntennaArrayState:
         """Return a subset of the antenna array state.
@@ -1504,10 +1230,10 @@ class AntennaArrayState(Sequence, AntennaArrayBase):
     def __len__(self) -> int:
         """Number of antenna elements within this array."""
 
-        return self.num_ports
+        return len(self.__antennas)
 
 
-class AntennaArray(AntennaArrayBase[APT], Generic[APT, AT]):
+class AntennaArray(AntennaArrayBase, Generic[AT]):
     """Base class of a model of a set of antennas."""
 
     def __init__(self, pose: Transformation | None = None) -> None:
@@ -1522,115 +1248,39 @@ class AntennaArray(AntennaArrayBase[APT], Generic[APT, AT]):
         # Initialize base class
         AntennaArrayBase.__init__(self, pose)
 
-    @abstractmethod
-    def _new_port(self) -> APT:
-        """Create a new antenna port.
-
-        Returns: The newly connected port.
-        """
-        ...  # pragma: no cover
-
-    @property
-    def transmit_ports(self) -> Sequence[APT]:
-        return [port for port in self.ports if port.transmitting]
-
-    @property
-    def receive_ports(self) -> Sequence[APT]:
-        return [port for port in self.ports if port.receiving]
-
     @property
     def num_transmit_antennas(self) -> int:
-        num_antennas = sum(port.num_transmit_antennas for port in self.transmit_ports)
+        num_antennas = 0
+        for a in self.antennas:
+            if a.mode != AntennaMode.RX:
+                num_antennas += 1
         return num_antennas
 
     @property
     def num_receive_antennas(self) -> int:
-        num_antennas = sum(port.num_receive_antennas for port in self.receive_ports)
-        return num_antennas
-
-    def count_antennas(self, ports: Sequence[int]) -> int:
-        """Count the number of antenna elements within a subset of ports.
-
-        Args:
-            ports: Indices of the ports to be considered.
-
-        Returns: Number of antenna elements within the specified ports.
-
-        Raises:
-            IndexError: If an invalid port index is encountered.
-        """
-
         num_antennas = 0
-        for port_index in ports:
-            num_antennas += self.ports[port_index].num_antennas
-
-        return num_antennas
-
-    def count_transmit_antennas(self, ports: Sequence[int]) -> int:
-        """Count the number of transmitting antenna elements within a subset of ports.
-
-        Args:
-            ports: Indices of the ports to be considered.
-
-        Returns: Number of transmitting antenna elements within the specified ports.
-
-        Raises:
-            IndexError: If an invalid port index is encountered.
-        """
-
-        num_antennas = 0
-        for port_index in ports:
-            num_antennas += self.transmit_ports[port_index].num_transmit_antennas
-
-        return num_antennas
-
-    def count_receive_antennas(self, ports: Sequence[int]) -> int:
-        """Count the number of receiving antenna elements within a subset of ports.
-
-        Args:
-            ports: Indices of the ports to be considered.
-
-        Returns: Number of receiving antenna elements within the specified ports.
-
-        Raises:
-            IndexError: If an invalid port index is encountered.
-        """
-
-        num_antennas = 0
-        for port_index in ports:
-            num_antennas += self.receive_ports[port_index].num_receive_antennas
-
+        for a in self.antennas:
+            if a.mode != AntennaMode.TX:
+                num_antennas += 1
         return num_antennas
 
     @property
-    def antennas(self) -> List[AT]:
+    @abstractmethod
+    def antennas(self) -> list[AT]:
         """All individual antenna elements within this array."""
-
-        antennas: List[AT] = []
-        for port in self.ports:
-            antennas.extend(port.antennas)
-
-        return antennas
+        ...  # pragma: no cover
 
     @property
-    def transmit_antennas(self) -> Sequence[AT]:
+    def transmit_antennas(self) -> list[AT]:
         """Transmitting antennas within this array."""
 
-        antennas: List[AT] = []
-        for port in self.transmit_ports:
-            antennas.extend(port.transmit_antennas)
-
-        return antennas
+        return [a for a in self.antennas if a.mode != AntennaMode.RX]
 
     @property
-    def receive_antennas(self) -> Sequence[AT]:
+    def receive_antennas(self) -> list[AT]:
         """Receiving antennas within this array."""
 
-        antennas: List[AT] = []
-        for port in self.receive_ports:
-            antennas.extend(port.receive_antennas)
-
-        return antennas
+        return [a for a in self.antennas if a.mode != AntennaMode.TX]
 
     def state(self, base_pose: Transformation) -> AntennaArrayState:
         """Return the current state of the antenna array.
@@ -1642,23 +1292,21 @@ class AntennaArray(AntennaArrayBase[APT], Generic[APT, AT]):
         """
 
         # Create a copy of the antenna elements
-        port_copies = [port.copy() for port in self.ports]
-        return AntennaArrayState(port_copies, base_pose)
+        antenna_copies: list[AT] = [a.copy() for a in self.antennas]
+        return AntennaArrayState(antenna_copies, base_pose)
 
 
-class UniformArray(Generic[APT, AT], AntennaArray[APT, AT], Serializable):
+class UniformArray(Generic[AT], AntennaArray[AT], Serializable):
     """Model of a Uniform Antenna Array."""
 
-    property_blacklist = {"topology"}
-    __element: AT | APT
-    __base_port: APT
-    __ports: List[APT]  # List of individual antenna ports within this array
+    __element: AT
+    __antennas: list[AT]  # List of all individual antenna elements within this array
     __spacing: float  # Spacing betwene the antenna ports in m
-    __dimensions: Tuple[int, int, int]  # Number of ports in x-, y-, and z-direction
+    __dimensions: tuple[int, int, int]  # Number of ports in x-, y-, and z-direction
 
     def __init__(
         self,
-        element: Type[AT] | AT | APT,
+        element: Type[AT] | AT,
         spacing: float,
         dimensions: Sequence[int],
         pose: Transformation | None = None,
@@ -1667,8 +1315,7 @@ class UniformArray(Generic[APT, AT], AntennaArray[APT, AT], Serializable):
         Args:
 
             element:
-                The element uniformly repeated across the array.
-                If an antenna is passed instead of a port, a new port is automatically created.
+                The antenna element uniformly repeated across the array.
 
             spacing:
                 Spacing between the elements in m.
@@ -1683,56 +1330,29 @@ class UniformArray(Generic[APT, AT], AntennaArray[APT, AT], Serializable):
         # Initialize base class
         AntennaArray.__init__(self, pose=pose)
 
-        _base_port: APT
-        if isinstance(element, AntennaPort):
-            _base_port = element  # type: ignore[assignment]
-            self.__element = element  # type: ignore[assignment]
-        else:
-            _base_port = self._new_port()
-            element_instance = element if isinstance(element, Antenna) else element()
-            self.__element = element_instance  # type: ignore[assignment]
-            _base_port.add_antenna(element_instance)
-
-        self.__base_port = _base_port
+        element_instance = element if isinstance(element, Antenna) else element()
+        self.__element = element_instance  # type: ignore[assignment]
         self.__spacing = 0.0
         self.__dimensions = (0, 0, 0)
 
         self.spacing = spacing
         self.dimensions = tuple(dimensions)
 
-        self.__update_ports()
-
-    def _new_port(self) -> APT:
-        return AntennaPort()  # type: ignore
-
-    @property
-    def ports(self) -> Sequence[APT]:
-        return self.__ports.copy()
-
-    def __update_ports(self) -> None:
-        """Update ports if the toplogy configuration has changed in any way."""
+    def __update_elements(self) -> None:
+        """Update antenna elements if the toplogy configuration has changed in any way."""
 
         grid = np.meshgrid(
             np.arange(self.__dimensions[0]),
             np.arange(self.__dimensions[1]),
             np.arange(self.__dimensions[2]),
         )
-        positions = self.__spacing * np.vstack((grid[0].flat, grid[1].flat, grid[2].flat)).T
 
-        self.__ports = [deepcopy(self.__base_port) for _ in range(self.num_antennas)]
-        self.__antennas: List[AT] = []
-
-        # ToDo:
-        # Currently the forward kinematic chain, i.e. self.linked_frames will still hold references
-        # to the old ports. This might cause a memory leak.
-
-        for port, pos in zip(self.__ports, positions):
-            # Update the port transformation
-            port.position = pos
-            port.set_base(self)
-
-            # Update the internal antenna lists
-            self.__antennas.extend(port.antennas)
+        self.__antennas: list[AT] = []
+        for pos in self.__spacing * np.vstack((grid[0].flat, grid[1].flat, grid[2].flat)).T:
+            antenna_instance = self.__element.copy()
+            antenna_instance.position = pos
+            antenna_instance.set_base(self)
+            self.__antennas.append(antenna_instance)
 
     @property
     def spacing(self) -> float:
@@ -1752,14 +1372,19 @@ class UniformArray(Generic[APT, AT], AntennaArray[APT, AT], Serializable):
             raise ValueError("Spacing must be greater than zero")
 
         self.__spacing = value
-        self.__update_ports()
+        self.__update_elements()
+
+    @property
+    @override
+    def antennas(self) -> list[AT]:
+        return self.__antennas
 
     @property
     def num_antennas(self) -> int:
         return self.__dimensions[0] * self.__dimensions[1] * self.__dimensions[2]
 
     @property
-    def dimensions(self) -> Tuple[int, ...]:
+    def dimensions(self) -> tuple[int, ...]:
         """Number of antennas in x-, y-, and z-dimension."""
 
         return self.__dimensions
@@ -1782,21 +1407,11 @@ class UniformArray(Generic[APT, AT], AntennaArray[APT, AT], Serializable):
             raise ValueError("Number of antennas must have three or less entries")
 
         self.__dimensions = value  # type: ignore
-        self.__update_ports()
-
-    @property
-    def antennas(self) -> List[AT]:
-        return self.__antennas
-
-    @property
-    def base_port(self) -> APT:
-        """Base port repeated across the array topology."""
-
-        return self.__base_port
+        self.__update_elements()
 
     def serialize(self, process: SerializationProcess) -> None:
         AntennaArray.serialize(self, process)
-        process.serialize_array(np.array(self.__dimensions, np.float64), "dimensions")
+        process.serialize_array(np.asarray(self.__dimensions, np.float64), "dimensions")
         process.serialize_floating(self.__spacing, "spacing")
         process.serialize_object(self.__element, "element")
 
@@ -1804,25 +1419,23 @@ class UniformArray(Generic[APT, AT], AntennaArray[APT, AT], Serializable):
     def Deserialize(cls, process: DeserializationProcess) -> UniformArray:
         pose = process.deserialize_array("pose", np.float64).view(Transformation)
         spacing = process.deserialize_floating("spacing")
-        dimensions = process.deserialize_array("dimensions", int).tolist()
-        element = process.deserialize_object("element", (Antenna, AntennaPort))
+        dimensions = process.deserialize_array("dimensions", np.float64).flatten().tolist()
+        element = process.deserialize_object("element", Antenna)
         return cls(element, spacing, dimensions, pose)  # type: ignore[arg-type]
 
 
-class CustomAntennaArray(Generic[APT, AT], AntennaArray[APT, AT], Serializable):
+class CustomAntennaArray(Generic[AT], AntennaArray[AT], Serializable):
     """Model of a set of arbitrary antennas."""
 
-    __ports: List[APT]  # List of antenna ports within this array
+    __antennas: list[AT]  # List of all individual antenna elements within this array
 
     def __init__(
-        self, ports: Sequence[APT | AT] = None, pose: Transformation | None = None
+        self, antennas: Sequence[AT] | None = None, pose: Transformation | None = None
     ) -> None:
         """
         Args:
-
-            ports:
-                Sequence of antenna ports available within this array.
-                If antennas are passed instead of ports, the ports are automatically created.
+            antennas:
+                Sequence of antenna elements available within this array.
                 If not specified, an empty array is assumed.
 
             pose:
@@ -1836,94 +1449,37 @@ class CustomAntennaArray(Generic[APT, AT], AntennaArray[APT, AT], Serializable):
         # Initialize base class
         AntennaArray.__init__(self, pose=pose)
 
-        self.__ports = []
+        self.__antennas = []
+        _antennas: Sequence[AT] = [] if antennas is None else antennas
+        for antenna in _antennas:
+            self.add_antenna(antenna)
 
-        _ports = [] if ports is None else ports
-        for port in _ports:
-            if isinstance(port, AntennaPort):
-                self.add_port(port)  # type: ignore
-            else:
-                self.add_antenna(port)
-
-    def _new_port(self) -> APT:
-        return AntennaPort()  # type: ignore
-
-    @property
-    def ports(self) -> Sequence[APT]:
-        return self.__ports.copy()
-
-    def add_port(self, port: APT) -> None:
-        """Add a new port to this array.
-
-        Args:
-
-            port:
-                The antenna port to be added.
-        """
-
-        # Do nothing if the antenna is already registered within this array
-        if port.array is self and port in self.ports:
-            return
-
-        # Add information to the internal lists
-        self.__ports.append(port)
-        port.array = self
-
-    def remove_port(self, port: APT) -> None:
-        """Remove a port from this array.
-
-        Args:
-
-            port:
-                The antenna port to be removed.
-
-        Raises:
-
-            ValueError: If the port is not connected to this array.
-        """
-
-        # Do nothing if the antenna is not within this array
-        if port not in self.__ports:
-            raise ValueError("Port is not connected to this array")
-
-        self.__ports.remove(port)
-        port.array = None
-
-    def add_antenna(self, antenna: AT) -> APT:
+    def add_antenna(self, antenna: AT) -> None:
         """Add a new antenna element to this array.
 
-        Convenience wrapper around :meth:`.add_port`,
-        meaning a new port is automatically created and the antenna is added to it.
-
         Args:
-
-            antenna:
-                The antenna element to be added.
-
-        Raises:
-
-            ValueError: If the antenna is already attached to another array or port.
+            antenna: The antenna element to be added.
 
         Returns: The newly created port.
         """
 
-        # Raise an error if the antenna is already attached to another array or port
-        if antenna.port is not None:
-            raise ValueError("Antenna is already attached to another port")
+        self.__antennas.append(antenna)
+        antenna.set_base(self)
 
-        port = self._new_port()
-        port.add_antenna(antenna)
-        self.add_port(port)
+    @property
+    @override
+    def antennas(self) -> list[AT]:
+        return self.__antennas
 
-        return port
-
+    @override
     def serialize(self, process: SerializationProcess) -> None:
-        process.serialize_object_sequence(self.ports, "ports")
+        process.serialize_object_sequence(self.antennas, "antennas")
         process.serialize_array(self.pose, "pose")
 
     @classmethod
+    @override
     def Deserialize(cls, process: DeserializationProcess) -> CustomAntennaArray:
         return CustomAntennaArray(
-            process.deserialize_object_sequence("ports", AntennaPort),
+            process.deserialize_object_sequence("antennas", Antenna),
             process.deserialize_array("pose", np.float64).view(Transformation),
         )

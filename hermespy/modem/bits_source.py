@@ -35,7 +35,7 @@ class BitsSource(RandomNode, Serializable):
         RandomNode.__init__(self, seed=seed)
 
     @abstractmethod
-    def generate_bits(self, num_bits: int) -> np.ndarray:
+    def generate_bits(self, num_bits: int) -> np.ndarray[tuple[int], np.dtype[np.uint8]]:
         """Generate a new sequence of bits.
 
         Args:
@@ -58,8 +58,9 @@ class RandomBitsSource(BitsSource):
         # Initialize base classes
         BitsSource.__init__(self, seed=seed)
 
-    def generate_bits(self, num_bits: int) -> np.ndarray:
-        return self._rng.integers(0, 2, size=num_bits, dtype=int)
+    @override
+    def generate_bits(self, num_bits: int) -> np.ndarray[tuple[int], np.dtype[np.uint8]]:
+        return self._rng.integers(0, 2, size=num_bits, dtype=np.uint8).flatten()
 
     @override
     def serialize(self, process: SerializationProcess) -> None:
@@ -90,7 +91,8 @@ class StreamBitsSource(BitsSource, Serializable):
     def __del__(self) -> None:
         self.__stream.close()
 
-    def generate_bits(self, num_bits: int) -> np.ndarray:
+    @override
+    def generate_bits(self, num_bits: int) -> np.ndarray[tuple[int], np.dtype[np.uint8]]:
         num_bytes = int(ceil(num_bits / 8))
         bit_overflow = num_bytes * 8 - num_bits
 
@@ -98,7 +100,7 @@ class StreamBitsSource(BitsSource, Serializable):
             raise RuntimeError("Bit caching not yet supported")
 
         byte_string = self.__stream.read(num_bytes)
-        array = np.unpackbits(np.frombuffer(byte_string, dtype=np.uint8))
+        array = np.unpackbits(np.frombuffer(byte_string, dtype=np.uint8)).flatten()
 
         return array
 

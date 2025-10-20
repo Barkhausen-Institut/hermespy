@@ -11,7 +11,7 @@ from .beamformer import TransmitBeamformer, ReceiveBeamformer
 
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -27,22 +27,26 @@ class ConventionalBeamformer(TransmitBeamformer, ReceiveBeamformer):
         TransmitBeamformer.__init__(self)
         ReceiveBeamformer.__init__(self)
 
+    @override
     def num_transmit_input_streams(self, num_output_streams: int) -> int:
         # The conventional beamformer distirbutes a single stream
         # to an arbitrary number of antenna streams
         return 1
 
+    @override
     def num_receive_output_streams(self, num_input_streams: int) -> int:
         # The convetional beamformer will always return a single stream,
         # combining all antenna signals into one
         return 1
 
     @property
+    @override
     def num_transmit_focus_points(self) -> int:
         # The conventional beamformer focuses a single angle
         return 1
 
     @property
+    @override
     def num_receive_focus_points(self) -> int:
         # The conventional beamformer focuses a single angle
         return 1
@@ -74,19 +78,20 @@ class ConventionalBeamformer(TransmitBeamformer, ReceiveBeamformer):
 
         # Query topology of receiving antenna ports
         topology = (
-            np.array([p.global_position for p in array.receive_ports], dtype=np.float64)
+            np.array([p.global_position for p in array.receive_antennas], dtype=np.float64)
             - array.global_position
         )
 
         # Build receive beamforming codebook of steering vectors for each angle of interest
-        book = np.empty((angles.shape[0], array.num_receive_ports), dtype=complex)
+        book = np.empty((angles.shape[0], array.num_receive_antennas), dtype=complex)
         for n, (azimuth, zenith) in enumerate(angles):
             direction = Direction.From_Spherical(azimuth, zenith)
             weights = np.exp(-2j * pi * carrier_frequency / speed_of_light * (topology @ direction))
             book[n, :] = weights
 
-        return book / array.num_receive_ports
+        return book / array.num_receive_antennas
 
+    @override
     def _encode(
         self,
         samples: np.ndarray,
@@ -98,7 +103,7 @@ class ConventionalBeamformer(TransmitBeamformer, ReceiveBeamformer):
 
         # Compute conventional beamformer weights
         topology = (
-            np.array([p.global_position for p in array.transmit_ports], dtype=np.float64)
+            np.array([p.global_position for p in array.transmit_antennas], dtype=np.float64)
             - array.global_position
         )
         direction = Direction.From_Spherical(azimuth, zenith)
@@ -111,6 +116,7 @@ class ConventionalBeamformer(TransmitBeamformer, ReceiveBeamformer):
         # That's it
         return samples
 
+    @override
     def _decode(
         self,
         samples: np.ndarray,

@@ -29,13 +29,13 @@ class TestFEC(TestCase):
     """Test the forward error correction (FECT) integration with communication dsp layers."""
 
     def setUp(self) -> None:
-        self.tx_device = SimulatedDevice(seed=42)
-        self.rx_device = SimulatedDevice(seed=42)
+        self.tx_device = SimulatedDevice(bandwidth=100e6, oversampling_factor=1, seed=42)
+        self.rx_device = SimulatedDevice(bandwidth=100e6, oversampling_factor=1, seed=42)
         self.link = SimplexLink()
         self.tx_device.transmitters.add(self.link)
         self.rx_device.receivers.add(self.link)
 
-        self.link.waveform = RootRaisedCosineWaveform(oversampling_factor=1, symbol_rate=100e6, num_data_symbols=1024, modulation_order=64, num_preamble_symbols=0)
+        self.link.waveform = RootRaisedCosineWaveform(num_data_symbols=1024, modulation_order=64, num_preamble_symbols=0)
 
         self.alpha_candidates = [
             Scrambler3GPP(),
@@ -64,7 +64,7 @@ class TestFEC(TestCase):
         received_bits = reception.operator_receptions[0].bits
 
         assert_array_equal(transmitted_bits, received_bits)
-    
+
     def test_individual_codings(self) -> None:
         """Test integration of individual coding schemes"""
 

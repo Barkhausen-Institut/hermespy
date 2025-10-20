@@ -24,16 +24,22 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-def test_roundtrip_serialization(case: TestCase, serializable: Serializable, property_blacklist: set[str] | None = None) -> None:
+def test_roundtrip_serialization(
+    case: TestCase,
+    serializable: Serializable,
+    property_blacklist: set[str] | None = None,
+    additional_tags: dict[str, type[Serializable]] | None = None,
+) -> None:
     """Test the serialization and deserialization of a serializable class instance.
 
     Fails the `case` if the serializable properties don't match the deserialization.
 
     Args:
 
-        case (TestCase): Unit test case on which the testing routine is executed.
-        serializable (Serializable): The serializable object to be tested.
-        property_blacklist (Set[str], optional): Set of property names to be ignored during testing.
+        case: Unit test case on which the testing routine is executed.
+        serializable: The serializable object to be tested.
+        property_blacklist: Set of property names to be ignored during testing.
+        additional_tags: Additional tags to be registered in the factory.
 
     Raises:
 
@@ -69,7 +75,7 @@ def test_roundtrip_serialization(case: TestCase, serializable: Serializable, pro
         attributes.add(attribute_key)
 
     # Serialize the serialzable object configuration to text
-    factory = Factory()
+    factory = Factory(additional_tags)
     file = File("test.h5", "w", driver="core", backing_store=False)
     factory.to_HDF(file, serializable)
 
@@ -250,19 +256,19 @@ class TestSerializationProcess(object):
 
 class TestHDFSerializationProcess(TestSerializationProcess, TestCase):
     """Test the HDF serialization process"""
-    
-    def setUp(self):    
+
+    def setUp(self) -> None:
         self.file = File("test.h5", "w", driver="core", backing_store=False)
         tag_registry = {'unit_tests.core.test_factory.SerializableMock': SerializableMock}
         self.serialization = HDFSerializationProcess.New(tag_registry, self.file)
         self.deserialization = HDFDeserializationProcess.New(tag_registry, self.file)
-    
-    def tearDown(self):
+
+    def tearDown(self) -> None:
         self.file.close()
 
     def test_serialize_object_sequence(self) -> None:
         """Test the serialization of object sequences"""
-    
+
         expected_objects = [SerializableMock() for _ in range(5)]
         self.serialization.serialize_object_sequence(expected_objects, "objects")
 
@@ -276,7 +282,7 @@ class TestHDFSerializationProcess(TestSerializationProcess, TestCase):
         for index in range(5):
             deserialized_sequence = self.deserialization.deserialize_object_sequence("objects", SerializableMock, index, index + 1)
             self.assertEqual(len(deserialized_sequence), 1)
-            
+
             deserialized_object = deserialized_sequence[0]
             self.assertEqual(expected_objects[index].standard_attribute, deserialized_object.standard_attribute)
             self.assertEqual(expected_objects[index].standard_property, deserialized_object.standard_property)

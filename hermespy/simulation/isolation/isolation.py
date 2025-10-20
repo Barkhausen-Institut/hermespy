@@ -84,9 +84,9 @@ class Isolation(Serializable):
         if signal is None:
             raise ValueError("Leaking signal not specified")
 
-        if self.device.antennas.num_transmit_antennas != signal.num_streams:
+        if self.device.num_transmit_antennas != signal.num_streams:
             raise ValueError(
-                f"Number of signal streams ({signal.num_streams}) does not match the number of transmitting antennas ({self.device.antennas.num_transmit_antennas})"
+                f"Number of signal streams ({signal.num_streams}) does not match the number of transmitting antennas ({self.device.num_transmit_antennas})"
             )
 
         return signal

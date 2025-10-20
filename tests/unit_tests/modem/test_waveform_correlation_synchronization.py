@@ -26,6 +26,8 @@ class TestCorellationSynchronization(TestCase):
     def setUp(self) -> None:
         self.threshold = 0.91
         self.guard_ratio = 0.81
+        self.bandwidth = 1e6
+        self.oversampling_factor = 2
         self.synchronization = CorrelationSynchronization(threshold=self.threshold, guard_ratio=self.guard_ratio)
 
     def test_init(self) -> None:
@@ -71,31 +73,31 @@ class TestCorellationSynchronization(TestCase):
     def test_synchronize(self) -> None:
         """Synchronization should properly order pilot sections into frames"""
 
-        pilot_sequence = Signal.Create(np.ones(20, dtype=complex), 1.0)
+        pilot_sequence = Signal.Create(np.ones((1, 20), dtype=complex), self.bandwidth * self.oversampling_factor)
 
         waveform = Mock()
-        waveform.pilot_signal = pilot_sequence
-        waveform.samples_per_frame = 20
+        waveform.pilot_signal.return_value = pilot_sequence
+        waveform.samples_per_frame.return_value = 20
         self.synchronization.waveform = waveform
 
-        shifted_sequence = np.append(np.zeros((1, 10), dtype=complex), pilot_sequence.getitem(), axis=1)
+        shifted_sequence = np.append(np.zeros((1, 10), dtype=complex), pilot_sequence.view(np.ndarray), axis=1)
 
-        pilot_indices = self.synchronization.synchronize(shifted_sequence)
+        pilot_indices = self.synchronization.synchronize(shifted_sequence, self.bandwidth, self.oversampling_factor)
         self.assertSequenceEqual([10], pilot_indices)
 
     def test_default_synchronize(self) -> None:
         """Synchronization should properly order pilot sections into frames"""
 
-        pilot_sequence = Signal.Create(np.ones(20, dtype=complex), 1.0)
+        pilot_sequence = Signal.Create(np.ones((1, 20), dtype=complex), self.bandwidth * self.oversampling_factor)
 
         waveform = Mock()
-        waveform.pilot_signal = pilot_sequence
-        waveform.samples_per_frame = 20
+        waveform.pilot_signal.return_value = pilot_sequence
+        waveform.samples_per_frame.return_value = 20
         self.synchronization.waveform = waveform
 
         empty_sequence = np.zeros((1, 40), dtype=complex)
 
-        pilot_indices = self.synchronization.synchronize(empty_sequence)
+        pilot_indices = self.synchronization.synchronize(empty_sequence, self.bandwidth, self.oversampling_factor)
         self.assertSequenceEqual([], pilot_indices)
 
     def test_serialization(self) -> None:

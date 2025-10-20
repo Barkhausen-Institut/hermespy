@@ -13,8 +13,10 @@ simulation = Simulation(seed=42, num_samples=1000)
 # Create two devices representing base station and terminal
 # in a downlink scenario
 cf = 2.4e9
-base_station = simulation.scenario.new_device(carrier_frequency=cf)
-terminal = simulation.scenario.new_device(carrier_frequency=cf)
+os = 8
+bw = 1e6
+base_station = simulation.scenario.new_device(carrier_frequency=cf, bandwidth=bw, oversampling_factor=os)
+terminal = simulation.scenario.new_device(carrier_frequency=cf, bandwidth=bw, oversampling_factor=os)
 
 # Assign a positions / trajectories to the terminal and base station
 base_station.trajectory = StaticTrajectory(
@@ -29,9 +31,9 @@ terminal.trajectory = LinearTrajectory(
 # Configure a downlink communicating between base station and terminal
 # via a single-carrier waveform
 link = SimplexLink()
-link.waveform = RootRaisedCosineWaveform(symbol_rate=1e6, oversampling_factor=8,
-                                         num_preamble_symbols=10, num_data_symbols=100,
-                                         roll_off=.9)
+link.waveform = RootRaisedCosineWaveform(
+    num_preamble_symbols=10, num_data_symbols=100, roll_off=.9,
+)
 link.waveform.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
 link.waveform.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
 base_station.transmitters.add(link)

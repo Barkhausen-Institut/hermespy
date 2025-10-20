@@ -23,24 +23,37 @@ class TestOFDMRadar(TestCase):
     """Test the OFDM radar."""
 
     def setUp(self) -> None:
-        self.device = SimulatedDevice()
+        self.bandwidth = 20e6
+        self.oversampling_factor = 2
+        self.carrier_frequency = 2.4e9
+        self.num_subcarriers = 1024
+        
+        self.device = SimulatedDevice(
+            carrier_frequency=self.carrier_frequency,
+            bandwidth=self.bandwidth,
+            oversampling_factor=self.oversampling_factor,
+        )
         self.radar = OFDMRadar(self.device)
 
         resources = [GridResource(64, prefix_ratio=.1, elements=[GridElement(ElementType.DATA, 15), GridElement(ElementType.REFERENCE, 1)])]
         structure = [SymbolSection(11, [0])]
-        self.radar.waveform = OFDMWaveform(grid_resources=resources, grid_structure=structure)
+        self.radar.waveform = OFDMWaveform(
+            num_subcarriers=self.num_subcarriers,
+            grid_resources=resources,
+            grid_structure=structure,
+        )
 
     def test_max_range(self) -> None:
         """Max range property should return the correct maximum range"""
 
-        expected_max_range = speed_of_light / (2 * self.radar.waveform.subcarrier_spacing)
-        self.assertAlmostEqual(expected_max_range, self.radar.max_range)
+        expected_max_range = speed_of_light / (2 * (self.bandwidth / self.num_subcarriers))
+        self.assertAlmostEqual(expected_max_range, self.radar.max_range(self.bandwidth))
 
     def test_range_resolution(self) -> None:
         """Range resolution property should return the correct range resolution"""
 
-        expected_range_resolution = self.radar.max_range / self.radar.waveform.num_subcarriers
-        self.assertAlmostEqual(expected_range_resolution, self.radar.range_resolution)
+        expected_range_resolution = self.radar.max_range(self.bandwidth) / self.radar.waveform.num_subcarriers
+        self.assertAlmostEqual(expected_range_resolution, self.radar.range_resolution(self.bandwidth))
 
     def test_transmit_receive(self) -> None:
         """Transmitting and subsequently receiving should return in a correct radar estimate"""

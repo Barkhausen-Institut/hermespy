@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from typing import Any, Generic, List, TypeVar
+from typing import Any, Generic, TypeVar
 from typing_extensions import override
 
 import numpy as np
@@ -116,13 +116,21 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT]):
 
         self.__guard_ratio = value
 
-    def synchronize(self, signal: np.ndarray) -> List[int]:
+    def synchronize(
+        self, signal: np.ndarray, bandwidth: float, oversampling_factor: int
+    ) -> list[int]:
         # Expand the dimensionality for flat signal streams
         if signal.ndim == 1:
             signal = signal[np.newaxis, :]
 
+        # Abort if the signal is empty
+        if signal.size < 1:
+            return []
+
         # Query the pilot signal from the waveform generator
-        pilot_sequence = self.waveform.pilot_signal.getitem().flatten()
+        pilot_sequence = (
+            self.waveform.pilot_signal(bandwidth, oversampling_factor).view(np.ndarray).flatten()
+        )
 
         # Raise a runtime error if pilot sequence is empty
         if len(pilot_sequence) < 1:
@@ -138,7 +146,7 @@ class CorrelationSynchronization(Generic[PGT], Synchronization[PGT]):
         correlation /= correlation.max()  # Normalize correlation
 
         # Determine the pilot sequence locations by performing a peak search over the correlation profile
-        frame_length = self.waveform.samples_per_frame
+        frame_length = self.waveform.samples_per_frame(bandwidth, oversampling_factor)
         pilot_indices, _ = find_peaks(
             abs(correlation), height=0.9, distance=int(0.8 * frame_length)
         )

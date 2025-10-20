@@ -68,6 +68,12 @@ class RegisteredDimension(property):
             getattr(_property, "doc", None),
         )
 
+    def __call__(self, *args, **kwargs) -> None:
+        # The registered dimension class by itself is not callable
+        # However, mypy does not fully understand the property inheritance
+        # Therefore, this stub is necessary
+        raise NotImplementedError("RegisteredDimension is not callable")  # pragma: no cover
+
     @classmethod
     def is_registered(cls, object: object) -> bool:
         """Check if any object is a registered PyMonte simulation dimension.

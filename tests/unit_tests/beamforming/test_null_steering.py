@@ -32,10 +32,10 @@ class TestNullSteeringBeamformer(TestCase):
         )
 
         self.beamformer = NullSteeringBeamformer()
-    
-        self.expected_samples = Signal.Create(np.exp(2j * pi * self.rng.uniform(0, 1, (1, 5))), self.device.sampling_rate, self.device.carrier_frequency)
+
+        self.expected_samples = Signal.Create(np.exp(2j * pi * self.rng.uniform(0, 1, (1, 60))), self.device.bandwidth)
         self.transmitter = BeamformingTransmitter(self.expected_samples, self.beamformer)
-        self.receiver = BeamformingReceiver(self.beamformer, self.expected_samples.num_samples, self.device.sampling_rate)
+        self.receiver = BeamformingReceiver(self.beamformer, self.expected_samples.num_samples)
 
         self.device.add_dsp(self.transmitter)
         self.device.add_dsp(self.receiver)
@@ -60,14 +60,14 @@ class TestNullSteeringBeamformer(TestCase):
         # Configure the beamformer to focus the respective angles
         self.beamformer.transmit_focus = [SphericalFocus(a) for a in focus_angles]
         self.beamformer.receive_focus = [SphericalFocus(a) for a in focus_angles]
-    
+
         # Compute thet array responses for the focus angles
         # Compute spherical phase responses for a0, a1, and a2
         focus_responses = np.array([self.device.antennas.spherical_phase_response(self.carrier_frequency, a[0], a[1]) for a in focus_angles])
 
         # Test transmission
-        transmission = self.device.transmit().mixed_signal.getitem()
-        beamformed_powers = np.array([np.linalg.norm(focus_response @ transmission) ** 2 for focus_response in focus_responses])
+        transmission = self.device.transmit().mixed_signal
+        beamformed_powers = np.array([np.linalg.norm(focus_response @ transmission.view(np.ndarray)) ** 2 for focus_response in focus_responses])
         self.assertGreater(beamformed_powers[0], beamformed_powers[1] * 10, "a0 power should be at least 10x greater than a1 power (nulling issue).")
         self.assertGreater(beamformed_powers[0], beamformed_powers[2] * 10, "a0 power should be at least 10x greater than a2 power (nulling issue).")
 

@@ -2,11 +2,11 @@
 #
 # In this example we simulate the interference between an OFDM signal and a
 # single-carrier signal in an AWGN channel.
-# 
+#
 # The OFDM signal has the same numerology as an LTE system with 20 MHz bandwidth,
 # in which the first 8 sub-frames are used.
 # However, the bits are uncoded. The carrier frequency is 3.5 GHz.
-# 
+#
 # A single carrier 64-QAM interferer with 6 Mbps is also transmitting at 3.501 GHz
 
 from os import environ
@@ -50,14 +50,13 @@ environ["RAY_memory_monitor_refresh_ms"] = "0"
 # Initialize a new simulation considering three devices:
 # Two devices operating at 3.5 GHz and one at 3.501 GHz
 simulation = Simulation(num_actors=1)
-tx_device = simulation.new_device(carrier_frequency=3.5e9)
-rx_device = simulation.new_device(carrier_frequency=3.5e9)
-interferer = simulation.new_device(carrier_frequency=3.501e9)
+tx_device = simulation.new_device(carrier_frequency=3.5e9, bandwidth=3.072e9)
+rx_device = simulation.new_device(carrier_frequency=3.5e9, bandwidth=3.072e9)
+interferer = simulation.new_device(carrier_frequency=3.501e9, bandwidth=20e6, oversampling_factor=4)
 
 # Configure an OFDM link between the first two devices
 link = SimplexLink(waveform=OFDMWaveform(
     modulation_order=16,
-    subcarrier_spacing=15e3,
     dc_suppression=False,
     num_subcarriers=2048,
     grid_resources=[
@@ -86,10 +85,8 @@ link.connect(tx_device, rx_device)
 # Configure an interfering single carrier transmitter
 interferer_dsp = TransmittingModem(waveform=RootRaisedCosineWaveform(
     modulation_order=64,
-    symbol_rate=link.sampling_rate / 4,
-    oversampling_factor=4,
     num_preamble_symbols=16,
-    num_data_symbols=1024,    
+    num_data_symbols=1024,
 ))
 interferer.transmitters.add(interferer_dsp)
 

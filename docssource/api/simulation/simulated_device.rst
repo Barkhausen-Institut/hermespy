@@ -17,7 +17,7 @@ or calling :meth:`new_device<hermespy.core.pipeline.Pipeline.new_device>` on a :
 .. literalinclude:: ../../scripts/examples/simulation_SimulatedDevice.py
    :language: python
    :linenos:
-   :lines: 11-26
+   :lines: 23-28
 
 There exist a number of attributes that can be configured to describe the device's physical properties,
 such as its antenna front-end, its radio-frequency chain, the isolation / leakage between transmit and receive chains,
@@ -26,7 +26,7 @@ the mutual coupling between multiple antennas, the synchronizatio and the hardwa
 .. literalinclude:: ../../scripts/examples/simulation_SimulatedDevice.py
    :language: python
    :linenos:
-   :lines: 28-53
+   :lines: 30-49
 
 Additionally, within the context of a simulation scenario,
 users may configure the device's position, orientation and velocity.
@@ -34,7 +34,7 @@ users may configure the device's position, orientation and velocity.
 .. literalinclude:: ../../scripts/examples/simulation_SimulatedDevice.py
    :language: python
    :linenos:
-   :lines: 55-62
+   :lines: 52-68
 
 Note that these properties are only considered by spatial channel models linking to the respective devices,
 and are otherwise ignored by the simulation engine.
@@ -48,7 +48,7 @@ slots.
 .. literalinclude:: ../../scripts/examples/simulation_SimulatedDevice.py
    :language: python
    :linenos:
-   :lines: 64-75
+   :lines: 60-70
 
 The selected singnal processing algorithms in the snippet above are rather simplistic and only
 generate a static signal that is continuously transmitted, and receive a fixed number of samples, respectively.
@@ -61,7 +61,7 @@ by calling the :meth:`transmit<hermespy.simulation.simulated_device.SimulatedDev
 .. literalinclude:: ../../scripts/examples/simulation_SimulatedDevice.py
    :language: python
    :linenos:
-   :lines: 77-78
+   :lines: 72-73
 
 Similarly, users may inspect the signal processing result of configured receive signal processing algorithms
 by calling the :meth:`receive<hermespy.simulation.simulated_device.SimulatedDevice.receive>` method
@@ -70,7 +70,7 @@ and providing a :class:`Signal<hermespy.core.signal_model.Signal>` model of the 
 .. literalinclude:: ../../scripts/examples/simulation_SimulatedDevice.py
    :language: python
    :linenos:
-   :lines: 80-87
+   :lines: 75-82
 
 The :meth:`transmit<hermespy.simulation.simulated_device.SimulatedDevice.transmit>` routine is a wrapper around multiple subroutines,
 that are individually executed during simulation runtime for performance optimization reasons, finally returning a

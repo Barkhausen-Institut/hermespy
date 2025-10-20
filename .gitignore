@@ -30,6 +30,8 @@ dist/
 .coverage
 MANIFEST*
 pip-wheel-metadata/
+CMakeFiles/
+CMakeCache.txt
 
 # misc
 *~

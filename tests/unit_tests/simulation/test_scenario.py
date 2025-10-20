@@ -5,9 +5,7 @@ from unittest import TestCase
 from unittest.mock import Mock
 
 from hermespy.core import Signal
-from hermespy.simulation.noise import NoiseLevel, NoiseModel
-from hermespy.simulation.scenario import SimulationScenario
-from hermespy.simulation.simulated_device import SimulatedDevice, StaticTrigger
+from hermespy.simulation import NoiseLevel, NoiseModel, SimulationScenario, SimulatedDevice, StaticTrigger
 from unit_tests.utils import SimulationTestContext
 
 __author__ = "Jan Adler"

@@ -16,7 +16,7 @@ from hermespy.simulation import Simulation
 
 # Create a new simulation featuring a single device
 simulation = Simulation()
-device = simulation.new_device()
+device = simulation.new_device(oversampling_factor=2)
 
 # Create a new modem
 # This should be replaced by a BaseModem implementation such as DuplexLink
@@ -25,7 +25,6 @@ device.add_dsp(modem)
 
 # Configure an OFDM waveform
 modem.waveform = OFDMWaveform(
-    oversampling_factor=2,
     num_subcarriers=1024,
     grid_resources=[GridResource(
         repetitions=100,

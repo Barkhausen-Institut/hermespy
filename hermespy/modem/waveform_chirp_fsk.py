@@ -2,27 +2,21 @@
 
 from __future__ import annotations
 from importlib.metadata import version
-from typing import Tuple
 from typing_extensions import override
 from math import ceil
-from functools import lru_cache
+from functools import cache
 
 import numpy as np
 from scipy import integrate
 
 from hermespy.core import Serializable, SerializationProcess, DeserializationProcess
-from hermespy.modem.waveform import (
-    PilotCommunicationWaveform,
-    StatedSymbols,
-    CommunicationWaveform,
-    Synchronization,
-)
+from hermespy.modem.waveform import PilotCommunicationWaveform, StatedSymbols, Synchronization
 from hermespy.core.signal_model import Signal
 from .symbols import Symbols
 from .waveform_correlation_synchronization import CorrelationSynchronization
 
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2021, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -37,8 +31,10 @@ scipy_minor_version = int(version("scipy").split(".")[1])
 class ChirpFSKWaveform(PilotCommunicationWaveform):
     """Chirp Frequency Shift Keying communication waveform  description."""
 
+    DERIVE_FREQ_DIFFERENCE: float = 0.0
+    """Magic number to derive the frequency difference from the modulation order."""
+
     __DEFAULT_CHIRP_DURATION: float = 10e-9
-    __DEFAULT_CHIRP_BANDWIDTH: float = 1e9
     __DEFAULT_NUM_PILOT_CHIRPS: int = 14
     __DEFAULT_NUM_DATA_CHIRPS: int = 50
     __DEFAULT_GUARD_INTERVAL: float = 0.0
@@ -47,7 +43,6 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
     symbol_type = np.int_
     synchronization: ChirpFSKSynchronization
     __chirp_duration: float  # Duraiton of a single chirp in seconds
-    __chirp_bandwidth: float  # Frequency range over which a single chirp sweeps
     __freq_difference: float  # Frequency offset between two adjecent chirp symbols
 
     # Frame parameters
@@ -58,8 +53,7 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
     def __init__(
         self,
         chirp_duration: float = __DEFAULT_CHIRP_DURATION,
-        chirp_bandwidth: float = __DEFAULT_CHIRP_BANDWIDTH,
-        freq_difference: float | None = None,
+        freq_difference: float = DERIVE_FREQ_DIFFERENCE,
         num_pilot_chirps: int = __DEFAULT_NUM_PILOT_CHIRPS,
         num_data_chirps: int = __DEFAULT_NUM_DATA_CHIRPS,
         guard_interval: float = __DEFAULT_GUARD_INTERVAL,
@@ -70,9 +64,6 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
 
             chirp_duration:
                 Duration of a single chirp in seconds.
-
-            chirp_bandwidth:
-                Bandwidth of a single chirp in Hz.
 
             freq_difference:
                 Frequency difference of two adjacent chirp symbols.
@@ -86,7 +77,7 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
             guard_interval:
                 Frame guard interval in seconds.
 
-            \*\*kwargs:
+            kwargs:
                 Base waveform generator initialization arguments.
         """
 
@@ -96,16 +87,13 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
         # Configure waveform paramters
         self.synchronization = ChirpFSKSynchronization()
         self.chirp_duration = chirp_duration
-        self.chirp_bandwidth = chirp_bandwidth
         self.freq_difference = freq_difference
         self.num_pilot_chirps = num_pilot_chirps
         self.num_data_chirps = num_data_chirps
         self.guard_interval = guard_interval
 
-    @property
-    def frame_duration(self) -> float:
-        """Length of one data frame in seconds."""
-
+    @override
+    def frame_duration(self, bandwidth: float) -> float:
         return (
             self.chirp_duration * (self.num_data_chirps + self.num_pilot_chirps)
             + self.guard_interval
@@ -129,58 +117,23 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
             raise ValueError("Chirp duration must be greater than zero")
 
         self.__chirp_duration = value
-        self._clear_cache()
-
-    @property
-    def chirp_bandwidth(self) -> float:
-        """Access the chirp bandwidth.
-
-        Returns: The chirp bandwidth in Hz.
-        """
-
-        return self.__chirp_bandwidth
-
-    @chirp_bandwidth.setter
-    def chirp_bandwidth(self, bandwidth: float) -> None:
-        """Modify the chirp bandwidth.
-
-        Args:
-            bandwidth:
-                The new bandwidth in Hz.
-
-        Raises:
-            ValueError: If the bandwidth is les sor equal to zero.
-        """
-
-        if bandwidth <= 0.0:
-            raise ValueError("Chirp bandwidth must be greater than zero")
-
-        self.__chirp_bandwidth = bandwidth
-        self._clear_cache()
 
     @property
     def freq_difference(self) -> float:
-        """The frequency offset between neighbouring chirp symbols.
+        """The frequency offset between neighbouring chirp symbols in Hz.
 
-        Returns: The frequency difference in Hz.
+        If set to zero, the frequency offset will be calculated automatically based on the modulation order.
 
         Raises:
-            ValueError: If `freq_difference` is smaller or equal to zero.
+            ValueError: If `freq_difference` is smaller than zero.
         """
-
-        if self.__freq_difference is None:
-            return self.chirp_bandwidth / self.modulation_order
 
         return self.__freq_difference
 
     @freq_difference.setter
-    def freq_difference(self, value: float | None) -> None:
-        if value is None:
-            self.__freq_difference = None
-            return
-
-        if value <= 0.0:
-            raise ValueError("Frequency difference must be greater than zero")
+    def freq_difference(self, value: float) -> None:
+        if value < 0.0:
+            raise ValueError("Frequency difference must be or equal to zero")
 
         self.__freq_difference = value
 
@@ -209,7 +162,6 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
             raise ValueError("The number of pilot chirps must be greater or equal to zero.")
 
         self.__num_pilot_chirps = num
-        self._clear_cache()
 
     @property
     def num_data_chirps(self) -> int:
@@ -272,11 +224,18 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
     def num_data_symbols(self) -> int:
         return self.num_data_chirps
 
-    @property
-    def samples_in_chirp(self) -> int:
-        """The number of discrete samples per generated chirp."""
+    def samples_in_chirp(self, bandwidth: float, oversampling_factor: int) -> int:
+        """The number of discrete samples per generated chirp.
 
-        return int(ceil(self.chirp_duration * self.sampling_rate))
+        Args:
+            bandwidth: The bandwidth of the chirp in Hz.
+            oversampling_factor: The oversampling factor of the waveform.
+
+        Returns:
+            The number of samples per chirp.
+        """
+
+        return int(ceil(self.chirp_duration * bandwidth * oversampling_factor))
 
     @property
     def chirps_in_frame(self) -> int:
@@ -284,32 +243,17 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
 
         return self.num_pilot_chirps + self.num_data_chirps
 
-    @property
     @override
-    def samples_per_frame(self) -> int:
-        return self.samples_in_chirp * self.chirps_in_frame + int(
-            (np.around(self.__guard_interval * self.sampling_rate))
+    def samples_per_frame(self, bandwidth: float, oversampling_factor: int) -> int:
+        return self.samples_in_chirp(bandwidth, oversampling_factor) * self.chirps_in_frame + int(
+            (np.around(self.__guard_interval * bandwidth * oversampling_factor))
         )
 
-    @property
     @override
-    def symbol_duration(self) -> float:
-        return self.chirp_duration
-
-    @property
-    @override
-    def symbol_energy(self) -> float:
-        _, energy = self._prototypes()
-        return energy
-
-    @property
-    @override
-    def bit_energy(self) -> float:
-        """Theoretical average bit energy of the modulated signal."""
-
-        _, symbol_energy = self._prototypes()
-        bit_energy = symbol_energy / self.bits_per_symbol
-        return bit_energy
+    def symbol_energy(self, bandwidth: float, oversampling_factor: int) -> float:
+        # Since all chirps have a constant magnitude of 1,
+        # the symbol energy is equal to the number of samples per chirp
+        return self.samples_in_chirp(bandwidth, oversampling_factor)
 
     @override
     def map(self, data_bits: np.ndarray) -> Symbols:
@@ -334,25 +278,37 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
         return symbols
 
     @override
-    def pick(self, symbols: StatedSymbols) -> StatedSymbols:
-        return symbols
+    def pick(self, placed_symbols: StatedSymbols) -> StatedSymbols:
+        return placed_symbols
 
     @override
-    def modulate(self, symbols: Symbols) -> np.ndarray:
-        prototypes, _ = self._prototypes()
-        frame_samples = np.empty(self.samples_per_frame, dtype=complex)
+    def modulate(
+        self, data_symbols: Symbols, bandwidth: float, oversampling_factor: int
+    ) -> np.ndarray:
+        samples_in_chirp = self.samples_in_chirp(bandwidth, oversampling_factor)
+        prototypes, _ = ChirpFSKWaveform._prototypes(
+            bandwidth,
+            oversampling_factor,
+            self.chirp_duration,
+            self.bits_per_symbol,
+            self.modulation_order,
+            self.freq_difference,
+            samples_in_chirp,
+        )
+        frame_samples = np.empty(
+            self.samples_per_frame(bandwidth, oversampling_factor), dtype=complex
+        )
 
         sample_idx = 0
-        samples_in_chirp = self.samples_in_chirp
 
         # Add pilot samples
-        pilot_samples = self.pilot_signal.getitem().flatten()
+        pilot_samples = self.pilot_signal(bandwidth, oversampling_factor).view(np.ndarray).flatten()
         num_pilot_samples = len(pilot_samples)
         frame_samples[:num_pilot_samples] = pilot_samples
         sample_idx += num_pilot_samples
 
         # Modulate data symbols
-        for symbol in symbols.raw[0, ::].flat:
+        for symbol in data_symbols.raw[0, ::].flat:
             frame_samples[sample_idx : sample_idx + samples_in_chirp] = prototypes[
                 int(symbol.real), :
             ]
@@ -361,26 +317,31 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
         return frame_samples
 
     @override
-    def demodulate(self, baseband_signal: np.ndarray) -> Symbols:
+    def demodulate(self, signal: np.ndarray, bandwidth: float, oversampling_factor: int) -> Symbols:
         # Assess number of frames contained within this signal
-        samples_in_chirp = self.samples_in_chirp
+        samples_in_chirp = self.samples_in_chirp(bandwidth, oversampling_factor)
         samples_in_pilot_section = samples_in_chirp * self.num_pilot_chirps
-        prototypes, _ = self._prototypes()
+        prototypes, _ = ChirpFSKWaveform._prototypes(
+            bandwidth,
+            oversampling_factor,
+            self.chirp_duration,
+            self.bits_per_symbol,
+            self.modulation_order,
+            self.freq_difference,
+            samples_in_chirp,
+        )
 
-        data_frame = baseband_signal[samples_in_pilot_section:]
+        data_frame = signal[
+            samples_in_pilot_section : samples_in_pilot_section
+            + samples_in_chirp * self.num_data_chirps
+        ]
 
-        symbol_signals = data_frame.reshape(-1, self.samples_in_chirp)
+        symbol_signals = data_frame.reshape(-1, samples_in_chirp)
         symbol_metrics = abs(symbol_signals @ prototypes.T.conj())
 
         # ToDo: Unfortunately the demodulation-scheme is non-linear. Is there a better way?
         symbols = np.argmax(symbol_metrics, axis=1)
         return Symbols(symbols[np.newaxis, np.newaxis, :])
-
-    @property
-    @override
-    def bandwidth(self) -> float:
-        # The bandwidth is identical to the chirp bandwidth
-        return self.chirp_bandwidth
 
     def _calculate_frequency_offsets(self, data_bits: np.ndarray) -> np.ndarray:
         """Calculates the frequency offsets on frame creation.
@@ -402,19 +363,24 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
     @property
     @override
     def power(self) -> float:
-        return self.symbol_energy / self.samples_in_chirp
-
-    @CommunicationWaveform.modulation_order.setter  # type: ignore
-    def modulation_order(self, value: int) -> None:
-        self._prototypes.cache_clear()
-        CommunicationWaveform.modulation_order.fset(self, value)  # type: ignore
+        # Chirp of constant magnitude 1
+        return 1.0
 
     @property
     def symbol_precoding_support(self) -> bool:
         return False
 
-    @lru_cache(maxsize=1, typed=True)
-    def _prototypes(self) -> Tuple[np.ndarray, float]:
+    @cache
+    @staticmethod
+    def _prototypes(
+        bandwidth: float,
+        oversampling_factor: int,
+        chirp_duration: float,
+        bits_per_symbol: int,
+        modulation_order: int,
+        freq_difference: float,
+        samples_in_chirp: int,
+    ) -> tuple[np.ndarray, float]:
         """Generate chirp prototypes.
 
         This method generates the prototype chirps for all possible modulation symbols, that will be correlated with the
@@ -426,64 +392,63 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
         """
 
         # Chirp parameter inference
-        slope = self.chirp_bandwidth / self.chirp_duration
-        chirp_time = np.arange(self.samples_in_chirp) / self.sampling_rate
-        f0 = -0.5 * self.chirp_bandwidth
+        sampling_rate = oversampling_factor * bandwidth
+        freq_difference = (
+            bandwidth / modulation_order
+            if freq_difference == ChirpFSKWaveform.DERIVE_FREQ_DIFFERENCE
+            else freq_difference
+        )
+        slope = bandwidth / chirp_duration
+        chirp_time = np.arange(samples_in_chirp) / sampling_rate
+        f0 = -0.5 * bandwidth
         f1 = -f0
 
         # non-coherent detection
-        prototypes = np.zeros((2**self.bits_per_symbol, self.samples_in_chirp), dtype=complex)
+        prototypes = np.zeros((2**bits_per_symbol, samples_in_chirp), dtype=complex)
 
-        for idx in range(self.modulation_order):
-            initial_frequency = f0 + idx * self.freq_difference
+        for idx in range(modulation_order):
+            initial_frequency = f0 + idx * freq_difference
             frequency = chirp_time * slope + initial_frequency
-            frequency[frequency > f1] -= self.chirp_bandwidth
+            frequency[frequency > f1] -= bandwidth
 
             # integrate.cumtrapz was changed to cumulative_trapezoid in scipy 1.14.0
             phase: np.ndarray
             if scipy_minor_version < 14:
-                phase = integrate.cumtrapz(frequency, dx=1 / self.sampling_rate, initial=0)
+                phase = integrate.cumtrapz(frequency, dx=1 / sampling_rate, initial=0)  # type: ignore
             else:
-                phase = integrate.cumulative_trapezoid(
-                    frequency, dx=1 / self.sampling_rate, initial=0
-                )
+                phase = integrate.cumulative_trapezoid(frequency, dx=1 / sampling_rate, initial=0)
             phase *= 2 * np.pi
             prototypes[idx, :] = np.exp(1j * phase)
 
         symbol_energy = sum(abs(prototypes[0, :]) ** 2)
         return prototypes, symbol_energy
 
-    @property
     @override
-    def sampling_rate(self) -> float:
-        # Sampling rate scales with the chirp bandwidth
-        return self.oversampling_factor * self.__chirp_bandwidth
-
-    @property
-    def pilot_signal(self) -> Signal:
-        """Samples of the frame's pilot section."""
-
+    def pilot_signal(self, bandwidth: float, oversampling_factor: int) -> Signal:
         # Generate single pilot chirp prototype
-        prototypes, _ = self._prototypes()
+        samples_in_chirp = self.samples_in_chirp(bandwidth, oversampling_factor)
+        prototypes, _ = ChirpFSKWaveform._prototypes(
+            bandwidth,
+            oversampling_factor,
+            self.chirp_duration,
+            self.bits_per_symbol,
+            self.modulation_order,
+            self.freq_difference,
+            samples_in_chirp,
+        )
 
-        pilot_samples = np.empty(self.samples_in_chirp * self.num_pilot_chirps, dtype=complex)
+        pilot_samples = np.empty(samples_in_chirp * self.num_pilot_chirps, dtype=np.complex128)
         for pilot_idx in range(self.num_pilot_chirps):
-            pilot_samples[
-                pilot_idx * self.samples_in_chirp : (1 + pilot_idx) * self.samples_in_chirp
-            ] = prototypes[pilot_idx % len(prototypes)]
+            pilot_samples[pilot_idx * samples_in_chirp : (1 + pilot_idx) * samples_in_chirp] = (
+                prototypes[pilot_idx % len(prototypes)]
+            )
 
-        return Signal.Create(pilot_samples, self.sampling_rate)
-
-    def _clear_cache(self) -> None:
-        """Clear cached properties because a parameter has changed."""
-
-        self._prototypes.cache_clear()
+        return Signal.Create(pilot_samples.reshape((1, -1)), bandwidth * oversampling_factor)
 
     @override
     def serialize(self, process: SerializationProcess) -> None:
         PilotCommunicationWaveform.serialize(self, process)
         process.serialize_floating(self.chirp_duration, "chirp_duration")
-        process.serialize_floating(self.chirp_bandwidth, "chirp_bandwidth")
         process.serialize_floating(self.freq_difference, "freq_difference")
         process.serialize_integer(self.num_pilot_chirps, "num_pilot_chirps")
         process.serialize_integer(self.num_data_chirps, "num_data_chirps")
@@ -496,10 +461,9 @@ class ChirpFSKWaveform(PilotCommunicationWaveform):
             chirp_duration=process.deserialize_floating(
                 "chirp_duration", ChirpFSKWaveform.__DEFAULT_CHIRP_DURATION
             ),
-            chirp_bandwidth=process.deserialize_floating(
-                "chirp_bandwidth", ChirpFSKWaveform.__DEFAULT_CHIRP_BANDWIDTH
+            freq_difference=process.deserialize_floating(
+                "freq_difference", ChirpFSKWaveform.DERIVE_FREQ_DIFFERENCE
             ),
-            freq_difference=process.deserialize_floating("freq_difference", None),
             num_pilot_chirps=process.deserialize_integer(
                 "num_pilot_chirps", ChirpFSKWaveform.__DEFAULT_NUM_PILOT_CHIRPS
             ),

@@ -17,7 +17,7 @@ from hermespy.radar import RadarCube, RadarDetector, RadarReception
 from .jcas import DuplexJCASOperator
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -93,8 +93,7 @@ class OFDMRadar(DuplexJCASOperator[OFDMWaveform], Serializable):
         # Initialize class attributes
         self.__last_transmission = None
 
-    @property
-    def max_range(self) -> float:
+    def max_range(self, bandwidth: float) -> float:
         """Maximum range detectable by OFDM radar.
 
         Defined by equation (12) in :footcite:p:`2009:sturm` as
@@ -103,16 +102,19 @@ class OFDMRadar(DuplexJCASOperator[OFDMWaveform], Serializable):
 
            d_\\mathrm{max} = \\frac{c_0}{2 \\Delta f} \\quad \\text{.}
 
-        Returns: Maximum range in m.
+        Args:
+            bandwidth: Target bandwidth of the OFDM waveform in Hz.
+
+        Returns:
+            Maximum range in m.
         """
 
         if self.waveform is None:
             return 0.0
 
-        return speed_of_light / (2 * self.waveform.subcarrier_spacing)
+        return speed_of_light * self.waveform.num_subcarriers / (2 * bandwidth)
 
-    @property
-    def range_resolution(self) -> float:
+    def range_resolution(self, bandwidth: float) -> float:
         """Range resolution achievable by OFDM radar.
 
         Defined by equation (13) in :footcite:p:`2009:sturm` as
@@ -120,50 +122,74 @@ class OFDMRadar(DuplexJCASOperator[OFDMWaveform], Serializable):
         .. math::
 
             \\Delta r = \\frac{c_0}{2 B} = \\frac{c_0}{2 N \\Delta f} = \\frac{d_{\\mathrm{max}}}{N} \\quad \\text{.}
+
+        Args:
+            bandwidth: Target bandwidth of the OFDM waveform in Hz.
+
+        Returns:
+            Range resolution in m.
         """
 
-        if self.waveform is None:
-            return 0.0
+        return speed_of_light / (2 * bandwidth)
 
-        return self.max_range / self.waveform.num_subcarriers
+    def max_relative_doppler(self, bandwidth: float) -> float:
+        """The maximum relative doppler shift detectable by the OFDM radar in Hz.
 
-    @property
-    def max_relative_doppler(self) -> float:
-        """The maximum relative doppler shift detectable by the OFDM radar in Hz."""
+        Args:
+            bandwidth: Target bandwidth of the OFDM waveform in Hz.
+
+        Returns:
+            Maximum relative doppler shift in Hz.
+        """
 
         # The maximum velocity is the wavelength divided by four times the pulse repetition interval
-        max_doppler = 1 / (4 * self.frame_duration)
+        max_doppler = 1 / (4 * self.frame_duration(bandwidth))
         return max_doppler
 
-    @property
-    def relative_doppler_resolution(self) -> float:
-        """The relative doppler resolution achievable by the OFDM radar in Hz."""
+    def relative_doppler_resolution(self, bandwidth: float) -> float:
+        """The relative doppler resolution achievable by the OFDM radar in Hz.
+
+        Args:
+            bandwidth: Target bandwidth of the OFDM waveform in Hz.
+
+        Returns:
+            Relative doppler resolution in Hz.
+        """
 
         # The doppler resolution is the inverse of twice the frame duration
-        resolution = 1 / (2 * self.frame_duration)
+        resolution = 1 / (2 * self.frame_duration(bandwidth))
         return resolution
 
     @property
     def power(self) -> float:
         return 0.0 if self.waveform is None else self.waveform.power
 
+    @override
     def _transmit(self, device: TransmitState, duration: float) -> JCASTransmission:
         communication_transmission = TransmittingModemBase._transmit(self, device, duration)
         self.__last_transmission = JCASTransmission(communication_transmission)
         return self.__last_transmission
 
-    def __estimate_range(self, transmitted_symbols: Symbols, received_signal: Signal) -> np.ndarray:
+    def __estimate_range(
+        self,
+        transmitted_symbols: Symbols,
+        received_signal: np.ndarray,
+        bandwidth: float,
+        oversampling_factor: int = 1,
+    ) -> np.ndarray:
         """Estiamte the range-power profile of the received signal.
 
         Args:
             transmitted_symbols: The originally transmitted OFDM symbols.
             received_signal: The received OFDM base-band signal samples.
+            bandwidth: Target bandwidth of the OFDM waveform in Hz.
+            oversampling_factor: Oversampling factor used during the OFDM modulation.
 
         Returns: The range-power profile of the received signal.
         """
 
         # Demodulate the signal received from an angle of interest
-        received_symbols = self.waveform.demodulate(received_signal.getitem(0).flatten())
+        received_symbols = self.waveform.demodulate(received_signal, bandwidth, oversampling_factor)
 
         # Normalize received demodulated symbols equation (8)
         normalized_symbols = np.divide(
@@ -177,6 +203,7 @@ class OFDMRadar(DuplexJCASOperator[OFDMWaveform], Serializable):
         power_profile = ifftshift(fft(ifft(normalized_symbols[0, ::], axis=1), axis=0), axes=0)
         return np.abs(power_profile)
 
+    @override
     def _receive(self, signal: Signal, device: ReceiveState) -> JCASReception:
         if self.__last_transmission is None:
             raise RuntimeError("Unable to receive ")
@@ -189,25 +216,26 @@ class OFDMRadar(DuplexJCASOperator[OFDMWaveform], Serializable):
 
         # Build a radar cube
         angles_of_interest, beamformed_samples = self._receive_beamform(signal, device)
-        range_bins = np.arange(self.waveform.num_subcarriers) * self.range_resolution
-        doppler_bins = (
-            np.arange(self.waveform.words_per_frame) * self.relative_doppler_resolution
-            - self.max_relative_doppler
+        range_bins = np.arange(self.waveform.num_subcarriers) * self.range_resolution(
+            device.bandwidth
         )
+        doppler_bins = np.arange(self.waveform.words_per_frame) * self.relative_doppler_resolution(
+            device.bandwidth
+        ) - self.max_relative_doppler(device.bandwidth)
 
         # Filter range for the minimum range
-        min_range_index = ceil(self.min_range / self.range_resolution)
+        min_range_index = ceil(self.min_range / self.range_resolution(device.bandwidth))
         selected_range_bins = range_bins[min_range_index:]
 
         cube_data = np.empty(
             (len(angles_of_interest), len(doppler_bins), len(selected_range_bins)), dtype=float
         )
 
+        # Process the single angular line by the waveform generator
         for angle_idx, line in enumerate(beamformed_samples):
-            # Process the single angular line by the waveform generator
-            line_signal = signal.from_ndarray(line)
-            line_estimate = self.__estimate_range(transmitted_symbols, line_signal)
-
+            line_estimate = self.__estimate_range(
+                transmitted_symbols, line, device.bandwidth, device.oversampling_factor
+            )
             cube_data[angle_idx, ::] = line_estimate[min_range_index:]
 
         # Create radar cube object

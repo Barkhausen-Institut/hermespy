@@ -10,8 +10,8 @@ from hermespy.simulation import Simulation
 # Initialize a simulation with two dedicated devices for transmission and reception
 carrier_frequency = 3.7e9
 simulation = Simulation()
-tx_device = simulation.new_device(carrier_frequency=carrier_frequency)
-rx_device = simulation.new_device(carrier_frequency=carrier_frequency)
+tx_device = simulation.new_device(carrier_frequency=carrier_frequency, bandwidth=128e3)
+rx_device = simulation.new_device(carrier_frequency=carrier_frequency, bandwidth=128e3)
 
 # Assume a 5G TDL channel model
 channel = TDL(TDLType.A, 1e-7, doppler_frequency=10)
@@ -29,7 +29,6 @@ waveform = OFDMWaveform(
     grid_resources=grid_resources,
     grid_structure=grid_structure,
     num_subcarriers=128,
-    subcarrier_spacing=1e3,
 )
 
 # Configure the link to connect both devices

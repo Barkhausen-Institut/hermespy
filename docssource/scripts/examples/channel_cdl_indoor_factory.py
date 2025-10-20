@@ -12,12 +12,20 @@ from hermespy.simulation import Simulation
 # Initialize two devices to be linked by a channel
 simulation = Simulation()
 alpha_device = simulation.new_device(
-    carrier_frequency=1e8, pose=Transformation.From_Translation(np.array([0., 0., 3.])))
+    bandwidth=1e5,
+    oversampling_factor=8,
+    carrier_frequency=1e8,
+    pose=Transformation.From_Translation(np.array([0., 0., 3.])),
+)
 beta_device = simulation.new_device(
-    carrier_frequency=1e8, pose=Transformation.From_Translation(np.array([40., 40., 3.])))
+    bandwidth=1e5,
+    oversampling_factor=8,
+    carrier_frequency=1e8,
+    pose=Transformation.From_Translation(np.array([40., 40., 3.])),
+)
 
 # Create a channel between the two devices
-channel = IndoorFactory(10000, 30000, FactoryType.HH, seed=42)
+channel = IndoorFactory(10000, 3000, FactoryType.HH, seed=42)
 simulation.set_channel(alpha_device, beta_device, channel)
 
 # Configure communication link between the two devices
@@ -27,8 +35,8 @@ beta_device.receivers.add(link)
 
 # Specify the waveform and postprocessing to be used by the link
 link.waveform = RRCWaveform(
-    symbol_rate=1e8, oversampling_factor=2, num_data_symbols=1000,
-    num_preamble_symbols=10, pilot_rate=10)
+    num_data_symbols=1000, num_preamble_symbols=10, pilot_rate=10,
+)
 link.waveform.channel_estimation = SCLeastSquaresChannelEstimation()
 link.waveform.channel_equalization = SCZeroForcingChannelEqualization()
 

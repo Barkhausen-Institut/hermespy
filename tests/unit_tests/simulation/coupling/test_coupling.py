@@ -40,32 +40,17 @@ class TestCoupling(TestCase):
 
     def setUp(self) -> None:
         self.device = SimulatedDevice()
-        self.coupling = MockCoupling(device=self.device)
-
-    def test_device_setget(self) -> None:
-        """Device property getter should return setter argument"""
-
-        expected_device = SimulatedDevice()
-        self.coupling.device = expected_device
-
-        self.assertEqual(self.coupling.device, expected_device)
+        self.coupling = MockCoupling()
+        self.state = self.device.state()
 
     def test_transmit_validation(self) -> None:
         """Transmit method should raise ValueError on invalid arguments"""
 
         with self.assertRaises(ValueError):
-            self.coupling.transmit(Signal.Create(np.zeros((2, 1)), 1.0, 0.0))
-
-        self.coupling.device = None
-        with self.assertRaises(FloatingError):
-            self.coupling.transmit(Mock())
+            self.coupling.transmit(Signal.Create(np.zeros((2, 1), np.complex128), 1.0, 0.0), self.state)
 
     def test_receive_validation(self) -> None:
         """Receive method should raise ValueError on invalid arguments"""
 
         with self.assertRaises(ValueError):
-            self.coupling.receive(Signal.Create(np.zeros((2, 1)), 1.0, 0.0))
-
-        self.coupling.device = None
-        with self.assertRaises(FloatingError):
-            self.coupling.receive(Mock())
+            self.coupling.receive(Signal.Create(np.zeros((2, 1), np.complex128), 1.0, 0.0), self.state)

@@ -130,20 +130,18 @@ class SionnaRTChannelSample(ChannelSample):
         return ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE, raw_state)
 
     @override
-    def _propagate(
-        self, signal_block: SignalBlock, interpolation: InterpolationMode
-    ) -> SignalBlock:
+    def _propagate(self, signal: SignalBlock, interpolation: InterpolationMode) -> SignalBlock:
         # Calculate the resulting signal block parameters
         sr_ratio = self.receiver_state.sampling_rate / self.transmitter_state.sampling_rate
-        offset_new = int(signal_block.offset * sr_ratio)
+        offset_new = int(signal.offset * sr_ratio)
         num_streams_new = self.num_receive_antennas
-        num_samples_new = int(signal_block.num_samples * sr_ratio)
+        num_samples_new = int(signal.num_samples * sr_ratio)
 
         # Apply Doppler effect and get the channel impulse response
         # the cir() method applied doppler internally
         a, tau = self.paths.cir(
             sampling_frequency=self.bandwidth,
-            num_time_steps=signal_block.num_samples,
+            num_time_steps=signal.num_samples,
             normalize_delays=False,
             out_type="numpy",
         )
@@ -153,34 +151,41 @@ class SionnaRTChannelSample(ChannelSample):
         # If no paths hit the target, then return a zeroed signal
         if np.size(a) == 0 or np.size(tau) == 0:
             return SignalBlock(
-                np.zeros((num_streams_new, num_samples_new), signal_block.dtype), offset_new
+                num_streams_new,
+                num_samples_new,
+                offset_new,
+                np.zeros((num_streams_new, num_samples_new), signal.dtype),
             )
 
         # Set other attributes
         max_delay = np.max(tau)
         max_delay_in_samples = ceil(max_delay * self.bandwidth)
         propagated_samples = np.zeros(
-            (num_streams_new, signal_block.num_samples + max_delay_in_samples),
-            dtype=signal_block.dtype,
+            (num_streams_new, signal.num_samples + max_delay_in_samples), dtype=signal.dtype
         )
 
         # Prepare the optimal einsum path ahead of time for faster execution
         einsum_subscripts = "ijk,jk->ik"
-        einsum_path = np.einsum_path(
-            einsum_subscripts, a[:, :, 0, :], signal_block, optimize="optimal"
-        )[0]
+        einsum_path = np.einsum_path(einsum_subscripts, a[:, :, 0, :], signal, optimize="optimal")[
+            0
+        ]
 
         # For each path
         for a_p, tau_p in zip(np.moveaxis(a, -2, 0), np.moveaxis(tau, -1, 0)):
             if tau_p == -1.0:
                 continue
             t = int(tau_p * self.bandwidth)
-            propagated_samples[:, t : t + signal_block.num_samples] += np.einsum(
-                einsum_subscripts, a_p, signal_block, optimize=einsum_path
+            propagated_samples[:, t : t + signal.num_samples] += np.einsum(
+                einsum_subscripts, a_p, signal, optimize=einsum_path
             )
 
         propagated_samples *= np.sqrt(self.__gain)
-        return SignalBlock(propagated_samples, offset_new)
+        return SignalBlock(
+            propagated_samples.shape[0],
+            propagated_samples.shape[1],
+            offset_new,
+            bytearray(propagated_samples),
+        )
 
 
 class SionnaRTChannelRealization(ChannelRealization[SionnaRTChannelSample]):

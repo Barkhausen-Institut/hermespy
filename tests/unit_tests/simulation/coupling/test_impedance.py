@@ -9,6 +9,7 @@ from numpy.testing import assert_array_almost_equal
 from hermespy.core import Signal
 from hermespy.simulation import ImpedanceCoupling, SimulatedDevice
 from unit_tests.core.test_factory import test_roundtrip_serialization
+from unit_tests.utils import assert_signals_equal
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -27,7 +28,8 @@ class TestImpedanceCoupling(TestCase):
         self.rng = default_rng(42)
 
         self.device = SimulatedDevice()
-        self.coupling = ImpedanceCoupling(device=self.device)
+        self.coupling = ImpedanceCoupling()
+        self.state = self.device.state()
 
     def test_transmit_correlation_validation(self) -> None:
         """Transmit correlation property should raise ValueError on invalid arguments"""
@@ -134,10 +136,10 @@ class TestImpedanceCoupling(TestCase):
 
         signal = Signal.Create(self.rng.normal(size=(1, 10)) + 1j * self.rng.normal(size=(1, 10)), 1, carrier_frequency=0.0)
 
-        tx = self.coupling.transmit(signal)
-        rx = self.coupling.receive(tx)
+        tx = self.coupling.transmit(signal, self.state)
+        rx = self.coupling.receive(tx, self.state)
 
-        assert_array_almost_equal(signal.getitem(), rx.getitem())
+        assert_signals_equal(self, signal, rx)
 
     def test_serialization(self) -> None:
         """Test serialization"""

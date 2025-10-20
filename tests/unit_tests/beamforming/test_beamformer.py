@@ -7,12 +7,13 @@ import numpy as np
 from numpy.testing import assert_array_equal
 
 from hermespy.beamforming import BeamFocus, CoordinateFocus, ReceiveBeamformer, SphericalFocus, TransmitBeamformer
-from hermespy.core import AntennaArray, DeviceState, Direction, Device, FloatingError, Signal, Transformation
+from hermespy.core import AntennaArray, DenseSignal, DeviceState, Direction, Device, FloatingError, DenseSignal, Transformation
 from hermespy.simulation import DeviceFocus, SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
 from unit_tests.core.test_factory import test_roundtrip_serialization
+from unit_tests.utils import assert_signals_equal
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -174,36 +175,36 @@ class TestTransmitBeamformer(TestCase):
         """Encode streams routine should raise exceptions on invalid arguments"""
 
         # Correct number of input signal streams
-        signal = Signal.Create(np.zeros((3, 10), dtype=complex), 1.0)
+        signal = DenseSignal.FromNDArray(np.zeros((3, 10), dtype=complex), 1.0)
         with self.assertRaises(ValueError):
-            self.beamformer.encode_streams(signal, 2, self.device.state())
+            self.beamformer.encode_streams(signal, 2, self.device.state().transmit_state())
 
         # Incorrect number of focus points
-        signal = Signal.Create(np.zeros((2, 10), dtype=complex), 1.0)
+        signal = DenseSignal.FromNDArray(np.zeros((2, 10), dtype=complex), 1.0)
         with self.assertRaises(ValueError):
-            self.beamformer.encode_streams(signal, 2, self.device.state(), [SphericalFocus(0, 0), SphericalFocus(1, 2)])
+            self.beamformer.encode_streams(signal, 2, self.device.state().transmit_state(), [SphericalFocus(0, 0), SphericalFocus(1, 2)])
 
     def test_encode_streams_focus(self) -> None:
         """The focus should be correctly processed in the encode subroutine"""
 
-        signal = Signal.Create(np.ones((2, 10), dtype=complex), 1.0)
+        signal = DenseSignal.FromNDArray(np.ones((2, 10), dtype=complex), 1.0)
         self.beamformer.transmit_focus = SphericalFocus(1, 2)
 
-        encoded_signal_no_focus = self.beamformer.encode_streams(signal, 2, self.device.state(), None)
-        encoded_signal_simple_focus = self.beamformer.encode_streams(signal, 2, self.device.state(), SphericalFocus(1, 2))
-        encode_signal_list_focus = self.beamformer.encode_streams(signal, 2, self.device.state(), [SphericalFocus(1, 2)])
+        encoded_signal_no_focus = self.beamformer.encode_streams(signal, 2, self.device.state().transmit_state(), None)
+        encoded_signal_simple_focus = self.beamformer.encode_streams(signal, 2, self.device.state().transmit_state(), SphericalFocus(1, 2))
+        encode_signal_list_focus = self.beamformer.encode_streams(signal, 2, self.device.state().transmit_state(), [SphericalFocus(1, 2)])
 
-        assert_array_equal(signal.getitem(), encoded_signal_no_focus.getitem())
-        assert_array_equal(signal.getitem(), encoded_signal_simple_focus.getitem())
-        assert_array_equal(signal.getitem(), encode_signal_list_focus.getitem())
+        assert_signals_equal(self, signal, encoded_signal_no_focus)
+        assert_signals_equal(self, signal, encoded_signal_simple_focus)
+        assert_signals_equal(self, signal, encode_signal_list_focus)
 
     def test_encode_streams(self) -> None:
         """Stream encoding should properly encode the argument signal"""
 
-        signal = Signal.Create(np.ones((2, 10), dtype=complex), 1.0)
-        encoded_signal = self.beamformer.encode_streams(signal, 2, self.device.state())
+        signal = DenseSignal.FromNDArray(np.ones((2, 10), dtype=complex), 1.0)
+        encoded_signal = self.beamformer.encode_streams(signal, 2, self.device.state().transmit_state())
 
-        assert_array_equal(signal.getitem(), encoded_signal.getitem())
+        assert_signals_equal(self, signal, encoded_signal)
 
 
 class ReceiveBeamformerMock(ReceiveBeamformer):
@@ -271,40 +272,39 @@ class TestReceiveBeamformer(TestCase):
         """Decode streams routine should raise exceptions on invalid arguments"""
 
         # Invalid number of focus points
-        signal = Signal.Create(np.zeros((2, 10), dtype=complex), 1.0)
+        signal = DenseSignal.FromNDArray(np.zeros((2, 10), dtype=complex), 1.0)
         with self.assertRaises(ValueError):
-            self.beamformer.decode_streams(signal, 2, self.device.state(), [SphericalFocus(0, 0), SphericalFocus(1, 2)])
+            self.beamformer.decode_streams(signal, 2, self.device.state().receive_state(), [SphericalFocus(0, 0), SphericalFocus(1, 2)])
 
     def test_decode_streams(self) -> None:
         """Stream decoding should properly encode the argument signal"""
 
-        signal = Signal.Create(np.ones((2, 10), dtype=complex), 1.0)
-        decoded_signal = self.beamformer.decode_streams(signal, 2, self.device.state())
+        signal = DenseSignal.FromNDArray(np.ones((2, 10), dtype=complex), 1.0)
+        decoded_signal = self.beamformer.decode_streams(signal, 2, self.device.state().receive_state())
 
-        assert_array_equal(signal.getitem(), decoded_signal.getitem())
+        assert_signals_equal(self, signal, decoded_signal)
 
     def test_decode_streams_focus(self) -> None:
         """The focus should be correctly processed in the decode subroutine"""
 
-        signal = Signal.Create(np.ones((2, 10), dtype=complex), 1.0)
+        signal = DenseSignal.FromNDArray(np.ones((2, 10), dtype=complex), 1.0)
         self.beamformer.receive_focus = SphericalFocus(1, 2)
 
-        decoded_signal_no_focus = self.beamformer.decode_streams(signal, 2, self.device.state(), None)
-        decoded_signal_simple_focus = self.beamformer.decode_streams(signal, 2, self.device.state(), SphericalFocus(1, 2))
-        decoded_signal_list_focus = self.beamformer.decode_streams(signal, 2, self.device.state(), [SphericalFocus(1, 2)])
+        decoded_signal_no_focus = self.beamformer.decode_streams(signal, 2, self.device.state().receive_state(), None)
+        decoded_signal_simple_focus = self.beamformer.decode_streams(signal, 2, self.device.state().receive_state(), SphericalFocus(1, 2))
+        decoded_signal_list_focus = self.beamformer.decode_streams(signal, 2, self.device.state().receive_state(), [SphericalFocus(1, 2)])
 
-        assert_array_equal(signal.getitem(), decoded_signal_no_focus.getitem())
-        assert_array_equal(signal.getitem(), decoded_signal_simple_focus.getitem())
-        assert_array_equal(signal.getitem(), decoded_signal_list_focus.getitem())
+        assert_signals_equal(self, signal, decoded_signal_no_focus)
+        assert_signals_equal(self, signal, decoded_signal_simple_focus)
+        assert_signals_equal(self, signal, decoded_signal_list_focus)
 
     def test_probe(self) -> None:
         """Probe routine should correctly envoke the encode subroutine"""
 
         expected_samples = np.ones((2, 10), dtype=complex)
-        expected_signal = Signal.Create(expected_samples, 1.0)
         focus = np.ones((1, 2, self.beamformer.num_receive_focus_points), dtype=float)
 
-        steered_signal = self.beamformer.probe(expected_signal, self.device.state(), focus)
-        assert_array_equal(expected_samples[np.newaxis, ::], steered_signal)
+        steered_samples = self.beamformer.probe(expected_samples, self.device.state().receive_state(), focus)
+        assert_array_equal(expected_samples[np.newaxis, ::], steered_samples)
 
 del _TestBeamFocus

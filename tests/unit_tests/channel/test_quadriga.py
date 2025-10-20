@@ -36,9 +36,11 @@ class TestQuadrigaChannelSample(TestCase):
         
         self.carrier_frequency = 1e9
         self.bandwidth = 1e6
+        self.oversampling_factor = 2
+        self.sampling_rate = self.bandwidth * self.oversampling_factor
         
-        self.transmitter = SimulatedDevice(carrier_frequency=self.carrier_frequency, sampling_rate=self.bandwidth)
-        self.receiver = SimulatedDevice(carrier_frequency=self.carrier_frequency, sampling_rate=self.bandwidth)
+        self.transmitter = SimulatedDevice(carrier_frequency=self.carrier_frequency, bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor)
+        self.receiver = SimulatedDevice(carrier_frequency=self.carrier_frequency, bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor)
         
         self.rng = np.random.default_rng(42)
         self.path_gains = np.ones((1, 1, 5))
@@ -47,13 +49,13 @@ class TestQuadrigaChannelSample(TestCase):
         self.transmitter_state = self.transmitter.state(0)
         self.receiver_state = self.receiver.state(0)
 
-        self.sample = QuadrigaChannelSample(self.path_gains, self.path_delays, self.gain, LinkState(self.transmitter_state, self.receiver_state, self.carrier_frequency, self.bandwidth, 0.0))
+        self.sample = QuadrigaChannelSample(self.path_gains, self.path_delays, self.gain, LinkState(self.transmitter_state, self.receiver_state, self.carrier_frequency, self.sampling_rate, 0.0))
 
     def test_propagate_state(self) -> None:
         """Propagation should result in a signal with the correct number of samples"""
 
         num_samples = 10
-        signal = DenseSignal(self.rng.normal(0, 1, size=(1, num_samples)) + 1j * self.rng.normal(0, 1, size=(1, num_samples)), self.bandwidth, self.carrier_frequency)
+        signal = DenseSignal.FromNDArray(self.rng.normal(0, 1, size=(1, num_samples)) + 1j * self.rng.normal(0, 1, size=(1, num_samples)), self.sampling_rate, self.carrier_frequency)
 
         signal_propagation = self.sample.propagate(signal)
         state_propagation = self.sample.state(signal.num_samples, 1 + signal_propagation.num_samples - signal.num_samples).propagate(signal)
@@ -72,11 +74,13 @@ class TestQuadrigaChannelRealization(TestCase):
         
         self.rng = np.random.default_rng(42)
 
-        self.sampling_rate = 1e6
+        self.bandwidth = 1e6
+        self.oversampling_factor = 2
+        self.sampling_rate = self.bandwidth * self.oversampling_factor
         self.carrier_frequency = 1e9
 
-        self.alpha_device = SimulatedDevice(sampling_rate=self.sampling_rate, carrier_frequency=self.carrier_frequency)
-        self.beta_device = SimulatedDevice(sampling_rate=self.sampling_rate, carrier_frequency=self.carrier_frequency)
+        self.alpha_device = SimulatedDevice(bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor, carrier_frequency=self.carrier_frequency)
+        self.beta_device = SimulatedDevice(bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor, carrier_frequency=self.carrier_frequency)
 
         self.delays = np.ones((1, 1, 5)) / self.sampling_rate
         self.cirs = self.rng.standard_normal((1, 1, 5, 10)) + 1j * self.rng.standard_normal((1, 1, 5, 10))
@@ -108,12 +112,14 @@ class TestQuadrigaChannel(TestCase):
         path_quadriga_src = path.abspath(path.join(path.dirname(__file__), "..", "..", "..", "submodules", "quadriga", "quadriga_src"))
         self.interface = QuadrigaInterface(path_quadriga_src=path_quadriga_src)
 
-        self.sampling_rate = 1e6
+        self.bandwidth = 1e6
+        self.oversampling_factor = 2
+        self.sampling_rate = self.bandwidth * self.oversampling_factor
         self.num_samples = 1000
         self.carrier_frequency = 1e9
 
-        self.transmitter = SimulatedDevice(sampling_rate=self.sampling_rate, carrier_frequency=self.carrier_frequency)
-        self.receiver = SimulatedDevice(sampling_rate=self.sampling_rate, carrier_frequency=self.carrier_frequency)
+        self.transmitter = SimulatedDevice(bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor, carrier_frequency=self.carrier_frequency)
+        self.receiver = SimulatedDevice(bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor, carrier_frequency=self.carrier_frequency)
         self.transmitter.position = np.array([-500.0, 0.0, 0.0], dtype=float)
         self.receiver.position = np.array([500.0, 0.0, 0.0], dtype=float)
 

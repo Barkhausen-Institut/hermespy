@@ -4,8 +4,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing_extensions import override
 
-import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.figure import Figure
 from scipy.stats import uniform
 
 from hermespy.core import (
@@ -175,7 +175,7 @@ class ErrorEvaluation(EvaluationTemplate[np.ndarray, StemVisualization], ABC):
         ...  # pragma: no cover
 
     def _prepare_visualization(
-        self, figure: plt.Figure | None, axes: VAT, **kwargs
+        self, figure: Figure | None, axes: VAT, **kwargs
     ) -> StemVisualization:
         # Configure axes
         axes[0, 0].set_ylim([-0.1, 1.1])
@@ -424,18 +424,22 @@ class ThroughputEvaluation(EvaluationTemplate[float, PlotVisualization]):
         EvaluationTemplate.__init__(self, throughput)
 
     @property
+    @override
     def title(self) -> str:
         return "Data Throughput"
 
+    @override
     def artifact(self) -> ThroughputArtifact:
         return ThroughputArtifact(self.evaluation)
 
+    @override
     def _prepare_visualization(
-        self, figure: plt.Figure | None, axes: VAT, **kwargs
+        self, figure: Figure | None, axes: VAT, **kwargs
     ) -> PlotVisualization:
-        lines = np.empty_like(axes, dtype=np.object_)
+        lines = np.empty((axes.shape[0], axes.shape[1]), dtype=np.object_)
         return PlotVisualization(figure, axes, lines)
 
+    @override
     def _update_visualization(self, visualization: PlotVisualization, **kwargs) -> None:
         pass
 
@@ -443,7 +447,7 @@ class ThroughputEvaluation(EvaluationTemplate[float, PlotVisualization]):
 class ThroughputEvaluator(CommunicationEvaluator, Serializable):
     """Evaluate data throughput between two modems exchanging information."""
 
-    __framer_error_evaluator: FrameErrorEvaluator
+    __frame_erorr_evaluator: FrameErrorEvaluator
 
     def __init__(
         self,
@@ -469,11 +473,12 @@ class ThroughputEvaluator(CommunicationEvaluator, Serializable):
         CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem, plot_surface)
 
         # Initialize class attributes
-        self.__framer_error_evaluator = FrameErrorEvaluator(transmitting_modem, receiving_modem)
+        self.__frame_erorr_evaluator = FrameErrorEvaluator(transmitting_modem, receiving_modem)
 
+    @override
     def evaluate(self) -> ThroughputEvaluation:
         # Get the frame errors
-        frame_errors = self.__framer_error_evaluator.evaluate().evaluation.flatten()
+        frame_errors = self.__frame_erorr_evaluator.evaluate().evaluation.flatten()
         _, reception = self._fetch_dsp_results()
 
         # Transform frame errors to data throughput
@@ -483,10 +488,12 @@ class ThroughputEvaluator(CommunicationEvaluator, Serializable):
         return ThroughputEvaluation(bits_per_frame, frame_duration, frame_errors)
 
     @property
+    @override
     def title(self) -> str:
         return "Data Throughput"
 
     @property
+    @override
     def abbreviation(self) -> str:
         return "DRX"
 
@@ -521,22 +528,22 @@ class EVMEvaluation(EvaluationTemplate[float, PlotVisualization]):
         )
 
     @property
+    @override
     def title(self) -> str:
         return "Error Vector Magnitude"
 
-    @property
-    def abbreviation(self) -> str:
-        return "EVM"
-
+    @override
     def artifact(self) -> EVMArtifact:
         return EVMArtifact(self.__evm)
 
+    @override
     def _prepare_visualization(
-        self, figure: plt.Figure | None, axes: VAT, **kwargs
+        self, figure: Figure | None, axes: VAT, **kwargs
     ) -> PlotVisualization:
-        lines = np.empty_like(axes, dtype=np.object_)
+        lines = np.empty((axes.shape[0], axes.shape[1]), dtype=np.object_)
         return PlotVisualization(figure, axes, lines)
 
+    @override
     def _update_visualization(self, visualization: PlotVisualization, **kwargs) -> None:
         pass
 
@@ -544,15 +551,18 @@ class EVMEvaluation(EvaluationTemplate[float, PlotVisualization]):
 class ConstellationEVM(CommunicationEvaluator):
     """Evaluate the error vector magnitude (EVM) of a constellation diagram."""
 
+    @override
     def evaluate(self) -> EVMEvaluation:
         # Retrieve transmitted and received symbols
         transmission, reception = self._fetch_dsp_results()
         return EVMEvaluation(transmission.symbols.raw, reception.equalized_symbols.raw)
 
     @property
+    @override
     def title(self) -> str:
         return "Error Vector Magnitude"
 
     @property
+    @override
     def abbreviation(self) -> str:
         return "EVM"

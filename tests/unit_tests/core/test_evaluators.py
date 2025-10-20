@@ -6,7 +6,7 @@ from unittest.mock import Mock
 import numpy as np
 from numpy.testing import assert_almost_equal, assert_array_equal
 
-from hermespy.core import AntennaMode, ScalarEvaluationResult, Signal, SignalTransmitter, SignalReceiver, GridDimensionInfo, SamplePoint, ValueType
+from hermespy.core import AntennaMode, ScalarEvaluationResult, DenseSignal, SignalTransmitter, SignalReceiver, GridDimensionInfo, SamplePoint, ValueType
 from hermespy.core.evaluators import PAPRArtifact, PowerArtifact, PowerEvaluation, ReceivePowerEvaluator, TransmitPowerEvaluator, PAPR, PAPREvaluation, SignalExtractor, SignalExtraction, ExtractedSignals
 from hermespy.simulation import SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
 
@@ -24,7 +24,7 @@ class TestPowerArtifact(TestCase):
     """Test the received power artifact"""
 
     def setUp(self) -> None:
-        self.power = 1.234
+        self.power = np.array([1.234])
         self.artifact = PowerArtifact(self.power)
 
     def test_power(self) -> None:
@@ -78,16 +78,16 @@ class TestReceivePowerEvaluator(TestCase):
     def setUp(self) -> None:
         self.rng = np.random.default_rng(42)
         self.num_samples = 100
-        self.sampling_rate = 1e6
+        self.bandwidth = 1e6
         self.num_antennas = 2
 
-        self.transmitted_signal = Signal.Create(self.rng.standard_normal((self.num_antennas, self.num_samples)) + 1j * self.rng.standard_normal((self.num_antennas, self.num_samples)), self.sampling_rate, 0, 0, 0)
-        
+        self.transmitted_signal = DenseSignal.FromNDArray(self.rng.standard_normal((self.num_antennas, self.num_samples)) + 1j * self.rng.standard_normal((self.num_antennas, self.num_samples)), self.bandwidth)
+
         self.transmitter = SignalTransmitter(self.transmitted_signal)
-        self.receiver = SignalReceiver(self.num_samples, self.sampling_rate)
+        self.receiver = SignalReceiver(self.num_samples)
         self.evaluator = ReceivePowerEvaluator(self.receiver)
-        
-        self.device = SimulatedDevice(antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1.0, [self.num_antennas, 1, 1]))
+
+        self.device = SimulatedDevice(oversampling_factor=1, bandwidth=self.bandwidth, antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1.0, [self.num_antennas, 1, 1]))
         self.device.transmitters.add(self.transmitter)
         self.device.receivers.add(self.receiver)
 
@@ -107,21 +107,16 @@ class TestReceivePowerEvaluator(TestCase):
         num_drops = 10
         signal_scales = self.rng.random(num_drops)
         result = self.evaluator.initialize_result([GridDimensionInfo([SamplePoint(0)], 'x', 'linear', ValueType.LIN)])
-        
+
         expected_mean_power = np.sum(self.transmitted_signal.power * np.sum(signal_scales**2)) / num_drops
 
         # Collect drop artifacts
-        grid = []
         artifacts = np.empty(1, dtype=np.object_)
         artifacts[0] = list()
 
         for signal_scale in signal_scales:
-            signal = self.transmitted_signal.copy()
-            for block in signal:
-                block *= signal_scale
+            device_reception = self.device.receive(self.transmitted_signal * signal_scale)
 
-            _ = self.device.receive(signal)
-            
             evaluation = self.evaluator.evaluate()
             result.add_artifact((0,), evaluation.artifact())
             expected_powers = self.transmitted_signal.power * signal_scale**2
@@ -140,7 +135,7 @@ class TestTransmitPowerEvaluator(TestCase):
         self.sampling_rate = 1e6
         self.num_antennas = 2
 
-        self.transmitted_signal = Signal.Create(self.rng.standard_normal((self.num_antennas, self.num_samples)) + 1j * self.rng.standard_normal((self.num_antennas, self.num_samples)), self.sampling_rate, 0, 0, 0)
+        self.transmitted_signal = DenseSignal.FromNDArray(self.rng.standard_normal((self.num_antennas, self.num_samples)) + 1j * self.rng.standard_normal((self.num_antennas, self.num_samples)), self.sampling_rate, 0, 0, 0)
 
         self.device = SimulatedDevice(antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1.0, [self.num_antennas, 1, 1]))
         
@@ -171,12 +166,7 @@ class TestTransmitPowerEvaluator(TestCase):
         for signal_scale in signal_scales:
             expected_power = self.transmitted_signal.power * signal_scale**2
             
-            
-            signal = self.transmitted_signal.copy()
-            for block in signal:
-                block *= signal_scale
-
-            _ = self.transmitter.signal = signal
+            _ = self.transmitter.signal = self.transmitted_signal.copy() * signal_scale
             self.device.transmit()
             
             evaluation = self.evaluator.evaluate()
@@ -185,6 +175,7 @@ class TestTransmitPowerEvaluator(TestCase):
             assert_almost_equal(evaluation.power, expected_power)
     
         assert_almost_equal(result.to_array()[0], expected_mean_power)
+
 
 class TestPAPREvaluation(TestCase):
     """Test PAPR evaluation"""
@@ -226,10 +217,10 @@ class TestPAPR(TestCase):
         self.sampling_rate = 1e6
         self.num_antennas = 2
 
-        self.transmitted_signal = Signal.Create(self.rng.standard_normal((self.num_antennas, self.num_samples)) + 1j * self.rng.standard_normal((self.num_antennas, self.num_samples)), self.sampling_rate, 0, 0, 0)
+        self.transmitted_signal = DenseSignal.FromNDArray(self.rng.standard_normal((self.num_antennas, self.num_samples)) + 1j * self.rng.standard_normal((self.num_antennas, self.num_samples)), self.sampling_rate, 0, 0, 0)
 
         self.device = SimulatedDevice(antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1.0, [self.num_antennas, 1, 1]))
-        
+
         self.transmitter = SignalTransmitter(self.transmitted_signal)
         self.device.transmitters.add(self.transmitter)
 
@@ -238,16 +229,16 @@ class TestPAPR(TestCase):
 
         # Cache a signal
         self.device.receive(self.device.transmit())
-        
+
     def test_init_validation(self) -> None:
         """Test initialization validation"""
-        
+
         with self.assertRaises(ValueError):
             PAPR(Mock(), AntennaMode.DUPLEX)
 
     def test_properties(self) -> None:
         """Test static properties"""
-        
+
         self.assertEqual("PAPR", self.tx_papr.abbreviation)
         self.assertEqual("Peak-to-Average Power Ratio", self.tx_papr.title)
 
@@ -270,16 +261,16 @@ class TestSignalExtraction(TestCase):
 
     def setUp(self) -> None:
         self.rng = np.random.default_rng(42)
-        self.signal = Signal.Create(self.rng.standard_normal((1, 10)), 1e6, 1e8)
+        self.signal = DenseSignal.FromNDArray(self.rng.standard_normal((1, 10)), 1e6, 1e8)
         self.device_state = SimulatedDevice().state()
-        
+
         self.transmit_target = SignalTransmitter(self.signal)
-        self.receive_target = SignalReceiver(self.signal.num_samples, self.signal.sampling_rate)
-        
+        self.receive_target = SignalReceiver(self.signal.num_samples)
+
         self.transmit_extractor = SignalExtractor(self.transmit_target)
         self.receive_extractor = SignalExtractor(self.receive_target)
 
-        self.grid = [GridDimensionInfo([0], 'random_dimensions', 'linear', ValueType.LIN)]
+        self.grid = [GridDimensionInfo([SamplePoint(0)], 'random_dimensions', 'linear', ValueType.LIN)]
         self.transmit_result = self.transmit_extractor.initialize_result(self.grid)
         self.receive_result = self.receive_extractor.initialize_result(self.grid)
 
@@ -299,7 +290,7 @@ class TestSignalExtraction(TestCase):
         # Generate extractions
         transamit_extraction = self.transmit_extractor.evaluate()
         receive_extraction = self.receive_extractor.evaluate()
-    
+
         # Add extractions to results
         num_artifacts = 3
         for i in range(num_artifacts):

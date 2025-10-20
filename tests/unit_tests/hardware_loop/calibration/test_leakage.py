@@ -66,16 +66,16 @@ class TestSelectiveLeakageCalibration(TestCase):
         received_signal = Signal.Create(np.array([[1, 2, 3, 4, 5]], dtype=np.complex128), 1.0)
 
         with self.assertRaises(ValueError):
-            _ = self.calibration.remove_leakage(Signal.Create(np.repeat(transmitted_signal.getitem(), 2, axis=0), transmitted_signal.sampling_rate), received_signal)
+            _ = self.calibration.remove_leakage(Signal.Create(np.repeat(transmitted_signal, 2, axis=0), transmitted_signal.sampling_rate), received_signal)
 
         with self.assertRaises(ValueError):
-            _ = self.calibration.remove_leakage(transmitted_signal, Signal.Create(np.repeat(received_signal.getitem(), 2, axis=0), received_signal.sampling_rate))
+            _ = self.calibration.remove_leakage(transmitted_signal, Signal.Create(np.repeat(received_signal, 2, axis=0), received_signal.sampling_rate))
 
         with self.assertRaises(ValueError):
-            _ = self.calibration.remove_leakage(Signal.Create(transmitted_signal.getitem(), 2 * transmitted_signal.sampling_rate), received_signal)
+            _ = self.calibration.remove_leakage(Signal.Create(transmitted_signal, 2 * transmitted_signal.sampling_rate), received_signal)
 
         with self.assertRaises(ValueError):
-            _ = self.calibration.remove_leakage(Signal.Create(transmitted_signal.getitem(), transmitted_signal.sampling_rate, 10), received_signal)
+            _ = self.calibration.remove_leakage(Signal.Create(transmitted_signal, transmitted_signal.sampling_rate, 10), received_signal)
 
     def test_plot(self) -> None:
         """Test the visualization of the calibration"""
@@ -98,7 +98,7 @@ class TestSelectiveLeakageCalibration(TestCase):
     def test_mmse_estimate_validation(self) -> None:
         """MMSE estimation should raise exceptions for invalid arguments"""
 
-        device = PhysicalDeviceDummy(carrier_frequency=1e9, sampling_rate=1e8, seed=42, antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1e-3, (2, 1, 1)), receive_transmission=False)
+        device = PhysicalDeviceDummy(carrier_frequency=1e9, bandwidth=1e8, seed=42, antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1e-3, (2, 1, 1)), receive_transmission=False)
 
         with self.assertRaises(ValueError):
             _ = SelectiveLeakageCalibration.MMSEEstimate(device, num_probes=0)
@@ -117,8 +117,17 @@ class TestSelectiveLeakageCalibration(TestCase):
 
         num_samples = 32
         sampling_rate = 1e8
+        oversampling_factor = 1
 
-        device = PhysicalDeviceDummy(carrier_frequency=1e9, sampling_rate=sampling_rate, max_receive_delay=num_samples / sampling_rate, seed=42, antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1e-3, (2, 1, 1)), receive_transmission=False)
+        device = PhysicalDeviceDummy(
+            carrier_frequency=1e9,
+            bandwidth=sampling_rate,
+            max_receive_delay=num_samples / sampling_rate,
+            seed=42,
+            antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1e-3, (2, 1, 1)),
+            receive_transmission=False,
+            oversampling_factor=oversampling_factor,
+        )
         leakage_model = SelectiveLeakage.Normal(device, num_samples=num_samples)
         device.isolation = leakage_model
 
@@ -131,7 +140,15 @@ class TestSelectiveLeakageCalibration(TestCase):
         num_samples = 32
         sampling_rate = 1e8
 
-        device = PhysicalDeviceDummy(carrier_frequency=1e9, sampling_rate=sampling_rate, max_receive_delay=num_samples / sampling_rate, seed=42, antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1e-3, (2, 1, 1)), receive_transmission=False, noise_power=np.zeros(2))
+        device = PhysicalDeviceDummy(
+            carrier_frequency=1e9,
+            bandwidth=sampling_rate,
+            max_receive_delay=num_samples / sampling_rate, seed=42,
+            antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1e-3, (2, 1, 1)),
+            receive_transmission=False,
+            noise_power=np.zeros(2),
+            oversampling_factor=1,
+        )
         leakage_model = SelectiveLeakage.Normal(device, num_samples=num_samples)
         device.isolation = leakage_model
 
@@ -142,7 +159,7 @@ class TestSelectiveLeakageCalibration(TestCase):
         num_samples = 32
         sampling_rate = 1e8
 
-        device = PhysicalDeviceDummy(carrier_frequency=1e9, sampling_rate=sampling_rate, max_receive_delay=num_samples / sampling_rate, seed=42, antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1e-3, (2, 1, 1)), receive_transmission=False, noise_power=np.zeros(2))
+        device = PhysicalDeviceDummy(carrier_frequency=1e9, bandwidth=sampling_rate, max_receive_delay=num_samples / sampling_rate, seed=42, antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1e-3, (2, 1, 1)), receive_transmission=False, noise_power=np.zeros(2))
         leakage_model = SelectiveLeakage.Normal(device, num_samples=num_samples)
         device.isolation = leakage_model
 

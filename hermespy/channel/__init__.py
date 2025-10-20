@@ -1,14 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from .channel import (
-    Channel,
-    ChannelRealization,
-    ChannelSample,
-    ChannelSampleHook,
-    CRT,
-    InterpolationMode,
-    LinkState,
-)
+from .channel import Channel, ChannelRealization, ChannelSample, ChannelSampleHook, CRT, LinkState
 from .consistent import (
     ConsistentGenerator,
     ConsistentBoolean,
@@ -67,7 +59,7 @@ from .radar import (
 )
 
 __author__ = "Tobias Kronauer"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -77,15 +69,12 @@ __status__ = "Prototype"
 
 
 __all__ = [
-    "ChannelStateDimension",
-    "ChannelStateFormat",
     "Channel",
     "ChannelRealization",
     "ChannelRealization",
     "ChannelSample",
     "ChannelSampleHook",
     "CRT",
-    "InterpolationMode",
     "LinkState",
     "SpatialDelayChannel",
     "RandomDelayChannel",

@@ -383,10 +383,10 @@ class MonteCarlo(Generic[MO]):
 
             # Start running the actors
             for a in actors:
-                _ = a.run.remote()  # type: ignore[attr-defined]
+                _ = a.run.remote()  # type: ignore
 
             # Start the collector
-            _ = collector.run.remote()  # type: ignore[attr-defined]
+            _ = collector.run.remote()  # type: ignore
 
             # Compute parameters for displaying interemediate results
             page_counter = 0
@@ -404,7 +404,7 @@ class MonteCarlo(Generic[MO]):
                 sleep(self.__progress_log_interval)
 
                 # Fetch a progress estimate from the queue manager
-                queue_progress, active_map = ray.get(queue_manager.query_progress.remote())  # type: ignore[attr-defined]
+                queue_progress, active_map = ray.get(queue_manager.query_progress.remote())  # type: ignore
 
                 # Update progress bar visualization
                 if self.__console_mode == ConsoleMode.INTERACTIVE:
@@ -414,7 +414,7 @@ class MonteCarlo(Generic[MO]):
                     if collector is not None:
 
                         # Fetch an intermediate parameter estimate from the collector
-                        intermediate_estimates: list[None | np.ndarray] = ray.get(collector.query_estimates.remote())  # type: ignore[attr-defined]
+                        intermediate_estimates: list[None | np.ndarray] = ray.get(collector.query_estimates.remote())  # type: ignore
 
                         results_table = Table(min_width=self.console.measure(progress).minimum)
 
@@ -471,7 +471,7 @@ class MonteCarlo(Generic[MO]):
         # Fetch all remote samples at the controller#
         with self.console.status("Collecting remote results ...", spinner="dots") if self.__console_mode == ConsoleMode.INTERACTIVE else nullcontext():  # type: ignore
 
-            evaluation_results: list[EvaluationResult] = ray.get(collector.fetch_results.remote())  # type: ignore[attr-defined]
+            evaluation_results: list[EvaluationResult] = ray.get(collector.fetch_results.remote())  # type: ignore
 
         # Measure elapsed time
         stop_time = perf_counter()
@@ -516,12 +516,12 @@ class MonteCarlo(Generic[MO]):
                 list points at which the dimension will be sampled into a grid.
                 The type of points must be identical to the grid arguments / type.
 
-            \*args:
+            args:
                 References to the object the dimension belongs to.
                 Resolved to the investigated object by default,
                 but may be an attribute or sub-attribute of the investigated object.
 
-            \*\*kwargs:
+            kwargs:
                 Additional initialization arguments passed to :class:`GridDimension<hermespy.core.pymonte.grid.GridDimension>`.
 
         Returns: The newly created dimension object.

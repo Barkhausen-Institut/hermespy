@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15...3.19)
+cmake_minimum_required(VERSION 3.15...3.26)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -18,7 +18,8 @@ set(AFF3CT_COMPILE_EXE OFF CACHE INTERNAL "Disable executable target" FORCE)
 set(AFF3CT_COMPILE_STATIC_LIB OFF CACHE INTERNAL "Disable static library target" FORCE)
 set(AFF3CT_COMPILE_SHARED_LIB ON CACHE INTERNAL "Enable shared library target" FORCE)
 set(AFF3CT_OVERRIDE_VERSION 3.0.1 CACHE INTERNAL "Enable build without .git" FORCE)
-set(AFF3CT_COMPILE_OBJ OFF CACHE INTERNAL "Force object building" FORCE)
+set(AFF3CT_COMPILE_OBJ ON CACHE INTERNAL "Force object building" FORCE)
+set(AFF3CT_POLAR_BIT_PACKING OFF CACHE INTERNAL "Disable Polar bit packing" FORCE)
 
 # Completely disable building the aff3ct CLI submodule
 set(CLI_COMPILE_STATIC_LIB OFF CACHE INTERNAL "Disable CLI" FORCE)

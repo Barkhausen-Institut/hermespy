@@ -45,7 +45,22 @@ class TestDocumentationExamples(TestCase):
 
         with self.test_context:
             exec(open(script_path).read())
-            
+
+    def test_beamforming_capon(self) -> None:
+        """Test example snippet for capon beamforming"""
+
+        self.__run_example("beamforming_capon.py")
+
+    def test_beamforming_conventional_tx(self) -> None:
+        """Test example snippet for conventional beamformer as Transmitter"""
+
+        self.__run_example("beamforming_conventional_Tx.py")
+
+    def test_beamforming_conventional_rx(self) -> None:
+        """Test example snippet for conventional beamformer as Receiver"""
+
+        self.__run_example("beamforming_conventional_Rx.py")
+
     def test_beamforming_nullsteeringbeamformer_radiation_pattern(self) -> None:
         """Test example snippet for nullsteeringbeamformer radition pattern"""
 
@@ -61,21 +76,6 @@ class TestDocumentationExamples(TestCase):
 
         self.__run_example("beamforming_nullsteering_Rx.py")
 
-    def test_beamforming_Conventionalbeamformer_Tx(self) -> None:
-        """Test example snippet for conventional beamformer as Transmitter"""
-
-        self.__run_example("beamforming_conventional_Tx.py")
-
-    def test_beamforming_Conventionalbeamformer_Rx(self) -> None:
-        """Test example snippet for conventional beamformer as Receiver"""
-
-        self.__run_example("beamforming_conventional_Rx.py")
-
-    def test_beamforming_caponbeamformer(self) -> None:
-        """Test example snippet for caponbeamformer"""
-
-        self.__run_example("beamforming_capon.py")
-
     def test_core_evaluators_papr(self) -> None:
         """Test example snippet for PAPR evaluation"""
 
@@ -90,7 +90,7 @@ class TestDocumentationExamples(TestCase):
         """Test example snippet for receive power evaluation"""
 
         self.__run_example("core_evaluators_rxpow.py")
-        
+
     def test_core_evaluators_txpow(self) -> None:
         """Test example snippet for transmit power evaluation"""
 
@@ -316,11 +316,6 @@ class TestDocumentationExamples(TestCase):
 
         self.__run_example("radar_fmcw_FMCW.py")
 
-    def test_simulation_adc(self) -> None:
-        """Test example snippet for ADC"""
-
-        self.__run_example("simulation_adc.py")
-
     def test_simulation_antennas_SimulatedAntennaArray(self) -> None:
         """Test example snippet for simulated antenna array"""
 
@@ -331,16 +326,11 @@ class TestDocumentationExamples(TestCase):
 
         self.__run_example("simulation_antennas.py")
 
-    def test_simulation_amplifier(self) -> None:
-        """Test example snippet for amplifier"""
-
-        self.__run_example("simulation_amplifier.py")
-
     def test_simulation_animation(self) -> None:
         """Test example snippet for animation"""
 
         self.__run_example("simulation_animation.py")
-    
+
     def test_simulation_evaluation_sidelobe(self) -> None:
         """Test example snippet for sidelobe evaluation"""
 
@@ -370,11 +360,6 @@ class TestDocumentationExamples(TestCase):
         """Test example snippet for noise"""
 
         self.__run_example("simulation_noise.py")
-
-    def test_simulation_phase_noise(self) -> None:
-        """Test example snippet for phase noise"""
-
-        self.__run_example("simulation_phase_noise.py")
 
     def test_simulation_SimulatedDevice(self) -> None:
         """Test example snippet for simulated device"""

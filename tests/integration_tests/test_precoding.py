@@ -37,14 +37,14 @@ class TestPrecoding(ABC):
     def setUp(self) -> None:
         self.rng = np.random.default_rng(42)
 
-        self.sampling_rate = 1e6
+        self.oversampling_factor = 2
+        self.bandwidth = 3e9
+        self.sampling_rate = self.oversampling_factor * self.bandwidth
         self.carrier_frequency = 1e8
         self.device = self._setUp_device()
 
         # Communication operators
         waveform = RootRaisedCosineWaveform(
-            symbol_rate=self.sampling_rate//2,
-            oversampling_factor=2,
             num_preamble_symbols=16,
             num_data_symbols=48,
         )
@@ -75,7 +75,7 @@ class TestPrecoding(ABC):
                 transmission = self.device.transmit()
 
                 # Asser the transmitted signal's shape
-                self.assertEqual(self.device.num_transmit_antennas, transmission.mixed_signal.num_streams)
+                self.assertEqual(self.device.num_transmit_rf_ports, transmission.mixed_signal.num_streams)
 
     def __test_reception(self) -> None:
         """Test all receive operators ofr a given precoding"""
@@ -93,7 +93,7 @@ class TestPrecoding(ABC):
                 reception = self.device.receive(impinging_signal)
 
                 # Asser the received signal's shape
-                self.assertEqual(self.device.num_digital_receive_ports, reception.operator_inputs[0].num_streams)
+                self.assertEqual(self.device.num_receive_dsp_ports, reception.operator_inputs[0].num_streams)
 
     def test_transmit_beamforming(self) -> None:
         """Test digital beamforming precoding during transmission"""
@@ -110,15 +110,16 @@ class TestPrecoding(ABC):
     def test_iq_splitting(self) -> None:
         """Test the IQ splitter"""
 
-        self.device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, .5 * speed_of_light / self.carrier_frequency, [2, 1, 1])
         self.device.transmit_coding[0] = IQSplitter()
+        self.device.transmit_coding[1] = IQSplitter()
         self.__test_transmission()
 
     def test_iq_combining(self) -> None:
         """Test the IQ combiner"""
 
-        self.device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, .5 * speed_of_light / self.carrier_frequency, [2, 1, 1])
         self.device.receive_coding[0] = IQCombiner()
+        self.device.receive_coding[1] = IQCombiner()
+
         self.__test_reception()
 
 
@@ -128,7 +129,8 @@ class TestSimulationPrecoding(TestPrecoding, TestCase):
     def _setUp_device(self) -> SimulatedDevice:
         return SimulatedDevice(
             carrier_frequency=self.carrier_frequency,
-            sampling_rate=self.sampling_rate,
+            bandwidth=self.bandwidth,
+            oversampling_factor=self.oversampling_factor,
             antennas=SimulatedUniformArray(SimulatedIdealAntenna, .5 * speed_of_light / self.carrier_frequency, [2, 2, 1]),
         )
 
@@ -139,6 +141,7 @@ class TestHardwareLoopPrecoding(TestPrecoding, TestCase):
     def _setUp_device(self) -> PhysicalDeviceDummy:
         return PhysicalDeviceDummy(
             carrier_frequency=self.carrier_frequency,
-            sampling_rate=self.sampling_rate,
+            bandwidth=self.bandwidth,
+            oversampling_factor=self.oversampling_factor,
             antennas=SimulatedUniformArray(SimulatedIdealAntenna, .5 * speed_of_light / self.carrier_frequency, [2, 2, 1]),
         )

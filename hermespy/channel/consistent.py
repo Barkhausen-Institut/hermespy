@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import Tuple, List, Dict
 from typing_extensions import override
 
@@ -21,7 +21,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class ConsistentVariable(ABC, Serializable):
+class ConsistentVariable(Serializable):
     """Base class for spatially consistent random variables."""
 
     _DEFAULT_OFFSET = 0
@@ -123,7 +123,7 @@ class ConsistentSample(object):
         ...  # pragma: no cover
 
 
-class ConsistentRealization(ABC, Serializable):
+class ConsistentRealization(Serializable):
     """Base class for a realization of a consistent random generator."""
 
     @abstractmethod

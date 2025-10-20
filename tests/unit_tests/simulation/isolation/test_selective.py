@@ -8,9 +8,10 @@ from scipy.fft import fft
 
 from hermespy.core import Signal
 from hermespy.simulation import SelectiveLeakage, SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
+from unit_tests.utils import assert_signals_equal
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -47,7 +48,7 @@ class TestSelectiveLeakage(TestCase):
         """Leaking a signal should result in the expected leak"""
 
         test_signal = Signal.Create(np.zeros((self.device.antennas.num_transmit_antennas, 100), dtype=np.complex128), self.device.sampling_rate, self.device.carrier_frequency)
-        test_signal[:, 0] = 1.0
+        test_signal[:, [0]] = 1.0
 
         leaked_signal = self.leakage.leak(test_signal)
-        assert_array_almost_equal(np.abs(6 * test_signal.getitem()), np.abs(leaked_signal.getitem((slice(None, None), slice(None, 100)))))
+        assert_signals_equal(self, np.abs(6 * test_signal), np.abs(leaked_signal[:, :100]))

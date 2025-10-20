@@ -11,7 +11,7 @@ during simulation or hardware loop runtime.
 .. literalinclude:: ../../scripts/examples/core_evaluators_extraction.py
    :language: python
    :linenos:
-   :lines: 10-24
+   :lines: 10-23
 
 .. autoclass:: hermespy.core.evaluators.SignalExtractor
 

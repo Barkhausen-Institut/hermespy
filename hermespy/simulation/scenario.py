@@ -2,24 +2,20 @@
 
 from __future__ import annotations
 from time import time
-from typing import Sequence, Tuple
+from typing import Sequence
 from typing_extensions import override
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.figure import Figure, FigureBase
 from mpl_toolkits.mplot3d.axes3d import Axes3D  # type: ignore
 from mpl_toolkits.mplot3d.art3d import Line3DCollection  # type: ignore
 
-from hermespy.channel import (
-    Channel,
-    ChannelRealization,
-    ChannelSample,
-    IdealChannel,
-    InterpolationMode,
-)
+from hermespy.channel import Channel, ChannelRealization, ChannelSample, IdealChannel
 from hermespy.core import (
     DeviceInput,
     DeviceOutput,
+    InterpolationMode,
     register,
     Scenario,
     Signal,
@@ -29,7 +25,7 @@ from hermespy.core import (
     Visualization,
 )
 from .drop import SimulatedDrop
-from .noise import NoiseLevel, NoiseModel
+from .rf import NoiseLevel, NoiseModel
 from .simulated_device import (
     ProcessedSimulatedDeviceInput,
     SimulatedDevice,
@@ -56,7 +52,7 @@ class ScenarioVisualization(Visualization):
 
     def __init__(
         self,
-        figure: plt.Figure | None,
+        figure: Figure | None,
         axes: VAT,
         device_frames: list[Line3DCollection],
         device_frame_scale: float,
@@ -82,13 +78,13 @@ class _ScenarioVisualizer(VisualizableAttribute[ScenarioVisualization]):
     def title(self) -> str:
         return "Simulation Scenario"
 
-    def create_figure(self, **kwargs) -> Tuple[plt.FigureBase, VAT]:
+    def create_figure(self, **kwargs) -> tuple[FigureBase, VAT]:
         return plt.subplots(
             *self._axes_dimensions(**kwargs), squeeze=False, subplot_kw={"projection": "3d"}
         )
 
     def _prepare_visualization(
-        self, figure: plt.Figure | None, axes: VAT, **kwargs
+        self, figure: Figure | None, axes: VAT, **kwargs
     ) -> ScenarioVisualization:
 
         _ax: Axes3D = axes[0, 0]
@@ -214,7 +210,7 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDeviceState, Simulat
                 Global noise model of the scenario assumed for all devices.
                 If not specified, the noise configuration is device-specific.
 
-            \*args, \*\*kwargs:
+            args, kwargs:
                 Additional arguments passed to the base class constructor.
         """
 
@@ -377,7 +373,7 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDeviceState, Simulat
 
         return self.__noise_level
 
-    @noise_level.setter
+    @noise_level.setter  # type: ignore
     def noise_level(self, value: NoiseLevel | None) -> None:
         self.__noise_level = value
 
@@ -391,12 +387,12 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDeviceState, Simulat
 
         return self.__noise_model
 
-    @noise_model.setter
+    @noise_model.setter  # type: ignore
     def noise_model(self, value: NoiseModel | None) -> None:
-        self.__noise_model = value
-
         if value is not None:
-            self.__noise_model.random_mother = self
+            value.random_mother = self
+
+        self.__noise_model = value
 
     def realize_triggers(
         self, devices: Sequence[SimulatedDevice] | None = None
@@ -525,7 +521,7 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDeviceState, Simulat
         device_states: Sequence[SimulatedDeviceState] | None = None,
         channel_realizations: Sequence[ChannelRealization] | None = None,
         interpolation_mode: InterpolationMode = InterpolationMode.NEAREST,
-    ) -> Tuple[list[list[Signal]], Sequence[ChannelRealization]]:
+    ) -> tuple[list[list[Signal]], Sequence[ChannelRealization]]:
         """Propagate device transmissions over the scenario's channel instances.
 
         Args:

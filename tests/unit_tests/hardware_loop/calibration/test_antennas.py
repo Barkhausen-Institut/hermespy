@@ -32,7 +32,9 @@ class TestScalarAntennaCalibration(TestCase):
 
         self.rng = np.random.default_rng(42)
         self.carrier_frequency = 6e9
-        self.sampling_rate = 400e6
+        self.bandwidth = 100e6
+        self.oversampling_factor = 4
+        self.sampling_rate = self.bandwidth * self.oversampling_factor
         self.wavelength = speed_of_light / self.carrier_frequency
 
         self.calibrated_antennas = SimulatedUniformArray(SimulatedIdealAntenna, .5 * self.wavelength, [3, 2, 1])
@@ -44,7 +46,8 @@ class TestScalarAntennaCalibration(TestCase):
         self.calibrated_device = PhysicalDeviceDummy(
             antennas=self.calibrated_antennas,
             carrier_frequency=self.carrier_frequency,
-            sampling_rate=self.sampling_rate,
+            bandwidth=self.bandwidth,
+            oversampling_factor=self.oversampling_factor,
             pose=StaticTrajectory(Transformation.From_Translation(np.zeros(3))),
         )
         self.calibrated_device.pose = Transformation.From_Translation(np.zeros(3))
@@ -56,7 +59,8 @@ class TestScalarAntennaCalibration(TestCase):
         self.reference_device = PhysicalDeviceDummy(
             antennas=self.reference_antennas,
             carrier_frequency=self.carrier_frequency,
-            sampling_rate=self.sampling_rate,
+            bandwidth=self.bandwidth,
+            oversampling_factor=self.oversampling_factor,
             pose=StaticTrajectory(Transformation.From_Translation(np.array([0, 0, 2]))),
         )
         self.reference_device.pose = Transformation.From_Translation(np.array([0, 0, 2]))
@@ -87,7 +91,7 @@ class TestScalarAntennaCalibration(TestCase):
 
     def test_serialization(self) -> None:
         """Test scalar antenna calibration serialization"""
-        
+
         transmit_weights = np.exp(1j * self.rng.uniform(0, 2 * np.pi, self.calibrated_antennas.num_transmit_antennas))
         receive_weights = np.exp(1j * self.rng.uniform(0, 2 * np.pi, self.calibrated_antennas.num_receive_antennas))
         calibration = ScalarAntennaCalibration(transmit_weights, receive_weights)

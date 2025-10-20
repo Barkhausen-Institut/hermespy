@@ -13,7 +13,7 @@ from hermespy.tools import db2lin, lin2db
 from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"

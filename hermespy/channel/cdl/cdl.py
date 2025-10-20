@@ -364,7 +364,7 @@ class CDL(Channel[CDLRealization, ClusterDelayLineSample]):
             rms_delay: Root mean square delay spread of the channel.
             rayleigh_factor: Rayleigh K-factor of the channel.
             decorrelation_distance: Decorrelation distance of the channel.
-            \*\*kwargs: Additional parameters for the base class.
+            kwargs: Additional parameters for the base class.
         """
 
         # Initialize base class

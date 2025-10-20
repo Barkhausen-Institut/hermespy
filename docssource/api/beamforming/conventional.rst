@@ -41,21 +41,21 @@ A digital antenna array consisting of ideal isotropic antenna elements spaced at
 .. literalinclude:: ../../scripts/examples/beamforming_conventional_Tx.py
    :language: python
    :linenos:
-   :lines: 7-20
+   :lines: 15-19
 
 To probe the characterestics a cosine waveform is generated as the transmit waveform.
 
 .. literalinclude:: ../../scripts/examples/beamforming_conventional_Tx.py
    :language: python
    :linenos:
-   :lines: 22-34
+   :lines: 24-28
 
 The base station device is configured to transmit the beamformed signal by assigning the Conventional Beamformer to the base station device.
 
 .. literalinclude:: ../../scripts/examples/beamforming_conventional_Tx.py
    :language: python
    :linenos:
-   :lines: 36-45
+   :lines: 38-42
 
 Now the simulation can be extended to evalaute the performance in a real world communication scenario.
 For this two devices representing the UEs are added, to be illuminated by the BS.
@@ -63,14 +63,14 @@ For this two devices representing the UEs are added, to be illuminated by the BS
 .. literalinclude:: ../../scripts/examples/beamforming_conventional_Tx.py
    :language: python
    :linenos:
-   :lines: 47-55
+   :lines: 46-53
 
 The user equipments can be configured to receive the signal by setting them up as receiving modems.
 
 .. literalinclude:: ../../scripts/examples/beamforming_conventional_Tx.py
    :language: python
    :linenos:
-   :lines: 57-63
+   :lines: 58-61
 
 Now as defined the Conventional Beamformer illuminates the maximum radiation on one UE.
 This can be realised by configuring the transmit foucs of the Beamformer.
@@ -78,21 +78,21 @@ This can be realised by configuring the transmit foucs of the Beamformer.
 .. literalinclude:: ../../scripts/examples/beamforming_conventional_Tx.py
    :language: python
    :linenos:
-   :lines: 65-70
+   :lines: 67-69
 
 The propgation characterestics between the BS and the UEs can be modelled using the SpatialDelayChannel Model.
 
 .. literalinclude:: ../../scripts/examples/beamforming_conventional_Tx.py
    :language: python
    :linenos:
-   :lines: 72-85
+   :lines: 74-84
 
 Now hermespy can be instructed to conduct a simulation campaign to evaluate the received signal power at the UEs by adding the evaluator.
 
 .. literalinclude:: ../../scripts/examples/beamforming_conventional_Tx.py
    :language: python
    :linenos:
-   :lines: 87-100
+   :lines: 89-90
 
 In the previous example the Conventional Beamformer was assigned to transmitting base station.
 The same example can be adpated to study the performance of the beamformer assigned to a receiving base station.
@@ -102,21 +102,21 @@ The base station is configured for reception.
 .. literalinclude:: ../../scripts/examples/beamforming_conventional_Rx.py
    :language: python
    :linenos:
-   :lines: 36-45
+   :lines: 38-42
 
 The UEs will be configured as transmitting.
 
 .. literalinclude:: ../../scripts/examples/beamforming_conventional_Rx.py
    :language: python
    :linenos:
-   :lines: 58-64
+   :lines: 46-53
 
 The receieve focus of the beamformer will be configured.
 
 .. literalinclude:: ../../scripts/examples/beamforming_conventional_Rx.py
    :language: python
    :linenos:
-   :lines: 67-72
+   :lines: 67-69
 
 The performance of the beamformer is studied by analysing the received signal quality from the respective UEs.
 For this purpose, the Error Vector Magnitude of the consetallation diagram of the Received signal is evaluated.
@@ -124,7 +124,7 @@ For this purpose, the Error Vector Magnitude of the consetallation diagram of th
 .. literalinclude:: ../../scripts/examples/beamforming_conventional_Rx.py
    :language: python
    :linenos:
-   :lines: 89-103
+   :lines: 89-99
 
 .. automodule:: hermespy.beamforming.conventional
    :private-members: _decode, _encode

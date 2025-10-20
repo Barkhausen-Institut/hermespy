@@ -6,13 +6,14 @@ import numpy as np
 from numpy.testing import assert_array_equal
 from scipy.constants import speed_of_light, pi
 
+from hermespy.beamforming import ConventionalBeamformer
 from hermespy.core import Transformation
-from hermespy.modem import Alamouti, Ganesan, SimplexLink, ChannelEqualization, CommunicationReception, CommunicationTransmission, OFDMWaveform, OrthogonalZeroForcingChannelEqualization, PilotSection, GridResource, GridElement, ElementType, SymbolSection, OrthogonalZeroForcingChannelEqualization, OFDMCorrelationSynchronization, ReferencePosition, OrthogonalLeastSquaresChannelEstimation
-from hermespy.simulation import SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray, OFDMIdealChannelEstimation
+from hermespy.modem import Alamouti, Ganesan, OrthogonalLeastSquaresChannelEstimation, SimplexLink, ChannelEqualization, CommunicationReception, CommunicationTransmission, OFDMWaveform, OrthogonalZeroForcingChannelEqualization, PilotSection, GridResource, GridElement, ElementType, SymbolSection, OrthogonalZeroForcingChannelEqualization, OFDMCorrelationSynchronization, ReferencePosition
+from hermespy.simulation import DeviceFocus, SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray, OFDMIdealChannelEstimation, N0
 from hermespy.channel import Channel, DelayNormalization, UrbanMacrocells, O2IState
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -21,8 +22,8 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class TestMIMOLink(TestCase):
-    
+class _TestMIMOLink(TestCase):
+
     def __configure_ofdm_waveform(self, channel: Channel) -> OFDMWaveform:
         """Configure an OFDM wafeform with default parameters.
 
@@ -53,28 +54,45 @@ class TestMIMOLink(TestCase):
             ),
         ]
 
-        waveform = OFDMWaveform(subcarrier_spacing=1e6 / num_subcarriers, num_subcarriers=num_subcarriers, dc_suppression=True, grid_resources=grid_resources, grid_structure=grid_structure)
-        waveform.oversampling_factor = 2
+        waveform = OFDMWaveform(
+            num_subcarriers=num_subcarriers,
+            dc_suppression=True,
+            grid_resources=grid_resources,
+            grid_structure=grid_structure,
+            modulation_order=4,
+        )
         waveform.pilot_section = PilotSection()
         waveform.synchronization = OFDMCorrelationSynchronization()
         waveform.channel_estimation = OFDMIdealChannelEstimation(channel, self.tx_device, self.rx_device, reference_position=ReferencePosition.IDEAL)
         waveform.channel_equalization = OrthogonalZeroForcingChannelEqualization()
 
         return waveform
-    
-    def setUp(self) -> None:
+
+    def setUp(
+        self,
+        num_transmit_antennas: int = 1,
+        num_receive_antennas: int = 1,
+    ) -> None:
         self.carrier_frequency = 1e8
+        self.bandwidth = 128*12e3
+        self.oversampling_factor = 1
         self.wavelength = speed_of_light / self.carrier_frequency
 
         self.tx_device = SimulatedDevice(
             carrier_frequency=self.carrier_frequency,
+            bandwidth=self.bandwidth,
+            oversampling_factor=self.oversampling_factor,
             pose=Transformation.From_Translation(np.array([0, 0, 10.0])),
-            antennas=SimulatedUniformArray(SimulatedIdealAntenna(), 0.5 * self.wavelength, [2, 2]),
+            antennas=SimulatedUniformArray(SimulatedIdealAntenna(), 0.5 * self.wavelength, [num_transmit_antennas, 1, 1]),
+            noise_level=N0(0.0),
         )
         self.rx_device = SimulatedDevice(
             carrier_frequency=self.carrier_frequency,
+            bandwidth=self.bandwidth,
+            oversampling_factor=self.oversampling_factor,
             pose=Transformation.From_RPY(np.array([0, 0, pi]), np.array([1000, 0, 2])),
-            antennas=SimulatedUniformArray(SimulatedIdealAntenna(), 0.5 * self.wavelength, [3, 3]),
+            antennas=SimulatedUniformArray(SimulatedIdealAntenna(), 0.5 * self.wavelength, [num_receive_antennas, 1, 1]),
+            noise_level=N0(0.0),
         )
         self.channel = UrbanMacrocells(
             delay_normalization=DelayNormalization.ZERO,
@@ -88,7 +106,7 @@ class TestMIMOLink(TestCase):
         self.link.waveform = self.__configure_ofdm_waveform(self.channel)
 
     def __propagate(self) -> Tuple[CommunicationTransmission, CommunicationReception]:
-        
+
         device_transmission = self.tx_device.transmit()
 
         channel_realization = self.channel.realize()
@@ -99,46 +117,63 @@ class TestMIMOLink(TestCase):
 
         return device_transmission.operator_transmissions[0], device_reception.operator_receptions[0]
 
-    # ToDo: Fix duplex operator transmit/receive device assignment
-    #def test_conventional_beamforming(self) -> None:
-    #    """Test valid data transmission using conventional beamformers"""
-    #
-    #    tx_beamformer = ConventionalBeamformer()
-    #    rx_beamformer = ConventionalBeamformer()
-    #    tx_beamformer.transmit_focus = DeviceFocus(self.rx_device)
-    #    rx_beamformer.receive_focus = DeviceFocus(self.tx_device)
-    #
-    #    self.link.transmit_stream_coding[0] = tx_beamformer
-    #    self.link.receive_stream_coding[0] = rx_beamformer
-    #    self.link.waveform.channel_estimation = OrthogonalLeastSquaresChannelEstimation()
-    #    
-    #    transmission, reception = self.__propagate()
-    #    assert_array_equal(transmission.bits, reception.bits)
+    def test_propagation(self) -> None:
+        """Test valid data transmission"""
 
-    def test_alamouti(self) -> None:
-        """Test valid data tansmission via Alamouti precoding"""
+        transmission, reception = self.__propagate()
+        reception.signal.plot()
+        reception.equalized_symbols.plot_constellation()
 
-        self.tx_device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 0.5 * self.wavelength, [2])
-        self.rx_device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 0.5 * self.wavelength, [1])
+        assert_array_equal(transmission.bits, reception.bits)
+
+
+class TestAlamouti(_TestMIMOLink):
+    """Test Alamouti space-time block precoding"""
+
+    def setUp(
+        self,
+        num_transmit_antennas: int = 2,
+        num_receive_antennas: int = 1,
+    ) -> None:
+        super().setUp(num_transmit_antennas, num_receive_antennas)
 
         self.link.transmit_symbol_coding[0] = Alamouti()
         self.link.receive_symbol_coding[0] = Alamouti()
         self.link.waveform.channel_estimation = OFDMIdealChannelEstimation(self.channel, self.tx_device, self.rx_device)
         self.link.waveform.channel_equalization = ChannelEqualization()
 
-        transmission, reception = self.__propagate()
-        assert_array_equal(transmission.bits, reception.bits)
 
-    def test_ganesan(self) -> None:
-        """Test valid data transmission via Ganesan precoding"""
+class TestGanesan(_TestMIMOLink):
+    """Test Ganesan space-time block precoding"""
 
-        self.tx_device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 0.5 * self.wavelength, [4])
-        self.rx_device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 0.5 * self.wavelength, [1])
+    def setUp(
+        self,
+        num_transmit_antennas: int = 4,
+        num_receive_antennas: int = 1,
+    ) -> None:
+        super().setUp(num_transmit_antennas, num_receive_antennas)
 
         self.link.transmit_symbol_coding[0] = Ganesan()
         self.link.receive_symbol_coding[0] = Ganesan()
         self.link.waveform.channel_estimation = OFDMIdealChannelEstimation(self.channel, self.tx_device, self.rx_device)
         self.link.waveform.channel_equalization = ChannelEqualization()
 
-        transmission, reception = self.__propagate()
-        assert_array_equal(transmission.bits, reception.bits)
+
+class TestConventionalBeamformer(_TestMIMOLink):
+
+    def setUp(self, num_transmit_antennas: int = 4, num_receive_antennas: int = 4) -> None:
+
+        super().setUp(num_transmit_antennas, num_receive_antennas)
+
+        tx_beamformer = ConventionalBeamformer()
+        rx_beamformer = ConventionalBeamformer()
+        tx_beamformer.transmit_focus = DeviceFocus(self.rx_device)
+        rx_beamformer.receive_focus = DeviceFocus(self.tx_device)
+
+        self.tx_device.transmit_coding[0] = tx_beamformer
+        self.rx_device.receive_coding[0] = rx_beamformer
+
+        self.link.waveform.channel_estimation = OrthogonalLeastSquaresChannelEstimation()
+
+
+del _TestMIMOLink

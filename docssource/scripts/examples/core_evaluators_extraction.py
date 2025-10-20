@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import matplotlib.pyplot as plt
 
-from hermespy.core import dB, SignalExtractor
+from hermespy.core import SignalExtractor
 from hermespy.modem import TransmittingModem, ReceivingModem, RRCWaveform
 from hermespy.simulation import Simulation
 

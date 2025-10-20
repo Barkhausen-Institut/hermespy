@@ -7,6 +7,8 @@ from typing import Generic, Literal, Tuple
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import numpy as np
+from matplotlib.figure import Figure
+from matplotlib.axes import Axes
 
 from hermespy.core import (
     Evaluator,
@@ -54,7 +56,7 @@ class SignalPlot(HardwareLoopPlot[PlotVisualization], ABC):
 
         return self.__space
 
-    def _initialize_subplots(self, num_streams: int) -> Tuple[plt.Figure, VAT]:
+    def _initialize_subplots(self, num_streams: int) -> Tuple[Figure, VAT]:
         """Initialize the suplots for a signal model visualization.
 
         Subroutine of :meth:`HardwareLoopPlot._prepare_plot` for classes inheriting
@@ -126,7 +128,7 @@ class DeviceTransmissionPlot(HardwareLoopDevicePlot[PlotVisualization], SignalPl
     def __init__(
         self,
         device: PhysicalDevice,
-        title: str | None = None,
+        title: str = "",
         space: Literal["time", "frequency", "both"] = "time",
     ) -> None:
         """
@@ -152,7 +154,7 @@ class DeviceTransmissionPlot(HardwareLoopDevicePlot[PlotVisualization], SignalPl
     def _default_title(self) -> str:
         return "Device Transmission"
 
-    def _prepare_plot(self) -> Tuple[plt.Figure, VAT]:
+    def _prepare_plot(self) -> Tuple[Figure, VAT]:
         figure, axes = self._initialize_subplots(self.device.num_transmit_antennas)
         return figure, axes
 
@@ -177,10 +179,7 @@ class DeviceReceptionPlot(HardwareLoopDevicePlot[PlotVisualization], SignalPlot)
     """Plot base-band signals received by a device."""
 
     def __init__(
-        self,
-        device: PhysicalDevice,
-        title: str | None = None,
-        space: Literal["time", "frequency"] = "time",
+        self, device: PhysicalDevice, title: str = "", space: Literal["time", "frequency"] = "time"
     ) -> None:
         """
         Args:
@@ -205,8 +204,8 @@ class DeviceReceptionPlot(HardwareLoopDevicePlot[PlotVisualization], SignalPlot)
     def _default_title(self) -> str:
         return "Device Reception"
 
-    def _prepare_plot(self) -> Tuple[plt.Figure, VAT]:
-        figure, axes = self._initialize_subplots(self.device.num_receive_antenna_ports)
+    def _prepare_plot(self) -> Tuple[Figure, VAT]:
+        figure, axes = self._initialize_subplots(self.device.num_receive_rf_ports)
         return figure, axes
 
     def _initial_plot(self, sample: HardwareLoopSample, axes: VAT) -> PlotVisualization:
@@ -266,7 +265,7 @@ class EyePlot(HardwareLoopPlot[PlotVisualization]):
     def _default_title(self) -> str:
         return "Eye Plot"
 
-    def _prepare_plot(self) -> Tuple[plt.Figure, VAT]:
+    def _prepare_plot(self) -> Tuple[Figure, VAT]:
         figure, axes = plt.subplots(1, 1, squeeze=False)
         return figure, axes
 
@@ -336,7 +335,7 @@ class ReceivedConstellationPlot(HardwareLoopPlot[ScatterVisualization]):
     def _default_title(self) -> str:
         return "Received Symbol Constellation"
 
-    def _prepare_plot(self) -> Tuple[plt.Figure, VAT]:
+    def _prepare_plot(self) -> Tuple[Figure, VAT]:
         figure, axes = plt.subplots(1, 1, squeeze=False)
         return figure, axes
 
@@ -353,7 +352,7 @@ class ReceivedConstellationPlot(HardwareLoopPlot[ScatterVisualization]):
 class RadarRangePlot(HardwareLoopPlot[PlotVisualization]):
     """Plot of a radar's range-power profile.""" ""
 
-    __reception: RadarReception
+    __reception: RadarReception | None
     __hook: Hook[RadarReception]
     __radar: Radar
 
@@ -398,7 +397,7 @@ class RadarRangePlot(HardwareLoopPlot[PlotVisualization]):
     def _default_title(self) -> str:
         return "Range-Power Profile"
 
-    def _prepare_plot(self) -> Tuple[plt.Figure, VAT]:
+    def _prepare_plot(self) -> Tuple[Figure, VAT]:
         figure, axes = plt.subplots(1, 1, squeeze=False)
         return figure, axes
 
@@ -457,7 +456,7 @@ class HardwareLoopEvaluatorPlot(Generic[VT], HardwareLoopPlot[VT], ABC):
 
         return self.hardware_loop.evaluator_index(self.evaluator)
 
-    def _prepare_plot(self) -> Tuple[plt.Figure, VAT]:
+    def _prepare_plot(self) -> Tuple[Figure, VAT]:
         figure, axes = plt.subplots(1, 1, squeeze=False)
         return figure, axes
 
@@ -481,7 +480,7 @@ class ArtifactPlot(HardwareLoopEvaluatorPlot[PlotVisualization]):
     def __init__(
         self,
         evaluator: Evaluator,
-        title: str | None = None,
+        title: str = "",
         queue_length: int = 20,
         y_axis_limits: Tuple[float, float] | None = None,
     ) -> None:
@@ -493,10 +492,10 @@ class ArtifactPlot(HardwareLoopEvaluatorPlot[PlotVisualization]):
         self.__artifact_indices = np.arange(queue_length)
         self.__y_axis_limits = y_axis_limits
 
-    def _prepare_plot(self) -> Tuple[plt.Figure, VAT]:
+    def _prepare_plot(self) -> Tuple[Figure, VAT]:
         figure, axes = HardwareLoopEvaluatorPlot._prepare_plot(self)
 
-        ax: plt.Axes = axes.flat[0]
+        ax: Axes = axes.flat[0]
         ax.set_xlabel("Drop Index")
         ax.set_ylabel(self.evaluator.abbreviation)
         ax.set_xlim(0, self.__artifact_queue.size - 1)
@@ -529,8 +528,8 @@ class ArtifactPlot(HardwareLoopEvaluatorPlot[PlotVisualization]):
         self.__update_artifact_queue(sample)
 
         # Plot artifact queue
-        ax: plt.Axes = axes.flat[0]
-        lines = np.empty_like(axes, dtype=np.object_)
+        ax: Axes = axes.flat[0]
+        lines = np.empty((axes.shape[0], axes.shape[1]), dtype=object)
         lines[0, 0] = ax.plot(self.__artifact_indices, self.__artifact_queue)
         ax.set_yscale(self.evaluator.plot_scale)
 

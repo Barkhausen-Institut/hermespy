@@ -34,9 +34,11 @@ class TestIdealChannel(unittest.TestCase):
         self.gain = 1.0
         self.random_node = Mock()
         self.random_node._rng = default_rng(42)
-        self.sampling_rate = 1e3
-        self.alpha_device = SimulatedDevice(sampling_rate=self.sampling_rate)
-        self.beta_device = SimulatedDevice(sampling_rate=self.sampling_rate)
+        self.bandwidth = 5e2
+        self.oversampling_factor = 2
+        self.sampling_rate = self.bandwidth * self.oversampling_factor
+        self.alpha_device = SimulatedDevice(bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor)
+        self.beta_device = SimulatedDevice(bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor)
         self.channel = IdealChannel(self.gain)
         self.channel.random_mother = self.random_node
 
@@ -73,14 +75,14 @@ class TestIdealChannel(unittest.TestCase):
                 forwards_signal = forwards_sample.propagate(signal)
                 backwards_signal = backwards_sample.propagate(signal)
 
-                assert_array_almost_equal(expected_propagated_samples, forwards_signal.getitem())
-                assert_array_almost_equal(expected_propagated_samples, backwards_signal.getitem())
-                
+                assert_array_almost_equal(expected_propagated_samples, forwards_signal.view(np.ndarray))
+                assert_array_almost_equal(expected_propagated_samples, backwards_signal.view(np.ndarray))
+
                 forwards_state_propagation = forwards_sample.state(num_samples, 1).propagate(signal)
                 backwards_state_propagation = backwards_sample.state(num_samples, 1).propagate(signal)
 
-                assert_array_almost_equal(expected_propagated_samples, forwards_state_propagation.getitem())
-                assert_array_almost_equal(expected_propagated_samples, backwards_state_propagation.getitem())
+                assert_array_almost_equal(expected_propagated_samples, forwards_state_propagation.view(np.ndarray))
+                assert_array_almost_equal(expected_propagated_samples, backwards_state_propagation.view(np.ndarray))
 
     def test_propagate_SIMO(self) -> None:
         """Test valid propagation for the Single-Input-Multiple-Output channel"""
@@ -106,14 +108,14 @@ class TestIdealChannel(unittest.TestCase):
                 forwards_propagation = forwards_sample.propagate(forwards_input)
                 backwards_propagation = backwards_sample.propagate(backwards_input)
 
-                assert_array_almost_equal(expected_forwards_samples, forwards_propagation.getitem())
-                assert_array_almost_equal(expected_backwards_samples, backwards_propagation.getitem())
+                assert_array_almost_equal(expected_forwards_samples, forwards_propagation.view(np.ndarray))
+                assert_array_almost_equal(expected_backwards_samples, backwards_propagation.view(np.ndarray))
 
                 forwards_state_propagation = forwards_sample.state(num_samples, 1).propagate(forwards_input)
                 backwards_state_propagation = backwards_sample.state(num_samples, 1).propagate(backwards_input)
 
-                assert_array_almost_equal(expected_forwards_samples, forwards_state_propagation.getitem())
-                assert_array_almost_equal(expected_backwards_samples, backwards_state_propagation.getitem())
+                assert_array_almost_equal(expected_forwards_samples, forwards_state_propagation.view(np.ndarray))
+                assert_array_almost_equal(expected_backwards_samples, backwards_state_propagation.view(np.ndarray))
 
     def test_propagate_MISO(self) -> None:
         """Test valid propagation for the Multiple-Input-Single-Output channel"""
@@ -139,14 +141,14 @@ class TestIdealChannel(unittest.TestCase):
                 forwards_signal = forwards_sample.propagate(forwards_input)
                 backwards_signal = backwards_sample.propagate(backwards_input)
 
-                assert_array_almost_equal(expected_forwards_samples, forwards_signal.getitem())
-                assert_array_almost_equal(expected_backwards_samples, backwards_signal.getitem())
+                assert_array_almost_equal(expected_forwards_samples, forwards_signal.view(np.ndarray))
+                assert_array_almost_equal(expected_backwards_samples, backwards_signal.view(np.ndarray))
 
                 forwards_state_propagation = forwards_sample.state(num_samples, 1).propagate(forwards_input)
                 backwards_state_propagation = backwards_sample.state(num_samples, 1).propagate(backwards_input)
 
-                assert_array_almost_equal(expected_forwards_samples, forwards_state_propagation.getitem())
-                assert_array_almost_equal(expected_backwards_samples, backwards_state_propagation.getitem())
+                assert_array_almost_equal(expected_forwards_samples, forwards_state_propagation.view(np.ndarray))
+                assert_array_almost_equal(expected_backwards_samples, backwards_state_propagation.view(np.ndarray))
 
     def test_propagate_MIMO(self) -> None:
         """Test valid propagation for the Multiple-Input-Multiple-Output channel"""
@@ -172,8 +174,8 @@ class TestIdealChannel(unittest.TestCase):
                 forwards_signal = forwards_sample.propagate(forwards_transmission)
                 backwards_signal = backwards_sample.propagate(backwards_transmission)
 
-                assert_array_almost_equal(expected_forwards_propagated_samples, forwards_signal.getitem())
-                assert_array_almost_equal(expected_backwards_propagated_samples, backwards_signal.getitem())
+                assert_array_almost_equal(expected_forwards_propagated_samples, forwards_signal.view(np.ndarray))
+                assert_array_almost_equal(expected_backwards_propagated_samples, backwards_signal.view(np.ndarray))
 
                 forwards_state_propagation = forwards_sample.state(num_samples, 1).propagate(forwards_transmission)
                 backwards_state_propagation = backwards_sample.state(num_samples, 1).propagate(backwards_transmission)

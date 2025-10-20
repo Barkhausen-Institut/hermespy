@@ -8,7 +8,7 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from hermespy.channel import SingleTargetRadarChannel
-from hermespy.hardware_loop import HardwareLoop, PhysicalScenarioDummy
+from hermespy.hardware_loop import HardwareLoop, PhysicalScenarioDummy, PhysicalDeviceDummy
 from hermespy.radar import Radar, FMCW, ReceiverOperatingCharacteristic
 from hermespy.simulation import SpecificIsolation, N0
 
@@ -30,21 +30,26 @@ class TestRocFromMeasurements(TestCase):
         self.tempdir = TemporaryDirectory()
 
         bandwidth = 3.072e9
+        oversampling_factor = 2
         carrier_frequency = 10e9
         chirp_duration = 2e-8
 
         system = PhysicalScenarioDummy()
         system.noise_level = N0(1e-13)
 
-        hardware_loop = HardwareLoop(system)
+        hardware_loop = HardwareLoop[PhysicalScenarioDummy, PhysicalDeviceDummy](system)
         hardware_loop.num_drops = 1
         hardware_loop.results_dir = self.tempdir.name
 
-        device = system.new_device(carrier_frequency=carrier_frequency)
+        device = system.new_device(
+            carrier_frequency=carrier_frequency,
+            bandwidth=bandwidth,
+            oversampling_factor=oversampling_factor,
+        )
         device.isolation = SpecificIsolation(1e-8)
 
         radar = Radar()
-        radar.waveform = FMCW(bandwidth=bandwidth, num_chirps=10, chirp_duration=chirp_duration, pulse_rep_interval=1.1 * chirp_duration)
+        radar.waveform = FMCW(num_chirps=10, chirp_duration=chirp_duration, pulse_rep_interval=1.1 * chirp_duration)
         device.add_dsp(radar)
 
         channel = SingleTargetRadarChannel(target_range=(0.75, 1.25), radar_cross_section=1.0)
@@ -55,8 +60,8 @@ class TestRocFromMeasurements(TestCase):
             stack.enter_context(patch("matplotlib.pyplot.figure"))
 
             # Suppress stdout if not in debug mode
-            if gettrace() is None:
-                stack.enter_context(patch("sys.stdout"))
+            #if gettrace() is None:
+            #    stack.enter_context(patch("sys.stdout"))
 
             hardware_loop.run(overwrite=False, campaign="h1_measurements")
 

@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from unittest import TestCase
 
-import numpy as np
-
 from hermespy.modem import DuplexModem, RootRaisedCosineWaveform, BitErrorEvaluator, BlockErrorEvaluator, FrameErrorEvaluator, ThroughputEvaluator
 from hermespy.simulation import SimulatedDevice
 from hermespy.core.evaluators import ReceivePowerEvaluator, SignalExtractor
@@ -34,7 +32,7 @@ class InvestigatedObject(object):
 
 class TestEvaluators(TestCase):
     def setUp(self) -> None:
-        waveform = RootRaisedCosineWaveform(symbol_rate=1, num_preamble_symbols=0, num_data_symbols=100, modulation_order=64, oversampling_factor=1)
+        waveform = RootRaisedCosineWaveform(num_preamble_symbols=0, num_data_symbols=100, modulation_order=64)
         self.device = SimulatedDevice()
 
         self.modem = DuplexModem()

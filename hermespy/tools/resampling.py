@@ -50,11 +50,12 @@ def delay_resampling_matrix(
     if num_samples_out < 0:
         delay_samples_overhead = int(ceil(abs(delay) * sampling_rate)) * np.sign(delay)
         output_timestamps = (
-            np.arange(num_samples_in + delay_samples_overhead) - delay * sampling_rate
+            np.arange(num_samples_in + delay_samples_overhead, dtype=np.float64)
+            - delay * sampling_rate
         )
 
     else:
-        output_timestamps = np.arange(num_samples_out) - delay * sampling_rate
+        output_timestamps = np.arange(num_samples_out, dtype=np.float64) - delay * sampling_rate
 
     interpolation_filter = np.sinc(np.subtract.outer(output_timestamps, input_timestamps))
     return interpolation_filter
