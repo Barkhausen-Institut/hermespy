@@ -229,7 +229,7 @@ class SidelobeEvaluator(Evaluator, Serializable):
 
         weights = np.concatenate([focus_beamformer, self.__codebook], axis=0)
 
-        beamformed_energy = np.zeros(weights.shape[0], dtype=np.float128)
+        beamformed_energy = np.zeros(weights.shape[0], dtype=np.float64)
         signal_energy: float = 0.0
         for block in samples.blocks:
             beamformed_energy += np.linalg.norm(weights @ block, axis=1) ** 2

@@ -8,7 +8,7 @@ version=1.5.0
 export MAKEFLAGS="-j $(grep -c ^processor /proc/cpuinfo)"
 
 # Declare Python versions to build for
-declare -a versions=( "cp312-cp312" "cp311-cp311" "cp310-cp310")
+declare -a versions=( "cp313-cp313" "cp312-cp312" "cp311-cp311" )
 
 # Build for every available python version
 for PYBIN in ${versions[@]}; do
