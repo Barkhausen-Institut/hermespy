@@ -3,7 +3,7 @@
 from __future__ import annotations
 from typing_extensions import override
 
-from hermespy.core import FloatingError, Signal, SerializationProcess, DeserializationProcess
+from hermespy.core import Signal, SerializationProcess, DeserializationProcess
 from .isolation import Isolation
 
 __author__ = "Jan Adler"
@@ -19,20 +19,7 @@ __status__ = "Prototype"
 class PerfectIsolation(Isolation):
     """Perfect isolation model without leakage between RF chains."""
 
-    def leak(self, signal: Signal | None) -> Signal:
-        if self.device is None:
-            raise FloatingError("Error trying to simulate leakage of a floating model")
-
-        if signal is None:
-            return self._leak(None)
-
-        if self.device.antennas.num_transmit_ports != signal.num_streams:
-            raise ValueError(
-                "Number of signal streams ({signal.num_streams}) does not match the number of transmitting antenna ports ({self.device.antennas.num_transmit_ports})"
-            )
-
-        return self._leak(signal)
-
+    @override
     def _leak(self, signal: Signal | None) -> Signal:
         if signal is None:
             return Signal.Empty(
@@ -49,7 +36,7 @@ class PerfectIsolation(Isolation):
             )
 
     @override
-    def serialize(self, serialization_process: SerializationProcess) -> None:
+    def serialize(self, process: SerializationProcess) -> None:
         return
 
     @override

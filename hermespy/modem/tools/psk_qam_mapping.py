@@ -101,7 +101,7 @@ class PskQamMapping(Serializable):
 
         self.soft_output = soft_output
 
-    def get_symbols(self, bits: np.ndarray) -> np.ndarray:
+    def get_symbols(self, bits: np.ndarray[tuple[int], np.dtype[np.uint8]]) -> np.ndarray[tuple[int], np.dtype[np.complex128]]:
         """Calculates the complex numbers corresponding to the information in 'bits'.
 
         Note:
@@ -118,12 +118,12 @@ class PskQamMapping(Serializable):
 
         number_symbols = int(bits.size / self.bits_per_symbol)
         # bits in rows, symbols in columns
-        bits = np.reshape(bits, (self.bits_per_symbol, number_symbols), order="F")
+        symbol_bits = bits.reshape((self.bits_per_symbol, number_symbols), order="F")
 
         if self.mapping is not None:
             # e.g. [8, 4, 2, 1]
             power_of_2 = 2 ** np.arange(self.bits_per_symbol - 1, -1, -1)
-            idx = np.matmul(power_of_2, bits)  # multiply to get symbol value
+            idx = np.matmul(power_of_2, symbol_bits)  # multiply to get symbol value
             symbols = self.mapping[idx]
 
         else:
@@ -131,33 +131,33 @@ class PskQamMapping(Serializable):
             # equivalent)
             if self.modulation_order == 2:
                 # BPSK
-                symbols = self.generate_pam_symbol_3gpp(2, bits) + 1j * 0
+                symbols = self.generate_pam_symbol_3gpp(2, symbol_bits) + 1j * 0
             elif self.modulation_order == 4 and self.is_complex:
                 # QPSK
-                real_part = self.generate_pam_symbol_3gpp(2, bits[0, :])
-                imag_part = self.generate_pam_symbol_3gpp(2, bits[1, :])
+                real_part = self.generate_pam_symbol_3gpp(2, symbol_bits[0:1, :])
+                imag_part = self.generate_pam_symbol_3gpp(2, symbol_bits[1:2, :])
                 symbols = (real_part + 1j * imag_part) / np.sqrt(2)
             elif self.modulation_order == 4 and not self.is_complex:
                 # 4-PAM
-                symbols = self.generate_pam_symbol_3gpp(4, bits) / np.sqrt(5) + 1j * 0
+                symbols = self.generate_pam_symbol_3gpp(4, symbol_bits) / np.sqrt(5) + 1j * 0
             elif self.modulation_order == 8 and not self.is_complex:
                 # 8-PAM
-                symbols = self.generate_pam_symbol_3gpp(8, bits) / np.sqrt(21) + 1j * 0
+                symbols = self.generate_pam_symbol_3gpp(8, symbol_bits) / np.sqrt(21) + 1j * 0
             elif self.modulation_order == 16 and self.is_complex:
                 # 16-QAM
-                real_part = self.generate_pam_symbol_3gpp(4, bits[[0, 2], :])
-                imag_part = self.generate_pam_symbol_3gpp(4, bits[[1, 3], :])
+                real_part = self.generate_pam_symbol_3gpp(4, symbol_bits[[0, 2], :])
+                imag_part = self.generate_pam_symbol_3gpp(4, symbol_bits[[1, 3], :])
                 symbols = (real_part + 1j * imag_part) / np.sqrt(10)
             elif self.modulation_order == 16 and not self.is_complex:
                 # 16-PAM
-                symbols = self.generate_pam_symbol_3gpp(16, bits) / np.sqrt(85) + 1j * 0
+                symbols = self.generate_pam_symbol_3gpp(16, symbol_bits) / np.sqrt(85) + 1j * 0
             elif self.modulation_order == 64 and self.is_complex:
-                real_part = self.generate_pam_symbol_3gpp(8, bits[[0, 2, 4], :])
-                imag_part = self.generate_pam_symbol_3gpp(8, bits[[1, 3, 5], :])
+                real_part = self.generate_pam_symbol_3gpp(8, symbol_bits[[0, 2, 4], :])
+                imag_part = self.generate_pam_symbol_3gpp(8, symbol_bits[[1, 3, 5], :])
                 symbols = (real_part + 1j * imag_part) / np.sqrt(42)
             elif self.modulation_order == 256 and self.is_complex:
-                real_part = self.generate_pam_symbol_3gpp(16, bits[[0, 2, 4, 6], :])
-                imag_part = self.generate_pam_symbol_3gpp(16, bits[[1, 3, 5, 7], :])
+                real_part = self.generate_pam_symbol_3gpp(16, symbol_bits[[0, 2, 4, 6], :])
+                imag_part = self.generate_pam_symbol_3gpp(16, symbol_bits[[1, 3, 5, 7], :])
                 symbols = (real_part + 1j * imag_part) / np.sqrt(170)
             else:
                 raise RuntimeError(
@@ -257,7 +257,7 @@ class PskQamMapping(Serializable):
         return llr if self.soft_output else llr > 0
 
     @staticmethod
-    def generate_pam_symbol_3gpp(modulation_order: int, bits: np.ndarray) -> np.ndarray:
+    def generate_pam_symbol_3gpp(modulation_order: int, bits: np.ndarray[tuple[int, ...], np.dtype[np.uint8]]) -> np.ndarray[tuple[int], np.dtype[np.float64]]:
         """Returns 1D amplitudes following 3GPP modulation mapping.
 
         3GPP has defined in TS 36.211 mapping tables from bits into complex symbols.
@@ -275,20 +275,23 @@ class PskQamMapping(Serializable):
             values can be -7, -5, -3, -1, 1, 3, 5, 7.
         """
 
+        # Trannsform bits to signed integers
+        _bits = bits.astype(np.float64)
+
         if modulation_order == 2:
-            symbols = 1.0 - 2 * bits
+            symbols = 1.0 - 2 * _bits
         elif modulation_order == 4:
-            symbols = (1 - 2 * bits[0, :]) * (1 + 2 * bits[1, :])
+            symbols = (1 - 2 * _bits[0, :]) * (1 + 2 * _bits[1, :])
         elif modulation_order == 8:
-            symbols = (2 * bits[0, :] - 1) * ((1 - 2 * bits[1, :]) * (1 + 2 * bits[2, :]) - 4)
+            symbols = (2 * _bits[0, :] - 1) * ((1 - 2 * _bits[1, :]) * (1 + 2 * _bits[2, :]) - 4)
         elif modulation_order == 16:
             symbols = (
-                (((1 - 2 * bits[2, :]) * (1 + 2 * bits[3, :]) - 4) * (-1 + 2 * bits[1, :])) - 8
-            ) * (-1 + 2 * bits[0, :])
+                (((1 - 2 * _bits[2, :]) * (1 + 2 * _bits[3, :]) - 4) * (-1 + 2 * _bits[1, :])) - 8
+            ) * (-1 + 2 * _bits[0, :])
         else:
-            raise ValueError(f"unsupported modulation order ({modulation_order})")
+            raise ValueError(f"Unsupported modulation order ({modulation_order})")
 
-        return symbols
+        return symbols.flatten()
 
     @staticmethod
     def get_llr_3gpp(
@@ -499,14 +502,15 @@ class PskQamMapping(Serializable):
         if self.mapping is not None:
             mapping = self.mapping
         else:
-            bits_all = np.zeros(self.modulation_order * self.bits_per_symbol)
+            bits_all = np.zeros(self.modulation_order * self.bits_per_symbol, np.uint8)
             for symbol_idx in range(self.modulation_order):
                 idx = symbol_idx * self.bits_per_symbol
                 bits = np.asarray(
                     [
                         1 if symbol_idx & (1 << (self.bits_per_symbol - 1 - n)) else 0
                         for n in range(self.bits_per_symbol)
-                    ]
+                    ],
+                    dtype=np.uint8,
                 )
 
                 bits_all[idx : idx + self.bits_per_symbol] = bits

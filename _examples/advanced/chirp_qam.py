@@ -1,17 +1,13 @@
 # -*- coding: utf-8 -*-
 #
 # In this example we simulate a frame of QAM modulated overlapping chirps.
-# 
+#
 
 import matplotlib.pyplot as plt
 
 from hermespy.core import dB
 from hermespy.fec import TurboCoding
-from hermespy.simulation import (
-    Simulation,
-    RappPowerAmplifier,
-    EBN0,
-)
+from hermespy.simulation import Simulation, EBN0
 from hermespy.channel import IdealChannel
 from hermespy.modem import (
     SimplexLink,
@@ -25,11 +21,13 @@ from hermespy.modem import (
 # Initialize a simulation considering two devices operting in base-band
 simulation = Simulation()
 cf = 0.0
-tx_device = simulation.new_device(carrier_frequency=cf)
-rx_device = simulation.new_device(carrier_frequency=cf)
+bandwidth = 100e6
+oversampling_factor = 4
+tx_device = simulation.new_device(carrier_frequency=cf, bandwidth=bandwidth, oversampling_factor=oversampling_factor)
+rx_device = simulation.new_device(carrier_frequency=cf, bandwidth=bandwidth, oversampling_factor=oversampling_factor)
 
 # Configure a non-ideal power Rapp power amplifier model at the transmitting device
-tx_device.rf_chain.power_amplifier = RappPowerAmplifier(smoothness_factor=6.0)
+# tx_device.rf_chain.power_amplifier = RappPowerAmplifier(smoothness_factor=6.0)
 
 # Configure an ideal channel between the two devices
 # This is the default setting, but we can set it explicitly
@@ -40,8 +38,6 @@ simulation.set_channel(tx_device, rx_device, IdealChannel())
 link = SimplexLink(waveform=RootRaisedCosineWaveform(
     roll_off=.9,
     modulation_order=16,
-    symbol_rate=100e6,
-    oversampling_factor=4,
     num_preamble_symbols=16,
     num_data_symbols=1024,
     pilot_rate=1e6,

@@ -10,9 +10,10 @@ from numpy.testing import assert_array_equal
 from hermespy.core import Signal
 from hermespy.hardware_loop import DelayCalibration, PhysicalDeviceDummy
 from unit_tests.core.test_factory import test_roundtrip_serialization
+from unit_tests.utils import assert_signals_equal
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -43,11 +44,11 @@ class TestDelayCalibration(TestCase):
         test_signal = Signal.Create(test_samples, 5 / abs(self.delay))
 
         self.calibration.delay = abs(self.delay)
-        assert_array_equal(test_signal.getitem(), self.calibration.correct_transmit_delay(test_signal).getitem())
+        assert_signals_equal(self, test_signal, self.calibration.correct_transmit_delay(test_signal))
 
         self.calibration.delay = -abs(self.delay)
-        expected_delayed_samples = np.concatenate((np.zeros((test_signal.num_streams, 5), dtype=complex), test_signal.getitem()), axis=1)
-        assert_array_equal(expected_delayed_samples, self.calibration.correct_transmit_delay(test_signal).getitem())
+        expected_delayed_samples = np.concatenate((np.zeros((test_signal.num_streams, 5), dtype=complex), test_signal.view(np.ndarray)), axis=1)
+        assert_array_equal(expected_delayed_samples, self.calibration.correct_transmit_delay(test_signal).view(np.ndarray))
 
     def test_correct_receive_delay(self) -> None:
         """Delays should be correctly corrected during reception"""
@@ -56,16 +57,16 @@ class TestDelayCalibration(TestCase):
         test_signal = Signal.Create(test_samples, 1 / abs(self.delay))
 
         self.calibration.delay = -abs(self.delay)
-        assert_array_equal(test_signal.getitem(), self.calibration.correct_receive_delay(test_signal).getitem())
+        assert_signals_equal(self, test_signal, self.calibration.correct_receive_delay(test_signal))
 
         self.calibration.delay = abs(self.delay)
         expected_delayed_samples = test_samples[:, 1:]
-        assert_array_equal(expected_delayed_samples, self.calibration.correct_receive_delay(test_signal).getitem())
+        assert_array_equal(expected_delayed_samples, self.calibration.correct_receive_delay(test_signal).view(np.ndarray))
 
     def test_estimate_validation(self) -> None:
         """Delay estimation routine should raise ValueErrors for invalid arguments"""
 
-        device = PhysicalDeviceDummy(sampling_rate=1e-3)
+        device = PhysicalDeviceDummy(bandwidth=1e-3, oversampling_factor=1)
 
         with self.assertRaises(ValueError):
             DelayCalibration.Estimate(device, 15e-3, 0)
@@ -83,7 +84,7 @@ class TestDelayCalibration(TestCase):
     def test_estimate(self, _trigger_direct: MagicMock) -> None:
         """Test the physical device calibration routine"""
 
-        device = PhysicalDeviceDummy(sampling_rate=1e3)
+        device = PhysicalDeviceDummy(bandwidth=1e3, oversampling_factor=1)
 
         for expected_delay_samples in [0, 10, 12]:
             expected_delay = expected_delay_samples / device.sampling_rate
@@ -93,7 +94,7 @@ class TestDelayCalibration(TestCase):
             def trigger_side_effect(signal: Signal) -> Signal:
                 # Prepend delay samples
                 delayed_signal: Signal = signal.copy()
-                delayed_signal.set_samples(np.append(np.zeros((delayed_signal.num_streams, expected_delay_samples), dtype=complex), delayed_signal.getitem()))
+                delayed_signal = Signal.Create(np.append(np.zeros((delayed_signal.num_streams, expected_delay_samples), dtype=complex), delayed_signal.view(np.ndarray), axis=1), delayed_signal.sampling_rate)
 
                 return delayed_signal
 

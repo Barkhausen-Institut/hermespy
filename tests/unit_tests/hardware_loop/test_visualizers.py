@@ -15,7 +15,7 @@ from hermespy.radar import Radar, FMCW
 from unit_tests.utils import SimulationTestContext
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -29,8 +29,8 @@ class _HardwareLoopPlotTest(TestCase):
 
     def setUp(self) -> None:
         self.scenario = PhysicalScenarioDummy()
-        self.loop = HardwareLoop[PhysicalDeviceDummy, PhysicalScenarioDummy](self.scenario)
-        self.device = self.scenario.new_device()
+        self.loop = HardwareLoop[PhysicalScenarioDummy, PhysicalDeviceDummy](self.scenario)
+        self.device = self.scenario.new_device(oversampling_factor=4)
 
     def _prepare_plot(self, plot: Type[HardwareLoopPlot], *args, **kwargs) -> None:
 
@@ -96,7 +96,7 @@ class TestEyePlot(_HardwareLoopPlotTest, TestCase):
         super().setUp()
 
         self.modem = DuplexModem()
-        self.modem.waveform = RRCWaveform(oversampling_factor=4, symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=50)
+        self.modem.waveform = RRCWaveform(num_preamble_symbols=0, num_data_symbols=50)
 
         self.device.transmitters.add(self.modem)
         self.device.receivers.add(self.modem)
@@ -120,7 +120,7 @@ class TestReceivedConstellationPlot(_HardwareLoopPlotTest, TestCase):
         super().setUp()
 
         self.modem = DuplexModem()
-        self.modem.waveform = RRCWaveform(oversampling_factor=4, symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=10)
+        self.modem.waveform = RRCWaveform(num_preamble_symbols=0, num_data_symbols=10)
 
         self.device.transmitters.add(self.modem)
         self.device.receivers.add(self.modem)
@@ -157,7 +157,7 @@ class TestEvaluationPlot(_HardwareLoopPlotTest, TestCase):
         super().setUp()
 
         self.modem = DuplexModem()
-        self.modem.waveform = RRCWaveform(oversampling_factor=4, symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=10)
+        self.modem.waveform = RRCWaveform(num_preamble_symbols=0, num_data_symbols=10)
 
         self.device.transmitters.add(self.modem)
         self.device.receivers.add(self.modem)
@@ -175,7 +175,7 @@ class TestArtifactPlot(_HardwareLoopPlotTest, TestCase):
         super().setUp()
 
         self.modem = DuplexModem()
-        self.modem.waveform = RRCWaveform(oversampling_factor=4, symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=10)
+        self.modem.waveform = RRCWaveform(num_preamble_symbols=0, num_data_symbols=10)
 
         self.device.transmitters.add(self.modem)
         self.device.receivers.add(self.modem)

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import Any, Generic, List, Sequence, TypeVar
+from typing import Any, Generic, Sequence, TypeVar
 from typing_extensions import override
 
 import matplotlib.pyplot as plt
@@ -27,7 +27,7 @@ from ...waveform import (
 )
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -112,7 +112,7 @@ class GridResource(Serializable):
     prefix_type: PrefixType
     """Prefix type of the frame resource"""
 
-    elements: List[GridElement]
+    elements: list[GridElement]
     """Individual resource elements"""
 
     def __init__(
@@ -120,7 +120,7 @@ class GridResource(Serializable):
         repetitions: int = __DEFAULT_REPETITIONS,
         prefix_type: PrefixType | str = __DEFAULT_PREFIX_TYPE,
         prefix_ratio: float = __DEFAULT_PREFIX_RATIO,
-        elements: List[GridElement] | None = None,
+        elements: list[GridElement] | None = None,
     ) -> None:
         self.repetitions = repetitions
         self.prefix_ratio = prefix_ratio
@@ -204,14 +204,15 @@ class GridResource(Serializable):
         return self.__repetitions * num
 
     @property
-    def mask(self) -> np.ndarray:
+    def mask(self) -> np.ndarray[tuple[int, int], np.dtype[np.bool]]:
         """Boolean mask selecting a specific type of element from the OFDM grid.
 
-        Mask of dimension `num_element_types`x`num_subcarriers`.
+        Mask of dimension `num_element_types`x`num_subcarriers*num_repetitions`.
         """
 
         # Initialize the base mask as all false
-        mask = np.ndarray((len(ElementType), self.num_subcarriers), dtype=bool) * False
+        mask: np.ndarray[tuple[int, int], np.dtype[np.bool]]
+        mask = np.full((len(ElementType), self.num_subcarriers), False, np.bool)
 
         element_count = 0
         for element in self.elements:
@@ -219,7 +220,7 @@ class GridResource(Serializable):
             element_count += element.repetitions
 
         # Repeat the subcarrier masks according to the configured number of repetitions.
-        mask = np.tile(mask[:, :element_count], (1, self.__repetitions))
+        mask = np.tile(mask[:, :element_count], (1, self.__repetitions))  # type: ignore
         return mask
 
     @override
@@ -347,10 +348,16 @@ class GridSection(Generic[OWT], Serializable):
     def resource_mask(self) -> np.ndarray:
         return np.empty((len(ElementType), 0, 0), dtype=bool)
 
-    @property
     @abstractmethod
-    def num_samples(self) -> int:
-        """Number of samples within this OFDM time-section."""
+    def num_samples(self, bandwidth: float, oversampling_factor: int) -> int:
+        """Number of samples within this OFDM time-section.
+
+        Args:
+            bandwidth: Bandwidth of the OFDM waveform.
+            oversampling_factor: Oversampling factor of resulting time-domain signal.
+
+        Returns: Number of samples within this section.
+        """
         ...  # pragma: no cover
 
     def place_symbols(self, data_symbols: np.ndarray, reference_symbols: np.ndarray) -> np.ndarray:
@@ -401,24 +408,30 @@ class GridSection(Generic[OWT], Serializable):
         return picked_symbols
 
     @abstractmethod
-    def place_samples(self, signal: np.ndarray) -> np.ndarray:
+    def place_samples(
+        self, signal: np.ndarray, bandwdith: float, oversampling_factor: int
+    ) -> np.ndarray:
         """Place this section's samples into the time-domain signal.
 
         Args:
-
             signal: Time-domain signal to be placed. Numpy vector of size `num_samples`.
+            bandwidth: Bandwidth of the OFDM waveform.
+            oversampling_factor: Oversampling factor of resulting time-domain signal.
 
         Returns: Time-domain signal with the section's samples placed.
         """
         ...  # pragma: no cover
 
     @abstractmethod
-    def pick_samples(self, signal: np.ndarray) -> np.ndarray:
+    def pick_samples(
+        self, signal: np.ndarray, bandwidth: float, oversampling_factor: int
+    ) -> np.ndarray:
         """Pick this section's samples from the time-domain signal.
 
         Args:
-
             signal: Time-domain signal to be picked from. Numpy vector of size `num_samples`.
+            bandwidth: Bandwidth of the OFDM waveform.
+            oversampling_factor: Oversampling factor of resulting time-domain signal.
 
         Returns: Time-domain signal with the section's samples picked.
         """
@@ -452,12 +465,12 @@ class GridSection(Generic[OWT], Serializable):
 class SymbolSection(GridSection["OrthogonalWaveform"]):
     """Representation of a section of symbols within an OFDM-grid's time-domain."""
 
-    pattern: List[int]
+    pattern: list[int]
 
     def __init__(
         self,
         num_repetitions: int = GridSection._DEFAULT_NUM_REPETITIONS,
-        pattern: List[int] | None = None,
+        pattern: list[int] | None = None,
         sample_offset: int = GridSection._DEFAULT_SAMPLE_OFFSET,
         wave: OrthogonalWaveform | None = None,
     ) -> None:
@@ -506,18 +519,17 @@ class SymbolSection(GridSection["OrthogonalWaveform"]):
 
         return num
 
-    @property
-    def _padded_num_subcarriers(self) -> int:
-        """Number of subcarriers required to represent this section in time-domain."""
-
-        return self.wave.num_subcarriers * self.wave.oversampling_factor
-
-    def place_samples(self, samples: np.ndarray) -> np.ndarray:
-        placed_samples = np.empty(self.num_samples, dtype=np.complex128)
+    @override
+    def place_samples(
+        self, signal: np.ndarray, bandwidth: float, oversampling_factor: int
+    ) -> np.ndarray:
+        placed_samples = np.empty(
+            self.num_samples(bandwidth, oversampling_factor), dtype=np.complex128
+        )
         sample_idx = 0
         resource_idx: int
         resource_samples: np.ndarray
-        for resource_idx, resource_samples in enumerate(samples):
+        for resource_idx, resource_samples in enumerate(signal):
             # Infer pattern index
             pattern_idx = resource_idx % len(self.pattern)
 
@@ -525,7 +537,7 @@ class SymbolSection(GridSection["OrthogonalWaveform"]):
             prefix_ratio = self.wave.grid_resources[self.pattern[pattern_idx]].prefix_ratio
             prefix_type = self.wave.grid_resources[self.pattern[pattern_idx]].prefix_type
 
-            num_prefix_samples = int(self._padded_num_subcarriers * prefix_ratio)
+            num_prefix_samples = int(self.wave.num_subcarriers * oversampling_factor * prefix_ratio)
 
             # Only add a prefix if required
             if num_prefix_samples > 0 and prefix_type != PrefixType.NONE:
@@ -554,11 +566,18 @@ class SymbolSection(GridSection["OrthogonalWaveform"]):
 
         return placed_samples
 
-    def pick_samples(self, samples: np.ndarray) -> np.ndarray:
+    @override
+    def pick_samples(
+        self,
+        signal: np.ndarray[tuple[int, ...], np.dtype[np.complex128]],
+        bandwidth: float,
+        oversampling_factor: int,
+    ) -> np.ndarray:
         sample_index = 0
         num_symbols = len(self.pattern) * self.num_repetitions
         resource_samples = np.empty(
-            (*samples.shape[:-1], num_symbols, self._padded_num_subcarriers), dtype=complex
+            (*signal.shape[:-1], num_symbols, self.wave.num_subcarriers * oversampling_factor),
+            dtype=np.complex128,
         )
         prefix_slice = [slice(None)] * (resource_samples.ndim - 2)
 
@@ -571,7 +590,7 @@ class SymbolSection(GridSection["OrthogonalWaveform"]):
             prefix_ratio = resource.prefix_ratio
             prefix_type = resource.prefix_type
 
-            num_prefix_samples = int(self._padded_num_subcarriers * prefix_ratio)
+            num_prefix_samples = int(self.wave.num_subcarriers * oversampling_factor * prefix_ratio)
 
             # Only add a prefix if required
             if num_prefix_samples > 0 and prefix_type != PrefixType.NONE:
@@ -579,18 +598,20 @@ class SymbolSection(GridSection["OrthogonalWaveform"]):
                 sample_index += num_prefix_samples
 
             # Sort resource samples into their respective matrix sections
-            resource_slicing = (*prefix_slice, resource_idx, slice(None))
+            resource_slicing: tuple[slice | int, ...] = (*prefix_slice, resource_idx, slice(None))
             signal_slicing = (
                 *prefix_slice,
                 slice(
                     sample_index - self.sample_offset,
-                    sample_index + self._padded_num_subcarriers - self.sample_offset,
+                    sample_index
+                    + self.wave.num_subcarriers * oversampling_factor
+                    - self.sample_offset,
                 ),
             )
-            resource_samples[resource_slicing] = samples[signal_slicing]
+            resource_samples[resource_slicing] = signal[signal_slicing]
 
             # Advance sample index by resource length
-            sample_index += self._padded_num_subcarriers
+            sample_index += self.wave.num_subcarriers * oversampling_factor
 
         return resource_samples
 
@@ -605,9 +626,9 @@ class SymbolSection(GridSection["OrthogonalWaveform"]):
 
         return np.tile(mask, (1, self.num_repetitions, 1))
 
-    @property
-    def num_samples(self) -> int:
-        num_samples_per_slot = self.wave.num_subcarriers * self.wave.oversampling_factor
+    @override
+    def num_samples(self, bandwidth: float, oversampling_factor: int) -> int:
+        num_samples_per_slot = self.wave.num_subcarriers * oversampling_factor
         num = len(self.pattern) * num_samples_per_slot
 
         # Add up the additional samples from cyclic prefixes
@@ -667,17 +688,21 @@ class GuardSection(GridSection["OrthogonalWaveform"], Serializable):
 
         self.__duration = value
 
-    @property
-    def num_samples(self) -> int:
-        return int(self.num_repetitions * self.__duration * self.wave.sampling_rate)
+    @override
+    def num_samples(self, bandwidth: float, oversampling_factor: int) -> int:
+        return int(self.num_repetitions * self.__duration * bandwidth * oversampling_factor)
 
-    def place_samples(self, signal: np.ndarray) -> np.ndarray:
-        return np.zeros(self.num_samples, dtype=np.complex128)
+    @override
+    def place_samples(
+        self, signal: np.ndarray, bandwidth: float, oversampling_factor: int
+    ) -> np.ndarray:
+        return np.zeros(self.num_samples(bandwidth, oversampling_factor), dtype=np.complex128)
 
-    def pick_samples(self, signal: np.ndarray) -> np.ndarray:
-        return np.empty(
-            (0, self.wave.num_subcarriers * self.wave.oversampling_factor), dtype=np.complex128
-        )
+    @override
+    def pick_samples(
+        self, signal: np.ndarray, bandwidth: float, oversampling_factor: int
+    ) -> np.ndarray:
+        return np.empty((0, self.wave.num_subcarriers * oversampling_factor), dtype=np.complex128)
 
     @override
     def serialize(self, process: SerializationProcess) -> None:
@@ -736,9 +761,9 @@ class PilotSection(Generic[OWT], GridSection[OWT], Serializable):
 
         GridSection.sample_offset.fset(self, value)  # type: ignore
 
-    @property
-    def num_samples(self) -> int:
-        return self.wave.num_subcarriers * self.wave.oversampling_factor
+    @override
+    def num_samples(self, bandwidth: float, oversampling_factor: int) -> int:
+        return self.wave.num_subcarriers * oversampling_factor
 
     @property
     def num_symbols(self) -> int:
@@ -796,7 +821,7 @@ class PilotSection(Generic[OWT], GridSection[OWT], Serializable):
 
         self.__pilot_elements = value
 
-    def _pilot_sequence(self, num_symbols: int = None) -> np.ndarray:
+    def _pilot_sequence(self, num_symbols: int | None = None) -> np.ndarray:
         """Generate a new sequence of pilot elements.
 
         Args:
@@ -814,7 +839,7 @@ class PilotSection(Generic[OWT], GridSection[OWT], Serializable):
         if self.__pilot_elements is None:
             rng = np.random.default_rng(50)
             num_bits = num_symbols * self.wave.mapping.bits_per_symbol
-            subsymbols = self.wave.mapping.get_symbols(rng.integers(0, 2, num_bits))
+            subsymbols = self.wave.mapping.get_symbols(rng.integers(0, 2, num_bits, np.uint8).flatten())
 
         else:
             num_repetitions = int(np.ceil(num_symbols / self.__pilot_elements.num_symbols))
@@ -822,19 +847,26 @@ class PilotSection(Generic[OWT], GridSection[OWT], Serializable):
 
         return subsymbols[:num_symbols]
 
+    @override
     def place_symbols(self, data_symbols: np.ndarray, reference_symbols: np.ndarray) -> np.ndarray:
         reference_symbols = self._pilot_sequence(self.wave.num_subcarriers)
         return GridSection.place_symbols(self, data_symbols, reference_symbols)
 
-    def place_samples(self, signal: np.ndarray) -> np.ndarray:
+    @override
+    def place_samples(
+        self, signal: np.ndarray, bandwidth: float, oversampling_factor: int
+    ) -> np.ndarray:
         # Just a stub, since the pilot section does not consider any prefixing
         return signal
 
-    def pick_samples(self, signal: np.ndarray) -> np.ndarray:
+    @override
+    def pick_samples(
+        self, signal: np.ndarray, bandwidth: float, oversampling_factor: int
+    ) -> np.ndarray:
         # Just a stub, since the pilot section does not consider any prefixing
         return signal
 
-    def generate(self) -> np.ndarray:
+    def generate(self, oversampling_factor: int) -> np.ndarray:
         """Generate the pilot section in time domain."""
 
         if self.wave is None:
@@ -844,17 +876,17 @@ class PilotSection(Generic[OWT], GridSection[OWT], Serializable):
         if (
             self.__cached_pilot is not None
             and self.__cached_num_subcarriers == self.wave.num_subcarriers
-            and self.__cached_oversampling_factor == self.wave.oversampling_factor
+            and self.__cached_oversampling_factor == oversampling_factor
         ):
             return self.__cached_pilot
 
         pilot_symbols = self._pilot_sequence(self.wave.num_subcarriers)
-        pilot = self.wave._forward_transformation(pilot_symbols[np.newaxis, :])
+        pilot = self.wave._forward_transformation(pilot_symbols[np.newaxis, :], oversampling_factor)
 
         # Cache the pilot
         self.__cached_pilot = pilot
         self.__cached_num_subcarriers = self.wave.num_subcarriers
-        self.__cached_oversampling_factor = self.wave.oversampling_factor
+        self.__cached_oversampling_factor = oversampling_factor
 
         return pilot
 
@@ -961,39 +993,46 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
             section.wave = self
 
     @abstractmethod
-    def _forward_transformation(self, symbol_grid: np.ndarray) -> np.ndarray:
+    def _forward_transformation(
+        self, symbol_grid: np.ndarray, oversampling_factor: int
+    ) -> np.ndarray:
         """Forward transformation of the orthogonal symbol grid into the time-domain.
 
         Args:
-
             symbol_grid: The grid of modulated symbols to be transformed.
+            oversampling_factor: The oversampling factor for the time-domain signal.
 
         Returns: The time-domain signal grid.
         """
         ...  # pragma: no cover
 
     @abstractmethod
-    def _backward_transformation(self, signal_grid: np.ndarray) -> np.ndarray:
+    def _backward_transformation(
+        self, signal_grid: np.ndarray, oversampling_factor: int
+    ) -> np.ndarray:
         """Backward transformation of the time-domain signal grid into the orthogonal symbol grid.
 
         Args:
-
             signal_grid: The time-domain signal grid to be transformed.
+            oversampling_factor: The oversampling factor for the time-domain signal.
 
         Returns: The grid of modulated symbols.
         """
         ...  # pragma: no cover
 
     @abstractmethod
-    def _correct_sample_offset(self, symbol_subgrid: np.ndarray, sample_offset: int) -> np.ndarray:
+    def _correct_sample_offset(
+        self, symbol_subgrid: np.ndarray, sample_offset: int, oversampling_factor: int
+    ) -> np.ndarray:
         """Correct the sample offset of a symbol subgrid.
 
         Args:
-
             symbol_subgrid: The symbol subgrid to be corrected.
             sample_offset: The sample offset to be corrected.
+            oversampling_factor: The oversampling factor for the time-domain signal.
 
-        Returns: The corrected symbol subgrid.
+        Returns:
+            The corrected symbol subgrid.
         """
         ...  # pragma: no cover
 
@@ -1026,33 +1065,25 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
         if value.wave is not self:
             value.wave = self
 
-    @property
-    def pilot_signal(self) -> Signal:
+    @override
+    def pilot_signal(self, bandwidth: float, oversampling_factor: int) -> Signal:
         if self.pilot_section:
-            return Signal.Create(self.pilot_section.generate(), sampling_rate=self.sampling_rate)
+            return Signal.Create(
+                self.pilot_section.generate(oversampling_factor),
+                sampling_rate=bandwidth * oversampling_factor,
+            )
 
         else:
-            return Signal.Empty(self.sampling_rate)
+            return Signal.Empty(bandwidth * oversampling_factor)
 
     @CommunicationWaveform.modulation_order.setter  # type: ignore
     def modulation_order(self, value: int) -> None:
         CommunicationWaveform.modulation_order.fset(self, value)  # type: ignore
         self.__mapping = PskQamMapping(value)
 
-    @property
     @override
-    def bit_energy(self) -> float:
-        return 1 / self.mapping.bits_per_symbol  # ToDo: Check validity
-
-    @property
-    @override
-    def symbol_energy(self) -> float:
-        return 1  # ToDo: Check validity
-
-    @property
-    @override
-    def symbol_duration(self) -> float:
-        return 1 / self.bandwidth
+    def symbol_energy(self, bandwidth: float, oversampling_factor: float) -> float:
+        return oversampling_factor  # ToDo: Check validity
 
     @property
     @override
@@ -1136,17 +1167,19 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
 
         return num_symbols
 
-    @property
     @override
-    def samples_per_frame(self) -> int:
+    def samples_per_frame(self, bandwidth: float, oversampling_factor: int) -> int:
         num = 0
         for section in self.grid_structure:
-            num += section.num_samples
+            num += section.num_samples(bandwidth, oversampling_factor)
 
         if self.pilot_section:
-            num += self.pilot_section.num_samples
-
+            num += self.pilot_section.num_samples(bandwidth, oversampling_factor)
         return num
+
+    @override
+    def frame_duration(self, bandwidth: float) -> float:
+        return self.num_subcarriers / bandwidth * self.symbols_per_frame
 
     @property
     def resource_mask(self) -> np.ndarray:
@@ -1173,7 +1206,7 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
 
     @override
     def unmap(self, symbols: Symbols) -> np.ndarray:
-        return self.mapping.detect_bits(symbols.raw.flatten()).astype(int)
+        return self.mapping.detect_bits(symbols.raw.flatten()).astype(np.uint8)
 
     @override
     def place(self, symbols: Symbols) -> Symbols:
@@ -1247,56 +1280,64 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
         return StatedSymbols(raw_picked_symbols, raw_picked_states)
 
     @override
-    def modulate(self, symbols: Symbols) -> np.ndarray:
-        frame_samples = np.empty(self.samples_per_frame, dtype=np.complex128)
+    def modulate(self, data_symbols: Symbols, bandwidth: float, oversampling_factor) -> np.ndarray:
+        frame_samples = np.empty(
+            self.samples_per_frame(bandwidth, oversampling_factor), dtype=np.complex128
+        )
         sample_idx = 0
 
         # Start the frame with a pilot section, if configured
         if self.pilot_section:
-            frame_samples[: self.pilot_section.num_samples] = self.pilot_section.generate()
-            sample_idx += self.pilot_section.num_samples
+            num_section_samples = self.pilot_section.num_samples(bandwidth, oversampling_factor)
+            frame_samples[:num_section_samples] = self.pilot_section.generate(oversampling_factor)
+            sample_idx += num_section_samples
 
         # Transform the symbols into the time-domain
-        symbol_grid = symbols.raw[0, :, :]
-        signal_grid = self._forward_transformation(symbol_grid)
+        symbol_grid = data_symbols.raw[0, :, :]
+        signal_grid = self._forward_transformation(symbol_grid, oversampling_factor)
 
         # Place the time-domain samples of each section into their respective frame section
         # This includes the application of prefixes
         block_idx = 0
         for section in self.grid_structure:
+            num_section_samples = section.num_samples(bandwidth, oversampling_factor)
             # Modulate the signal
-            frame_samples[sample_idx : sample_idx + section.num_samples] = section.place_samples(
-                signal_grid[block_idx : block_idx + section.num_words, :]
+            frame_samples[sample_idx : sample_idx + num_section_samples] = section.place_samples(
+                signal_grid[block_idx : block_idx + section.num_words, :],
+                bandwidth,
+                oversampling_factor,
             )
             block_idx += section.num_words
-            sample_idx += section.num_samples
+            sample_idx += num_section_samples
 
         return frame_samples
 
     @override
-    def demodulate(self, signal: np.ndarray) -> Symbols:
+    def demodulate(self, signal: np.ndarray, bandwidth: float, oversampling_factor) -> Symbols:
         sample_idx = 0
 
         # If the frame contains a pilot section, skip the respective samples
         if self.pilot_section:
-            sample_idx += self.pilot_section.num_samples
+            sample_idx += self.pilot_section.num_samples(bandwidth, oversampling_factor)
 
         signal_grid = np.empty(
-            (self.words_per_frame, self.num_subcarriers * self.oversampling_factor),
-            dtype=np.complex128,
+            (self.words_per_frame, self.num_subcarriers * oversampling_factor), dtype=np.complex128
         )
 
         # Pick the time-domain samples of each section from the frame
         block_idx = 0
         for section in self.grid_structure:
+            num_section_samples = section.num_samples(bandwidth, oversampling_factor)
             signal_grid[block_idx : block_idx + section.num_words, :] = section.pick_samples(
-                signal[sample_idx : sample_idx + section.num_samples]
+                signal[sample_idx : sample_idx + num_section_samples],
+                bandwidth,
+                oversampling_factor,
             )
             block_idx += section.num_words
-            sample_idx += section.num_samples
+            sample_idx += num_section_samples
 
         # Transform the time-domain samples into the orthogonal symbol grid
-        symbol_grid = self._backward_transformation(signal_grid)
+        symbol_grid = self._backward_transformation(signal_grid, oversampling_factor)
 
         # Correct the effect of prefix offsets on symbols within the individual sections
         block_idx = 0
@@ -1306,6 +1347,7 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
                     self._correct_sample_offset(
                         symbol_grid[block_idx : block_idx + section.num_words, :],
                         section.sample_offset,
+                        oversampling_factor,
                     )
                 )
 

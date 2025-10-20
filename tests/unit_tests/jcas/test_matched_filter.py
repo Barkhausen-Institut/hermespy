@@ -3,6 +3,7 @@
 from unittest import TestCase
 
 import numpy as np
+from scipy.constants import speed_of_light
 
 from hermespy.core import Signal
 from hermespy.simulation import SimulatedDevice
@@ -11,7 +12,7 @@ from unit_tests.core.test_factory import test_roundtrip_serialization
 from unit_tests.modem.test_waveform import MockCommunicationWaveform
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "Jan Adler"
 __version__ = "1.5.0"
@@ -46,8 +47,14 @@ class TestMatchedFilterJoint(TestCase):
         num_delay_samples = 10
         transmission = self.joint.transmit(self.device.state())
 
-        delay_offset = Signal.Create(np.zeros((1, num_delay_samples), dtype=complex), transmission.signal.sampling_rate, carrier_frequency=self.carrier_frequency)
-        delay_offset.append_samples(transmission.signal)
+        delay_offset = Signal.Create(
+            np.append(
+                np.zeros((1, num_delay_samples), dtype=complex),
+                transmission.signal.view(np.ndarray),
+                axis=1,
+            ),
+            transmission.signal.sampling_rate,
+        )
 
         reception = self.joint.receive(delay_offset, self.device.state())
         self.assertTrue(10, reception.cube.data.argmax)
@@ -55,37 +62,12 @@ class TestMatchedFilterJoint(TestCase):
         padded_reception = self.joint.receive(transmission.signal, self.device.state())
         self.assertTrue(10, padded_reception.cube.data.argmax)
 
-    def test_range_resolution_setget(self) -> None:
-        """Range resolution property getter should return setter argument."""
+    def test_range_resolution(self) -> None:
+        """Range resolution should be properly computed"""
 
-        range_resolution = 1e-3
-        self.joint.range_resolution = range_resolution
-
-        self.assertEqual(range_resolution, self.joint.range_resolution)
-
-    def test_range_resolution_validation(self) -> None:
-        """Range resolution property setter should raise ValueError on non-positive arguments."""
-
-        with self.assertRaises(ValueError):
-            self.joint.range_resolution = -1.0
-
-        with self.assertRaises(ValueError):
-            self.joint.range_resolution = 0.0
-
-    def test_sampling_rate_validation(self) -> None:
-        """Sampling rate property setter should raise ValueError on invalid arguments"""
-
-        with self.assertRaises(ValueError):
-            self.joint.sampling_rate = 0.0
-
-    def test_sampling_rate_setget(self) -> None:
-        """Sampling rate property getter should return setter argument"""
-
-        self.joint.sampling_rate = 1.234e10
-        self.assertEqual(1.234e10, self.joint.sampling_rate)
-
-        self.joint.sampling_rate = None
-        self.assertEqual(self.waveform.sampling_rate, self.joint.sampling_rate)
+        sampling_rate = 1e6
+        expected_range_resolution = speed_of_light / (2 * sampling_rate)
+        self.assertEqual(expected_range_resolution, self.joint.range_resolution(sampling_rate))
 
     def test_max_range_validation(self) -> None:
         """Max range property setter should raise ValueError on invalid arguments"""

@@ -8,15 +8,20 @@ import numpy as np
 from scipy.signal import convolve
 from scipy.fft import ifft
 
-from hermespy.core import Serializable, Signal, SerializationProcess, DeserializationProcess
+from hermespy.core import (
+    DenseSignal,
+    Serializable,
+    Signal,
+    SerializationProcess,
+    DeserializationProcess,
+)
 from .isolation import Isolation
 
 if TYPE_CHECKING:
     from ..simulated_device import SimulatedDevice  # pragma: no cover
 
-
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -97,7 +102,9 @@ class SelectiveLeakage(Isolation):
                 num_samples,
             ),
         )
-        leakage_response = ifft(frequency_response, axis=2, norm="backward")
+        leakage_response = np.asarray(
+            ifft(frequency_response, axis=2, norm="backward"), np.complex128
+        )
 
         return cls(leakage_response=leakage_response)
 
@@ -121,14 +128,22 @@ class SelectiveLeakage(Isolation):
         for m, n in np.ndindex(self.leakage_response.shape[0], signal.num_streams):
             # The leaked signal is the convolution of the transmitted signal with the leakage response
             leaking_samples[m, :] += convolve(
-                self.leakage_response[m, n, :], signal.getitem(n).flatten(), "full"
+                self.leakage_response[m, n, :],
+                signal[n : n + 1, :].view(np.ndarray).flatten(),
+                "full",
             )[:num_leaked_samples]
 
-        return signal.from_ndarray(leaking_samples)
+        return DenseSignal.FromNDArray(
+            leaking_samples,
+            signal.sampling_rate,
+            signal.carrier_frequency,
+            signal.noise_power,
+            signal.delay,
+        )
 
     @override
-    def serialize(self, serialization_process: SerializationProcess) -> None:
-        serialization_process.serialize_array(self.__leakage_response, "leakage_response")
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_array(self.__leakage_response, "leakage_response")
 
     @override
     @classmethod

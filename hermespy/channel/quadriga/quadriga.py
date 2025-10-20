@@ -100,7 +100,12 @@ class QuadrigaChannelSample(ChannelSample):
             propagated_signal[:, time_delay : time_delay + signal.num_samples] += channel @ signal
 
         propagated_signal *= np.sqrt(self.__gain)
-        return SignalBlock(propagated_signal, signal._offset)
+        return SignalBlock(
+            propagated_signal.shape[0],
+            propagated_signal.shape[1],
+            signal._offset,
+            propagated_signal.tobytes(),
+        )
 
     def state(
         self,

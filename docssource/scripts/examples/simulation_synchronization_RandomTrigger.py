@@ -11,15 +11,13 @@ from hermespy.simulation import Simulation, RandomTrigger
 simulation = Simulation()
 
 # Create devices
-device_A_Tx = simulation.new_device(carrier_frequency=3.7e9)
-device_A_Rx = simulation.new_device(carrier_frequency=3.7e9)
-device_B_Tx = simulation.new_device(carrier_frequency=3.9e9)
-device_B_Rx = simulation.new_device(carrier_frequency=3.9e9)
+device_A_Tx = simulation.new_device(carrier_frequency=3.7e9, bandwidth=400e6, oversampling_factor=4)
+device_A_Rx = simulation.new_device(carrier_frequency=3.7e9, bandwidth=400e6, oversampling_factor=4)
+device_B_Tx = simulation.new_device(carrier_frequency=3.9e9, bandwidth=400e6, oversampling_factor=4)
+device_B_Rx = simulation.new_device(carrier_frequency=3.9e9, bandwidth=400e6, oversampling_factor=4)
 
 # Specify a root-raised cosine single carrier waveform
 waveform = RootRaisedCosineWaveform(
-    symbol_rate=400e6,
-    oversampling_factor=4,
     roll_off=.9,
     num_preamble_symbols=0,
     num_data_symbols=1024,

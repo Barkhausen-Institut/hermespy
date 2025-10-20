@@ -356,8 +356,10 @@ class Transformation(np.ndarray, Serializable):
         return transformation.view(cls)
 
     @classmethod
-    def From_Translation(cls: Type[Transformation], translation: np.ndarray) -> Transformation:
-        translation = translation.flatten()
+    def From_Translation(
+        cls: Type[Transformation], translation: np.typing.ArrayLike
+    ) -> Transformation:
+        translation = np.asarray(translation).flatten()
         ndim = len(translation)
 
         if ndim > 3:

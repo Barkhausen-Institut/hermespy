@@ -93,7 +93,6 @@ class Pipeline(Executable, Generic[ScenarioType, DeviceType]):
         Returns: Handle to the created device.
 
         Raises:
-            ValueError: If the device already exists.
             RuntimeError: If the scenario is not in default mode.
             RuntimeError: If the scenario does not allow for the creation or addition of new devices.
         """

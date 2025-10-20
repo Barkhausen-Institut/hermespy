@@ -4,8 +4,9 @@ from __future__ import annotations
 from typing import Sequence
 from typing_extensions import override
 
-import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
 from hermespy.beamforming import BeamFocus
 from hermespy.core import (
@@ -15,6 +16,7 @@ from hermespy.core import (
     Evaluation,
     GridDimensionInfo,
     Hook,
+    Signal,
     ScalarEvaluationResult,
     Serializable,
     SerializationProcess,
@@ -57,14 +59,14 @@ class SidelobeEvaluation(Evaluation[PlotVisualization]):
 
     @override
     def _prepare_visualization(
-        self, figure: plt.Figure | None, axes: VAT, **kwargs
+        self, figure: Figure | None, axes: VAT, **kwargs
     ) -> PlotVisualization:
-        _ax = axes[0, 0]
+        _ax: Axes = axes[0, 0]
         _ax.set_title("Sidelobe Level")
         _ax.set_xlabel("Codebook Index")
         _ax.set_ylabel("Sidelobe Power")
 
-        lines = np.empty_like(axes, dtype=object)
+        lines = np.empty((axes.shape[0], axes.shape[1],), dtype=object)
         lines[0, 0] = _ax.semilogy(np.arange(len(self.__powers)), self.__powers, **kwargs)
 
         return PlotVisualization(figure, axes, lines)
@@ -195,7 +197,7 @@ class SidelobeEvaluator(Evaluator, Serializable):
 
     @override
     def evaluate(self) -> SidelobeEvaluation:
-        samples: np.ndarray
+        samples: Signal
 
         if self.mode is AntennaMode.TX:
             if self.__output is None:
@@ -203,7 +205,7 @@ class SidelobeEvaluator(Evaluator, Serializable):
                     "Sidelobe evaluator could not fetch output. Has the device transmitted data?"
                 )
 
-            samples = self.__output.mixed_signal.getitem()
+            samples = self.__output.mixed_signal
 
         elif self.mode is AntennaMode.RX:
             if self.__input is None:
@@ -211,7 +213,7 @@ class SidelobeEvaluator(Evaluator, Serializable):
                     "Sidelobe evaluator could not fetch input. Has the device received data?"
                 )
 
-            samples = self.__input.baseband_signal.getitem()
+            samples = self.__input.baseband_signal
 
         else:
             raise RuntimeError("Invalid duplex mode configuration in SidelobeEvaluator")
@@ -225,15 +227,18 @@ class SidelobeEvaluator(Evaluator, Serializable):
             device_state.carrier_frequency, focus_direction[0], focus_direction[1], self.mode
         )[np.newaxis, :]
 
-        beamformed_power = (
-            np.linalg.norm(
-                np.concatenate([focus_beamformer, self.__codebook], axis=0) @ samples, axis=1
-            )
-            ** 2
-            / np.linalg.norm(samples) ** 2
-        )
+        weights = np.concatenate([focus_beamformer, self.__codebook], axis=0)
 
-        return SidelobeEvaluation(beamformed_power[1:], beamformed_power[0])
+        beamformed_energy = np.zeros(weights.shape[0], dtype=np.float128)
+        signal_energy: float = 0.0
+        for block in samples.blocks:
+            beamformed_energy += np.linalg.norm(weights @ block, axis=1) ** 2
+            signal_energy += float(np.linalg.norm(block)) ** 2
+
+        # We evaluate the beamforming sidelobe levels by normalizing the beamformed energy
+        normalized_beamformed_energy = beamformed_energy / signal_energy
+
+        return SidelobeEvaluation(normalized_beamformed_energy[1:], normalized_beamformed_energy[0])
 
     @override
     def initialize_result(self, grid: Sequence[GridDimensionInfo]) -> ScalarEvaluationResult:

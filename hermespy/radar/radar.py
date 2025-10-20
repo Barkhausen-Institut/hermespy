@@ -10,6 +10,7 @@ from scipy.constants import speed_of_light
 
 from hermespy.beamforming import ReceiveBeamformer
 from hermespy.core import (
+    DenseSignal,
     DeserializationProcess,
     FloatingError,
     Signal,
@@ -101,8 +102,11 @@ class RadarWaveform(Serializable):
     """
 
     @abstractmethod
-    def ping(self) -> Signal:
+    def ping(self, state: TransmitState) -> Signal:
         """Generate a single radar frame.
+
+        Args:
+            state: State of the device the radar is assigned to.
 
         Returns:
             Single-stream signal model of a single radar frame.
@@ -110,12 +114,12 @@ class RadarWaveform(Serializable):
         ...  # pragma: no cover
 
     @abstractmethod
-    def estimate(self, signal: Signal) -> np.ndarray:
+    def estimate(self, signal: Signal, state: ReceiveState) -> np.ndarray:
         """Generate a range-doppler map from a single-stream radar frame.
 
         Args:
-
             signal: Single-stream signal model of a single propagated radar frame.
+            state: State of the device the radar is assigned to.
 
         Returns:
             Numpy matrix (2D array) of the range-doppler map, where the first dimension indicates
@@ -123,50 +127,52 @@ class RadarWaveform(Serializable):
         """
         ...  # pragma: no cover
 
-    @property
     @abstractmethod
-    def sampling_rate(self) -> float:
-        """The optional sampling rate required to process this waveform.
-
-        Denoted by :math:`f_\\mathrm{s}` of unit :math:`\\left[ f_\\mathrm{s} \\right] = \\mathrm{Hz} = \\tfrac{1}{\\mathrm{s}}` in literature.
-        """
-        ...  # pragma: no cover
-
-    @property
-    @abstractmethod
-    def frame_duration(self) -> float:
+    def frame_duration(self, bandwidth: float) -> float:
         """Duration of a single radar frame in seconds.
+
+        Args:
+            bandwidth: Bandwidth of the radar waveform in Hz.
 
         Denoted by :math:`T_{\\mathrm{F}}` of unit :math:`\\left[ T_{\\mathrm{F}} \\right] = \\mathrm{s}` in literature.
         """
         ...  # pragma: no cover
 
-    @property
     @abstractmethod
-    def max_range(self) -> float:
+    def max_range(self, bandwidth: float) -> float:
         """The waveform's maximum detectable range in meters.
+
+        Args:
+            bandwidth: Bandwidth of the radar waveform in Hz.
 
         Denoted by :math:`R_{\\mathrm{Max}}` of unit :math:`\\left[ R_{\\mathrm{Max}} \\right] = \\mathrm{m}` in literature.
         """
         ...  # pragma: no cover
 
-    @property
     @abstractmethod
-    def range_resolution(self) -> float:
+    def range_resolution(self, bandwidth: float) -> float:
         """Resolution of the radial range sensing in meters.
 
-        Denoted by :math:`\Delta R` of unit :math:`\\left[ \Delta R \\right] = \\mathrm{m}` in literature.
+        Args:
+            bandwidth: Bandwidth of the radar waveform in Hz.
+
+        Denoted by :math:`\\Delta R` of unit :math:`\\left[ \\Delta R \\right] = \\mathrm{m}` in literature.
         """
         ...  # pragma: no cover
 
-    @property
-    def range_bins(self) -> np.ndarray:
+    @abstractmethod
+    def range_bins(self, bandwidth: float) -> np.ndarray:
         """Discrete sample bins of the radial range sensing.
 
-        A numpy vector (1D array) of discrete range bins in meters.
+        Args:
+            bandwidth: Bandwidth of the radar waveform in Hz.
+
+        Returns:
+            A numpy vector (1D array) of discrete range bins in meters.
         """
 
-        return np.arange(int(self.max_range / self.range_resolution)) * self.range_resolution
+        resolution = self.range_resolution(bandwidth)
+        return np.arange(int(self.max_range(bandwidth) / resolution)) * resolution
 
     @property
     @abstractmethod
@@ -175,7 +181,7 @@ class RadarWaveform(Serializable):
 
         .. math::
 
-           \Delta f_\\mathrm{Max} = \\frac{v_\\mathrm{Max}}{\\lambda}
+           \\Delta f_\\mathrm{Max} = \\frac{v_\\mathrm{Max}}{\\lambda}
         """
         ...  # pragma: no cover
 
@@ -186,7 +192,7 @@ class RadarWaveform(Serializable):
 
         .. math::
 
-           \Delta f_\\mathrm{Res} = \\frac{v_\\mathrm{Res}}{\\lambda}
+           \\Delta f_\\mathrm{Res} = \\frac{v_\\mathrm{Res}}{\\lambda}
         """
         ...  # pragma: no cover
 
@@ -198,10 +204,13 @@ class RadarWaveform(Serializable):
         """
         ...  # pragma: no cover
 
-    @property
     @abstractmethod
-    def energy(self) -> float:
+    def energy(self, bandwidth: float, oversampling_factor: int) -> float:
         """Energy of the radar waveform.
+
+        Args:
+            bandwidth: Bandwidth of the radar waveform in Hz.
+            oversampling_factor: Oversampling factor of the radar waveform.
 
         Radar energy in :math:`\\mathrm{Wh}`.
         """
@@ -213,6 +222,19 @@ class RadarWaveform(Serializable):
         """Power of the radar waveform.
 
         Radar power in :math:`\\mathrm{W}`.
+        """
+        ...  # pragma: no cover
+
+    @abstractmethod
+    def samples_per_frame(self, bandwidth: float, oversampling_factor: int) -> int:
+        """Number of samples in a single radar frame.
+
+        Args:
+            bandwidth: Bandwidth of the radar waveform in Hz.
+            oversampling_factor: Oversampling factor of the radar waveform.
+
+        Returns:
+            Number of samples in a single radar frame.
         """
         ...  # pragma: no cover
 
@@ -446,10 +468,12 @@ class RadarBase(Generic[RTT, RRT], Transmitter[RTT], Receiver[RRT]):
                     "Only receive beamformers generating a single output stream are supported by radar operators"
                 )
 
-            beamformed_samples = self.receive_beamformer.probe(signal, device)[:, 0, :]
+            beamformed_samples = self.receive_beamformer.probe(signal.view(np.ndarray), device)[
+                :, 0, :
+            ]
 
         else:
-            beamformed_samples = signal.getitem()
+            beamformed_samples = signal.view(np.ndarray)
 
         # Build the radar cube by generating a beam-forming line over all angles of interest
         angles_of_interest = (
@@ -595,7 +619,6 @@ class Radar(RadarBase[RadarTransmission, RadarReception], Serializable):
                 Description of the waveform to be transmitted and received by this radar.
                 :py:obj:`None` if no waveform is configured.
 
-
             receive_beamformer:
                 Beamforming applied during signal reception.
                 If not specified, no beamforming will be applied during reception.
@@ -641,22 +664,18 @@ class Radar(RadarBase[RadarTransmission, RadarReception], Serializable):
         self.waveform = waveform
 
     @property
-    def sampling_rate(self) -> float:
-        return 0.0 if self.waveform is None else self.waveform.sampling_rate
-
-    @property
-    def frame_duration(self) -> float:
-        if self.waveform is None:
-            return 0.0
-
-        return self.waveform.frame_duration
-
-    @property
     def power(self) -> float:
         if self.waveform is None:
             return 0.0
 
         return self.waveform.power
+
+    @override
+    def samples_per_frame(self, bandwidth: float, oversampling_factor: int) -> int:
+        if self.waveform is None:
+            return 0
+
+        return self.waveform.samples_per_frame(bandwidth, oversampling_factor)
 
     @property
     def waveform(self) -> RadarWaveform | None:
@@ -678,16 +697,18 @@ class Radar(RadarBase[RadarTransmission, RadarReception], Serializable):
     def waveform(self, value: RadarWaveform | None) -> None:
         self.__waveform = value
 
-    @property
-    def max_range(self) -> float:
+    def max_range(self, bandwidth: float) -> float:
         """The radar's maximum detectable range in meters.
+
+        Args:
+            bandwidth: Bandwidth of the radar waveform in Hz.
 
         Denoted by :math:`R_{\\mathrm{Max}}` of unit :math:`\\left[ R_{\\mathrm{Max}} \\right] = \\mathrm{m}` in literature.
         Convenience property that resolves to the configured :class:`.RadarWaveform`'s :meth:`max_range<.RadarWaveform.max_range>` property.
         Returns :math:`R_{\\mathrm{Max}} = 0` if no waveform is configured.
         """
 
-        return 0.0 if self.waveform is None else self.waveform.max_range
+        return 0.0 if self.waveform is None else self.waveform.max_range(bandwidth)
 
     def velocity_resolution(self, carrier_frequency: float) -> float:
         """The radar's velocity resolution in meters per second.
@@ -710,35 +731,36 @@ class Radar(RadarBase[RadarTransmission, RadarReception], Serializable):
 
         return 0.5 * self.waveform.relative_doppler_resolution * speed_of_light / carrier_frequency
 
-    def _transmit(self, device: TransmitState, duration: float) -> RadarTransmission:
+    @override
+    def _transmit(self, state: TransmitState, duration: float) -> RadarTransmission:
         if not self.__waveform:
             raise RuntimeError("Radar waveform not specified")
 
         # Generate the radar waveform
-        signal = self.waveform.ping()
+        signal = self.waveform.ping(state)
 
         # Radar only supports a single output stream
-        if device.num_digital_transmit_ports > 1:
+        if state.num_transmit_dsp_ports > 1:
             raise RuntimeError(
-                "Radars only provide a single output stream. Configure a transmit beamformer at the assigned device."
+                "Radars only provide a single DSP output stream. Configure a transmit beamformer at the assigned device."
             )
 
         # Prepare transmission
-        signal.carrier_frequency = device.carrier_frequency
         transmission = RadarTransmission(signal)
 
         return transmission
 
-    def _receive(self, signal: Signal, device: ReceiveState) -> RadarReception:
+    @override
+    def _receive(self, signal: Signal, state: ReceiveState) -> RadarReception:
         if not self.waveform:
             raise RuntimeError("Radar waveform not specified")
 
         # Resample signal properly
-        signal = signal.resample(self.__waveform.sampling_rate)
+        # signal = signal.resample(self.__waveform.sampling_rate)
 
         # If the device has more than one antenna, a beamforming strategy is required
-        angles_of_interest, beamformed_samples = self._receive_beamform(signal, device)
-        range_bins = self.waveform.range_bins
+        angles_of_interest, beamformed_samples = self._receive_beamform(signal, state)
+        range_bins = self.waveform.range_bins(state.bandwidth)
         doppler_bins = self.waveform.relative_doppler_bins
 
         # Filter the cube data to only contain the range bins outside the considered minimal range
@@ -751,8 +773,8 @@ class Radar(RadarBase[RadarTransmission, RadarReception], Serializable):
 
         for angle_idx, line in enumerate(beamformed_samples):
             # Process the single angular line by the waveform generator
-            line_signal = signal.from_ndarray(line)
-            line_estimate = self.waveform.estimate(line_signal)
+            line_signal = DenseSignal.FromNDArray(line[None, :], state.sampling_rate)
+            line_estimate = self.waveform.estimate(line_signal, state)
 
             cube_data[angle_idx, ::] = line_estimate[:, selected_range_idxs]
 
@@ -762,7 +784,7 @@ class Radar(RadarBase[RadarTransmission, RadarReception], Serializable):
             angles_of_interest,
             doppler_bins,
             selected_range_bins,
-            device.carrier_frequency,
+            state.carrier_frequency,
         )
 
         # Infer the point cloud, if a detector has been configured

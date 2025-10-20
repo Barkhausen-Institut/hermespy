@@ -23,7 +23,7 @@ from unit_tests.core.test_factory import test_roundtrip_serialization
 from unit_tests.utils import SimulationTestContext
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -217,9 +217,9 @@ class TestHardwareLoop(TestCase):
             self.hardware_loop.console = Console(file=StringIO())
 
         # Add devices of all plot modes
-        device = self.hardware_loop.new_device()
+        device = self.hardware_loop.new_device(bandwidth=1e8, oversampling_factor=4)
 
-        waveform = RRCWaveform(symbol_rate=1e8, oversampling_factor=4, num_preamble_symbols=0, num_data_symbols=20)
+        waveform = RRCWaveform(num_preamble_symbols=0, num_data_symbols=20)
         modem = DuplexModem(waveform=waveform)
         device.transmitters.add(modem)
         device.receivers.add(modem)
@@ -302,9 +302,9 @@ class TestHardwareLoop(TestCase):
         self.hardware_loop.results_dir = temp.name
 
         # Add devices of all plot modes
-        device = self.hardware_loop.new_device()
+        device = self.hardware_loop.new_device(bandwidth=1e8, oversampling_factor=4)
 
-        waveform = RRCWaveform(symbol_rate=1e8, oversampling_factor=4, num_preamble_symbols=0, num_data_symbols=20)
+        waveform = RRCWaveform(num_preamble_symbols=0, num_data_symbols=20)
         modem = DuplexModem(waveform=waveform)
         device.transmitters.add(modem)
         device.receivers.add(modem)
@@ -327,8 +327,8 @@ class TestHardwareLoop(TestCase):
         """Test recording a dataset from a hardware loop and replaying it"""
 
         # Add devices of all plot modes
-        device = self.hardware_loop.new_device()
-        waveform = RRCWaveform(symbol_rate=1e8, oversampling_factor=4, num_preamble_symbols=0, num_data_symbols=20)
+        device = self.hardware_loop.new_device(bandwidth=1e8, oversampling_factor=4)
+        waveform = RRCWaveform(num_preamble_symbols=0, num_data_symbols=20)
         modem = DuplexModem(waveform=waveform)
         device.transmitters.add(modem)
         device.receivers.add(modem)

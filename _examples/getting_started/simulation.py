@@ -26,8 +26,8 @@ rx_device.receivers.add(link)
 
 # Configure the waveform to be transmitted over the link
 link.waveform = RootRaisedCosineWaveform(
-    symbol_rate=1e6, oversampling_factor=8,
-    num_preamble_symbols=10, num_data_symbols=100,
+    num_preamble_symbols=10,
+    num_data_symbols=100,
     roll_off=.9,
 )
 link.waveform.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()

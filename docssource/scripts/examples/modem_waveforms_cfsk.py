@@ -13,7 +13,6 @@ from hermespy.simulation import Simulation
 # Initialize the waveform description
 waveform = ChirpFSKWaveform(
     chirp_duration=1e-8,
-    chirp_bandwidth=1e9,
     num_pilot_chirps=16,
     num_data_chirps=64,
 )
@@ -23,8 +22,8 @@ waveform.synchronization = ChirpFSKCorrelationSynchronization()
 
 # Initialize a new simulation considering a single device
 simulation = Simulation()
-tx_device = simulation.new_device(carrier_frequency=1e10)
-rx_device = simulation.new_device(carrier_frequency=1e10)
+tx_device = simulation.new_device(carrier_frequency=1e10, bandwidth=1e9)
+rx_device = simulation.new_device(carrier_frequency=1e10, bandwidth=1e9)
 
 # Configure the link to connect both devices
 link = SimplexLink(waveform=waveform)

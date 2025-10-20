@@ -7,7 +7,6 @@ from hermespy.core import dB, Signal, SignalTransmitter, SignalReceiver, Transfo
 from hermespy.simulation import (
     PerfectCoupling,
     RandomTrigger,
-    RfChain,
     Simulation,
     SimulatedDevice,
     SimulatedIdealAntenna,
@@ -18,21 +17,18 @@ from hermespy.simulation import (
     StaticTrajectory
 )
 
+# Configure the antenna frontend
+antennas = SimulatedUniformArray(SimulatedIdealAntenna, .05, [4, 4, 1])
+
 # Create a new stand-alone simulated device
-device = SimulatedDevice()
+device = SimulatedDevice(antennas=antennas)
 
 # Create a new device within a simulation context
 simulation = Simulation()
-device = simulation.new_device()
+device = simulation.new_device(antennas=antennas)
 
 # Configure the default carrier frequency at wich waveforms are emitted
 device.carrier_frequency = 3.7e9
-
-# Configure the antenna frontend
-device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, .5 * device.wavelength, [4, 4, 1])
-
-# Configure the default rf-chain model
-device.rf_chain = RfChain()
 
 # Configure a transmit-receive isolation model
 device.isolation = SpecificIsolation(
@@ -45,8 +41,8 @@ device.coupling = PerfectCoupling()
 # Configure a trigger model for synchronization
 device.trigger_model = RandomTrigger()
 
-# Specify a default sampling rate / bandwidth
-device.sampling_rate = 100e6
+# Specify a default bandwidth
+device.bandwidth, device.oversampling_factor = 100e6, 4
 
 # Configure a hardware noise model
 device.noise_model = AWGN()
@@ -63,15 +59,14 @@ device.trajectory = StaticTrajectory(
 
 # Transmit random white noise from the device
 transmitter = SignalTransmitter(Signal.Create(
-    np.random.normal(size=(device.num_digital_transmit_ports, 100)) +
-    1j * np.random.normal(size=(device.num_digital_transmit_ports, 100)),
+    np.random.normal(size=(device.num_transmit_dsp_ports, 100)) +
+    1j * np.random.normal(size=(device.num_transmit_dsp_ports, 100)),
     device.sampling_rate,
-    device.carrier_frequency
 ))
 device.transmitters.add(transmitter)
 
 # Receive a signal without additional processing at the device
-receiver = SignalReceiver(100, device.sampling_rate, expected_power=1.)
+receiver = SignalReceiver(100, expected_power=1.)
 device.receivers.add(receiver)
 
 # Generate a transmission from the device
@@ -79,8 +74,8 @@ transmission = device.transmit()
 
 # Receive a signal at the device
 impinging_signal = Signal.Create(
-    np.random.normal(size=(device.num_digital_transmit_ports, 100)) +
-    1j * np.random.normal(size=(device.num_digital_transmit_ports, 100)),
+    np.random.normal(size=(device.num_receive_antennas, 100)) +
+    1j * np.random.normal(size=(device.num_receive_antennas, 100)),
     device.sampling_rate,
     device.carrier_frequency
 )

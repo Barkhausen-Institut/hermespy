@@ -11,8 +11,8 @@ hardware_scenario = PhysicalScenarioDummy(seed=42)
 hardware_loop = HardwareLoop[PhysicalScenarioDummy, PhysicalDeviceDummy](hardware_scenario)
 
 # Add two dedicated devices to the hardware loop, this could be, for example, two USRPs
-tx_device = hardware_loop.new_device(carrier_frequency=1e9)
-rx_device = hardware_loop.new_device(carrier_frequency=1e9)
+tx_device = hardware_loop.new_device(carrier_frequency=1e9, oversampling_factor=8)
+rx_device = hardware_loop.new_device(carrier_frequency=1e9, oversampling_factor=8)
 
 # Specifiy the channel instance linking the two devices
 # Only available for PhysicalScenarioDummy, which is a simulation of hardware behaviour
@@ -24,9 +24,9 @@ tx_device.transmitters.add(link)
 rx_device.receivers.add(link)
 
 # Configure the waveform to be transmitted over the link
-link.waveform = RootRaisedCosineWaveform(symbol_rate=1e6, oversampling_factor=8,
-                                         num_preamble_symbols=10, num_data_symbols=100,
-                                         roll_off=.9)
+link.waveform = RootRaisedCosineWaveform(
+    num_preamble_symbols=10, num_data_symbols=100, roll_off=.9,
+)
 link.waveform.channel_estimation = SingleCarrierLeastSquaresChannelEstimation()
 link.waveform.channel_equalization = SingleCarrierZeroForcingChannelEqualization()
 

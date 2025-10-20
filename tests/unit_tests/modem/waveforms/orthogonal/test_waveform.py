@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import annotations
 from itertools import product
-from typing import Tuple
+from typing_extensions import override
 from unittest import TestCase
 from unittest.mock import Mock, patch, PropertyMock
 
@@ -10,13 +11,14 @@ from numpy.testing import assert_array_almost_equal, assert_array_equal
 from numpy.random import default_rng
 from scipy.constants import pi
 
-from hermespy.core import ChannelStateInformation, Signal
-from hermespy.modem import OrthogonalWaveform, SymbolSection, GuardSection, GridResource, StatedSymbols, Symbols, CustomPilotSymbolSequence, GridElement, ElementType, PrefixType, GridSection, OFDMCorrelationSynchronization, PilotSection, ReferencePosition, OrthogonalLeastSquaresChannelEstimation, OrthogonalChannelEqualization, OrthogonalZeroForcingChannelEqualization
-from unit_tests.core.test_factory import test_roundtrip_serialization
-from unit_tests.utils import SimulationTestContext
+from hermespy.core import DeserializationProcess, Signal
+from hermespy.modem import OrthogonalWaveform, SymbolSection, GuardSection, GridResource, StatedSymbols, Symbols, CustomPilotSymbolSequence, GridElement, ElementType, PrefixType, GridSection, OFDMCorrelationSynchronization, PilotSection, OrthogonalLeastSquaresChannelEstimation, OrthogonalChannelEqualization, OrthogonalZeroForcingChannelEqualization
+from unit_tests.core.test_factory import test_roundtrip_serialization  # type: ignore[import-not-found]
+from unit_tests.utils import SimulationTestContext  # type: ignore[import-not-found]
+from ...test_waveform import TestCommunicationWaveform
 
 __author__ = "André Noll Barreto"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["André Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -132,25 +134,37 @@ class TestGridResource(TestCase):
 class GridSectionMock(GridSection):
     """Grid section implementation for testing purposes"""
 
-    @property
-    def num_samples(self) -> int:
+    @override
+    def num_samples(self, bandwidth: float, oversampling_factor: int) -> int:
         return 1
 
     @property
     def duration(self) -> float:
         return 1.0
 
-    def modulate(self, symbols: np.ndarray) -> np.ndarray:
-        pass
+    @override
+    def pick_samples(
+        self,
+        signal: np.ndarray,
+        bandwidth: float,
+        oversampling_factor: int,
+    ) -> np.ndarray:
+        return signal  # Just a mock implementation
 
-    def demodulate(self, baseband_signal: np.ndarray, channel_state: ChannelStateInformation) -> Tuple[np.ndarray, ChannelStateInformation]:
-        pass
-    
-    def pick_samples(self, signal: np.ndarray) -> np.ndarray:
-        return signal
-    
-    def place_samples(self, signal: np.ndarray) -> np.ndarray:
-        return signal
+    @override
+    def place_samples(
+        self,
+        signal: np.ndarray,
+        bandwdith: float,
+        oversampling_factor: int,
+    ) -> np.ndarray:
+        return signal  # Just a mock implementation
+
+    @classmethod
+    @override
+    def Deserialize(cls: type[GridSectionMock], process: DeserializationProcess) -> GridSectionMock:
+        return cls(**cls._DeserializeArguments(process))
+
 
 class TestGridSection(TestCase):
     """Test the grid section base class section"""
@@ -190,6 +204,9 @@ class TestSymbolSection(TestCase):
 
     def setUp(self) -> None:
         self.rnd = np.random.default_rng(42)
+
+        self.bandwidth = 1e6
+        self.oversampling_factor = 2
 
         self.repetitions_a = 2
         self.prefix_type_a = PrefixType.CYCLIC
@@ -237,12 +254,12 @@ class TestSymbolSection(TestCase):
 
     def test_place_samples_validation(self) -> None:
         """Place samples should raise a RuntimeError on invalid prefix types"""
-        
+
         samples = np.empty((self.section.num_words, self.section.num_subcarriers), dtype=np.complex128)
         with patch.object(self.resource_a, 'prefix_type', new_callable=PropertyMock) as type_mock:
             type_mock.return_value = Mock()
             with self.assertRaises(RuntimeError):
-                _ = self.section.place_samples(samples)        
+                _ = self.section.place_samples(samples, self.bandwidth, self.oversampling_factor)
 
     def test_resource_mask(self) -> None:
         _ = self.section.resource_mask
@@ -295,8 +312,10 @@ class TestGuardSection(TestCase):
     def test_num_samples(self) -> None:
         """Number of samples property should compute the correct amount of samples"""
 
-        expected_num_samples = int(self.num_repetitions * self.duration * self.wave.sampling_rate)
-        self.assertEqual(expected_num_samples, self.section.num_samples)
+        bandwidth = 1e5
+        oversampling_factor = 2
+        expected_num_samples = int(self.num_repetitions * self.duration * bandwidth * oversampling_factor)
+        self.assertEqual(expected_num_samples, self.section.num_samples(bandwidth, oversampling_factor))
 
     def test_serialization(self) -> None:
         """Test guard section serialization"""
@@ -306,37 +325,31 @@ class TestGuardSection(TestCase):
 
 class OrthogonalWaveformMock(OrthogonalWaveform):
     """Mock class for testing the abstract base class"""
-    
-    def _forward_transformation(self, symbol_grid: np.ndarray) -> np.ndarray:
-        return symbol_grid.repeat(self.oversampling_factor, axis=-1)
 
-    def _backward_transformation(self, signal_grid: np.ndarray) -> np.ndarray:
-        return signal_grid[::, ::self.oversampling_factor] 
-    
-    @property
-    def sampling_rate(self) -> float:
-        return self.oversampling_factor
-    
-    @property
-    def bandwidth(self) -> float:
-        return 1.
-    
-    def _correct_sample_offset(self, symbol_subgrid: np.ndarray, sample_offset: int) -> np.ndarray:
+    @override
+    def _forward_transformation(self, symbol_grid: np.ndarray, oversampling_factor: int) -> np.ndarray:
+        return symbol_grid.repeat(oversampling_factor, axis=-1)
+
+    @override
+    def _backward_transformation(self, signal_grid: np.ndarray, oversampling_factor: int) -> np.ndarray:
+        return signal_grid[::, ::oversampling_factor]
+
+    @override
+    def _correct_sample_offset(self, symbol_subgrid: np.ndarray, sample_offset: int, oversampling_factor: int) -> np.ndarray:
         return symbol_subgrid
 
 
-class TestOrthogonalWaveform(TestCase):
+class TestOrthogonalWaveform(TestCommunicationWaveform):
     """Test the general base class for orthogonal multicarrier waveforms"""
+
+    waveform: OrthogonalWaveform
 
     def setUp(self) -> None:
         self.num_subcarriers = 100
         self.oversampling_factor = 2
+        self.bandwidth = 1e6
 
         self.rng = default_rng(42)
-
-        self.modem = Mock()
-        self.modem.random_generator = self.rng
-        self.modem.carrier_frequency = 100e6
 
         self.repetitions_a = 2
         self.prefix_type_a = PrefixType.CYCLIC
@@ -358,25 +371,26 @@ class TestOrthogonalWaveform(TestCase):
         self.grid_sections = [self.section_a, self.section_b, self.section_c]
 
         self.waveform = OrthogonalWaveformMock(
-            modem=self.modem,
             grid_resources=self.grid_resources,
             grid_structure=self.grid_sections,
             num_subcarriers=self.num_subcarriers,
-            oversampling_factor=self.oversampling_factor,
         )
+
+    @override
+    def test_energy(self) -> None:
+        self.skipTest(reason="Not relevant for mock class")  # Skip because not relevant
 
     def test_init(self) -> None:
         """Object initialization arguments should be properly stored as class attributes"""
 
-        self.assertIs(self.modem, self.waveform.modem)
         self.assertEqual(self.num_subcarriers, self.waveform.num_subcarriers)
 
     def test_plot_grid(self) -> None:
         """Test the grid visualization"""
-        
+
         with SimulationTestContext():
-            visualization = self.waveform.plot_grid()
-            
+            _ = self.waveform.plot_grid()
+
     def test_pilot_setget(self) -> None:
         """Pilot property getter should return setter argument"""
 
@@ -397,19 +411,17 @@ class TestOrthogonalWaveform(TestCase):
         """The pilot signal property should generate the correct pilot samples"""
 
         self.waveform.pilot_section = None
-        empty_pilot_signal = self.waveform.pilot_signal
+        empty_pilot_signal = self.waveform.pilot_signal(self.bandwidth, self.oversampling_factor)
 
         self.assertEqual(0, empty_pilot_signal.num_samples)
-        self.assertEqual(self.waveform.sampling_rate, empty_pilot_signal.sampling_rate)
 
-        expected_samples = np.arange(100, dtype=np.complex128)
+        expected_samples = np.arange(100, dtype=np.complex128)[None, :]
         pilot_mock = Mock()
         pilot_mock.generate.return_value = expected_samples
         self.waveform.pilot_section = pilot_mock
-        pilot_signal = self.waveform.pilot_signal
+        pilot_signal = self.waveform.pilot_signal(self.bandwidth, self.oversampling_factor)
 
-        assert_array_equal(expected_samples[None, :], pilot_signal.getitem())
-        self.assertEqual(self.waveform.sampling_rate, pilot_signal.sampling_rate)
+        assert_array_equal(expected_samples, pilot_signal.view(np.ndarray))
 
     def test_symbols_per_frame(self) -> None:
         """Symbols per frame property should return the correct number of symbols per frame"""
@@ -437,14 +449,9 @@ class TestOrthogonalWaveform(TestCase):
         expected_bits = self.rng.integers(0, 2, self.waveform.bits_per_frame(self.waveform.num_data_symbols))
         mapped_symbols = self.waveform.map(expected_bits)
         placed_symbols = self.waveform.place(mapped_symbols)
-        signal = self.waveform.modulate(placed_symbols)
+        signal = self.waveform.modulate(placed_symbols, self.bandwidth, self.oversampling_factor)
 
-        self.assertEqual(signal.size, self.waveform.samples_per_frame)
-
-    def test_symbol_duration(self) -> None:
-        """Symbol duration property should report the correct symbol duration"""
-
-        self.assertEqual(1 / self.waveform.bandwidth, self.waveform.symbol_duration)
+        self.assertEqual(signal.size, self.waveform.samples_per_frame(self.bandwidth, self.oversampling_factor))
 
     def test_map_validation(self) -> None:
         """Mapping should raise ValueError on invalid arguments"""
@@ -473,8 +480,8 @@ class TestOrthogonalWaveform(TestCase):
         bits = self.rng.integers(0, 2, self.waveform.bits_per_frame(self.waveform.num_data_symbols))
         expected_symbols = self.waveform.place(self.waveform.map(bits))
 
-        baseband_signal = self.waveform.modulate(expected_symbols)
-        symbols = self.waveform.demodulate(baseband_signal)
+        baseband_signal = self.waveform.modulate(expected_symbols, self.bandwidth, self.oversampling_factor)
+        symbols = self.waveform.demodulate(baseband_signal, self.bandwidth, self.oversampling_factor)
 
         assert_array_almost_equal(expected_symbols.raw, symbols.raw)
 
@@ -485,8 +492,8 @@ class TestOrthogonalWaveform(TestCase):
         bits = self.rng.integers(0, 2, self.waveform.bits_per_frame(self.waveform.num_data_symbols))
         expected_symbols = self.waveform.place(self.waveform.map(bits))
 
-        baseband_signal = self.waveform.modulate(expected_symbols)
-        symbols = self.waveform.demodulate(baseband_signal)
+        baseband_signal = self.waveform.modulate(expected_symbols, self.bandwidth, self.oversampling_factor)
+        symbols = self.waveform.demodulate(baseband_signal, self.bandwidth, self.oversampling_factor)
 
         assert_array_almost_equal(expected_symbols.raw, symbols.raw)
 
@@ -500,11 +507,11 @@ class TestOrthogonalWaveform(TestCase):
         ofdm.channel_estimation = OrthogonalLeastSquaresChannelEstimation()
 
         symbols = ofdm.map(np.empty(0, dtype=np.int_))
-        tx_signal = ofdm.modulate(ofdm.place(symbols))
-        received_symbols = ofdm.demodulate(tx_signal)
+        tx_signal = ofdm.modulate(ofdm.place(symbols), self.bandwidth, self.oversampling_factor)
+        received_symbols = ofdm.demodulate(tx_signal, self.bandwidth, self.oversampling_factor)
 
         expected_state = np.ones((1, 1, 1, self.num_subcarriers), dtype=np.complex128)
-        stated_symbols = ofdm.channel_estimation.estimate_channel(received_symbols)
+        stated_symbols = ofdm.channel_estimation.estimate_channel(received_symbols, self.bandwidth, self.oversampling_factor)
 
         assert_array_almost_equal(expected_state, stated_symbols.states)
 
@@ -515,19 +522,14 @@ class TestOrthogonalWaveform(TestCase):
 
         mapped_symbols = self.waveform.map(expected_bits)
         placed_symbols = self.waveform.place(mapped_symbols)
-        signal = self.waveform.modulate(placed_symbols)
+        signal = self.waveform.modulate(placed_symbols, self.bandwidth, self.oversampling_factor)
 
-        demodulated_symbols = self.waveform.demodulate(signal)
+        demodulated_symbols = self.waveform.demodulate(signal, self.bandwidth, self.oversampling_factor)
         stated_symbols = StatedSymbols(demodulated_symbols.raw, np.ones((1, 1, demodulated_symbols.num_blocks, demodulated_symbols.num_symbols)))
         picked_symbols = self.waveform.pick(stated_symbols)
         bits = self.waveform.unmap(picked_symbols)
 
         assert_array_equal(expected_bits, bits)
-
-    def test_frame_duration(self) -> None:
-        """The frame duration should be the sum of the durations of all sections"""
-
-        self.assertEqual(self.waveform.samples_per_frame / self.waveform.sampling_rate, self.waveform.frame_duration)
 
     def test_resource_mask(self) -> None:
         """The resource mask should be the sum of the masks of all resources"""
@@ -538,12 +540,12 @@ class TestOrthogonalWaveform(TestCase):
     def test_bit_energy(self) -> None:
         """The bit energy should be the sum of the bit energies of all sections"""
 
-        self.assertEqual(0.25, self.waveform.bit_energy)
+        self.assertEqual(self.oversampling_factor / 4, self.waveform.bit_energy(self.bandwidth, self.oversampling_factor))
 
     def test_symbol_energy(self) -> None:
         """The symbol energy should be the sum of the symbol energies of all sections"""
 
-        self.assertEqual(1, self.waveform.symbol_energy)
+        self.assertEqual(self.oversampling_factor, self.waveform.symbol_energy(self.bandwidth, self.oversampling_factor))
 
     def test_power(self) -> None:
         """The signal power should be computed correctly"""
@@ -552,12 +554,12 @@ class TestOrthogonalWaveform(TestCase):
         self.resource_a = GridResource(1, PrefixType.NONE, 0, self.elements_a)
         self.section_a = SymbolSection(100, [0])
 
-        self.waveform = OrthogonalWaveformMock(modem=self.modem, grid_resources=[self.resource_a], grid_structure=[self.section_a], num_subcarriers=self.num_subcarriers, oversampling_factor=self.oversampling_factor)
+        self.waveform = OrthogonalWaveformMock(grid_resources=[self.resource_a], grid_structure=[self.section_a], num_subcarriers=self.num_subcarriers)
 
         symbols = self.waveform.map(self.rng.integers(0, 2, self.waveform.bits_per_frame(self.waveform.num_data_symbols)))
         placed_symbols = self.waveform.place(symbols)
-        frame_samples = self.waveform.modulate(placed_symbols)
-        frame_signal = Signal.Create(frame_samples, self.waveform.sampling_rate)
+        frame_samples = self.waveform.modulate(placed_symbols, self.bandwidth, self.oversampling_factor)
+        frame_signal = Signal.Create(frame_samples[None, :], self.bandwidth * self.oversampling_factor)
 
         self.assertAlmostEqual(self.waveform.power, frame_signal.power[0], places=2)
 
@@ -577,7 +579,9 @@ class TestPilotSection(TestCase):
     def setUp(self) -> None:
         self.rng = default_rng(42)
         self.subsymbols = Symbols(np.array([1.0, -1.0, 1.0j, -1.0j], dtype=np.complex128))
-        self.wave = OrthogonalWaveformMock(128, [], [], oversampling_factor=4)
+        self.wave = OrthogonalWaveformMock(128, [], [])
+        self.bandwidth = 1e6
+        self.oversampling_factor = 2
 
         self.pilot_section = PilotSection(pilot_elements=self.subsymbols, wave=self.wave)
 
@@ -587,44 +591,44 @@ class TestPilotSection(TestCase):
         self.assertIs(self.subsymbols, self.pilot_section.pilot_elements)
         self.assertIs(self.wave, self.pilot_section.wave)
         self.assertEqual(0, self.pilot_section.num_symbols)
-        
+
     def test_num_repetitions_validation(self) -> None:
         """Number of repetitions property setter should raise ValueError on arguments not one"""
-        
+
         with self.assertRaises(ValueError):
             self.pilot_section.num_repetitions = 0
-        
+
         with self.assertRaises(ValueError):
             self.pilot_section.num_repetitions = -1
-            
+
         with self.assertRaises(ValueError):
             self.pilot_section.num_repetitions = 2
-            
+
     def test_sample_offset(self) -> None:
         """Sample offset property may only be zero"""
-        
+
         with self.assertRaises(ValueError):
             self.pilot_section.sample_offset = 1
-            
+
         with self.assertRaises(ValueError):
             self.pilot_section.sample_offset = -1
 
     def test_num_samples(self) -> None:
         """The number of samples property should compute the correct sample count"""
 
-        self.assertEqual(4 * self.wave.num_subcarriers, self.pilot_section.num_samples)
+        self.assertEqual(self.wave.num_subcarriers * self.oversampling_factor, self.pilot_section.num_samples(self.bandwidth, self.oversampling_factor))
 
     def test_num_references(self) -> None:
         """Number of references property should return the correct value"""
-        
+
         self.assertEqual(0, self.pilot_section.num_references)
-        
+
         self.pilot_section.pilot_elements = None
         self.assertEqual(self.wave.num_subcarriers, self.pilot_section.num_references)
 
     def test_resource_mask(self) -> None:
         """The pilot section's resource mask should be completely references"""
-        
+
         mask = self.pilot_section.resource_mask
         self.assertEqual(self.wave.num_subcarriers, np.sum(mask[ElementType.REFERENCE.value, ...], axis=(0, 1), keepdims=False))
 
@@ -674,29 +678,29 @@ class TestPilotSection(TestCase):
         expected_pilot_symbols = np.exp(2j * pi * self.rng.uniform(0, 1, (1, 1, self.wave.num_subcarriers)))
         self.pilot_section.pilot_elements = Symbols(expected_pilot_symbols)
 
-        pilot = self.pilot_section.generate()
-        cached_pilot = self.pilot_section.generate()
+        pilot = self.pilot_section.generate(self.oversampling_factor)
+        cached_pilot = self.pilot_section.generate(self.oversampling_factor)
         assert_array_equal(pilot, cached_pilot)
-        
+
     def test_pick_place_symbols(self) -> None:
-        
+
         placed_symbols = self.pilot_section.place_symbols(np.empty(0, dtype=np.complex128), Mock())
         picked_symbols = self.pilot_section.pick_symbols(placed_symbols)
-        
+
         self.assertEqual(0, picked_symbols.size)
 
     def test_pick_place_samples(self) -> None:
-        
+
         samples = Mock()
-        picked_samples = self.pilot_section.pick_samples(self.pilot_section.place_samples(samples))
+        picked_samples = self.pilot_section.pick_samples(self.pilot_section.place_samples(samples, self.bandwidth, self.oversampling_factor), self.bandwidth, self.oversampling_factor)
         self.assertIs(samples, picked_samples)
 
     def test_generate_validation(self) -> None:
         """Generate should raise a RuntimeError if no waveform is set"""
-        
+
         self.pilot_section.wave = None
         with self.assertRaises(RuntimeError):
-            self.pilot_section.generate()
+            self.pilot_section.generate(self.oversampling_factor)
 
     def test_serialization(self) -> None:
         """Test pilot section serialization"""
@@ -713,12 +717,14 @@ class TestCorrelationSynchronization(TestCase):
 
         test_resource = GridResource(repetitions=1, elements=[GridElement(ElementType.DATA, repetitions=1024)])
         test_payload = SymbolSection(num_repetitions=3, pattern=[0])
-        self.wave = OrthogonalWaveformMock(num_subcarriers=1024, oversampling_factor=4, grid_resources=[test_resource], grid_structure=[test_payload])
+        self.wave = OrthogonalWaveformMock(num_subcarriers=1024, grid_resources=[test_resource], grid_structure=[test_payload])
         self.wave.pilot_section = PilotSection()
 
         self.synchronization = OFDMCorrelationSynchronization()
         self.wave.synchronization = self.synchronization
 
+        self.bandwidth = 15e3
+        self.oversampling_factor = 2
         self.num_streams = 3
         self.delays_in_samples = [0, 9, 80]
         self.num_frames = [1, 2, 3]
@@ -728,15 +734,15 @@ class TestCorrelationSynchronization(TestCase):
 
         for d, n in product(self.delays_in_samples, self.num_frames):
             symbols = np.exp(2j * pi * self.rng.uniform(0, 1, (n, self.wave.num_data_symbols)))
-            frames = [np.outer(np.exp(2j * pi * self.rng.uniform(0, 1, self.num_streams)), self.wave.modulate(self.wave.place(Symbols(symbols[f, :])))) for f in range(n)]
+            frames = [np.outer(np.exp(2j * pi * self.rng.uniform(0, 1, self.num_streams)), self.wave.modulate(self.wave.place(Symbols(symbols[f, :])), self.bandwidth, self.oversampling_factor)) for f in range(n)]
 
             signal = np.empty((self.num_streams, 0), dtype=np.complex128)
             for frame in frames:
                 signal = np.concatenate((signal, np.zeros((self.num_streams, d), dtype=np.complex128), frame), axis=1)
 
-            frame_delays = self.synchronization.synchronize(signal)
+            frame_delays = self.synchronization.synchronize(signal, self.bandwidth, self.oversampling_factor)
 
-            self.assertCountEqual(d + (d + self.wave.samples_per_frame) * np.arange(n), frame_delays)
+            self.assertCountEqual(d + (d + self.wave.samples_per_frame(self.bandwidth, self.oversampling_factor)) * np.arange(n), frame_delays)
 
     def test_serialization(self) -> None:
         """Test YAML serialization"""
@@ -746,17 +752,14 @@ class TestCorrelationSynchronization(TestCase):
 
 class TestLeastSquaresChannelEstimation(TestCase):
     """Test leat squares channel estimation for orthogonal waveforms"""
-    
+
     def setUp(self) -> None:
         self.subcarrier_spacing = 1e3
         self.num_subcarriers = 100
+        self.bandwidth = self.subcarrier_spacing * self.num_subcarriers
         self.oversampling_factor = 2
 
         self.rng = default_rng(42)
-
-        self.modem = Mock()
-        self.modem.random_generator = self.rng
-        self.modem.carrier_frequency = 100e6
 
         self.prefix_type_a = PrefixType.CYCLIC
         self.prefix_ratio_a = 0.1
@@ -768,7 +771,7 @@ class TestLeastSquaresChannelEstimation(TestCase):
         self.resources = [self.resource_a]
         self.sections = [self.section_a]
 
-        self.wave = OrthogonalWaveformMock(modem=self.modem, grid_resources=self.resources, grid_structure=self.sections, num_subcarriers=self.num_subcarriers, oversampling_factor=self.oversampling_factor)
+        self.wave = OrthogonalWaveformMock(grid_resources=self.resources, grid_structure=self.sections, num_subcarriers=self.num_subcarriers)
 
         self.estimation = OrthogonalLeastSquaresChannelEstimation()
         self.wave.channel_estimation = self.estimation
@@ -779,7 +782,7 @@ class TestLeastSquaresChannelEstimation(TestCase):
         """Least squares channel estimation should raise a NotImplementedError on invalid arguments"""
 
         with self.assertRaises(NotImplementedError):
-            self.estimation.estimate_channel(Symbols(np.empty((2, 0, 10), dtype=np.complex128)))
+            self.estimation.estimate_channel(Symbols(np.empty((2, 0, 10), dtype=np.complex128)), self.bandwidth, self.oversampling_factor)
 
     def test_estimate_channel(self) -> None:
         """Least squares channel estimation should correctly compute the channel estimate"""
@@ -790,7 +793,7 @@ class TestLeastSquaresChannelEstimation(TestCase):
         propagated_symbols_raw = symbols.raw * expected_state[:, 0, :, :]
         propagated_symbols = Symbols(propagated_symbols_raw)
 
-        stated_symbols = self.estimation.estimate_channel(propagated_symbols)
+        stated_symbols = self.estimation.estimate_channel(propagated_symbols, self.bandwidth, self.oversampling_factor)
         assert_array_almost_equal(expected_state, stated_symbols.states)
 
     def test_serialization(self) -> None:
@@ -801,7 +804,7 @@ class TestLeastSquaresChannelEstimation(TestCase):
 
 class TestChannelEqualization(TestCase):
     """Test orthogonal waveform channel equalization"""
-    
+
     def setUp(self) -> None:
         self.channel_equalization = OrthogonalChannelEqualization()
 
@@ -813,7 +816,7 @@ class TestChannelEqualization(TestCase):
 
 class TestZeroForcingChannelEqualization(TestCase):
     """Test zero-forcing channel equalization for orthogonal waveforms"""
-    
+
     def setUp(self) -> None:
         self.channel_equalization = OrthogonalZeroForcingChannelEqualization()
 

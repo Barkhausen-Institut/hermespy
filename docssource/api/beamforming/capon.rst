@@ -45,21 +45,21 @@ A digital antenna array consisting of ideal isotropic antenna elements spaced at
 .. literalinclude:: ../../scripts/examples/beamforming_capon.py
    :language: python
    :linenos:
-   :lines: 7-21 
+   :lines: 16-20 
 
 To probe the characterestics a cosine waveform is generated as the transmit waveform.
 
 .. literalinclude:: ../../scripts/examples/beamforming_capon.py
    :language: python
    :linenos:
-   :lines: 23-35
+   :lines: 23-32
 
 The base station device is configured to receive the signal from desired UE by assigning the Capon Beamformer to the base station device.
 
 .. literalinclude:: ../../scripts/examples/beamforming_capon.py
    :language: python
    :linenos:
-   :lines: 37-46
+   :lines: 39-43
 
 Now the simulation can be extended to evaluate the performance in a real world communication scenario.
 For this two devices representing the UEs are added, to be illuminated by the BS.
@@ -67,14 +67,14 @@ For this two devices representing the UEs are added, to be illuminated by the BS
 .. literalinclude:: ../../scripts/examples/beamforming_capon.py
    :language: python
    :linenos:
-   :lines: 48-56
+   :lines: 46-53
 
 The user equipments are configured to transmit the probing signal.
 
 .. literalinclude:: ../../scripts/examples/beamforming_capon.py
    :language: python
    :linenos:
-   :lines: 58-64
+   :lines: 58-61
 
 Now as defined the Capon Beamformer focuses on one UE. 
 This can be realised by configuring the receive foucs of the Beamformer.
@@ -82,14 +82,14 @@ This can be realised by configuring the receive foucs of the Beamformer.
 .. literalinclude:: ../../scripts/examples/beamforming_capon.py
    :language: python
    :linenos:
-   :lines: 66-71
+   :lines: 66-68
 
 The propgation characterestics between the BS and the UEs can be modelled using the SpatialDelayChannel Model.
 
 .. literalinclude:: ../../scripts/examples/beamforming_capon.py
    :language: python
    :linenos:
-   :lines: 73-86
+   :lines: 73-83
 
 The performance of the beamformer is studied by analysing the received signal quality from the respective UEs.
 For this purpose, the Error Vector Magnitude of the consetallation diagram of the Received signal is evaluated.
@@ -97,7 +97,7 @@ For this purpose, the Error Vector Magnitude of the consetallation diagram of th
 .. literalinclude:: ../../scripts/examples/beamforming_capon.py
    :language: python
    :linenos:
-   :lines: 88-101
+   :lines: 88-89
 
 .. automodule:: hermespy.beamforming.capon
    :private-members: _decode

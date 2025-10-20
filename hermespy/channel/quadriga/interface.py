@@ -169,7 +169,7 @@ class QuadrigaInterface(RandomNode):
         Must be realised by interface implementations.
 
         Args:
-            \**parameters: Quadriga channel parameters.
+            parameters: Quadriga channel parameters.
         """
 
         raise NotImplementedError(

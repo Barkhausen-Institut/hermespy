@@ -15,6 +15,7 @@ from hermespy.core import ConsoleMode, MonteCarloResult, SignalTransmitter, Sign
 from hermespy.modem import DuplexModem, BitErrorEvaluator, RRCWaveform
 from hermespy.simulation import N0
 from hermespy.simulation.simulation import SimulatedDevice, Simulation, SimulationActor, SimulationRunner, SimulationScenario
+from unit_tests.utils import random_rf_signal
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
@@ -37,16 +38,18 @@ class TestSimulationRunner(TestCase):
         self.scenario = SimulationScenario(seed=self.seed)
 
         self.sampling_rate = 1e8
+        self.oversampling_factor = 4
+        self.bandwidth = self.sampling_rate / self.oversampling_factor
         self.num_samples = 100
 
-        self.device_alpha = self.scenario.new_device(sampling_rate=self.sampling_rate)
-        self.device_beta = self.scenario.new_device(sampling_rate=self.sampling_rate)
+        self.device_alpha = self.scenario.new_device(bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor)
+        self.device_beta = self.scenario.new_device(bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor)
 
-        transmitted_signal = Signal.Create(self.scenario._rng.standard_normal((1, self.num_samples)), self.sampling_rate)
+        transmitted_signal = random_rf_signal(1, self.num_samples, self.bandwidth, self.oversampling_factor)
         self.transmitter_alpha = SignalTransmitter(transmitted_signal)
         self.transmitter_beta = SignalTransmitter(transmitted_signal)
-        self.receiver_alpha = SignalReceiver(self.num_samples, self.sampling_rate)
-        self.receiver_beta = SignalReceiver(self.num_samples, self.sampling_rate)
+        self.receiver_alpha = SignalReceiver(self.num_samples)
+        self.receiver_beta = SignalReceiver(self.num_samples)
 
         self.device_alpha.transmitters.add(self.transmitter_alpha)
         self.device_beta.transmitters.add(self.transmitter_beta)
@@ -58,31 +61,26 @@ class TestSimulationRunner(TestCase):
     def test_stages(self) -> None:
         """Make sure the stages all execute without exceptions"""
 
-        try:
+        # Realize channels
+        self.runner.realize_channels()
 
-            # Realize channels
-            self.runner.realize_channels()
+        # Sample trajectories
+        self.runner.sample_states()
 
-            # Sample trajectories
-            self.runner.sample_states()
+        # Transmit operators
+        self.runner.transmit_operators()
 
-            # Transmit operators
-            self.runner.transmit_operators()
+        # Generate device outputs
+        self.runner.generate_outputs()
 
-            # Generate device outputs
-            self.runner.generate_outputs()
+        # Propagate device outputs
+        self.runner.propagate()
 
-            # Propagate device outputs
-            self.runner.propagate()
+        # Process device inputs
+        self.runner.process_inputs()
 
-            # Process device inputs
-            self.runner.process_inputs()
-
-            # Receive operators
-            self.runner.receive_operators()
-
-        except Exception as e:
-            self.fail(str(e))
+        # Receive operators
+        self.runner.receive_operators()
 
     def test_propagate_validation(self) -> None:
         """Propagate should raise RuntimeErrors for invalid internal states"""
@@ -160,7 +158,7 @@ class TestSimulation(TestCase):
         self.device = self.simulation.new_device()
 
         self.modem = DuplexModem()
-        self.modem.waveform = RRCWaveform(symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=10)
+        self.modem.waveform = RRCWaveform(num_preamble_symbols=0, num_data_symbols=10)
         self.device.transmitters.add(self.modem)
         self.device.receivers.add(self.modem)
 

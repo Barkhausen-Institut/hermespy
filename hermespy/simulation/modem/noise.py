@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
+from typing_extensions import override
 
 from hermespy.modem import BaseModem, CommunicationWaveform
-from ..noise import NoiseLevel
+from ..rf.noise import NoiseLevel
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -38,6 +39,7 @@ class CommunicationNoiseLevel(NoiseLevel):
         self.__reference = reference
 
     @property
+    @override
     def level(self) -> float:
         """Communication relative noise level.
 
@@ -91,10 +93,12 @@ class CommunicationNoiseLevel(NoiseLevel):
 class EBN0(CommunicationNoiseLevel):
     """Fixed noise power configuration."""
 
-    def get_power(self) -> float:
-        return self._get_reference_waveform().bit_energy / self.level
+    @override
+    def get_power(self, bandwidth: float) -> float:
+        return self._get_reference_waveform().bit_energy(bandwidth, 1) / self.level
 
     @property
+    @override
     def title(self) -> str:
         return "E_B/N_0"
 
@@ -102,9 +106,11 @@ class EBN0(CommunicationNoiseLevel):
 class ESN0(CommunicationNoiseLevel):
     """Fixed noise power configuration."""
 
-    def get_power(self) -> float:
-        return self._get_reference_waveform().symbol_energy / self.level
+    @override
+    def get_power(self, bandwidth: float) -> float:
+        return self._get_reference_waveform().symbol_energy(bandwidth, 1) / self.level
 
     @property
+    @override
     def title(self) -> str:
         return "E_S/N_0"

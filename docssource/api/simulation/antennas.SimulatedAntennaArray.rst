@@ -8,7 +8,7 @@ Antenna Arrays
 
 Simulated antenna arrays are the simulation module's extension of
 the core :class:`AnteannaArray<hermespy.core.antennas.AntennaArray>`
-decsription by :class:`RfChain<hermespy.simulation.rf_chain.rf_chain.RfChain>` models
+decsription by :class:`RfChain<hermespy.simulation.rf.chain.RFChain>` models
 and polarimetric antenna descriptions. 
 They are used to configure the frontend description of
 :class:`SimulatedDevices<hermespy.simulation.simulated_device.SimulatedDevice>`.

@@ -4,13 +4,13 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 from abc import abstractmethod
 
-from hermespy.core import Signal, FloatingError, Serializable
+from hermespy.core import Signal, SignalBlock, Serializable, SparseSignal
 
 if TYPE_CHECKING:
-    from ..simulated_device import SimulatedDevice  # pragma: no cover
+    from ..simulated_device import SimulatedDeviceState  # pragma: no cover
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -22,101 +22,84 @@ __status__ = "Prototype"
 class Coupling(Serializable):
     """Base class for mutual coupling model implementations."""
 
-    __device: SimulatedDevice | None
-
-    def __init__(self, device: SimulatedDevice | None = None) -> None:
-        """
-        Args:
-
-            device: Device the model is configured to.
-        """
-
-        self.device = device
-
-    @property
-    def device(self) -> SimulatedDevice | None:
-        """Device the model is configured to.
-
-        Returns:
-            Handle to the device.
-            `None`, if the model is considered floating.
-        """
-
-        return self.__device
-
-    @device.setter
-    def device(self, value: SimulatedDevice | None) -> None:
-        self.__device = value
-
-    def transmit(self, signal: Signal) -> Signal:
+    def transmit(self, signal: Signal, state: SimulatedDeviceState) -> Signal:
         """Apply the mutual coupling model during signal transmission.
 
         Args:
 
             signal: The signal to be transmitted.
+            state: The current state of the simulated device.
 
         Returns: The signal resulting from coupling modeling.
 
         Raises:
 
-            FloatingError: If the device is not specified.
             ValueError: If the number of signal streams does not match the number of transmitting antennas.
         """
 
-        if self.device is None:
-            raise FloatingError("Error trying to simulate coupling of a floating model")
-
-        if self.device.num_transmit_antennas != signal.num_streams:
+        if state.antennas.num_transmit_antennas != signal.num_streams:
             raise ValueError(
-                f"Number of signal streams ({signal.num_streams}) does not match the number of transmitting antenna ports ({self.device.num_transmit_antennas})"
+                f"Number of signal streams ({signal.num_streams}) does not match the number of transmitting antenna ports ({state.antennas.num_transmit_antennas})"
             )
 
-        return self._transmit(signal)
+        coupled_blocks: list[SignalBlock] = [self._transmit(b, state) for b in signal.blocks]
+        return SparseSignal.Create(
+            coupled_blocks,
+            signal.sampling_rate,
+            signal.carrier_frequency,
+            signal.noise_power,
+            signal.delay,
+        )
 
     @abstractmethod
-    def _transmit(self, signal: Signal) -> Signal:
+    def _transmit(self, signal: SignalBlock, state: SimulatedDeviceState) -> SignalBlock:
         """Apply the mutual coupling model during signal transmission.
 
         Args:
 
             signal: The signal to be transmitted.
+            state: The current state of the simulated device.
 
         Returns: The signal resulting from coupling modeling.
         """
         ...  # pragma: no cover
 
-    def receive(self, signal: Signal) -> Signal:
+    def receive(self, signal: Signal, state: SimulatedDeviceState) -> Signal:
         """Apply the mutual coupling model during signal reception.
 
         Args:
-
             signal: The signal to be received.
+            state: The current state of the simulated device.
 
-        Returns: The signal resulting from coupling modeling.
+        Returns:
+            The signal resulting from coupling modeling.
 
         Raises:
-
-            FloatingError: If the device is not specified.
-            ValueError: If the number of signal streams does not match the number of transmitting antennas.
+            ValueError: If the number of signal streams does not match the number of receive antennas.
         """
 
-        if self.device is None:
-            raise FloatingError("Error trying to simulate coupling of a floating model")
-
-        if self.device.num_receive_antenna_ports != signal.num_streams:
+        if state.antennas.num_receive_antennas != signal.num_streams:
             raise ValueError(
-                f"Number of signal streams ({signal.num_streams}) does not match the number of receiving antenna ports ({self.device.num_receive_antenna_ports})"
+                f"Number of signal streams ({signal.num_streams}) does not match the number of receive antennas ({state.antennas.num_receive_antennas})"
             )
 
-        return self._receive(signal)
+        coupled_blocks: list[SignalBlock] = [self._receive(b, state) for b in signal.blocks]
+        return SparseSignal.Create(
+            coupled_blocks,
+            signal.sampling_rate,
+            signal.carrier_frequency,
+            signal.noise_power,
+            signal.delay,
+        )
 
     @abstractmethod
-    def _receive(self, signal: Signal) -> Signal:
+    def _receive(self, signal: SignalBlock, state: SimulatedDeviceState) -> SignalBlock:
         """Apply the mutual coupling model during signal reception.
 
         Args:
 
             signal: The signal to be received.
+            state: The current state of the simulated device.
 
         Returns: The signal resulting from coupling modeling.
         """

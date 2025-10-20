@@ -14,7 +14,7 @@ from copy import deepcopy
 import matplotlib.pyplot as plt
 import numpy as np
 
-from hermespy.core import dB, Transformation
+from hermespy.core import dB
 from hermespy.simulation import (
     Simulation,
     N0,
@@ -39,7 +39,7 @@ from hermespy.modem import (
 from hermespy.radar import ThresholdDetector, ReceiverOperatingCharacteristic
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.4.0"
@@ -51,8 +51,10 @@ __status__ = "Prototype"
 # Initialize a simulation considering a base station and a terminal
 cf = 1e9
 simulation = Simulation()
-base_station = simulation.new_device(carrier_frequency=cf)
-terminal = simulation.new_device(carrier_frequency=cf)
+bandwidth = 1e8
+oversampling_factor = 4
+base_station = simulation.new_device(carrier_frequency=cf, bandwidth=bandwidth, oversampling_factor=oversampling_factor)
+terminal = simulation.new_device(carrier_frequency=cf, bandwidth=bandwidth, oversampling_factor=oversampling_factor)
 
 # Assume a 100 dB transmit-receive isolation at the base station
 base_station.isolation = SpecificIsolation(dB(100))
@@ -63,12 +65,10 @@ terminal.trajectory = StaticTrajectory.From_Translation(np.array([20, 0, 0]))
 
 # Configure a rectangular single-carrier waveform
 waveform = RectangularWaveform(
-    symbol_rate=1e8,
     modulation_order=16,
-    oversampling_factor=4,
     num_preamble_symbols=16,
     num_data_symbols=128,
-    pilot_rate=2e-6,
+    pilot_rate=10,
     guard_interval=1e-6,
 )
 
@@ -78,7 +78,7 @@ jcas_dsp = MatchedFilterJcas(
     max_range=30,
     waveform=deepcopy(waveform),
 )
-jcas_dsp.detector = ThresholdDetector(2e-2)
+jcas_dsp.detector = ThresholdDetector(.95, peak_detection=False)
 base_station.add_dsp(jcas_dsp)
 
 # Configure the terminal to receive the rectangular waveform
@@ -115,4 +115,5 @@ simulation.new_dimension("noise_level", dB(range(-100, 10, 10)), base_station, t
 simulation.num_samples = 1000
 result = simulation.run()
 result.plot()
+result.print()
 plt.show()

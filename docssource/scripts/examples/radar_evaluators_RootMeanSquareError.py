@@ -7,7 +7,7 @@ from hermespy.channel import SingleTargetRadarChannel
 
 # Create a new simulated scenario featuring a single device
 simulation = Simulation(num_samples=1000)
-device = simulation.new_device(carrier_frequency=60e9)
+device = simulation.new_device(carrier_frequency=60e9, bandwidth=3e9, oversampling_factor=1)
 
 # Configure the device to transmit and reveive radar waveforms
 radar = Radar(waveform=FMCW())
@@ -15,7 +15,7 @@ radar.detector = MaxDetector()
 device.add_dsp(radar)
 
 # Create a new radar channel with a single illuminated target
-target = SingleTargetRadarChannel((1, radar.max_range), 1., attenuate=False)
+target = SingleTargetRadarChannel((1, radar.max_range(device.bandwidth)), 1., attenuate=False)
 simulation.scenario.set_channel(device, device, target)
 
 # Create a new detection probability evaluator
@@ -28,4 +28,3 @@ simulation.new_dimension('noise_level', dB(0, -5, -10, -20, -30), device)
 result = simulation.run()
 result.plot()
 plt.show()
-

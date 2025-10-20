@@ -3,7 +3,7 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from math import ceil
-from typing import Generic, TYPE_CHECKING, TypeVar, List
+from typing import Generic, TypeVar
 from typing_extensions import override
 
 import numpy as np
@@ -13,11 +13,8 @@ from hermespy.core import Serializable, Signal, SerializationProcess, Deserializ
 from hermespy.modem.tools.psk_qam_mapping import PskQamMapping
 from .symbols import StatedSymbols, Symbols
 
-if TYPE_CHECKING:
-    from hermespy.modem.modem import BaseModem  # pragma: no cover
-
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -67,29 +64,33 @@ class Synchronization(Generic[CWT], Serializable):
 
         self.__waveform = value
 
-    def synchronize(self, signal: np.ndarray) -> List[int]:
+    def synchronize(
+        self, signal: np.ndarray, bandwidth: float, oversampling_factor: int
+    ) -> list[int]:
         """Simulates time-synchronization at the receiver-side.
 
         Sorts base-band signal-sections into frames in time-domain.
+        Note that the overall sampling rate is defined as `bandwidth * oversampling_factor`.
 
         Args:
-
             signal:
                 Vector of complex base-band samples of with `num_streams`x`num_samples` entries.
+            bandwidth:
+                Bandwidth of the communication waveform in Hz.
+            oversampling_factor:
+                Oversampling factor of the communication waveform.
 
         Returns:
-
             List of time indices indicating the first samples of frames detected in `signal`.
 
         Raises:
-
             RuntimeError: If the synchronization routine is floating
         """
 
-        if self.__waveform is None:
+        if self.waveform is None:
             raise RuntimeError("Trying to synchronize with a floating synchronization routine")
 
-        samples_per_frame = self.waveform.samples_per_frame
+        samples_per_frame = self.waveform.samples_per_frame(bandwidth, oversampling_factor)
         num_frames = signal.shape[1] // samples_per_frame
 
         if num_frames < 1:
@@ -146,18 +147,19 @@ class ChannelEstimation(Generic[CWT], Serializable):
             self.__waveform = value
             value.channel_estimation = self
 
-    def estimate_channel(self, symbols: Symbols, delay: float = 0.0) -> StatedSymbols:
+    def estimate_channel(
+        self, symbols: Symbols, bandwidth: float, oversampling_factor: int, delay: float = 0.0
+    ) -> StatedSymbols:
         """Estimate the wireless channel of a received communication frame.
 
         Args:
+            symbols: Demodulated communication symbols.
+            bandwidth: Bandwidth of the communication waveform in Hz.
+            oversampling_factor: Oversampling factor of the communication waveform.
+            delay: The considered frame's delay offset to the drop start in seconds.
 
-            symbols:
-                Demodulated communication symbols.
-
-            delay:
-                The considered frame's delay offset to the drop start in seconds.
-
-        Returns: The symbols and their respective channel states.
+        Returns:
+            The symbols and their respective channel states.
         """
 
         state = GCXS.from_numpy(
@@ -233,16 +235,17 @@ class ChannelEqualization(Generic[CWT], ABC, Serializable):
 class ZeroForcingChannelEqualization(Generic[CWT], ChannelEqualization[CWT], Serializable):
     """Zero-Forcing channel equalization for arbitrary waveforms."""
 
-    def equalize_channel(self, symbols: StatedSymbols) -> Symbols:
+    @override
+    def equalize_channel(self, stated_symbols: StatedSymbols) -> Symbols:
         equalized_symbols: np.ndarray
 
-        if symbols.num_streams < 2:
-            summed_tx_states = np.sum(symbols.states, axis=1, keepdims=False)
-            equalized_symbols = symbols.raw / summed_tx_states
+        if stated_symbols.num_streams < 2:
+            summed_tx_states = np.sum(stated_symbols.states, axis=1, keepdims=False)
+            equalized_symbols = stated_symbols.raw / summed_tx_states
 
         else:
-            equalization = np.linalg.pinv(symbols.dense_states().transpose((2, 3, 0, 1)))
-            equalized_symbols = np.einsum("ijkl,lij->kij", equalization, symbols.raw)
+            equalization = np.linalg.pinv(stated_symbols.dense_states().transpose((2, 3, 0, 1)))
+            equalized_symbols = np.einsum("ijkl,lij->kij", equalization, stated_symbols.raw)
 
         return Symbols(equalized_symbols)
 
@@ -250,23 +253,15 @@ class ZeroForcingChannelEqualization(Generic[CWT], ChannelEqualization[CWT], Ser
 class CommunicationWaveform(ABC, Serializable):
     """Abstract base class for all communication waveform descriptions."""
 
-    symbol_type: type = np.complex128
-    """Symbol type."""
-
     __DEFAULT_MODULATION_ORDER: int = 16  # Default modulation order
-    __DEFAULT_OVERSAMPLING_FACTOR: int = 1  # Default oversampling factor
 
-    __modem: BaseModem | None  # Modem this generator is attached to
     __synchronization: Synchronization  # Synchronization routine
     __channel_estimation: ChannelEstimation  # Channel estimation routine
     __channel_equalization: ChannelEqualization  # Channel equalization routine
-    __oversampling_factor: int  # Oversampling factor
     __modulation_order: int
 
     def __init__(
         self,
-        modem: BaseModem | None = None,
-        oversampling_factor: int = __DEFAULT_OVERSAMPLING_FACTOR,
         modulation_order: int = __DEFAULT_MODULATION_ORDER,
         channel_estimation: ChannelEstimation | None = None,
         channel_equalization: ChannelEqualization | None = None,
@@ -274,31 +269,25 @@ class CommunicationWaveform(ABC, Serializable):
     ) -> None:
         """
         Args:
-            modem:
-                A modem this generator is attached to.
-                By default, the generator is considered to be floating.
-
-            oversampling_factor:
-                The factor at which the simulated baseband_signal is oversampled.
 
             modulation_order:
                 Order of modulation.
                 Must be a non-negative power of two.
+                By default, a modulation order of :math:`16` is assumed.
 
             channel_estimation:
-                Channel estimation algorithm. If not specified, an ideal channel is assumed.
+                Channel estimation algorithm.
+                If not specified, no channel estimation is performed, which implicitly assumes an ideal channel.
 
             channel_equalization:
                 Channel equalization algorithm. If not specified, no symbol equalization is performed.
 
             synchronization:
                 Time-domain synchronization routine.
-                If not specified, no synchronization is performed.
+                If not specified, no synchronization is performed, which implicitly assumes a channel without delay.
         """
 
         # Default parameters
-        self.__modem = None
-        self.oversampling_factor = oversampling_factor
         self.modulation_order = modulation_order
         self.synchronization = Synchronization(self) if synchronization is None else synchronization
         self.channel_estimation = (
@@ -308,43 +297,8 @@ class CommunicationWaveform(ABC, Serializable):
             ChannelEqualization(self) if channel_equalization is None else channel_equalization
         )
 
-        if modem is not None:
-            self.modem = modem
-
-        if oversampling_factor is not None:
-            self.oversampling_factor = oversampling_factor
-
         if modulation_order is not None:
             self.modulation_order = modulation_order
-
-    @property
-    def oversampling_factor(self) -> int:
-        """Access the oversampling factor.
-
-        Returns:
-            int:
-                The oversampling factor.
-        """
-
-        return self.__oversampling_factor
-
-    @oversampling_factor.setter
-    def oversampling_factor(self, factor: int) -> None:
-        """Modify the oversampling factor.
-
-        Args:
-            factor:
-                The new oversampling factor.
-
-        Raises:
-            ValueError:
-                If the oversampling `factor` is less than one.
-        """
-
-        if factor < 1:
-            raise ValueError("The oversampling factor must be greater or equal to one")
-
-        self.__oversampling_factor = factor
 
     @property
     def modulation_order(self) -> int:
@@ -408,59 +362,86 @@ class CommunicationWaveform(ABC, Serializable):
         """Number of bit-mapped symbols contained within each communication frame."""
         ...  # pragma: no cover
 
-    @property
     @abstractmethod
-    def samples_per_frame(self) -> int:
-        """Number of time-domain samples per processed communication frame."""
-        ...  # pragma: no cover
+    def samples_per_frame(self, bandwidth: float, oversampling_factor: int) -> int:
+        """Number of time-domain samples per processed communication frame.
 
-    @property
-    def frame_duration(self) -> float:
-        """Duration a single communication frame in seconds."""
+        Args:
 
-        return self.samples_per_frame / self.sampling_rate
+            bandwidth: Bandwidth of the communication waveform in Hz.
+            oversampling_factor: Oversampling factor of the communication waveform.
 
-    @property
-    @abstractmethod
-    def symbol_duration(self) -> float:
-        """Duration of a single symbol block."""
-        ...  # pragma: no cover
+        Note that the overall sampling rate is defined as `bandwidth * oversampling_factor`.
 
-    @property
-    @abstractmethod
-    def bit_energy(self) -> float:
-        """Returns the theoretical average (discrete-time) bit energy of the modulated baseband_signal.
-
-        Energy of baseband_signal :math:`x[k]` is defined as :math:`\\sum{|x[k]}^2`
-        Only data bits are considered, i.e., reference, guard intervals are ignored.
+        Returns:
+            int: Number of samples per frame.
         """
         ...  # pragma: no cover
 
-    @property
     @abstractmethod
-    def symbol_energy(self) -> float:
-        """The theoretical average symbol (discrete-time) energy of the modulated baseband_signal.
+    def frame_duration(self, bandwidth: float) -> float:
+        """Duration of a single communication frame in seconds.
 
-        Energy of baseband_signal :math:`x[k]` is defined as :math:`\\sum{|x[k]}^2`
-        Only data bits are considered, i.e., reference, guard intervals are ignored.
+        Args:
+            bandwidth: Target bandwidth of the communication waveform in Hz.
 
         Returns:
-            The average symbol energy in UNIT.
+            float: Duration of a single communication frame in seconds.
+        """
+        ...  # pragma: no cover
+
+    def bit_energy(self, bandwidth: float, oversampling_factor: int) -> float:
+        """Expected energy of a single data bit within the modulated baseband-signal.
+
+        Typically denoted by :math:`E_b`.
+        Can be derived from the :attr:`~symbol_energy` via the modulation order:
+
+        .. math::
+           E_b = \\frac{E_s}{\\log_2(M)}
+
+        where :math:`M` is the modulation order, i.e. the number of unique symbols.
+
+        Returns:
+            float: The expected bit energy.
+        """
+
+        return self.symbol_energy(bandwidth, oversampling_factor) / self.bits_per_symbol
+
+    @abstractmethod
+    def symbol_energy(self, bandwidth: float, oversampling_factor: int) -> float:
+        """Expected energy of a single communication symbol within the modulated baseband-signal.
+
+        Args:
+            bandwidth: Bandwidth of the communication waveform in Hz.
+            oversampling_factor: Oversampling factor of the communication waveform.
+
+        Typically denoted by :math:`E_s`.
+        HermesPy defines the symbol energy as the expected sum of squared magnitudes
+
+        .. math::
+           E_s = \\sum_{n=0}^{N-1} |x[n]|^2
+
+        where :math:`x[n]` are the complex base-band samples of a single communication symbol.
+
+        Returns:
+            float: The expected symbol energy.
         """
         ...  # pragma: no cover
 
     @property
     @abstractmethod
     def power(self) -> float:
-        """Returns the theoretical average symbol (unitless) power,
+        """Expected in-band power of the generated baseband-signal for within given target bandwidth.
 
-        Power of baseband_signal :math:`x[k]` is defined as :math:`\\sum_{k=1}^N{|x[k]|}^2 / N`
-        Power is the average power of the data part of the transmitted frame, i.e., bit energy x raw bit rate
+        Typically denoted by :math:`P`.
+
+        Returns:
+            The expected power of the modulated signal.
         """
         ...  # pragma: no cover
 
     @abstractmethod
-    def map(self, data_bits: np.ndarray) -> Symbols:
+    def map(self, data_bits: np.ndarray[tuple[int], np.dtype[np.uint8]]) -> Symbols:
         """Map a stream of bits to data symbols.
 
         Args:
@@ -472,7 +453,7 @@ class CommunicationWaveform(ABC, Serializable):
         ...  # pragma: no cover
 
     @abstractmethod
-    def unmap(self, symbols: Symbols) -> np.ndarray:
+    def unmap(self, symbols: Symbols) -> np.ndarray[tuple[int], np.dtype[np.uint8]]:
         """Map a stream of data symbols to data bits.
 
         Args:
@@ -512,87 +493,73 @@ class CommunicationWaveform(ABC, Serializable):
         ...  # pragma: no cover
 
     @abstractmethod
-    def modulate(self, data_symbols: Symbols) -> np.ndarray:
+    def modulate(
+        self, data_symbols: Symbols, bandwidth: float, oversampling_factor: int
+    ) -> np.ndarray:
         """Modulate a stream of data symbols to a base-band signal containing a single data frame.
 
         Args:
             data_symbols: Singular stream of data symbols to be modulated by this waveform.
+            bandwidth: Bandwidth of the communication waveform in Hz.
+            oversampling_factor: Oversampling factor of the communication waveform.
 
-        Returns: Samples of the modulated base-band signal.
+        Returns:
+            Samples of the modulated base-band signal.
         """
         ...  # pragma: no cover
 
     @abstractmethod
-    def demodulate(self, signal: np.ndarray) -> Symbols:
+    def demodulate(self, signal: np.ndarray, bandwidth: float, oversampling_factor: int) -> Symbols:
         """Demodulate a base-band signal stream to data symbols.
 
         Args:
             signal:  Vector of complex-valued base-band samples of a single communication frame.
+            bandwidth: Bandwidth of the communication waveform in Hz.
+            oversampling_factor: Oversampling factor of the communication waveform.
 
         Returns:
-
             The demodulated communication symbols
         """
         ...  # pragma: no cover
 
-    def estimate_channel(self, frame: Symbols, frame_delay: float = 0.0) -> StatedSymbols:
-        return self.channel_estimation.estimate_channel(frame, frame_delay)
+    def estimate_channel(
+        self, symbols: Symbols, bandwidth: float, oversampling_factor: int, delay: float = 0.0
+    ) -> StatedSymbols:
+        """Estimate the wireless channel of a received communication frame.
+
+        Wrapper around the channel estimation rountine assigned to this waveform via
+        the :attr:`~channel_estimation` property.
+
+        Args:
+            symbols: Demodulated communication symbols.
+            bandwidth: Bandwidth of the communication waveform in Hz.
+            oversampling_factor: Oversampling factor of the communication waveform.
+            delay: The considered frame's delay offset to the drop start in seconds.
+
+        Returns:
+            The symbols and their respective channel states.
+        """
+        return self.channel_estimation.estimate_channel(
+            symbols, bandwidth, oversampling_factor, delay
+        )
 
     def equalize_symbols(self, symbols: StatedSymbols) -> Symbols:
         return self.channel_equalization.equalize_channel(symbols)
 
-    @property
-    @abstractmethod
-    def bandwidth(self) -> float:
-        """Bandwidth of the frame generated by this generator.
-
-        Used to estimate the minimal sampling frequency required to adequately simulate the scenario.
-
-        Returns: Bandwidth in Hz.
-        """
-        ...  # pragma: no cover
-
-    def data_rate(self, num_data_symbols: int) -> float:
+    def data_rate(self, num_data_symbols: int, bandwidth: float) -> float:
         """Data rate theoretically achieved by this waveform configuration.
 
         Args:
             num_data_symbols: Number of data symbols contained within the frame.
+            bandwidth: Target bandwidth of the communication waveform in Hz.
 
         Returns: Bits per second.
         """
 
-        time = self.frame_duration  # ToDo: Consider guard interval
+        time = self.frame_duration(bandwidth)  # ToDo: Consider guard interval
         bits = self.bits_per_frame(num_data_symbols)
 
         return bits / time
-
-    @property
-    def modem(self) -> BaseModem | None:
-        """Access the modem this generator is attached to.
-
-        Returns: A handle to the modem.
-
-        Raises:
-            RuntimeError: If the `modem` does not reference this generator.
-        """
-
-        return self.__modem
-
-    @modem.setter
-    def modem(self, handle: BaseModem | None) -> None:
-        if handle is None:
-            modem = self.__modem
-            self.__modem = None
-
-            if modem is not None:
-                modem.waveform = None
-
-        else:
-            if handle.waveform is not self:
-                handle.waveform = self
-
-            self.__modem = handle
-            self.random_mother = handle
 
     @property
     def synchronization(self) -> Synchronization:
@@ -634,15 +601,6 @@ class CommunicationWaveform(ABC, Serializable):
             value.waveform = self
 
     @property
-    @abstractmethod
-    def sampling_rate(self) -> float:
-        """Rate at which the waveform generator signal is internally sampled.
-
-        Returns: Sampling rate in Hz.
-        """
-        ...  # pragma: no cover
-
-    @property
     def symbol_precoding_support(self) -> bool:
         """Flag indicating if this waveforms supports symbol precodings.
 
@@ -653,7 +611,6 @@ class CommunicationWaveform(ABC, Serializable):
 
     @override
     def serialize(self, process: SerializationProcess) -> None:
-        process.serialize_integer(self.oversampling_factor, "oversampling_factor")
         process.serialize_integer(self.modulation_order, "modulation_order")
         process.serialize_object(self.synchronization, "synchronization")
         process.serialize_object(self.channel_estimation, "channel_estimation")
@@ -670,9 +627,6 @@ class CommunicationWaveform(ABC, Serializable):
         """
 
         return {
-            "oversampling_factor": process.deserialize_integer(
-                "oversampling_factor", cls.__DEFAULT_OVERSAMPLING_FACTOR
-            ),
             "modulation_order": process.deserialize_integer(
                 "modulation_order", cls.__DEFAULT_MODULATION_ORDER
             ),
@@ -689,10 +643,13 @@ class CommunicationWaveform(ABC, Serializable):
 class PilotCommunicationWaveform(CommunicationWaveform):
     """Abstract base class of communication waveform generators generating a pilot signal."""
 
-    @property
     @abstractmethod
-    def pilot_signal(self) -> Signal:
+    def pilot_signal(self, bandwidth: float, oversampling_factor: int) -> Signal:
         """Model of the pilot sequence within this communication waveform.
+
+        Args:
+            bandwidth: Bandwidth of the communication waveform in Hz.
+            oversampling_factor: Oversampling factor of the communication waveform.
 
         Returns: The pilot sequence.
         """
@@ -825,7 +782,7 @@ class ConfigurablePilotWaveform(PilotCommunicationWaveform):
                Allow the repetition of pilot symbol sequences.
                Enabled by default.
 
-           \*\*kwargs:
+           kwargs:
                Additional :class:`CommunicationWaveform` initialization parameters.
         """
 

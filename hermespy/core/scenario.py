@@ -23,7 +23,6 @@ from .device import (
     Transmission,
     Transmitter,
     Receiver,
-    Operator,
 )
 from .drop import Drop, DropType
 from .factory import (
@@ -80,7 +79,6 @@ class Scenario(
 
     __mode: ScenarioMode  # Current scenario operating mode
     __devices: list[DeviceType]  # Registered devices within this scenario.
-    __drop_duration: float  # Drop duration in seconds.
     __serialization_process: SerializationProcess | None  # Available during recording
     __deserialization_process: DeserializationProcess | None  # Available during replay
     __drop_counter: int  # Internal drop counter
@@ -108,7 +106,6 @@ class Scenario(
         # Initialize attributes
         self.__mode = ScenarioMode.DEFAULT
         self.__devices = list()
-        self.drop_duration = 0.0
         self.__serialization_process = None
         self.__drop_counter = 0
         self.__campaign = "default"
@@ -168,7 +165,6 @@ class Scenario(
 
         Raises:
 
-            ValueError: If the device already exists.
             RuntimeError: If the scenario is not in default mode.
             RuntimeError: If the scenario does not allow for the creation or addition of new devices.
         """
@@ -286,13 +282,13 @@ class Scenario(
         return num
 
     @property
-    def operators(self) -> set[Operator]:
+    def operators(self) -> set[Transmitter | Receiver]:
         """All operators within this scenario.
 
         Returns: A set containing all unique operators within this scenario
         """
 
-        operators: set[Operator] = set()
+        operators: set[Transmitter | Receiver] = set()
 
         # Iterate over all devices and collect operators
         for device in self.devices:
@@ -314,43 +310,6 @@ class Scenario(
             num += device.transmitters.num_operators + device.receivers.num_operators
 
         return num
-
-    @property
-    def drop_duration(self) -> float:
-        """The scenario's default drop duration in seconds.
-
-        If the drop duration is set to zero, the property will return the maximum frame duration
-        over all registered transmitting modems as drop duration!
-
-        Returns:
-            float: The default drop duration in seconds.
-
-        Raises:
-            ValueError: For durations smaller than zero.
-            RuntimeError: If the scenario is not in default mode.
-        """
-
-        # Return the largest frame length as default drop duration
-        if self.__drop_duration == 0.0:
-            duration = 0.0
-
-            for device in self.__devices:
-                duration = max(duration, device.max_frame_duration)
-
-            return duration
-
-        else:
-            return self.__drop_duration
-
-    @drop_duration.setter
-    def drop_duration(self, value: float) -> None:
-        if value < 0.0:
-            raise ValueError("Drop duration must be greater or equal to zero")
-
-        if self.mode != ScenarioMode.DEFAULT:
-            raise RuntimeError("Modifying scenario parameters is only allowed in default mode")
-
-        self.__drop_duration = value
 
     @property
     def campaign(self) -> str:
@@ -393,16 +352,12 @@ class Scenario(
     @override
     def serialize(self, process: SerializationProcess) -> None:
         process.serialize_object_sequence(list(self.devices), "devices")
-        process.serialize_floating(self.drop_duration, "drop_duration")
 
     @override
     @classmethod
     def Deserialize(cls, process: DeserializationProcess) -> Scenario:
         # Deserialize class instance
         instance = cls()
-
-        # Configure drop duration parameter
-        instance.drop_duration = process.deserialize_floating("drop_duration", 0.0)
 
         # Add devices and (implicitly) their respective operators
         for device in process.deserialize_object_sequence("devices", cls._device_type()):

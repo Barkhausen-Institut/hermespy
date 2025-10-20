@@ -31,11 +31,13 @@ scenario = SimulationScenario()
 
 # Create a new simulated device
 carrier_frequency = 1e8
-tx_device = scenario.new_device(carrier_frequency=carrier_frequency)
-rx_device = scenario.new_device(carrier_frequency=carrier_frequency)
+bandwidth = 1e6
+oversampling_factor = 4
+tx_device = scenario.new_device(carrier_frequency=carrier_frequency, bandwidth=bandwidth, oversampling_factor=oversampling_factor)
+rx_device = scenario.new_device(carrier_frequency=carrier_frequency, bandwidth=bandwidth, oversampling_factor=oversampling_factor)
 scenario.set_channel(rx_device, tx_device, TDL(TDLType.E))
 
-waveform = RootRaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=0 , num_data_symbols=120, oversampling_factor=4, roll_off=.9)
+waveform = RootRaisedCosineWaveform(num_preamble_symbols=0 , num_data_symbols=120, roll_off=.9)
 waveform.num_preamble_symbols = 128
 waveform.num_data_symbols = 2048
 waveform.modulation_order = 256

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 from typing import Generic
+from typing_extensions import override
 
 import numpy as np
 from scipy.signal import convolve
@@ -81,7 +82,11 @@ class IdealChannelEstimation(Generic[CWT], ChannelEstimation[CWT]):
         self.__cached_sample = sample
 
     def _csi(
-        self, delay: float, sampling_rate: float | None = None, num_samples: int | None = None
+        self,
+        delay: float,
+        bandwidth: float,
+        oversampling_factor: int,
+        num_samples: int | None = None,
     ) -> ChannelStateInformation:
         """Query the ideal channel state information.
 
@@ -90,9 +95,11 @@ class IdealChannelEstimation(Generic[CWT], ChannelEstimation[CWT]):
             delay:
                 The considered frame's delay offset to the drop start in seconds.
 
-            sampling_rate:
-                Sampling rate of the generated CSI.
-                If not provided, the waveform's sampling rate will be assumed.
+            bandwidth:
+                Bandwidth of the generated channel state information in Hz.
+
+            oversampling_factor:
+                Oversampling factor of the generated channel state information.
 
             num_samples:
                 Number of samples within the generated CSI.
@@ -114,8 +121,11 @@ class IdealChannelEstimation(Generic[CWT], ChannelEstimation[CWT]):
                 "No channel sample available from which to estimate the ideal channel state information"
             )
 
-        sampling_rate = self.waveform.sampling_rate if sampling_rate is None else sampling_rate
-        num_samples = self.waveform.samples_per_frame if num_samples is None else num_samples
+        num_samples = (
+            self.waveform.samples_per_frame(bandwidth, oversampling_factor)
+            if num_samples is None
+            else num_samples
+        )
 
         channel_state_information = self.__cached_sample.state(num_samples, num_samples)
         return channel_state_information
@@ -126,16 +136,25 @@ class SingleCarrierIdealChannelEstimation(
 ):
     """Ideal channel estimation for single carrier waveforms"""
 
-    def estimate_channel(self, symbols: Symbols, frame_delay: float = 0.0) -> StatedSymbols:
-        oversampling_factor = self.waveform.oversampling_factor
+    @override
+    def estimate_channel(
+        self, symbols: Symbols, bandwidth: float, oversampling_factor: int, delay: float = 0.0
+    ) -> StatedSymbols:
         num_symbols = self.waveform._num_frame_symbols
-        filter_delay = int(0.5 * self.waveform._filter_delay)
+        filter_delay = int(0.5 * self.waveform._filter_delay(oversampling_factor))
         # sync_delay = int(frame_delay * self.waveform.sampling_rate)
 
         # Compute the CSI including inter-symbol interference
-        filter_characteristics = self.waveform._transmit_filter() * self.waveform._receive_filter()
+        filter_characteristics = self.waveform._transmit_filter(
+            oversampling_factor
+        ) * self.waveform._receive_filter(oversampling_factor)
         state = (
-            self._csi(frame_delay, self.waveform.sampling_rate, self.waveform.samples_per_frame)
+            self._csi(
+                delay,
+                bandwidth,
+                oversampling_factor,
+                self.waveform.samples_per_frame(bandwidth, oversampling_factor),
+            )
             .to_impulse_response()
             .dense_state()
         )
@@ -163,7 +182,7 @@ class SingleCarrierIdealChannelEstimation(
 class OFDMIdealChannelEstimation(IdealChannelEstimation[OFDMWaveform], Serializable):
     """Ideal channel state estimation for OFDM waveforms."""
 
-    serialized_attributes = {"reference_position"}
+    ibutes = {"reference_position"}
 
     reference_position: ReferencePosition
     """Assumed position of the reference symbol within the frame."""
@@ -194,10 +213,15 @@ class OFDMIdealChannelEstimation(IdealChannelEstimation[OFDMWaveform], Serializa
         IdealChannelEstimation.__init__(self, channel, transmitter, receiver, *args, **kwargs)  # type: ignore
 
     def __extract_channel(
-        self, section: GridSection, csi: np.ndarray, reference_position: ReferencePosition
+        self,
+        section: GridSection,
+        csi: np.ndarray,
+        reference_position: ReferencePosition,
+        bandwidth: float,
+        oversampling_factor: int,
     ) -> np.ndarray:
         # Remove the cyclic prefixes before transformation into the symbol's domain
-        _csi = section.pick_samples(csi.transpose((0, 1, 3, 2)))
+        _csi = section.pick_samples(csi.transpose((0, 1, 3, 2)), bandwidth, oversampling_factor)
 
         """if reference_position == ReferencePosition.IDEAL:
             selected_csi = np.mean(_csi, axis=3, keepdims=False)
@@ -219,15 +243,22 @@ class OFDMIdealChannelEstimation(IdealChannelEstimation[OFDMWaveform], Serializa
 
         # The CSI is the Fourier transform of the channel state
         transformed_csi = self.waveform._backward_transformation(
-            average_symbol_csi.transpose((0, 1, 3, 2)), normalize=False
+            average_symbol_csi.transpose((0, 1, 3, 2)), oversampling_factor, normalize=False
         )
 
         # Transform the channel state into the frequency domain
         return transformed_csi
 
-    def estimate_channel(self, symbols: Symbols, delay: float = 0.0) -> StatedSymbols:
-        # Query and densify the channel state
-        ideal_csi = self._csi(delay=delay).dense_state()[: symbols.num_streams, ...]
+    @override
+    def estimate_channel(
+        self, symbols: Symbols, bandwidth: float, oversampling_factor: int, delay: float = 0.0
+    ) -> StatedSymbols:  # Query and densify the channel state
+        ideal_csi = self._csi(
+            delay,
+            bandwidth,
+            oversampling_factor,
+            self.waveform.samples_per_frame(bandwidth, oversampling_factor),
+        ).dense_state()[: symbols.num_streams, ...]
 
         symbol_csi = np.zeros(
             (symbols.num_streams, ideal_csi.shape[1], symbols.num_blocks, symbols.num_symbols),
@@ -239,10 +270,10 @@ class OFDMIdealChannelEstimation(IdealChannelEstimation[OFDMWaveform], Serializa
 
         # If the frame contains a pilot section, skip the respective samples
         if self.waveform.pilot_section:
-            sample_index += self.waveform.pilot_section.num_samples
+            sample_index += self.waveform.pilot_section.num_samples(bandwidth, oversampling_factor)
 
         for section in self.waveform.grid_structure:
-            num_samples = section.num_samples
+            num_samples = section.num_samples(bandwidth, oversampling_factor)
             num_words = section.num_words
 
             if num_words > 0:
@@ -250,6 +281,8 @@ class OFDMIdealChannelEstimation(IdealChannelEstimation[OFDMWaveform], Serializa
                     section,
                     ideal_csi[:, :, sample_index : sample_index + num_samples, :],
                     self.reference_position,
+                    bandwidth,
+                    oversampling_factor,
                 )
                 symbol_csi[:, :, word_index : word_index + section.num_words, :] = csi
 

@@ -218,7 +218,7 @@ class SimulationActor(MonteCarloActor[SimulationScenario], SimulationRunner):
         SimulationRunner.__init__(self, self._investigated_object)
 
         # Update the internal random seed pseudo-deterministically for each actor instance
-        seed = self._investigated_object._rng.integers(0, maxsize)
+        seed = int(self._investigated_object._rng.integers(0, maxsize))
         individual_seed = seed + index * 12345678
         self._investigated_object.seed = individual_seed
 
@@ -261,7 +261,6 @@ class Simulation(Pipeline[SimulationScenario, SimulatedDevice], MonteCarlo[Simul
         self,
         scenario: SimulationScenario | None = None,
         num_samples: int = 100,
-        drop_duration: float = 0.0,
         drop_interval: float = float("inf"),
         plot_results: bool = False,
         dump_results: bool = True,
@@ -271,7 +270,6 @@ class Simulation(Pipeline[SimulationScenario, SimulatedDevice], MonteCarlo[Simul
         verbosity: str | Verbosity = Verbosity.INFO,
         seed: int | None = None,
         num_actors: int | None = None,
-        premature_stopping: bool = False,
         debug: bool = False,
     ) -> None:
         """
@@ -284,9 +282,6 @@ class Simulation(Pipeline[SimulationScenario, SimulatedDevice], MonteCarlo[Simul
             num_samples:
                 Number of drops generated per sweeping grid section.
                 100 by default.
-
-            drop_duration:
-                Duration of simulation drops in seconds.
 
             drop_interval:
                 Interval at which drops are being generated in seconds.
@@ -353,7 +348,6 @@ class Simulation(Pipeline[SimulationScenario, SimulatedDevice], MonteCarlo[Simul
         # Initialize class attributes
         self.plot_results = plot_results
         self.dump_results = dump_results
-        self.drop_duration = drop_duration
         self.num_drops = num_samples
         self.drop_interval = drop_interval
 

@@ -10,7 +10,7 @@ from hermespy.simulation import Simulation
 
 # Initialize a new simulation considering a single device
 simulation = Simulation()
-device = simulation.new_device(carrier_frequency=1e10)
+device = simulation.new_device(carrier_frequency=1e10, oversampling_factor=4, bandwidth=1e6)
 
 # Configure the modem modeling the device's transmit DSP
 tx_modem = TransmittingModem()
@@ -18,8 +18,6 @@ device.transmitters.add(tx_modem)
 
 # Configure the modem's waveform
 waveform = RootRaisedCosineWaveform(
-    oversampling_factor=4,
-    symbol_rate=1e6,
     num_preamble_symbols=16,
     num_data_symbols=32,
     modulation_order=64,

@@ -52,10 +52,15 @@ class TestTriggerGroups(TestCase):
             ),
         ]
 
-        waveform = OFDMWaveform(subcarrier_spacing=1e6 / num_subcarriers, num_subcarriers=num_subcarriers, dc_suppression=True, grid_resources=grid_resources, grid_structure=grid_structure)
-        waveform.oversampling_factor = 2
-        waveform.pilot_section = PilotSection()
-        waveform.synchronization = OFDMCorrelationSynchronization()
+        waveform = OFDMWaveform(
+            num_subcarriers=num_subcarriers,
+            dc_suppression=True,
+            grid_resources=grid_resources,
+            grid_structure=grid_structure,
+            modulation_order=self.modulation_order,
+        )
+        #waveform.pilot_section = PilotSection()
+        #waveform.synchronization = OFDMCorrelationSynchronization()
         waveform.channel_estimation = OrthogonalLeastSquaresChannelEstimation()
         waveform.channel_equalization = OrthogonalZeroForcingChannelEqualization()
         #waveform.pilot_symbol_sequence = CustomPilotSymbolSequence(np.arange(1, num_subcarriers * 60))
@@ -67,26 +72,37 @@ class TestTriggerGroups(TestCase):
         self.trigger_beta_link = RandomTrigger()
 
         self.carrier_frequency = 1e8
+        self.bandwidth = 128 * 15e3  # 5G numerology #1
+        self.oversampling_factor = 2
+        self.modulation_order = 4
         self.scenario = SimulationScenario(seed=42)
 
         # Set up the base scenario devices
         self.alpha_transmitter = self.scenario.new_device(
             carrier_frequency=self.carrier_frequency,
+            bandwidth=self.bandwidth,
+            oversampling_factor=self.oversampling_factor,
             trigger_model=self.trigger_alpha_link,
             pose=Transformation.From_Translation(np.array([100, 0, 0]))
         )
         self.alpha_receiver = self.scenario.new_device(
             carrier_frequency=self.carrier_frequency,
+            bandwidth=self.bandwidth,
+            oversampling_factor=self.oversampling_factor,
             trigger_model=self.trigger_alpha_link,
             pose=Transformation.From_Translation(np.array([0, 100, 0])),
         )
         self.beta_transmitter = self.scenario.new_device(
             carrier_frequency=self.carrier_frequency,
+            bandwidth=self.bandwidth,
+            oversampling_factor=self.oversampling_factor,
             trigger_model=self.trigger_beta_link,
             pose=Transformation.From_Translation(np.array([-100, 0, 0])),
         )
         self.beta_receiver = self.scenario.new_device(
             carrier_frequency=self.carrier_frequency,
+            bandwidth=self.bandwidth,
+            oversampling_factor=self.oversampling_factor,
             trigger_model=self.trigger_beta_link,
             pose=Transformation.From_Translation(np.array([0, -100, 0])),
         )
@@ -144,7 +160,7 @@ class TestTriggerGroups(TestCase):
         replayed_realizations = []
         for _ in range(num_drops):
             drop = self.scenario.drop()
-            replayed_realizations.append(drop.device_transmissions[0].trigger_realization)   
+            replayed_realizations.append(drop.device_transmissions[0].trigger_realization)
 
         for initial_realization, replayed_realization in zip(initial_realizations, replayed_realizations):
             self.assertEqual(initial_realization.num_offset_samples, replayed_realization.num_offset_samples)

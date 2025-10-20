@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from typing import Type
+from typing import Type, Sequence
 from typing_extensions import override
 
 import numpy as np
@@ -12,7 +12,7 @@ from .signal_model import Signal
 from .state import ReceiveState, TransmitState
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -25,21 +25,16 @@ class StaticOperator(object):
     """Base class for static device operators"""
 
     __num_samples: int  # Number of samples per transmission
-    __sampling_rate: float  # Sampling rate of transmission
 
-    def __init__(self, num_samples: int, sampling_rate: float) -> None:
+    def __init__(self, num_samples: int) -> None:
         """
         Args:
 
             num_samples (int):
                 Number of samples per transmission.
-
-            sampling_rate (float):
-                Sampling rate of transmission.
         """
 
         self.__num_samples = num_samples
-        self.sampling_rate = sampling_rate
 
     @property
     def num_samples(self) -> int:
@@ -50,69 +45,62 @@ class StaticOperator(object):
 
         return self.__num_samples
 
-    @property
-    def sampling_rate(self) -> float:
-        return self.__sampling_rate
-
-    @sampling_rate.setter
-    def sampling_rate(self, value: float) -> None:
-        if value <= 0:
-            raise ValueError(f"Sampling rate must be positive (not {value})")
-
-        self.__sampling_rate = value
-
-    @property
-    def frame_duration(self) -> float:
-        return self.__num_samples / self.sampling_rate
-
     def serialize(self, process: SerializationProcess) -> None:
         process.serialize_integer(self.__num_samples, "num_samples")
-        process.serialize_floating(self.__sampling_rate, "sampling_rate")
 
 
 class SilentTransmitter(StaticOperator, Transmitter[Transmission], Serializable):
     """Silent transmitter mock."""
 
-    serialized_attributes = {"num_samples", "sampling_rate"}
-
-    def __init__(self, num_samples: int, sampling_rate: float, *args, **kwargs) -> None:
+    def __init__(
+        self, num_samples: int, selected_transmit_ports: Sequence[int] | None = None
+    ) -> None:
         """
         Args:
 
-            num_samples (int):
-                Number of samples per transmission.
+            num_samples: Number of samples per transmission.
+            selected_transamit_ports: Digital transmit prots this dsp algorithm operates on.
 
-            sampling_rate (float):
-                Sampling rate of transmission.
         """
 
         # Init base classes
-        StaticOperator.__init__(self, num_samples, sampling_rate)
-        Transmitter.__init__(self, *args, **kwargs)
+        StaticOperator.__init__(self, num_samples)
+        Transmitter.__init__(self, selected_transmit_ports=selected_transmit_ports)
 
     @property
     def power(self) -> float:
         return 0.0
 
-    def _transmit(self, device: TransmitState, duration: float) -> Transmission:
+    @override
+    def _transmit(self, state: TransmitState, duration: float) -> Transmission:
         # Compute the number of samples to be transmitted
-        num_samples = self.num_samples if duration <= 0.0 else int(duration * self.sampling_rate)
+        num_samples = self.num_samples if duration <= 0.0 else int(duration * state.sampling_rate)
 
         silence = Signal.Create(
-            np.zeros((device.num_digital_transmit_ports, num_samples), dtype=complex),
-            sampling_rate=self.sampling_rate,
-            carrier_frequency=device.carrier_frequency,
+            np.zeros((state.num_transmit_dsp_ports, num_samples), dtype=complex),
+            sampling_rate=state.sampling_rate,
+            carrier_frequency=state.carrier_frequency,
         )
 
         return Transmission(silence)
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_integer(self.num_samples, "num_samples")
+        if self.selected_transmit_ports is not None:
+            process.serialize_array(
+                np.asarray(self.selected_transmit_ports, np.int64), "selected_transmit_ports"
+            )
+
     @classmethod
+    @override
     def Deserialize(
         cls: Type[SilentTransmitter], process: DeserializationProcess
     ) -> SilentTransmitter:
+        transmit_ports = process.deserialize_array("selected_transmit_ports", np.int64, None)
         return SilentTransmitter(
             process.deserialize_integer("num_samples"),
-            process.deserialize_floating("sampling_rate"),
+            transmit_ports.flatten().tolist() if transmit_ports is not None else None,
         )
 
 
@@ -130,7 +118,7 @@ class SignalTransmitter(StaticOperator, Transmitter[Transmission], Serializable)
         """
 
         # Init base classes
-        StaticOperator.__init__(self, signal.num_samples, signal.sampling_rate)
+        StaticOperator.__init__(self, signal.num_samples)
         Transmitter.__init__(self, *args, **kwargs)
 
         # Init class attributes
@@ -138,7 +126,7 @@ class SignalTransmitter(StaticOperator, Transmitter[Transmission], Serializable)
 
     @property
     def power(self) -> float:
-        return np.mean(self.signal.power)
+        return float(np.mean(self.signal.power))
 
     @property
     def signal(self) -> Signal:
@@ -150,12 +138,15 @@ class SignalTransmitter(StaticOperator, Transmitter[Transmission], Serializable)
     def signal(self, value: Signal) -> None:
         self.__signal = value
 
-    def _transmit(self, device: TransmitState, duration) -> Transmission:
+    def frame_duration(self, bandwidth: float) -> float:
+        return self.num_samples / bandwidth
+
+    @override
+    def _transmit(self, state: TransmitState, duration: float) -> Transmission:
         transmitted_signal = self.__signal.copy()
 
-        # Update the transmitted signal's carrier frequency if it is specified as base-band
-        if transmitted_signal.carrier_frequency == 0.0:
-            transmitted_signal.carrier_frequency = device.carrier_frequency
+        # Update the transmitted signal's sampling rate
+        transmitted_signal.sampling_rate = state.sampling_rate
 
         transmission = Transmission(transmitted_signal)
         return transmission
@@ -178,11 +169,14 @@ class SignalReceiver(StaticOperator, Receiver[Reception], Serializable):
     __expected_power: float
 
     def __init__(
-        self, num_samples: int, sampling_rate: float, expected_power: float = 0.0, *args, **kwargs
+        self,
+        num_samples: int,
+        selected_receive_ports: Sequence[int] | None = None,
+        expected_power: float = 0.0,
     ) -> None:
         # Initialize base classes
-        StaticOperator.__init__(self, num_samples, sampling_rate)
-        Receiver.__init__(self, *args, **kwargs)
+        StaticOperator.__init__(self, num_samples)
+        Receiver.__init__(self, selected_receive_ports=selected_receive_ports)
 
         # Initialize class attributes
         if expected_power < 0.0:
@@ -193,23 +187,41 @@ class SignalReceiver(StaticOperator, Receiver[Reception], Serializable):
     def energy(self) -> float:
         return self.__expected_power * self.num_samples
 
+    def frame_duration(self, bandwidth: float) -> float:
+        return self.num_samples / bandwidth
+
     @property
+    @override
     def power(self) -> float:
         return self.__expected_power
 
-    def _receive(self, signal: Signal, device: ReceiveState) -> Reception:
-        received_signal = signal.resample(self.sampling_rate)
-        return Reception(received_signal)
+    @override
+    def samples_per_frame(self, bandwidth: float, oversampling_factor: int) -> int:
+        return self.num_samples
 
+    @override
+    def _receive(self, signal: Signal, state: ReceiveState) -> Reception:
+        return Reception(signal)
+
+    @override
     def serialize(self, process: SerializationProcess) -> None:
         process.serialize_integer(self.num_samples, "num_samples")
-        process.serialize_floating(self.sampling_rate, "sampling_rate")
+        if self.selected_receive_ports is not None:
+            process.serialize_array(
+                np.asarray(self.selected_receive_ports, np.float64), "selected_receive_ports"
+            )
         process.serialize_floating(self.__expected_power, "expected_power")
 
     @classmethod
+    @override
     def Deserialize(cls, process: DeserializationProcess) -> SignalReceiver:
+        selected_receive_ports = process.deserialize_array("selected_receive_ports", np.int64, None)
         return cls(
             process.deserialize_integer("num_samples"),
-            process.deserialize_floating("sampling_rate"),
+            (
+                selected_receive_ports.flatten().tolist()
+                if selected_receive_ports is not None
+                else None
+            ),
             process.deserialize_floating("expected_power"),
         )

@@ -1,6 +1,5 @@
 from scipy.constants import speed_of_light
 
-sampling_rate = 1e6
 carrier_frequency = 70e9
 wavelength = speed_of_light / carrier_frequency
 
@@ -10,7 +9,7 @@ simulation = Simulation(seed=42)
 
 # Create a new device and assign it the antenna array
 from hermespy.simulation import SimulatedIdealAntenna, SimulatedUniformArray
-from hermespy.core import  Transformation
+from hermespy.core import Transformation
 import numpy as np
 
 base_station_device = simulation.new_device(
@@ -23,8 +22,6 @@ base_station_device = simulation.new_device(
 from hermespy.modem import RootRaisedCosineWaveform, SingleCarrierLeastSquaresChannelEstimation, SingleCarrierZeroForcingChannelEqualization, SingleCarrierCorrelationSynchronization
 
 waveform = RootRaisedCosineWaveform(
-    symbol_rate=sampling_rate//2,
-    oversampling_factor=2,
     num_preamble_symbols=32,
     num_data_symbols=128,
     roll_off=.9,
@@ -91,7 +88,6 @@ from hermespy.modem import ConstellationEVM
 
 simulation.add_evaluator(ConstellationEVM(user_equipment_transmitter_1, base_station_receiver))
 simulation.add_evaluator(ConstellationEVM(user_equipment_transmitter_2, base_station_receiver))
-
 
 # Creating a new dimension to dynamically switch the focus of the beamformer during the simulation campaign.
 simulation.new_dimension(

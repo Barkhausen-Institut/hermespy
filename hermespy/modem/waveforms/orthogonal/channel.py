@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 from abc import ABC
+from typing_extensions import override
 
 import numpy as np
 from scipy.interpolate import griddata
@@ -12,7 +13,7 @@ from ...waveform import ChannelEstimation, ChannelEqualization, ZeroForcingChann
 from .waveform import ElementType, OrthogonalWaveform
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -24,7 +25,10 @@ __status__ = "Prototype"
 class OrthogonalLeastSquaresChannelEstimation(ChannelEstimation[OrthogonalWaveform], Serializable):
     """Least-Squares channel estimation for OFDM waveforms."""
 
-    def estimate_channel(self, symbols: Symbols, delay: float = 0.0) -> StatedSymbols:
+    @override
+    def estimate_channel(
+        self, symbols: Symbols, bandwidth: float, oversampling_factor: int, delay: float = 0.0
+    ) -> StatedSymbols:
         if symbols.num_streams != 1:
             raise NotImplementedError(
                 "Least-Squares channel estimation is only implemented for SISO links"

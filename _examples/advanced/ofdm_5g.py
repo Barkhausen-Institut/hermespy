@@ -38,7 +38,7 @@ from hermespy.modem import (
 from hermespy.fec import LDPCCoding
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "André Noll-Barreto", "Tobias Kronauer"]
 __license__ = "AGPLv3"
 __version__ = "1.4.0"
@@ -50,8 +50,9 @@ __status__ = "Prototype"
 # Initialize a simulation with two devices at 3 GHz.
 simulation = Simulation()
 cf = 3e9
-tx_device = simulation.new_device(carrier_frequency=cf)
-rx_device = simulation.new_device(carrier_frequency=cf)
+bandwidth = 4096 * 30e3  # 4096 subcarriers with 30 kHz spacing
+tx_device = simulation.new_device(carrier_frequency=cf, bandwidth=bandwidth)
+rx_device = simulation.new_device(carrier_frequency=cf, bandwidth=bandwidth)
 
 # Configure a 5G-TDL channel model type E with 100 ns rms delay spread.
 tdl_channel = TDL(TDLType.E, 100e-9)
@@ -62,7 +63,6 @@ tdd_57 = OFDMWaveform(
     num_subcarriers=4096,
     dc_suppression=False,
     modulation_order=4,
-    subcarrier_spacing=30e3,
     grid_resources=[
         GridResource(1, PrefixType.CYCLIC, 0.0703125, [
             GridElement(ElementType.NULL, 998),
@@ -108,7 +108,6 @@ simulation.new_dimension("noise_level", dB(range(0, 21, 2)), rx_device)
 
 # Run the simulation and collect 1000 samples per SNR point
 simulation.num_samples = 1000
-simulation.min_num_samples = 100
 result = simulation.run()
 result.plot()
 plt.show()

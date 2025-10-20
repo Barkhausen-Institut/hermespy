@@ -1,21 +1,21 @@
 # -*- coding: utf-8 -*-
-"""Test communication evaluators"""
 
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
-import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 from numpy.random import default_rng
 
-from hermespy.core.pymonte import GridDimensionInfo, ScalarEvaluationResult, ArtifactTemplate
-from hermespy.core import ValueType
-from hermespy.modem import TransmittingModem, ReceivingModem, RootRaisedCosineWaveform
+from hermespy.modem import TransmittingModem, ReceivingModem
 from hermespy.modem.evaluators import BitErrorEvaluation, BitErrorEvaluator, BlockErrorEvaluation, BlockErrorEvaluator, CommunicationEvaluator, FrameErrorEvaluation, FrameErrorEvaluator, ThroughputEvaluation, ThroughputEvaluator, ConstellationEVM, EVMEvaluation
 from hermespy.simulation import SimulatedDevice
 
+from .test_waveform import MockCommunicationWaveform
+
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -70,8 +70,8 @@ class TestBitErrorEvaluation(TestCase):
     def test_plot(self) -> None:
         """Plotting should generate a valid plot"""
 
-        figure_mock = Mock(spec=plt.Figure)
-        axes_mock = Mock(spec=plt.Axes)
+        figure_mock = Mock(spec=Figure)
+        axes_mock = Mock(spec=Axes)
         axes_collection = np.array([[axes_mock]], dtype=np.object_)
 
         with patch("matplotlib.pyplot.subplots") as subplots_mock:
@@ -85,15 +85,17 @@ class TestBitErrorEvaluator(TestCase):
     """Test bit error evaluator"""
 
     def setUp(self) -> None:
-        self.waveform = RootRaisedCosineWaveform(symbol_rate=1e9, num_preamble_symbols=0, num_data_symbols=10)
+        self.bandwidth = 1e9
+        self.oversampling_factor = 4
+        self.waveform = MockCommunicationWaveform()
         self.transmitter = TransmittingModem()
         self.transmitter.waveform = self.waveform
         self.receiver = ReceivingModem()
         self.receiver.waveform = self.waveform
 
-        self.transmit_device = SimulatedDevice()
+        self.transmit_device = SimulatedDevice(bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor)
         self.transmit_device.transmitters.add(self.transmitter)
-        self.receive_device = SimulatedDevice()
+        self.receive_device = SimulatedDevice(bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor)
         self.transmit_device.receivers.add(self.receiver)
 
         self.evaluator = BitErrorEvaluator(self.transmitter, self.receiver)
@@ -139,8 +141,8 @@ class TestBlockErrorEvaluation(TestCase):
     def test_plot(self) -> None:
         """Plotting should generate a valid plot"""
 
-        figure_mock = Mock(spec=plt.Figure)
-        axes_mock = Mock(spec=plt.Axes)
+        figure_mock = Mock(spec=Figure)
+        axes_mock = Mock(spec=Axes)
         axes_collection = np.array([[axes_mock]], dtype=np.object_)
 
         with patch("matplotlib.pyplot.subplots") as subplots_mock:
@@ -154,15 +156,17 @@ class TestBlockErrorEvaluator(TestCase):
     """Test block error evaluator"""
 
     def setUp(self) -> None:
-        self.waveform = RootRaisedCosineWaveform(symbol_rate=1e9, num_preamble_symbols=0, num_data_symbols=10)
+        self.bandwidth = 1e9
+        self.oversampling_factor = 4
+        self.waveform = MockCommunicationWaveform()
         self.transmitter = TransmittingModem()
         self.transmitter.waveform = self.waveform
         self.receiver = ReceivingModem()
         self.receiver.waveform = self.waveform
 
-        self.transmit_device = SimulatedDevice()
+        self.transmit_device = SimulatedDevice(bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor)
         self.transmit_device.transmitters.add(self.transmitter)
-        self.receive_device = SimulatedDevice()
+        self.receive_device = SimulatedDevice(bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor)
         self.transmit_device.receivers.add(self.receiver)
 
         self.evaluator = BlockErrorEvaluator(self.transmitter, self.receiver)
@@ -208,8 +212,8 @@ class TestFrameErrorEvaluation(TestCase):
     def test_plot(self) -> None:
         """Plotting should generate a valid plot"""
 
-        figure_mock = Mock(spec=plt.Figure)
-        axes_mock = Mock(spec=plt.Axes)
+        figure_mock = Mock(spec=Figure)
+        axes_mock = Mock(spec=Axes)
         axes_collection = np.array([[axes_mock]], dtype=np.object_)
 
         with patch("matplotlib.pyplot.subplots") as subplots_mock:
@@ -223,15 +227,18 @@ class TestFrameErrorEvaluator(TestCase):
     """Test frame error evaluator"""
 
     def setUp(self) -> None:
-        self.waveform = RootRaisedCosineWaveform(symbol_rate=1e9, num_preamble_symbols=0, num_data_symbols=10)
+        self.bandwidth = 1e9
+        self.oversampling_factor = 4
+
+        self.waveform = MockCommunicationWaveform()
         self.transmitter = TransmittingModem()
         self.transmitter.waveform = self.waveform
         self.receiver = ReceivingModem()
         self.receiver.waveform = self.waveform
 
-        self.transmit_device = SimulatedDevice()
+        self.transmit_device = SimulatedDevice(bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor)
         self.transmit_device.transmitters.add(self.transmitter)
-        self.receive_device = SimulatedDevice()
+        self.receive_device = SimulatedDevice(bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor)
         self.transmit_device.receivers.add(self.receiver)
 
         self.evaluator = FrameErrorEvaluator(self.transmitter, self.receiver)
@@ -239,7 +246,7 @@ class TestFrameErrorEvaluator(TestCase):
     def test_evaluate(self) -> None:
         """Evaluator should compute the proper frame error rate"""
 
-        transmission = self.transmitter.transmit(self.transmit_device.state(), 5 * self.waveform.frame_duration)
+        transmission = self.transmitter.transmit(self.transmit_device.state(), 5 * self.waveform.frame_duration(self.bandwidth))
         self.receiver.receive(transmission.signal, self.receive_device.state())
 
         evaluation = self.evaluator.evaluate()
@@ -249,11 +256,11 @@ class TestFrameErrorEvaluator(TestCase):
         """A mismatch in number of frames should count as a frame error"""
 
         # Generate two frames receive only one
-        frame_duration = self.waveform.frame_duration
+        frame_duration = self.waveform.frame_duration(self.bandwidth)
         transmission = self.transmitter.transmit(self.transmit_device.state(), 2 * frame_duration)
-        
-        received_samples = transmission.signal.getitem()[:, :int(frame_duration * self.waveform.sampling_rate)]
-        self.receiver.receive(transmission.signal.from_ndarray(received_samples), self.receive_device.state())
+
+        received_samples = transmission.signal[:, :int(frame_duration * self.bandwidth * self.oversampling_factor)]
+        self.receiver.receive(received_samples, self.receive_device.state())
 
         evaluation = self.evaluator.evaluate()
         self.assertLess(0, evaluation.artifact().to_scalar())
@@ -292,8 +299,8 @@ class TestThroughputEvaluation(TestCase):
     def test_plot(self) -> None:
         """Plotting should generate a valid plot"""
 
-        figure_mock = Mock(spec=plt.Figure)
-        axes_mock = Mock(spec=plt.Axes)
+        figure_mock = Mock(spec=Figure)
+        axes_mock = Mock(spec=Axes)
         axes_collection = np.array([[axes_mock]], dtype=np.object_)
 
         with patch("matplotlib.pyplot.subplots") as subplots_mock:
@@ -309,11 +316,13 @@ class TestThroughputEvaluator(TestCase):
     def setUp(self) -> None:
         self.rng = default_rng(42)
         self.num_frames = 10
+        self.bandwidth = 1e9
+        self.oversampling_factor = 4
 
-        self.waveform = RootRaisedCosineWaveform(symbol_rate=1e9, num_preamble_symbols=0, num_data_symbols=100)
+        self.waveform = MockCommunicationWaveform()
         self.receiver = ReceivingModem(waveform=self.waveform, seed=42)
         self.transmitter = TransmittingModem(waveform=self.waveform, seed=42)
-        self.device = SimulatedDevice()
+        self.device = SimulatedDevice(bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor)
         self.device.transmitters.add(self.transmitter)
         self.device.receivers.add(self.receiver)
 
@@ -328,12 +337,12 @@ class TestThroughputEvaluator(TestCase):
     def test_evaluate(self) -> None:
         """Evaluator should compute the proper throughput rate"""
 
-        duration = self.num_frames * self.waveform.frame_duration
+        duration = self.num_frames * self.waveform.frame_duration(self.bandwidth)
         transmission = self.transmitter.transmit(self.device.state(), duration)
         self.receiver.receive(transmission.signal, self.device.state())
 
         # Assert throughput without any frame errors
-        expected_throughput = self.waveform.bits_per_frame(None) / self.waveform.frame_duration
+        expected_throughput = self.waveform.bits_per_frame(None) / self.waveform.frame_duration(self.bandwidth)
         throughput = self.evaluator.evaluate()
         self.assertAlmostEqual(expected_throughput, throughput.artifact().to_scalar())
 
@@ -366,8 +375,8 @@ class TestEVMEvaluation(TestCase):
     def test_plot(self) -> None:
         """Plotting should generate a valid plot"""
 
-        figure_mock = Mock(spec=plt.Figure)
-        axes_mock = Mock(spec=plt.Axes)
+        figure_mock = Mock(spec=Figure)
+        axes_mock = Mock(spec=Axes)
         axes_collection = np.array([[axes_mock]], dtype=np.object_)
 
         with patch("matplotlib.pyplot.subplots") as subplots_mock:
@@ -387,16 +396,18 @@ class TestConstellationEVM(TestCase):
     """Test the constellation diagram EVM evaluator"""
 
     def setUp(self) -> None:
-        self.waveform = RootRaisedCosineWaveform(symbol_rate=1e9, num_preamble_symbols=0, num_data_symbols=10, roll_off=.9)
+        self.bandwidth = 1e9
+        self.oversampling_factor = 4
+        self.waveform = MockCommunicationWaveform()
         self.transmitter = TransmittingModem()
         self.transmitter.seed = 42
         self.transmitter.waveform = self.waveform
         self.receiver = ReceivingModem()
         self.receiver.waveform = self.waveform
 
-        self.transmit_device = SimulatedDevice()
+        self.transmit_device = SimulatedDevice(bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor)
         self.transmit_device.transmitters.add(self.transmitter)
-        self.receive_device = SimulatedDevice()
+        self.receive_device = SimulatedDevice(bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor)
         self.transmit_device.receivers.add(self.receiver)
 
         self.evaluator = ConstellationEVM(self.transmitter, self.receiver)
@@ -407,16 +418,8 @@ class TestConstellationEVM(TestCase):
         transmission = self.transmitter.transmit(self.transmit_device.state())
         self.receiver.receive(transmission.signal, self.receive_device.state())
 
-        rolled_off_evaluation = self.evaluator.evaluate()
-        self.assertAlmostEqual(0.0, rolled_off_evaluation.artifact().to_scalar(), 3)
-
-        # Lower roll-off should result in higher EVM
-        self.waveform.roll_off = 0.1
-        transmission = self.transmitter.transmit(self.transmit_device.state())
-        self.receiver.receive(transmission.signal, self.receive_device.state())
-
         evaluation = self.evaluator.evaluate()
-        self.assertGreater(evaluation.artifact().to_scalar(), rolled_off_evaluation.artifact().to_scalar())
+        self.assertAlmostEqual(0.0, evaluation.artifact().to_scalar())
 
     def test_init(self) -> None:
         """Initialization parameters should be properly stored as class attributes"""

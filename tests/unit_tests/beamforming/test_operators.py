@@ -9,9 +9,10 @@ from hermespy.beamforming import BeamformingTransmitter, BeamformingReceiver, Co
 from hermespy.core import Signal
 from hermespy.simulation import SimulatedDevice
 from unit_tests.core.test_factory import test_roundtrip_serialization
+from unit_tests.utils import assert_signals_equal
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -35,8 +36,8 @@ class TestBeamformingTransmitter(TestCase):
     def test_init(self) -> None:
         """Test initialization of the beamforming transmitter"""
 
-        self.assertEqual(self.transmitter.signal, self.signal)
-        self.assertEqual(self.transmitter.beamformer, self.beamformer)
+        assert_signals_equal(self, self.transmitter.signal, self.signal)
+        self.assertIs(self.transmitter.beamformer, self.beamformer)
 
     def test_beamformer_setget(self) -> None:
         """Beamformer property getter should return setter argument"""
@@ -65,7 +66,7 @@ class TestBeamformingReceiver(TestCase):
 
         self.rng = np.random.default_rng(42)
         self.beamformer = ConventionalBeamformer()
-        self.receiver = BeamformingReceiver(self.beamformer, 100, 1e6)
+        self.receiver = BeamformingReceiver(self.beamformer, 100)
         self.device = SimulatedDevice(carrier_frequency=1e9)
         self.device.receivers.add(self.receiver)
 
@@ -85,7 +86,7 @@ class TestBeamformingReceiver(TestCase):
     def test_receive(self) -> None:
         """Receiving should generate a valid reception"""
 
-        signal = Signal.Create(self.rng.normal(size=(1, 100)) + 1j * self.rng.normal(size=(1, 100)), 1e6, 1e9)
+        signal = Signal.Create(self.rng.normal(size=(1, 100)) + 1j * self.rng.normal(size=(1, 100)), self.device.sampling_rate, self.device.carrier_frequency)
         reception = self.receiver.receive(signal, self.device.state())
         self.assertEqual(100, reception.signal.num_samples)
 

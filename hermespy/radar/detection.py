@@ -8,7 +8,7 @@ Radar Detection
 from __future__ import annotations
 from abc import abstractmethod
 from math import cos, sin
-from typing import List, Tuple, Type
+from typing import Type
 from typing_extensions import override
 
 import matplotlib.pyplot as plt
@@ -28,7 +28,7 @@ from hermespy.core import (
 from .cube import RadarCube
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Egor Achkasov"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -170,7 +170,7 @@ class PointDetection(Serializable):
 class RadarPointCloud(Serializable, Visualizable[ScatterVisualization]):
     """A sparse radar point cloud."""
 
-    __points: List[PointDetection]
+    __points: list[PointDetection]
     __max_range: float
 
     def __init__(self, max_range: float = 0.0) -> None:
@@ -187,7 +187,7 @@ class RadarPointCloud(Serializable, Visualizable[ScatterVisualization]):
             ValueError: For `max_range` smaller than zero.
         """
 
-        if max_range <= 0.0:
+        if max_range < 0.0:
             raise ValueError(
                 f"Maximal represented range must be greater than zero (not {max_range})"
             )
@@ -211,7 +211,7 @@ class RadarPointCloud(Serializable, Visualizable[ScatterVisualization]):
         return self.__max_range
 
     @property
-    def points(self) -> List[PointDetection]:
+    def points(self) -> list[PointDetection]:
         """Points contained within the represented point cloud.
 
         Returns: List of represented points.
@@ -242,7 +242,7 @@ class RadarPointCloud(Serializable, Visualizable[ScatterVisualization]):
     def title(self) -> str:
         return "Radar Point Coud"
 
-    def create_figure(self, **kwargs) -> Tuple[plt.Figure, VAT]:
+    def create_figure(self, **kwargs) -> tuple[plt.Figure, VAT]:
         figure, axes = plt.subplots(1, 1, squeeze=False, subplot_kw={"projection": "3d"})
         return figure, axes
 
@@ -487,7 +487,7 @@ class CFARDetector(RadarDetector, Serializable):
 
     .. math::
 
-        P_{r,d} = \sum_{\\substack{
+        P_{r,d} = \\sum_{\\substack{
             i \\in \\lbrace \\mathbb{Z} | N_\\mathrm{G, R} < \\lVert r + i \\rVert \\leq N_{\\mathrm{T, R}} \\rbrace \\\\
             j \\in \\lbrace \\mathbb{Z} | N_\\mathrm{G, D} < \\lVert d + j \\rVert \\leq N_{\\mathrm{T, D}} \\rbrace
         }}

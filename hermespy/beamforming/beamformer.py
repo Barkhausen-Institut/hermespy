@@ -10,12 +10,12 @@ import numpy as np
 from hermespy.core import (
     AntennaArrayState,
     Direction,
-    Operator,
     ReceiveState,
     DeserializationProcess,
     Serializable,
     SerializationProcess,
     Signal,
+    SignalBlock,
     State,
     TransmitState,
     TransmitStreamEncoder,
@@ -101,7 +101,7 @@ class SphericalFocus(BeamFocus):
     def __init__(  # type: ignore
         self, angles: float | np.ndarray, zenith: float | None = None
     ) -> None:
-        if isinstance(angles, (float, int, np.float64, np.int_)):
+        if np.isscalar(angles) and zenith is not None:
             self.__angles = np.array([angles, zenith], dtype=np.float64)
 
         elif isinstance(angles, np.ndarray):
@@ -190,6 +190,9 @@ class CoordinateFocus(BeamFocus):
             local_direction = transformation.transform_direction(self.__direction)
             return local_direction.to_spherical()
 
+        else:
+            raise ValueError(f"Invalid reference frame '{self.reference}'")
+
     @override
     def serialize(self, process: SerializationProcess) -> None:
         process.serialize_array(self.__direction, "direction")
@@ -202,10 +205,6 @@ class CoordinateFocus(BeamFocus):
             process.deserialize_array("direction", np.float64).view(Direction),
             process.deserialize_string("reference"),  # type: ignore[arg-type]
         )
-
-
-OT = TypeVar("OT", bound=Operator)
-"""Type of operator."""
 
 
 class TransmitBeamformer(TransmitStreamEncoder):
@@ -263,6 +262,7 @@ class TransmitBeamformer(TransmitStreamEncoder):
         # Save results
         self.__focus_points = _value
 
+    @override
     def encode_streams(
         self,
         streams: Signal,
@@ -327,13 +327,22 @@ class TransmitBeamformer(TransmitStreamEncoder):
             )
 
         # Encode the signal
-        steered_samples = self._encode(
-            streams.getitem(),
-            device.carrier_frequency,
-            np.array([focus.spherical_angles(device) for focus in _focus], dtype=np.float64),
-            device.antennas,
+        focus_angles = np.array(
+            [focus.spherical_angles(device) for focus in _focus], dtype=np.float64
         )
-        return streams.from_ndarray(steered_samples)
+        return Signal.Create(
+            [
+                self._encode(
+                    block.view(np.ndarray), device.carrier_frequency, focus_angles, device.antennas
+                ).view(SignalBlock)
+                for block in streams.blocks
+            ],
+            streams.sampling_rate,
+            streams.carrier_frequency,
+            streams.noise_power,
+            streams.delay,
+            streams.block_offsets,
+        )
 
     @abstractmethod
     def _encode(
@@ -510,6 +519,7 @@ class ReceiveBeamformer(ReceiveStreamDecoder):
         """
         ...  # pragma: no cover
 
+    @override
     def decode_streams(
         self,
         streams: Signal,
@@ -567,22 +577,31 @@ class ReceiveBeamformer(ReceiveStreamDecoder):
             )
 
         # Decode the signal
-        beamformed_samples = self._decode(
-            streams.getitem(),
-            device.carrier_frequency,
-            np.array([[focus.spherical_angles(device) for focus in _focus]], dtype=np.float64),
-            device.antennas,
+        focus_angles = np.array(
+            [[focus.spherical_angles(device) for focus in _focus]], dtype=np.float64
         )
-        return streams.from_ndarray(beamformed_samples[0, ::])
+        return Signal.Create(
+            [
+                self._decode(
+                    block.view(np.ndarray), device.carrier_frequency, focus_angles, device.antennas
+                )[0, ::].view(SignalBlock)
+                for block in streams.blocks
+            ],
+            streams.sampling_rate,
+            streams.carrier_frequency,
+            streams.noise_power,
+            streams.delay,
+            streams.block_offsets,
+        )
 
     def probe(
-        self, signal: Signal, device: ReceiveState, focus_points: np.ndarray | None = None
+        self, signal: np.ndarray, device: ReceiveState, focus_points: np.ndarray | None = None
     ) -> np.ndarray:
         """Focus a signal model towards certain directions of interest.
 
         Args:
 
-            signal: The signal to be steered.
+            signal: The signal samples to be steered.
             device: State of the device this beamformer is operating on.
             focus_points:
                 Focus point of the steered signal power.
@@ -599,6 +618,4 @@ class ReceiveBeamformer(ReceiveStreamDecoder):
         _focus_points = self.probe_focus_points if focus_points is None else focus_points
 
         # Decode the signal focusing towards the provided points
-        return self._decode(
-            signal.getitem(), device.carrier_frequency, _focus_points, device.antennas
-        )
+        return self._decode(signal, device.carrier_frequency, _focus_points, device.antennas)

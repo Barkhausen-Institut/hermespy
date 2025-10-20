@@ -6,7 +6,7 @@ Antenna Descriptions
    :parts: 1
    :top-classes: hermespy.core.transformation.Transformable, hermespy.core.factory.Serializable
 
-.. inheritance-diagram:: hermespy.core.antennas.AntennaArrayBase hermespy.core.antennas.AntennaArrayState hermespy.core.antennas.AntennaArray hermespy.core.antennas.UniformArray hermespy.core.antennas.CustomAntennaArray hermespy.core.antennas.AntennaPort
+.. inheritance-diagram:: hermespy.core.antennas.AntennaArrayBase hermespy.core.antennas.AntennaArrayState hermespy.core.antennas.AntennaArray hermespy.core.antennas.UniformArray hermespy.core.antennas.CustomAntennaArray
    :parts: 1
    :top-classes: collections.abc.Sequence, hermespy.core.transformation.Transformable
 
@@ -31,14 +31,10 @@ Antenna Descriptions
 
 .. autoclass:: hermespy.core.antennas.CustomAntennaArray
 
-.. autoclass:: hermespy.core.antennas.AntennaPort
-
 .. autoclass:: hermespy.core.antennas.AntennaMode
 
 .. autoclass:: hermespy.core.antennas.AT
 
 .. autoclass:: hermespy.core.antennas.AAT
-
-.. autoclass:: hermespy.core.antennas.APT
 
 .. footbibliography::

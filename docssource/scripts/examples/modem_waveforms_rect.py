@@ -16,8 +16,6 @@ from hermespy.simulation import Simulation
 
 # Initialize the waveform description
 waveform = RectangularWaveform(
-    oversampling_factor=4,
-    symbol_rate=1e6,
     num_preamble_symbols=16,
     num_data_symbols=32,
     modulation_order=64,
@@ -39,8 +37,8 @@ waveform.pilot_symbol_sequence = CustomPilotSymbolSequence(
 
 # Initialize a new simulation considering a single device
 simulation = Simulation()
-tx_device = simulation.new_device(carrier_frequency=1e10)
-rx_device = simulation.new_device(carrier_frequency=1e10)
+tx_device = simulation.new_device(carrier_frequency=1e10, bandwidth=1e6, oversampling_factor=4)
+rx_device = simulation.new_device(carrier_frequency=1e10, bandwidth=1e6, oversampling_factor=4)
 
 # Configure the link to connect both devices
 link = SimplexLink(waveform=waveform)

@@ -2,18 +2,20 @@
 
 from __future__ import annotations
 from functools import cached_property
-from typing import Generic, List, Sequence, Tuple, Type, TypeVar
+from typing import Generic, List, Sequence, Type, TypeVar
 from typing_extensions import override
 
 import numpy as np
 
 from hermespy.fec import Encoder, EncoderManager
 from hermespy.core import (
+    DenseSignal,
     Device,
     DeserializationProcess,
     RandomNode,
     Serializable,
     SerializationProcess,
+    SignalBlock,
     Transmission,
     TransmitSignalCoding,
     TransmitStreamEncoder,
@@ -38,7 +40,7 @@ from .waveform import CommunicationWaveform, CWT
 from .frame_generator import FrameGenerator, FrameGeneratorStub
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -199,15 +201,22 @@ class CommunicationTransmission(Transmission):
         return len(self.frames)
 
     @cached_property
-    def bits(self) -> np.ndarray:
+    def bits(self) -> np.ndarray[tuple[int], np.dtype[np.uint8]]:
         """Transmitted bits before FEC encoding.
 
         Returns: Numpy array of transmitted bits.
         """
 
-        concatenated_bits = np.empty(0, dtype=np.uint8)
+        num_bits = sum(frame.bits.size for frame in self.frames)
+        concatenated_bits = np.empty((num_bits,), dtype=np.uint8)
+        bit_counter = 0
         for frame in self.frames:
-            concatenated_bits = np.append(concatenated_bits, frame.bits)
+            np.copyto(
+                concatenated_bits[bit_counter : bit_counter + frame.bits.size],
+                frame.bits,
+                casting="unsafe",
+            )
+            bit_counter += frame.bits.size
 
         return concatenated_bits
 
@@ -407,7 +416,7 @@ class CommunicationReception(Reception):
         return len(self.frames)
 
     @cached_property
-    def encoded_bits(self) -> np.ndarray:
+    def encoded_bits(self) -> np.ndarray[tuple[int], np.dtype[np.uint8]]:
         """Received bits before FEC decoding.
 
         Returns:
@@ -415,14 +424,21 @@ class CommunicationReception(Reception):
             Numpy array containing received bits.
         """
 
-        concatenated_bits = np.empty(0, dtype=np.uint8)
+        num_bits = sum(frame.encoded_bits.size for frame in self.frames)
+        concatenated_bits = np.empty((num_bits,), dtype=np.uint8)
+        bit_counter = 0
         for frame in self.frames:
-            concatenated_bits = np.append(concatenated_bits, frame.encoded_bits)
+            np.copyto(
+                concatenated_bits[bit_counter : bit_counter + frame.encoded_bits.size],
+                frame.encoded_bits,
+                casting="unsafe",
+            )
+            bit_counter += frame.encoded_bits.size
 
         return concatenated_bits
 
     @cached_property
-    def bits(self) -> np.ndarray:
+    def bits(self) -> np.ndarray[tuple[int], np.dtype[np.uint8]]:
         """Received bits after FEC decoding.
 
         Returns:
@@ -430,9 +446,16 @@ class CommunicationReception(Reception):
             Numpy array containing received bits.
         """
 
-        concatenated_bits = np.empty(0, dtype=np.uint8)
+        num_bits = sum(frame.decoded_bits.size for frame in self.frames)
+        concatenated_bits = np.empty((num_bits,), dtype=np.uint8)
+        bit_counter = 0
         for frame in self.frames:
-            concatenated_bits = np.append(concatenated_bits, frame.decoded_bits)
+            np.copyto(
+                concatenated_bits[bit_counter : bit_counter + frame.decoded_bits.size],
+                frame.decoded_bits,
+                casting="unsafe",
+            )
+            bit_counter += frame.decoded_bits.size
 
         return concatenated_bits
 
@@ -554,10 +577,6 @@ class BaseModem(Generic[CWT], RandomNode, Serializable):
     def waveform(self, value: CWT | None) -> None:
         self.__waveform = value
 
-        if value is not None:
-            value.modem = self
-            value.random_mother = self
-
     @property
     def frame_generator(self) -> FrameGenerator:
         return self.__frame_generator
@@ -566,43 +585,32 @@ class BaseModem(Generic[CWT], RandomNode, Serializable):
     def frame_generator(self, value: FrameGenerator) -> None:
         self.__frame_generator = value
 
-    @property
-    def samples_per_frame(self) -> int:
-        """Number of discrete-time samples per processed communication frame.
+    def samples_per_frame(self, bandwidth: float, oversampling_factor: int) -> int:
+        """Number of samples required to process at least a single frame.
 
-        Convenience wrapper for the :attr:`waveform<BaseModem.waveform>`
-        :attr:`sampling_rate<hermespy.modem.waveform.CommunicationWaveform.sampling_rate>` property.
+        Convenience wrapper for the :attr:`waveform's<hermespy.modem.modem.BaseModem.waveform>`
+        :meth:`samples_per_frame<hermespy.modem.waveform.CommunicationWaveform.samples_per_frame>` method.
+
+        Args:
+            bandwidth: The processed signal's bandwidth in Hz.
+            oversampling_factor: Factor by which the processed signal is oversampled.
+
+        Returns:
+            Number of discrete samples.
         """
-        return self.waveform.samples_per_frame
+        return self.waveform.samples_per_frame(bandwidth, oversampling_factor)
 
-    @property
-    def frame_duration(self) -> float:
+    def frame_duration(self, bandwidth: float) -> float:
         """Duration of a single communication frame in seconds.
 
-        Convenience wrapper for the :attr:`waveform<BaseModem.waveform>`
-        :attr:`frame_duration<hermespy.modem.waveform.CommunicationWaveform.frame_duration>` property.
+        Args:
+            bandwidth: Target bandwidth of the communication waveform in Hz.
+
+        Convenience wrapper for the :attr:`waveform<hermespy.modem.modem.BaseModem.waveform>`
+        :meth:`frame_duration<hermespy.modem.waveform.CommunicationWaveform.frame_duration>` method.
         """
 
-        return self.waveform.frame_duration
-
-    @property
-    def symbol_duration(self) -> float:
-        """Duration of a single communication symbol in seconds.
-
-        Convenience wrapper for the :attr:`waveform<BaseModem.waveform>`
-        :attr:`symbol_duration<hermespy.modem.waveform.CommunicationWaveform.symbol_duration>` property.
-        """
-
-        return self.waveform.symbol_duration
-
-    @property
-    def sampling_rate(self) -> float:
-        """Sampling rate of the processed waveforms in Hz.
-
-        Convenience wrapper for the :attr:`waveform<BaseModem.waveform>`
-        :attr:`sampling_rate<hermespy.modem.waveform.CommunicationWaveform.sampling_rate>` property.
-        """
-        return self.waveform.sampling_rate
+        return self.waveform.frame_duration(bandwidth)
 
     @override
     def serialize(self, process: SerializationProcess) -> None:
@@ -736,7 +744,7 @@ class TransmittingModemBase(Generic[CWT], BaseModem[CWT]):
     def transmit_symbol_coding(self, value: TransmitSymbolCoding) -> None:
         self.__transmit_symbol_coding = value
 
-    def __map(self, bits: np.ndarray, num_streams: int) -> Symbols:
+    def __map(self, bits: np.ndarray[tuple[int], np.dtype[np.uint8]], num_streams: int) -> Symbols:
         """Map a block of information bits to commuication symbols.
 
         Args:
@@ -749,54 +757,56 @@ class TransmittingModemBase(Generic[CWT], BaseModem[CWT]):
         """
 
         symbols = Symbols()
-        for frame_bits in np.reshape(bits, (num_streams, -1)):
-            symbols.append_stream(self.waveform.map(frame_bits))
+        for frame_bits in bits.reshape((num_streams, -1)):
+            symbols.append_stream(self.waveform.map(frame_bits.flatten()))
 
         return symbols
 
-    def __modulate(self, symbols: Symbols, carrier_frequency: float) -> Signal:
+    def __modulate(self, symbols: Symbols, device: TransmitState) -> Signal:
         """Modulates a sequence of MIMO signals into a base-band communication waveform.
 
         Args:
-
-            symbols:
-                Communication symbols to be modulated.
-
-            carrier_frequency:
-                Carrier frequency of the communication signal.
+            symbols: Communication symbols to be modulated.
+            device: State of the device over which the symbols are to be transmitted.
 
         Returns:
-
             The modualted base-band communication frame.
         """
 
         # For each stream resulting from the initial encoding stage
         # Place and encode the symbols according to the stream transmit coding configuration
         frame_samples = np.empty(
-            (symbols.num_streams, self.waveform.samples_per_frame), dtype=np.complex128
+            (
+                symbols.num_streams,
+                self.waveform.samples_per_frame(device.bandwidth, device.oversampling_factor),
+            ),
+            dtype=np.complex128,
         )
         for s, stream_symbols in enumerate(symbols.raw):
             placed_symbols = self.waveform.place(Symbols(stream_symbols[np.newaxis, :, :]))
 
             # Modulate each placed symbol stream individually to its base-band signal representation
-            frame_samples[s, :] = self.waveform.modulate(placed_symbols)
+            frame_samples[s, :] = self.waveform.modulate(
+                placed_symbols, device.bandwidth, device.oversampling_factor
+            )
 
         # Apply the stream transmit coding configuration
-        frame_signal = Signal.Create(frame_samples, self.waveform.sampling_rate, carrier_frequency)
+        frame_signal = Signal.Create(frame_samples, device.sampling_rate, device.carrier_frequency)
         return frame_signal
 
-    def _transmit(self, device: TransmitState, duration: float) -> CommunicationTransmission:
+    def _transmit(self, state: TransmitState, duration: float) -> CommunicationTransmission:
+        frame_duration = self.frame_duration(state.bandwidth)
+
         # By default, the generated signal's duration will be exactly one frame
         if duration <= 0.0:
-            duration = self.frame_duration
+            duration = frame_duration
 
         # Compute the number of frames to be transmitted within the given duration
-        frame_duration = self.frame_duration
         num_mimo_frames = int(duration / frame_duration)
 
         # Compute the number of parallel symbol streams required to transmit over the given coding config
         num_input_signal_streams = self.transmit_signal_coding.num_transmit_input_streams(
-            device.num_digital_transmit_ports
+            state.num_transmit_dsp_ports
         )
         num_input_symbol_streams = self.transmit_symbol_coding.num_transmit_input_streams(
             num_input_signal_streams
@@ -811,18 +821,10 @@ class TransmittingModemBase(Generic[CWT], BaseModem[CWT]):
         )
         required_num_data_bits = self.encoder_manager.required_num_data_bits(required_num_code_bits)
 
-        signal = Signal.Empty(
-            self.waveform.sampling_rate,
-            device.num_digital_transmit_ports,
-            carrier_frequency=device.carrier_frequency,
-        )
+        frames: list[CommunicationTransmissionFrame] = []
+        signal_blocks: list[SignalBlock] = []
+        frame_offset: int = 0
 
-        # Abort if no frame is to be transmitted within the current duration
-        if num_mimo_frames < 1:
-            transmission = CommunicationTransmission(signal)
-            return transmission
-
-        frames: List[CommunicationTransmissionFrame] = []
         for n in range(num_mimo_frames):
             # Generate plain data bits
             frame_bits = self.frame_generator.pack_frame(self.bits_source, required_num_data_bits)
@@ -851,16 +853,22 @@ class TransmittingModemBase(Generic[CWT], BaseModem[CWT]):
             )
 
             # Modulate symbols to a base-band signal
-            frame_signal = self.__modulate(encoded_symbols, device.carrier_frequency)
+            frame_signal = self.__modulate(encoded_symbols, state)
 
             # Apply stream encoding configuration
-            encoded_frame_signal = self.transmit_signal_coding.encode_streams(frame_signal, device)
+            encoded_frame_signal = self.transmit_signal_coding.encode_streams(frame_signal, state)
+
+            # Correct the block offsets
+            # ToDo: Account for possible delays
+            encoded_frame_blocks = [b.view(SignalBlock) for b in encoded_frame_signal.blocks]
+            for b in encoded_frame_blocks:
+                b.offset += frame_offset
 
             # Save results
-            signal.append_samples(encoded_frame_signal)
+            signal_blocks += encoded_frame_blocks
             frames.append(
                 CommunicationTransmissionFrame(
-                    signal=frame_signal,
+                    signal=encoded_frame_signal,
                     bits=frame_bits,
                     bit_block_size=self.encoder_manager.bit_block_size,
                     encoded_bits=encoded_bits,
@@ -870,6 +878,13 @@ class TransmittingModemBase(Generic[CWT], BaseModem[CWT]):
                     timestamp=n * frame_duration,
                 )
             )
+            frame_offset += frame_signal.num_samples
+
+        # Concatenate all frames into a single signal
+        signal = Signal.Create(
+            signal_blocks,
+            state.sampling_rate,
+        )
 
         # Save the transmitted information
         transmission = CommunicationTransmission(signal, frames)
@@ -1070,7 +1085,9 @@ class ReceivingModemBase(Generic[CWT], BaseModem[CWT]):
     def receive_symbol_coding(self, value: ReceiveSymbolCoding) -> None:
         self.__receive_symbol_coding = value
 
-    def __synchronize(self, received_signal: Signal) -> Tuple[List[int], List[Signal]]:
+    def __synchronize(
+        self, received_signal: Signal, bandwidth: float, oversampling_factor: int
+    ) -> tuple[list[int], list[DenseSignal]]:
         """Synchronize a received MIMO base-band stream.
 
         Converts the stream into sections representing communication frames.
@@ -1080,53 +1097,72 @@ class ReceivingModemBase(Generic[CWT], BaseModem[CWT]):
             received_signal:
                 The MIMO signal received over the operated device's RF chain.
 
+            bandwidth:
+                Bandwidth of the communication waveform in Hz.
+
+            oversampling_factor:
+                Oversampling factor of the communication waveform.
+
         Returns:
 
             A sequence signals representing communication frames and their respective detection indices.
         """
 
-        # Synchronize raw MIMO data into frames
-        frame_start_indices = self.waveform.synchronization.synchronize(received_signal.getitem())
-        frame_length = self.waveform.samples_per_frame
+        frame_length = self.waveform.samples_per_frame(bandwidth, oversampling_factor)
 
-        synchronized_signals = []
-        for frame_start in frame_start_indices:
-            frame_stop = frame_start + frame_length
-            frame_samples = received_signal.getitem(
-                (slice(None, None), slice(frame_start, frame_stop))
+        # Synchronize raw MIMO data into frames
+        synchronized_signals: list[DenseSignal] = []
+        frame_start_indices: list[int] = []
+        for block in received_signal.blocks:
+
+            # Find all frames contained within the given dense signal block
+            # This assumes that frames are not spread through multiple blocks
+            block_frame_start_indices = self.waveform.synchronization.synchronize(
+                block.view(np.ndarray), bandwidth, oversampling_factor
             )
 
-            # Pad the frame if it is too short
-            # This may happen if the last frame is incomplete, or synhronization is not perfect
-            if frame_samples.shape[1] < frame_length:
-                frame_samples = np.pad(
+            for frame_start in block_frame_start_indices:
+                frame_stop = frame_start + frame_length
+                frame_samples: np.ndarray[tuple[int, int], np.dtype[np.complex128]] = block[
+                    :, frame_start:frame_stop
+                ]
+
+                # Pad the frame if it is too short
+                # This may happen if the last frame is incomplete, or synhronization is not perfect
+                if frame_samples.shape[1] < frame_length:
+                    frame_samples = np.pad(
+                        frame_samples,
+                        ((0, 0), (0, frame_length - frame_samples.shape[1])),
+                        mode="constant",
+                    ).reshape((frame_samples.shape[0], frame_length))
+
+                frame_signal = DenseSignal.FromNDArray(
                     frame_samples,
-                    ((0, 0), (0, frame_length - frame_samples.shape[1])),
-                    mode="constant",
+                    received_signal.sampling_rate,
+                    received_signal.carrier_frequency,
+                    received_signal.noise_power,
+                    received_signal.delay,
                 )
-
-            frame_signal = Signal.Create(frame_samples, received_signal.sampling_rate)
-
-            synchronized_signals.append(frame_signal)
+                synchronized_signals.append(frame_signal)
+                frame_start_indices.append(block.offset + frame_start)
 
         return frame_start_indices, synchronized_signals
 
-    def __demodulate(self, frame: Signal) -> Symbols:
+    def __demodulate(self, frame: Signal, bandwidth: float, oversampling_factor: int) -> Symbols:
         """Demodulates a sequence of synchronized MIMO signals into data symbols.
 
         Args:
-
-            frame:
-                Synchronized MIMO signal, representing the samples of a full communication frame.
+            frame: Synchronized MIMO signal, representing the samples of a full communication frame.
+            bandwidth: Bandwidth of the communication waveform in Hz.
+            oversampling_factor: Oversampling factor of the communication waveform.
 
         Returns:
-
             Demodulated frame symbols.
         """
 
         symbols = Symbols()
-        for stream in frame.getitem():
-            stream_symbols = self.waveform.demodulate(stream)
+        for stream in frame.view(np.ndarray):
+            stream_symbols = self.waveform.demodulate(stream, bandwidth, oversampling_factor)
             symbols.append_stream(stream_symbols)
 
         return symbols
@@ -1143,21 +1179,27 @@ class ReceivingModemBase(Generic[CWT], BaseModem[CWT]):
             A numpy array containing hard information bits.
         """
 
-        bits = np.empty(0, dtype=np.uint8)
+        raw_bits_per_frame = int(self.waveform.num_data_symbols * self.receive_symbol_coding.decode_rate) * self.waveform.bits_per_symbol
+        bits = np.empty((symbols.num_streams * raw_bits_per_frame,), dtype=np.uint8)
+        bit_index = 0
         for stream in symbols.raw:
-            bits = np.append(bits, self.waveform.unmap(Symbols(stream[np.newaxis, :, :])))
-
+            bits[bit_index : bit_index + raw_bits_per_frame] = self.waveform.unmap(
+                Symbols(stream[np.newaxis, :, :])
+            )
+            bit_index += raw_bits_per_frame
         return bits
 
-    def _receive(self, signal: Signal, device: ReceiveState) -> CommunicationReception:
+    def _receive(self, signal: Signal, state: ReceiveState) -> CommunicationReception:
         # Resample the signal to match the waveform's requirements
-        signal = signal.resample(self.waveform.sampling_rate)
+        signal = signal.resample(state.sampling_rate)
 
         # Decode the signal using the receive signal coding configuration
-        decoded_signal = self.receive_signal_coding.decode_streams(signal, device)
+        decoded_signal = self.receive_signal_coding.decode_streams(signal, state)
 
         # Synchronize incoming signals
-        frame_start_indices, synchronized_signals = self.__synchronize(decoded_signal)
+        frame_start_indices, synchronized_signals = self.__synchronize(
+            decoded_signal, state.bandwidth, state.oversampling_factor
+        )
 
         # Abort if no frame has been detected
         if len(synchronized_signals) < 1:
@@ -1178,11 +1220,13 @@ class ReceivingModemBase(Generic[CWT], BaseModem[CWT]):
         frames: List[CommunicationReceptionFrame] = []
         for frame_index, frame_signal in zip(frame_start_indices, synchronized_signals):
             # Demodulate raw symbols for each frame independtly
-            symbols = self.__demodulate(frame_signal)
+            symbols = self.__demodulate(frame_signal, state.bandwidth, state.oversampling_factor)
 
             # Estimate the channel from each frame demodulation
-            frame_delay = frame_index / self.waveform.sampling_rate
-            stated_symbols = self.waveform.estimate_channel(symbols, frame_delay)
+            frame_delay = frame_index / state.sampling_rate
+            stated_symbols = self.waveform.estimate_channel(
+                symbols, state.bandwidth, state.oversampling_factor, frame_delay
+            )
 
             # Extract data symbols to be decoded
             picked_symbols = self.waveform.pick(stated_symbols)

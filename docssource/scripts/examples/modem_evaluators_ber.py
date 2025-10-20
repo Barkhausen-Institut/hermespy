@@ -9,8 +9,8 @@ from hermespy.simulation import Simulation
 
 # Create a new simulation featuring two devices
 simulation = Simulation()
-device_alpha = simulation.new_device()
-device_beta = simulation.new_device()
+device_alpha = simulation.new_device(bandwidth=1e8, oversampling_factor=8)
+device_beta = simulation.new_device(bandwidth=1e8, oversampling_factor=8)
 
 # Create a transmitting and receiving modem for each device, respectively
 modem_alpha = TransmittingModem()
@@ -20,7 +20,6 @@ device_beta.receivers.add(modem_beta)
 
 # Configure the modem's waveform
 waveform_configuration = {
-    'symbol_rate': 1e8,
     'num_preamble_symbols': 10,
     'num_data_symbols': 100,
 }

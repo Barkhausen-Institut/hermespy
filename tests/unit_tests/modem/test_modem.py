@@ -15,10 +15,10 @@ from hermespy.modem import Symbols, CommunicationReceptionFrame, CommunicationTr
 from hermespy.simulation import SimulatedDevice
 
 from .test_waveform import MockCommunicationWaveform
-from unit_tests.core.test_factory import test_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization  # type: ignore
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler", "Tobias Kronauer"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -140,7 +140,7 @@ class TestBaseModem(TestCase):
         self.random_node._rng = self.random_generator
 
         self.encoding = EncoderManager()
-        self.waveform = MockCommunicationWaveform(oversampling_factor=4)
+        self.waveform = MockCommunicationWaveform()
 
         self.modem = modem_type(encoding=self.encoding, waveform=self.waveform, **kwargs)
         self.modem.random_mother = self.random_node
@@ -179,7 +179,7 @@ class TestBaseModem(TestCase):
     def test_samples_per_frame(self) -> None:
         """Samples per frame should correctly resolve the waveform's number of samples"""
 
-        self.assertEqual(self.waveform.samples_per_frame, self.modem.samples_per_frame)
+        self.assertEqual(self.waveform.samples_per_frame(1, 2), self.modem.samples_per_frame(1, 2))
 
     def test_serialization(self) -> None:
         """Test base modem serialzation"""
@@ -197,7 +197,7 @@ class TestTransmittingModem(TestBaseModem):
         self.bits_source = RandomBitsSource()
         self._init_base_modem(TransmittingModem, bits_source=self.bits_source)
 
-        self.transmit_device = SimulatedDevice()
+        self.transmit_device = SimulatedDevice(oversampling_factor=4)
         self.transmit_device.transmitters.add(self.modem)
 
     def test_bits_source_setget(self) -> None:
@@ -227,25 +227,17 @@ class TestTransmittingModem(TestBaseModem):
     def test_transmit(self) -> None:
         """Test modem data transmission"""
 
-        transmission = self.modem.transmit(self.transmit_device.state(), duration=2 * self.waveform.frame_duration)
+        transmission = self.modem.transmit(self.transmit_device.state(), duration=2 * self.waveform.frame_duration(self.transmit_device.bandwidth))
 
         self.assertEqual(0.0, transmission.signal.carrier_frequency)
         self.assertEqual(2, transmission.num_frames)
-        self.assertEqual(2 * self.waveform.samples_per_frame, transmission.signal.num_samples)
+        self.assertEqual(2 * self.waveform.samples_per_frame(self.transmit_device.bandwidth, self.transmit_device.oversampling_factor), transmission.signal.num_samples)
 
     def test_empty_transmit(self) -> None:
         """Transmissions not fitting into the waveform duration should return an empty transmission"""
 
-        transmission = self.modem.transmit(self.transmit_device.state(), duration=0.5 * self.waveform.frame_duration)
+        transmission = self.modem.transmit(self.transmit_device.state(), duration=0.5 * self.waveform.frame_duration(self.transmit_device.bandwidth))
         self.assertEqual(0, transmission.num_frames)
-
-    def test_device_setget(self) -> None:
-        """Device property getter should return setter argument"""
-
-        expected_device = SimulatedDevice()
-        self.modem.device = expected_device
-
-        self.assertIs(expected_device, self.modem.device)
 
 
 class TestReceivingModem(TestBaseModem):
@@ -280,12 +272,14 @@ class TestReceivingModem(TestBaseModem):
 class TestDuplexModem(TestBaseModem):
     """Test the simultaneously transmitting and receiving duplex modem"""
 
+    modem: DuplexModem
+
     def setUp(self) -> None:
         self.bits_source = RandomBitsSource()
 
         self._init_base_modem(DuplexModem, bits_source=self.bits_source)
 
-        self.device = SimulatedDevice()
+        self.device = SimulatedDevice(oversampling_factor=1)
         self.transmit_device = self.device
         self.receive_device = self.device
         self.device.transmitters.add(self.modem)
@@ -307,7 +301,7 @@ class TestDuplexModem(TestBaseModem):
 
         transmission = self.modem.transmit(self.transmit_device.state())
 
-        self.waveform.synchronization.synchronize = lambda s: []
+        self.waveform.synchronization.synchronize = lambda *args: []
         reception = self.modem.receive(transmission.signal, self.receive_device.state())
 
         self.assertEqual(0, reception.num_frames)
@@ -316,8 +310,8 @@ class TestDuplexModem(TestBaseModem):
         """Received frames should be padded to the correct length"""
 
         transmission = self.modem.transmit(self.device.state())
-        cutoff_samples = transmission.signal.getitem((slice(None, None), slice(None, transmission.signal.num_samples//2)))
-        self.waveform.synchronization.synchronize = lambda s: [0]
+        cutoff_samples = transmission.signal[:, :transmission.signal.num_samples//2]
+        self.waveform.synchronization.synchronize = lambda *args: [0]
         processed_input = self.device.process_input(Signal.Create(cutoff_samples, transmission.signal.sampling_rate, self.device.carrier_frequency))
         reception = self.modem.receive(processed_input.operator_inputs[0], self.device.state())
 

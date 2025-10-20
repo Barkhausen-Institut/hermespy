@@ -23,26 +23,28 @@ class TestSI(TestCase):
     def setUp(self):
 
         self.rng = np.random.default_rng(42)
-        self.scenario = SimulationScenario()
-        self.device = self.scenario.new_device(carrier_frequency=1e9)
-        self.scenario.channel(self.device, self.device).gain = 1.0
-
         self.isolation = 1e4
-        self.device.isolation = SpecificIsolation(self.isolation * np.ones((2, 2)))
-        self.device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 1e-2, (2, 1, 1))
 
+        self.scenario = SimulationScenario()
+        self.device = self.scenario.new_device(
+            carrier_frequency=1e9,
+            antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1e-2, (2, 1, 1)),
+            isolation=SpecificIsolation(self.isolation * np.ones((2, 2))),
+            oversampling_factor=1,
+        )
+
+        self.scenario.channel(self.device, self.device).gain = 1.0
         self.evaluator = SI(self.device)
 
         self.transmitter = SignalTransmitter(Signal.Create(
             2**-.5 * (self.rng.standard_normal((2, 1000)) + 1j * self.rng.standard_normal((2, 1000))),
             1e6,
-            1e9
         ))
         self.device.transmitters.add(self.transmitter)
 
     def test_properties(self) -> None:
         """Test static properties of SI evaluators"""
-        
+
         self.assertEqual(self.evaluator.abbreviation, "SI")
         self.assertEqual(self.evaluator.title, "Self-Interference")
 
@@ -65,20 +67,22 @@ class TestSSINR(TestCase):
     def setUp(self):
 
         self.rng = np.random.default_rng(42)
-        self.scenario = SimulationScenario()
-        self.device = self.scenario.new_device(carrier_frequency=1e9)
-        self.scenario.channel(self.device, self.device).gain = 1.0
-
         self.isolation = 1e4
-        self.device.isolation = SpecificIsolation(self.isolation * np.ones((2, 2)))
-        self.device.antennas = SimulatedUniformArray(SimulatedIdealAntenna, 1e-2, (2, 1, 1))
 
+        self.scenario = SimulationScenario()
+        self.device = self.scenario.new_device(
+            oversampling_factor=1,
+            carrier_frequency=1e9,
+            isolation=SpecificIsolation(self.isolation * np.ones((2, 2))),
+            antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1e-2, (2, 1, 1)),
+        )
+
+        self.scenario.channel(self.device, self.device).gain = 1.0
         self.evaluator = SSINR(self.device)
 
         self.transmitter = SignalTransmitter(Signal.Create(
             2**-.5 * (self.rng.standard_normal((2, 1000)) + 1j * self.rng.standard_normal((2, 1000))),
-            1e6,
-            1e9
+            self.device.sampling_rate,
         ))
         self.device.transmitters.add(self.transmitter)
 
@@ -91,6 +95,6 @@ class TestSSINR(TestCase):
     def test_evaluate(self) -> None:
         """Test SSINR evaluation routine"""
 
-        _ = self.scenario.drop()
+        drop = self.scenario.drop()
         evaluation = self.evaluator.evaluate()
-        self.assertAlmostEqual(np.mean(evaluation.power), self.isolation / 2, delta=100)
+        self.assertAlmostEqual(np.mean(evaluation.power), .5 * self.isolation, delta=100)

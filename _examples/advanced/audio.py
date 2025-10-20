@@ -25,7 +25,7 @@ from hermespy.modem import (
 )
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.4.0"
@@ -39,7 +39,7 @@ loop = HardwareLoop[AudioScenario, AudioDevice](AudioScenario())
 
 # Connect to the first sound card
 soundcard = loop.new_device(
-    playback_device=6, 
+    playback_device=6,
     record_device=4,
     playback_channels=[1],
     record_channels=[1],
@@ -50,7 +50,6 @@ soundcard = loop.new_device(
 modem = DuplexModem()
 modem.waveform = OFDMWaveform(
     modulation_order=2,
-    subcarrier_spacing=30e3,
     dc_suppression=False,
     num_subcarriers=4096,
     channel_estimation=OrthogonalLeastSquaresChannelEstimation(),
@@ -76,6 +75,7 @@ modem.waveform = OFDMWaveform(
         GuardSection(35.677083e-6),
     ],
 )
+soundcard.add_dsp(modem)
 
 # Add a bit error evaluation to the hardware loop
 loop.add_evaluator(BitErrorEvaluator(modem, modem))

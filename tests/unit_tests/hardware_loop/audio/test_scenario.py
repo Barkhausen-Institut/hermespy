@@ -9,7 +9,7 @@ from hermespy.core import Signal
 from hermespy.hardware_loop.audio import AudioDevice, AudioScenario
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"

@@ -149,17 +149,12 @@ class DuplexJCASOperator(
         # Initialize class attributes
         self.waveform = waveform
 
-    @property
-    def sampling_rate(self) -> float:
+    @override
+    def frame_duration(self, bandwidth: float) -> float:
         if self.waveform is None:
-            return 1.0
-        return self.waveform.sampling_rate
+            raise RuntimeError("Waveform must be set to compute the frame duration.")
 
-    @property
-    def frame_duration(self) -> float:
-        if self.waveform is None:
-            return 0.0
-        return self.waveform.frame_duration
+        return self.waveform.frame_duration(bandwidth)
 
     @abstractmethod
     def _transmit(

@@ -121,6 +121,7 @@ class DelayChannelSample(ChannelSample):
 
         return gain_factor
 
+    @override
     def _propagate(self, signal: SignalBlock, interpolation: InterpolationMode) -> SignalBlock:
 
         delay_samples = round(self.delay * self.bandwidth)
@@ -135,9 +136,15 @@ class DelayChannelSample(ChannelSample):
             axis=1,
         )
 
-        propagated_signal = SignalBlock(propagated_samples, signal._offset)
+        propagated_signal = SignalBlock(
+            propagated_samples.shape[0],
+            propagated_samples.shape[1],
+            signal._offset,
+            propagated_samples.tobytes(),
+        )
         return propagated_signal
 
+    @override
     def state(
         self,
         num_samples: int,
@@ -198,6 +205,7 @@ class DelayChannelRealization(ChannelRealization[DelayChannelSample]):
 
         return self.__model_propagation_loss
 
+    @override
     def _reciprocal_sample(
         self, sample: DelayChannelSample, state: LinkState
     ) -> DelayChannelSample:

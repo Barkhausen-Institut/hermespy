@@ -7,11 +7,11 @@ import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 from scipy.constants import pi, speed_of_light
 
-from hermespy.core import Antenna, AntennaArray, AntennaMode, AntennaPort, CustomAntennaArray, Dipole, Direction, LinearAntenna, IdealAntenna, PatchAntenna, UniformArray
+from hermespy.core import Antenna, AntennaArray, AntennaMode, CustomAntennaArray, Dipole, Direction, LinearAntenna, IdealAntenna, PatchAntenna, Transformation, UniformArray
 from .test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -24,31 +24,13 @@ class _TestAntenna(TestCase):
     """Test the antenna model"""
 
     antenna: Antenna
-    port: AntennaPort[Antenna, AntennaArray]
-
-    def setUp(self) -> None:
-        self.port = AntennaPort()
-        self.antenna.port = self.port
 
     def test_mode_setget(self) -> None:
         """Mode property getter should return setter argument"""
 
-        with patch.object(self.port, "antennas_updated") as antennas_updated_mock:
-            mode = Mock(spec=AntennaMode)
-            self.antenna.mode = mode
-
-            self.assertEqual(mode, self.antenna.mode)
-            antennas_updated_mock.assert_called_once()
-
-    def test_port_setget(self) -> None:
-        """Port property getter should return setter argument"""
-
-        port = Mock(spec=AntennaPort)
-        self.antenna.port = port
-
-        self.assertIs(port, self.antenna.port)
-        port.add_antenna.assert_called_once_with(self.antenna)
-        self.assertFalse(self.antenna.is_base)
+        mode = Mock(spec=AntennaMode)
+        self.antenna.mode = mode
+        self.assertEqual(mode, self.antenna.mode)
 
     def test_global_characteristics_dimensions(self) -> None:
         """Global characteristics should return the correct polarization"""
@@ -89,7 +71,7 @@ class _TestAntenna(TestCase):
     def test_serialization(self) -> None:
         """Test antenna serialization"""
 
-        test_roundtrip_serialization(self, self.antenna, {'port'})
+        test_roundtrip_serialization(self, self.antenna)
 
 
 class TestIdealAntenna(_TestAntenna):
@@ -174,237 +156,44 @@ class TestDipoleAntenna(_TestAntenna):
         assert_array_equal(self.antenna.pose, copy.pose)
 
 
-class TestAntennaPort(TestCase):
-    """Test the antenna port class"""
-
-    def setUp(self) -> None:
-        self.antennas = [IdealAntenna(AntennaMode.DUPLEX), IdealAntenna(AntennaMode.TX), IdealAntenna(AntennaMode.RX)]
-        self.port = AntennaPort(self.antennas)
-
-    def test_antennas(self) -> None:
-        """Antenna property should return the correct sequence of antennas"""
-
-        self.assertSequenceEqual(self.antennas, self.port.antennas)
-
-    def test_num_antennas(self) -> None:
-        """Number of antennas property should report the correct antenna count"""
-
-        self.assertEqual(len(self.antennas), self.port.num_antennas)
-
-        self.port.add_antenna(IdealAntenna())
-        self.assertEqual(1 + len(self.antennas), self.port.num_antennas)
-
-    def test_antennas_updated_validation(self) -> None:
-        """Antennas updated callback should raise a RuntimeError on invalid antenna modes"""
-
-        mock_antenna = IdealAntenna()
-        mock_antenna.mode = "xxxx"
-
-        with self.assertRaises(RuntimeError):
-            self.port.add_antenna(mock_antenna)
-
-    def test_add_antenna_validation(self) -> None:
-        """Adding a new antenna should raise a ValueError if already assigned a port"""
-
-        antenna = IdealAntenna()
-        antenna.port = Mock()
-
-        with self.assertRaises(ValueError):
-            self.port.add_antenna(antenna)
-
-    def test_add_antenna(self) -> None:
-        """Adding a new annteann should update the antenna's port reference"""
-
-        antenna = IdealAntenna()
-        self.port.add_antenna(antenna)
-
-        self.assertIn(antenna, self.port.antennas)
-        self.assertIs(self.port, antenna.port)
-
-    def test_remove_antenna(self) -> None:
-        """Removing an antenna should update the antenna's port reference"""
-
-        antenna = self.port.antennas[0]
-        self.port.remove_antenna(antenna)
-
-        self.assertNotIn(antenna, self.port.antennas)
-        self.assertIsNone(antenna.port)
-
-    def test_num_transmit_antennas(self) -> None:
-        """Number of transmitting antennas property should return the correct value"""
-
-        self.assertEqual(2, self.port.num_transmit_antennas)
-
-    def test_num_receive_antennas(self) -> None:
-        """Number of receiving antennas property should return the correct value"""
-
-        self.assertEqual(2, self.port.num_receive_antennas)
-
-    def test_transmitting(self) -> None:
-        """Transmitting property should return the correct value"""
-
-        self.assertTrue(self.port.transmitting)
-
-        for antenna in self.port.antennas:
-            antenna.mode = AntennaMode.RX
-
-        self.assertFalse(self.port.transmitting)
-
-    def test_receiving(self) -> None:
-        """Receiving property should return the correct value"""
-
-        self.assertTrue(self.port.receiving)
-
-        for antenna in self.port.antennas:
-            antenna.mode = AntennaMode.TX
-
-        self.assertFalse(self.port.receiving)
-
-    def test_transmit_antennas(self) -> None:
-        """Transmit antennas property should return the correct sequence of antennas"""
-
-        self.assertSequenceEqual(self.antennas[:2], self.port.transmit_antennas)
-
-    def test_receive_antennas(self) -> None:
-        """Receive antennas property should return the correct sequence of antennas"""
-
-        self.assertSequenceEqual(self.antennas[::2], self.port.receive_antennas)
-
-    def test_array(self) -> None:
-        """Array property should return the correct array"""
-
-        array = Mock()
-
-        self.port.array = array
-        self.assertIs(array, self.port.array)
-
-        self.port.array = array
-        self.assertIs(array, self.port.array)
-
-    def test_serialization(self) -> None:
-        """Test antenna port serialization"""
-
-        test_roundtrip_serialization(self, self.port)
-
 
 class _TestAntennaArray(TestCase):
     """Test the base class for all antenna array models"""
 
-    array: AntennaArray[AntennaPort[Antenna, AntennaArray], Antenna]
-
-    def test_num_ports(self) -> None:
-        """Number of ports property should return the correct value"""
-
-        expected_num_ports = len(self.array.ports)
-        self.assertEqual(expected_num_ports, self.array.num_ports)
-
-    def test_num_transmit_ports(self) -> None:
-        """Number of transmitting ports property should return the correct value"""
-
-        expected_num_ports = len(self.array.transmit_ports)
-        self.assertEqual(expected_num_ports, self.array.num_transmit_ports)
-
-    def test_num_receive_ports(self) -> None:
-        """Number of receiving ports property should return the correct value"""
-
-        expected_num_ports = len(self.array.receive_ports)
-        self.assertEqual(expected_num_ports, self.array.num_receive_ports)
-
-    def test_transmit_ports(self) -> None:
-        """Transmit ports property should return only transmitting ports"""
-
-        ports = self.array.transmit_ports
-        for port in ports:
-            transmitting = False
-            for antenna in port.antennas:
-                if antenna.mode == AntennaMode.TX or antenna.mode == AntennaMode.DUPLEX:
-                    transmitting = True
-                    break
-            self.assertTrue(transmitting)
-
-    def test_receive_ports(self) -> None:
-        """Receive ports property should return only receiving ports"""
-
-        ports = self.array.receive_ports
-        for port in ports:
-            receiving = False
-            for antenna in port.antennas:
-                if antenna.mode == AntennaMode.RX or antenna.mode == AntennaMode.DUPLEX:
-                    receiving = True
-                    break
-            self.assertTrue(receiving)
+    array: AntennaArray[Antenna]
+    expected_num_transmit_antennas: int
+    expected_num_receive_antennas: int
+    expected_num_antennas: int
 
     def test_num_antennas(self) -> None:
         """Number of antennas property should return the correct value"""
 
-        expected_num_antennas = sum([port.num_antennas for port in self.array.ports])
-        self.assertEqual(expected_num_antennas, self.array.num_antennas)
+        self.assertEqual(self.expected_num_antennas, self.array.num_antennas)
 
     def test_num_transmit_antennas(self) -> None:
         """Number of transmit antennas property should return the correct value"""
 
-        expected_num_antennas = sum([port.num_transmit_antennas for port in self.array.ports])
-        self.assertEqual(expected_num_antennas, self.array.num_transmit_antennas)
+        self.assertEqual(self.expected_num_transmit_antennas, self.array.num_transmit_antennas)
 
     def test_num_receive_antennas(self) -> None:
         """Number of receive antennas property should return the correct value"""
 
-        expected_num_antennas = sum([port.num_receive_antennas for port in self.array.ports])
-        self.assertEqual(expected_num_antennas, self.array.num_receive_antennas)
-
-    def test_count_antennas(self) -> None:
-        """Antenna counting function should return the correct value"""
-
-        selected_ports = [self.array.num_ports - 1,]
-        expected_num_antennas = self.array.ports[-1].num_antennas
-
-        num_antennas = self.array.count_antennas(selected_ports)
-        self.assertEqual(expected_num_antennas, num_antennas)
-
-    def test_count_transmit_antennas(self) -> None:
-        """Transmit antenna counting function should return the correct value"""
-
-        selected_ports = [self.array.num_transmit_ports - 1,]
-        expected_num_antennas = self.array.transmit_ports[-1].num_transmit_antennas
-
-        num_antennas = self.array.count_transmit_antennas(selected_ports)
-        self.assertEqual(expected_num_antennas, num_antennas)
-
-    def test_count_receive_antennas(self) -> None:
-        """Receive antenna counting function should return the correct value"""
-
-        selected_ports = [self.array.num_receive_ports - 1,]
-        expected_num_antennas = self.array.receive_ports[-1].num_receive_antennas
-
-        num_antennas = self.array.count_receive_antennas(selected_ports)
-        self.assertEqual(expected_num_antennas, num_antennas)
+        self.assertEqual(self.expected_num_receive_antennas, self.array.num_receive_antennas)
 
     def test_antennas(self) -> None:
         """Antennas property should return the correct sequence of antennas"""
 
-        expected_antennas = []
-        for port in self.array.ports:
-            expected_antennas.extend(port.antennas)
-
-        self.assertSequenceEqual(expected_antennas, self.array.antennas)
+        self.assertEqual(self.expected_num_antennas, len(self.array.antennas))
 
     def test_transmit_antennas(self) -> None:
         """Transmit antennas property should return the correct sequence of antennas"""
 
-        expected_antennas = []
-        for port in self.array.transmit_ports:
-            expected_antennas.extend(port.antennas)
-
-        self.assertSequenceEqual(expected_antennas, self.array.transmit_antennas)
+        self.assertEqual(self.expected_num_transmit_antennas, len(self.array.transmit_antennas))
 
     def test_receive_antennas(self) -> None:
         """Receive antennas property should return the correct sequence of antennas"""
 
-        expected_antennas = []
-        for port in self.array.receive_ports:
-            expected_antennas.extend(port.receive_antennas)
-
-        self.assertSequenceEqual(expected_antennas, self.array.receive_antennas)
+        self.assertEqual(self.expected_num_receive_antennas, len(self.array.receive_antennas))
 
     def test_topology_empty_dimensions(self) -> None:
         """Topology property should return the correct dimensions for an empty array"""
@@ -625,6 +414,15 @@ class _TestAntennaArray(TestCase):
 
         assert_array_almost_equal(front_array_response, back_array_response)
 
+    def test_state(self) -> None:
+        """State function should return the correct state"""
+
+        state = self.array.state(Transformation.From_Translation([0.0, 0.0, 0.0]))
+        self.assertEqual(self.array.num_antennas, state.num_antennas)
+        assert_array_equal(self.array.position, state.position)
+        assert_array_equal(self.array.orientation, state.orientation)
+        assert_array_equal(self.array.topology, state.topology)
+
     def test_serialization(self) -> None:
         """Test antenna array serialization"""
 
@@ -634,7 +432,7 @@ class _TestAntennaArray(TestCase):
 class TestUniformArray(_TestAntennaArray):
     """Test the Uniform array model"""
 
-    array: UniformArray[AntennaPort[Antenna, AntennaArray], Antenna]
+    array: UniformArray[Antenna]
 
     def setUp(self) -> None:
         self.antenna = IdealAntenna()
@@ -643,6 +441,9 @@ class TestUniformArray(_TestAntennaArray):
         self.spacing = 0.5 * self.wavelength
         self.dimensions = (10, 9, 8)
 
+        self.expected_num_transmit_antennas = int(2 * 720 / 3)
+        self.expected_num_receive_antennas = int(2 * 720 / 3)
+        self.expected_num_antennas = 720
         self.array = UniformArray(self.antenna, self.spacing, self.dimensions)
 
         # Alter antenna modes for better debugging
@@ -671,12 +472,6 @@ class TestUniformArray(_TestAntennaArray):
 
         with self.assertRaises(ValueError):
             self.array.spacing = 0.0
-
-    def test_num_antennas(self) -> None:
-        """The number of antennas property should report the correct antenna count"""
-
-        super().test_num_antennas()
-        self.assertEqual(720, self.array.num_antennas)
 
     def test_dimensions_setget(self) -> None:
         """The dimensions property getter should return the proper antenna count"""
@@ -713,67 +508,19 @@ class TestUniformArray(_TestAntennaArray):
 class TestCustomAntennaArray(_TestAntennaArray):
     """Test the customizable antenna array model"""
 
-    array: CustomAntennaArray[AntennaPort[Antenna, AntennaArray], Antenna]
+    array: CustomAntennaArray[Antenna]
 
     def setUp(self) -> None:
-        self.ports = [AntennaPort([IdealAntenna(AntennaMode.DUPLEX), IdealAntenna(AntennaMode.TX)]), IdealAntenna(AntennaMode.RX)]
-        self.array = CustomAntennaArray(self.ports)
+        self.elements = [IdealAntenna(AntennaMode.TX), IdealAntenna(AntennaMode.RX), IdealAntenna(AntennaMode.DUPLEX)]
+        self.array = CustomAntennaArray(self.elements)
+        self.expected_num_transmit_antennas = 2
+        self.expected_num_receive_antennas = 2
+        self.expected_num_antennas = 3
 
     def test_init(self) -> None:
         """Initialization routine should properly assign the ports"""
 
-        self.assertEqual(2, self.array.num_ports)
         self.assertEqual(3, self.array.num_antennas)
-
-    def test_ports(self) -> None:
-        """Ports property should return the correct sequence of ports"""
-
-        ports = self.array.ports
-        self.assertIs(self.ports[0], ports[0])
-        self.assertIs(self.ports[1], ports[1].antennas[0])
-
-    def test_add_port(self) -> None:
-        """Adding a new port should correctly adapt the array"""
-
-        port = AntennaPort([IdealAntenna(AntennaMode.DUPLEX)])
-        self.array.add_port(port)
-
-        self.assertEqual(3, self.array.num_ports)
-        self.assertEqual(4, self.array.num_antennas)
-        self.assertIs(self.array, port.array)
-
-        # Re-adding the port should do nothing
-        self.array.add_port(port)
-
-        self.assertEqual(3, self.array.num_ports)
-        self.assertEqual(4, self.array.num_antennas)
-        self.assertIs(self.array, port.array)
-
-    def test_remove_port_validation(self) -> None:
-        """Removing a port should raise a ValueError if not assigned to the array"""
-
-        port = AntennaPort([IdealAntenna(AntennaMode.DUPLEX)])
-
-        with self.assertRaises(ValueError):
-            self.array.remove_port(port)
-
-    def test_remove_port(self) -> None:
-        """Removing a port should correctly adapt the array"""
-
-        port = self.ports[0]
-        self.array.remove_port(port)
-
-        self.assertEqual(1, self.array.num_ports)
-        self.assertEqual(1, self.array.num_antennas)
-        self.assertIsNone(port.array)
-
-    def test_add_antenna_validation(self) -> None:
-        """Adding an antenna should raise a ValueError if already assigned to the array"""
-
-        antenna = self.ports[0].antennas[0]
-
-        with self.assertRaises(ValueError):
-            self.array.add_antenna(antenna)
 
     def test_add_antenna(self) -> None:
         """Adding an antenna should correctly adapt the array"""
@@ -781,10 +528,8 @@ class TestCustomAntennaArray(_TestAntennaArray):
         antenna = IdealAntenna()
         added_port = self.array.add_antenna(antenna)
 
-        self.assertEqual(3, self.array.num_ports)
         self.assertEqual(4, self.array.num_antennas)
         self.assertIn(antenna, self.array.antennas)
-        self.assertIn(added_port, self.array.ports)
 
 
 del _TestAntenna

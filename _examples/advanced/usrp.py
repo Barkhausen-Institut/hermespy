@@ -71,7 +71,6 @@ else:
 # Configure an OFDM modem
 modem = DuplexModem(waveform=OFDMWaveform(
     modulation_order=4,
-    subcarrier_spacing=30e3,
     dc_suppression=False,
     num_subcarriers=4096,
     channel_estimation=OrthogonalLeastSquaresChannelEstimation(),

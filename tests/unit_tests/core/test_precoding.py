@@ -28,9 +28,8 @@ class TransmitStreamEncoderMock(TransmitStreamEncoder):
 
     def encode_streams(self, streams: Signal, num_output_streams: int, device: DeviceState) -> Signal:
         # Repeat the number of streams
-        stream = streams.getitem(0)
-        tiled_streams = np.tile(stream, (num_output_streams, 1))
-        return streams.from_ndarray(tiled_streams)
+        tiled_streams = np.tile(streams[[0], :], (num_output_streams, 1))
+        return tiled_streams
 
     def num_transmit_input_streams(self, num_output_streams: int) -> int:
         return 1
@@ -43,7 +42,7 @@ class ReceiveStreamDecoderMock(ReceiveStreamDecoder):
     """
 
     def decode_streams(self, streams: Signal, num_output_streams: int, device: DeviceState) -> Signal:
-        return streams.getstreams(slice(0, streams.num_streams, 2))
+        return streams[slice(0, streams.num_streams, 2), :]
 
     def num_receive_output_streams(self, num_input_streams: int) -> int:
         return num_input_streams // 2
@@ -98,6 +97,7 @@ class TestTransmitSignalCoding(_TestSignalCoding, TestCase):
 
         signal = Signal.Create(self.rng.standard_normal((3, 100)) + 1j * self.rng.standard_normal((3, 100)))
         with self.assertRaises(ValueError):
+            self.coding[0] = TransmitStreamEncoderMock()
             self.coding.encode_streams(signal, self.device.state())
 
     def test_encode_streams(self) -> None:

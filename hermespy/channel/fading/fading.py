@@ -387,7 +387,12 @@ class MultipathFadingSample(ChannelSample):
         propagated_samples = self.spatial_response @ propagated_samples
 
         # Return the result
-        propagated_block = SignalBlock(propagated_samples, signal.offset)
+        propagated_block = SignalBlock(
+            propagated_samples.shape[0],
+            propagated_samples.shape[1],
+            signal.offset,
+            propagated_samples.tobytes(),
+        )
         return propagated_block
 
     def plot_power_delay(self, axes: VAT | None = None) -> Tuple[plt.Figure, VAT]:

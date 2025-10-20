@@ -4,14 +4,15 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing_extensions import override
 
-import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure
 
 from .antennas import AntennaMode
 from .device import (
     Device,
     DeviceOutput,
-    OperationResult,
+    DSPResult,
     ProcessedDeviceInput,
     Receiver,
     Reception,
@@ -33,7 +34,7 @@ from .signal_model import Signal
 from .visualize import PlotVisualization, StemVisualization, VAT
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -117,9 +118,9 @@ class PowerEvaluation(Evaluation[StemVisualization]):
 
     @override
     def _prepare_visualization(
-        self, figure: plt.Figure | None, axes: VAT, **kwargs
+        self, figure: Figure | None, axes: VAT, **kwargs
     ) -> StemVisualization:
-        ax: plt.Axes = axes.flat[0]
+        ax: Axes = axes.flat[0]
         ax.set_xlabel("Antenna Stream")
         ax.set_ylabel("Power [W]")
 
@@ -331,13 +332,13 @@ class PAPREvaluation(Evaluation[PlotVisualization]):
 
     @override
     def _prepare_visualization(
-        self, figure: plt.Figure | None, axes: VAT, **kwargs
+        self, figure: Figure | None, axes: VAT, **kwargs
     ) -> PlotVisualization:
-        ax: plt.Axes = axes.flat[0]
+        ax: Axes = axes.flat[0]
         ax.set_xlabel("Sample Index")
         ax.set_ylabel("Power [V^2]")
 
-        lines = np.empty_like(axes, dtype=object)
+        lines = np.empty((axes.shape[0], axes.shape[1]), dtype=object)
         lines.flat[0] = []
         zeros = np.zeros(self.__instantaneous_power.shape[1], dtype=np.float64)
         indices = np.arange(self.__instantaneous_power.shape[1])
@@ -457,7 +458,7 @@ class PAPR(ScalarEvaluator):
             raise RuntimeError("Invalid direction flag for PAPR evaluator")
 
         # Compute the instantaneous power of the signal as an intermediate result
-        signal_samples = signal.getitem((slice(None)))
+        signal_samples = signal.to_dense().view(np.ndarray)
         instantaneous_power = signal_samples.real**2 + signal_samples.imag**2
 
         return PAPREvaluation(instantaneous_power)
@@ -473,7 +474,7 @@ class PAPR(ScalarEvaluator):
             self.__input_hook.remove()
 
 
-class SignalExtraction(Evaluation, Artifact):
+class SignalExtraction(Evaluation[PlotVisualization], Artifact):
 
     __signal: Signal
 
@@ -519,11 +520,11 @@ class SignalExtraction(Evaluation, Artifact):
 
     @override
     def _prepare_visualization(self, figure, axes, **kwargs):
-        return self.__signal._prepare_visualization(figure, axes, **kwargs)
+        return self.__signal.plot._prepare_visualization(figure, axes, **kwargs)
 
     @override
     def _update_visualization(self, visualization, **kwargs):
-        self.__signal._update_visualization(visualization, **kwargs)
+        self.__signal.plot._update_visualization(visualization, **kwargs)
 
 
 class ExtractedSignals(EvaluationResult[SignalExtraction]):
@@ -592,14 +593,12 @@ class ExtractedSignals(EvaluationResult[SignalExtraction]):
         for grid_coordinates, signals in np.ndenumerate(self.__signal_stash):
             sample_offset = 0
             for s, signal in enumerate(signals):
-                samples_array[
-                    grid_coordinates
-                    + (
-                        s,
-                        slice(0, signal.num_streams),
-                        slice(sample_offset, sample_offset + signal.num_samples),
-                    )
-                ] = signal.getitem((slice(None), slice(None)))
+                samples_coordinates: tuple[int | slice, ...] = grid_coordinates + (
+                    s,
+                    slice(0, signal.num_streams),
+                    slice(sample_offset, sample_offset + signal.num_samples),
+                )
+                samples_array[samples_coordinates] = signal
 
         return samples_array
 
@@ -614,7 +613,7 @@ class SignalExtractor(Evaluator):
     """
 
     __cached_signal: Signal | None
-    __hook: Hook[OperationResult]
+    __hook: Hook[DSPResult]
 
     def __init__(self, target: Transmitter | Receiver) -> None:
         """
@@ -640,7 +639,7 @@ class SignalExtractor(Evaluator):
         else:
             raise TypeError("Target must be a Transmitter or Receiver instance")
 
-    def __operation_callback(self, operation_result: OperationResult) -> None:
+    def __operation_callback(self, operation_result: DSPResult) -> None:
         """Callback function notifying the evaluator of a new signal."""
 
         self.__cached_signal = operation_result.signal
@@ -661,12 +660,12 @@ class SignalExtractor(Evaluator):
     def initialize_result(self, grid: Sequence[GridDimensionInfo]) -> ExtractedSignals:
         return ExtractedSignals(grid, self)
 
-    @override
     @property
+    @override
     def abbreviation(self) -> str:
         return "SigExt"
 
-    @override
     @property
+    @override
     def title(self) -> str:
         return "Signal Extractor"

@@ -3,7 +3,6 @@
 from .antennas import (
     Antenna,
     AntennaMode,
-    AntennaPort,
     IdealAntenna,
     Dipole,
     LinearAntenna,
@@ -13,7 +12,7 @@ from .antennas import (
     CustomAntennaArray,
     UniformArray,
 )
-from .definitions import ConsoleMode, Verbosity, FloatingError
+from .definitions import ConsoleMode, Verbosity, FloatingError, InterpolationMode
 from .pymonte import (
     Artifact,
     ArtifactTemplate,
@@ -48,8 +47,6 @@ from .operators import StaticOperator, SilentTransmitter, SignalTransmitter, Sig
 from .channel import ChannelStateFormat, ChannelStateInformation, ChannelStateDimension
 from .transformation import Direction, Transformable, TransformableBase, Transformation
 from .device import (
-    Operator,
-    OperatorSlot,
     MixingOperator,
     ProcessedDeviceInput,
     TransmitterSlot,
@@ -108,7 +105,7 @@ from .visualize import (
 )
 
 __author__ = "André Noll Barreto"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["André Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -120,7 +117,6 @@ __status__ = "Prototype"
 __all__ = [
     "Antenna",
     "AntennaMode",
-    "AntennaPort",
     "IdealAntenna",
     "Dipole",
     "LinearAntenna",
@@ -151,7 +147,6 @@ __all__ = [
     "Transformable",
     "TransformableBase",
     "Transformation",
-    "Operator",
     "OperatorSlot",
     "MixingOperator",
     "TransmitterSlot",
@@ -159,7 +154,6 @@ __all__ = [
     "Transmitter",
     "Receiver",
     "Device",
-    "FloatingError",
     "Transmission",
     "Reception",
     "ReceptionType",
@@ -176,6 +170,7 @@ __all__ = [
     "ArtifactTemplate",
     "ConsoleMode",
     "FloatingError",
+    "InterpolationMode",
     "Evaluator",
     "Evaluator",
     "Evaluation",

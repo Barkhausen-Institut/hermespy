@@ -11,6 +11,8 @@ from typing_extensions import override
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.axes import Axes
+from matplotlib.figure import Figure, FigureBase
 from matplotlib.projections.polar import PolarAxes
 from mpl_toolkits.mplot3d import Axes3D  # type: ignore
 from scipy.constants import pi, speed_of_light
@@ -80,10 +82,10 @@ class _PowerDelayVisualization(VisualizableAttribute[StemVisualization]):
         self.__sample = sample
 
     def _prepare_visualization(
-        self, figure: plt.Figure | None, axes: VAT, **kwargs
+        self, figure: Figure | None, axes: VAT, **kwargs
     ) -> StemVisualization:
 
-        _axes: plt.Axes = axes[0, 0]
+        _axes: Axes = axes[0, 0]
         colors = self._get_color_cycle()
 
         container = _axes.stem(
@@ -121,7 +123,7 @@ class _PowerDelayVisualization(VisualizableAttribute[StemVisualization]):
         )
 
         # Update axes limits
-        axes: plt.Axes = visualization.axes[0, 0]
+        axes: Axes = visualization.axes[0, 0]
         try:
             axes.set_xlim(0, max(self.__sample.max_delay, axes.get_xlim()[1]))
             axes.set_ylim(min(self.__sample.cluster_powers.min(), axes.get_ylim()[0]), 1.0)
@@ -144,7 +146,7 @@ class _AngleVisualization(VisualizableAttribute[ScatterVisualization]):
     def _axes_dimensions(self, **kwargs) -> Tuple[int, int]:
         return (1, 2)
 
-    def create_figure(self, **kwargs) -> Tuple[plt.FigureBase, VAT]:
+    def create_figure(self, **kwargs) -> Tuple[FigureBase, VAT]:
         return plt.subplots(
             *self._axes_dimensions(**kwargs), subplot_kw={"projection": "polar"}, squeeze=False
         )
@@ -180,16 +182,15 @@ class _AngleVisualization(VisualizableAttribute[ScatterVisualization]):
 
         return scatter_locations
 
+    @override
     def _prepare_visualization(
-        self, figure: plt.Figure | None, axes: VAT, **kwargs
+        self, figure: Figure | None, axes: VAT, **kwargs
     ) -> ScatterVisualization:
 
         _axes = axes[0, :]
         colors = self._get_color_cycle()
         num_colors = len(colors)
         markers = ["x", "+", "o"]
-
-        paths = np.empty((1, 2), dtype=np.object_)
 
         scatter_locations = self.__generate_scatter_locations()
         paths = np.empty((1, 2, 25), dtype=np.object_)
@@ -228,8 +229,10 @@ class _AngleVisualization(VisualizableAttribute[ScatterVisualization]):
         _axes[0].set_title("Angles of Arrival")
         _axes[1].set_title("Angles of Departure")
 
-        return ScatterVisualization(figure, _axes, paths)
+        # Future updates should introduce a new type of visualization container for scatter plots
+        return ScatterVisualization(figure, axes, paths)  # type: ignore
 
+    @override
     def _update_visualization(self, visualization: ScatterVisualization, **kwargs) -> None:
         scatter_locations = self.__generate_scatter_locations()
 
@@ -519,6 +522,7 @@ class ClusterDelayLineSample(ChannelSample):
 
             yield los_channel, los_impulse, los_delay
 
+    @override
     def _propagate(self, signal: SignalBlock, interpolation: InterpolationMode) -> SignalBlock:
 
         max_delay_in_samples = ceil((self.max_delay) * self.bandwidth)
@@ -546,8 +550,14 @@ class ClusterDelayLineSample(ChannelSample):
                     :, delay_in_samples : delay_in_samples + signal.num_samples
                 ] += np.einsum(einsum_subscripts, channel, signal, impulse, optimize=einsum_path)
 
-        return SignalBlock(propagated_samples, signal._offset)
+        return SignalBlock(
+            propagated_samples.shape[0],
+            propagated_samples.shape[1],
+            signal._offset,
+            propagated_samples.tobytes(),
+        )
 
+    @override
     def state(
         self,
         num_samples: int,
@@ -589,10 +599,10 @@ class ClusterDelayLineSample(ChannelSample):
     def plot_angles(self) -> _AngleVisualization:
         return self.__angle_visualization
 
-    def plot_rays(self, title: str | None = None) -> plt.Figure:
+    def plot_rays(self, title: str | None = None) -> Figure:
         with Executable.style_context():
             axis: Axes3D
-            figure, axis = plt.subplots(subplot_kw={"projection": "3d"})
+            figure, axis = plt.subplots(subplot_kw={"projection": "3d"})  # type: ignore
             colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
 
         magnitude = np.linalg.norm(

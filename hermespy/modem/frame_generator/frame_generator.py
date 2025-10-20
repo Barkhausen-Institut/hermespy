@@ -10,7 +10,7 @@ from hermespy.core import DeserializationProcess, Serializable, SerializationPro
 from ..bits_source import BitsSource
 
 __author__ = "Egor Achkasov"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Egor Achkasov", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -23,7 +23,9 @@ class FrameGenerator(ABC, Serializable):
     """Base class for frame generators."""
 
     @abstractmethod
-    def pack_frame(self, source: BitsSource, num_bits: int) -> np.ndarray:
+    def pack_frame(
+        self, source: BitsSource, num_bits: int
+    ) -> np.ndarray[tuple[int], np.dtype[np.uint8]]:
         """Generate a frame of num_bits bits from the given bitsource.
 
         Args:
@@ -35,7 +37,9 @@ class FrameGenerator(ABC, Serializable):
         ...  # pragma: no cover
 
     @abstractmethod
-    def unpack_frame(self, frame: np.ndarray) -> np.ndarray:
+    def unpack_frame(
+        self, frame: np.ndarray[tuple[int], np.dtype[np.uint8]]
+    ) -> np.ndarray[tuple[int], np.dtype[np.uint8]]:
         """Extract the original payload from the frame generated with pack_frame.
 
         Args:
@@ -48,10 +52,14 @@ class FrameGenerator(ABC, Serializable):
 class FrameGeneratorStub(FrameGenerator):
     """A dummy placeholder frame generator, packing and unpacking payload without any overhead."""
 
-    def pack_frame(self, source: BitsSource, num_bits: int) -> np.ndarray:
+    def pack_frame(
+        self, source: BitsSource, num_bits: int
+    ) -> np.ndarray[tuple[int], np.dtype[np.uint8]]:
         return source.generate_bits(num_bits)
 
-    def unpack_frame(self, frame: np.ndarray) -> np.ndarray:
+    def unpack_frame(
+        self, frame: np.ndarray[tuple[int], np.dtype[np.uint8]]
+    ) -> np.ndarray[tuple[int], np.dtype[np.uint8]]:
         return frame
 
     @override

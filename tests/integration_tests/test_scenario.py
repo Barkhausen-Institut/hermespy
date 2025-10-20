@@ -9,9 +9,10 @@ from numpy.testing import assert_array_almost_equal
 
 from hermespy.simulation import SimulatedDrop, SimulationScenario
 from hermespy.modem import TransmittingModem, ReceivingModem, RaisedCosineWaveform
+from unit_tests.utils import assert_signals_equal
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -26,15 +27,16 @@ class TestRecordReplay(TestCase):
     def setUp(self) -> None:
         self.scenario = SimulationScenario()
         self.num_drops = 3
+        self.bandwidth = 1e6
 
         modem_alpha = TransmittingModem()
-        modem_alpha.waveform = RaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=20)
+        modem_alpha.waveform = RaisedCosineWaveform(num_preamble_symbols=0, num_data_symbols=20)
 
         modem_beta = ReceivingModem()
-        modem_beta.waveform = RaisedCosineWaveform(symbol_rate=1e6, num_preamble_symbols=0, num_data_symbols=20)
+        modem_beta.waveform = RaisedCosineWaveform(num_preamble_symbols=0, num_data_symbols=20)
 
-        device_alpha = self.scenario.new_device()
-        device_beta = self.scenario.new_device()
+        device_alpha = self.scenario.new_device(bandwidth=self.bandwidth)
+        device_beta = self.scenario.new_device(bandwidth=self.bandwidth)
         device_alpha.transmitters.add(modem_alpha)
         device_beta.receivers.add(modem_beta)
 
@@ -101,10 +103,10 @@ class TestRecordReplay(TestCase):
                 self.assertEqual(expected_drop.num_device_receptions, replayed_drop.num_device_transmissions)
 
                 # Make sure the operator inputs are identical
-                assert_array_almost_equal(expected_drop.operator_inputs[1][0].getitem(), replayed_drop.operator_inputs[1][0].getitem())
+                assert_signals_equal(self, expected_drop.operator_inputs[1][0], replayed_drop.operator_inputs[1][0])
 
                 # Assert that operators have identical input signals
-                assert_array_almost_equal(expected_drop.device_receptions[1].operator_receptions[0].signal.getitem(), replayed_drop.device_receptions[1].operator_receptions[0].signal.getitem())
+                assert_signals_equal(self, expected_drop.device_receptions[1].operator_receptions[0].signal, replayed_drop.device_receptions[1].operator_receptions[0].signal)
 
                 # Assert that operators have identical equalized symbols
                 assert_array_almost_equal(expected_drop.device_receptions[1].operator_receptions[0].equalized_symbols.raw, replayed_drop.device_receptions[1].operator_receptions[0].equalized_symbols.raw)

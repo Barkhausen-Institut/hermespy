@@ -6,13 +6,17 @@ Perfect Coupling
 """
 
 from __future__ import annotations
+from typing import TYPE_CHECKING
 from typing_extensions import override
 
-from hermespy.core import Signal, SerializationProcess, DeserializationProcess
+from hermespy.core import SignalBlock, SerializationProcess, DeserializationProcess
 from .coupling import Coupling
 
+if TYPE_CHECKING:
+    from hermespy.simulation import SimulatedDeviceState  # pragma: no cover
+
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -24,14 +28,16 @@ __status__ = "Prototype"
 class PerfectCoupling(Coupling):
     """Ideal mutual coupling between two antenna arrays."""
 
-    def _transmit(self, signal: Signal) -> Signal:
-        return signal
-
-    def _receive(self, signal: Signal) -> Signal:
-        return signal
+    @override
+    def _transmit(self, signal: SignalBlock, state: SimulatedDeviceState) -> SignalBlock:
+        return signal  # Just a pass-through
 
     @override
-    def serialize(self, serialization_process: SerializationProcess) -> None:
+    def _receive(self, signal: SignalBlock, state: SimulatedDeviceState) -> SignalBlock:
+        return signal  # Just a pass-through
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
         return
 
     @override

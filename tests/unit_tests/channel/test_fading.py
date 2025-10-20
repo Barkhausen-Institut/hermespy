@@ -111,10 +111,22 @@ class TestMultipathFadingSample(unittest.TestCase):
     def setUp(self) -> None:
         self.rng = np.random.default_rng(42)
 
-        self.sampling_rate = 1e9
-
-        self.tx_device = SimulatedDevice(antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1e-2, (2, 1, 1)), sampling_rate=self.sampling_rate)
-        self.rx_device = SimulatedDevice(antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1e-2, (2, 1, 1)), sampling_rate=self.sampling_rate)
+        self.bandwidth = 5e8
+        self.oversampling_factor = 2
+        self.sampling_rate = self.bandwidth * self.oversampling_factor
+        self.carrier_frequency = 2.4e8
+        self.tx_device = SimulatedDevice(
+            carrier_frequency=self.carrier_frequency,
+            bandwidth=self.bandwidth,
+            oversampling_factor=self.oversampling_factor,
+            antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1e-2, (2, 1, 1)),
+        )
+        self.rx_device = SimulatedDevice(
+            carrier_frequency=self.carrier_frequency,
+            bandwidth=self.bandwidth,
+            oversampling_factor=self.oversampling_factor,
+            antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1e-2, (2, 1, 1)),
+        )
 
         self.gain = 0.987
         self.num_paths = 10
@@ -167,10 +179,10 @@ class TestMultipathFadingSample(unittest.TestCase):
         """Plotting power delay profile should not raise any errors"""
 
         with SimulationTestContext(patch_plot=True):
-            
+
             figure, axes = self.sample.plot_power_delay()
             axes[0, 0].stem.assert_called()
-            
+
             axes[0, 0].stem.reset_mock()
             figure, axes = self.sample.plot_power_delay(axes=axes)
             axes[0, 0].get_figure.assert_called()
@@ -186,15 +198,16 @@ class TestMultipathFadingChannel(unittest.TestCase):
         self.delays = np.zeros(1, dtype=float)
         self.power_profile = np.ones(1, dtype=float)
         self.rice_factors = np.zeros(1, dtype=float)
-
-        self.sampling_rate = 1e6
+        self.bandwidth = 5e5
+        self.oversampling_factor = 2
+        self.sampling_rate = self.bandwidth * self.oversampling_factor
+        self.carrier_frequency = 2.4e8
         self.transmit_frequency = pi * self.sampling_rate
         self.num_sinusoids = 40
         self.doppler_frequency = 0.0
         self.los_doppler_frequency = 0.0
-
-        self.alpha_device = SimulatedDevice(sampling_rate=self.sampling_rate)
-        self.beta_device = SimulatedDevice(sampling_rate=self.sampling_rate)
+        self.alpha_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor, pose=StaticTrajectory(Transformation.From_Translation(np.array([100, 0, 0]))))
+        self.beta_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor, pose=StaticTrajectory(Transformation.From_Translation(np.array([100, 0, 0]))))
 
         self.channel_params = {"gain": self.gain, "delays": self.delays, "power_profile": self.power_profile, "rice_factors": self.rice_factors, "num_sinusoids": self.num_sinusoids, "los_angle": None, "doppler_frequency": self.doppler_frequency, "los_doppler_frequency": self.los_doppler_frequency, "seed": 42}
 
@@ -425,7 +438,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
             delayed_propagation = delayed_channel.propagate(transmit_signal, self.alpha_device, self.beta_device)
 
             zero_pads = int(self.sampling_rate * float(delay))
-            assert_array_almost_equal(reference_propagation.getitem(), delayed_propagation.getitem((slice(None, None), slice(zero_pads, None))))
+            assert_signals_equal(self, reference_propagation, delayed_propagation[:, zero_pads:])
 
     def test_rayleigh(self) -> None:
         """
@@ -573,7 +586,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
         channel_gain._rng = np.random.default_rng(42)  # Reset random number rng
         propagation_gain = channel_gain.propagate(tx_signal, self.alpha_device, self.beta_device)
 
-        assert_array_almost_equal(propagation_no_gain.getitem() * gain ** .5, propagation_gain.getitem())
+        assert_signals_equal(self, propagation_no_gain * gain ** .5, propagation_gain)
 
     def test_antenna_correlation(self) -> None:
         """Test channel simulation with antenna correlation modeling"""
@@ -588,10 +601,10 @@ class TestMultipathFadingChannel(unittest.TestCase):
 
         uncorrelated_realization = uncorrelated_channel.realize()
         correlated_realization = correlated_channel.realize()
-        
+
         uncorrelated_sample = uncorrelated_realization.sample(self.alpha_device, self.beta_device)
         correlated_sample = correlated_realization.sample(self.alpha_device, self.beta_device)
-        
+
         uncorrelated_state = uncorrelated_sample.state(self.num_samples, 1).dense_state()
         correlated_state = correlated_sample.state(self.num_samples, 1).dense_state()
 
@@ -617,7 +630,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
         channel.beta_correlation = expected_correlation
 
         self.assertIs(expected_correlation, channel.beta_correlation)
-        
+
     def test_realization_reciprocal_sample(self) -> None:
         """Test reciprocal channel realization"""
 
@@ -643,7 +656,6 @@ class TestStandardAntennaCorrelation(unittest.TestCase):
         self.num_antennas = [1, 2, 4]
 
         self.correlation = StandardAntennaCorrelation(CorrelationType.LOW)
-
 
     def test_correlation_setget(self) -> None:
         """Correlation type property getter should return setter argument"""
@@ -678,10 +690,12 @@ class TestCost259(unittest.TestCase):
     """Test the Cost256 template for the multipath fading channel model."""
 
     def setUp(self) -> None:
-        self.sampling_rate = 10e6
+        self.bandwidth = 5e6
+        self.oversampling_factor = 2
+        self.sampling_rate = self.bandwidth * self.oversampling_factor
         self.carrier_frequency = 2.4e8
-        self.alpha_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, sampling_rate=self.sampling_rate, pose=StaticTrajectory(Transformation.From_Translation(np.array([100, 0, 0]))))
-        self.beta_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, sampling_rate=self.sampling_rate, pose=StaticTrajectory(Transformation.From_Translation(np.array([100, 0, 0]))))
+        self.alpha_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor, pose=StaticTrajectory(Transformation.From_Translation(np.array([100, 0, 0]))))
+        self.beta_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor, pose=StaticTrajectory(Transformation.From_Translation(np.array([100, 0, 0]))))
     
     def test_init(self) -> None:
         """Test the template initializations."""
@@ -707,7 +721,7 @@ class TestCost259(unittest.TestCase):
         """Test the expected amplitude scaling"""
         
         model = Cost259(Cost259Type.HILLY, doppler_frequency=10.0, seed=42)
-        unit_energy_signal = DenseSignal(np.ones((self.alpha_device.num_transmit_antennas, 100)) / 10, self.sampling_rate, self.carrier_frequency)
+        unit_energy_signal = DenseSignal.FromNDArray(np.ones((self.alpha_device.num_transmit_antennas, 100)) / 10, self.sampling_rate, self.carrier_frequency)
         num_attempts = 1000
         
         cumulated_propagated_energy = np.zeros((self.beta_device.num_receive_antennas), dtype=np.float64)
@@ -735,10 +749,12 @@ class Test5GTDL(unittest.TestCase):
 
     def setUp(self) -> None:
         self.rms_delay = 1e-6
-        self.sampling_rate = 10e6
+        self.bandwidth = 5e6
+        self.oversampling_factor = 2
+        self.sampling_rate = self.bandwidth * self.oversampling_factor
         self.carrier_frequency = 2.4e8
-        self.alpha_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, sampling_rate=self.sampling_rate, pose=StaticTrajectory(Transformation.From_Translation(np.array([100, 0, 0]))))
-        self.beta_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, sampling_rate=self.sampling_rate, pose=StaticTrajectory(Transformation.From_Translation(np.array([100, 0, 0]))))
+        self.alpha_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor, pose=StaticTrajectory(Transformation.From_Translation(np.array([100, 0, 0]))))
+        self.beta_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor, pose=StaticTrajectory(Transformation.From_Translation(np.array([100, 0, 0]))))
     
 
     def test_init(self) -> None:
@@ -774,7 +790,7 @@ class Test5GTDL(unittest.TestCase):
         """Test the expected amplitude scaling"""
         
         model = TDL(model_type=TDLType.E, doppler_frequency=10.0, seed=42)
-        unit_energy_signal = DenseSignal(np.ones((self.alpha_device.num_transmit_antennas, 100)) / 10, self.sampling_rate, self.carrier_frequency)
+        unit_energy_signal = DenseSignal.FromNDArray(np.ones((self.alpha_device.num_transmit_antennas, 100)) / 10, self.sampling_rate, self.carrier_frequency)
         num_attempts = 1000
         
         cumulated_propagated_energy = np.zeros((self.beta_device.num_receive_antennas), dtype=np.float64)
@@ -806,11 +822,13 @@ class TestExponential(unittest.TestCase):
         self.rms_delay = 1e-8
         self.channel = Exponential(tap_interval=self.tap_interval, rms_delay=self.rms_delay, seed=42)
 
-        self.sampling_rate = 10e6
+        self.bandwidth = 5e6
+        self.oversampling_factor = 2
+        self.sampling_rate = self.bandwidth * self.oversampling_factor
         self.carrier_frequency = 2.4e8
-        self.alpha_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, sampling_rate=self.sampling_rate, pose=StaticTrajectory(Transformation.From_Translation(np.array([100, 0, 0]))))
-        self.beta_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, sampling_rate=self.sampling_rate, pose=StaticTrajectory(Transformation.From_Translation(np.array([100, 0, 0]))))
-
+        self.alpha_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor, pose=StaticTrajectory(Transformation.From_Translation(np.array([100, 0, 0]))))
+        self.beta_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor, pose=StaticTrajectory(Transformation.From_Translation(np.array([100, 0, 0]))))
+    
     def test_init(self) -> None:
         """Initialization arguments should be properly parsed."""
         pass
@@ -827,7 +845,7 @@ class TestExponential(unittest.TestCase):
     def test_expected_scale(self) -> None:
         """Test the expected amplitude scaling"""
         
-        unit_energy_signal = DenseSignal(np.ones((self.alpha_device.num_transmit_antennas, 100)) / 10, self.sampling_rate, self.carrier_frequency)
+        unit_energy_signal = DenseSignal.FromNDArray(np.ones((self.alpha_device.num_transmit_antennas, 100)) / 10, self.sampling_rate, self.carrier_frequency)
         num_attempts = 1000
         
         cumulated_propagated_energy = np.zeros((self.beta_device.num_receive_antennas), dtype=np.float64)

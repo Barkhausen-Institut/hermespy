@@ -105,15 +105,13 @@ class TestNotebooks(TestCase):
         """Test the audio device loop example notebook"""
 
         notebook = self.__load_notebook("audio.ipynb")
-        self.__patch_notebook(notebook, 2, patches={2: "from hermespy.hardware_loop import PhysicalDeviceDummy"})
-        self.__patch_notebook(notebook, 4, patches={0: "device = PhysicalDeviceDummy()"})
         self.__test_notebook(notebook)
 
     def test_beamforming_implementation(self) -> None:
-        """Test the beamforming implemntation example notebook"""
+        """Test the beamforming implementation example notebook"""
 
         notebook = self.__load_notebook("beamforming_implementation.ipynb")
-        self.__patch_notebook(notebook, 8, inserts={2: "import ray as ray\n", 9: "ray.init(ignore_reinit_error=True)"}, patches={9: "simulation = Simulation(console_mode=ConsoleMode.SILENT)", 24: "simulation.num_samples = 1"})
+        self.__patch_notebook(notebook, 8, inserts={2: "import ray as ray\n", 9: "ray.init(ignore_reinit_error=True)"}, patches={9: "simulation = Simulation(console_mode=ConsoleMode.SILENT)", 29: "simulation.num_samples = 1"})
         self.__test_notebook(notebook)
 
     def test_beamforming_usage(self) -> None:
@@ -122,7 +120,6 @@ class TestNotebooks(TestCase):
         notebook = self.__load_notebook("beamforming_usage.ipynb")
         self.__patch_notebook(notebook, 8, inserts={0: "import ray as ray\n", 7: "ray.init(ignore_reinit_error=True)"}, patches={8: "simulation = Simulation(console_mode=ConsoleMode.SILENT, num_samples=1)"})
         self.__patch_notebook(notebook, 25, patches={21: "simulation.num_drops = 1"})
-        self.__patch_notebook(notebook, 31, patches={14: "simulation.num_drops = 1"})
         self.__test_notebook(notebook)
 
     def test_channel(self) -> None:

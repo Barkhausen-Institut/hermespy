@@ -11,7 +11,7 @@ from scipy.fft import fft, ifft
 from sparse import COO, SparseArray  # type: ignore
 
 from .factory import Serializable, SerializationProcess, DeserializationProcess
-from .signal_model import Signal
+from .signal_model import DenseSignal, Signal
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -485,7 +485,7 @@ class ChannelStateInformation(Serializable):
         Plots the absolute values of all channel state weights.
         """
 
-        fig, axes = plt.subplots(self.__state.shape[0], self.__state.shape[1], squeeze=False)
+        _, axes = plt.subplots(self.__state.shape[0], self.__state.shape[1], squeeze=False)
         for rx_id, receive_states in enumerate(self.__state):
             for tx_id, transmit_states in enumerate(receive_states):
                 axes[rx_id, tx_id].imshow(abs(transmit_states))
@@ -494,9 +494,9 @@ class ChannelStateInformation(Serializable):
         """Propagate a single signal model over this channel state information.
 
         This method should generally be avoided, since it's computationally costly.
+        Its main purpose is debugging and testing.
 
         Args:
-
             signal: Signal model to be propagated.
 
         Returns: Propagated signal model.
@@ -504,23 +504,28 @@ class ChannelStateInformation(Serializable):
 
         # Make sure the accessed state is in impulse response format
         state = self.to_impulse_response().dense_state()
+        _signal = signal.view(np.ndarray)
 
         # Propagate the signal
-        propagated_samples = np.zeros(
-            (state.shape[0], signal.num_samples + state.shape[3] - 1), dtype=np.complex128
+        propagated_signal = DenseSignal.Zeros(
+            state.shape[0],
+            signal.num_samples + state.shape[3] - 1,
+            signal.sampling_rate,
+            signal.carrier_frequency,
+            signal.noise_power,
+            signal.delay,
         )
 
         for delay_index in range(state.shape[3]):
             for tx_idx, rx_idx in product(range(state.shape[1]), range(state.shape[0])):
                 delayed_signal = (
-                    state[rx_idx, tx_idx, : signal.num_samples, delay_index]
-                    * signal.getitem(tx_idx).flatten()
+                    state[rx_idx, tx_idx, : signal.num_samples, delay_index] * _signal[tx_idx, :]
                 )
-                propagated_samples[
+                propagated_signal[  # type: ignore
                     rx_idx, delay_index : delay_index + signal.num_samples
-                ] += delayed_signal
+                ] += delayed_signal  # type: ignore
 
-        return signal.from_ndarray(propagated_samples)
+        return propagated_signal
 
     def reciprocal(self) -> ChannelStateInformation:
         """Compute the reciprocal channel state.

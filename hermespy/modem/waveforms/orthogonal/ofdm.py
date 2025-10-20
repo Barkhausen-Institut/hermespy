@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from math import ceil
-from typing import List, Any, Sequence
+from typing import Any, Sequence
 from typing_extensions import override
 
 import numpy as np
@@ -21,7 +21,7 @@ from .waveform import (
 )
 
 __author__ = "André Noll Barreto"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["André Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -34,9 +34,6 @@ class OFDMWaveform(OrthogonalWaveform, Serializable):
     """Generic Orthogonal Frequency Division Multiplexing waveform description."""
 
     __DEFAULT_NUM_SUBCARRIERS = 1024
-    __DEFAULT_SUBCARRIER_SPACING = 1e3
-
-    __subcarrier_spacing: float
     dc_suppression: bool
 
     def __init__(
@@ -44,7 +41,6 @@ class OFDMWaveform(OrthogonalWaveform, Serializable):
         grid_resources: Sequence[GridResource],
         grid_structure: Sequence[GridSection],
         num_subcarriers: int = __DEFAULT_NUM_SUBCARRIERS,
-        subcarrier_spacing: float = __DEFAULT_SUBCARRIER_SPACING,
         dc_suppression: bool = True,
         pilot_section: PilotSection | None = None,
         pilot_sequence: PilotSymbolSequence | None = None,
@@ -65,15 +61,6 @@ class OFDMWaveform(OrthogonalWaveform, Serializable):
                 Unassigned subcarriers will be assumed to be zero.
                 :math:`1024` by default.
 
-            subcarrier_spacing:
-                Spacing between individual subcarriers in Hz.
-                :math:`1~\\mathrm{kHz}` by default.
-
-            num_subcarriers:
-                Maximum number of assignable subcarriers.
-                Unassigned subcarriers will be assumed to be zero.
-                :math:`1024` by default.
-
             dc_suppression:
                 Suppress the direct current component during waveform generation.
                 Enabled by default.
@@ -87,7 +74,7 @@ class OFDMWaveform(OrthogonalWaveform, Serializable):
                 within the frame. If not specified, pseudo-random sequences will be generated
                 from the set of data symbols.
 
-            \*\*kwargs:
+            kwargs:
                 Waveform generator base class initialization parameters.
                 Refer to :class:`CommunicationWaveform<hermespy.modem.waveform.CommunicationWaveform>` for details.
         """
@@ -105,21 +92,22 @@ class OFDMWaveform(OrthogonalWaveform, Serializable):
         )
 
         # Initialize the OFDM specific attributes
-        self.subcarrier_spacing = subcarrier_spacing
         self.dc_suppression = dc_suppression
 
     @override
-    def _forward_transformation(self, symbol_grid: np.ndarray) -> np.ndarray:
+    def _forward_transformation(
+        self, symbol_grid: np.ndarray, oversampling_factor: int
+    ) -> np.ndarray:
         # Normalize the frequency-domain data symbols for unit power transmission
         normalized_symbols = symbol_grid / np.sqrt(self.num_subcarriers)
 
         # Zero-pad the grid to account for oversampling
         padded_symbol_grid = np.zeros(
-            (normalized_symbols.shape[0], self.oversampling_factor * self.num_subcarriers),
+            (normalized_symbols.shape[0], oversampling_factor * self.num_subcarriers),
             dtype=np.complex128,
         )
         padding_start_idx = (
-            self.oversampling_factor * self.num_subcarriers
+            oversampling_factor * self.num_subcarriers
         ) // 2 - self.num_subcarriers // 2
         padded_symbol_grid[:, padding_start_idx : self.num_subcarriers + padding_start_idx] = (
             normalized_symbols
@@ -128,29 +116,26 @@ class OFDMWaveform(OrthogonalWaveform, Serializable):
         # Shift in order to suppress the dc component
         # Note that for configurations without any oversampling the DC component will not be suppressed
         if self.dc_suppression:
-            dc_index = int(0.5 * self.num_subcarriers * self.oversampling_factor)
+            dc_index = int(0.5 * self.num_subcarriers * oversampling_factor)
             padded_symbol_grid[:, dc_index:] = np.roll(padded_symbol_grid[:, dc_index:], 1, axis=-1)
 
         # By convention, the length of each time slot is the inverse of the sub-carrier spacing
         sample_grid = ifft(
             ifftshift(padded_symbol_grid, axes=-1),
-            self.num_subcarriers * self.oversampling_factor,
+            self.num_subcarriers * oversampling_factor,
             axis=-1,
             norm="forward",
         )
 
-        return sample_grid
+        return np.asarray(sample_grid)
 
     @override
     def _backward_transformation(
-        self, sample_sections: np.ndarray, normalize: bool = True
+        self, signal_grid: np.ndarray, oversampling_factor: int, normalize: bool = True
     ) -> np.ndarray:
         # Transform the time-domain resource signals to frequency-domain data symbols
         symbol_grid = fft(
-            sample_sections,
-            n=self.num_subcarriers * self.oversampling_factor,
-            axis=-1,
-            norm="backward",
+            signal_grid, n=self.num_subcarriers * oversampling_factor, axis=-1, norm="backward"
         )
 
         # Shift fft bins to the center
@@ -158,12 +143,12 @@ class OFDMWaveform(OrthogonalWaveform, Serializable):
 
         # Account for the DC suppression
         if self.dc_suppression:
-            dc_index = int(0.5 * self.num_subcarriers * self.oversampling_factor)
+            dc_index = int(0.5 * self.num_subcarriers * oversampling_factor)
             symbol_grid[..., dc_index:] = np.roll(symbol_grid[..., dc_index:], -1, axis=-1)
 
         # Remove the zero padding due to the oversampling from the symbol grid
         padding_start_idx = (
-            self.oversampling_factor * self.num_subcarriers
+            oversampling_factor * self.num_subcarriers
         ) // 2 - self.num_subcarriers // 2
         original_symbol_grid = symbol_grid[
             ..., padding_start_idx : self.num_subcarriers + padding_start_idx
@@ -171,15 +156,17 @@ class OFDMWaveform(OrthogonalWaveform, Serializable):
 
         # Normalize the frequency-domain data symbols for unit power reception
         if normalize:
-            original_symbol_grid *= (self.num_subcarriers) ** -0.5 / self.oversampling_factor
+            original_symbol_grid *= (self.num_subcarriers) ** -0.5 / oversampling_factor
 
         return original_symbol_grid
 
-    def _correct_sample_offset(self, symbol_subgrid: np.ndarray, sample_offset: int) -> np.ndarray:
+    def _correct_sample_offset(
+        self, symbol_subgrid: np.ndarray, sample_offset: int, oversampling_factor: int
+    ) -> np.ndarray:
         frame_start_idx = (
-            self.oversampling_factor * self.num_subcarriers
+            oversampling_factor * self.num_subcarriers
         ) // 2 - self.num_subcarriers // 2
-        freqs = fftshift(fftfreq(self.oversampling_factor * self.num_subcarriers))[
+        freqs = fftshift(fftfreq(oversampling_factor * self.num_subcarriers))[
             frame_start_idx : frame_start_idx + self.num_subcarriers
         ]
 
@@ -188,56 +175,6 @@ class OFDMWaveform(OrthogonalWaveform, Serializable):
             freqs[dc_index:] = np.roll(freqs[dc_index:], -1)
 
         return symbol_subgrid * np.exp(2j * np.pi * freqs * sample_offset)
-
-    @property
-    def subcarrier_spacing(self) -> float:
-        """Subcarrier spacing between frames.
-
-        Returns:
-            float: Spacing in Hz.
-        """
-
-        return self.__subcarrier_spacing
-
-    @subcarrier_spacing.setter
-    def subcarrier_spacing(self, spacing: float) -> None:
-        """Modify the subcarrier spacing between frames.
-
-        Args:
-            spacing: New spacing in Hz.
-
-        Raises:
-            ValueError: If `spacing` is smaller or equal to zero.
-        """
-
-        if spacing <= 0.0:
-            raise ValueError("Subcarrier spacing must be greater than zero")
-
-        self.__subcarrier_spacing = spacing
-
-    @property
-    @override
-    def samples_per_frame(self) -> int:
-        num = 0
-        for section in self.grid_structure:
-            num += section.num_samples
-
-        if self.pilot_section:
-            num += self.pilot_section.num_samples
-
-        return num
-
-    @property
-    @override
-    def bandwidth(self) -> float:
-        # OFDM bandwidth currently is identical to the number of subcarriers times the subcarrier spacing
-        b = self.num_subcarriers * self.subcarrier_spacing
-        return b
-
-    @property
-    @override
-    def sampling_rate(self) -> float:
-        return self.oversampling_factor * self.subcarrier_spacing * self.num_subcarriers
 
     @override
     def serialize(self, process: SerializationProcess) -> None:
@@ -251,6 +188,9 @@ class SchmidlCoxPilotSection(PilotSection[OFDMWaveform]):
     """
 
     def _pilot_sequence(self, num_symbols: int | None = None) -> np.ndarray:
+        if self.wave is None:
+            raise RuntimeError("Waveform not set for pilot section")
+
         # The schmidl-cox pilot sequence is zero-stuffed in frequency domain
         stuffed_pilot_sequence = np.zeros(self.wave.num_subcarriers, dtype=complex)
         stuffed_pilot_sequence[::2] = PilotSection._pilot_sequence(
@@ -283,8 +223,11 @@ class SchmidlCoxSynchronization(OFDMSynchronization):
     Refer to :footcite:t:`1997:schmidl` for a detailed description.
     """
 
-    def synchronize(self, signal: np.ndarray) -> List[int]:
-        symbol_length = self.waveform.oversampling_factor * self.waveform.num_subcarriers
+    @override
+    def synchronize(
+        self, signal: np.ndarray, bandwidth: float, oversampling_factor: int
+    ) -> list[int]:
+        symbol_length = oversampling_factor * self.waveform.num_subcarriers
 
         # Abort if the supplied signal is shorter than one symbol length
         if signal.shape[-1] < symbol_length:
@@ -306,7 +249,7 @@ class SchmidlCoxSynchronization(OFDMSynchronization):
                 )
             )
 
-        num_samples = self.waveform.samples_per_frame
+        num_samples = self.waveform.samples_per_frame(bandwidth, oversampling_factor)
         min_height = 0.75 * np.max(delay_powers)
         peaks, _ = find_peaks(delay_powers, distance=int(0.9 * num_samples), height=min_height)
         frame_indices = peaks - 1  # Correct for the first delay bin being prepended

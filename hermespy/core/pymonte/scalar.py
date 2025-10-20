@@ -7,9 +7,10 @@ from typing_extensions import override
 from warnings import catch_warnings, simplefilter
 
 import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.figure import Figure, FigureBase
 from matplotlib.lines import Line2D
 from mpl_toolkits.mplot3d import Axes3D  # type: ignore
-import numpy as np
 from scipy.stats import norm
 
 from ..logarithmic import ValueType
@@ -140,7 +141,7 @@ class ScalarEvaluationResult(EvaluationResult):
         return self.to_array()
 
     @override
-    def create_figure(self, **kwargs) -> tuple[plt.FigureBase, VAT]:
+    def create_figure(self, **kwargs) -> tuple[FigureBase, VAT]:
         if len(self.grid) == 2 and self.plot_surface:
             return plt.subplots(1, 1, squeeze=False, subplot_kw={"projection": "3d"})
 
@@ -148,7 +149,7 @@ class ScalarEvaluationResult(EvaluationResult):
 
     @override
     def _prepare_visualization(
-        self, figure: plt.Figure | None, axes: VAT, **kwargs
+        self, figure: Figure | None, axes: VAT, **kwargs
     ) -> PlotVisualization:
         if len(self.grid) == 2 and self.plot_surface:
             lines = self._prepare_surface_visualization(axes[0, 0])
@@ -156,7 +157,7 @@ class ScalarEvaluationResult(EvaluationResult):
         else:
             lines = self._prepare_multidim_visualization(axes[0, 0])
 
-        line_array = np.empty_like(axes, dtype=np.object_)
+        line_array = np.empty((axes.shape[0], axes.shape[1]), dtype=np.object_)
         line_array[0, 0] = lines
         return PlotVisualization(figure, axes, line_array)
 
@@ -245,6 +246,10 @@ class ScalarEvaluator(Evaluator):
     :math:`M_{\\mathrm{max}} \\in \\mathbb{R}_{++}`.
     """
 
+    _DEFAULT_CONFIDENCE = 1.0
+    _DEFAULT_TOLERANCE = 0.0
+    _DEFAULT_MIN_NUM_SAMPLES = 1024
+
     __confidence: float
     __tolerance: float
     __min_num_samples: int
@@ -252,9 +257,9 @@ class ScalarEvaluator(Evaluator):
 
     def __init__(
         self,
-        confidence: float = 1.0,
-        tolerance: float = 0.0,
-        min_num_samples: int = 1024,
+        confidence: float = _DEFAULT_CONFIDENCE,
+        tolerance: float = _DEFAULT_TOLERANCE,
+        min_num_samples: int = _DEFAULT_MIN_NUM_SAMPLES,
         plot_scale: str = "linear",
         tick_format: ValueType = ValueType.LIN,
         plot_surface: bool = True,

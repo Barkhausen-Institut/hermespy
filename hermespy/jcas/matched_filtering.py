@@ -42,7 +42,6 @@ class MatchedFilterJcas(DuplexJCASOperator[CommunicationWaveform], Serializable)
 
     # The specific required sampling rate
     __last_transmission: JCASTransmission | None = None
-    __sampling_rate: float | None
     __max_range: float  # Maximally detectable range
 
     def __init__(
@@ -110,7 +109,6 @@ class MatchedFilterJcas(DuplexJCASOperator[CommunicationWaveform], Serializable)
 
         # Initialize class attributes
         self.__last_transmission = None
-        self.__sampling_rate = None
         self.max_range = max_range
 
     @property
@@ -141,29 +139,26 @@ class MatchedFilterJcas(DuplexJCASOperator[CommunicationWaveform], Serializable)
         # Receive information
         communication_reception = ReceivingModemBase._receive(self, signal, device)
 
-        # Re-sample communication waveform
-        signal = signal.resample(self.sampling_rate)
-
-        resolution = self.range_resolution
-        num_propagated_samples = int(2 * self.max_range / resolution)
+        resolution = self.range_resolution(device.sampling_rate)
+        num_propagated_samples = int(self.max_range / resolution)
 
         # Append additional samples if the signal is too short
-        required_num_received_samples = (
-            self.__last_transmission.signal.num_samples + num_propagated_samples
-        )
-        if signal.num_samples < required_num_received_samples:
-            signal.append_samples(
-                Signal.Create(
-                    np.zeros(
-                        (signal.num_streams, required_num_received_samples - signal.num_samples),
-                        dtype=complex,
-                    ),
-                    self.sampling_rate,
-                    signal.carrier_frequency,
-                    signal.noise_power,
-                    signal.delay,
-                )
-            )
+        # required_num_received_samples = (
+        #    self.__last_transmission.signal.num_samples + num_propagated_samples
+        # )
+        # if signal.num_samples < required_num_received_samples:
+        #    signal.append_samples(
+        #        Signal.Create(
+        #            np.zeros(
+        #                (signal.num_streams, required_num_received_samples - signal.num_samples),
+        #                dtype=complex,
+        #            ),
+        #            self.sampling_rate,
+        #            signal.carrier_frequency,
+        #            signal.noise_power,
+        #            signal.delay,
+        #        )
+        #    )
 
         # Digital receive beamformer
         angle_bins, beamformed_samples = self._receive_beamform(signal, device)
@@ -180,7 +175,7 @@ class MatchedFilterJcas(DuplexJCASOperator[CommunicationWaveform], Serializable)
                 AntennaMode.TX,
             )
             transmitted_samples[t, :] = (
-                phase_response.conj() @ self.__last_transmission.signal.getitem(unflatten=True)
+                phase_response.conj() @ self.__last_transmission.signal.view(np.ndarray)
             )
 
         # Transmit-receive correlation for range estimation
@@ -209,52 +204,35 @@ class MatchedFilterJcas(DuplexJCASOperator[CommunicationWaveform], Serializable)
         jcas_reception = JCASReception(communication_reception, radar_reception)
         return jcas_reception
 
-    @property
-    def sampling_rate(self) -> float:
-        modem_sampling_rate = self.waveform.sampling_rate
-
-        if self.__sampling_rate is None:
-            return modem_sampling_rate
-
-        return max(modem_sampling_rate, self.__sampling_rate)
-
-    @sampling_rate.setter
-    def sampling_rate(self, value: float | None) -> None:
-        if value is None:
-            self.__sampling_rate = None
-            return
-
-        if value <= 0.0:
-            raise ValueError("Sampling rate must be greater than zero")
-
-        self.__sampling_rate = value
-
-    @property
-    def range_resolution(self) -> float:
+    def range_resolution(self, sampling_rate: float) -> float:
         """Resolution of the Range Estimation.
 
+        Args:
+            sampling_rate:
+                Sampling rate of the transmitted and received signal in Hz.
+                Defined as the waveform's bandwidth times the oversampling factor.
+
         Returns:
-            float:
-                Resolution in m.
+            float: Resolution in m.
 
         Raises:
-
             ValueError:
                 If the range resolution is smaller or equal to zero.
         """
 
-        return speed_of_light / self.sampling_rate
+        return speed_of_light / (2 * sampling_rate)
 
-    @range_resolution.setter
-    def range_resolution(self, value: float) -> None:
-        if value <= 0.0:
-            raise ValueError("Range resolution must be greater than zero")
+    @override
+    def frame_duration(self, bandwidth: float) -> float:
+        if self.waveform is None:
+            return 0.0
+        return self.waveform.frame_duration(bandwidth)
 
-        self.sampling_rate = speed_of_light / value
-
-    @property
-    def frame_duration(self) -> float:
-        return self.waveform.frame_duration
+    @override
+    def samples_per_frame(self, bandwidth: float, oversampling_factor: int) -> int:
+        if self.waveform is None:
+            return 0
+        return self.waveform.samples_per_frame(bandwidth, oversampling_factor)
 
     @property
     def max_range(self) -> float:

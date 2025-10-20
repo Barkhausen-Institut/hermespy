@@ -42,7 +42,7 @@ class _RangePlot(VisualizableAttribute[PlotVisualization]):
         return "Radar Range-Power Profile"
 
     def _prepare_visualization(
-        self, figure: plt.Figure | None, axes: VAT, scale: Literal["lin", "log"] = "lin", **kwargs
+        self, figure: plt.Figure | None, axes: VAT, scale: Literal["lin", "log"] = "log", **kwargs
     ) -> PlotVisualization:
 
         _ax: plt.Axes = axes[0, 0]

@@ -13,12 +13,13 @@ import numpy as np
 from matplotlib.container import StemContainer
 from mpl_toolkits.mplot3d.art3d import Line3D
 from numpy.testing import assert_array_almost_equal
+from scipy.signal import butter, sosfiltfilt
 
 from hermespy.core import ConsoleMode, MonteCarlo, GridDimension, Signal, Verbosity
-from hermespy.simulation import Simulation, SimulationScenario
+from hermespy.simulation import RFSignal, Simulation, SimulationScenario
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -58,10 +59,35 @@ def monte_carlo_init_mock(cls: MonteCarlo, *args, **kwargs) -> None:
     monte_carlo_init(cls, *args, **kwargs)
 
 
-def simulation_init_mock(self: Simulation, scenario: None | SimulationScenario = None, num_samples: int = 100, drop_duration: float = 0.0, drop_interval: float = float('inf'), plot_results: bool = False, dump_results: bool = True, console_mode: ConsoleMode = ConsoleMode.INTERACTIVE, ray_address=None, results_dir=None, verbosity=Verbosity.INFO, seed=None, num_actors=None) -> None:
+def simulation_init_mock(
+    self: Simulation,
+    scenario: None | SimulationScenario = None,
+    num_samples: int = 100,
+    drop_interval: float = float('inf'),
+    plot_results: bool = False,
+    dump_results: bool = True,
+    console_mode: ConsoleMode = ConsoleMode.INTERACTIVE,
+    ray_address=None,
+    results_dir=None,
+    verbosity=Verbosity.INFO,
+    seed=None,
+    num_actors=None,
+) -> None:
     num_samples = 1
-    drop_duration = float('inf')
-    simulation_init(self, scenario, num_samples, drop_duration, drop_interval, plot_results, dump_results, console_mode, ray_address, results_dir, verbosity, seed, num_actors)
+    simulation_init(
+        self,
+        scenario,
+        num_samples,
+        drop_interval,
+        plot_results,
+        dump_results,
+        console_mode,
+        ray_address,
+        results_dir,
+        verbosity,
+        seed,
+        num_actors,
+    )
 
 
 def new_dimension_mock(cls: MonteCarlo, dimension: str, sample_points: List[Any], *args, **kwargs) -> GridDimension:
@@ -98,7 +124,7 @@ def subplots_mock(x=1, y=1, *args, squeeze=True, **kwargs) -> Tuple[MagicMock, M
             container_mock = MagicMock(spec=StemContainer)
             container_mock.markerline = MagicMock(spec=line_spec)
             container_mock.stemlines = MagicMock(spec=list)
-            mock_element.stem.return_value = container_mock  
+            mock_element.stem.return_value = container_mock
             plot_lines_mock = MagicMock(spec=line_spec)
             plot_lines_mock.set_3d_properties = MagicMock()
             mock_element.plot.return_value = [plot_lines_mock]
@@ -171,12 +197,69 @@ class SimulationTestContext(object):
 
         return self.__patch_plot
 
+
 def assert_signals_equal(test: TestCase, expected_signal: Signal, actual_signal: Signal) -> None:
-    
+    """Assert that two signal models are equivalent.
+
+    Args:
+        test: The test case instance to use for assertions.
+        expected_signal: The expected signal model.
+        actual_signal: The actual signal model to compare against the expected one.
+    """
+
     test.assertEqual(expected_signal.sampling_rate, actual_signal.sampling_rate, msg="Sampling rate mismatch")
     test.assertEqual(expected_signal.num_samples, actual_signal.num_samples, msg="Number of samples mismatch")
     test.assertEqual(expected_signal.num_streams, actual_signal.num_streams, msg="Number of streams mismatch")
-    test.assertEqual(len(expected_signal), len(actual_signal), msg="Number of blovks mismatch")
-    
-    for expected_block, actual_block in zip(expected_signal, actual_signal):
-        assert_array_almost_equal(expected_block, actual_block)
+
+    # If both signals have the identical amount of blocks,
+    # compare each individual block
+    if expected_signal.num_blocks == actual_signal.num_blocks:
+        for expected_block, actual_block in zip(expected_signal.blocks, actual_signal.blocks):
+            test.assertEqual(expected_block.offset, actual_block.offset, msg="Block offset mismatch")
+            assert_array_almost_equal(actual_block.view(np.ndarray), expected_block.view(np.ndarray))
+
+    # Otherwise convert both signals to dense format and compare
+    else:
+        expected_dense = expected_signal.to_dense()
+        actual_dense = actual_signal.to_dense()
+        assert_array_almost_equal(actual_dense.view(np.ndarray), expected_dense.view(np.ndarray))
+
+
+def random_rf_signal(
+    num_streams: int,
+    num_samples: int,
+    bandwidth: float,
+    oversampling_factor: int,
+    rng: np.random.Generator | None = None,
+) -> RFSignal:
+    """Generate a random RF signal for testing purposes.
+
+    Args:
+        num_streams: Number of streams in the signal.
+        num_samples: Number of samples in the signal.
+        bandwidth: Bandwidth of the signal in Hz.
+        oversampling_factor: Oversampling factor of the signal.
+        rng:
+            Optional random number generator for reproducibility.
+            If not provided a new generator with seed 42 is created.
+
+    Returns:
+        A random RFSignal instance.
+    """
+
+    _rng = np.random.default_rng(42) if rng is None else rng
+    sampling_rate = bandwidth * oversampling_factor
+
+    # Generate random filtered complex Gaussian samples
+    samples = (_rng.normal(size=(num_streams, num_samples)) + 1j * _rng.normal(size=(num_streams, num_samples))) / np.sqrt(2)
+
+    if oversampling_factor > 1:
+        filtered_samples = sosfiltfilt(
+            butter(16, 1/oversampling_factor, output='sos'),
+            samples,
+            axis=1
+        )
+    else:
+        filtered_samples = samples
+
+    return RFSignal(num_streams, num_samples, sampling_rate, buffer=filtered_samples.tobytes())

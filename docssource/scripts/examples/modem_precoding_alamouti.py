@@ -20,10 +20,14 @@ from hermespy.simulation import (
 simulation = Simulation()
 tx_device = simulation.new_device(
     antennas=SimulatedUniformArray(SimulatedIdealAntenna(AntennaMode.TX), 0.1, (2,)),
+    oversampling_factor=4,
+    bandwidth=1e6,
 )
 
 rx_device = simulation.new_device(
     antennas=SimulatedUniformArray(SimulatedIdealAntenna(AntennaMode.RX), 0.1, (1,)),
+    oversampling_factor=4,
+    bandwidth=1e6,
 )
 
 # Create a link between the two devices
@@ -32,8 +36,6 @@ link.connect(tx_device, rx_device)
 
 # Configure a single carrier waveform
 waveform = RootRaisedCosineWaveform(
-    oversampling_factor=4,
-    symbol_rate=1e6,
     num_preamble_symbols=16,
     num_data_symbols=32,
     modulation_order=64,

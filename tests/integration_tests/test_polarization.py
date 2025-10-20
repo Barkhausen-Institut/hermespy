@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
+from typing_extensions import override
 from unittest import TestCase
 
 import numpy as np
@@ -8,7 +9,7 @@ from numpy.testing import assert_array_almost_equal
 
 from hermespy.core import Antenna, Signal, Transformation
 from hermespy.channel import SpatialDelayChannel
-from hermespy.simulation import SimulationScenario, SimulatedUniformArray, StaticTrajectory
+from hermespy.simulation import SimulatedAntenna, SimulationScenario, SimulatedUniformArray, StaticTrajectory
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -20,20 +21,24 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class HorizontallyPolarizedAntenna(Antenna):
-    
+class HorizontallyPolarizedAntenna(SimulatedAntenna):
+
+    @override
     def copy(self) -> HorizontallyPolarizedAntenna:
         return HorizontallyPolarizedAntenna(self.mode, self.pose)
-    
+
+    @override
     def local_characteristics(self, azimuth: float, elevation) -> np.ndarray:
         return np.array([1.0, 0.0], dtype=float)
 
 
-class VerticallyPolarizedAntenna(Antenna):
-    
+class VerticallyPolarizedAntenna(SimulatedAntenna):
+
+    @override
     def copy(self) -> VerticallyPolarizedAntenna:
         return VerticallyPolarizedAntenna(self.mode, self.pose)
 
+    @override
     def local_characteristics(self, azimuth: float, elevation) -> np.ndarray:
         return np.array([1.0, 0.0], dtype=float)
 
@@ -50,7 +55,7 @@ class TestSingleAntennaPolarization(TestCase):
 
         self.orientation_candidates = np.pi * np.array([[0.0, 0.0, 0.0], [0.5, 0.0, 0.0], [-0.5, 0.0, 0.0], [1, 0.0, 0.0], [-1, 0.0, 0.0], [0.0, 0.5, 0.0], [0.0, -0.5, 0.0], [0.0, 1.0, 0.0], [0.0, -1.0, 0.0], [0.0, 0.0, 0.5], [0.0, 0.0, -0.5], [0.0, 0.0, 1.0], [0.0, 0.0, -1.0]], dtype=float)
 
-        self.test_signal = Signal.Create(np.ones(100), 1, carrier_frequency=1e9)
+        self.test_signal = Signal.Create(np.ones((1, 100)), 1, 1e9)
 
     def test_translation(self) -> None:
         """Test translational polarization behavior"""

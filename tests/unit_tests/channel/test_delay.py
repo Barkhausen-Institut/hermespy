@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from unittest import TestCase
-from unittest.mock import patch, PropertyMock
 
 import numpy as np
-from h5py import File
-from numpy.testing import assert_array_almost_equal
 from scipy.constants import speed_of_light
 
-from hermespy.channel.delay.spatial import SpatialDelayChannel, SpatialDelayChannelRealization
+from hermespy.channel.delay.spatial import SpatialDelayChannel
 from hermespy.channel.delay.delay import DelayChannelBase
 from hermespy.channel.delay.random import RandomDelayChannel
 from hermespy.core import DenseSignal, Transformation
@@ -18,7 +15,7 @@ from unit_tests.core.test_factory import test_roundtrip_serialization
 from unit_tests.utils import assert_signals_equal
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -34,10 +31,12 @@ class _TestDelayChannelBase(TestCase):
         ...
 
     def setUp(self) -> None:
-        self.sampling_rate = 1e6
+        self.bandwidth = 1e6
+        self.oversampling_factor = 2
+        self.sampling_rate = self.bandwidth * self.oversampling_factor
         self.carrier_frequency = 1.234e9
-        self.alpha_device = SimulatedDevice(sampling_rate=self.sampling_rate, carrier_frequency=self.carrier_frequency, pose=Transformation.From_Translation(np.array([0, 0, 0])))
-        self.beta_device = SimulatedDevice(sampling_rate=self.sampling_rate, carrier_frequency=self.carrier_frequency, pose=Transformation.From_Translation(np.array([0, 0, 10])))
+        self.alpha_device = SimulatedDevice(bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor, carrier_frequency=self.carrier_frequency, pose=Transformation.From_Translation(np.array([0, 0, 0])))
+        self.beta_device = SimulatedDevice(bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor, carrier_frequency=self.carrier_frequency, pose=Transformation.From_Translation(np.array([0, 0, 10])))
 
         self.channel = self._init_channel()
 
@@ -46,36 +45,36 @@ class _TestDelayChannelBase(TestCase):
 
         realization = self.channel.realize()
         self.assertEqual(self.channel.gain, realization.gain)
-        
+
     def test_propagate_validation(self) -> None:
         """Propagating in base-band is prohibited if propagation loss is modeled"""
 
         self.alpha_device.carrier_frequency = 0.0
         self.beta_device.carrier_frequency = 0.0
         self.channel.model_propagation_loss = True
-        
+
         with self.assertRaises(RuntimeError):
-            self.channel.propagate(DenseSignal(np.zeros((self.alpha_device.num_antennas, 10)), self.alpha_device.sampling_rate), self.alpha_device, self.beta_device)
+            self.channel.propagate(DenseSignal.FromNDArray(np.zeros((self.alpha_device.num_antennas, 10)), self.alpha_device.sampling_rate), self.alpha_device, self.beta_device)
 
     def test_propagate_state(self) -> None:
         """Propagation and channel state should match"""
-        
+
         sample = self.channel.realize().sample(self.alpha_device, self.beta_device)
-        signal = DenseSignal(np.ones((self.alpha_device.num_antennas, 10)), self.sampling_rate, self.carrier_frequency)
+        signal = DenseSignal.FromNDArray(np.ones((self.alpha_device.num_antennas, 10)), self.sampling_rate, self.carrier_frequency)
 
         channel_propagation = sample.propagate(signal)
-        state_propagation = sample.state(10, 1556701).propagate(signal)
+        state_propagation = sample.state(signal.num_samples, 1 + channel_propagation.num_samples - signal.num_samples).propagate(signal)
 
         assert_signals_equal(self, channel_propagation, state_propagation)
 
     def test_model_serialization(self) -> None:
         """Test delay channel model serialization"""
-        
+
         test_roundtrip_serialization(self, self.channel)
 
     def test_realization_serialization(self) -> None:
         """Test delay channel serialization realization"""
-        
+
         realization = self.channel.realize()
         test_roundtrip_serialization(self, realization)
 
@@ -95,19 +94,19 @@ class TestSpatialDelayChannel(_TestDelayChannelBase):
 
     def test_propagate_identical_positions(self) -> None:
         """Propagation whith identical positions should result in zero delay"""
-        
+
         self.alpha_device.trajectory = self.beta_device.trajectory
-        
-        signal = DenseSignal(np.zeros((self.alpha_device.num_antennas, 1)), self.alpha_device.sampling_rate, self.alpha_device.carrier_frequency)
+
+        signal = DenseSignal.FromNDArray(np.zeros((self.alpha_device.num_antennas, 1)), self.alpha_device.sampling_rate, self.alpha_device.carrier_frequency)
         propagation = self.channel.propagate(signal, self.alpha_device, self.beta_device)
-        
+
         self.assertEqual(1, propagation.num_samples)
 
     def test_power_loss(self) -> None:
-        """Propagated signals should loose power according to the free space propagation loss"""
+        """Propagated signals should lose power according to the free space propagation loss"""
 
         # Assert free space propagation power loss
-        power_signal = DenseSignal(np.zeros((self.alpha_device.num_antennas, 10)), self.alpha_device.sampling_rate, self.alpha_device.carrier_frequency)
+        power_signal = DenseSignal.FromNDArray(np.zeros((self.alpha_device.num_antennas, 10)), self.alpha_device.sampling_rate, self.alpha_device.carrier_frequency)
         power_signal[0, :] = np.ones(10)
 
         initial_energy = np.sum(power_signal.energy)
@@ -123,20 +122,21 @@ class TestSpatialDelayChannel(_TestDelayChannelBase):
         propagation = self.channel.propagate(power_signal, self.alpha_device, self.beta_device)
 
         self.assertAlmostEqual(initial_energy, np.mean(propagation.energy))
-        
+
     def test_reciprocal_sample(self) -> None:
         """Test reciprocal channel samples"""
-        
+
         realization = self.channel.realize()
         sample = realization.sample(self.alpha_device, self.beta_device)
         reciprocal_sample = realization.reciprocal_sample(sample, self.beta_device, self.alpha_device)
 
         self.assertAlmostEqual(sample.delay, reciprocal_sample.delay)
 
+
 class TestRandomDelayChannel(_TestDelayChannelBase):
-    def _init_channel(self, *args, **kwargs) -> SpatialDelayChannel:
+    def _init_channel(self, *args, **kwargs) -> RandomDelayChannel:
         return RandomDelayChannel(0.0, *args, seed=42, **kwargs)
-    
+
     def test_delay_setget(self) -> None:
         """Delay property getter should return setter argument"""
 
@@ -165,14 +165,14 @@ class TestRandomDelayChannel(_TestDelayChannelBase):
 
         with self.assertRaises(ValueError):
             self.channel.delay = "wrong param"
-            
+
     def test_decorrelation_distance_setget(self) -> None:
         """Decorrelation distance property getter should return setter argument"""
 
         expected_distance = 1.0
         self.channel.decorrelation_distance = expected_distance
         self.assertEqual(expected_distance, self.channel.decorrelation_distance)
-        
+
     def test_decorrelation_distance_validation(self) -> None:
         """Invalid decorrelation distance should raise a ValueError"""
 

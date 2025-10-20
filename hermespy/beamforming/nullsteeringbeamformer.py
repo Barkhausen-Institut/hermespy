@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import annotations
+from typing_extensions import override
+
 import numpy as np
 from scipy.linalg import pinvh
 
 from hermespy.beamforming import TransmitBeamformer, ReceiveBeamformer
-from hermespy.core import AntennaArrayState
+from hermespy.core import AntennaArrayState, DeserializationProcess, SerializationProcess
 
 __author__ = "Alan Thomas"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Alan Thomas", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -16,7 +19,6 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-# Define the NullStearingBeamformer class by inheriting from the ReceiveBeamformer class
 class NullSteeringBeamformer(TransmitBeamformer, ReceiveBeamformer):
 
     def __init__(self) -> None:
@@ -97,3 +99,12 @@ class NullSteeringBeamformer(TransmitBeamformer, ReceiveBeamformer):
 
         beamformed_samples = dictionary.T @ samples
         return beamformed_samples[:, np.newaxis, :]
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        return
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> NullSteeringBeamformer:
+        return cls()

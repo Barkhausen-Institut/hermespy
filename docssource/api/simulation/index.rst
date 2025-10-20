@@ -138,14 +138,10 @@ From there, the result can be printed to the console, plotted, or saved to the d
    
    simulation.Simulation
    simulated_device
+   rf/index
    animation
    antennas
-   noise
    synchronization
-   rf_chain.adc
-   rf_chain
-   rf_chain.phase_noise
-   rf_chain.amplifier
    coupling
    isolation
    evaluators

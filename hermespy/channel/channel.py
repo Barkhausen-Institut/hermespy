@@ -9,11 +9,11 @@ import numpy as np
 
 from hermespy.core import (
     AntennaArrayState,
+    InterpolationMode,
     SignalBlock,
     DeserializationProcess,
     DeviceOutput,
     RandomNode,
-    SerializableEnum,
     SerializationProcess,
     Signal,
     Transformation,
@@ -36,51 +36,6 @@ __version__ = "1.5.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
-
-
-class InterpolationMode(SerializableEnum):
-    """Interpolation behaviour for sampling and resampling routines.
-
-    Considering a complex time series
-
-    .. math::
-
-       \\mathbf{s} = \\left[s_{0}, s_{1},\\,\\dotsc, \\, s_{M-1} \\right]^{\\mathsf{T}} \\in \\mathbb{C}^{M} \\quad \\text{with} \\quad s_{m} = s(\\frac{m}{f_{\\mathrm{s}}})
-
-    sampled at rate :math:`f_{\\mathrm{s}}`, so that each sample
-    represents a discrete sample of a time-continuous underlying function :math:`s(t)`.
-
-    Given only the time-discrete sample vector :math:`\\mathbf{s}`,
-    resampling refers to
-
-    .. math::
-
-       \\hat{s}(\\tau) = \\mathscr{F} \\left\\lbrace \\mathbf{s}, \\tau \\right\\rbrace
-
-    estimating a sample of the original time-continuous function at time :math:`\\tau` given only the discrete-time sample vector :math:`\\mathbf{s}`.
-    """
-
-    NEAREST = 0
-    """Interpolate to the nearest sampling instance.
-
-    .. math::
-
-       \\hat{s}(\\tau) = s_{\\lfloor \\tau f_{\\mathrm{s}} \\rfloor}
-
-    Very fast, but not very accurate.
-    """
-
-    SINC = 1
-    """Interpolate using sinc kernels.
-
-    Also known as the Whittaker-Kotel'nikov-Shannon interpolation formula :footcite:p:`2002:meijering`.
-
-    .. math::
-
-       \\hat{s}(\\tau) = \\sum_{m=0}^{M-1} s_{m} \\operatorname{sinc} \\left( \\tau f_{\\mathrm{s}} - m \\right)
-
-    Perfect for bandlimited signals, not very fast.
-    """
 
 
 CST = TypeVar("CST", bound="ChannelSample")
@@ -349,7 +304,7 @@ class ChannelSample(object):
         ...  # pragma: no cover
 
     def propagate(
-        self: CST,
+        self,
         signal: DeviceOutput | Signal,
         interpolation_mode: InterpolationMode = InterpolationMode.NEAREST,
     ) -> Signal:
@@ -371,7 +326,7 @@ class ChannelSample(object):
 
         .. math::
 
-           \\mathbf{y}^{(m)} = \\sum_{\\tau = 0}^{m} \\mathbf{H}^{(m, \\tau)} \mathbf{x}^{(m-\\tau)} \\ \\text{.}
+           \\mathbf{y}^{(m)} = \\sum_{\\tau = 0}^{m} \\mathbf{H}^{(m, \\tau)} \\mathbf{x}^{(m-\\tau)} \\ \\text{.}
 
         It wraps :meth:`ChannelSample._propagate<hermespy.channel.channel.ChannelSample._propagate>` and returns a :class:`Signal<hermespy.core.signal_model.Signal>` instance.
 
@@ -394,6 +349,17 @@ class ChannelSample(object):
         else:
             raise ValueError("Signal is of unsupported type")
 
+        # If scale is zero, return an empty signal
+        if self.expected_energy_scale <= 0.0:
+            return Signal.Empty(
+                _signal.sampling_rate,
+                self.num_receive_antennas,
+                0,
+                carrier_frequency=_signal.carrier_frequency,
+                noise_power=_signal.noise_power,
+                delay=_signal.delay,
+            )
+
         # Assert that the signal's number of streams matches the number of antennas of the transmitter
         if _signal.num_streams != self.num_transmit_antennas:
             raise ValueError(
@@ -401,8 +367,16 @@ class ChannelSample(object):
             )
 
         # Propagate each signal block
-        signal_blocks_propagated = [self._propagate(b, interpolation_mode) for b in _signal]
-        return _signal.Create(signal_blocks_propagated, self.bandwidth, self.carrier_frequency)
+        propagated_blocks = [self._propagate(b, interpolation_mode) for b in _signal.blocks]
+        block_offsets = [b.offset for b in propagated_blocks]
+        return Signal.Create(
+            propagated_blocks,
+            self.bandwidth,
+            self.carrier_frequency,
+            _signal.noise_power,
+            _signal.delay,
+            offsets=block_offsets,
+        )
 
     @abstractmethod
     def state(
@@ -959,7 +933,7 @@ class Channel(ABC, RandomNode, Serializable, Generic[CRT, CST]):
 
         .. math::
 
-           \\mathbf{y}^{(m)} = \\sum_{\\tau = 0}^{m} \\mathbf{H}^{(m, \\tau)} \mathbf{x}^{(m-\\tau)} \\ \\text{.}
+           \\mathbf{y}^{(m)} = \\sum_{\\tau = 0}^{m} \\mathbf{H}^{(m, \\tau)} \\mathbf{x}^{(m-\\tau)} \\ \\text{.}
 
         Args:
 

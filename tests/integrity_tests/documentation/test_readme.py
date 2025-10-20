@@ -23,13 +23,13 @@ class TestReadme(TestCase):
         readme_location = path.join(path.dirname(path.abspath(__file__)), "..", "..", "..", "README.md")
         with open(readme_location, "r") as f:
             readme_text = f.read()
-            
+
         # Extract python code blocks
         code_blocks = re.findall(r"```python(.*?)```", readme_text, re.MULTILINE | re.DOTALL | re.S)
-        
+
         # Replace the num_samples with one to avoid long simulation times
         code_blocks[1] = re.sub(r"num_samples = \d+", "num_samples = 1", code_blocks[1])
-        
+
         # Replace the num_drops with one to avoid long simulation times
         code_blocks[2] = re.sub(r"num_drops = \d+", "num_drops = 1", code_blocks[2])
 

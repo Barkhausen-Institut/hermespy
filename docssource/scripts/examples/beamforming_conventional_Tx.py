@@ -1,6 +1,5 @@
 from scipy.constants import speed_of_light
 
-sampling_rate = 1e6
 carrier_frequency = 70e9
 wavelength = speed_of_light / carrier_frequency
 
@@ -23,8 +22,6 @@ base_station_device = simulation.new_device(
 from hermespy.modem import RootRaisedCosineWaveform, SingleCarrierLeastSquaresChannelEstimation, SingleCarrierZeroForcingChannelEqualization, SingleCarrierCorrelationSynchronization
 
 waveform = RootRaisedCosineWaveform(
-    symbol_rate=sampling_rate//2,
-    oversampling_factor=2,
     num_preamble_symbols=32,
     num_data_symbols=128,
     roll_off=.9,
@@ -66,7 +63,7 @@ user_equipment_device_2.add_dsp(user_equipment_receiver_2)
 from hermespy.simulation import DeviceFocus
 
 beamformer.transmit_focus = [
-    DeviceFocus(user_equipment_device_1), # Focus on User Equipmment 1
+    DeviceFocus(user_equipment_device_1),  # Focus on User Equipmment 1
 ]
 
 # Configure a channel between base station and the UEs

@@ -15,12 +15,11 @@ from typing_extensions import override, overload
 
 import numpy as np
 from h5py import ExternalLink, File, HardLink, Group, SoftLink, string_dtype
-from numpy.typing import DTypeLike
 
 import hermespy
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -28,6 +27,9 @@ __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
+
+DEFAULT_TYPE = TypeVar("DEFAULT_TYPE")
+"""Type of a default value."""
 
 UNDEF_TYPE = Literal["UNDEFINED"]
 """Type of an undefined value representing optional arguments that include :py:obj:`None` as a default value."""
@@ -39,6 +41,8 @@ UNDEF: UNDEF_TYPE = "UNDEFINED"
 
 SerializableType = TypeVar("SerializableType", bound="Serializable")
 """Type of Serializable Class."""
+
+_SCT = TypeVar("_SCT", bound=np.generic)
 
 
 class Serializable(object):
@@ -152,10 +156,18 @@ class SerializationBackend(SerializableEnum):
 class Factory:
     """Helper class to serialize Hermespy's runtime objects."""
 
-    __tag_registry: Mapping[str, Type[Serializable]]
+    __tag_registry: dict[str, type[Serializable]]
 
-    def __init__(self) -> None:
-        self.__tag_registry = dict()
+    def __init__(self, tag_registry: dict[str, type[Serializable]] | None = None) -> None:
+        """
+        Args:
+
+            tag_registry:
+                Optional custom tag registry.
+                Should only be used for test and debugging purposes.
+        """
+
+        self.__tag_registry = dict() if tag_registry is None else tag_registry
 
         # Iterate over all modules within the hermespy namespace
         # Scan for serializable classes
@@ -231,7 +243,7 @@ class Factory:
             serializable.serialize(process)
 
         finally:
-            if isinstance(target, str):
+            if isinstance(target, str) and isinstance(_target, File):
                 _target.close()
 
     def from_HDF(self, target: str | Group, type: Type[Serializable]) -> Any:
@@ -510,15 +522,25 @@ class SerializationProcess(ProcessBase):
 class DeserializationProcess(ProcessBase):
     """Base class for all deserialization processes."""
 
+    @overload
+    def deserialize_array(
+        self, name: str, dtype: type[_SCT], default: DEFAULT_TYPE
+    ) -> np.ndarray[tuple[int, ...], np.dtype[_SCT]] | DEFAULT_TYPE: ...  # pragma: no cover
+
+    @overload
+    def deserialize_array(
+        self, name: str, dtype: type[_SCT], default: UNDEF_TYPE = UNDEF
+    ) -> np.ndarray[tuple[int, ...], np.dtype[_SCT]]: ...  # pragma: no cover
+
     @abstractmethod
     def deserialize_array(
-        self, name: str, dtype: DTypeLike, default: np.ndarray | UNDEF_TYPE = UNDEF
-    ) -> np.ndarray:
+        self, name: str, dtype: type[_SCT], default: DEFAULT_TYPE | UNDEF_TYPE = UNDEF
+    ) -> np.ndarray[tuple[int, ...], np.dtype[_SCT]] | DEFAULT_TYPE:
         """Deserialize a numpy array.
 
         Args:
             name: Name of the dataset.
-            dtype: Expected data type of the array.
+            dtype: Expected NumPy data type of the array.
             default: Default value to be returned if the value does not exist.
 
         Returns:
@@ -552,8 +574,34 @@ class DeserializationProcess(ProcessBase):
         """
         ...  # pragma: no cover
 
+    @overload
+    def deserialize_integer(self, name: str, default: DEFAULT_TYPE) -> int | DEFAULT_TYPE:
+        """Deserialize an integer value.
+
+        Args:
+            name: Name of the dataset.
+            default: Default value to be returned if the value does not exist.
+
+        Returns:
+            int: The deserialized integer value.
+        """
+        ...  # pragma: no cover
+
+    @overload
+    def deserialize_integer(self, name: str, default: UNDEF_TYPE = UNDEF) -> int:
+        """Deserialize an integer value.
+
+        Args:
+            name: Name of the dataset.
+            default: Default value to be returned if the value does not exist.
+
+        Returns:
+            int: The deserialized integer value.
+        """
+        ...  # pragma: no cover
+
     @abstractmethod
-    def deserialize_integer(self, name: str, default: int | UNDEF_TYPE = UNDEF) -> int:
+    def deserialize_integer(self, name: str, default: _RT | UNDEF_TYPE = UNDEF) -> _RT | int:
         """Deserialize an integer value.
 
         Args:
@@ -654,7 +702,7 @@ class DeserializationProcess(ProcessBase):
         Args:
 
             name: Name of the dataset.
-            \*args: Optional arguments for method overloading.
+            args: Optional arguments for method overloading.
 
         Returns: The deserialized object.
 
@@ -1004,10 +1052,20 @@ class HDFDeserializationProcess(DeserializationProcess):
 
         return HDFDeserializationProcess(tag_registry, base_group, base_group, dict(), dict())
 
+    @overload
+    def deserialize_array(
+        self, name: str, dtype: type[_SCT], default: DEFAULT_TYPE
+    ) -> np.ndarray[tuple[int, ...], np.dtype[_SCT]] | DEFAULT_TYPE: ...  # pragma: no cover
+
+    @overload
+    def deserialize_array(
+        self, name: str, dtype: type[_SCT], default: UNDEF_TYPE = UNDEF
+    ) -> np.ndarray[tuple[int, ...], np.dtype[_SCT]]: ...  # pragma: no cover
+
     @override
     def deserialize_array(
-        self, name: str, dtype: DTypeLike, default: np.ndarray | UNDEF_TYPE = UNDEF
-    ) -> np.ndarray:
+        self, name: str, dtype: type[_SCT], default: DEFAULT_TYPE | UNDEF_TYPE = UNDEF
+    ) -> np.ndarray[tuple[int, ...], np.dtype[_SCT]] | DEFAULT_TYPE:
         # Get the link from the group
         link: SoftLink | HardLink | ExternalLink | None = self.__group.get(name, None, False, True)
 

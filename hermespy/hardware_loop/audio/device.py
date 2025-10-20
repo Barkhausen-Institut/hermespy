@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from abc import ABC, abstractmethod
 from datetime import datetime
+from itertools import chain
 from types import ModuleType
 from typing import Sequence
 from typing_extensions import override
@@ -12,18 +12,18 @@ from scipy.fft import fft, ifft
 
 from hermespy.core import (
     AntennaMode,
+    DenseSignal,
     Serializable,
     Signal,
     Antenna,
     AntennaArray,
-    AntennaPort,
     SerializationProcess,
     DeserializationProcess,
 )
 from ..physical_device import PhysicalDevice, PhysicalDeviceState
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -42,86 +42,19 @@ class AudioAntenna(Antenna):
         return np.array([2**0.5, 2**0.5], dtype=float)
 
 
-class AudioPort(ABC, AntennaPort[AudioAntenna, "AudioDeviceAntennas"]):
-    """Antenna port model for audio devices."""
-
-    @property
-    @abstractmethod
-    def channel(self) -> int:
-        """Audio channel index."""
-        ...  # pragma: no cover
-
-
-class AudioPlaybackPort(AudioPort):
-    """Antenna transmit port model for audio devices.
-
-    Represents a single transmitting audio channel of a soundcard.
-    """
-
-    __channel: int
-
-    def __init__(self, array: AudioDeviceAntennas, channel: int) -> None:
-        """
-        Args:
-
-            array:
-                Antenna array to which the port belongs.
-
-            channel:
-                Recording audio channel index.
-        """
-
-        # Save attributes
-        self.__channel = channel
-
-        # Initialize base class
-        antennas = [AudioAntenna(AntennaMode.TX)]
-        AntennaPort.__init__(self, antennas, None, array)
-
-    @property
-    def channel(self) -> int:
-        """Recording audio channel index."""
-
-        return self.__channel
-
-
-class AudioRecordPort(AudioPort):
-    """Antenna receive port model for audio devices.
-
-    Represents a single receiving audio channel of a soundcard.
-    """
-
-    def __init__(self, array: AudioDeviceAntennas, channel: int) -> None:
-        """
-        Args:
-
-            array:
-                Antenna array to which the port belongs.
-
-            channel:
-                Recording audio channel index.
-        """
-
-        # Initialize base class
-        antennas = [AudioAntenna(AntennaMode.RX)]
-        AntennaPort.__init__(self, antennas, None, array)
-
-        # Save attributes
-        self.__channel = channel
-
-    @property
-    def channel(self) -> int:
-        """Recording audio channel index."""
-
-        return self.__channel
-
-
-class AudioDeviceAntennas(AntennaArray[AudioPort, AudioAntenna]):
+class AudioDeviceAntennas(AntennaArray[AudioAntenna]):
     """Antenna array information for audio devices."""
 
     __device: AudioDevice
+    __transmit_antennas: list[AudioAntenna]
+    __receive_antennas: list[AudioAntenna]
 
     def __init__(self, device: AudioDevice) -> None:
+        """
+        Args:
+            device: The audio device to which the antenna array belongs.
+        """
+
         # Initialize base class
         AntennaArray.__init__(self)
 
@@ -129,54 +62,58 @@ class AudioDeviceAntennas(AntennaArray[AudioPort, AudioAntenna]):
         self.__device = device
 
         # Create ports
-        self.__transmit_ports = [
-            AudioPlaybackPort(self, channel) for channel in self.__device.playback_channels
+        self.__transmit_antennas = [
+            AudioAntenna(AntennaMode.TX) for _ in self.__device.playback_channels
         ]
-        self.__receiver_ports = [
-            AudioRecordPort(self, channel) for channel in self.__device.record_channels
+        self.__receive_antennas = [
+            AudioAntenna(AntennaMode.RX) for _ in self.__device.record_channels
         ]
+
+        for antenna in chain(self.__transmit_antennas, self.__receive_antennas):
+            antenna.set_base(self)
 
         # Configure the kinematics
         self.set_base(device)
 
-    def _new_port(self) -> AudioPort:
-        raise RuntimeError("Audio antenna arrays can't create new ports")
-
     @property
-    def ports(self) -> Sequence[AudioPort]:
-        return [*self.__transmit_ports, *self.__receiver_ports]
-
-    @property
-    def transmit_ports(self) -> Sequence[AudioPlaybackPort]:
-        return self.__transmit_ports
-
-    @property
-    def receive_ports(self) -> Sequence[AudioRecordPort]:
-        return self.__receiver_ports
-
-    @property
-    def num_antennas(self) -> int:
-        return len(self.__transmit_ports) + len(self.__receiver_ports)
-
-    @property
+    @override
     def num_receive_antennas(self) -> int:
         return len(self.__device.playback_channels)
 
     @property
+    @override
     def num_transmit_antennas(self) -> int:
         return len(self.__device.record_channels)
+
+    @property
+    @override
+    def transmit_antennas(self) -> list[AudioAntenna]:
+        return self.__transmit_antennas
+
+    @property
+    @override
+    def receive_antennas(self) -> list[AudioAntenna]:
+        return self.__receive_antennas
+
+    @property
+    @override
+    def antennas(self) -> list[AudioAntenna]:
+        return self.__transmit_antennas + self.__receive_antennas
 
 
 class AudioDevice(PhysicalDevice[PhysicalDeviceState], Serializable):
     """HermesPy binding to an arbitrary audio device. Let's rock!"""
 
     __DEFAULT_SAMPLING_RATE = 48000.0
+    __DEFAULT_OVERSAMPLING_FACTOR = 2
 
     __playback_device: int  # Device over which audio streams are to be transmitted
     __record_device: int  # Device over which audio streams are to be received
     __playback_channels: Sequence[int]  # List of audio channel for signal transmission
     __record_channels: Sequence[int]  # List of audio channel for signal reception
     __sampling_rate: float  # Configured sampling rate
+    __oversampling_factor: int  # Oversampling factor for the internal signal processing
+    __reception: np.ndarray[tuple[int, int], np.dtype[np.float64]]
     __transmission: np.ndarray | None  # Configured transmission samples
     __antennas: AudioDeviceAntennas  # Antenna array information
 
@@ -187,6 +124,7 @@ class AudioDevice(PhysicalDevice[PhysicalDeviceState], Serializable):
         playback_channels: Sequence[int] | None = None,
         record_channels: Sequence[int] | None = None,
         sampling_rate: float = __DEFAULT_SAMPLING_RATE,
+        oversampling_factor: int = __DEFAULT_OVERSAMPLING_FACTOR,
         **kwargs,
     ) -> None:
         """
@@ -209,6 +147,10 @@ class AudioDevice(PhysicalDevice[PhysicalDeviceState], Serializable):
             sampling_rate:
                 Configured sampling rate.
                 48 kHz by default.
+
+            oversampling_factor:
+                Oversampling factor for the internal signal processing.
+                1 by default.
         """
 
         # Initialize base class
@@ -220,8 +162,9 @@ class AudioDevice(PhysicalDevice[PhysicalDeviceState], Serializable):
         self.playback_channels = [1] if playback_channels is None else playback_channels
         self.record_channels = [1] if record_channels is None else record_channels
         self.sampling_rate = sampling_rate
+        self.oversampling_factor = oversampling_factor
         self.__transmission = None
-        self.__reception = np.empty(0, float)
+        self.__reception = np.empty((0, 0), dtype=np.float64)
         self.__antennas = AudioDeviceAntennas(self)
 
     def state(self) -> PhysicalDeviceState:
@@ -231,10 +174,13 @@ class AudioDevice(PhysicalDevice[PhysicalDeviceState], Serializable):
             self.pose,
             self.velocity,
             self.carrier_frequency,
-            self.sampling_rate,
-            self.num_digital_transmit_ports,
-            self.num_digital_receive_ports,
+            self.sampling_rate / self.oversampling_factor,
+            self.oversampling_factor,
             self.antennas.state(self.pose),
+            self.num_transmit_dsp_ports,
+            self.num_receive_dsp_ports,
+            self.num_transmit_rf_ports,
+            self.num_receive_rf_ports,
         )
 
     @property
@@ -327,31 +273,56 @@ class AudioDevice(PhysicalDevice[PhysicalDeviceState], Serializable):
         self.__sampling_rate = value
 
     @property
+    def oversampling_factor(self) -> int:
+        """Oversampling factor for the internal signal processing.
+
+        Raises:
+            ValueError: For values smaller than one.
+        """
+        return self.__oversampling_factor
+
+    @oversampling_factor.setter
+    def oversampling_factor(self, value: int) -> None:
+        if value < 1:
+            raise ValueError("Oversampling factor must be a positive integer")
+        self.__oversampling_factor = value
+
+    @property
     def max_sampling_rate(self) -> float:
         return self.sampling_rate
 
-    def _upload(self, signal: Signal) -> None:
+    @override
+    def _upload(self, signal: Signal) -> DenseSignal:
         # Infer parameters
         delay_samples = int(self.max_receive_delay * self.sampling_rate)
 
         # Mix to to positive frequencies for audio transmission
-        resampled_samples = signal.resample(self.sampling_rate).getitem()
-        pressure_signal = np.roll(
-            fft(resampled_samples), int(0.25 * resampled_samples.shape[1]), axis=1
-        )
-        pressure_signal[:, int(0.5 * pressure_signal.shape[1]) :] = 0.0
-        pressure_signal = ifft(pressure_signal, axis=1).real
-        pressure_signal = np.append(
-            pressure_signal,
-            np.zeros((pressure_signal.shape[0], delay_samples), dtype=float),
+        pressure_spectrum = np.roll(
+            np.asarray(fft(signal.to_dense()), np.complex128),
+            int(0.25 * signal.num_samples) + 1,
             axis=1,
+        ).reshape((self.num_transmit_rf_ports, -1))
+        pressure_spectrum[:, int(0.5 * pressure_spectrum.shape[1]) :] = 0.0
+        real_pressure_signal = np.asarray(ifft(pressure_spectrum, axis=1), np.complex128).real.reshape(
+            (self.num_transmit_rf_ports, -1)
         )
+        real_pressure_signal = np.append(
+            real_pressure_signal,
+            np.zeros((real_pressure_signal.shape[0], delay_samples), dtype=np.float64),
+            axis=1,
+        ).reshape((self.num_transmit_rf_ports, -1))
 
-        self.__transmission = pressure_signal.T
+        self.__transmission = real_pressure_signal.T
         self.__reception = np.empty(
-            (self.__transmission.shape[0], len(self.__record_channels)), dtype=float
+            (self.__transmission.shape[0], len(self.__record_channels)), dtype=np.float64
+        )
+        return DenseSignal.FromNDArray(
+            real_pressure_signal.reshape((self.num_receive_rf_ports, -1)).astype(np.complex128),
+            signal.sampling_rate,
+            0.0,
         )
 
+    @override
     def trigger(self) -> None:
         # Import sounddevice
         sd = self._import_sd()
@@ -367,6 +338,7 @@ class AudioDevice(PhysicalDevice[PhysicalDeviceState], Serializable):
             blocking=False,
         )
 
+    @override
     def _download(self) -> Signal:
         # Import sounddevice
         sd = self._import_sd()
@@ -380,7 +352,7 @@ class AudioDevice(PhysicalDevice[PhysicalDeviceState], Serializable):
         # Convert the received samples to complex using an implicit Hilbert transformation
         transform = fft(reception, axis=1)
         transform[:, int(0.5 * transform.shape[1]) :] = 0.0
-        transform = np.roll(transform, -int(0.25 * transform.shape[1]), axis=1)
+        transform = np.roll(transform, -int(0.25 * transform.shape[1])-1, axis=1)
         complex128samples = ifft(2 * transform, axis=1)
 
         signal_model = Signal.Create(complex128samples, self.sampling_rate, 0)
@@ -406,6 +378,7 @@ class AudioDevice(PhysicalDevice[PhysicalDeviceState], Serializable):
         process.serialize_array(np.asarray(self.playback_channels), "playback_channels")
         process.serialize_array(np.asarray(self.record_channels), "record_channels")
         process.serialize_floating(self.sampling_rate, "sampling_rate")
+        process.serialize_integer(self.oversampling_factor, "oversampling_factor")
 
     @override
     @classmethod
@@ -416,4 +389,5 @@ class AudioDevice(PhysicalDevice[PhysicalDeviceState], Serializable):
             process.deserialize_array("playback_channels", np.int64).tolist(),
             process.deserialize_array("record_channels", np.int64).tolist(),
             process.deserialize_floating("sampling_rate", cls.__DEFAULT_SAMPLING_RATE),
+            process.deserialize_integer("oversampling_factor", cls.__DEFAULT_OVERSAMPLING_FACTOR),
         )

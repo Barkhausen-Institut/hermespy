@@ -5,10 +5,11 @@ from __future__ import annotations
 import unittest
 
 import numpy as np
-from numpy.testing import assert_array_almost_equal
 from scipy.constants import speed_of_light
-
-from hermespy.channel.sionna_rt_channel import rt, SionnaRTChannel
+try:
+    from hermespy.channel.sionna_rt_channel import rt, SionnaRTChannel
+except ModuleNotFoundError:
+    raise unittest.SkipTest("Sionna is not installed")
 from hermespy.core import Signal, Transformation
 from hermespy.simulation import (
     SimulatedDevice,
@@ -16,10 +17,11 @@ from hermespy.simulation import (
     SimulatedIdealAntenna,
     StaticTrajectory,
 )
-from unit_tests.core.test_factory import test_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization  # type: ignore
+from unit_tests.utils import assert_signals_equal  # type: ignore
 
 __author__ = "Egor Achkasov"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Egor Achkasov", "Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -34,7 +36,7 @@ class TestSionnaRTChannel(unittest.TestCase):
         # Properties
         self.seed = 42
         self.rng = np.random.default_rng(self.seed)
-        self.sampling_rate = 3 * 1e9
+        self.bandwidth = 3 * 1e9
         self.carrier_freq = 2.14e9
 
         # Devices
@@ -44,13 +46,16 @@ class TestSionnaRTChannel(unittest.TestCase):
             Transformation.From_Translation(self.device_position)
         )
         self.alpha_device = SimulatedDevice(
-            sampling_rate=self.sampling_rate,
+            bandwidth=self.bandwidth,
+            oversampling_factor=1,
             antennas=SimulatedUniformArray(SimulatedIdealAntenna, 3e-3, [3, 1, 1]),
             carrier_frequency=self.carrier_freq,
         )
         self.alpha_device.trajectory = self.device_trajectory
         self.beta_device = SimulatedDevice(
-            sampling_rate=self.sampling_rate, carrier_frequency=self.carrier_freq
+            oversampling_factor=1,
+            bandwidth=self.bandwidth,
+            carrier_frequency=self.carrier_freq
         )
         self.beta_device.trajectory = self.device_trajectory
 
@@ -62,10 +67,10 @@ class TestSionnaRTChannel(unittest.TestCase):
 
         # Samples
         self.sample_forward = self.realization.sample(
-            self.alpha_device, self.beta_device, self.carrier_freq, self.sampling_rate
+            self.alpha_device, self.beta_device, self.carrier_freq, self.bandwidth
         )
         self.sample_backward = self.realization.sample(
-            self.beta_device, self.alpha_device, self.carrier_freq, self.sampling_rate
+            self.beta_device, self.alpha_device, self.carrier_freq, self.bandwidth
         )
         self.channel_samples = [self.sample_forward, self.sample_backward]
 
@@ -104,7 +109,7 @@ class TestSionnaRTChannel(unittest.TestCase):
                 sigma * np.sqrt(2 * np.pi)
             )  # normal distribution pdf
             signal_samples *= spike + 1.0
-            signal_orig = Signal.Create(signal_samples, self.sampling_rate, self.carrier_freq)
+            signal_orig = Signal.Create(signal_samples, self.bandwidth, self.carrier_freq)
 
             # Propagate
             signal_prop = sample.propagate(signal_orig)
@@ -113,20 +118,19 @@ class TestSionnaRTChannel(unittest.TestCase):
             signal_state_prop = state.propagate(signal_orig)
 
             # Propagation and state propagation should be almost the same
-            assert_array_almost_equal(signal_prop.getitem(), signal_state_prop.getitem())
+            assert_signals_equal(self, signal_prop, signal_state_prop)
 
             # Assert the delays
             delay_expected = int(
-                2.0 * self.distance_to_target / speed_of_light * self.sampling_rate
+                2.0 * self.distance_to_target / speed_of_light * self.bandwidth
             )
-            delay_actual = np.min(signal_prop.getitem().nonzero()[1])
+            delay_actual = np.min(signal_prop.view(np.ndarray).nonzero()[1])
             self.assertAlmostEqual(delay_actual, delay_expected, delta=1)
 
             # simple_reflector should cause a phase shift
-            samples_expected = np.sum(signal_orig.getitem(), axis=0)
-            samples_restored = signal_prop.getitem(
-                (0, slice(delay_expected, delay_expected + signal_orig.num_samples))
-            )
+            samples_expected = np.sum(signal_orig.view(np.ndarray), axis=0)
+            samples_restored = signal_prop[0, delay_expected:delay_expected + signal_orig.num_samples].view(np.ndarray)
+
             phase_shift = np.angle(samples_expected) - np.angle(samples_restored)
             samples_restored *= np.exp(1.0j * phase_shift)
 
@@ -142,13 +146,13 @@ class TestSionnaRTChannel(unittest.TestCase):
         self.alpha_device.trajectory = device_trajectory
         self.beta_device.trajectory = device_trajectory
         sample = self.realization.sample(
-            self.alpha_device, self.beta_device, self.carrier_freq, self.sampling_rate
+            self.alpha_device, self.beta_device, self.carrier_freq, self.bandwidth
         )
 
         # Init test signal
         signal_shape = (self.alpha_device.num_transmit_antennas, 150)
         samples = np.empty(signal_shape, np.complex128)
-        signal_orig = Signal.Create(samples, self.sampling_rate, self.carrier_freq)
+        signal_orig = Signal.Create(samples, self.bandwidth, self.carrier_freq)
 
         # Test state
         state = sample.state(signal_orig.num_samples, 1)
@@ -156,7 +160,7 @@ class TestSionnaRTChannel(unittest.TestCase):
 
         # Test propagate
         signal_prop = sample.propagate(signal_orig)
-        self.assertTrue(np.all(signal_prop.getitem() == 0.0))
+        self.assertTrue(np.all(signal_prop.view(np.ndarray) == 0.0))
         self.assertEqual(signal_prop.num_streams, self.beta_device.num_receive_antennas)
 
     def test_reciprocal_sample(self) -> None:
@@ -169,10 +173,10 @@ class TestSionnaRTChannel(unittest.TestCase):
                 self.beta_device,
                 0,
                 self.carrier_freq,
-                self.sampling_rate,
+                self.bandwidth,
             )
             self.assertEqual(rSample.carrier_frequency, self.carrier_freq)
-            self.assertEqual(rSample.bandwidth, self.sampling_rate)
+            self.assertEqual(rSample.bandwidth, self.bandwidth)
 
     def test_model_serialization(self) -> None:
         """Test Sionna RT channel model serialization"""

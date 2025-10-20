@@ -158,12 +158,12 @@ class SingleTargetRadarChannelRealization(RadarChannelRealization):
     @classmethod
     @override
     def Deserialize(cls, process: DeserializationProcess) -> SingleTargetRadarChannelRealization:
-        target_velocity: float | tuple[float, float] | np.ndarray
-        target_velocity = process.deserialize_array("target_velocity", np.float64)
+        target_velocity = process.deserialize_array("target_velocity", np.float64).flatten()
+        _target_velocity: float | tuple[float, float]
         if len(target_velocity) == 1:
-            target_velocity = float(target_velocity[0])
-        elif len(target_velocity) == 2:
-            target_velocity = (target_velocity[0], target_velocity[1])
+            _target_velocity = float(target_velocity[0])
+        else:
+            _target_velocity = (float(target_velocity[0]), float(target_velocity[1]))
         return SingleTargetRadarChannelRealization(
             process.deserialize_object("consistent_realization", ConsistentRealization),
             process.deserialize_object("target_range_variable", ConsistentUniform),
@@ -175,7 +175,7 @@ class SingleTargetRadarChannelRealization(RadarChannelRealization):
             process.deserialize_range("target_azimuth"),
             process.deserialize_range("target_zenith"),
             process.deserialize_floating("target_cross_section"),
-            target_velocity,
+            _target_velocity,
             bool(process.deserialize_integer("attenuate")),
             set(),
             process.deserialize_floating("gain"),

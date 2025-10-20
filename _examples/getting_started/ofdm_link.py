@@ -7,8 +7,8 @@ from hermespy.modem import SimplexLink, BitErrorEvaluator, OFDMWaveform, GridRes
 
 # model an LTE OFDM link with 20 MHz bandwidth
 # 3 data time slots + 1 empty slot are transmitted
-subcarrier_spacing = 15e3
 num_subcarriers = 2048
+bandwidth = 20e6
 oversampling_factor = 2
 dc_suppression = True
 modulation_order = 16
@@ -31,14 +31,14 @@ time_slot = SymbolSection(pattern=[0, 1, 1, 1, 2, 1, 1])
 structure = [time_slot, time_slot, time_slot, GuardSection(duration=0.5e-3)]
 
 # Create two simulated devices acting as source and sink
-tx_device = SimulatedDevice()
-rx_device = SimulatedDevice()
+tx_device = SimulatedDevice(bandwidth=bandwidth, oversampling_factor=oversampling_factor)
+rx_device = SimulatedDevice(bandwidth=bandwidth, oversampling_factor=oversampling_factor)
 
 # Set up a unidirectional link between both simulated devices
 link = SimplexLink()
-link.waveform = OFDMWaveform(subcarrier_spacing=subcarrier_spacing, modulation_order=modulation_order,
-                             num_subcarriers=num_subcarriers, oversampling_factor=oversampling_factor,
-                             dc_suppression=dc_suppression, grid_resources=resources, grid_structure=structure)
+link.waveform = OFDMWaveform(
+    modulation_order=modulation_order, num_subcarriers=num_subcarriers,
+    dc_suppression=dc_suppression, grid_resources=resources, grid_structure=structure)
 tx_device.transmitters.add(link)
 rx_device.receivers.add(link)
 

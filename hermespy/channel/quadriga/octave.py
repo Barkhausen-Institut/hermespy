@@ -44,7 +44,7 @@ class QuadrigaOctaveInterface(QuadrigaInterface):  # pragma: no cover
             octave_bin:
                 Path to the octave cli executable.
 
-            \*\*kwargs:
+            kwargs:
                 Interface arguments.
         """
 

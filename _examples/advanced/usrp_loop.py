@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from hermespy.hardware_loop import HardwareLoop, UsrpSystem
+from hermespy.hardware_loop import HardwareLoop, UsrpSystem, UsrpDevice
 from hermespy.modem import SimplexLink, RRCWaveform, SCCorrelationSynchronization, SCLeastSquaresChannelEstimation, SCZeroForcingChannelEqualization, BitErrorEvaluator
+from hermespy.core import Verbosity
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
@@ -13,13 +14,15 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-loop = HardwareLoop(UsrpSystem(), manual_triggering=False, plot_information=True)
-loop.verbosity = "ALL"
+loop = HardwareLoop[UsrpSystem, UsrpDevice](UsrpSystem(), manual_triggering=False, plot_information=True)
+loop.verbosity = Verbosity.INFO
 
-# Configure a single carrier waveform modulated with 16-QAM root-raised cosine 
-# shaped pulses at a rate of 61.44 MHz
-wave = RRCWaveform(symbol_rate=61.44e6, num_preamble_symbols=100,
-                   num_data_symbols=1000, modulation_order=4)
+# Configure a single carrier waveform modulated with 16-QAM root-raised cosine pulses
+wave = RRCWaveform(
+    num_preamble_symbols=100,
+    num_data_symbols=1000,
+    modulation_order=16,
+)
 
 # Configure the waveform to perform a correlation-based synchronization followed
 # by a least-squares channel estimation and zero-forcing equalization

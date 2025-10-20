@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
+from typing_extensions import override
 
 import numpy as np
 from scipy.fft import fft, ifft
@@ -8,7 +9,7 @@ from scipy.fft import fft, ifft
 from .ofdm import OFDMWaveform
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -20,21 +21,27 @@ __status__ = "Prototype"
 class OTFSWaveform(OFDMWaveform):
     """Orthogonal Time Frequency Space (OTFS) waveform."""
 
-    def _forward_transformation(self, symbol_grid: np.ndarray) -> np.ndarray:
+    @override
+    def _forward_transformation(
+        self, symbol_grid: np.ndarray, oversampling_factor: int
+    ) -> np.ndarray:
         # Initial step: ISFFT
         delay_doppler_symbols = fft(ifft(symbol_grid, axis=-1, norm="ortho"), axis=-2, norm="ortho")
 
         # Second step: Heisenberg transform, i.e. the regular OFDM treatment
-        sample_sections = OFDMWaveform._forward_transformation(self, delay_doppler_symbols)
+        sample_sections = OFDMWaveform._forward_transformation(
+            self, delay_doppler_symbols, oversampling_factor
+        )
 
         return sample_sections
 
+    @override
     def _backward_transformation(
-        self, sample_sections: np.ndarray, normalize: bool = True
+        self, sample_sections: np.ndarray, oversampling_factor: int, normalize: bool = True
     ) -> np.ndarray:
         # Initial step: Inverse Heisenberg transform, i.e. the regular OFDM treatment
         delay_doppler_symbols = OFDMWaveform._backward_transformation(
-            self, sample_sections, normalize
+            self, sample_sections, oversampling_factor, normalize
         )
 
         # Second step: SFFT

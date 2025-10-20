@@ -354,10 +354,12 @@ class TransmitSignalCoding(TransmitPrecoding[TransmitStreamEncoder]):
             ValueError: If the number of input streams does not match the configuration.
         """
 
+        # Do nothing if no precoding is configured
+        if len(self) < 1:
+            return signal
+
         # Collect the number of required output streams at each encoding step
-        encoder_num_io_streams = self._collect_encoder_num_io_streams(
-            device.num_digital_transmit_ports
-        )
+        encoder_num_io_streams = self._collect_encoder_num_io_streams(device.num_transmit_rf_ports)
 
         # Assert that the number of input streams is correct
         if signal.num_streams != encoder_num_io_streams[0]:
@@ -393,10 +395,12 @@ class ReceiveSignalCoding(ReceivePrecoding[ReceiveStreamDecoder], Serializable):
             ValueError: If the number of input streams does not match the configuration.
         """
 
+        # Do nothing if no precoding is configured
+        if len(self) < 1:
+            return signal
+
         # Collect the number of required output streams at each decoding step
-        decoder_num_io_streams = self._collect_decoder_num_io_streams(
-            device.num_digital_receive_ports
-        )
+        decoder_num_io_streams = self._collect_decoder_num_io_streams(device.num_receive_rf_ports)
 
         # Iteratively apply each encoding step
         decoded_signal = signal.copy()
