@@ -4,7 +4,8 @@ from __future__ import annotations
 from collections.abc import Sequence
 from enum import Enum
 from math import isclose
-from typing import Callable, overload, override, SupportsIndex, Type
+from typing import Callable, overload, SupportsIndex, Type
+from typing_extensions import override
 
 import numpy as np
 

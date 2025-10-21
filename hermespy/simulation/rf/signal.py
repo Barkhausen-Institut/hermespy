@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from collections.abc import Buffer
 from typing import Literal, Sequence
 from typing_extensions import override
 
 import numpy as np
 
 from hermespy.core import DenseSignal, SerializationProcess, DeserializationProcess
+from hermespy.core.signal_model import Buffer
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"

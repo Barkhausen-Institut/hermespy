@@ -111,7 +111,7 @@ class TestNotebooks(TestCase):
         """Test the beamforming implementation example notebook"""
 
         notebook = self.__load_notebook("beamforming_implementation.ipynb")
-        self.__patch_notebook(notebook, 8, inserts={2: "import ray as ray\n", 9: "ray.init(ignore_reinit_error=True)"}, patches={9: "simulation = Simulation(console_mode=ConsoleMode.SILENT)", 29: "simulation.num_samples = 1"})
+        self.__patch_notebook(notebook, 8, inserts={2: "import ray as ray\n", 9: "ray.init(ignore_reinit_error=True, num_cpus=4)"}, patches={9: "simulation = Simulation(console_mode=ConsoleMode.LINEAR, num_actors=3)", 29: "simulation.num_samples = 1"})
         self.__test_notebook(notebook)
 
     def test_beamforming_usage(self) -> None:
