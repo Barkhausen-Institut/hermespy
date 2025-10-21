@@ -2,9 +2,16 @@
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from collections.abc import Buffer
 from typing import Iterable, Iterator, Literal, Sequence, SupportsIndex, Type, Any, TypeVar
 from typing_extensions import override
+
+# Backwards compatibility for Python < 3.12
+# Create a dummy for abc.Buffer that is compatible with NumPy's buffer definition
+from sys import version_info
+if version_info >= (3, 12):
+    from collections.abc import Buffer  # type: ignore
+else:
+    Buffer = bytes | bytearray | memoryview
 
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D

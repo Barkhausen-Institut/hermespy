@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import annotations
-from typing import override
-from unittest import TestCase
+from typing_extensions import override
 
 import numpy as np
 from numpy.testing import assert_array_almost_equal
 
-from hermespy.modem import DuplexModem, ElementType, GridElement, GridResource, OTFSWaveform, SchmidlCoxPilotSection, SchmidlCoxSynchronization, SymbolSection, TransmittingModem
+from hermespy.modem import DuplexModem, ElementType, GridElement, GridResource, OTFSWaveform, SymbolSection, TransmittingModem
 from hermespy.simulation import SimulatedDevice
-from unit_tests.core.test_factory import test_roundtrip_serialization
+from unit_tests.core.test_factory import test_roundtrip_serialization  # type: ignore
 from ...test_waveform import TestCommunicationWaveform
 
 __author__ = "Jan Adler"
