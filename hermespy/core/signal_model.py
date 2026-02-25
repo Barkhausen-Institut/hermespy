@@ -1560,7 +1560,7 @@ class DenseSignal(SignalBlock, Signal):  # type: ignore[misc]
 
     @override
     def serialize(self, process: SerializationProcess) -> None:
-        process.serialize_array(self.view(np.ndarray).astype(np.complex128), "samples")
+        process.serialize_array(self, "samples")
         process.serialize_floating(self.sampling_rate, "sampling_rate")
         process.serialize_floating(self.carrier_frequency, "carrier_frequency")
         process.serialize_floating(self.noise_power, "noise_power")

@@ -281,7 +281,7 @@ class RFSignal(DenseSignal):
 
     @override
     def serialize(self, process: SerializationProcess) -> None:
-        process.serialize_array(self.view(np.ndarray), "samples")
+        process.serialize_array(self, "samples")
         process.serialize_floating(self.sampling_rate, "sampling_rate")
         process.serialize_array(self.carrier_frequencies, "carrier_frequencies")
         process.serialize_array(self.noise_powers, "noise_powers")
