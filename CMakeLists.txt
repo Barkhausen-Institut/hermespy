@@ -11,13 +11,15 @@ project(${SKBUILD_PROJECT_NAME} VERSION ${SKBUILD_PROJECT_VERSION} LANGUAGES CXX
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
     set(BUILD_SHARED_LIBS TRUE)
+else()
+
 endif()
 
 # Configure aff3ct to only build the shared library
 set(AFF3CT_COMPILE_EXE OFF CACHE INTERNAL "Disable executable target" FORCE)
 set(AFF3CT_COMPILE_STATIC_LIB OFF CACHE INTERNAL "Disable static library target" FORCE)
 set(AFF3CT_COMPILE_SHARED_LIB ON CACHE INTERNAL "Enable shared library target" FORCE)
-set(AFF3CT_OVERRIDE_VERSION 3.0.1 CACHE INTERNAL "Enable build without .git" FORCE)
+set(AFF3CT_OVERRIDE_VERSION 4.0.0 CACHE INTERNAL "Enable build without .git" FORCE)
 set(AFF3CT_COMPILE_OBJ ON CACHE INTERNAL "Force object building" FORCE)
 set(AFF3CT_POLAR_BIT_PACKING OFF CACHE INTERNAL "Disable Polar bit packing" FORCE)
 
