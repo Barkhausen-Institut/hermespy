@@ -276,7 +276,9 @@ class HardwareLoopPlot(ABC, Generic[VT]):
             self._update_plot(sample, self.__visualization)
 
         # Re-draw the plot
-        self.__canvas.draw()
+        # Currently disabled because it leads to massive slowdowns when
+        # drawing in Tkinter from a separate thread
+        # self.__canvas.draw()
 
         # Flush the events
         if self.__figure is not None:

@@ -464,7 +464,7 @@ class SimulatedDeviceOutput(DeviceOutput):
                     f"Emerging signal has unexpected number of transmit antennas ({signal.num_streams} instead of {num_antennas})"
                 )
 
-            if signal.carrier_frequency != carrier_frequency:
+            if signal.carrier_frequency != carrier_frequency and signal.num_samples > 0:
                 raise ValueError(
                     f"Emerging signal has unexpected carrier frequency ({signal.carrier_frequency} instead of {carrier_frequency})"
                 )

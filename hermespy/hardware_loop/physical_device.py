@@ -690,11 +690,35 @@ class Calibration(ABC, Serializable):
     """Group name of the calibration in the HDF save file."""
 
     __device: PhysicalDevice | None
+    __transamit_ports: list[int] | None
+    __receive_ports: list[int] | None
 
-    def __init__(self, device: PhysicalDevice | None = None) -> None:
+    def __init__(
+        self,
+        device: PhysicalDevice | None = None,
+        transmit_ports: list[int] | None = None,
+        receive_ports: list[int] | None = None,
+    ) -> None:
+        """Args:
+
+        device:
+            The physical device to which this calibration belongs.
+            If provided, the device will be configured to use this calibration.
+
+        transmit_ports:
+            List of transmit port indices considered for this calibration.
+            If :py:obj:`None`, all available transmit ports are assumed.
+
+        receive_ports:
+            List of receive port indices considered for this calibration.
+            If :py:obj:`None`, all available receive ports are assumed.
+        """
+
         # Initialize class attributes
         self.__device = None
         self.device = device
+        self.__transamit_ports = transmit_ports
+        self.__receive_ports = receive_ports
 
     @classmethod
     @abstractmethod
@@ -720,6 +744,24 @@ class Calibration(ABC, Serializable):
         self.__device = value
         if self.__device is not None:
             self._configure_slot(self.__device, self)
+
+    @property
+    def transmit_ports(self) -> list[int] | None:
+        """List of transmit port indices considered for this calibration.
+
+        If :py:obj:`None`, all available transmit ports are assumed.
+        """
+
+        return self.__transamit_ports
+
+    @property
+    def receive_ports(self) -> list[int] | None:
+        """List of receive port indices considered for this calibration.
+
+        If :py:obj:`None`, all available receive ports are assumed.
+        """
+
+        return self.__receive_ports
 
     def save(self, path: str, backend: SerializationBackend = SerializationBackend.HDF) -> None:
         """Save the calibration file to the hard drive.
@@ -832,10 +874,17 @@ class DelayCalibrationBase(Calibration, Serializable):
         if self.delay <= 0:
             return signal
 
-        # Remove samples from the signal to account for positive delays
+        _receive_ports = slice(None) if self.receive_ports is None else self.receive_ports
         delay_in_samples = round(self.delay * signal.sampling_rate)
-        corrected_signal = signal[:, delay_in_samples:]
+
+        # Remove samples from the signal's relevant streams to account for positive delays
+        corrected_signal = signal.copy()
+        corrected_signal[_receive_ports, :-delay_in_samples] = signal[
+            _receive_ports, delay_in_samples:
+        ]
+        corrected_signal[_receive_ports, -delay_in_samples:] = 0.0
         corrected_signal.delay = self.delay
+
         return corrected_signal
 
 

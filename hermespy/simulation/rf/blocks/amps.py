@@ -200,7 +200,9 @@ class PowerAmplifier(RFBlock, Serializable):
             fig.suptitle(title if title else self.title)
 
         if samples is None:
-            samples = (np.arange(0, 2, 0.01, np.complex128) * self.saturation_amplitude).reshape((1, -1))
+            samples = (np.arange(0, 2, 0.01, np.complex128) * self.saturation_amplitude).reshape(
+                (1, -1)
+            )
 
         model = self.model(
             RFSignal(samples.shape[0], samples.shape[1], 1.0, buffer=bytearray(samples))

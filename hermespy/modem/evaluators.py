@@ -418,9 +418,14 @@ class ThroughputEvaluation(EvaluationTemplate[float, PlotVisualization]):
         """
 
         num_frames = len(frame_errors)
-        num_correct_frames = np.sum(np.invert(frame_errors))
 
-        throughput = num_correct_frames * bits_per_frame / (num_frames * frame_duration)
+        if num_frames < 1 or frame_duration <= 0.0:
+            throughput = 0.0
+
+        else:
+            num_correct_frames = np.sum(np.invert(frame_errors))
+            throughput = num_correct_frames * bits_per_frame / (num_frames * frame_duration)
+
         EvaluationTemplate.__init__(self, throughput)
 
     @property
@@ -470,7 +475,9 @@ class ThroughputEvaluator(CommunicationEvaluator, Serializable):
         """
 
         # Initialize base class
-        CommunicationEvaluator.__init__(self, transmitting_modem, receiving_modem, plot_surface)
+        CommunicationEvaluator.__init__(
+            self, transmitting_modem, receiving_modem, plot_surface=plot_surface
+        )
 
         # Initialize class attributes
         self.__frame_erorr_evaluator = FrameErrorEvaluator(transmitting_modem, receiving_modem)
@@ -480,6 +487,9 @@ class ThroughputEvaluator(CommunicationEvaluator, Serializable):
         # Get the frame errors
         frame_errors = self.__frame_erorr_evaluator.evaluate().evaluation.flatten()
         _, reception = self._fetch_dsp_results()
+
+        if reception.num_frames < 1:
+            return ThroughputEvaluation(0, reception.signal.duration, frame_errors)
 
         # Transform frame errors to data throughput
         bits_per_frame = reception.frames[0].decoded_bits.size

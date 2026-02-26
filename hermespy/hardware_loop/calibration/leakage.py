@@ -37,6 +37,8 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase):
     __leakage_response: np.ndarray  # Impulse response of the leakage model
     __sampling_rate: float  # Sampling rate of the leakage model
     __delay: float  # Implicit delay of the leakage model
+    __transmit_ports: list[int] | None = None
+    __receive_ports: list[int] | None = None
 
     def __init__(
         self,
@@ -44,6 +46,8 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase):
         sampling_rate: float,
         delay: float = __DEFAULT_DELAY,
         physical_device: PhysicalDevice | None = None,
+        transmit_ports: list[int] | None = None,
+        receive_ports: list[int] | None = None,
     ) -> None:
         """
         Args:
@@ -77,6 +81,8 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase):
         self.__leakage_response = leakage_response
         self.__sampling_rate = sampling_rate
         self.__delay = delay
+        self.__transmit_ports = transmit_ports
+        self.__receive_ports = receive_ports
 
     @property
     def leakage_response(self) -> np.ndarray:
@@ -103,7 +109,11 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase):
 
     @override
     def predict_leakage(self, transmitted_signal: Signal) -> Signal:
-        if transmitted_signal.num_streams != self.leakage_response.shape[1]:
+
+        _transmit_ports = slice(None) if self.__transmit_ports is None else self.__transmit_ports
+        _transmit_signal = transmitted_signal[_transmit_ports, :]
+
+        if _transmit_signal.num_streams != self.leakage_response.shape[1]:
             raise ValueError(
                 f"Transmitted signal has unxpected number of streams ({transmitted_signal.num_streams} instead of {self.leakage_response.shape[1]})"
             )
@@ -131,15 +141,14 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase):
 
     @override
     def remove_leakage(self, transmitted_signal: Signal, received_signal: Signal) -> Signal:
-        if transmitted_signal.num_streams != self.leakage_response.shape[1]:
-            raise ValueError(
-                f"Transmitted signal has unxpected number of streams ({transmitted_signal.num_streams} instead of {self.leakage_response.shape[1]})"
-            )
 
-        if received_signal.num_streams != self.leakage_response.shape[0]:
-            raise ValueError(
-                f"Received signal has unxpected number of streams ({received_signal.num_streams} instead of {self.leakage_response.shape[0]})"
-            )
+        _transmit_ports = slice(None) if self.__transmit_ports is None else self.__transmit_ports
+        _receive_ports = (
+            np.arange(self.leakage_response.shape[0])
+            if self.__receive_ports is None
+            else self.__receive_ports
+        )
+        _transmit_signal = transmitted_signal[_transmit_ports, :]
 
         if transmitted_signal.sampling_rate != received_signal.sampling_rate:
             raise ValueError(
@@ -158,17 +167,22 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase):
         corrected_signal = received_signal.copy()
 
         # If nothing has been transmitted, abort
-        if transmitted_signal.num_samples < 1:
+        if _transmit_signal.num_samples < 1:
             return corrected_signal
 
         # Compute the implicit delay shift in samples
         delay_sample_shift = round((self.delay - delay_correction) * received_signal.sampling_rate)
 
-        for m, n in np.ndindex(received_signal.num_streams, transmitted_signal.num_streams):
+        for m, n in np.ndindex(
+            min(received_signal.num_streams, self.leakage_response.shape[0]),
+            min(transmitted_signal.num_streams, self.leakage_response.shape[0]),
+        ):
+            _m = _receive_ports[m]
+
             # The leaked signal is the convolution of the transmitted signal with the leakage response
             predicted_siso_signal = convolve(
                 self.__leakage_response[m, n, :],
-                transmitted_signal[n : n + 1, :].view(np.ndarray).flatten(),
+                _transmit_signal[n : n + 1, :].view(np.ndarray).flatten(),
             )
 
             # The correction is achieved by subtracting the leaked signal from the received signal
@@ -179,8 +193,8 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase):
                 min_num_samples = min(
                     corrected_signal.num_samples - delay_sample_shift, len(predicted_siso_signal)
                 )
-                corrected_signal[m : m + 1, delay_sample_shift:leak_range] = (
-                    corrected_signal[m : m + 1, delay_sample_shift:leak_range]
+                corrected_signal[_m : _m + 1, delay_sample_shift:leak_range] = (
+                    corrected_signal[_m : _m + 1, delay_sample_shift:leak_range]
                     - predicted_siso_signal[:min_num_samples]
                 )
 
@@ -190,8 +204,8 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase):
                     corrected_signal.num_samples + delay_sample_shift,
                 )
                 min_num_samples = min(corrected_signal.num_samples, len(predicted_siso_signal))
-                corrected_signal[m : m + 1, 0:leak_range] = (
-                    corrected_signal[m : m + 1, :leak_range]
+                corrected_signal[_m : _m + 1, 0:leak_range] = (
+                    corrected_signal[_m : _m + 1, :leak_range]
                     - predicted_siso_signal[-delay_sample_shift:min_num_samples]
                 )
 
@@ -294,16 +308,14 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase):
                 carrier_frequency=device.carrier_frequency,
             )
 
-            rx_signal = device.trigger_direct(tx_signal, calibrate=False)
+            rx_signal = device.trigger_direct(tx_signal, calibrate=False).view(np.ndarray)
             # From the received signal, collect the middle num_wavelet_samples of the transmitted
             # ZC sequences. This should account for any delays of the transmission, as long as the
             # sequence is long enough. If it's not long enough, the leakage calculation will fail.
             # TODO: look at the estimated delay and its reliability. If the delay cannot be estimated
             # reliably, most probably, the TX signal was not received in the window decided here
             start = num_wavelet_samples
-            received_waveforms[p, :, n, :] = rx_signal[
-                :, start : start + num_wavelet_samples
-            ].to_dense()
+            received_waveforms[p, :, n, :] = rx_signal[:, start : start + num_wavelet_samples]
 
         # Compute received frequency spectra
         received_frequencies = np.asarray(
@@ -320,6 +332,8 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase):
         num_wavelet_samples: int = 4673,
         configure_device: bool = True,
         filter_calibration: bool = True,
+        transmit_ports: list[int] | None = None,
+        receive_ports: list[int] | None = None,
     ) -> SelectiveLeakageCalibration:
         """Estimate the transmit-receive leakage for a physical device using Leat-Squares estimation.
 
@@ -351,6 +365,20 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase):
             ValueError: If the number of probes is not strictly positive.
             ValueError: If the number of samples is not strictly positive.
         """
+
+        _transmit_ports: list[int] | slice = slice(None)
+        if isinstance(transmit_ports, list):
+            if len(transmit_ports) > 1:
+                _transmit_ports = transmit_ports
+            else:
+                _transmit_ports = slice(transmit_ports[0], transmit_ports[0] + 1)
+
+        _receive_ports: list[int] | slice = slice(None)
+        if isinstance(receive_ports, list):
+            if len(receive_ports) > 1:
+                _receive_ports = receive_ports
+            else:
+                _receive_ports = slice(receive_ports[0], receive_ports[0] + 1)
 
         # Probe the device leakage
         probing_frequencies, received_frequencies = SelectiveLeakageCalibration.__probe_leakage(
@@ -384,7 +412,8 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase):
 
         # Convert the estimated leakage-response into the time-domain
         leakage_response = np.asarray(
-            ifft(estimated_frequency_response, norm="backward"), np.complex128
+            ifft(estimated_frequency_response[_receive_ports, _transmit_ports, :], norm="backward"),
+            np.complex128,
         )
 
         # Only consider the leakage response around the highest peak

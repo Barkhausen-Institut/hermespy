@@ -303,9 +303,9 @@ class AudioDevice(PhysicalDevice[PhysicalDeviceState], Serializable):
             axis=1,
         ).reshape((self.num_transmit_rf_ports, -1))
         pressure_spectrum[:, int(0.5 * pressure_spectrum.shape[1]) :] = 0.0
-        real_pressure_signal = np.asarray(ifft(pressure_spectrum, axis=1), np.complex128).real.reshape(
-            (self.num_transmit_rf_ports, -1)
-        )
+        real_pressure_signal = np.asarray(
+            ifft(pressure_spectrum, axis=1), np.complex128
+        ).real.reshape((self.num_transmit_rf_ports, -1))
         real_pressure_signal = np.append(
             real_pressure_signal,
             np.zeros((real_pressure_signal.shape[0], delay_samples), dtype=np.float64),
@@ -352,7 +352,7 @@ class AudioDevice(PhysicalDevice[PhysicalDeviceState], Serializable):
         # Convert the received samples to complex using an implicit Hilbert transformation
         transform = fft(reception, axis=1)
         transform[:, int(0.5 * transform.shape[1]) :] = 0.0
-        transform = np.roll(transform, -int(0.25 * transform.shape[1])-1, axis=1)
+        transform = np.roll(transform, -int(0.25 * transform.shape[1]) - 1, axis=1)
         complex128samples = ifft(2 * transform, axis=1)
 
         signal_model = Signal.Create(complex128samples, self.sampling_rate, 0)

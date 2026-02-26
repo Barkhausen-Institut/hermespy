@@ -101,7 +101,9 @@ class PskQamMapping(Serializable):
 
         self.soft_output = soft_output
 
-    def get_symbols(self, bits: np.ndarray[tuple[int], np.dtype[np.uint8]]) -> np.ndarray[tuple[int], np.dtype[np.complex128]]:
+    def get_symbols(
+        self, bits: np.ndarray[tuple[int], np.dtype[np.uint8]]
+    ) -> np.ndarray[tuple[int], np.dtype[np.complex128]]:
         """Calculates the complex numbers corresponding to the information in 'bits'.
 
         Note:
@@ -257,7 +259,9 @@ class PskQamMapping(Serializable):
         return llr if self.soft_output else llr > 0
 
     @staticmethod
-    def generate_pam_symbol_3gpp(modulation_order: int, bits: np.ndarray[tuple[int, ...], np.dtype[np.uint8]]) -> np.ndarray[tuple[int], np.dtype[np.float64]]:
+    def generate_pam_symbol_3gpp(
+        modulation_order: int, bits: np.ndarray[tuple[int, ...], np.dtype[np.uint8]]
+    ) -> np.ndarray[tuple[int], np.dtype[np.float64]]:
         """Returns 1D amplitudes following 3GPP modulation mapping.
 
         3GPP has defined in TS 36.211 mapping tables from bits into complex symbols.

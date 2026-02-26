@@ -204,15 +204,15 @@ class GridResource(Serializable):
         return self.__repetitions * num
 
     @property
-    def mask(self) -> np.ndarray[tuple[int, int], np.dtype[np.bool]]:
+    def mask(self) -> np.ndarray[tuple[int, int], np.dtype[np.bool_]]:
         """Boolean mask selecting a specific type of element from the OFDM grid.
 
         Mask of dimension `num_element_types`x`num_subcarriers*num_repetitions`.
         """
 
         # Initialize the base mask as all false
-        mask: np.ndarray[tuple[int, int], np.dtype[np.bool]]
-        mask = np.full((len(ElementType), self.num_subcarriers), False, np.bool)
+        mask: np.ndarray[tuple[int, int], np.dtype[np.bool_]]
+        mask = np.full((len(ElementType), self.num_subcarriers), False, bool)
 
         element_count = 0
         for element in self.elements:
@@ -839,7 +839,9 @@ class PilotSection(Generic[OWT], GridSection[OWT], Serializable):
         if self.__pilot_elements is None:
             rng = np.random.default_rng(50)
             num_bits = num_symbols * self.wave.mapping.bits_per_symbol
-            subsymbols = self.wave.mapping.get_symbols(rng.integers(0, 2, num_bits, np.uint8).flatten())
+            subsymbols = self.wave.mapping.get_symbols(
+                rng.integers(0, 2, num_bits, np.uint8).flatten()
+            )
 
         else:
             num_repetitions = int(np.ceil(num_symbols / self.__pilot_elements.num_symbols))
