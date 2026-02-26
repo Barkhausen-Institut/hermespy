@@ -126,13 +126,13 @@ class RFSignal(DenseSignal):
 
         # Recover additional attributes lost in numpy view/copy operations
         if hasattr(obj, "carrier_frequencies"):
-            self.carrier_frequencies = obj.carrier_frequencies[:self.num_streams].copy()  # type: ignore
+            self.carrier_frequencies = obj.carrier_frequencies[: self.num_streams].copy()  # type: ignore
         else:
             self.carrier_frequencies = np.full(
                 (self.num_streams,), self.carrier_frequency, np.float64
             )
         if hasattr(obj, "noise_powers"):
-            self.noise_powers = obj.noise_powers[:self.num_streams].copy()  # type: ignore
+            self.noise_powers = obj.noise_powers[: self.num_streams].copy()  # type: ignore
         else:
             self.noise_powers = np.full((self.num_streams,), self.noise_power, np.float64)
 
@@ -148,7 +148,9 @@ class RFSignal(DenseSignal):
         if isinstance(key, Sequence):
             stream_selector = key[0]
 
-            sliced_rf_signal.carrier_frequencies = self.carrier_frequencies[stream_selector].flatten().copy()
+            sliced_rf_signal.carrier_frequencies = (
+                self.carrier_frequencies[stream_selector].flatten().copy()
+            )
             sliced_rf_signal.noise_powers = self.noise_powers[stream_selector].flatten().copy()
 
         return sliced_rf_signal

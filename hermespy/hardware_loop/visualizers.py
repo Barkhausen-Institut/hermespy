@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from abc import ABC
-from typing import Generic, Literal, Tuple
+from typing import Generic, Literal
 
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
@@ -13,21 +13,30 @@ from matplotlib.axes import Axes
 from hermespy.core import (
     Evaluator,
     Hook,
+    Receiver,
+    Reception,
     Signal,
+    Transmission,
+    Transmitter,
     VAT,
     VT,
     PlotVisualization,
     ScatterVisualization,
     ValueType,
 )
-from hermespy.modem import CommunicationReception, ReceivingModem
+from hermespy.modem import (
+    CommunicationReception,
+    CommunicationTransmission,
+    ReceivingModem,
+    TransmittingModem,
+)
 from hermespy.radar import Radar, RadarCube, RadarReception
 from hermespy.tools import lin2db
 from .hardware_loop import HardwareLoopPlot, HardwareLoopSample
 from .physical_device import PhysicalDevice
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2026, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -42,10 +51,30 @@ class SignalPlot(HardwareLoopPlot[PlotVisualization], ABC):
     __space: Literal["time", "frequency", "both"]
 
     def __init__(
-        self, title: str = "", space: Literal["time", "frequency", "both"] = "time"
+        self,
+        title: str = "",
+        canvas: plt.FigureCanvasBase | None = None,
+        axes: VAT | None = None,
+        space: Literal["time", "frequency", "both"] = "time",
     ) -> None:
+        """
+        Args:
+
+            title:
+                Title of the hardware loop plot.
+                If not specified, resorts to the default title of the plot.
+
+            canvas:
+                Canvas to plot into.
+                If not specified, a new canvas is created.
+
+            axes:
+                Visualization axes to plot into.
+                If not specified, a new figure is created.
+        """
+
         # Initialize base class
-        HardwareLoopPlot.__init__(self, title)
+        HardwareLoopPlot.__init__(self, title, canvas, axes)
 
         # Initialize class attributes
         self.__space = space
@@ -56,7 +85,7 @@ class SignalPlot(HardwareLoopPlot[PlotVisualization], ABC):
 
         return self.__space
 
-    def _initialize_subplots(self, num_streams: int) -> Tuple[Figure, VAT]:
+    def _initialize_subplots(self, num_streams: int) -> tuple[Figure, VAT]:
         """Initialize the suplots for a signal model visualization.
 
         Subroutine of :meth:`HardwareLoopPlot._prepare_plot` for classes inheriting
@@ -97,7 +126,13 @@ class HardwareLoopDevicePlot(Generic[VT], HardwareLoopPlot[VT], ABC):
 
     __device: PhysicalDevice
 
-    def __init__(self, device: PhysicalDevice, title: str | None = None) -> None:
+    def __init__(
+        self,
+        device: PhysicalDevice,
+        title: str | None = None,
+        canvas: plt.FigureCanvasBase | None = None,
+        axes: VAT | None = None,
+    ) -> None:
         """
         Args:
 
@@ -107,10 +142,18 @@ class HardwareLoopDevicePlot(Generic[VT], HardwareLoopPlot[VT], ABC):
             title:
                 Title of the hardware loop plot.
                 If not specified, resorts to the default title of the plot.
+
+            canvas:
+                Canvas to plot into.
+                If not specified, a new canvas is created.
+
+            axes:
+                Visualization axes to plot into.
+                If not specified, a new figure is created.
         """
 
         # Initialize base class
-        HardwareLoopPlot.__init__(self, title)
+        HardwareLoopPlot.__init__(self, title, canvas, axes)
 
         # Initialize class attributes
         self.__device = device
@@ -129,6 +172,8 @@ class DeviceTransmissionPlot(HardwareLoopDevicePlot[PlotVisualization], SignalPl
         self,
         device: PhysicalDevice,
         title: str = "",
+        canvas: plt.FigureCanvasBase | None = None,
+        axes: VAT | None = None,
         space: Literal["time", "frequency", "both"] = "time",
     ) -> None:
         """
@@ -141,20 +186,28 @@ class DeviceTransmissionPlot(HardwareLoopDevicePlot[PlotVisualization], SignalPl
                 Title of the hardware loop plot.
                 If not specified, resorts to the default title of the plot.
 
+            canvas:
+                Canvas to plot into.
+                If not specified, a new canvas is created.
+
+            axes:
+                Visualization axes to plot into.
+                If not specified, a new figure is created.
+
             space:
                 Space in which the signal is to be plotted.
                 By the default, the signal is plotted in the time domain.
         """
 
         # Initialize base classes
-        HardwareLoopDevicePlot.__init__(self, device, title)
-        SignalPlot.__init__(self, title, space)
+        HardwareLoopDevicePlot.__init__(self, device, title, canvas, axes)
+        SignalPlot.__init__(self, title, canvas, axes, space)
 
     @property
     def _default_title(self) -> str:
         return "Device Transmission"
 
-    def _prepare_plot(self) -> Tuple[Figure, VAT]:
+    def _prepare_plot(self) -> tuple[Figure, VAT]:
         figure, axes = self._initialize_subplots(self.device.num_transmit_antennas)
         return figure, axes
 
@@ -179,7 +232,12 @@ class DeviceReceptionPlot(HardwareLoopDevicePlot[PlotVisualization], SignalPlot)
     """Plot base-band signals received by a device."""
 
     def __init__(
-        self, device: PhysicalDevice, title: str = "", space: Literal["time", "frequency"] = "time"
+        self,
+        device: PhysicalDevice,
+        title: str = "",
+        canvas: plt.FigureCanvasBase | None = None,
+        axes: VAT | None = None,
+        space: Literal["time", "frequency"] = "time",
     ) -> None:
         """
         Args:
@@ -191,20 +249,27 @@ class DeviceReceptionPlot(HardwareLoopDevicePlot[PlotVisualization], SignalPlot)
                 Title of the hardware loop plot.
                 If not specified, resorts to the default title of the plot.
 
+            canvas:
+                Canvas to plot into.
+                If not specified, a new canvas is created.
+
+            axes:
+                Visualization axes to plot into.
+                If not specified, a new figure is created.
             space:
                 Space in which the signal is to be plotted.
                 By the default, the signal is plotted in the time domain.
         """
 
         # Initialize base classes
-        HardwareLoopDevicePlot.__init__(self, device, title)
-        SignalPlot.__init__(self, title, space)
+        HardwareLoopDevicePlot.__init__(self, device, title, canvas, axes)
+        SignalPlot.__init__(self, title, canvas, axes, space)
 
     @property
     def _default_title(self) -> str:
         return "Device Reception"
 
-    def _prepare_plot(self) -> Tuple[Figure, VAT]:
+    def _prepare_plot(self) -> tuple[Figure, VAT]:
         figure, axes = self._initialize_subplots(self.device.num_receive_rf_ports)
         return figure, axes
 
@@ -225,13 +290,169 @@ class DeviceReceptionPlot(HardwareLoopDevicePlot[PlotVisualization], SignalPlot)
         )
 
 
+class DSPTransmissionPlot(SignalPlot):
+    """Plot base-band signals generated by a digital signal processing algorithm."""
+
+    __cached_transmission: Signal
+    __transmit_hook: Hook[Transmission]
+
+    def __init__(
+        self,
+        dsp: Transmitter,
+        title: str = "",
+        canvas: plt.FigureCanvasBase | None = None,
+        axes: VAT | None = None,
+        space: Literal["time", "frequency", "both"] = "time",
+    ) -> None:
+        """
+        Args:
+
+            dsp:
+                Transmitting DSP algorithm of which information is to be plotted.
+
+            title:
+                Title of the hardware loop plot.
+                If not specified, resorts to the default title of the plot.
+
+            canvas:
+                Canvas to plot into.
+                If not specified, a new canvas is created.
+
+            axes:
+                Visualization axes to plot into.
+                If not specified, a new figure is created.
+
+            space:
+                Space in which the signal is to be plotted.
+                By the default, the signal is plotted in the time domain.
+        """
+
+        # Register a hoock to cache the latest DSP transmission signal
+        self.__cached_transmission = Signal.Empty(1.0, 1, 0)
+        self.__transmit_hook = dsp.add_transmit_callback(self.__transmit_callback)
+
+        # Initialize base classes
+        HardwareLoopPlot.__init__(self, title, canvas, axes)
+        SignalPlot.__init__(self, title, canvas, axes, space)
+
+    def __transmit_callback(self, transmission: Transmission) -> None:
+        """Callback invoked by the transmitting modem to notify the plot about new transmissions.
+
+        Args:
+
+            transmission:
+                The most recent transmission.
+        """
+
+        self.__cached_transmission = transmission.signal
+
+    @property
+    def _default_title(self) -> str:
+        return "DSP Transmission"
+
+    def _prepare_plot(self) -> tuple[Figure, VAT]:
+        figure, axes = self._initialize_subplots(1)
+        return figure, axes
+
+    def _initial_plot(self, sample: HardwareLoopSample, axes: VAT) -> PlotVisualization:
+        return self._plot_initial_signal(self.__cached_transmission, axes)
+
+    def _update_plot(self, sample: HardwareLoopSample, visualization: PlotVisualization) -> None:
+        self._update_signal_plot(self.__cached_transmission, visualization)
+
+    def __del__(self) -> None:
+        # Remove the hook
+        self.__transmit_hook.remove()
+
+
+class DSPReceptionPlot(SignalPlot):
+    """Plot base-band signals processed by a digital signal processing algorithm."""
+
+    __cached_reception: Signal
+    __receive_hook: Hook[Reception]
+
+    def __init__(
+        self,
+        dsp: Receiver,
+        title: str = "",
+        canvas: plt.FigureCanvasBase | None = None,
+        axes: VAT | None = None,
+        space: Literal["time", "frequency", "both"] = "time",
+    ) -> None:
+        """
+        Args:
+
+            dsp:
+                Receiving DSP algorithm of which information is to be plotted.
+
+            title:
+                Title of the hardware loop plot.
+                If not specified, resorts to the default title of the plot.
+
+            canvas:
+                Canvas to plot into.
+                If not specified, a new canvas is created.
+
+            axes:
+                Visualization axes to plot into.
+                If not specified, a new figure is created.
+
+            space:
+                Space in which the signal is to be plotted.
+                By the default, the signal is plotted in the time domain.
+        """
+
+        # Register a hoock to cache the latest DSP reception signal
+        self.__cached_reception = Signal.Empty(1.0, 1, 0)
+        self.__receive_hook = dsp.add_receive_callback(self.__receive_callback)
+
+        # Initialize base classes
+        HardwareLoopPlot.__init__(self, title, canvas, axes)
+        SignalPlot.__init__(self, title, canvas, axes, space)
+
+    def __receive_callback(self, reception: Reception) -> None:
+        """Callback invoked by the receiving modem to notify the plot about new receptions.
+
+        Args:
+
+            reception:
+                The most recent reception.
+        """
+
+        self.__cached_reception = reception.signal
+
+    @property
+    def _default_title(self) -> str:
+        return "DSP Reception"
+
+    def _prepare_plot(self) -> tuple[Figure, VAT]:
+        figure, axes = self._initialize_subplots(1)
+        return figure, axes
+
+    def _initial_plot(self, sample: HardwareLoopSample, axes: VAT) -> PlotVisualization:
+        return self._plot_initial_signal(self.__cached_reception, axes)
+
+    def _update_plot(self, sample: HardwareLoopSample, visualization: PlotVisualization) -> None:
+        self._update_signal_plot(self.__cached_reception, visualization)
+
+    def __del__(self) -> None:
+        # Remove the hook
+        self.__receive_hook.remove()
+
+
 class EyePlot(HardwareLoopPlot[PlotVisualization]):
     """Plot eye diagrams of a received signal."""
 
     __hook: Hook[CommunicationReception]
     __reception: CommunicationReception
 
-    def __init__(self, modem: ReceivingModem, title: str | None = None) -> None:
+    def __init__(
+        self,
+        modem: ReceivingModem,
+        title: str | None = None,
+        canvas: plt.FigureCanvasBase | None = None,
+        axes: VAT | None = None,
+    ) -> None:
         """
         Args:
 
@@ -241,10 +462,18 @@ class EyePlot(HardwareLoopPlot[PlotVisualization]):
             title:
                 Title of the hardware loop plot.
                 If not specified, resorts to the default title of the plot.
+
+            canvas:
+                Canvas to plot into.
+                If not specified, a new canvas is created.
+
+            axes:
+                Visualization axes to plot into.
+                If not specified, a new figure is created.
         """
 
         # Initialize base class
-        HardwareLoopPlot.__init__(self, title)
+        HardwareLoopPlot.__init__(self, title, canvas, axes)
 
         # Initialize class attributes
         self.__hook = modem.add_receive_callback(self.__update_reception)
@@ -265,7 +494,7 @@ class EyePlot(HardwareLoopPlot[PlotVisualization]):
     def _default_title(self) -> str:
         return "Eye Plot"
 
-    def _prepare_plot(self) -> Tuple[Figure, VAT]:
+    def _prepare_plot(self) -> tuple[Figure, VAT]:
         figure, axes = plt.subplots(1, 1, squeeze=False)
         return figure, axes
 
@@ -295,13 +524,19 @@ class EyePlot(HardwareLoopPlot[PlotVisualization]):
         self.__hook.remove()
 
 
-class ReceivedConstellationPlot(HardwareLoopPlot[ScatterVisualization]):
-    """Plot the constellation diagram of a received signal."""
+class TransmittedConstellationPlot(HardwareLoopPlot[ScatterVisualization]):
+    """Plot the constellation diagram of a transmitted communication event."""
 
-    __reception: CommunicationReception
-    __hook: Hook[CommunicationReception]
+    __transmission: CommunicationTransmission
+    __hook: Hook[CommunicationTransmission]
 
-    def __init__(self, modem: ReceivingModem, title: str | None = None) -> None:
+    def __init__(
+        self,
+        modem: TransmittingModem,
+        title: str | None = None,
+        canvas: plt.FigureCanvasBase | None = None,
+        axes: VAT | None = None,
+    ) -> None:
         """
         Args:
 
@@ -311,10 +546,86 @@ class ReceivedConstellationPlot(HardwareLoopPlot[ScatterVisualization]):
             title:
                 Title of the hardware loop plot.
                 If not specified, resorts to the default title of the plot.
+
+            canvas:
+                Canvas to plot into.
+                If not specified, a new canvas is created.
+
+            axes:
+                Visualization axes to plot into.
+                If not specified, a new figure is created.
         """
 
         # Initialize base class
-        HardwareLoopPlot.__init__(self, title)
+        HardwareLoopPlot.__init__(self, title, canvas, axes)
+
+        # Initialize class attributes
+        self.__transmission = CommunicationTransmission(Signal.Empty(1.0, 1), [])
+        self.__hook = modem.add_transmit_callback(self.__update_transmission)
+
+    def __update_transmission(self, transmission: CommunicationTransmission) -> None:
+        """Callback invoked by receiving modem to notify the plot about new transmissions.
+
+        Args:
+
+            transmission:
+                The most recent reception.
+        """
+
+        self.__transmission = transmission
+
+    @property
+    def _default_title(self) -> str:
+        return "Received Symbol Constellation"
+
+    def _prepare_plot(self) -> tuple[Figure, VAT]:
+        figure, axes = plt.subplots(1, 1, squeeze=False)
+        return figure, axes
+
+    def _initial_plot(self, sample: HardwareLoopSample, axes: VAT) -> ScatterVisualization:
+        return self.__transmission.symbols.plot_constellation.visualize(axes=axes)
+
+    def _update_plot(self, sample: HardwareLoopSample, visualization: ScatterVisualization) -> None:
+        self.__transmission.symbols.plot_constellation.update_visualization(visualization)
+
+    def __del__(self) -> None:
+        self.__hook.remove()
+
+
+class ReceivedConstellationPlot(HardwareLoopPlot[ScatterVisualization]):
+    """Plot the constellation diagram of a received communication event."""
+
+    __reception: CommunicationReception
+    __hook: Hook[CommunicationReception]
+
+    def __init__(
+        self,
+        modem: ReceivingModem,
+        title: str | None = None,
+        canvas: plt.FigureCanvasBase | None = None,
+        axes: VAT | None = None,
+    ) -> None:
+        """
+        Args:
+
+            modem:
+                Modem of which information is to be plotted.
+
+            title:
+                Title of the hardware loop plot.
+                If not specified, resorts to the default title of the plot.
+
+            canvas:
+                Canvas to plot into.
+                If not specified, a new canvas is created.
+
+            axes:
+                Visualization axes to plot into.
+                If not specified, a new figure is created.
+        """
+
+        # Initialize base class
+        HardwareLoopPlot.__init__(self, title, canvas, axes)
 
         # Initialize class attributes
         self.__reception = CommunicationReception(Signal.Empty(1.0, 1), [])
@@ -335,7 +646,7 @@ class ReceivedConstellationPlot(HardwareLoopPlot[ScatterVisualization]):
     def _default_title(self) -> str:
         return "Received Symbol Constellation"
 
-    def _prepare_plot(self) -> Tuple[Figure, VAT]:
+    def _prepare_plot(self) -> tuple[Figure, VAT]:
         figure, axes = plt.subplots(1, 1, squeeze=False)
         return figure, axes
 
@@ -356,7 +667,13 @@ class RadarRangePlot(HardwareLoopPlot[PlotVisualization]):
     __hook: Hook[RadarReception]
     __radar: Radar
 
-    def __init__(self, radar: Radar, title: str | None = None) -> None:
+    def __init__(
+        self,
+        radar: Radar,
+        title: str | None = None,
+        canvas: plt.FigureCanvasBase | None = None,
+        axes: VAT | None = None,
+    ) -> None:
         """
         Args:
 
@@ -366,10 +683,18 @@ class RadarRangePlot(HardwareLoopPlot[PlotVisualization]):
             title:
                 Title of the hardware loop plot.
                 If not specified, resorts to the default title of the plot.
+
+            canvas:
+                Canvas to plot into.
+                If not specified, a new canvas is created.
+
+            axes:
+                Visualization axes to plot into.
+                If not specified, a new figure is created.
         """
 
         # Initialize base class
-        HardwareLoopPlot.__init__(self, title)
+        HardwareLoopPlot.__init__(self, title, canvas, axes)
 
         # Initialize class attributes
         self.__reception = None
@@ -397,7 +722,7 @@ class RadarRangePlot(HardwareLoopPlot[PlotVisualization]):
     def _default_title(self) -> str:
         return "Range-Power Profile"
 
-    def _prepare_plot(self) -> Tuple[Figure, VAT]:
+    def _prepare_plot(self) -> tuple[Figure, VAT]:
         figure, axes = plt.subplots(1, 1, squeeze=False)
         return figure, axes
 
@@ -433,9 +758,30 @@ class HardwareLoopEvaluatorPlot(Generic[VT], HardwareLoopPlot[VT], ABC):
 
     __evaluator: Evaluator
 
-    def __init__(self, evaluator: Evaluator, title: str = "") -> None:
+    def __init__(
+        self,
+        evaluator: Evaluator,
+        title: str = "",
+        canvas: plt.FigureCanvasBase | None = None,
+        axes: VAT | None = None,
+    ) -> None:
+        """
+        Args:
+
+            title:
+                Title of the hardware loop plot.
+                If not specified, resorts to the default title of the plot.
+
+            canvas:
+                Canvas to plot into.
+                If not specified, a new canvas is created.
+
+            axes:
+                Visualization axes to plot into.
+                If not specified, a new figure is created.
+        """
         # Initialize base class
-        HardwareLoopPlot.__init__(self, title)
+        HardwareLoopPlot.__init__(self, title, canvas, axes)
 
         # Initialize class attributes
         self.__evaluator = evaluator
@@ -456,7 +802,7 @@ class HardwareLoopEvaluatorPlot(Generic[VT], HardwareLoopPlot[VT], ABC):
 
         return self.hardware_loop.evaluator_index(self.evaluator)
 
-    def _prepare_plot(self) -> Tuple[Figure, VAT]:
+    def _prepare_plot(self) -> tuple[Figure, VAT]:
         figure, axes = plt.subplots(1, 1, squeeze=False)
         return figure, axes
 
@@ -475,24 +821,42 @@ class ArtifactPlot(HardwareLoopEvaluatorPlot[PlotVisualization]):
     """Plot of an evaluation's scalar artifact."""
 
     __artifact_queue: np.ndarray
-    __y_axis_limits: Tuple[float, float] | None
+    __y_axis_limits: tuple[float, float] | None
 
     def __init__(
         self,
         evaluator: Evaluator,
-        title: str = "",
         queue_length: int = 20,
-        y_axis_limits: Tuple[float, float] | None = None,
+        y_axis_limits: tuple[float, float] | None = None,
+        title: str = "",
+        canvas: plt.FigureCanvasBase | None = None,
+        axes: VAT | None = None,
     ) -> None:
+        """
+
+        Args:
+
+            title:
+                Title of the hardware loop plot.
+                If not specified, resorts to the default title of the plot.
+
+            canvas:
+                Canvas to plot into.
+                If not specified, a new canvas is created.
+
+            axes:
+                Visualization axes to plot into.
+                If not specified, a new figure is created.
+        """
         # Initialize base class
-        HardwareLoopEvaluatorPlot.__init__(self, evaluator, title)
+        HardwareLoopEvaluatorPlot.__init__(self, evaluator, title, canvas, axes)
 
         # Initialize class attributes
         self.__artifact_queue = np.nan * np.ones(queue_length, dtype=float)
         self.__artifact_indices = np.arange(queue_length)
         self.__y_axis_limits = y_axis_limits
 
-    def _prepare_plot(self) -> Tuple[Figure, VAT]:
+    def _prepare_plot(self) -> tuple[Figure, VAT]:
         figure, axes = HardwareLoopEvaluatorPlot._prepare_plot(self)
 
         ax: Axes = axes.flat[0]

@@ -28,9 +28,12 @@ from .audio import AudioDevice, AudioScenario
 from .visualizers import (
     DeviceReceptionPlot,
     DeviceTransmissionPlot,
+    DSPReceptionPlot,
+    DSPTransmissionPlot,
     EyePlot,
     ReceivedConstellationPlot,
     RadarRangePlot,
+    TransmittedConstellationPlot,
     EvaluationPlot,
     ArtifactPlot,
 )
@@ -41,7 +44,7 @@ except ImportError:  # pragma: no cover
     UsrpAntennas, UsrpDevice, UsrpSystem = None, None, None  # type: ignore
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2026, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -82,9 +85,12 @@ __all__ = [
     "AudioScenario",
     "DeviceReceptionPlot",
     "DeviceTransmissionPlot",
+    "DSPReceptionPlot",
+    "DSPTransmissionPlot",
     "EyePlot",
     "ReceivedConstellationPlot",
     "RadarRangePlot",
+    "TransmittedConstellationPlot",
     "EvaluationPlot",
     "ArtifactPlot",
 ]

@@ -66,7 +66,7 @@ class SidelobeEvaluation(Evaluation[PlotVisualization]):
         _ax.set_xlabel("Codebook Index")
         _ax.set_ylabel("Sidelobe Power")
 
-        lines = np.empty((axes.shape[0], axes.shape[1],), dtype=object)
+        lines = np.empty((axes.shape[0], axes.shape[1]), dtype=object)
         lines[0, 0] = _ax.semilogy(np.arange(len(self.__powers)), self.__powers, **kwargs)
 
         return PlotVisualization(figure, axes, lines)

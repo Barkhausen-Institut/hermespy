@@ -13,11 +13,13 @@ from hermespy.beamforming import ReceiveBeamformer
 from hermespy.core import (
     AntennaMode,
     DeserializationProcess,
+    Receiver,
     ReceiveState,
     Signal,
     Serializable,
     SerializationProcess,
     TransmitState,
+    Transmitter,
 )
 from hermespy.modem import TransmittingModemBase, ReceivingModemBase, CommunicationWaveform
 from hermespy.radar import RadarDetector, RadarReception, RadarCube
@@ -33,7 +35,12 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class MatchedFilterJcas(DuplexJCASOperator[CommunicationWaveform], Serializable):
+class MatchedFilterJcas(
+    DuplexJCASOperator[CommunicationWaveform],
+    Transmitter[JCASTransmission],
+    Receiver[JCASReception],
+    Serializable,
+):
     """Joint Communication and Sensing Operator.
 
     A combination of communication and sensing operations.
@@ -143,40 +150,40 @@ class MatchedFilterJcas(DuplexJCASOperator[CommunicationWaveform], Serializable)
         num_propagated_samples = int(self.max_range / resolution)
 
         # Append additional samples if the signal is too short
-        # required_num_received_samples = (
-        #    self.__last_transmission.signal.num_samples + num_propagated_samples
-        # )
-        # if signal.num_samples < required_num_received_samples:
-        #    signal.append_samples(
-        #        Signal.Create(
-        #            np.zeros(
-        #                (signal.num_streams, required_num_received_samples - signal.num_samples),
-        #                dtype=complex,
-        #            ),
-        #            self.sampling_rate,
-        #            signal.carrier_frequency,
-        #            signal.noise_power,
-        #            signal.delay,
-        #        )
-        #    )
+        required_num_received_samples = (
+            self.__last_transmission.signal.num_samples + num_propagated_samples
+        )
+        if signal.num_samples < required_num_received_samples:
+            signal = signal.append_samples(
+                np.zeros(
+                    (signal.num_streams, required_num_received_samples - signal.num_samples),
+                    dtype=complex,
+                )
+            )
 
         # Digital receive beamformer
         angle_bins, beamformed_samples = self._receive_beamform(signal, device)
 
         # Predict the signal transmitted towards the angles of interest
-        transmitted_samples = np.empty(
-            (angle_bins.shape[0], self.__last_transmission.signal.num_samples), dtype=np.complex128
-        )
-        for t, angle in enumerate(angle_bins):
-            phase_response = device.antennas.horizontal_phase_response(
-                self.__last_transmission.signal.carrier_frequency,
-                angle[0],
-                angle[1],
-                AntennaMode.TX,
+        if self.__last_transmission.signal.num_streams > 1:
+            transmitted_samples = np.empty(
+                (angle_bins.shape[0], self.__last_transmission.signal.num_samples),
+                dtype=np.complex128,
             )
-            transmitted_samples[t, :] = (
-                phase_response.conj() @ self.__last_transmission.signal.view(np.ndarray)
-            )
+            for t, angle in enumerate(angle_bins):
+                phase_response = device.antennas.horizontal_phase_response(
+                    self.__last_transmission.signal.carrier_frequency,
+                    angle[0],
+                    angle[1],
+                    AntennaMode.TX,
+                )
+                transmitted_samples[t, :] = (
+                    phase_response.conj() @ self.__last_transmission.signal.view(np.ndarray)
+                )
+
+        # For a single transmit antenna, this is not required
+        else:
+            transmitted_samples = self.__last_transmission.signal.view(np.ndarray)[[0], :]
 
         # Transmit-receive correlation for range estimation
         correlation = (

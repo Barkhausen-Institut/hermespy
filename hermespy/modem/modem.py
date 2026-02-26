@@ -881,10 +881,7 @@ class TransmittingModemBase(Generic[CWT], BaseModem[CWT]):
             frame_offset += frame_signal.num_samples
 
         # Concatenate all frames into a single signal
-        signal = Signal.Create(
-            signal_blocks,
-            state.sampling_rate,
-        )
+        signal = Signal.Create(signal_blocks, state.sampling_rate)
 
         # Save the transmitted information
         transmission = CommunicationTransmission(signal, frames)
@@ -1179,7 +1176,10 @@ class ReceivingModemBase(Generic[CWT], BaseModem[CWT]):
             A numpy array containing hard information bits.
         """
 
-        raw_bits_per_frame = int(self.waveform.num_data_symbols * self.receive_symbol_coding.decode_rate) * self.waveform.bits_per_symbol
+        raw_bits_per_frame = (
+            int(self.waveform.num_data_symbols * self.receive_symbol_coding.decode_rate)
+            * self.waveform.bits_per_symbol
+        )
         bits = np.empty((symbols.num_streams * raw_bits_per_frame,), dtype=np.uint8)
         bit_index = 0
         for stream in symbols.raw:

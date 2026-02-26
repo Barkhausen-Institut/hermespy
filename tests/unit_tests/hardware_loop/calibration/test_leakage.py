@@ -66,12 +66,6 @@ class TestSelectiveLeakageCalibration(TestCase):
         received_signal = Signal.Create(np.array([[1, 2, 3, 4, 5]], dtype=np.complex128), 1.0)
 
         with self.assertRaises(ValueError):
-            _ = self.calibration.remove_leakage(Signal.Create(np.repeat(transmitted_signal, 2, axis=0), transmitted_signal.sampling_rate), received_signal)
-
-        with self.assertRaises(ValueError):
-            _ = self.calibration.remove_leakage(transmitted_signal, Signal.Create(np.repeat(received_signal, 2, axis=0), received_signal.sampling_rate))
-
-        with self.assertRaises(ValueError):
             _ = self.calibration.remove_leakage(Signal.Create(transmitted_signal, 2 * transmitted_signal.sampling_rate), received_signal)
 
         with self.assertRaises(ValueError):

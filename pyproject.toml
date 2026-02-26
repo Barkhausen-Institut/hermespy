@@ -2,10 +2,15 @@
 requires = [
     "setuptools>=75.6.0",
     "wheel>=0.45.1",
-    "pybind11>=3.0.0",
-    "scikit-build-core>=0.10.7",
+#    "pybind11>=3.0.0",
+#    "scikit-build-core>=0.10.7",
 ]
-build-backend = "scikit_build_core.build"
+build-backend = "setuptools.build_meta"
+
+# Fallback if a compilation is impossible
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["hermespy.*"]
 
 [project]
 name = "hermespy"
@@ -18,7 +23,8 @@ maintainers = [
 ]
 description = "The Heterogeneous Radio Mobile Simulator"
 readme = {file = "README.md", content-type = "text/markdown"}
-license = {file = "LICENSE"}
+license = "AGPL-3.0-only"
+license-files = ["LICENSE"]
 keywords = [
     "simulation", "link-level", "communication", "radar", "channel",
     "signal processing", "MIMO", "monte carlo",
@@ -27,7 +33,6 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
-    "License :: OSI Approved :: GNU Affero General Public License v3",
     "Operating System :: OS Independent",
     "Development Status :: 4 - Beta",
     "Natural Language :: English",

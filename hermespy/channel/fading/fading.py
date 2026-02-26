@@ -275,7 +275,7 @@ class MultipathFadingSample(ChannelSample):
         return self.__nlos_doppler
 
     @property
-    def spatial_response(self) -> np.ndarray:
+    def spatial_response(self) -> np.ndarray[tuple[int, int], np.dtype[np.complex128]]:
         """Spatial response matrix of the channel realization considering `alpha_device` is the transmitter and `beta_device` is the receiver."""
 
         return self.__spatial_response
@@ -372,19 +372,27 @@ class MultipathFadingSample(ChannelSample):
         max_delay_in_samples = round(self.__max_delay * self.bandwidth)
         num_propagated_samples = signal.num_samples + max_delay_in_samples
 
+        # Slice the spatial response to match the required number of antennas
+        _spatial_response = self.spatial_response[
+            :self.num_receive_antennas, :self.num_transmit_antennas
+        ]
+
         # Propagate the transmitted samples
         propagated_samples = np.zeros(
-            (self.spatial_response.shape[0], num_propagated_samples), dtype=np.complex128
+            (_spatial_response.shape[0], num_propagated_samples), dtype=np.complex128
         )
-        for path_impulse, path_num_delay_samples in self.__path_impulse_generator(
-            signal.num_samples
-        ):
-            propagated_samples[
-                :, path_num_delay_samples : path_num_delay_samples + signal.num_samples
-            ] += (signal * path_impulse[np.newaxis, :])
 
-        # Apply the channel's spatial response
-        propagated_samples = self.spatial_response @ propagated_samples
+        # Only if there is something to propagate in the first place
+        if propagated_samples.size > 0:
+            for path_impulse, path_num_delay_samples in self.__path_impulse_generator(
+                signal.num_samples
+            ):
+                propagated_samples[
+                    :, path_num_delay_samples : path_num_delay_samples + signal.num_samples
+                ] += (signal * path_impulse[np.newaxis, :])
+
+            # Apply the channel's spatial response
+            propagated_samples[::] = _spatial_response @ propagated_samples
 
         # Return the result
         propagated_block = SignalBlock(
@@ -465,10 +473,7 @@ class MultipathFadingRealization(ChannelRealization[MultipathFadingSample]):
         # Generate MIMO channel response
         spatial_response = np.exp(
             2j * np.pi * self.__antenna_correlation_variable.sample(consistent_sample)
-        )[
-            : state.receiver.antennas.num_receive_antennas,
-            : state.transmitter.antennas.num_transmit_antennas,
-        ]
+        )[: state.receiver.antennas.num_antennas, : state.transmitter.antennas.num_antennas]
 
         if self.__antenna_correlation is not None:
             spatial_response = (
@@ -510,6 +515,10 @@ class MultipathFadingRealization(ChannelRealization[MultipathFadingSample]):
     def _reciprocal_sample(
         self, sample: MultipathFadingSample, state: LinkState
     ) -> MultipathFadingSample:
+
+        # Current limitation:
+        # Reciprocity does not consider different antennas in transmit and receive arrays
+
         return MultipathFadingSample(
             sample.power_profile,
             sample.delay_profile,

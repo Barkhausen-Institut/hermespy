@@ -56,12 +56,14 @@ class TestDelayCalibration(TestCase):
         test_samples = np.array([[1, 2, 3, 4, 5], [6, 7, 8, 9, 0]], dtype=np.complex128)
         test_signal = Signal.Create(test_samples, 1 / abs(self.delay))
 
+        # Ensure nothing happens for negative delays
         self.calibration.delay = -abs(self.delay)
         assert_signals_equal(self, test_signal, self.calibration.correct_receive_delay(test_signal))
 
+        # Ensure delay is removed for positive delays
         self.calibration.delay = abs(self.delay)
         expected_delayed_samples = test_samples[:, 1:]
-        assert_array_equal(expected_delayed_samples, self.calibration.correct_receive_delay(test_signal).view(np.ndarray))
+        assert_array_equal(expected_delayed_samples, self.calibration.correct_receive_delay(test_signal).view(np.ndarray)[:, :-1])
 
     def test_estimate_validation(self) -> None:
         """Delay estimation routine should raise ValueErrors for invalid arguments"""

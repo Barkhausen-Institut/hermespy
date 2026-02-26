@@ -384,8 +384,12 @@ class UsrpDevice(PhysicalDevice[PhysicalDeviceState], Serializable):
 
         # Configure reception
         # Ensure that the reception is long enough to capture at leat a single dsp frame
-        num_receive_samples = self.receivers.min_num_samples_per_frame(
-            self.sampling_rate / self.oversampling_factor, self.oversampling_factor
+        # ToDo: Add a switch here
+        num_receive_samples = max(
+            self.receivers.min_num_samples_per_frame(
+                self.sampling_rate / self.oversampling_factor, self.oversampling_factor
+            ),
+            signal.num_samples,
         )
 
         if num_receive_samples > 0.0:

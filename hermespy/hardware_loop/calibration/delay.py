@@ -42,7 +42,12 @@ class DelayCalibration(DelayCalibrationBase):
 
     @staticmethod
     def Estimate(
-        device: PhysicalDevice, max_delay: float, num_iterations: int = 10, wait: float = 0.0
+        device: PhysicalDevice,
+        max_delay: float,
+        num_iterations: int = 10,
+        wait: float = 0.0,
+        transmit_ports: list[int] | None = None,
+        receive_ports: list[int] | None = None,
     ) -> DelayCalibration:
         """Estimate a physical device's inherent transmit-receive delay.
 
@@ -65,6 +70,14 @@ class DelayCalibration(DelayCalibrationBase):
                 Idle time between iteration transmissions in seconds.
                 Zero by default.
 
+            transmit_ports:
+                List of transmit port indices considered for delay calibration.
+                If :py:obj:`None`, all available transmit ports are used.
+
+            receive_ports:
+                List of receive port indices considered for delay calibration.
+                If :py:obj:`None`, all available receive ports are used.
+
         Returns: An initialized delay calibration instance.
         """
 
@@ -74,6 +87,9 @@ class DelayCalibration(DelayCalibrationBase):
         if wait < 0.0:
             raise ValueError("The waiting time must be greater or equal to zero")
 
+        _transmit_ports = slice(None) if transmit_ports is None else transmit_ports
+        _receive_ports = slice(None) if receive_ports is None else receive_ports
+
         sampling_rate = device.max_sampling_rate
         num_samples = int(2 * max_delay * device.max_sampling_rate)
         if num_samples <= 1:
@@ -82,8 +98,8 @@ class DelayCalibration(DelayCalibrationBase):
             )
 
         dirac_index = int(max_delay * sampling_rate)
-        waveform = np.zeros((device.num_antennas, num_samples), dtype=complex)
-        waveform[:, dirac_index] = 1.0
+        waveform = np.zeros((device.num_transmit_rf_ports, num_samples), dtype=complex)
+        waveform[_transmit_ports, dirac_index] = 1.0
         calibration_signal = Signal.Create(waveform, sampling_rate, device.carrier_frequency)
 
         propagated_signals: List[Signal] = []
@@ -96,7 +112,7 @@ class DelayCalibration(DelayCalibrationBase):
             # Infer the implicit delay by estimating the sample index of the propagated dirac
             propagated_signals.append(propagated_signal)
             propagated_dirac_indices[n] = np.argmax(
-                propagated_signal.blocks[0].view(np.ndarray)[0, :]
+                propagated_signal.blocks[0].view(np.ndarray)[_receive_ports, :]
             )
 
             # Wait the configured amount of time between iterations
