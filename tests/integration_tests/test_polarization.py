@@ -70,7 +70,7 @@ class TestSingleAntennaPolarization(TestCase):
             self.device_beta.trajectory = StaticTrajectory(Transformation.From_Translation(position))
             propagation = self.channel.propagate(self.test_signal, self.device_alpha, self.device_beta)
 
-            powers[p] = propagation.power
+            powers[p:p+1] = propagation.power
 
         assert_array_almost_equal(expected_power * np.ones(position_candidates.shape[0]), powers)
 
@@ -80,7 +80,7 @@ class TestSingleAntennaPolarization(TestCase):
             self.device_beta.trajectory = StaticTrajectory(Transformation.From_RPY(orientation, beta_translation))
             propagation = self.channel.propagate(self.test_signal, self.device_alpha, self.device_beta)
 
-            powers[o] = propagation.power
+            powers[o:o+1] = propagation.power
 
         assert_array_almost_equal(expected_powers, powers)
 

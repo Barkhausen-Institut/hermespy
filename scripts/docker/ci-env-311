@@ -9,11 +9,15 @@ RUN dnf -y clean all
 # Point drjit to the correct libLLVM
 ENV DRJIT_LIBLLVM_PATH="/usr/lib64/llvm17/lib/libLLVM-17.so"
 
-# Copy requirements files
-COPY ci-requirements.txt /tmp/ci-requirements.txt
-
 # Add python binary folder to PATH
 ENV PATH="/opt/python/cp311-cp311/bin:${PATH}"
 
+# Upgrade pip
+RUN python -m pip install --no-cache-dir --upgrade pip
+
+# Generate requirements file from HermesPy's current pyproject.toml
+COPY pyproject.toml /tmp/pyproject.toml
+RUN python -m pip install --no-cache-dir --upgrade pip-tools && pip-compile --all-extras --allow-unsafe -o /tmp/ci-requirements.txt /tmp/pyproject.toml
+
 # Install all Python dependencies for HermesPy
-RUN python -m pip install --upgrade --no-cache-dir -r /tmp/ci-requirements.txt
+RUN python -m pip install --no-cache-dir --upgrade -r /tmp/ci-requirements.txt

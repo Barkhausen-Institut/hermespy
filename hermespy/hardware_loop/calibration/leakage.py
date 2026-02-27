@@ -225,20 +225,20 @@ class SelectiveLeakageCalibration(LeakageCalibrationBase):
 
             samples = np.abs(self.__leakage_response[m, n, :])
             max_amplitude = max(samples.max(), max_amplitude)
-            axes[m, n].plot(sample_instances, samples)
+            axes[m, n].plot(sample_instances, samples)  # type: ignore
             # freq_axes.plot(
             #    frequency_bins,
             #    fftshift(abs(fft(self.__leakage_response[m, n, :]))),
             #    label=f"Tx: {n} Rx{m}",
             # )
 
-            axes[m, n].set_xlabel("Time [s]")
-            axes[m, n].set_ylabel("Absolute Amplitude")
+            axes[m, n].set_xlabel("Time [s]")  # type: ignore
+            axes[m, n].set_ylabel("Absolute Amplitude")  # type: ignore
             # freq_axes.set_xlabel("Frequency [Hz]")
 
         # Set the y-axis limits to the maximum amplitude
         for ax in axes.flat:
-            ax.set_ylim(0, max_amplitude)
+            ax.set_ylim(0, max_amplitude)  # type: ignore
 
         return figure, axes
 

@@ -79,30 +79,30 @@ class SingleTargetRadarChannelRealization(RadarChannelRealization):
 
         # Generate the targe's absolute range from the receiver
         if isinstance(self.__target_range, (tuple, list)):
-            target_range = float(
+            target_range = (
                 self.__target_range[0]
                 + (self.__target_range[1] - self.__target_range[0])
-                * self.__target_range_variable.sample(consistent_sample)
+                * self.__target_range_variable.sample(consistent_sample).item()
             )
         else:
             target_range = self.__target_range
 
         # Generate the target's azimuth angle of arrival
         if isinstance(self.__target_azimuth, (tuple, list)):
-            target_azimuth = float(
+            target_azimuth = (
                 self.__target_azimuth[0]
                 + (self.__target_azimuth[1] - self.__target_azimuth[0])
-                * self.__target_azimuth_variable.sample(consistent_sample)
+                * self.__target_azimuth_variable.sample(consistent_sample).item()
             )
         else:
             target_azimuth = self.__target_azimuth
 
         # Generate the target's zenith angle of arrival
         if isinstance(self.__target_zenith, (tuple, list)):
-            target_zenith = float(
+            target_zenith = (
                 self.__target_zenith[0]
                 + (self.__target_zenith[1] - self.__target_zenith[0])
-                * self.__target_zenith_variable.sample(consistent_sample)
+                * self.__target_zenith_variable.sample(consistent_sample).item()
             )
         else:
             target_zenith = self.__target_zenith
@@ -125,7 +125,7 @@ class SingleTargetRadarChannelRealization(RadarChannelRealization):
             unit_direction * target_range,
             target_velocity,
             self.__target_cross_section,
-            float(2 * np.pi * self.__target_phase_variable.sample(consistent_sample)),
+            float(2 * np.pi * self.__target_phase_variable.sample(consistent_sample).item()),
             self.__attenuate,
             False,
         )

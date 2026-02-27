@@ -1851,7 +1851,7 @@ class ClusterDelayLineRealization(ChannelRealization[ClusterDelayLineSample], Ge
                     self.__state_realization.sample(
                         channel_state.transmitter.position, channel_state.receiver.position
                     )
-                )
+                ).item()
             )
             state = self._sample_large_scale_state(state_variable_sample, parameters)
         else:

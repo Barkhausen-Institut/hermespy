@@ -12,7 +12,7 @@ from sys import version_info
 if version_info >= (3, 12):
     from collections.abc import Buffer  # type: ignore
 else:
-    Buffer = bytes | bytearray | memoryview
+    Buffer = bytes | bytearray | memoryview  # type: ignore
 
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
@@ -204,11 +204,11 @@ class _EyeVisualization(_SignalVisualization):
 
         device = SimulatedDevice()
         transmitter = TransmittingModem()
-        waveform = RaisedCosineWaveform(modulation_order=16, oversampling_factor=16, num_preamble_symbols=0, symbol_rate=1e8, num_data_symbols=1000, roll_off=.9)
+        waveform = RaisedCosineWaveform(modulation_order=16, num_preamble_symbols=0, num_data_symbols=1000, roll_off=.9)
         transmitter.waveform = waveform
         device.add_dsp(transmitter)
 
-        device.transmit().mixed_signal.eye(symbol_duration=1/waveform.symbol_rate, domain='time')
+        device.transmit().mixed_signal.eye(domain='time')
         plt.show()
 
 
@@ -223,11 +223,11 @@ class _EyeVisualization(_SignalVisualization):
 
         device = SimulatedDevice()
         transmitter = TransmittingModem()
-        waveform = RaisedCosineWaveform(modulation_order=16, oversampling_factor=16, num_preamble_symbols=0, symbol_rate=1e8, num_data_symbols=1000, roll_off=.9)
+        waveform = RaisedCosineWaveform(modulation_order=16, num_preamble_symbols=0, num_data_symbols=1000, roll_off=.9)
         transmitter.waveform = waveform
         device.add_dsp(transmitter)
 
-        device.transmit().mixed_signal.eye(symbol_duration=1/waveform.symbol_rate, domain='complex')
+        device.transmit().mixed_signal.eye(domain='complex')
         plt.show()
 
     Args:

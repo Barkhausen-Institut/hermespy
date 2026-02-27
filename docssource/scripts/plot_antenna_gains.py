@@ -3,7 +3,7 @@ from typing import List, Type
 
 import matplotlib.pyplot as plt
 
-from hermespy.simulation.antenna import Antenna, IdealAntenna, PatchAntenna, Dipole
+from hermespy.core import Antenna, IdealAntenna, PatchAntenna, Dipole
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"

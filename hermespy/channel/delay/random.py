@@ -74,10 +74,10 @@ class RandomDelayChannelRealization(DelayChannelRealization):
             )
 
             # Realize the delay
-            delay = float(
+            delay = (
                 self.__delay[0]
                 + (self.__delay[1] - self.__delay[0])
-                * self.__delay_variable.sample(consistent_sample)
+                * self.__delay_variable.sample(consistent_sample).item()
             )
 
         # Generate a sample

@@ -6,7 +6,7 @@ import numpy as np
 from hermespy.core import Transformation
 from hermespy.simulation import RandomTrigger, Simulation, SimulationScenario
 from hermespy.channel import O2IState, UrbanMacrocells
-from hermespy.modem import BitErrorEvaluator, SimplexLink, OFDMWaveform, GridElement, GridResource, ElementType, SymbolSection, PilotSection, OFDMCorrelationSynchronization, OrthogonalLeastSquaresChannelEstimation, OrthogonalZeroForcingChannelEqualization
+from hermespy.modem import BitErrorEvaluator, SimplexLink, OFDMWaveform, GridElement, GridResource, ElementType, SymbolSection, SchmidlCoxPilotSection, OrthogonalLeastSquaresChannelEstimation, OrthogonalZeroForcingChannelEqualization, PrefixType
 from unit_tests.utils import SimulationTestContext
 
 __author__ = "Jan Adler"
@@ -29,38 +29,33 @@ class TestTriggerGroups(TestCase):
         """
 
         # Mock 5G numerology #1:
-        # 120khz subcarrier spacing, 120 subcarriers, 2us guard interval, 1ms subframe duration
+        # 15khz subcarrier spacing, 12 subcarriers, 2us guard interval, 1ms subframe duration
 
-        prefix_ratio = 0.0684
-        num_subcarriers = 128
-        grid_resources = [
-            GridResource(num_subcarriers // 5, prefix_ratio=prefix_ratio, elements=[
-                GridElement(ElementType.REFERENCE, 1),
-                GridElement(ElementType.DATA, 4)
-            ]),
-            GridResource(num_subcarriers // 5, prefix_ratio=prefix_ratio, elements=[
+        num_subcarriers = 12
+        prefix_ratio = 0.125
+        num_frame_symbols = 14
+
+        # Build a frame structure
+        grid_resources = [GridResource(
+            4,
+            PrefixType.CYCLIC,
+            prefix_ratio,
+            [
                 GridElement(ElementType.DATA, 2),
                 GridElement(ElementType.REFERENCE, 1),
-                GridElement(ElementType.DATA, 2),
-            ]),
-        ]
-        grid_structure = [
-            SymbolSection(
-                num_subcarriers // 2,
-                [0, 1],
-                5,
-            ),
-        ]
+            ],
+        )]
+        grid_structure = [SymbolSection(num_frame_symbols, [0], int(.5 * num_subcarriers * prefix_ratio))]
 
         waveform = OFDMWaveform(
             num_subcarriers=num_subcarriers,
-            dc_suppression=True,
+            dc_suppression=False,
             grid_resources=grid_resources,
             grid_structure=grid_structure,
             modulation_order=self.modulation_order,
         )
-        #waveform.pilot_section = PilotSection()
-        #waveform.synchronization = OFDMCorrelationSynchronization()
+        waveform.pilot_section = SchmidlCoxPilotSection()
+        #waveform.synchronization = SchmidlCoxSynchronization()
         waveform.channel_estimation = OrthogonalLeastSquaresChannelEstimation()
         waveform.channel_equalization = OrthogonalZeroForcingChannelEqualization()
         #waveform.pilot_symbol_sequence = CustomPilotSymbolSequence(np.arange(1, num_subcarriers * 60))
@@ -72,8 +67,8 @@ class TestTriggerGroups(TestCase):
         self.trigger_beta_link = RandomTrigger()
 
         self.carrier_frequency = 1e8
-        self.bandwidth = 128 * 15e3  # 5G numerology #1
-        self.oversampling_factor = 2
+        self.bandwidth = 12 * 15e3  # 5G numerology #1
+        self.oversampling_factor = 4
         self.modulation_order = 4
         self.scenario = SimulationScenario(seed=42)
 

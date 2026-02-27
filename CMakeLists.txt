@@ -7,12 +7,16 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 project(${SKBUILD_PROJECT_NAME} VERSION ${SKBUILD_PROJECT_VERSION} LANGUAGES CXX)
 
 
+option(HERMES_BUILD_AFF3CT "Build and wrap AFF3CT with HermesPy" ON)
+
+
 # Workaround for building shared libraries on Windows
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
     set(BUILD_SHARED_LIBS TRUE)
-else()
 
+    # Disable AFF3CT on Windows as a workaround to the exceeded limit of linked objects
+    set(HERMES_BUILD_AFF3CT OFF)
 endif()
 
 # Configure aff3ct to only build the shared library
@@ -30,22 +34,15 @@ set(CLI_COMPILE_SHARED_LIB OFF CACHE INTERNAL "Disable CLI" FORCE)
 # Configure aff3ct submodule StreamPU
 set(SPU_OVERRIDE_VERSION "0.1.0" CACHE INTERNAL "Enable SPU without .git" FORCE)
 set(SPU_TESTS OFF CACHE INTERNAL "Disable SPU tests" FORCE)
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-    set(SPU_STACKTRACE OFF CACHE INTERNAL "Disable SPU" FORCE)
-    set(SPU_STACKTRACE_SEGFAULT OFF CACHE INTERNAL "Disable SPU" FORCE)
+
+if(HERMES_BUILD_AFF3CT)
+    # Configure aff3ct installation
+    add_subdirectory(submodules/affect)
+    set_target_properties(aff3ct-shared-lib PROPERTIES OUTPUT_NAME affect)
+    install(TARGETS aff3ct-shared-lib COMPONENT PythonModule)
+
+    # Configure aff3ct expansions for LDPC, Polar, RS, RSC, Turbo, and BCH
+    add_subdirectory(hermespy/fec/aff3ct)
+    set_target_properties(ldpc polar rs rsc turbo bch PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE INSTALL_RPATH "$ORIGIN")
+    install(TARGETS aff3ct-shared-lib ldpc polar rs rsc turbo bch DESTINATION ${SKBUILD_PROJECT_NAME}/fec/aff3ct/ COMPONENT PythonModule)
 endif()
-
-# Configure aff3ct installation
-add_subdirectory(submodules/affect)
-set_target_properties(aff3ct-shared-lib PROPERTIES OUTPUT_NAME affect)
-install(TARGETS aff3ct-shared-lib COMPONENT PythonModule)
-
-# Configure aff3ct expansions for LDPC, Polar, RS, RSC, Turbo, and BCH
-add_subdirectory(hermespy/fec/aff3ct)
-set_target_properties(ldpc polar rs rsc turbo bch PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE INSTALL_RPATH "$ORIGIN")
-install(TARGETS aff3ct-shared-lib ldpc polar rs rsc turbo bch DESTINATION ${SKBUILD_PROJECT_NAME}/fec/aff3ct/ COMPONENT PythonModule)
-
-# Configure the raytracing build
-# add_subdirectory(submodules/raytracing)
-# set_target_properties(hermespy-rt-binding PROPERTIES OUTPUT_NAME binding)
-# install(TARGETS hermespy-rt-binding LIBRARY DESTINATION ${SKBUILD_PROJECT_NAME}/channel/rt/ COMPONENT PythonModule)

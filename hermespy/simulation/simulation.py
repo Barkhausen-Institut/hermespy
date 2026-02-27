@@ -415,7 +415,7 @@ class Simulation(Pipeline[SimulationScenario, SimulatedDevice], MonteCarlo[Simul
         # Generate timestamps at which drops are generated
         max_timestamp = max(d.trajectory.max_timestamp for d in self.scenario.devices)
         timestamps = (
-            np.arange(0, max_timestamp, self.drop_interval, np.float64)
+            np.arange(0, max_timestamp, self.drop_interval, dtype=np.float64)
             if max_timestamp > 0.0
             else np.zeros(1, np.float64)
         )

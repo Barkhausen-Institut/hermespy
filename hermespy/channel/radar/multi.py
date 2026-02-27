@@ -411,7 +411,7 @@ class MultiTargetRadarChannelRealization(RadarChannelRealization):
         consistent_sample = self.__consistent_realization.sample(
             target_forwards_transform.translation, state.receiver.position
         )
-        reflection_phase = float(2 * np.pi * self.__phase_variable.sample(consistent_sample))
+        reflection_phase = 2 * np.pi * self.__phase_variable.sample(consistent_sample).item()
 
         # Return realized information wrapped in a target realization dataclass
         return RadarTargetPath(

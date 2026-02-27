@@ -33,11 +33,15 @@ class TestReadme(TestCase):
         # Replace the num_drops with one to avoid long simulation times
         code_blocks[2] = re.sub(r"num_drops = \d+", "num_drops = 1", code_blocks[2])
 
+        # Required to cache imports and variables across code blocks
+        global_vars: dict[str, object] = {}
+        local_vars: dict[str, object] = {}
+
         # Execute the code blocks
         with SimulationTestContext():
             for c, code_block in enumerate(code_blocks):
                 with self.subTest(msg=f"Code block {c}"):
                     try:
-                        exec(code_block)
+                        exec(code_block, global_vars, local_vars)
                     except Exception as e:
                         self.fail(f"Code block {c} failed: {e}")
