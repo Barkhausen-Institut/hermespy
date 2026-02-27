@@ -682,7 +682,7 @@ class SimulatedAntennaArray(AntennaArray[SimulatedAntenna]):
                         1,
                     ),
                 )
-                power[a] = s.power
+                power[a:a+1] = s.power
 
         return power
 

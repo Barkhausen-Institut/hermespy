@@ -89,9 +89,9 @@ class TestReceiveSymbolCoding(unittest.TestCase):
 
         self.assertEqual(Fraction(1, 4), self.coding.decode_rate)
 
-    def test_yaml_serialization(self) -> None:
-        """Test serialization from and to YAML"""
-        
+    def test_serialization(self) -> None:
+        """Test serialization of receive symbol coding"""
+
         test_roundtrip_serialization(self, self.coding)
 
 
@@ -127,7 +127,7 @@ class TestTransmitSymbolCoding(unittest.TestCase):
 
         self.assertEqual(Fraction(1, 4), self.coding.encode_rate)
 
-    def test_yaml_serialization(self) -> None:
-        """Test serialization from and to YAML"""
-        
+    def test_serialization(self) -> None:
+        """Test serialization of transmit symbol coding"""
+
         test_roundtrip_serialization(self, self.coding)

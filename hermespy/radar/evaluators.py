@@ -627,7 +627,7 @@ class RocEvaluationResult(EvaluationResult[RocArtifact]):
 
         # Convert artifacts to raw data array
         for grid_coordinates in np.ndindex(self.__artifacts.shape):
-            artifact_line: list[RocArtifact] = self.__artifacts[grid_coordinates]
+            artifact_line: list[RocArtifact] = self.__artifacts[grid_coordinates]  # type: ignore
             roc_data = np.array([[a.h0_value, a.h1_value] for a in artifact_line])
 
             # Skip if there is no data

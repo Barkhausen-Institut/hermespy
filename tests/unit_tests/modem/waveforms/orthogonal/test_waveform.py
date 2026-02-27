@@ -745,7 +745,7 @@ class TestCorrelationSynchronization(TestCase):
             self.assertCountEqual(d + (d + self.wave.samples_per_frame(self.bandwidth, self.oversampling_factor)) * np.arange(n), frame_delays)
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test serialization of OFDM correlation synchronization"""
 
         test_roundtrip_serialization(self, OFDMCorrelationSynchronization())
 

@@ -245,9 +245,9 @@ class BitErrorEvaluator(CommunicationEvaluator, Serializable):
         # Pad bit sequences (if required)
         num_bits = max(len(received_bits), len(transmitted_bits))
         padded_transmission = np.append(
-            transmitted_bits, np.zeros(num_bits - len(transmitted_bits))
+            transmitted_bits, np.zeros(num_bits - len(transmitted_bits), dtype=np.uint8)
         )
-        padded_reception = np.append(received_bits, np.zeros(num_bits - len(received_bits)))
+        padded_reception = np.append(received_bits, np.zeros(num_bits - len(received_bits), dtype=np.uint8))
 
         # Compute bit errors as the positions where both sequences differ.
         # Note that this requires the sequences to be in 0/1 format!

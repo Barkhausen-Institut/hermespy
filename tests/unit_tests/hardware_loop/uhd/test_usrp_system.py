@@ -54,6 +54,6 @@ class TestUsrpSystem(TestCase):
         execute.assert_called_once()
 
     def test_serialization(self) -> None:
-        """Test YAML serialization"""
+        """Test serialization of USRP devices"""
 
         test_roundtrip_serialization(self, self.system)

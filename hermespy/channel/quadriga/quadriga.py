@@ -96,7 +96,7 @@ class QuadrigaChannelSample(ChannelSample):
         for channel, delay in zip(
             self.path_gains.transpose((2, 0, 1)), self.path_delays.transpose((2, 0, 1))
         ):
-            time_delay = int(np.round(delay * self.bandwidth))
+            time_delay = int(round(delay.item() * self.bandwidth))
             propagated_signal[:, time_delay : time_delay + signal.num_samples] += channel @ signal
 
         propagated_signal *= np.sqrt(self.__gain)
@@ -129,7 +129,7 @@ class QuadrigaChannelSample(ChannelSample):
         for channel, delay in zip(
             self.path_gains.transpose((2, 0, 1)), self.path_delays.transpose((2, 0, 1))
         ):
-            time_delay = int(np.round(delay * self.bandwidth))
+            time_delay = int(round(delay.item() * self.bandwidth))
             impulse_response[:, :, :, time_delay] += channel
 
         impulse_response *= np.sqrt(self.__gain)

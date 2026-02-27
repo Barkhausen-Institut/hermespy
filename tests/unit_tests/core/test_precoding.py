@@ -53,8 +53,8 @@ class _TestSignalCoding():
 
     coding: TransmitSignalCoding | ReceiveSignalCoding
 
-    def test_yaml_serialization(self) -> None:
-        """Test serialization to and from YAML"""
+    def test_serialization(self) -> None:
+        """Test serialization of signal codings"""
 
         test_roundtrip_serialization(self, self.coding)
 

@@ -120,7 +120,7 @@ class DelayCalibration(DelayCalibrationBase):
 
         # Compute calibration delay
         # This is just a ML estimation
-        mean_dirac_index = np.mean(propagated_dirac_indices)
+        mean_dirac_index = float(np.mean(propagated_dirac_indices))
         calibration_delay = (mean_dirac_index - dirac_index) / propagated_signal.sampling_rate
 
         return DelayCalibration(calibration_delay)

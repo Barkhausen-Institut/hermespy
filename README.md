@@ -59,8 +59,8 @@ from hermespy.simulation import Simulation
 
 # Initialize a simulation running each DSP algorithm on a dedicated device
 sim = Simulation(seed=42)
-sim.new_device(carrier_frequency=26e9).add_dsp(sense)
 sim.new_device(carrier_frequency=1e9).add_dsp(com)
+sim.new_device(carrier_frequency=26e9).add_dsp(sense)
 sim.new_device(carrier_frequency=1e9).add_dsp(joint)
 
 # Configure the simulation to run the KPI evaluation routine

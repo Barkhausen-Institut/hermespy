@@ -63,7 +63,7 @@ class TestDelayCalibration(TestCase):
         # Ensure delay is removed for positive delays
         self.calibration.delay = abs(self.delay)
         expected_delayed_samples = test_samples[:, 1:]
-        assert_array_equal(expected_delayed_samples, self.calibration.correct_receive_delay(test_signal).view(np.ndarray)[:, :-1])
+        assert_array_equal(expected_delayed_samples, self.calibration.correct_receive_delay(test_signal).view(np.ndarray)[:, :expected_delayed_samples.shape[1]])
 
     def test_estimate_validation(self) -> None:
         """Delay estimation routine should raise ValueErrors for invalid arguments"""

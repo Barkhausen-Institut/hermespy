@@ -197,7 +197,7 @@ class OscillatorPhaseNoiseRealization(PhaseNoiseRealization):
         pn = self._get_noise_samples(signal.num_samples, signal.num_streams, signal.sampling_rate)
         noisy_signal = signal * np.exp(1j * pn)
 
-        return noisy_signal
+        return noisy_signal.view(RFSignal)
 
 
 class OscillatorPhaseNoise(PhaseNoise, Serializable):

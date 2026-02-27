@@ -1,0 +1,3 @@
+# This will force only the pyproject.toml to be part of the CI build image context
+*
+!pyproject.toml
