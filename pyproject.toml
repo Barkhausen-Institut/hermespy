@@ -2,10 +2,10 @@
 requires = [
     "setuptools>=75.6.0, <81.0",  # Less than 81 to keep compatibility with UHD driver
     "wheel>=0.45.1",
-#    "pybind11>=3.0.0",
-#    "scikit-build-core>=0.10.7",
+    "pybind11>=3.0.0",
+    "scikit-build-core>=0.10.7",
 ]
-build-backend = "setuptools.build_meta"
+build-backend = "scikit_build_core.build"
 
 # Fallback if a compilation is impossible
 [tool.setuptools.packages.find]
@@ -132,7 +132,6 @@ sdist.exclude = [
 sdist.reproducible = true
 sdist.cmake = true
 wheel.packages = ["hermespy", "hermespy/*"]
-wheel.license-files = ["LICENSE"]
 wheel.cmake = true
 wheel.exclude = [
     "*.cpp",

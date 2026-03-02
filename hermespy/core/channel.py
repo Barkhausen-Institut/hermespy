@@ -540,7 +540,7 @@ class ChannelStateInformation(Serializable):
 
     def serialize(self, process: SerializationProcess) -> None:
         process.serialize_integer(self.__state_format.value, "state_format")
-        process.serialize_array(self.dense_state(), "state")
+        process.serialize_array(self.dense_state(), "state", cache=False)
 
     @classmethod
     def Deserialize(
