@@ -1,8 +1,20 @@
+# -*- coding: utf-8 -*-
+
 from .coding import Encoder, EncoderManager
 from .block_interleaver import BlockInterleaver
 from .cyclic_redundancy_check import CyclicRedundancyCheck
 from .repetition_encoder import RepetitionEncoder
 from .scrambler import Scrambler3GPP, Scrambler80211a
+
+__all__ = [
+    "Encoder",
+    "EncoderManager",
+    "BlockInterleaver",
+    "CyclicRedundancyCheck",
+    "RepetitionEncoder",
+    "Scrambler3GPP",
+    "Scrambler80211a",
+]
 
 
 # Attempt to import the C++ bindings of aff3ct.
@@ -18,6 +30,16 @@ try:  # pragma: no cover
         TurboCoding,
     )
 
+    __all__ += [
+        "BCHCoding",
+        "LDPCCoding",
+        "PolarSCCoding",
+        "PolarSCLCoding",
+        "ReedSolomonCoding",
+        "RSCCoding",
+        "TurboCoding",
+    ]
+
 except ModuleNotFoundError:  # pragma: no cover
     ...
 
@@ -30,20 +52,3 @@ __version__ = "1.5.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
-
-__all__ = [
-    "Encoder",
-    "EncoderManager",
-    "BlockInterleaver",
-    "CyclicRedundancyCheck",
-    "BCHCoding",
-    "LDPCCoding",
-    "PolarSCCoding",
-    "PolarSCLCoding",
-    "ReedSolomonCoding",
-    "RSCCoding",
-    "TurboCoding",
-    "RepetitionEncoder",
-    "Scrambler80211a",
-    "Scrambler3GPP",
-]

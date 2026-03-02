@@ -151,7 +151,7 @@ class TestSimulation(TestCase):
     def setUp(self) -> None:
         self.io = StringIO()
         self.console = Console(file=None if GENERATE_OUTPUT else self.io)
-        self.simulation = Simulation(seed=42)
+        self.simulation = Simulation(seed=42, num_actors=3)
         self.simulation.console = self.console
         self.simulation.num_drops = 1
 

@@ -402,7 +402,7 @@ class StatedSymbols(Symbols):
 
     def serialize(self, process: SerializationProcess) -> None:
         Symbols.serialize(self, process)
-        process.serialize_array(self.dense_states(), "states")
+        process.serialize_array(self.dense_states(), "states", cache=False)
 
     @classmethod
     def Deserialize(cls: Type[StatedSymbols], process: DeserializationProcess) -> StatedSymbols:
