@@ -1,9 +1,18 @@
 # -*- coding: utf -8 -*-
 
+from __future__ import annotations
 from os.path import abspath, dirname, join
-from typing import Sequence
+from typing import Sequence, Type
+from typing_extensions import override
 
-from hermespy.fec import LDPCCoding  # type: ignore
+import numpy as np
+
+# Attempt import LDPC channel coding. Might not be available on Windows
+try:
+    from hermespy.fec import LDPCCoding  # type: ignore
+except ImportError:
+    LDPCCoding = None  # type: ignore
+from hermespy.core import DeserializationProcess
 from .bits_source import BitsSource
 from .modem import SimplexLink
 from .frame_generator import FrameGenerator
@@ -24,6 +33,8 @@ class NRSlotLink(SimplexLink):
     """
     A simplex link for 5G NR simulations considering only a single slot.
     """
+
+    __slot: NRSlot
 
     def __init__(
         self,
@@ -69,11 +80,11 @@ class NRSlotLink(SimplexLink):
         """
 
         # Initialize waveform
-        slot = NRSlot(num_resource_blocks=num_resource_blocks)
+        self.__slot = NRSlot(num_resource_blocks=num_resource_blocks)
 
         # Least-squares channel estimation and zero-forcing equalization are used by default
-        slot.channel_estimation = OrthogonalLeastSquaresChannelEstimation()
-        slot.channel_equalization = OrthogonalZeroForcingChannelEqualization()
+        self.__slot.channel_estimation = OrthogonalLeastSquaresChannelEstimation()
+        self.__slot.channel_equalization = OrthogonalZeroForcingChannelEqualization()
 
         # Initialize link with the given parameters
         SimplexLink.__init__(
@@ -83,11 +94,28 @@ class NRSlotLink(SimplexLink):
             carrier_frequency=carrier_frequency,
             bits_source=bits_source,
             frame_generator=frame_generator,
-            waveform=slot,
+            waveform=self.__slot,
             seed=seed,
         )
 
         # Configure an LDPC code with rate R=1/2 and block length 128
         # Note that this is not standard-compliant
-        ldpc_code = join(dirname(abspath(__file__)), 'resources', 'ofdm_ldpc.alist')
-        self.encoder_manager.add_encoder(LDPCCoding(100, ldpc_code, "", True, 10))
+        if LDPCCoding:
+            ldpc_code = join(dirname(abspath(__file__)), 'resources', 'ofdm_ldpc.alist')
+            self.encoder_manager.add_encoder(LDPCCoding(100, ldpc_code, "", True, 10))
+
+    @override
+    @classmethod
+    def Deserialize(cls: Type[NRSlotLink], process: DeserializationProcess) -> NRSlotLink:
+        slot = process.deserialize_object("waveform", NRSlot)
+        selected_transmit_ports = process.deserialize_array("selected_transmit_ports", np.int64, None)
+        selected_receive_ports = process.deserialize_array("selected_receive_ports", np.int64, None)
+        return NRSlotLink(
+            num_resource_blocks=slot.num_resource_blocks,
+            selected_transmit_ports=selected_transmit_ports.tolist() if selected_transmit_ports else None,
+            selected_receive_ports=selected_receive_ports.tolist() if selected_receive_ports else None,
+            carrier_frequency=process.deserialize_floating("carrier_frequency", None),
+            bits_source=process.deserialize_object("bits_source", BitsSource),
+            frame_generator=process.deserialize_object("frame_generator", FrameGenerator),
+            seed=process.deserialize_integer("seed", None),
+        )

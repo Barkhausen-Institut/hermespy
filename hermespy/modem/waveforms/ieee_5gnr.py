@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import annotations
+from typing import Type
 from typing_extensions import override
 
 import numpy as np
 
+from hermespy.core import SerializationProcess, DeserializationProcess
 from hermespy.modem.waveform import Synchronization
 from .orthogonal import (
     ElementType,
@@ -229,6 +232,17 @@ class NRSlot(OFDMWaveform):
 
         return self.num_subcarriers // IEEE_5GNR_RB_NUM_SUBCARRIERS
 
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_integer(self.num_resource_blocks, "num_resource_blocks")
+
+    @override
+    @classmethod
+    def Deserialize(cls: Type[NRSlot], process: DeserializationProcess) -> NRSlot:
+        return cls(
+            num_resource_blocks=process.deserialize_integer("num_resource_blocks", IEEE_5GNR_MIN_NUM_RBS)
+        )
+
 
 class NRSubframe(NRSlot):
     """Mock of a 5G NR subframe.
@@ -236,6 +250,8 @@ class NRSubframe(NRSlot):
     Note that only the rough frame structure is implemented, reference symbols and synchronization patterns are not placed according to the actual 5G NR standard.
     This is intended for testing and demonstration purposes only.
     """
+
+    __numerology: int
 
     @staticmethod
     def num_subframe_slots(numerology: int) -> int:
@@ -263,6 +279,7 @@ class NRSubframe(NRSlot):
                 The maximum number depends on the overall bandwidth available for the given frequency range.
         """
 
+        self.__numerology = numerology
         num_subcarriers = num_resource_blocks * IEEE_5GNR_RB_NUM_SUBCARRIERS
         num_symbols = 2**numerology * IEEE_5GNR_NUM_SYMBOLS_PER_SLOT
 
@@ -285,6 +302,28 @@ class NRSubframe(NRSlot):
             grid_structure,
             num_subcarriers=num_subcarriers,
             dc_suppression=False,
+        )
+
+    @property
+    def numerology(self) -> int:
+        """5G NR numerology index.
+
+        Zero to six.
+        """
+
+        return self.__numerology
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_integer(self.numerology, "numerology")
+        process.serialize_integer(self.num_resource_blocks, "num_resource_blocks")
+
+    @override
+    @classmethod
+    def Deserialize(cls: Type[NRSubframe], process: DeserializationProcess) -> NRSubframe:
+        return cls(
+            numerology=process.deserialize_integer("numerology", 0),
+            num_resource_blocks=process.deserialize_integer("num_resource_blocks", IEEE_5GNR_MIN_NUM_RBS)
         )
 
 

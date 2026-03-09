@@ -20,7 +20,7 @@ __all__ = [
 # Attempt to import the C++ bindings of aff3ct.
 # They are treated as an optional feature.
 try:  # pragma: no cover
-    from .aff3ct import (
+    from .aff3ct_wrappers import (
         BCHCoding,
         LDPCCoding,
         PolarSCCoding,
@@ -39,6 +39,7 @@ try:  # pragma: no cover
         "RSCCoding",
         "TurboCoding",
     ]
+
 
 except ModuleNotFoundError:  # pragma: no cover
     ...
