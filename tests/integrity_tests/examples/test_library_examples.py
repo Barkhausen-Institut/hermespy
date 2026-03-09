@@ -114,7 +114,6 @@ class TestAdvancedExamples(TestCase):
 
     test_blacklist: set[str] = {
         'audio.py',  # No audio support in CI
-        'ofdm_5g.py',  # Execution time is too long
         'interference.py',  # Execution time is too long
         'usrp.py',  # Not supported in CI
         'usrp_loop.py',  # Not supported in CI

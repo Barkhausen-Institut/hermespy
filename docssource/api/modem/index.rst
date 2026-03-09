@@ -142,3 +142,4 @@ of communication systems:
    modem.CommunicationReceptionFrame
    mapping
    frame_generator
+   ieee_5gnr

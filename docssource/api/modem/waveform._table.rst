@@ -38,3 +38,15 @@
      - Yes
      - No
      - No
+   * - :doc:`5GNR Slot<waveforms.ieee_5gnr.NRSlot>`
+     - Yes
+     - Yes
+     - Yes
+   * - :doc:`5GNR Subframe<waveforms.ieee_5gnr.NRSubframe>`
+     - Yes
+     - Yes
+     - Yes
+   * - :doc:`5GNR Frame<waveforms.ieee_5gnr.NRFrame>`
+     - Yes
+     - Yes
+     - Yes

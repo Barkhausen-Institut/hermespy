@@ -156,18 +156,16 @@ class GridResource(Serializable):
     def prefix_ratio(self) -> float:
         """Ratio between full block length and prefix length.
 
-        Ratio is between zero and one.
-
         Raises:
-            ValueError: If ratio is less than zero or larger than one.
+            ValueError: If ratio is less than zero.
         """
 
         return self.__prefix_ratio
 
     @prefix_ratio.setter
     def prefix_ratio(self, ratio: float) -> None:
-        if ratio < 0.0 or ratio > 1.0:
-            raise ValueError(f"Cyclic prefix ratio must be between zero and one, not {ratio}")
+        if ratio < 0.0:
+            raise ValueError(f"Cyclic prefix ratio must be non-negative (not {ratio})")
 
         self.__prefix_ratio = ratio
 
@@ -409,7 +407,7 @@ class GridSection(Generic[OWT], Serializable):
 
     @abstractmethod
     def place_samples(
-        self, signal: np.ndarray, bandwdith: float, oversampling_factor: int
+        self, signal: np.ndarray, bandwidth: float, oversampling_factor: int
     ) -> np.ndarray:
         """Place this section's samples into the time-domain signal.
 
@@ -937,7 +935,7 @@ class GridVisualization(VisualizableAttribute[ImageVisualization]):
         self, figure: plt.Figure | None, axes: VAT, **kwargs
     ) -> ImageVisualization:
         ax: plt.Axes = axes.flat[0]
-        image = ax.imshow(self.__generate_image(), cmap="viridis", aspect="auto")
+        image = ax.imshow(self.__generate_image(), cmap="viridis", aspect="auto", interpolation='none')
         ax.set_ylabel("Resource")
         ax.set_xlabel("Time")
 
@@ -1128,6 +1126,14 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
 
         return self.__grid_structure
 
+    @grid_structure.setter
+    def grid_structure(self, value: Sequence[GridSection]) -> None:
+        self.__grid_structure = value
+
+        for section in self.__grid_structure:
+            if section.wave is not self:
+                section.wave = self
+
     @property
     def symbols_per_frame(self) -> int:
         """Number of modulated symbols within each transmitted communication frame.
@@ -1181,7 +1187,7 @@ class OrthogonalWaveform(ConfigurablePilotWaveform, ABC):
 
     @override
     def frame_duration(self, bandwidth: float) -> float:
-        return self.num_subcarriers / bandwidth * self.symbols_per_frame
+        return self.samples_per_frame(bandwidth, 1) / bandwidth
 
     @property
     def resource_mask(self) -> np.ndarray:
