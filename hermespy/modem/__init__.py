@@ -69,6 +69,15 @@ from .waveforms.orthogonal import (
     ReferencePosition,
 )
 
+from .waveforms.ieee_5gnr import (
+    NRFrame,
+    NRSlot,
+    NRSubframe,
+    nr_bandwidth,
+)
+
+from .ieee_5gnr import NRSlotLink
+
 from .precoding import (
     Alamouti,
     Ganesan,
@@ -91,7 +100,7 @@ from .evaluators import (
 from .tools import PskQamMapping
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2026, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
 __version__ = "1.5.0"
@@ -173,6 +182,11 @@ __all__ = [
     "OFDMCorrelationSynchronization",
     "SchmidlCoxSynchronization",
     "ReferencePosition",
+    "NRFrame",
+    "NRSlot",
+    "NRSubframe",
+    "nr_bandwidth",
+    "NRSlotLink",
     "Synchronization",
     "OTFSWaveform",
     "Alamouti",
@@ -181,7 +195,6 @@ __all__ = [
     "TransmitSymbolEncoder",
     "ReceiveSymbolCoding",
     "ReceiveSymbolDecoder",
-    "SymbolPrecoder",
     "SingleCarrier",
     "DFT",
     "DFTNorm",

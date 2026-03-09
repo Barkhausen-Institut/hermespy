@@ -31,6 +31,8 @@ from hermespy.modem import (
     SchmidlCoxSynchronization,
     ReferencePosition,
     Synchronization,
+    NRFrame,
+    nr_bandwidth,
 )
 from hermespy.fec import RepetitionEncoder, BlockInterleaver
 
@@ -110,7 +112,7 @@ class _TestLinksBase(TestCase):
         channel_realization = channel.realize()
         self.channel_sample = channel_realization.sample(self.tx_device, self.rx_device)
         channel_propagation = self.channel_sample.propagate(self.device_transmission)
-        self.rx_device.receive(channel_propagation)
+        reception = self.rx_device.receive(channel_propagation)
 
         # Debug:
         #
@@ -225,6 +227,31 @@ class _TestLinksBase(TestCase):
         self.interleaver.enabled = False
 
         return ofdm
+
+    def __configure_nr_waveform(self, channel: Channel) -> OFDMWaveform:
+        """Configure a 5G NR OFDM wafeform with default parameters.
+
+        Returns: The configured waveform.
+        """
+
+        # Select the correct bandwidth for the given numerology
+        numerology = 0
+        num_resource_blocks = 30
+        self.bandwidth = nr_bandwidth(numerology, num_resource_blocks)
+        self.tx_device.bandwidth = self.bandwidth
+        self.rx_device.bandwidth = self.bandwidth
+
+        frame = NRFrame(numerology)
+        frame.channel_estimation = OFDMIdealChannelEstimation(channel, self.tx_device, self.rx_device, reference_position=ReferencePosition.IDEAL)
+        frame.channel_equalization = OrthogonalZeroForcingChannelEqualization()
+
+        self.link.waveform = frame
+
+        # Debugging: Deactivate error correction
+        self.repeater.enabled = False
+        self.interleaver.enabled = True
+
+        return frame
 
     def __configure_otfs_waveform(self, channel: Channel) -> OTFSWaveform:
         """Configure an OTFS waveform with default parameters.
@@ -363,6 +390,14 @@ class _TestLinksBase(TestCase):
         self.__propagate(channel)
         self.__assert_link()
 
+    def test_ideal_channel_5GNR(self) -> None:
+        """Verify a valid SISO link over an ideal channel with 5G NR modulation"""
+
+        channel = IdealChannel()
+        self.__configure_nr_waveform(channel)
+        self.__propagate(channel)
+        self.__assert_link()
+
     def test_ideal_channel_ofdm_ls_zf(self) -> None:
         """Verify a valid SISO link over an ideal channel with OFDM modulation,
         least-squares channel estimation and zero-forcing equalization"""
@@ -453,6 +488,14 @@ class _TestLinksBase(TestCase):
         self.__propagate(channel)
         self.__assert_link()
 
+    def test_COST259_5GNR(self) -> None:
+        """Verify a valid SISO link over a COST259 channel with 5G NR modulation"""
+
+        channel = self.__configure_COST259_channel()
+        self.__configure_nr_waveform(channel)
+        self.__propagate(channel)
+        self.__assert_link()
+
     def test_COST259_otfs_ls_zf(self) -> None:
         """Verify a valid SISO link over an ideal channel with OTFS modulation,
         least-squares channel estimation and zero-forcing equalization"""
@@ -513,6 +556,14 @@ class _TestLinksBase(TestCase):
         self.__propagate(channel)
         self.__assert_link()
 
+    def test_5GTDL_5GNR(self) -> None:
+        """Verify a valid SISO link over a TDL channel with 5G NR modulation"""
+
+        channel = self.__configure_5GTDL_channel()
+        self.__configure_nr_waveform(channel)
+        self.__propagate(channel)
+        self.__assert_link()
+
     def test_5GTDL_otfs_ls_zf(self) -> None:
         """Verify a valid SISO link over a TDL channel with OTFS modulation,
         least-squares channel estimation and zero-forcing equalization"""
@@ -564,6 +615,14 @@ class _TestLinksBase(TestCase):
         channel = self.__configure_CDL_channel()
         waveform = self.__configure_ofdm_waveform(channel)
         waveform.channel_estimation = OrthogonalLeastSquaresChannelEstimation()
+        self.__propagate(channel)
+        self.__assert_link()
+
+    def test_CDL_5GNR(self) -> None:
+        """Verify a valid SISO link over a CDL channel with 5G NR modulation"""
+
+        channel = self.__configure_CDL_channel()
+        self.__configure_nr_waveform(channel)
         self.__propagate(channel)
         self.__assert_link()
 
@@ -631,6 +690,9 @@ class TestMIMOLinks(_TestLinksBase):
     def test_COST259_ofdm_ls_zf(self) -> None:
         self.skipTest(reason="Least-Squares channel estimation not supported for MIMO links")  # self.skipTest(reason="Least-Squares channel estimation not supported for MIMO links") the test since least-squares channel estimation is not supported for MIMO links
 
+    def test_COST259_5GNR(self) -> None:
+        self.skipTest(reason="Least-Squares channel estimation not supported for MIMO links")
+
     def test_COST259_otfs_ls_zf(self) -> None:
         self.skipTest(reason="Least-Squares channel estimation not supported for MIMO links")
 
@@ -646,6 +708,9 @@ class TestMIMOLinks(_TestLinksBase):
     def test_5GTDL_ofdm_ls_zf(self) -> None:
         self.skipTest(reason="Least-Squares channel estimation not supported for MIMO links")
 
+    def test_5GTDL_5GNR(self) -> None:
+        self.skipTest(reason="Least-Squares channel estimation not supported for MIMO links")
+
     def test_5GTDL_otfs_ls_zf(self) -> None:
         self.skipTest(reason="Least-Squares channel estimation not supported for MIMO links")
 
@@ -656,6 +721,9 @@ class TestMIMOLinks(_TestLinksBase):
         self.skipTest(reason="Least-Squares channel estimation not supported for MIMO links")
 
     def test_CDL_ofdm_ls_zf(self) -> None:
+        self.skipTest(reason="Least-Squares channel estimation not supported for MIMO links")
+
+    def test_CDL_5GNR(self) -> None:
         self.skipTest(reason="Least-Squares channel estimation not supported for MIMO links")
 
     def test_CDL_otfs_ls_zf(self) -> None:

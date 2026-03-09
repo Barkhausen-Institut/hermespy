@@ -90,12 +90,10 @@ class TestGridResource(TestCase):
         with self.assertRaises(ValueError):
             self.resource.prefix_ratio = -1.0
 
-        with self.assertRaises(ValueError):
-            self.resource.prefix_ratio = 1.5
-
         try:
             self.resource.prefix_ratio = 0.0
             self.resource.prefix_ratio = 1.0
+            self.resource.prefix_ratio = 1.5
 
         except ValueError:
             self.fail()

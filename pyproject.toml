@@ -115,7 +115,9 @@ cmake.args = [
 editable.mode = "redirect"
 ninja.make-fallback = true
 logging.level = "INFO"
-sdist.include = []
+sdist.include = [
+    "/hermespy/modem/waveforms/resources/ofdm_ldpc.alist",
+]
 sdist.exclude = [
     "/_examples/",
     "/docssource/",

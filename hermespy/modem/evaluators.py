@@ -239,15 +239,17 @@ class BitErrorEvaluator(CommunicationEvaluator, Serializable):
     def evaluate(self) -> BitErrorEvaluation:
         # Retrieve transmitted and received bits
         transmission, reception = self._fetch_dsp_results()
-        transmitted_bits = transmission.bits
-        received_bits = reception.bits
+        transmitted_bits = transmission.bits.astype(np.int8)
+        received_bits = reception.bits.astype(np.int8)
 
         # Pad bit sequences (if required)
         num_bits = max(len(received_bits), len(transmitted_bits))
         padded_transmission = np.append(
-            transmitted_bits, np.zeros(num_bits - len(transmitted_bits), dtype=np.uint8)
+            transmitted_bits, np.zeros(num_bits - len(transmitted_bits), dtype=np.int8)
         )
-        padded_reception = np.append(received_bits, np.zeros(num_bits - len(received_bits), dtype=np.uint8))
+        padded_reception = np.append(
+            received_bits, np.zeros(num_bits - len(received_bits), dtype=np.int8)
+        )
 
         # Compute bit errors as the positions where both sequences differ.
         # Note that this requires the sequences to be in 0/1 format!
