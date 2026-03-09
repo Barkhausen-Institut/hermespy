@@ -3,7 +3,7 @@
 from unittest import TestCase
 
 from hermespy.modem.waveforms.ieee_5gnr import NRFrame, NRSlot, NRSubframe, nr_bandwidth
-
+from unit_tests.core.test_factory import test_roundtrip_serialization  # type: ignore
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
@@ -30,6 +30,12 @@ class TestNRSlot(TestCase):
 
         self.assertAlmostEqual(self.slot.frame_duration(bandwidth), nr_slot_duration_numerology_0, delta=0.01 * nr_slot_duration_numerology_0)
 
+    def test_serialization(self) -> None:
+        """Test NR slot serialization."""
+
+        test_roundtrip_serialization(self, self.slot)
+
+
 
 class TestNRSubframe(TestCase):
     """Test the 5G NR subframe mockup implementation."""
@@ -49,6 +55,11 @@ class TestNRSubframe(TestCase):
             with self.subTest(numerology=numerology):
                 self.assertAlmostEqual(subframe.frame_duration(bandwidth), 1e-3, delta=0.01*1e-3)
 
+    def test_serialization(self) -> None:
+        """Test NR subframe serialization."""
+
+        test_roundtrip_serialization(self, self.subframe)
+
 
 class TestNRFrame(TestCase):
     """Test the 5G NR frame mockup implementation."""
@@ -67,3 +78,8 @@ class TestNRFrame(TestCase):
 
             with self.subTest(numerology=numerology):
                 self.assertAlmostEqual(frame.frame_duration(bandwidth), 1e-2, delta=0.01*1e-2)
+
+    def test_serialization(self) -> None:
+        """Test NR frame serialization."""
+
+        test_roundtrip_serialization(self, self.frame)

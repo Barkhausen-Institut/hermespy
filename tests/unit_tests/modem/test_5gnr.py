@@ -3,6 +3,7 @@
 from unittest import TestCase
 
 from hermespy.modem import NRSlotLink
+from unit_tests.core.test_factory import test_roundtrip_serialization  # type: ignore
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2026, Barkhausen Institut gGmbH"
@@ -26,3 +27,8 @@ class TestNRSlotLink(TestCase):
         """Ensure the link is configured with the correct default parameters."""
 
         self.assertEqual(self.link.waveform.num_resource_blocks, self.num_resource_blocks)
+
+    def test_serialization(self) -> None:
+        """Test NR slot link serialization."""
+
+        test_roundtrip_serialization(self, self.link)
