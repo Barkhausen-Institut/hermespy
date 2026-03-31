@@ -13,6 +13,7 @@ from matplotlib.axes import Axes
 from hermespy.core import (
     Evaluator,
     Hook,
+    QuadMeshVisualization,
     Receiver,
     Reception,
     Signal,
@@ -748,6 +749,99 @@ class RadarRangePlot(HardwareLoopPlot[PlotVisualization]):
 
     def _update_plot(self, sample: HardwareLoopSample, visualization: PlotVisualization) -> None:
         self.__get_cube().plot_range.update_visualization(visualization)
+
+    def __del__(self) -> None:
+        self.__hook.remove()
+
+
+class RadarRangeVelocityPlot(HardwareLoopPlot[QuadMeshVisualization]):
+    """Plot of a radar's range-velocity power profile.""" ""
+
+    __reception: RadarReception | None
+    __hook: Hook[RadarReception]
+    __radar: Radar
+
+    def __init__(
+        self,
+        radar: Radar,
+        title: str | None = None,
+        canvas: plt.FigureCanvasBase | None = None,
+        axes: VAT | None = None,
+    ) -> None:
+        """
+        Args:
+
+            radar:
+                Radar of which information is to be plotted.
+
+            title:
+                Title of the hardware loop plot.
+                If not specified, resorts to the default title of the plot.
+
+            canvas:
+                Canvas to plot into.
+                If not specified, a new canvas is created.
+
+            axes:
+                Visualization axes to plot into.
+                If not specified, a new figure is created.
+        """
+
+        # Initialize base class
+        HardwareLoopPlot.__init__(self, title, canvas, axes)
+
+        # Initialize class attributes
+        self.__reception = None
+        self.__hook = radar.add_receive_callback(self.__update_reception)
+        self.__radar = radar
+
+    def __update_reception(self, reception: RadarReception) -> None:
+        """Callback invoked by radar to notify the plot about new receptions.
+
+        Args:
+
+            reception:
+                The most recent reception.
+        """
+
+        self.__reception = reception
+
+    @property
+    def radar(self) -> Radar:
+        """Radar of which information is to be plotted."""
+
+        return self.__radar
+
+    @property
+    def _default_title(self) -> str:
+        return "Range-Velocity Power Profile"
+
+    def _prepare_plot(self) -> tuple[Figure, VAT]:
+        figure, axes = plt.subplots(1, 1, squeeze=False)
+        return figure, axes
+
+    def __get_cube(self) -> RadarCube:
+        """Fetch the radar cube from the radar reception.
+
+        Returns: The cube.
+        """
+
+        if not self.__reception:
+            raise RuntimeError("Radar reception is not available")
+
+        cube = self.__reception.cube
+        cube.normalize_power()  # This might be a problem since the normalization is in-place
+
+        return self.__reception.cube
+
+    def _initial_plot(self, sample: HardwareLoopSample, axes: VAT) -> QuadMeshVisualization:
+        cube = self.__get_cube()
+        plot = cube.plot_range_velocity(axes=axes)
+        # axes[0, 0].set_ylim((0.0, 1.1))
+        return plot
+
+    def _update_plot(self, sample: HardwareLoopSample, visualization: QuadMeshVisualization) -> None:
+        self.__get_cube().plot_range_velocity.update_visualization(visualization)
 
     def __del__(self) -> None:
         self.__hook.remove()

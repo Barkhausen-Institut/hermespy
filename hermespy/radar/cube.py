@@ -112,7 +112,7 @@ class _RangeVelocityPlot(VisualizableAttribute[QuadMeshVisualization]):
         range_velocity_profile = np.abs(np.sum(self.__cube.data, axis=0, keepdims=False))
         range_velocity_profile -= np.min(range_velocity_profile)
         range_velocity_profile /= np.max(range_velocity_profile)
-        visualization.mesh.set_array(range_velocity_profile)
+        visualization.mesh.update({'array': range_velocity_profile})
 
 
 class _AnglePlot(VisualizableAttribute[QuadMeshVisualization]):
