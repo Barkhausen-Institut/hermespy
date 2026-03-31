@@ -7,7 +7,7 @@ from unittest.mock import MagicMock
 import matplotlib.pyplot as plt
 
 from hermespy.core import Executable
-from hermespy.hardware_loop import DeviceReceptionPlot, DeviceTransmissionPlot, EyePlot, ReceivedConstellationPlot, RadarRangePlot, EvaluationPlot, ArtifactPlot, PhysicalDeviceDummy, HardwareLoopPlot, PhysicalScenarioDummy, HardwareLoop
+from hermespy.hardware_loop import DeviceReceptionPlot, DeviceTransmissionPlot, EyePlot, ReceivedConstellationPlot, RadarRangePlot, RadarRangeVelocityPlot, EvaluationPlot, ArtifactPlot, PhysicalDeviceDummy, HardwareLoopPlot, PhysicalScenarioDummy, HardwareLoop
 from hermespy.hardware_loop.hardware_loop import HardwareLoopSample
 from hermespy.modem import DuplexModem, RRCWaveform, BitErrorEvaluator
 from hermespy.radar import Radar, FMCW
@@ -141,6 +141,28 @@ class TestRadarRangePlot(_HardwareLoopPlotTest, TestCase):
         self.device.receivers.add(self.radar)
 
         self._prepare_plot(RadarRangePlot, self.radar)
+
+    def test_update_plot_validation(self) -> None:
+        """Updating the plot should raise a RuntimeError if no cube is available"""
+
+        with SimulationTestContext():
+            with self.assertRaises(RuntimeError):
+                self.plot.update_plot(MagicMock(spec=HardwareLoopSample))
+
+
+class TestRadarRangeVelocityPlot(_HardwareLoopPlotTest, TestCase):
+    """Test the radar range-velocity plot"""
+
+    def setUp(self) -> None:
+        super().setUp()
+
+        self.radar = Radar()
+        self.radar.waveform = FMCW()
+
+        self.device.transmitters.add(self.radar)
+        self.device.receivers.add(self.radar)
+
+        self._prepare_plot(RadarRangeVelocityPlot, self.radar)
 
     def test_update_plot_validation(self) -> None:
         """Updating the plot should raise a RuntimeError if no cube is available"""
