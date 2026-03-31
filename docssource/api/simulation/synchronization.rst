@@ -77,3 +77,4 @@ in between the two links.
    synchronization.RandomTrigger
    synchronization.SampleOffsetTrigger
    synchronization.TimeOffsetTrigger
+   synchronization.NormalTrigger
