@@ -72,6 +72,7 @@ from .simulated_device import (
     StaticTrigger,
     SampleOffsetTrigger,
     TimeOffsetTrigger,
+    NormalTrigger,
 )
 from .isolation import Isolation, SpecificIsolation, PerfectIsolation, SelectiveLeakage
 from .coupling import Coupling, ImpedanceCoupling, PerfectCoupling
@@ -166,7 +167,7 @@ __all__ = [
     "StaticTrigger",
     "SampleOffsetTrigger",
     "TimeOffsetTrigger",
-    "isolation",
+    "NormalTrigger",
     "Isolation",
     "SpecificIsolation",
     "PerfectIsolation",

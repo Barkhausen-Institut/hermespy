@@ -8,7 +8,23 @@ import numpy as np
 from numpy.testing import assert_array_equal
 
 from hermespy.core import DeviceInput, RandomNode, Signal, SignalReceiver, SignalTransmitter, Transformation
-from hermespy.simulation import N0, ProcessedSimulatedDeviceInput, SimulatedDevice, SimulatedDeviceOutput, SimulatedIdealAntenna, SimulatedUniformArray, SNR, TriggerModel, TriggerRealization, RandomTrigger, StaticTrigger, SampleOffsetTrigger, TimeOffsetTrigger, AWGNRealization
+from hermespy.simulation import (
+    N0,
+    ProcessedSimulatedDeviceInput,
+    SimulatedDevice,
+    SimulatedDeviceOutput,
+    SimulatedIdealAntenna,
+    SimulatedUniformArray,
+    SNR,
+    TriggerModel,
+    TriggerRealization,
+    RandomTrigger,
+    StaticTrigger,
+    SampleOffsetTrigger,
+    TimeOffsetTrigger,
+    NormalTrigger,
+    AWGNRealization,
+)
 from unit_tests.core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
@@ -24,7 +40,7 @@ __status__ = "Prototype"
 class MockTriggerModel(TriggerModel):
     """Trigger model implementation only for base class testing purposes"""
 
-    def realize(self) -> TriggerRealization:
+    def realize(self, rng: np.random.Generator | None = None) -> TriggerRealization:
         return TriggerRealization(0, 1.0)
 
 
@@ -245,6 +261,49 @@ class TestRandomTrigger(TestCase):
             realization = self.trigger_model.realize()
 
             self.assertEqual(0, realization.trigger_delay)
+
+
+class TestNormalTrigger(TestCase):
+    """Test the normal trigger implementation"""
+
+    def setUp(self) -> None:
+        self.mean = 10.678
+        self.std = 0.45
+        self.trigger_model = NormalTrigger(self.mean, self.std)
+
+    def test_realize(self) -> None:
+        """The realization routine should properly generated a random delay"""
+
+        self.trigger_model.seed = 42
+
+        for _ in range(10):
+            trigger_realization = self.trigger_model.realize()
+
+            self.assertEqual(1.0, trigger_realization.sampling_rate)
+            self.assertGreater(trigger_realization.num_offset_samples, 0)
+
+    def test_mean_setget(self) -> None:
+        """Mean property getter should return setter argument"""
+
+        self.trigger_model.mean = 11
+        self.assertEqual(11, self.trigger_model.mean)
+
+    def test_std_setget(self) -> None:
+        """Standard deviation property getter should return setter argument"""
+
+        self.trigger_model.std = 0.67
+        self.assertEqual(0.67, self.trigger_model.std)
+
+    def test_std_validation(self) -> None:
+        """Standard deviation property setter should raise ValueError on negative arguments"""
+
+        with self.assertRaises(ValueError):
+            self.trigger_model.std = -1.0
+
+    def test_serialization(self) -> None:
+        """Test trigger model serialization"""
+
+        test_roundtrip_serialization(self, self.trigger_model)
 
 
 class TestSimulatedDeviceOutput(TestCase):

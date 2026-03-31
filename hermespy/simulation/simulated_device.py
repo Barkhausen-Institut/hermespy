@@ -409,6 +409,80 @@ class RandomTrigger(TriggerModel):
         return cls()
 
 
+class NormalTrigger(TriggerModel):
+    """Model of a synchronization with a timing offset following a normal distribution."""
+
+    __mean: float
+    __std: float
+
+    def __init__(self, mean: float, std: float) -> None:
+        """
+        Args:
+
+            mean: Mean of the delay within this trigger group in seconds.
+            std: Standard deviation of the delay within this trigger group in seconds.
+        """
+
+        # Initialize class attributes
+        self.mean = mean
+        self.std = std
+
+        # Initialize base classes
+        TriggerModel.__init__(self)
+
+    @property
+    def mean(self) -> float:
+        """Mean timing offset in seconds."""
+
+        return self.__mean
+
+    @mean.setter
+    def mean(self, value: float) -> None:
+        self.__mean = value
+
+    @property
+    def std(self) -> float:
+        """Standard deviation of the timing offset in seconds.
+
+        Raises:
+            ValueError: If the provided value is negative.
+        """
+
+        return self.__std
+
+    @std.setter
+    def std(self, value: float) -> None:
+        if value < 0:
+            raise ValueError("Standard deviation must be non-negative")
+
+        self.__std = value
+
+    @override
+    def realize(self, rng: np.random.Generator | None = None) -> TriggerRealization:
+        # Query the sampling rate from one of the devices in the scenario (assuming all devices have the same sampling rate)
+        devices = list(self.devices)
+        sampling_rate = devices[0].sampling_rate if len(devices) > 0 else 1.0
+
+        # Select the proper random number generator
+        _rng = self._rng if rng is None else rng
+
+        trigger_delay = int(_rng.normal(loc=self.mean, scale=self.std) * sampling_rate)
+        return TriggerRealization(trigger_delay, sampling_rate)
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_floating(self.mean, 'mean')
+        process.serialize_floating(self.std, 'std')
+
+    @override
+    @classmethod
+    def Deserialize(cls: Type[NormalTrigger], process: DeserializationProcess) -> NormalTrigger:
+        return NormalTrigger(
+            mean=process.deserialize_floating('mean'),
+            std=process.deserialize_floating('std'),
+        )
+
+
 class SimulatedDeviceOutput(DeviceOutput):
     """Information transmitted by a simulated device"""
 
