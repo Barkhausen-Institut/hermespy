@@ -6,7 +6,7 @@ from functools import cache
 from typing import Generic, Iterable, SupportsInt, SupportsIndex, TypeVar
 
 import numpy as np
-from scipy.signal import butter, sosfiltfilt
+from scipy.signal import cheby2, cheb2ord, sosfiltfilt
 
 from hermespy.core import RandomNode, Serializable, SerializableEnum
 from .signal import RFSignal
@@ -162,12 +162,22 @@ class RFBlock(ABC, Generic[RFBRT], RandomNode, Serializable):
             Second-order sections of the anti-aliasing filter.
         """
 
-        min_cutoff = 1 / oversampling_factor
+        # Explanation:
+        # To anticipate aliasing effects in the following blocks,
+        # there should be enough space to fit the bandwith left and right of the current signal band.
+        # Therefore, the minimal cutoff is 1/3.
+        # The maximally possible cutoff is 0.5, i.e., half the sampling rate.
+        cutoff = 1 / oversampling_factor
+        min_cutoff = 1/3
         max_cutoff = 0.5
-        ideal_cutoff = 0.5 * (min_cutoff + max_cutoff)
-        cutoff = max(min_cutoff, min(max_cutoff, ideal_cutoff))
+        # selected_cutoff = max(min_cutoff, min(max_cutoff, cutoff))
 
-        return butter(16, cutoff, output="sos")
+        pass_ripple_dB = 0.01
+        stop_attenuation_dB = 40
+        selected_passband = max(min_cutoff, cutoff)
+        selected_stopband = max(max_cutoff, cutoff * 1.1)
+        order, wn = cheb2ord(selected_passband, selected_stopband, pass_ripple_dB, stop_attenuation_dB)
+        return cheby2(order, stop_attenuation_dB, wn, output='sos')
 
     def propagate(self, realization: RFBRT, input: RFSignal, filter: bool = True) -> RFSignal:
         """Propagate the input signals through the radio-frequency block.
@@ -193,20 +203,33 @@ class RFBlock(ABC, Generic[RFBRT], RandomNode, Serializable):
 
         # Propagate the input signals through the block
         propagated_signal = self._propagate(realization, input)
+        num_propagated_samples = propagated_signal.num_samples
+
+        if filter and realization.oversampling_factor > 1:
+
+            # Generate an anti-aliasing filter for the current bandwidth and oversampling factor
+            antialiasing_filter_sos = RFBlock._antialiasing_filter(realization.bandwidth, realization.oversampling_factor)
+
+            # Append zeros to the propagated signal if it is too short to be filtered with the anti-aliasing filter
+            if propagated_signal.num_samples < (antialiasing_filter_sos.shape[1] + 1) * 4:
+                padded_samples = propagated_signal.append_samples(np.zeros((propagated_signal.num_streams, (antialiasing_filter_sos.shape[1] + 1) * 4 - propagated_signal.num_samples), dtype=np.complex128))
+                propagated_signal = RFSignal(
+                    propagated_signal.num_streams,
+                    padded_samples.shape[1],
+                    propagated_signal.sampling_rate,
+                    propagated_signal.carrier_frequencies,
+                    propagated_signal.noise_powers,
+                    propagated_signal.delay,
+                    padded_samples.tobytes(),
+                )
 
         # Add noise to the propagated signal
         noisy_propagated_signal = realization.noise_realization.add_to(propagated_signal)
 
         # Apply an anti-aliasing filter if oversampling is used
-        if (
-            filter
-            and realization.oversampling_factor > 1
-            and noisy_propagated_signal.num_samples > 51
-        ):
+        if filter and realization.oversampling_factor > 1:
             filtered_output = sosfiltfilt(
-                RFBlock._antialiasing_filter(
-                    realization.bandwidth, realization.oversampling_factor
-                ),
+                antialiasing_filter_sos,
                 noisy_propagated_signal,
                 axis=1,
             )
@@ -220,7 +243,7 @@ class RFBlock(ABC, Generic[RFBRT], RandomNode, Serializable):
                 filtered_output.tobytes(),
             )
 
-        return noisy_propagated_signal
+        return noisy_propagated_signal[:, :num_propagated_samples]
 
     @abstractmethod
     def _propagate(self, realization: RFBRT, input: RFSignal) -> RFSignal:
