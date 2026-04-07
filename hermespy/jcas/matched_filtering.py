@@ -214,7 +214,7 @@ class MatchedFilterJcas(
         min_range_bin = ceil(2 * self.min_range / resolution)
 
         # Create the cube object
-        range_bins = 0.5 * lags[min_range_bin:num_propagated_samples] * resolution
+        range_bins = lags[min_range_bin:num_propagated_samples] * resolution
         minmal_cube_data = cube_data[:, :, min_range_bin:num_propagated_samples]
         cube = RadarCube(minmal_cube_data, angle_bins, doppler_bins, range_bins, state.carrier_frequency)
 
@@ -257,13 +257,9 @@ class MatchedFilterJcas(
 
     @property
     def max_range(self) -> float:
-        """Maximally Estimated Range.
-
-        Returns:
-            The maximum range in m.
+        """Maximally estimated reange in m.
 
         Raises:
-
             ValueError:
                 If `max_range` is smaller or equal to zero.
         """
