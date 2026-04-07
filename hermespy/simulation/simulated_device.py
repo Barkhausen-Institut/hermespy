@@ -133,8 +133,7 @@ class TriggerRealization(Serializable):
                 Delay already accounted for in seconds.
                 For example a signal model with a non-zero delay attribute.
 
-        Returns:
-            int: The integer number of trigger offset samples.
+        Returns: The integer number of trigger offset samples.
 
         Raises:
             ValueError: For a `sampling_rate` smaller or equal to zero.
@@ -145,8 +144,7 @@ class TriggerRealization(Serializable):
                 f"Sampling rate must be greater or equal to zero (not {sampling_rate})"
             )
 
-        num_offset_samples = int((self.trigger_delay - initial_delay) * sampling_rate)
-        return max(0, num_offset_samples)
+        return int((self.trigger_delay - initial_delay) * sampling_rate)
 
     def serialize(self, process: SerializationProcess) -> None:
         process.serialize_integer(self.num_offset_samples, "num_offset_samples")
@@ -1684,7 +1682,7 @@ class SimulatedDevice(Device[SimulatedDeviceState], Moveable):
         if trigger_realization is None:
             trigger_realization = self.trigger_model.realize()
 
-        # Apply the trigger delay to emergin and leaking signals
+        # Apply the trigger delay to emerging and leaking signals
         for signal in chain(emerging_signals, leaking_signals):
             signal.delay += trigger_realization.trigger_delay
 
@@ -1913,10 +1911,22 @@ class SimulatedDevice(Device[SimulatedDeviceState], Moveable):
                 mixed_signal = mixed_signal.to_dense()
 
         # Correct the trigger realization
+        synchronized_signal = mixed_signal
         num_trigger_offset_samples = _trigger_realization.compute_num_offset_samples(
             self.sampling_rate, mixed_signal.delay
         )
-        synchronized_signal = mixed_signal[:, num_trigger_offset_samples:]
+
+        if num_trigger_offset_samples > 0:
+            synchronized_signal = mixed_signal[:, num_trigger_offset_samples:]
+        elif num_trigger_offset_samples < 0:
+            synchronized_signal = DenseSignal.Zeros(
+                signal.num_streams,
+                num_trigger_offset_samples,
+                signal.sampling_rate,
+                signal.carrier_frequency,
+                signal.noise_power,
+            ).append_samples(synchronized_signal)
+
         synchronized_signal.delay = (
             mixed_signal.delay - num_trigger_offset_samples * self.sampling_rate
         )

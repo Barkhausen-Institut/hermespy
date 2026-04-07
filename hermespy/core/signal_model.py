@@ -1798,11 +1798,11 @@ class SparseSignal(Signal):
     @staticmethod
     def _getblocks_union(
         bs1: Sequence[SignalBlock], bs2: Sequence[SignalBlock]
-    ) -> tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[list[int], list[int]]:
         """Calculate new blocks offsets and ends for a union of 2 different signals.
 
         Returns:
-            A tuple of two numpy arrays:
+            A tuple of two lists:
             1. A list of new blocks offsets
             2. a list of new blocks ends
         """
@@ -1811,15 +1811,18 @@ class SparseSignal(Signal):
         nonzero_bs1 = (
             np.concatenate([np.arange(b.offset, b.offset + b.num_samples) for b in bs1])
             if len(bs1) != 0
-            else np.array([], int)
+            else np.empty(0, np.int64)
         )
         nonzero_bs2 = (
             np.concatenate([np.arange(b.offset, b.offset + b.num_samples) for b in bs2])
             if len(bs2) != 0
-            else np.array([], int)
+            else np.empty(0, np.int64)
         )
         # Join them (calculate a union)
         nz_cols_idx = np.union1d(nonzero_bs1, nonzero_bs2)
+
+        if len(nz_cols_idx) == 0:
+            return [], []
 
         # Transform column indices to new block starts and stops
         # Find block starts in the nz_cols_idx
@@ -1832,7 +1835,7 @@ class SparseSignal(Signal):
         # Find blocks offsets
         b_offs = nz_cols_idx[b_offs_idx]
 
-        return b_offs, b_stops
+        return b_offs.tolist(), b_stops.tolist()
 
     @staticmethod
     def __parse_slice(s: slice, dim_size: int) -> tuple[int, int, int]:
@@ -2296,9 +2299,7 @@ class SparseSignal(Signal):
                 bs_new, self.sampling_rate, self.carrier_frequency, self.noise_power, self.delay
             )
             blocks_new_mid_new = []
-            for i in range(b_offs.size):
-                b_off = b_offs[i]
-                b_stop = b_stops[i]
+            for b_off, b_stop in zip(b_offs, b_stops):
                 b_new = self[(slice(None, None), slice(b_off, b_stop))].view(np.ndarray)
                 b_new[stream_idx, :] = incoming_signal[:, b_off : min(b_stop, s11)]
 
@@ -2356,12 +2357,19 @@ class SparseSignal(Signal):
 
         # If the superimposed signal's delay is smaller,
         # cut its leading samples accordingly
+        added_blocks: Sequence[SignalBlock] = added_signal.blocks
         if self.delay > added_signal.delay:
             if interpolation is InterpolationMode.NEAREST:
                 added_signal_shift = int(
                     round((self.delay - added_signal.delay) * added_signal.sampling_rate)
                 )
                 added_signal = added_signal[:, added_signal_shift:]
+
+                # Do nothing if the added signal is empty
+                if added_signal.num_samples == 0:
+                    return self
+
+                added_blocks = added_signal.blocks
             else:
                 raise NotImplementedError("Only InterpolationMode.NEAREST is implemented")
 
@@ -2371,18 +2379,13 @@ class SparseSignal(Signal):
             num_delay_samples = int(
                 round((added_signal.delay - self.delay) * added_signal.sampling_rate)
             )
-            added_signal = added_signal.copy()
-            added_signal.delay = 0.0
+            added_blocks = added_signal.blocks
             if interpolation is InterpolationMode.NEAREST:
-                for b in added_signal.blocks:
+                for b in added_blocks:
                     b.offset += num_delay_samples
 
             else:
                 raise NotImplementedError("Only InterpolationMode.NEAREST is implemented")
-
-        # Do nothing if the added signal is empty
-        if added_signal.num_samples == 0:
-            return self
 
         # Parse stream indices
         num_streams = added_signal.num_streams if stream_indices is None else len(stream_indices)
@@ -2412,7 +2415,7 @@ class SparseSignal(Signal):
                 self.sampling_rate,
                 added_signal.carrier_frequency,
             )
-            for b in added_signal.blocks
+            for b in added_blocks
         ]
 
         # Create new blocks for the signals' intersections
@@ -2454,7 +2457,11 @@ class SparseSignal(Signal):
             )
 
         return SparseSignal(
-            unified_blocks, self.sampling_rate, self.carrier_frequency, self.noise_power, self.delay
+            unified_blocks if len(unified_blocks) != 0 else np.empty((self.num_streams, 0), np.complex128),
+            self.sampling_rate,
+            self.carrier_frequency,
+            self.noise_power,
+            self.delay,
         )
 
     @override
