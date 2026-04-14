@@ -6,8 +6,8 @@ from hermespy.simulation import SimulatedDevice
 from hermespy.modem import TransmittingModem, ReceivingModem, RootRaisedCosineWaveform, BitErrorEvaluator
 
 # Create two simulated devices acting as source and sink
-tx_device = SimulatedDevice()
-rx_device = SimulatedDevice()
+tx_device = SimulatedDevice(oversampling_factor=4)
+rx_device = SimulatedDevice(oversampling_factor=4)
 
 # Define a transmit operation on the first device
 tx_operator = TransmittingModem()

@@ -26,34 +26,17 @@ from ... import (
 )
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2026, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.5.0"
+__version__ = "1.6.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
 class TIXWR1843(RadarWaveform, RFChain):
-    """Model of the Texas Instruments AWR1843 / IWR1843 radar SoC.
-
-    .. list-table:: Modeled Parameters
-       :header-rows: 1
-       * - Parameter
-         - Value
-       * - Phase noise at :math:`10~\\mathrm{MHz}` offset
-         - :math:`-93~\\mathrm{dBc/Hz}`
-       * - Output Power
-         - :math:`12~\\mathrm{dBm}`
-       * - ADC sampling rate
-         - :math:`25~\\mathrm{MHz}`
-       * - ADC resolution
-         - :math:`12~\\mathrm{bit}`
-
-    https://www.ti.com/product/AWR1843
-    https://www.ti.com/product/IWR1843
-    """
+    """Model of the Texas Instruments AWR1843 / IWR1843 radar SoC."""
 
     __min_carrier_frequency = 76e9
     __max_carrier_frequency = 81e9

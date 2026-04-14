@@ -1,0 +1,22 @@
+=========================
+Texas Instruments xWR1843
+=========================
+
+.. note::
+   These presets are currently under active development and may still contain inaccuracies.
+
+.. inheritance-diagram:: hermespy.simulation.rf.presets.ti.xwr1843.TIXWR1843
+   :parts: 1
+
+Implementation of a block-based radio-frequency front-end model following the datasheet of Texas Instruments' `AWR1843`_ and `IWR1843`_ radar SoCs.
+It can be used within a simulation-context by assigning it as a simulated device's rf chain model and as a monostatic radar DSP's waveform description:
+
+.. literalinclude:: ../../../../scripts/examples/simulation_rf_presets_xwr1843.py
+   :language: python
+   :linenos:
+   :lines: 17-40
+
+.. autoclass:: hermespy.simulation.rf.presets.ti.xwr1843.TIXWR1843
+
+.. _AWR1843: https://www.ti.com/product/AWR1843
+.. _IWR1843: https://www.ti.com/product/IWR1843

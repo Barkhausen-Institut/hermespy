@@ -10,10 +10,10 @@ from hermespy.beamforming import TransmitBeamformer, ReceiveBeamformer
 from hermespy.core import AntennaArrayState, DeserializationProcess, SerializationProcess
 
 __author__ = "Alan Thomas"
-__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2026, Barkhausen Institut gGmbH"
 __credits__ = ["Alan Thomas", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.5.0"
+__version__ = "1.6.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"

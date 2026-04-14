@@ -32,6 +32,7 @@ Contributions are highly welcome and can be made by means of `GitHub pull reques
 For issue reports and feature requests please open a new `GitHub issue`_
 or directly contact the current `maintainer`_.
 
+
 .. toctree::
    :hidden:
    :maxdepth: 1

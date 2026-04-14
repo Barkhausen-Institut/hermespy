@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 
+import numpy as np
+
 from hermespy.hardware_loop import HardwareLoop, UsrpSystem, UsrpDevice
 from hermespy.modem import SimplexLink, RRCWaveform, SCCorrelationSynchronization, SCLeastSquaresChannelEstimation, SCZeroForcingChannelEqualization, BitErrorEvaluator
 from hermespy.core import Verbosity
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2026, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.4.0"
+__version__ = "1.6.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -53,8 +55,8 @@ ber = BitErrorEvaluator(link, link)
 loop.add_evaluator(ber)
 
 # Configure  a parameter sweep over the TX gain (i.e. transmit power) of the device
-#gains = linspace(0, 40, 5, endpoint=True)
-#loop.new_dimension('tx_gain', gains, transmitting_device)
+gains = np.linspace(0, 40, 5, endpoint=True)
+loop.new_dimension('tx_gain', gains, transmitting_device)
 
 # Execute the pipeline
 loop.num_drops = 100

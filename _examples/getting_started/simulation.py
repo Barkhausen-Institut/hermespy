@@ -9,8 +9,8 @@ from hermespy.modem import BitErrorEvaluator, SimplexLink, RootRaisedCosineWavef
 simulation = Simulation()
 
 # Add two dedicated devices to the simulation
-tx_device = simulation.new_device()
-rx_device = simulation.new_device()
+tx_device = simulation.new_device(oversampling_factor=4)
+rx_device = simulation.new_device(oversampling_factor=4)
 
 # Specify the hardware noise model
 tx_device.noise_level = SNR(dB(20), tx_device)
