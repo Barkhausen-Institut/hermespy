@@ -11,10 +11,10 @@ from ..symbols import StatedSymbols
 from .symbol_precoding import TransmitSymbolEncoder, ReceiveSymbolDecoder
 
 __author__ = "Tobias Kronauer"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2026, Barkhausen Institut gGmbH"
 __credits__ = ["Tobias Kronauer", "Jan Adler", "Egor Achkasov"]
 __license__ = "AGPLv3"
-__version__ = "1.5.0"
+__version__ = "1.6.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"

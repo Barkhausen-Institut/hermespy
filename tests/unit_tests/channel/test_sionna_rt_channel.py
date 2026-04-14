@@ -21,10 +21,10 @@ from unit_tests.core.test_factory import test_roundtrip_serialization  # type: i
 from unit_tests.utils import assert_signals_equal  # type: ignore
 
 __author__ = "Egor Achkasov"
-__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2026, Barkhausen Institut gGmbH"
 __credits__ = ["Egor Achkasov", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.5.0"
+__version__ = "1.6.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"

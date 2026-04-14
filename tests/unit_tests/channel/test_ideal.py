@@ -16,10 +16,10 @@ from unit_tests.core.test_factory import test_roundtrip_serialization
 from unit_tests.utils import assert_signals_equal
 
 __author__ = "Andre Noll Barreto"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2026, Barkhausen Institut gGmbH"
 __credits__ = ["Andre Noll Barreto", "Tobias Kronauer", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.5.0"
+__version__ = "1.6.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"

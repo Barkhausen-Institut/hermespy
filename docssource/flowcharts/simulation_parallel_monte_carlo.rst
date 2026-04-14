@@ -1,7 +1,6 @@
 .. mermaid::
    :align: center
 
-   %%{init: {"flowchart":{"useMaxWidth": false}}}%%
    flowchart TD
 
    pla[Simulated Physical Layer]

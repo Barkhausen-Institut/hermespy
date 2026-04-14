@@ -123,8 +123,8 @@ which both inherit from the abstract :doc:`Device<api/core/device.Device>` base:
    Device *--* Receiver
 
    link Device "api/core/device.Device.html" "Device"
-   link PhysicalDevice "api/hardware_loop.physical_device.PhysicalDevice.html" "Physical Device"
-   link SimulatedDevice "api/simulation.simulated_device.html" "Simulated Device"
+   link PhysicalDevice "api/hardware_loop/physical_device.PhysicalDevice.html" "Physical Device"
+   link SimulatedDevice "api/simulation/simulated_device.html" "Simulated Device"
    link Transmitter "api/core/device.Transmitter.html"
    link Receiver "api/core/device.Receiver.html"
 
@@ -274,10 +274,10 @@ which represents the physical layer description of the hardware loop.
    dbi -.-> world -.-> dbo
    dbi -.-> world -.-> dao
 
-   click dai "api/hardware_loop.physical_device.PhysicalDevice.html" "Physical Device"
-   click dbi "api/hardware_loop.physical_device.PhysicalDevice.html" "Physical Device"
-   click dao "api/hardware_loop.physical_device.PhysicalDevice.html" "Physical Device"
-   click dbo "api/hardware_loop.physical_device.PhysicalDevice.html" "Physical Device"
+   click dai "api/hardware_loop/physical_device.PhysicalDevice.html" "Physical Device"
+   click dbi "api/hardware_loop/physical_device.PhysicalDevice.html" "Physical Device"
+   click dao "api/hardware_loop/physical_device.PhysicalDevice.html" "Physical Device"
+   click dbo "api/hardware_loop/physical_device.PhysicalDevice.html" "Physical Device"
 
 When compared to simulations, :doc:`Hardware Loops<api/hardware_loop/index>` obvisouly lack channel and hardware modeling capabilities.
 Instead, each trigger of a :doc:`PhysicalDevice<api/hardware_loop/physical_device.PhysicalDevice>` will generate a transmission and transmit the

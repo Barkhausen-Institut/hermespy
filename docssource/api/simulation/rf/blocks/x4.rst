@@ -2,8 +2,13 @@
 Frequency Multipliers
 =====================
 
+.. inheritance-diagram:: hermespy.simulation.rf.blocks.x4.X4
+   :parts: 1
+
 Radio-Frequency (RF) frequency multipliers are non-linear components that generate output signals at integer multiples of the input signal frequency.
 They are commonly used in communication and radar systems to achieve higher frequencies from lower-frequency sources.
 In the process, they may introduce harmonic distortion, phase noise, and conversion loss.
 
 This module provides various numerical models of RF frequency multipliers.
+
+.. autoclass:: hermespy.simulation.rf.blocks.x4.X4

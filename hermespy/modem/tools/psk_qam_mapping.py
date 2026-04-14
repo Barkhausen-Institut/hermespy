@@ -8,10 +8,10 @@ import numpy as np
 from hermespy.core import Serializable, SerializationProcess, DeserializationProcess
 
 __author__ = "André Noll Barreto"
-__copyright__ = "Copyright 2024, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2026, Barkhausen Institut gGmbH"
 __credits__ = ["André Barreto", "Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.5.0"
+__version__ = "1.6.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"

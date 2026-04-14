@@ -2,7 +2,7 @@ variables:
   IMAGE_PREFIX: $CI_REGISTRY/barkhauseninstitut/wicon/hermespy
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   GIT_SUBMODULE_STRATEGY: recursive
-  HERMES_VERSION: "1.5.0"
+  HERMES_VERSION: "1.6.0"
   HERMES_WHEEL_13: "hermespy-$HERMES_VERSION-cp313-cp313-linux_x86_64.whl"
   HERMES_WHEEL_12: "hermespy-$HERMES_VERSION-cp312-cp312-linux_x86_64.whl"
   HERMES_WHEEL_11: "hermespy-$HERMES_VERSION-cp311-cp311-linux_x86_64.whl"

@@ -13,10 +13,10 @@ from .signal import RFSignal
 from .noise import AWGN, NoiseLevel, NoiseModel, NoiseRealization, N0
 
 __author__ = "Jan Adler"
-__copyright__ = "Copyright 2025, Barkhausen Institut gGmbH"
+__copyright__ = "Copyright 2026, Barkhausen Institut gGmbH"
 __credits__ = ["Jan Adler"]
 __license__ = "AGPLv3"
-__version__ = "1.5.0"
+__version__ = "1.6.0"
 __maintainer__ = "Jan Adler"
 __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
@@ -168,14 +168,11 @@ class RFBlock(ABC, Generic[RFBRT], RandomNode, Serializable):
         # Therefore, the minimal cutoff is 1/3.
         # The maximally possible cutoff is 0.5, i.e., half the sampling rate.
         cutoff = 1 / oversampling_factor
-        min_cutoff = 1/3
-        max_cutoff = 0.5
-        # selected_cutoff = max(min_cutoff, min(max_cutoff, cutoff))
-
         pass_ripple_dB = 0.01
         stop_attenuation_dB = 40
-        selected_passband = max(min_cutoff, cutoff)
-        selected_stopband = max(max_cutoff, cutoff * 1.1)
+        selected_passband = max(1/3, cutoff)
+        selected_stopband = max(0.5, cutoff * 1.1)
+
         order, wn = cheb2ord(selected_passband, selected_stopband, pass_ripple_dB, stop_attenuation_dB)
         return cheby2(order, stop_attenuation_dB, wn, output='sos')
 

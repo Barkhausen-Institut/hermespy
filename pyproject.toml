@@ -14,7 +14,7 @@ include = ["hermespy.*"]
 
 [project]
 name = "hermespy"
-version = "1.5.0"
+version = "1.6.0"
 authors = [
     {name = "Jan Adler", email ="jan.adler@barkhauseninstitut.org"},
 ]
@@ -105,12 +105,7 @@ shermes = "hermespy.tools.shermes:sHermes"
 [tool.scikit-build]
 cmake.build-type = "Release"  # "Debug" or "Release"
 cmake.args = [
-#    "-DCMAKE_POLICY_VERSION_MINIMUM=3.5",
-#    '-DCMAKE_CXX_COMPILER=C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.40.33807\\bin\\HostX64\\x64\\cl.exe',
-#    "-DCMAKE_SYSTEM_VERSION=11.0",
-#    '-G Visual Studio 15 2017 -A Win32',
     "--debug-output",
-#    " -D CMAKE_CXX_COMPILER_ID:STRING=MSVC",
 ]
 editable.mode = "redirect"
 ninja.make-fallback = true
@@ -169,7 +164,7 @@ module = "numpy.*,scipy.*,oct2py.*,matlab.*,matplotlib.*,ruamel.*,numba.*,h5py.*
 ignore_missing_imports = true
 
 [bumpver]
-current_version = "1.5.0"
+current_version = "1.6.0"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message = "Bump to version {new_version}"
 commit = false
