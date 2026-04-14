@@ -1,0 +1,10 @@
+<map id="inheritance6cd7f0c647" name="inheritance6cd7f0c647">
+<area shape="rect" id="node1" href="#hermespy.simulation.rf.noise.model.AWGN" target="_top" title="Additive White Gaussian Noise." alt="" coords="116,152,188,177"/>
+<area shape="rect" id="node2" href="#hermespy.simulation.rf.noise.model.NoiseModel" target="_top" title="Noise modeling base class." alt="" coords="103,79,201,104"/>
+<area shape="rect" id="node3" href="#hermespy.simulation.rf.noise.model.AWGNRealization" target="_top" title="Realization of additive white Gaussian noise" alt="" coords="232,225,368,251"/>
+<area shape="rect" id="node4" href="#hermespy.simulation.rf.noise.model.NoiseRealization" target="_top" title="Realization of a noise model" alt="" coords="234,152,366,177"/>
+<area shape="rect" id="node5" href="https://docs.python.org/3/library/typing.html#typing.Generic" target="_top" title="Abstract base class for generic types." alt="" coords="5,5,77,31"/>
+<area shape="rect" id="node6" href="../../../core/factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="247,5,345,31"/>
+<area shape="rect" id="node8" href="../../../core/random_node.html#hermespy.core.random_node.RandomRealization" target="_top" title="Realization of a random node." alt="" coords="225,79,375,104"/>
+<area shape="rect" id="node7" href="../../../core/random_node.html#hermespy.core.random_node.RandomNode" target="_top" title="Random Node within a random dependency graph." alt="" coords="102,5,213,31"/>
+</map>

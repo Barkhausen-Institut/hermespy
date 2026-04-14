@@ -2,7 +2,7 @@
 Audio Device
 ============
 
-.. inheritance-diagram:: hermespy.hardware_loop.audio.device.AudioDevice hermespy.hardware_loop.audio.device.AudioAntenna hermespy.hardware_loop.audio.device.AudioPort hermespy.hardware_loop.audio.device.AudioPlaybackPort hermespy.hardware_loop.audio.device.AudioRecordPort hermespy.hardware_loop.audio.device.AudioDeviceAntennas
+.. inheritance-diagram:: hermespy.hardware_loop.audio.device.AudioDevice hermespy.hardware_loop.audio.device.AudioDeviceAntennas
    :parts: 1
 
 Hermes hardware bindings to audio devices offer the option to benchmark complex-valued
@@ -13,12 +13,6 @@ which is typically either :math:`44.1~\\mathrm{kHz}` or :math:`48~\\mathrm{kHz}`
 .. autoclass:: hermespy.hardware_loop.audio.device.AudioDevice
 
 .. autoclass:: hermespy.hardware_loop.audio.device.AudioAntenna
-
-.. autoclass:: hermespy.hardware_loop.audio.device.AudioPort
-
-.. autoclass:: hermespy.hardware_loop.audio.device.AudioPlaybackPort
-
-.. autoclass:: hermespy.hardware_loop.audio.device.AudioRecordPort
 
 .. autoclass:: hermespy.hardware_loop.audio.device.AudioDeviceAntennas
 

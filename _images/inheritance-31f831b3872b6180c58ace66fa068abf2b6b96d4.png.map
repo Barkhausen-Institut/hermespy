@@ -1,0 +1,7 @@
+<map id="inheritance641d7681ad" name="inheritance641d7681ad">
+<area shape="rect" id="node1" href="https://docs.python.org/3/library/abc.html#abc.ABC" target="_top" title="Helper class that provides a standard way to create an ABC using" alt="" coords="5,5,77,31"/>
+<area shape="rect" id="node2" href="#hermespy.core.pymonte.artifact.Artifact" target="_top" title="Result of an investigated object evaluation." alt="" coords="5,79,77,104"/>
+<area shape="rect" id="node3" href="#hermespy.core.pymonte.artifact.ArtifactTemplate" target="_top" title="Scalar numerical result of an investigated object evaluation." alt="" coords="31,152,161,177"/>
+<area shape="rect" id="node4" href="https://docs.python.org/3/library/typing.html#typing.Generic" target="_top" title="Abstract base class for generic types." alt="" coords="101,79,173,104"/>
+<area shape="rect" id="node5" href="#hermespy.core.pymonte.artifact.MonteCarloSample" target="_top" title="Single sample of a Monte Carlo simulation." alt="" coords="257,5,404,31"/>
+</map>

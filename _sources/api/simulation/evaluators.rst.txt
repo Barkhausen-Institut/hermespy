@@ -2,9 +2,6 @@
 Evaluators
 ===========
 
-.. inheritance-diagram:: hermespy.simulation.evaluators.interference.SI hermespy.simulation.evaluators.interference.SSINR
-   :parts: 1
-
 A few evaluators are only available within simulation scenarios,
 since they rely on information based on models.
 
@@ -20,8 +17,14 @@ since they rely on information based on models.
    * - :class:`SSINR<hermespy.simulation.evaluators.interference.SSINR>`
      - Evaluates the signal-to-self-interference-plus-noise ratio of a simulated device.
 
-.. autoclass:: hermespy.simulation.evaluators.interference.SI
+   * - :class:`SidelobeEvaluator<hermespy.simulation.evaluators.beamforming.SidelobeEvaluator>`
+     - Evaluates the directivity of a multi-antenna device.
 
-.. autoclass:: hermespy.simulation.evaluators.interference.SSINR
+.. toctree::
+   :glob:
+   :hidden:
+   :maxdepth: 1
+
+   evaluators.*
 
 .. footbibliography::

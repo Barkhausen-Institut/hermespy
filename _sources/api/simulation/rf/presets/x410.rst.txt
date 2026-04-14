@@ -1,0 +1,21 @@
+==========
+Ettus X410
+==========
+
+.. note::
+   These presets are currently under active development and may still contain inaccuracies.
+
+.. inheritance-diagram:: hermespy.simulation.rf.presets.ettus.x410.X410
+   :parts: 1
+
+Implementation of a block-based radio-frequency front-end model following the datasheet of Ettus' `USRP X410`_ software-defined radio.
+It can be used within a simulation-context by assigning it as a simulated device's rf chain model:
+
+.. literalinclude:: ../../../../scripts/examples/simulation_rf_presets_x410.py
+   :language: python
+   :linenos:
+   :lines: 14-50
+
+.. autoclass:: hermespy.simulation.rf.presets.ettus.x410.X410
+
+.. _USRP X410: https://www.ni.com/docs/de-DE/bundle/ettus-usrp-x410-specs/page/specs.html

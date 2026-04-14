@@ -9,9 +9,9 @@ It is split into several interdependent sub-modules:
 .. toctree::
    :maxdepth: 1
 
+   pymonte/index
    device.Device
    scenario
-   monte_carlo
    signal
    antennas
    channel

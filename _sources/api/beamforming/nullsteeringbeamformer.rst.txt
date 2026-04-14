@@ -68,21 +68,21 @@ A digital antenna array consisting of ideal isotropic antenna elements spaced at
 .. literalinclude:: ../../scripts/examples/beamforming_nullsteeringbeamformer_Tx.py
    :language: python
    :linenos:
-   :lines: 7-20
+   :lines: 15-19
 
 To probe the characterestics a cosine waveform is generated as the transmit waveform.
 
 .. literalinclude:: ../../scripts/examples/beamforming_nullsteeringbeamformer_Tx.py
    :language: python
    :linenos:
-   :lines: 22-34
+   :lines: 24-28
 
 The base station device is configured to transmit the beamformed signal by assigning the NullSteeringBeamformer to the base station device.
 
 .. literalinclude:: ../../scripts/examples/beamforming_nullsteeringbeamformer_Tx.py
    :language: python
    :linenos:
-   :lines: 36-45
+   :lines: 38-42
 
 Now the simulation can be extended to evalaute the performance in a real world communication scenario.
 For this three devices representing the UEs are added, to be illuminated by the BS.
@@ -90,14 +90,14 @@ For this three devices representing the UEs are added, to be illuminated by the 
 .. literalinclude:: ../../scripts/examples/beamforming_nullsteeringbeamformer_Tx.py
    :language: python
    :linenos:
-   :lines: 47-60
+   :lines: 45-56
 
 The user equipments can be configured to receive the signal by setting them up as receiving modems.
 
 .. literalinclude:: ../../scripts/examples/beamforming_nullsteeringbeamformer_Tx.py
    :language: python
    :linenos:
-   :lines: 61-70
+   :lines: 61-66
 
 Now as defined the nullsteeringbeamformer illuminates the maximum radiation on one UE whereas the nulls on the others.
 This can be realised by configuring the transmit foucs of the Beamformer.
@@ -105,21 +105,21 @@ This can be realised by configuring the transmit foucs of the Beamformer.
 .. literalinclude:: ../../scripts/examples/beamforming_nullsteeringbeamformer_Tx.py
    :language: python
    :linenos:
-   :lines: 71-79
+   :lines: 71-75
 
 The propgation characterestics between the BS and the UEs can be modelled using the SpatialDelayChannel Model.
 
 .. literalinclude:: ../../scripts/examples/beamforming_nullsteeringbeamformer_Tx.py
    :language: python
    :linenos:
-   :lines: 80-99
+   :lines: 80-96
 
 Now hermespy can be instructed to conduct a simulation campaign to evaluate the received signal power at the UEs by adding the evaluator.
 
 .. literalinclude:: ../../scripts/examples/beamforming_nullsteeringbeamformer_Tx.py
    :language: python
    :linenos:
-   :lines: 101-118
+   :lines: 101-115
 
 In the previous example the NullSteeringBeamformer was assigned to transmitting base station.
 The same example can be adpated to study the performance of the beamformer assigned to a receiving base station.
@@ -129,21 +129,21 @@ The base station is configured for reception.
 .. literalinclude:: ../../scripts/examples/beamforming_nullsteering_Rx.py
    :language: python
    :linenos:
-   :lines: 37-46
+   :lines: 41-45
 
 The UEs will be configured as transmitting.
 
 .. literalinclude:: ../../scripts/examples/beamforming_nullsteering_Rx.py
    :language: python
    :linenos:
-   :lines: 64-72
+   :lines: 66-71
 
 The receieve focus of the beamformer will be configured.
 
 .. literalinclude:: ../../scripts/examples/beamforming_nullsteering_Rx.py
    :language: python
    :linenos:
-   :lines: 75-82
+   :lines: 77-81
 
 The performance of the beamformer is studied by analysing the received signal quality from the respective UEs.
 For this purpose, the Error Vector Magnitude of the consetallation diagram of the Received signal is evaluated.
@@ -151,7 +151,7 @@ For this purpose, the Error Vector Magnitude of the consetallation diagram of th
 .. literalinclude:: ../../scripts/examples/beamforming_nullsteering_Rx.py
    :language: python
    :linenos:
-   :lines: 105-122
+   :lines: 107-121
 
 .. autoclass:: hermespy.beamforming.nullsteeringbeamformer.NullSteeringBeamformer
    :private-members: _encode, _decode

@@ -59,7 +59,7 @@ Initially, the :class:`ReceivingModem<hermespy.modem.modem.ReceivingModem>` will
 :class:`Signals<hermespy.core.signal_model.Signal>`, partitionin them into individual frames.
 For each frame, the :class:`ReceiveSignalCoding<hermespy.core.precoding.ReceiveSignalCoding>`
 configured by the :attr:`receive_signal_coding<hermespy.modem.modem.ReceivingModemBase.receive_signal_coding>`
-will be used to decode the incoming base-band sample streams from each :class:`AntennaPort<hermespy.core.antennas.AntennaPort>`.
+will be used to decode the incoming base-band sample streams from each digital RF port.
 Afterwards, each decoded stream will be :meth:`demodulated<hermespy.modem.waveform.CommunicationWaveform.demodulate>`,
 the channel will be :meth:`estimated<hermespy.modem.waveform.CommunicationWaveform.estimate_channel>` and
 the resulting :class:`StatedSymbols<hermespy.modem.symbols.StatedSymbols>` will be :meth:`picked<hermespy.modem.waveform.CommunicationWaveform.pick>`.

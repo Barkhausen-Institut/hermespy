@@ -1,0 +1,12 @@
+<map id="inheritancef075fc9351" name="inheritancef075fc9351">
+<area shape="rect" id="node1" href="https://docs.python.org/3/library/typing.html#typing.Generic" target="_top" title="Abstract base class for generic types." alt="" coords="53,79,125,104"/>
+<area shape="rect" id="node5" href="device.Receiver.html#hermespy.core.device.Receiver" target="_top" title="Operator receiving from a device." alt="" coords="314,152,393,177"/>
+<area shape="rect" id="node9" href="device.Transmitter.html#hermespy.core.device.Transmitter" target="_top" title="Operator transmitting over a device." alt="" coords="53,152,149,177"/>
+<area shape="rect" id="node2" href="device.MixingOperator.html#hermespy.core.device.MixingOperator" target="_top" title="Base class for operators performing mixing operations." alt="" coords="149,79,272,104"/>
+<area shape="rect" id="node3" href="factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="279,5,377,31"/>
+<area shape="rect" id="node6" href="#hermespy.core.operators.SignalReceiver" target="_top" title="Custom signal receiver." alt="" coords="323,225,442,251"/>
+<area shape="rect" id="node8" href="#hermespy.core.operators.SignalTransmitter" target="_top" title="Custom signal transmitter." alt="" coords="5,225,141,251"/>
+<area shape="rect" id="node10" href="#hermespy.core.operators.SilentTransmitter" target="_top" title="Silent transmitter mock." alt="" coords="165,225,299,251"/>
+<area shape="rect" id="node4" href="random_node.html#hermespy.core.random_node.RandomNode" target="_top" title="Random Node within a random dependency graph." alt="" coords="297,79,407,104"/>
+<area shape="rect" id="node7" href="#hermespy.core.operators.StaticOperator" target="_top" title="Base class for static device operators" alt="" coords="174,152,290,177"/>
+</map>

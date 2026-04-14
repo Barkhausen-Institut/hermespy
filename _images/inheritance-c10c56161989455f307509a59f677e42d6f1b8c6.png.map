@@ -1,0 +1,10 @@
+<map id="inheritance71a222efcd" name="inheritance71a222efcd">
+<area shape="rect" id="node1" href="https://docs.python.org/3/library/abc.html#abc.ABC" target="_top" title="Helper class that provides a standard way to create an ABC using" alt="" coords="179,5,251,31"/>
+<area shape="rect" id="node2" href="evaluation.html#hermespy.core.pymonte.evaluation.EvaluationResult" target="_top" title="Result of an evaluation routine iterating over a parameter grid." alt="" coords="25,152,157,177"/>
+<area shape="rect" id="node3" href="../visualize.html#hermespy.core.visualize.Visualizable" target="_top" title="Base class for visualizable results." alt="" coords="33,79,134,104"/>
+<area shape="rect" id="node4" href="evaluation.html#hermespy.core.pymonte.evaluation.Evaluator" target="_top" title="Evaluation routine for investigated object states, extracting performance indicators of interest." alt="" coords="209,79,293,104"/>
+<area shape="rect" id="node6" href="#hermespy.core.pymonte.scalar.ScalarDimension" target="_top" title="Base class for objects that can be configured by scalar values." alt="" coords="317,79,449,104"/>
+<area shape="rect" id="node7" href="#hermespy.core.pymonte.scalar.ScalarEvaluationResult" target="_top" title="Base class for scalar evaluation results." alt="" coords="5,225,177,251"/>
+<area shape="rect" id="node8" href="#hermespy.core.pymonte.scalar.ScalarEvaluator" target="_top" title="Evaluation routine for investigated object states, extracting scalar performance indicators of interest." alt="" coords="189,152,313,177"/>
+<area shape="rect" id="node5" href="https://docs.python.org/3/library/typing.html#typing.Generic" target="_top" title="Abstract base class for generic types." alt="" coords="47,5,119,31"/>
+</map>

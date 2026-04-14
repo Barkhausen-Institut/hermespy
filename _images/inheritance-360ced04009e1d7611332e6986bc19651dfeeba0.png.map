@@ -1,0 +1,6 @@
+<map id="inheritance090d0c43f1" name="inheritance090d0c43f1">
+<area shape="rect" id="node1" href="https://docs.python.org/3/library/typing.html#typing.Generic" target="_top" title="Abstract base class for generic types." alt="" coords="35,5,107,31"/>
+<area shape="rect" id="node2" href="#hermespy.core.pymonte.actors.MonteCarloActor" target="_top" title="Monte Carlo Simulation Actor." alt="" coords="5,79,136,104"/>
+<area shape="rect" id="node3" href="#hermespy.core.pymonte.actors.MonteCarloCollector" target="_top" title="Collects samples from actors during simulation runtime." alt="" coords="157,5,312,31"/>
+<area shape="rect" id="node4" href="#hermespy.core.pymonte.actors.MonteCarloQueueManager" target="_top" title="Queue management actor for monte carlo simulations." alt="" coords="350,5,546,31"/>
+</map>

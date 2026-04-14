@@ -1,0 +1,11 @@
+<map id="inheritance567300eabb" name="inheritance567300eabb">
+<area shape="rect" id="node1" href="https://docs.python.org/3/library/abc.html#abc.ABC" target="_top" title="Helper class that provides a standard way to create an ABC using" alt="" coords="5,5,77,31"/>
+<area shape="rect" id="node4" href="../../core/signal.html#hermespy.core.signal_model.Signal" target="_top" title="Abstract base class for all signal models in HermesPy." alt="" coords="197,79,269,104"/>
+<area shape="rect" id="node2" href="../../core/signal.html#hermespy.core.signal_model.DenseSignal" target="_top" title="Dense signal model class." alt="" coords="237,152,339,177"/>
+<area shape="rect" id="node7" href="#hermespy.simulation.rf.signal.RFSignal" target="_top" title="An extension of general dense signals for propagation through RF chains." alt="" coords="249,225,327,251"/>
+<area shape="rect" id="node3" href="../../core/signal.html#hermespy.core.signal_model.SignalBlock" target="_top" title="A TxN matrix of complex entries representing signal samples over T streams and N time samples." alt="" coords="293,79,392,104"/>
+<area shape="rect" id="node5" href="https://docs.python.org/3/library/typing.html#typing.Generic" target="_top" title="Abstract base class for generic types." alt="" coords="101,5,173,31"/>
+<area shape="rect" id="node6" href="https://docs.python.org/3/library/collections.abc.html#collections.abc.Iterable" target="_top" title="Iterable" alt="" coords="197,5,269,31"/>
+<area shape="rect" id="node8" href="../../core/factory.html#hermespy.core.factory.Serializable" target="_top" title="Base class for serializable classes." alt="" coords="293,5,392,31"/>
+<area shape="rect" id="node9" href="https://numpy.org/doc/2.1/reference/generated/numpy.ndarray.html#numpy.ndarray" target="_top" title="ndarray(shape, dtype=float, buffer=None, offset=0, strides=None, order=None)" alt="" coords="416,5,488,31"/>
+</map>
