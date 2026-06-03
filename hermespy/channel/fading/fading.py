@@ -377,13 +377,11 @@ class MultipathFadingSample(ChannelSample):
             :self.num_receive_antennas, :self.num_transmit_antennas
         ]
 
-        # Propagate the transmitted samples
-        propagated_samples = np.zeros(
-            (_spatial_response.shape[0], num_propagated_samples), dtype=np.complex128
-        )
-
-        # Only if there is something to propagate in the first place
-        if propagated_samples.size > 0:
+        # Propagate the transmitted samples only if there is something to propagate in the first place
+        if num_propagated_samples > 0 and _spatial_response.shape[0] > 0:
+            propagated_samples = np.zeros(
+                (_spatial_response.shape[1], num_propagated_samples), dtype=np.complex128
+            )
             for path_impulse, path_num_delay_samples in self.__path_impulse_generator(
                 signal.num_samples
             ):
@@ -392,7 +390,11 @@ class MultipathFadingSample(ChannelSample):
                 ] += (signal * path_impulse[np.newaxis, :])
 
             # Apply the channel's spatial response
-            propagated_samples[::] = _spatial_response @ propagated_samples
+            propagated_samples = _spatial_response @ propagated_samples
+        else:
+            propagated_samples = np.zeros(
+                (_spatial_response.shape[0], num_propagated_samples), dtype=np.complex128
+            )
 
         # Return the result
         propagated_block = SignalBlock(
