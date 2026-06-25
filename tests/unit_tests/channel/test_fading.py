@@ -440,8 +440,8 @@ class TestMultipathFadingChannel(unittest.TestCase):
             zero_pads = int(self.sampling_rate * float(delay))
             assert_signals_equal(self, reference_propagation, delayed_propagation[:, zero_pads:])
 
-    # Note: Test is disabled at the moment, since scipy has a production bug
-    def _test_rayleigh(self) -> None:
+    @unittest.skip("Temporarily disabled due to an upstream SciPy bug affecting this statistical test")
+    def test_rayleigh(self) -> None:
         """
         Test if the amplitude of a path is Rayleigh distributed.
         Verify that both real and imaginary components are zero-mean normal random variables with the right variance and
