@@ -924,7 +924,7 @@ class MultipathFadingChannel(
         if value is not None:
             value.channel = self
 
-        self.__alpha_correlation = value
+        self.__antenna_correlation = value
 
     @override
     def serialize(self, process: SerializationProcess) -> None:
