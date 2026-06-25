@@ -71,7 +71,10 @@ class StandardAntennaCorrelation(AntennaCorrelation):
 
     def sample_covariance(self, antennas: AntennaArrayState, mode: AntennaMode) -> np.ndarray:
 
+        # Note: This is a simplified implementation of the standard,
+        # assuming that the transmitting device is always a base station and the receiving device is always a terminal.
         device_type = DeviceType.TERMINAL if mode == AntennaMode.RX else DeviceType.BASE_STATION
+
         num_antennas = (
             antennas.num_receive_antennas
             if mode == AntennaMode.RX

@@ -4,11 +4,11 @@
 import unittest
 from copy import deepcopy
 from itertools import product
+from typing_extensions import override
 from unittest.mock import Mock
 
 import numpy as np
 import numpy.random as rand
-from h5py import File
 from numpy import exp
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 from scipy import stats
@@ -17,7 +17,7 @@ from scipy.constants import pi
 from hermespy.channel import MultipathFadingChannel, AntennaCorrelation, CustomAntennaCorrelation, TDL, Exponential, Cost259, StandardAntennaCorrelation, CorrelationType, Cost259Type, TDLType
 from hermespy.channel.channel import LinkState
 from hermespy.channel.fading.fading import MultipathFadingSample
-from hermespy.core import AntennaMode, Signal, DenseSignal, Transformation
+from hermespy.core import AntennaMode, AntennaArrayState, Signal, DenseSignal, Transformation
 from hermespy.simulation import StaticTrajectory, SimulatedDevice, SimulatedIdealAntenna, SimulatedUniformArray
 from unit_tests.core.test_factory import test_roundtrip_serialization
 from unit_tests.utils import SimulationTestContext
@@ -36,8 +36,8 @@ __status__ = "Prototype"
 class MockAntennaCorrelation(AntennaCorrelation):
     """Mock antenna correlation implementation for test purposes"""
 
-    @property
-    def covariance(self) -> np.ndarray:
+    @override
+    def sample_covariance(self, antennas: AntennaArrayState, mode: AntennaMode) -> np.ndarray:
         return np.identity(2, dtype=complex)
 
 
@@ -270,7 +270,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
             params = deepcopy(self.channel_params)
             params["delays"] = np.empty((0,))
             _ = MultipathFadingChannel(**params)
-            
+
     def test_correlation_distance_setget(self) -> None:
         """Correlation distance property getter should return setter argument"""
 
@@ -280,7 +280,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
         channel.correlation_distance = correlation_distance
 
         self.assertEqual(correlation_distance, channel.correlation_distance)
-        
+
     def test_correlation_distance_validation(self) -> None:
         """Correlation distance property setter should raise ValueError on invalid arguments"""
 
@@ -611,25 +611,15 @@ class TestMultipathFadingChannel(unittest.TestCase):
         # Since the correlation mock is just an identity, both channel states should be identical
         assert_array_almost_equal(uncorrelated_state, correlated_state)
 
-    def test_alpha_correlation_setget(self) -> None:
-        """Alpha correlation property getter should return setter argument"""
+    def test_antenna_correlation_setget(self) -> None:
+        """Antenna correlation property getter should return setter argument"""
 
         channel = MultipathFadingChannel(**self.channel_params)
         expected_correlation = Mock()
 
-        channel.alpha_correlation = expected_correlation
+        channel.antenna_correlation = expected_correlation
 
-        self.assertIs(expected_correlation, channel.alpha_correlation)
-
-    def test_beta_correlation_setget(self) -> None:
-        """Beta correlation property getter should return setter argument"""
-
-        channel = MultipathFadingChannel(**self.channel_params)
-        expected_correlation = Mock()
-
-        channel.beta_correlation = expected_correlation
-
-        self.assertIs(expected_correlation, channel.beta_correlation)
+        self.assertIs(expected_correlation, channel.antenna_correlation)
 
     def test_realization_reciprocal_sample(self) -> None:
         """Test reciprocal channel realization"""
@@ -696,7 +686,7 @@ class TestCost259(unittest.TestCase):
         self.carrier_frequency = 2.4e8
         self.alpha_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor, pose=StaticTrajectory(Transformation.From_Translation(np.array([100, 0, 0]))))
         self.beta_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor, pose=StaticTrajectory(Transformation.From_Translation(np.array([100, 0, 0]))))
-    
+
     def test_init(self) -> None:
         """Test the template initializations."""
 
@@ -716,14 +706,14 @@ class TestCost259(unittest.TestCase):
         for model_type in Cost259Type:
             channel = Cost259(model_type)
             self.assertEqual(model_type, channel.model_type)
-            
+
     def test_expected_scale(self) -> None:
         """Test the expected amplitude scaling"""
-        
+
         model = Cost259(Cost259Type.HILLY, doppler_frequency=10.0, seed=42)
         unit_energy_signal = DenseSignal.FromNDArray(np.ones((self.alpha_device.num_transmit_antennas, 100)) / 10, self.sampling_rate, self.carrier_frequency)
         num_attempts = 1000
-        
+
         cumulated_propagated_energy = np.zeros((self.beta_device.num_receive_antennas), dtype=np.float64)
         cumulated_expected_scale = 0.0
         for _ in range(num_attempts):
@@ -732,10 +722,10 @@ class TestCost259(unittest.TestCase):
             propagated_signal = sample.propagate(unit_energy_signal)
             cumulated_propagated_energy += propagated_signal.energy
             cumulated_expected_scale += sample.expected_energy_scale
-            
+
         mean_propagated_energy = cumulated_propagated_energy / num_attempts
         mean_expected_energy = (cumulated_expected_scale / num_attempts) ** 2
-        
+
         self.assertAlmostEqual(mean_propagated_energy, mean_expected_energy, delta=1e-1)
 
     def test_serialization(self) -> None:
@@ -755,7 +745,6 @@ class Test5GTDL(unittest.TestCase):
         self.carrier_frequency = 2.4e8
         self.alpha_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor, pose=StaticTrajectory(Transformation.From_Translation(np.array([100, 0, 0]))))
         self.beta_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor, pose=StaticTrajectory(Transformation.From_Translation(np.array([100, 0, 0]))))
-    
 
     def test_init(self) -> None:
         """Test the template initializations."""
@@ -785,14 +774,14 @@ class Test5GTDL(unittest.TestCase):
         for model_type in TDLType:
             channel = TDL(model_type=model_type)
             self.assertEqual(model_type, channel.model_type)
-            
+
     def test_expected_scale(self) -> None:
         """Test the expected amplitude scaling"""
-        
+
         model = TDL(model_type=TDLType.E, doppler_frequency=10.0, seed=42)
         unit_energy_signal = DenseSignal.FromNDArray(np.ones((self.alpha_device.num_transmit_antennas, 100)) / 10, self.sampling_rate, self.carrier_frequency)
         num_attempts = 1000
-        
+
         cumulated_propagated_energy = np.zeros((self.beta_device.num_receive_antennas), dtype=np.float64)
         cumulated_expected_scale = 0.0
         for _ in range(num_attempts):
@@ -801,10 +790,10 @@ class Test5GTDL(unittest.TestCase):
             propagated_signal = sample.propagate(unit_energy_signal)
             cumulated_propagated_energy += propagated_signal.energy
             cumulated_expected_scale += sample.expected_energy_scale
-            
+
         mean_propagated_energy = cumulated_propagated_energy / num_attempts
         mean_expected_energy = (cumulated_expected_scale / num_attempts) ** 2
-        
+
         self.assertAlmostEqual(mean_propagated_energy, mean_expected_energy, delta=1e-1)
 
     def test_serialization(self) -> None:
@@ -828,7 +817,7 @@ class TestExponential(unittest.TestCase):
         self.carrier_frequency = 2.4e8
         self.alpha_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor, pose=StaticTrajectory(Transformation.From_Translation(np.array([100, 0, 0]))))
         self.beta_device = SimulatedDevice(carrier_frequency=self.carrier_frequency, bandwidth=self.bandwidth, oversampling_factor=self.oversampling_factor, pose=StaticTrajectory(Transformation.From_Translation(np.array([100, 0, 0]))))
-    
+
     def test_init(self) -> None:
         """Initialization arguments should be properly parsed."""
         pass
@@ -841,13 +830,13 @@ class TestExponential(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             _ = Exponential(1.0, 0.0)
-            
+
     def test_expected_scale(self) -> None:
         """Test the expected amplitude scaling"""
-        
+
         unit_energy_signal = DenseSignal.FromNDArray(np.ones((self.alpha_device.num_transmit_antennas, 100)) / 10, self.sampling_rate, self.carrier_frequency)
         num_attempts = 1000
-        
+
         cumulated_propagated_energy = np.zeros((self.beta_device.num_receive_antennas), dtype=np.float64)
         cumulated_expected_scale = 0.0
         for _ in range(num_attempts):
@@ -856,12 +845,11 @@ class TestExponential(unittest.TestCase):
             propagated_signal = sample.propagate(unit_energy_signal)
             cumulated_propagated_energy += propagated_signal.energy
             cumulated_expected_scale += sample.expected_energy_scale
-            
+
         mean_propagated_energy = cumulated_propagated_energy / num_attempts
         mean_expected_energy = (cumulated_expected_scale / num_attempts) ** 2
-        
-        self.assertAlmostEqual(mean_propagated_energy, mean_expected_energy, delta=1e-1)
 
+        self.assertAlmostEqual(mean_propagated_energy, mean_expected_energy, delta=1e-1)
 
     def test_serialization(self) -> None:
         """Test exponential channel model serialization"""
