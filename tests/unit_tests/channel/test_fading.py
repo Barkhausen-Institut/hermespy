@@ -484,8 +484,8 @@ class TestMultipathFadingChannel(unittest.TestCase):
 
         self.assertTrue(is_rayleigh)
 
-    # Note: Test is disabled at the moment, since scipy has a production bug
-    def _test_rice(self) -> None:
+    @unittest.skip("Temporarily disabled due to an upstream SciPy bug affecting this statistical test")
+    def test_rice(self) -> None:
         """
         Test if the amplitude of a path is Ricean distributed.
         """
