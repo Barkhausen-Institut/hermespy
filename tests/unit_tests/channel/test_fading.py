@@ -440,6 +440,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
             zero_pads = int(self.sampling_rate * float(delay))
             assert_signals_equal(self, reference_propagation, delayed_propagation[:, zero_pads:])
 
+    @unittest.skip("Temporarily disabled due to an upstream SciPy bug affecting this statistical test")
     def test_rayleigh(self) -> None:
         """
         Test if the amplitude of a path is Rayleigh distributed.
@@ -483,6 +484,7 @@ class TestMultipathFadingChannel(unittest.TestCase):
 
         self.assertTrue(is_rayleigh)
 
+    @unittest.skip("Temporarily disabled due to an upstream SciPy bug affecting this statistical test")
     def test_rice(self) -> None:
         """
         Test if the amplitude of a path is Ricean distributed.
