@@ -12,13 +12,13 @@ import matplotlib.pyplot as plt
 from hermespy.core import dB
 from hermespy.simulation import (
     ADC,
+    ClippingPowerAmplifier,
     Simulation,
     DAC,
     EBN0,
     Mixer,
     MixerType,
     Source,
-    RappPowerAmplifier,
     PowerAmplifier,
     RFChain,
     OscillatorPhaseNoise,
@@ -53,7 +53,7 @@ source = rf.new_block(Source, phase_noise=OscillatorPhaseNoise())
 # Transmit side
 dac = rf.new_block(DAC, num_quantization_bits=16)
 tx_mixer = rf.new_block(Mixer, mixer_type=MixerType.UP)
-pa = rf.new_block(RappPowerAmplifier, smoothness_factor=6.0)
+pa = rf.new_block(ClippingPowerAmplifier)
 rf.connect(dac.o, tx_mixer.i)
 rf.connect(tx_mixer.o, pa.i)
 rf.connect(source.o, tx_mixer.lo)
