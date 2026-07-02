@@ -2457,7 +2457,11 @@ class SparseSignal(Signal):
             )
 
         return SparseSignal(
-            unified_blocks if len(unified_blocks) != 0 else np.empty((self.num_streams, 0), np.complex128),
+            (
+                unified_blocks
+                if len(unified_blocks) != 0
+                else np.empty((self.num_streams, 0), np.complex128)
+            ),
             self.sampling_rate,
             self.carrier_frequency,
             self.noise_power,

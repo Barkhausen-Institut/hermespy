@@ -9,7 +9,7 @@ from matplotlib.figure import Figure
 from numpy.testing import assert_array_almost_equal, assert_array_equal, assert_array_less
 
 from hermespy.simulation import RFSignal
-from hermespy.simulation.rf.blocks.amps import PowerAmplifier, ClippingPowerAmplifier, RappPowerAmplifier, SalehPowerAmplifier, CustomPowerAmplifier
+from hermespy.simulation.rf.blocks.amps import PowerAmplifier, ClippingPowerAmplifier, RappPowerAmplifier, SalehPowerAmplifier, CustomPowerAmplifier, MemoryCTPolynomialPowerAmplifier, MemoryPolynomialPowerAmplifier
 from unit_tests.core.test_factory import test_roundtrip_serialization
 from unit_tests.utils import random_rf_signal, assert_signals_equal
 
@@ -331,6 +331,70 @@ class TestCustomPowerAmplifier(unittest.TestCase):
 
         expected_output = expected_amp * np.exp(1j * expected_phase)
         assert_array_almost_equal(output.view(np.ndarray).flatten(), expected_output)
+
+    def test_serialization(self) -> None:
+        """Test serialization"""
+
+        test_roundtrip_serialization(self, self.pa)
+
+
+class TestMemoryPolynomialPowerAmplifier(unittest.TestCase):
+    """Test the memory polynomial power amplifier model"""
+
+    def setUp(self) -> None:
+        self.rng = np.random.default_rng(42)
+        self.memory_len = 3
+        self.degree_len = 4
+        self.coeffs = self.rng.standard_normal(size=(self.memory_len, self.memory_len * (self.degree_len - 1) + 1)) + 1j * self.rng.standard_normal(size=(self.memory_len, self.memory_len * (self.degree_len - 1) + 1))
+        self.pa = MemoryPolynomialPowerAmplifier(coeff_matrix=self.coeffs)
+
+    def test_serialization(self) -> None:
+        """Test serialization"""
+
+        test_roundtrip_serialization(self, self.pa)
+
+
+class TestMemoryCTPolynomialPowerAmplifier(unittest.TestCase):
+    """Test the memory polynomial power amplifier model"""
+
+    def setUp(self) -> None:
+        self.rng = np.random.default_rng(42)
+        self.memory_len = 3
+        self.degree_len = 4
+        self.coeffs = self.rng.standard_normal(size=(self.memory_len, self.memory_len * (self.degree_len - 1) + 1)) + 1j * self.rng.standard_normal(size=(self.memory_len, self.memory_len * (self.degree_len - 1) + 1))
+        self.pa = MemoryCTPolynomialPowerAmplifier(coeff_matrix=self.coeffs)
+
+    def test_serialization(self) -> None:
+        """Test serialization"""
+
+        test_roundtrip_serialization(self, self.pa)
+
+
+class TestMemoryPolynomialPowerAmplifier(unittest.TestCase):
+    """Test the memory polynomial power amplifier model"""
+
+    def setUp(self) -> None:
+        self.rng = np.random.default_rng(42)
+        self.memory_len = 3
+        self.degree_len = 4
+        self.coeffs = self.rng.standard_normal(size=(self.memory_len, self.memory_len * (self.degree_len - 1) + 1)) + 1j * self.rng.standard_normal(size=(self.memory_len, self.memory_len * (self.degree_len - 1) + 1))
+        self.pa = MemoryPolynomialPowerAmplifier(coeff_matrix=self.coeffs)
+
+    def test_serialization(self) -> None:
+        """Test serialization"""
+
+        test_roundtrip_serialization(self, self.pa)
+
+
+class TestMemoryCTPolynomialPowerAmplifier(unittest.TestCase):
+    """Test the memory polynomial power amplifier model"""
+
+    def setUp(self) -> None:
+        self.rng = np.random.default_rng(42)
+        self.memory_len = 3
+        self.degree_len = 4
+        self.coeffs = self.rng.standard_normal(size=(self.memory_len, self.memory_len * (self.degree_len - 1) + 1)) + 1j * self.rng.standard_normal(size=(self.memory_len, self.memory_len * (self.degree_len - 1) + 1))
+        self.pa = MemoryCTPolynomialPowerAmplifier(coeff_matrix=self.coeffs)
 
     def test_serialization(self) -> None:
         """Test serialization"""

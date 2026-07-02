@@ -469,15 +469,14 @@ class NormalTrigger(TriggerModel):
 
     @override
     def serialize(self, process: SerializationProcess) -> None:
-        process.serialize_floating(self.mean, 'mean')
-        process.serialize_floating(self.std, 'std')
+        process.serialize_floating(self.mean, "mean")
+        process.serialize_floating(self.std, "std")
 
     @override
     @classmethod
     def Deserialize(cls: Type[NormalTrigger], process: DeserializationProcess) -> NormalTrigger:
         return NormalTrigger(
-            mean=process.deserialize_floating('mean'),
-            std=process.deserialize_floating('std'),
+            mean=process.deserialize_floating("mean"), std=process.deserialize_floating("std")
         )
 
 

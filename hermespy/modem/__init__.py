@@ -69,12 +69,7 @@ from .waveforms.orthogonal import (
     ReferencePosition,
 )
 
-from .waveforms.ieee_5gnr import (
-    NRFrame,
-    NRSlot,
-    NRSubframe,
-    nr_bandwidth,
-)
+from .waveforms.ieee_5gnr import NRFrame, NRSlot, NRSubframe, nr_bandwidth
 
 from .ieee_5gnr import NRSlotLink
 

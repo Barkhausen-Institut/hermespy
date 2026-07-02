@@ -17,7 +17,10 @@ from .bits_source import BitsSource
 from .modem import SimplexLink
 from .frame_generator import FrameGenerator
 from .waveforms.ieee_5gnr import IEEE_5GNR_MIN_NUM_RBS, NRSlot
-from .waveforms.orthogonal import OrthogonalLeastSquaresChannelEstimation, OrthogonalZeroForcingChannelEqualization
+from .waveforms.orthogonal import (
+    OrthogonalLeastSquaresChannelEstimation,
+    OrthogonalZeroForcingChannelEqualization,
+)
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2026, Barkhausen Institut gGmbH"
@@ -101,19 +104,25 @@ class NRSlotLink(SimplexLink):
         # Configure an LDPC code with rate R=1/2 and block length 128
         # Note that this is not standard-compliant
         if LDPCCoding:
-            ldpc_code = join(dirname(abspath(__file__)), 'resources', 'ofdm_ldpc.alist')
+            ldpc_code = join(dirname(abspath(__file__)), "resources", "ofdm_ldpc.alist")
             self.encoder_manager.add_encoder(LDPCCoding(100, ldpc_code, "", True, 10))
 
     @override
     @classmethod
     def Deserialize(cls: Type[NRSlotLink], process: DeserializationProcess) -> NRSlotLink:
         slot = process.deserialize_object("waveform", NRSlot)
-        selected_transmit_ports = process.deserialize_array("selected_transmit_ports", np.int64, None)
+        selected_transmit_ports = process.deserialize_array(
+            "selected_transmit_ports", np.int64, None
+        )
         selected_receive_ports = process.deserialize_array("selected_receive_ports", np.int64, None)
         return NRSlotLink(
             num_resource_blocks=slot.num_resource_blocks,
-            selected_transmit_ports=selected_transmit_ports.tolist() if selected_transmit_ports else None,
-            selected_receive_ports=selected_receive_ports.tolist() if selected_receive_ports else None,
+            selected_transmit_ports=(
+                selected_transmit_ports.tolist() if selected_transmit_ports else None
+            ),
+            selected_receive_ports=(
+                selected_receive_ports.tolist() if selected_receive_ports else None
+            ),
             carrier_frequency=process.deserialize_floating("carrier_frequency", None),
             bits_source=process.deserialize_object("bits_source", BitsSource),
             frame_generator=process.deserialize_object("frame_generator", FrameGenerator),

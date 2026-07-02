@@ -170,11 +170,13 @@ class RFBlock(ABC, Generic[RFBRT], RandomNode, Serializable):
         cutoff = 1 / oversampling_factor
         pass_ripple_dB = 0.01
         stop_attenuation_dB = 40
-        selected_passband = max(1/3, cutoff)
+        selected_passband = max(1 / 3, cutoff)
         selected_stopband = max(0.5, cutoff * 1.1)
 
-        order, wn = cheb2ord(selected_passband, selected_stopband, pass_ripple_dB, stop_attenuation_dB)
-        return cheby2(order, stop_attenuation_dB, wn, output='sos')
+        order, wn = cheb2ord(
+            selected_passband, selected_stopband, pass_ripple_dB, stop_attenuation_dB
+        )
+        return cheby2(order, stop_attenuation_dB, wn, output="sos")
 
     def propagate(self, realization: RFBRT, input: RFSignal, filter: bool = True) -> RFSignal:
         """Propagate the input signals through the radio-frequency block.
@@ -205,11 +207,22 @@ class RFBlock(ABC, Generic[RFBRT], RandomNode, Serializable):
         if filter and realization.oversampling_factor > 1:
 
             # Generate an anti-aliasing filter for the current bandwidth and oversampling factor
-            antialiasing_filter_sos = RFBlock._antialiasing_filter(realization.bandwidth, realization.oversampling_factor)
+            antialiasing_filter_sos = RFBlock._antialiasing_filter(
+                realization.bandwidth, realization.oversampling_factor
+            )
 
             # Append zeros to the propagated signal if it is too short to be filtered with the anti-aliasing filter
             if propagated_signal.num_samples < (antialiasing_filter_sos.shape[1] + 1) * 4:
-                padded_samples = propagated_signal.append_samples(np.zeros((propagated_signal.num_streams, (antialiasing_filter_sos.shape[1] + 1) * 4 - propagated_signal.num_samples), dtype=np.complex128))
+                padded_samples = propagated_signal.append_samples(
+                    np.zeros(
+                        (
+                            propagated_signal.num_streams,
+                            (antialiasing_filter_sos.shape[1] + 1) * 4
+                            - propagated_signal.num_samples,
+                        ),
+                        dtype=np.complex128,
+                    )
+                )
                 propagated_signal = RFSignal(
                     propagated_signal.num_streams,
                     padded_samples.shape[1],
@@ -225,11 +238,7 @@ class RFBlock(ABC, Generic[RFBRT], RandomNode, Serializable):
 
         # Apply an anti-aliasing filter if oversampling is used
         if filter and realization.oversampling_factor > 1:
-            filtered_output = sosfiltfilt(
-                antialiasing_filter_sos,
-                noisy_propagated_signal,
-                axis=1,
-            )
+            filtered_output = sosfiltfilt(antialiasing_filter_sos, noisy_propagated_signal, axis=1)
             noisy_propagated_signal = RFSignal(
                 propagated_signal.num_streams,
                 propagated_signal.num_samples,
