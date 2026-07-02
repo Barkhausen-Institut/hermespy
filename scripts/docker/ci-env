@@ -2,6 +2,9 @@
 # See https://github.com/pypa/manylinux for more information
 FROM quay.io/pypa/manylinux_2_28_x86_64:latest
 
+# The image's contents are based on the targeted python version
+ARG PYTHON_VERSION="312"
+
 # Install external dependencies
 RUN dnf -y install pandoc octave graphviz llvm-compat-libs
 RUN dnf -y clean all
@@ -10,10 +13,10 @@ RUN dnf -y clean all
 ENV DRJIT_LIBLLVM_PATH="/usr/lib64/llvm17/lib/libLLVM-17.so"
 
 # Add python binary folder to PATH
-ENV PATH="/opt/python/cp313-cp313/bin:${PATH}"
+ENV PATH="/opt/python/cp${PYTHON_VERSION}-cp${PYTHON_VERSION}/bin:${PATH}"
 
 # Upgrade pip
-RUN python -m pip install --no-cache-dir --upgrade pip
+RUN python -m pip install --no-cache-dir --root-user-action ignore --upgrade pip
 
 # Generate requirements file from HermesPy's current pyproject.toml
 COPY pyproject.toml /tmp/pyproject.toml

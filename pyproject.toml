@@ -1,9 +1,9 @@
 [build-system]
 requires = [
     "setuptools>=75.6.0, <81.0",  # Less than 81 to keep compatibility with UHD driver
-    "wheel>=0.45.1",
-    "pybind11>=3.0.0",
-    "scikit-build-core>=0.10.7",
+    "wheel>=0.47.0",
+    "pybind11>=3.0.4",
+    "scikit-build-core>=0.12.2",
 ]
 build-backend = "scikit_build_core.build"
 
@@ -33,6 +33,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Operating System :: OS Independent",
     "Development Status :: 4 - Beta",
     "Natural Language :: English",
@@ -41,14 +42,15 @@ classifiers = [
 ] 
 requires-python = ">=3.11.0"
 dependencies = [
-    "numpy>=2.4.2",
-    "matplotlib>=3.10.8",
-    "h5py>=3.8.0",
-    "scipy>=1.17.1",
-    "ray>=2.54.0",
+    "numpy>=2.4.0,<2.5.0",
+    "matplotlib>=3.11.0",
+    "h5py>=3.16.0",
+    'scipy>=1.18.0; python_version > "3.11"',
+    'scipy==1.17.*; python_version == "3.11"',  # Since 3.11 support is dropped with SciPy 1.18
+    "ray>=2.56.0",
     "sparse>=0.18.0",
-    "numba>=0.64.0",
-    "rich>=14.3.3",
+    "numba>=0.65.1",
+    "rich>=15.0.0",
 ]
 
 [project.urls]
@@ -59,7 +61,7 @@ Issues = "https://github.com/Barkhausen-Institut/hermespy/issues"
 [project.optional-dependencies]
 
 quadriga = [
-    "oct2py>=5.6.0",
+    "oct2py>=6.0.3",
 ]
 documentation = [
     "sphinx>=8.0.0, <8.2.0",  # 8.2.0 is not compatible nbsphinx 0.9.7
@@ -80,11 +82,6 @@ audio = [
     "sounddevice>=0.4.6",
 ]
 develop = [
-    "setuptools>=75.6.0, <81.0",
-    "pybind11>=3.0.0",
-    "scikit-build-core>=0.10.7",
-    "cmake>=3.31.2",
-    "wheel>=0.45.1",
     "black>=25.1.0",
     "flake8>=7.3.0",
     "coverage>=7.13.4",
