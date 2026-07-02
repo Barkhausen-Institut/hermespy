@@ -2,7 +2,7 @@
 Amplifiers
 ==========
 
-.. inheritance-diagram:: hermespy.simulation.rf.blocks.amps.PowerAmplifier hermespy.simulation.rf.blocks.amps.ClippingPowerAmplifier hermespy.simulation.rf.blocks.amps.RappPowerAmplifier hermespy.simulation.rf.blocks.amps.SalehPowerAmplifier hermespy.simulation.rf.blocks.amps.CustomPowerAmplifier
+.. inheritance-diagram:: hermespy.simulation.rf.blocks.amps.PowerAmplifier hermespy.simulation.rf.blocks.amps.ClippingPowerAmplifier hermespy.simulation.rf.blocks.amps.RappPowerAmplifier hermespy.simulation.rf.blocks.amps.SalehPowerAmplifier hermespy.simulation.rf.blocks.amps.CustomPowerAmplifier hermespy.simulation.rf.blocks.amps.MemoryPolynomialPowerAmplifier hermespy.simulation.rf.blocks.amps.MemoryCTPolynomialPowerAmplifier
    :parts: 1
 
 Radio-frequency (RF) amplifiers are blocks increasing the power (or equivalently the amplitude) of an input signals passing
@@ -119,5 +119,16 @@ The users may define their own gain and phase characteristics.
 
 .. autoclass:: hermespy.simulation.rf.blocks.amps.CustomPowerAmplifier
 
+
+----------------------------
+Memory Polynomial Amplifiers
+----------------------------
+
+Power amplifiers with memory effects are modeled by a polynomial function of the input signal and its past values.
+The memory polynomial model is based on the work of :footcite:t:`2006:Morgan`.
+
+.. autoclass:: hermespy.simulation.rf.blocks.amps.MemoryPolynomialPowerAmplifier
+
+.. autoclass:: hermespy.simulation.rf.blocks.amps.MemoryCTPolynomialPowerAmplifier
 
 .. footbibliography::

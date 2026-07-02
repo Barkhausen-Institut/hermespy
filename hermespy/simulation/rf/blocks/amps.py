@@ -6,6 +6,7 @@ from typing_extensions import override
 
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.linalg import lstsq
 from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from scipy.constants import pi
@@ -655,3 +656,209 @@ class CustomPowerAmplifier(PowerAmplifier):
             process.deserialize_object("noise_level", NoiseLevel, None),
             process.deserialize_integer("seed", None),
         )
+
+
+class MemoryPolynomialPowerAmplifier(PowerAmplifier):
+    """Model of a memory polynomial power amplifier.
+
+    Time Memory Polynomial PA model is based on equation [19] from the literature :footcite:t:`2006:Morgan`.
+    """
+
+    __coeff_matrix: np.ndarray[tuple[int, int], np.dtype[np.complex128]]
+
+    def __init__(
+        self, coeff_matrix: np.ndarray[tuple[int, int], np.dtype[np.complex128]], **kwargs
+    ) -> None:
+        """
+        Args:
+            coeff_matrix:
+                Matrix of polynomial coefficients.
+                An :math:`M \times K` matrix where :math:`M` denotes the amplifier's memory in discrete samples and
+                :math:`K` denotes the amplifiers polynomial order.
+        """
+        self.coeff_matrix = coeff_matrix
+
+        # Initialize base class
+        PowerAmplifier.__init__(self, **kwargs)
+
+    @property
+    def coeff_matrix(self) -> np.ndarray[tuple[int, int], np.dtype[np.complex128]]:
+        """Matrix of polynomial coefficients.
+
+        An :math:`M \times K` matrix where :math:`M` denotes the amplifier's memory in discrete samples and
+        :math:`K` denotes the amplifiers polynomial order.
+        """
+
+        return self.__coeff_matrix
+
+    @coeff_matrix.setter
+    def coeff_matrix(self, value: np.ndarray[tuple[int, int], np.dtype[np.complex128]]) -> None:
+        self.__coeff_matrix = value
+
+    @classmethod
+    def FromMeasurements(
+        cls: type[MemoryPolynomialPowerAmplifier],
+        input_samples: np.ndarray,
+        output_samples: np.ndarray,
+        memory_len: int,
+        degree_len: int,
+    ) -> MemoryPolynomialPowerAmplifier:
+        """Initialize a memory polynomial amplifier from a given set of measurment data points.
+
+        Builds the memory/degree feature matrix and solves for the model coefficients
+        using a least-squares approach.
+
+        Args:
+            x[n]: Time-domain discrete input samples of the amplifier.
+            y[n]: Time-domain discrete output samples of the amplifier.
+            memory_len: Memory length aka amplifier's memory in discrete samples.
+            degree_len: non-linearity order aka amplifier's polynomial order.
+        """
+
+        windows = np.lib.stride_tricks.sliding_window_view(input_samples, memory_len)[:, ::-1]
+        degree_range = np.arange(degree_len)[:, None, None]
+        features = (
+            (windows[None] * np.abs(windows[None]) ** degree_range)
+            .transpose(1, 0, 2)
+            .reshape(len(input_samples) - memory_len + 1, -1)
+        )
+        y_trimmed = output_samples[memory_len - 1 :]
+        coeffs_vector: np.ndarray = lstsq(features, y_trimmed, cond=-1)[0]
+        coeffs = coeffs_vector.reshape(memory_len, degree_len, order="F")
+        return MemoryPolynomialPowerAmplifier(coeffs)
+
+    @override
+    def model(self, input_signal: RFSignal) -> RFSignal:
+        memory_len = self.coeff_matrix.shape[0]
+        degree_len = self.coeff_matrix.shape[1]
+        windows = np.lib.stride_tricks.sliding_window_view(
+            input_signal.view(np.ndarray), memory_len
+        )[:, ::-1]
+        K_range = np.arange(degree_len)[:, None, None]
+        input_matrix = (
+            (windows[None] * np.abs(windows[None]) ** K_range)
+            .transpose(1, 0, 2)
+            .reshape(input_signal.size - memory_len + 1, -1)
+        )
+        output_samples = input_matrix @ self.coeff_matrix.ravel(order="F")
+        return RFSignal.FromNDArray(
+            output_samples, input_signal.sampling_rate, input_signal.carrier_frequency
+        )
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_array(self.coeff_matrix, "coeff_matrix")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> MemoryPolynomialPowerAmplifier:
+        return cls(process.deserialize_array("coeff_matrix", np.complex128))  # type: ignore
+
+
+class MemoryCTPolynomialPowerAmplifier(PowerAmplifier):
+    """Model of a memory polynomial power amplifier.
+
+    Tme Memory Cross-Term Polynomial PA model is based on equation [23] from the literature :footcite:t:`2006:Morgan`.
+    """
+
+    def __init__(self, coeff_matrix: np.ndarray, **kwargs) -> None:
+        """
+        Args:
+            coeff_matrix:
+                Matrix of polynomial coefficients.
+                An :math:`M \times (M \times (K - 1) + 1 )` matrix where
+                :math:`M` denotes the amplifier's memory in discrete samples and :math:`K` denotes the amplifiers polynomial order.
+        """
+        self.coeff_matrix = coeff_matrix
+
+        # Initialize base class
+        PowerAmplifier.__init__(self, **kwargs)
+
+    @property
+    def coeff_matrix(self) -> np.ndarray[tuple[int, int], np.dtype[np.complex128]]:
+        """Matrix of polynomial coefficients.
+
+        An :math:`M \times (M \times (K - 1) + 1 )` matrix where
+        :math:`M` denotes the amplifier's memory in discrete samples and :math:`K` denotes the amplifiers polynomial order.
+        """
+
+        return self.__coeff_matrix
+
+    @coeff_matrix.setter
+    def coeff_matrix(self, value: np.ndarray[tuple[int, int], np.dtype[np.complex128]]) -> None:
+        self.__coeff_matrix = value
+
+    @classmethod
+    def FromMeasurements(
+        cls: type[MemoryCTPolynomialPowerAmplifier],
+        input_samples: np.ndarray,
+        output_samples: np.ndarray,
+        memory_len: int,
+        degree_len: int,
+    ) -> MemoryCTPolynomialPowerAmplifier:
+        """Initialize a memory polynomial amplifier from a given set of measurment data points.
+
+        Builds the memory/degree feature matrix and solves for the model coefficients
+        using a least-squares approach.
+
+        Args:
+            x[n]: Time-domain discrete input samples of the amplifier.
+            y[n]: Time-domain discrete output samples of the amplifier.
+            M: Memory length aka amplifier's memory in discrete samples.
+            K: non-linearity order aka amplifier's polynomial order.
+        """
+
+        x = input_samples[:, None]
+        xLen = x.shape[0]
+        num_samples = xLen - memory_len + 1
+        absPow = np.abs(x) ** np.arange(1, degree_len)
+        mem = np.arange(memory_len, 0, -1)[:, None]
+        offsets = np.arange(0, xLen * (degree_len - 1), xLen)
+        pow_idx = np.arange(num_samples)[:, None] + (mem + offsets).ravel(order="F")
+        pow_part = absPow.ravel(order="F")[pow_idx - 1]
+        topPlane = np.concatenate((np.ones((num_samples, 1)), pow_part), axis=1).T[None, :, :]
+        side_idx = np.arange(num_samples)[:, None] + np.arange(memory_len, 0, -1)
+        sidePlane = x.ravel()[side_idx - 1].T[:, None, :]
+        features = (
+            (sidePlane * topPlane)
+            .reshape((memory_len * (memory_len * (degree_len - 1) + 1), num_samples), order="F")
+            .T
+        )
+        y_trimmed = output_samples[memory_len - 1 :]
+        coeffs_vector: np.ndarray = lstsq(features, y_trimmed, cond=-1)[0]
+        coeffs = coeffs_vector.reshape(memory_len, (memory_len * (degree_len - 1) + 1), order="F")
+        return MemoryCTPolynomialPowerAmplifier(coeff_matrix=coeffs)
+
+    @override
+    def model(self, input_signal: RFSignal) -> RFSignal:
+        memory_len = self.coeff_matrix.shape[0]
+        degree_len = int((self.coeff_matrix.shape[1] - 1) / memory_len) + 1
+        x = input_signal.view(np.ndarray)[:, None]
+        xLen = x.shape[0]
+        num_samples = xLen - memory_len + 1
+        absPow = np.abs(x) ** np.arange(1, degree_len)
+        mem = np.arange(memory_len, 0, -1)[:, None]
+        offsets = np.arange(0, xLen * (degree_len - 1), xLen)
+        pow_idx = np.arange(num_samples)[:, None] + (mem + offsets).ravel(order="F")
+        pow_part = absPow.ravel(order="F")[pow_idx - 1]
+        topPlane = np.concatenate((np.ones((num_samples, 1)), pow_part), axis=1).T[None, :, :]
+        side_idx = np.arange(num_samples)[:, None] + np.arange(memory_len, 0, -1)
+        sidePlane = x.ravel()[side_idx - 1].T[:, None, :]
+        input_matrix = (
+            (sidePlane * topPlane)
+            .reshape((memory_len * (memory_len * (degree_len - 1) + 1), num_samples), order="F")
+            .T
+        )
+        output_samples = input_matrix @ self.coeff_matrix.ravel(order="F")
+        return RFSignal.FromNDArray(
+            output_samples, input_signal.sampling_rate, input_signal.carrier_frequency
+        )
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_array(self.coeff_matrix, "coeff_matrix")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> MemoryCTPolynomialPowerAmplifier:
+        return cls(process.deserialize_array("coeff_matrix", np.complex128))  # type: ignore

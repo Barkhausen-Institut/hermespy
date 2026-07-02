@@ -374,7 +374,7 @@ class MultipathFadingSample(ChannelSample):
 
         # Slice the spatial response to match the required number of antennas
         _spatial_response = self.spatial_response[
-            :self.num_receive_antennas, :self.num_transmit_antennas
+            : self.num_receive_antennas, : self.num_transmit_antennas
         ]
 
         # Propagate the transmitted samples only if there is something to propagate in the first place

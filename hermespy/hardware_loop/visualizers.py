@@ -840,7 +840,9 @@ class RadarRangeVelocityPlot(HardwareLoopPlot[QuadMeshVisualization]):
         # axes[0, 0].set_ylim((0.0, 1.1))
         return plot
 
-    def _update_plot(self, sample: HardwareLoopSample, visualization: QuadMeshVisualization) -> None:
+    def _update_plot(
+        self, sample: HardwareLoopSample, visualization: QuadMeshVisualization
+    ) -> None:
         self.__get_cube().plot_range_velocity.update_visualization(visualization)
 
     def __del__(self) -> None:

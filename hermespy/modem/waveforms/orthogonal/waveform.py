@@ -935,7 +935,9 @@ class GridVisualization(VisualizableAttribute[ImageVisualization]):
         self, figure: plt.Figure | None, axes: VAT, **kwargs
     ) -> ImageVisualization:
         ax: plt.Axes = axes.flat[0]
-        image = ax.imshow(self.__generate_image(), cmap="viridis", aspect="auto", interpolation='none')
+        image = ax.imshow(
+            self.__generate_image(), cmap="viridis", aspect="auto", interpolation="none"
+        )
         ax.set_ylabel("Resource")
         ax.set_xlabel("Time")
 

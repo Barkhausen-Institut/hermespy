@@ -194,14 +194,35 @@ class MatchedFilterJcas(
         else:
             transmitted_samples = self.__last_transmission.signal.view(np.ndarray)[[0], :]
 
-        doppler_bins = state.carrier_frequency * np.linspace(-self.max_velocity, self.max_velocity, int(2 * self.max_velocity / self.velocity_resolution) + 1, endpoint=True) / speed_of_light
-        cube_data = np.empty((angle_bins.shape[0], doppler_bins.shape[0], num_propagated_samples), dtype=np.float64)
+        doppler_bins = (
+            state.carrier_frequency
+            * np.linspace(
+                -self.max_velocity,
+                self.max_velocity,
+                int(2 * self.max_velocity / self.velocity_resolution) + 1,
+                endpoint=True,
+            )
+            / speed_of_light
+        )
+        cube_data = np.empty(
+            (angle_bins.shape[0], doppler_bins.shape[0], num_propagated_samples), dtype=np.float64
+        )
 
         for d, doppler_shift in enumerate(doppler_bins):
             # Apply Doppler shift to the transmitted signal
-            doppler_shifted_samples = transmitted_samples * np.exp(4j * np.pi * doppler_shift * np.arange(transmitted_samples.shape[1]) / state.sampling_rate)
+            doppler_shifted_samples = transmitted_samples * np.exp(
+                4j
+                * np.pi
+                * doppler_shift
+                * np.arange(transmitted_samples.shape[1])
+                / state.sampling_rate
+            )
 
-            cube_data[:, d, :] = abs(correlate(beamformed_samples, doppler_shifted_samples, mode="valid", method="fft")[:, :num_propagated_samples])
+            cube_data[:, d, :] = abs(
+                correlate(beamformed_samples, doppler_shifted_samples, mode="valid", method="fft")[
+                    :, :num_propagated_samples
+                ]
+            )
 
         # Normalize and convert to power
         cube_data = cube_data**2 / self.__last_transmission.signal.num_samples
@@ -216,7 +237,9 @@ class MatchedFilterJcas(
         # Create the cube object
         range_bins = lags[min_range_bin:num_propagated_samples] * resolution
         minmal_cube_data = cube_data[:, :, min_range_bin:num_propagated_samples]
-        cube = RadarCube(minmal_cube_data, angle_bins, doppler_bins, range_bins, state.carrier_frequency)
+        cube = RadarCube(
+            minmal_cube_data, angle_bins, doppler_bins, range_bins, state.carrier_frequency
+        )
 
         # Infer the point cloud, if a detector has been configured
         cloud = None if self.detector is None else self.detector.detect(cube)
@@ -323,6 +346,8 @@ class MatchedFilterJcas(
             process.deserialize_floating("max_range"),
             process.deserialize_object("waveform", CommunicationWaveform, None),
             max_velocity=process.deserialize_floating("max_velocity", cls._DEFAULT_MAX_VELOCITY),
-            velocity_resolution=process.deserialize_floating("velocity_resolution", cls._DEFAULT_VELOCITY_RESOLUTION),
+            velocity_resolution=process.deserialize_floating(
+                "velocity_resolution", cls._DEFAULT_VELOCITY_RESOLUTION
+            ),
             **cls._DeserializeParameters(process),  # type: ignore[arg-type]
         )

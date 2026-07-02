@@ -30,7 +30,9 @@ __status__ = "Prototype"
 
 # Constants for the 5G NR waveform mockup
 IEEE_5GNR_RB_NUM_SUBCARRIERS = 12  # Referred to as N^RB_SC in the standard
-IEEE_5GNR_CYCLIC_PREFIX_RATIO = 0.07  # Ratio of cyclic prefix duration to useful symbol duration, typical for 5G NR (normal CP)
+IEEE_5GNR_CYCLIC_PREFIX_RATIO = (
+    0.07  # Ratio of cyclic prefix duration to useful symbol duration, typical for 5G NR (normal CP)
+)
 IEEE_5GNR_NUM_SYMBOLS_PER_SLOT = 14
 IEEE_5GNR_NUM_SUBFRAMES_PER_FRAME = 10
 IEEE_5GNR_MIN_NUM_RBS = 24  # Minimum number of resource blocks for a single slot in 5G NR
@@ -48,7 +50,7 @@ def nr_subcarrier_spacing(numerology: int) -> float:
     if numerology < 0 or numerology > 6:
         raise ValueError("Numerology index must be between 0 and 6")
 
-    return 15e3 * (2 ** numerology)
+    return 15e3 * (2**numerology)
 
 
 def nr_bandwidth(numerology: int, num_resource_blocks: int = IEEE_5GNR_MIN_NUM_RBS) -> float:
@@ -69,7 +71,9 @@ class PSS(PilotSection):
     """5G NR primary synchronization signal (PSS) section."""
 
     @override
-    def _pilot_sequence(self, num_symbols: int | None = None) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
+    def _pilot_sequence(
+        self, num_symbols: int | None = None
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
         # Section 7.4.2.2.1 of 3GPP TS 138.211 V18.8.0 (2026-02)
 
         # Physical layer identity within cell identity group, can be set to any value in { 0 ... 2 }
@@ -97,7 +101,9 @@ class SSS(PilotSection):
     """5G NR secondary synchronization signal (SSS) section."""
 
     @override
-    def _pilot_sequence(self, num_symbols: int | None = None) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
+    def _pilot_sequence(
+        self, num_symbols: int | None = None
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.complex128]]:
         # Section 7.4.2.3.1 of 3GPP TS 138.211 V18.8.0 (2026-02)
 
         # Cell identity group index, can be set to any value in { 0 ... 2 }
@@ -126,7 +132,9 @@ class SSS(PilotSection):
             x_1[i] = (x_1[i - 6] + x_1[i - 7]) % 2
 
         n = np.arange(num_symbols)
-        pilot_symbol_sequence = (1 - 2 * x_0 * ((n + m_0) % 127)) * (1 - 2 * x_1 * ((n + m_1) % 127))
+        pilot_symbol_sequence = (1 - 2 * x_0 * ((n + m_0) % 127)) * (
+            1 - 2 * x_1 * ((n + m_1) % 127)
+        )
 
         # Map bits to modulation symbols
         return pilot_symbol_sequence.view(np.complex128)
@@ -150,9 +158,9 @@ class NRSlot(OFDMWaveform):
             prefix_type=PrefixType.CYCLIC,
             prefix_ratio=IEEE_5GNR_CYCLIC_PREFIX_RATIO,
             elements=[
-                GridElement(ElementType.NULL, repetitions=int(.5 * num_subcarriers) - 64),
+                GridElement(ElementType.NULL, repetitions=int(0.5 * num_subcarriers) - 64),
                 GridElement(ElementType.REFERENCE, repetitions=127),
-                GridElement(ElementType.NULL, repetitions=int(.5 * num_subcarriers) - 63),
+                GridElement(ElementType.NULL, repetitions=int(0.5 * num_subcarriers) - 63),
             ],
         )
 
@@ -167,9 +175,9 @@ class NRSlot(OFDMWaveform):
             prefix_type=PrefixType.CYCLIC,
             prefix_ratio=IEEE_5GNR_CYCLIC_PREFIX_RATIO,
             elements=[
-                GridElement(ElementType.NULL, repetitions=int(.5 * num_subcarriers) - 64),
+                GridElement(ElementType.NULL, repetitions=int(0.5 * num_subcarriers) - 64),
                 GridElement(ElementType.REFERENCE, repetitions=127),
-                GridElement(ElementType.NULL, repetitions=int(.5 * num_subcarriers) - 63),
+                GridElement(ElementType.NULL, repetitions=int(0.5 * num_subcarriers) - 63),
             ],
         )
 
@@ -185,11 +193,11 @@ class NRSlot(OFDMWaveform):
             prefix_ratio=IEEE_5GNR_CYCLIC_PREFIX_RATIO,
             elements=[
                 GridElement(ElementType.REFERENCE, repetitions=1),  # PBCH DMRS
-                GridElement(ElementType.DATA, repetitions=3),       # PBCH data
+                GridElement(ElementType.DATA, repetitions=3),  # PBCH data
                 GridElement(ElementType.REFERENCE, repetitions=1),  # PBCH DMRS
-                GridElement(ElementType.DATA, repetitions=3),       # PBCH data
+                GridElement(ElementType.DATA, repetitions=3),  # PBCH data
                 GridElement(ElementType.REFERENCE, repetitions=1),  # PBCH DMRS
-                GridElement(ElementType.DATA, repetitions=3),       # PBCH data
+                GridElement(ElementType.DATA, repetitions=3),  # PBCH data
             ],
         )
 
@@ -240,7 +248,9 @@ class NRSlot(OFDMWaveform):
     @classmethod
     def Deserialize(cls: Type[NRSlot], process: DeserializationProcess) -> NRSlot:
         return cls(
-            num_resource_blocks=process.deserialize_integer("num_resource_blocks", IEEE_5GNR_MIN_NUM_RBS)
+            num_resource_blocks=process.deserialize_integer(
+                "num_resource_blocks", IEEE_5GNR_MIN_NUM_RBS
+            )
         )
 
 
@@ -264,7 +274,7 @@ class NRSubframe(NRSlot):
             int: The number of slots in a subframe.
         """
 
-        return 2 ** numerology
+        return 2**numerology
 
     def __init__(self, numerology: int, num_resource_blocks: int = IEEE_5GNR_MIN_NUM_RBS) -> None:
         """
@@ -323,7 +333,9 @@ class NRSubframe(NRSlot):
     def Deserialize(cls: Type[NRSubframe], process: DeserializationProcess) -> NRSubframe:
         return cls(
             numerology=process.deserialize_integer("numerology", 0),
-            num_resource_blocks=process.deserialize_integer("num_resource_blocks", IEEE_5GNR_MIN_NUM_RBS)
+            num_resource_blocks=process.deserialize_integer(
+                "num_resource_blocks", IEEE_5GNR_MIN_NUM_RBS
+            ),
         )
 
 
@@ -347,5 +359,9 @@ class NRSynchronization(Synchronization[NRSubframe]):
     """Synchronization routine detecting the delay and frequency offset of a 5G NR subframe based on the PSS and SSS patterns."""
 
     @override
-    def synchronize(self, signal: np.ndarray[tuple[int, ...], np.dtype[np.complex128]], bandwidth: float, oversampling_factor: int) -> list[int]:
-        ...
+    def synchronize(
+        self,
+        signal: np.ndarray[tuple[int, ...], np.dtype[np.complex128]],
+        bandwidth: float,
+        oversampling_factor: int,
+    ) -> list[int]: ...
