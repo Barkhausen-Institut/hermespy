@@ -793,7 +793,7 @@ class DSPSlot(Generic[DSPType], Sequence[DSPType]):
         """Index of an operator within this slot.
 
         Returns:
-            index: The `operator`'s index.
+            int: The `operator`'s index.
 
         Raises:
             ValueError: If the `operator` is not registered at this slot.

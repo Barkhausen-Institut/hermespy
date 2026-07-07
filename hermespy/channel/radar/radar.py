@@ -120,6 +120,7 @@ class RadarChannelSample(ChannelSample):
                 signal,
                 self.bandwidth,
                 self.carrier_frequency,
+                self.time,
                 propagated_samples,
                 delay,
                 velocity,
@@ -156,6 +157,7 @@ class RadarChannelSample(ChannelSample):
                 self.receiver_state,
                 self.bandwidth,
                 self.carrier_frequency,
+                self.time,
                 0.0,
                 raw_state,
             )
@@ -345,9 +347,10 @@ class RadarPath(Serializable):
         self,
         transmitter_state: DeviceState,
         receiver_state: DeviceState,
-        signal: np.ndarray,
+        signal: SignalBlock,
         bandwidth: float,
         carrier_frequency: float,
+        timestamp: float,
         propagated_samples: np.ndarray,
         propagation_delay: float | None = None,
         relative_velocity: float | None = None,
@@ -359,7 +362,8 @@ class RadarPath(Serializable):
             receiver: Receiving device.
             signal: Signal samples to be propagated.
             bandwidth: Sampling rate of the the propagated signal model in Hz.
-            carrier_frequency: Central carrier frequency of the propagated signal in Hz.
+            carrier_frequency: Central carrier frequency of the propagated signal in Hz.            propagated_samples: Sample buffer to be written to.
+            timestamp: Time at which the channel is sampled in seconds.
             propagated_samples: Sample buffer to be written to.
             propagation_delay:
                 Propagation delay of the wave from transmitter over target to receiver.
@@ -390,7 +394,7 @@ class RadarPath(Serializable):
         # ToDo: Exact time of flight resampling
         # echo_timestamps = propagation_delay + 2 * relative_velocity * signal.timestamps / speed_of_light
         # echo_weights = np.exp(2j * pi * (doppler_shift * echo_timestamps))
-        echo_weights = np.exp(2j * pi * (doppler_shift / bandwidth * np.arange(signal.shape[1])))
+        echo_weights = np.exp(2j * pi * (doppler_shift * (timestamp + np.arange(signal.shape[1]) / bandwidth)))
 
         propagated_samples[
             :, delay_sample_offset : delay_sample_offset + signal.shape[1]
@@ -402,6 +406,7 @@ class RadarPath(Serializable):
         receiver: DeviceState,
         bandwidth: float,
         carrier_frequency: float,
+        timestamp: float,
         delay: float,
         state: np.ndarray,
     ) -> None:
@@ -412,6 +417,7 @@ class RadarPath(Serializable):
             receiver: Receiving device.
             bandwidth: Sampling rate of the the propagated signal model in Hz.
             carrier_frequency: Central carrier frequency of the propagated signal in Hz.
+            timestamp: Time at which the channel is sampled in seconds.
             delay: Delay of the channel state information in seconds.
             state: Sample buffer to be written to.
         """
@@ -429,7 +435,7 @@ class RadarPath(Serializable):
 
         # echo_timestamps = delay + 2 * relative_velocity * np.arange(state.shape[2]) / speed_of_light
         # echo_weights = np.exp(2j * pi * (doppler_shift * echo_timestamps))
-        echo_weights = np.exp(2j * pi * (doppler_shift / bandwidth * np.arange(state.shape[2])))
+        echo_weights = np.exp(2j * pi * (doppler_shift * (timestamp + np.arange(state.shape[2]) / bandwidth)))
 
         state[:, :, :, delay_sample_offset] += np.einsum(
             "ij,k->ijk", propagation_response, echo_weights

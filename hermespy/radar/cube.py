@@ -64,6 +64,40 @@ class _RangePlot(VisualizableAttribute[PlotVisualization]):
         visualization.lines[0, 0][0].set_ydata(range_profile)
 
 
+class _VelocityPlot(VisualizableAttribute[PlotVisualization]):
+
+    __cube: RadarCube
+
+    def __init__(self, cube: RadarCube) -> None:
+        self.__cube = cube
+
+    @property
+    def title(self) -> str:
+        return "Radar Velocity-Power Profile"
+
+    def _prepare_visualization(
+        self, figure: plt.Figure | None, axes: VAT, scale: Literal["lin", "log"] = "log", **kwargs
+    ) -> PlotVisualization:
+
+        _ax: plt.Axes = axes[0, 0]
+        _ax.set_xlabel("Velocity [m/s]")
+        _ax.set_ylabel("Power")
+
+        velocity_profile = np.sum(self.__cube.data, axis=(0, 2), keepdims=False)
+        lines = np.empty((1, 1), dtype=np.object_)
+        if scale == "lin":
+            lines[0, 0] = _ax.plot(self.__cube.velocity_bins, velocity_profile)
+
+        elif scale == "log":
+            lines[0, 0] = _ax.semilogy(self.__cube.velocity_bins, velocity_profile)
+
+        return PlotVisualization(figure, axes, lines)
+
+    def _update_visualization(self, visualization: PlotVisualization, **kwargs) -> None:
+        range_profile = np.sum(self.__cube.data, axis=(0, 2), keepdims=False)
+        visualization.lines[0, 0][0].set_ydata(range_profile)
+
+
 class _RangeVelocityPlot(VisualizableAttribute[QuadMeshVisualization]):
     """Visualizable attribute for plotting range-velocity profiles."""
 
@@ -168,6 +202,7 @@ class RadarCube(Serializable):
     __range_plot: _RangePlot
     __range_velocity_plot: _RangeVelocityPlot
     __angle_plot: _AnglePlot
+    __velocity_plot: _VelocityPlot
 
     def __init__(
         self,
@@ -255,6 +290,7 @@ class RadarCube(Serializable):
         self.__carrier_frequency = carrier_frequency
 
         self.__range_plot = _RangePlot(self)
+        self.__velocity_plot = _VelocityPlot(self)
         self.__range_velocity_plot = _RangeVelocityPlot(self)
         self.__angle_plot = _AnglePlot(self)
 
@@ -343,6 +379,24 @@ class RadarCube(Serializable):
         """
 
         return self.__range_plot
+
+    @property
+    def plot_velocity(self) -> _VelocityPlot:
+        """Visualize the cube's velocity-power profile.
+
+        Args:
+
+            title:
+                Plot title.
+
+            scale:
+                Plot the power axis in linear or logarithmic scale.
+                If not specified, linear scaling is preferred.
+
+        Returns: The generated line plot.
+        """
+
+        return self.__velocity_plot
 
     @property
     def plot_range_velocity(self) -> _RangeVelocityPlot:
