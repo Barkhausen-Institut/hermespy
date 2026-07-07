@@ -3,7 +3,7 @@
 from __future__ import annotations
 from time import time
 from typing import Sequence
-from typing_extensions import override
+from typing_extensions import override, overload
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -520,6 +520,7 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDeviceState, Simulat
         transmissions: Sequence[DeviceOutput],
         device_states: Sequence[SimulatedDeviceState] | None = None,
         channel_realizations: Sequence[ChannelRealization] | None = None,
+        timestamp: float = 0.0,
         interpolation_mode: InterpolationMode = InterpolationMode.NEAREST,
     ) -> tuple[list[list[Signal]], Sequence[ChannelRealization]]:
         """Propagate device transmissions over the scenario's channel instances.
@@ -535,6 +536,11 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDeviceState, Simulat
 
             channel_realizations:
                 Sequence of channel realizations representing the scenario's channel random states.
+
+            timestamp:
+                Timestamp at which the propagation is to be evaluated in seconds.
+                This is relevant to the device states and the evolution the channel realizations.
+                Defaults to 0.0.
 
             interpolation_mode:
                 Interpolation mode for the channel samples.
@@ -560,7 +566,7 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDeviceState, Simulat
 
         # Realize all channel instances
         _device_states = (
-            device_states if device_states is not None else [d.state(0.0) for d in self.devices]
+            device_states if device_states is not None else [d.state(timestamp) for d in self.devices]
         )
         _channel_realizations = (
             channel_realizations if channel_realizations is not None else self.realize_channels()
@@ -580,7 +586,7 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDeviceState, Simulat
 
                 # Sample the channel realization for a propagation from device alpha to device beta
                 alpha_beta_sample: ChannelSample = channel_realization.sample(
-                    alpha_state, beta_state
+                    alpha_state, beta_state, timestamp
                 )
 
                 # Propagate signal emitted from device alpha to device beta over the linking channel
@@ -738,7 +744,8 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDeviceState, Simulat
 
         return self._drop(timestamp)
 
-    def _drop(self, timestamp: float = 0.0) -> SimulatedDrop:
+    @overload
+    def _drop(self, timestamps: float = 0.0) -> SimulatedDrop:
         """Simulate a drop at the given time.
 
         Args:
@@ -748,30 +755,53 @@ class SimulationScenario(Scenario[SimulatedDevice, SimulatedDeviceState, Simulat
 
         Returns: Simulated drop.
         """
+        ...  # pragma: no cover
+
+    @overload
+    def _drop(self, timestamps: Sequence[float]) -> Sequence[SimulatedDrop]:
+        """Simulate a drops at the given timestamps.
+
+        Args:
+            timestamps:
+                Times at which the drops are simulated.
+
+        Returns: Simulated drops.
+        """
+        ...  # pragma: no cover
+
+    def _drop(self, timestamps: float | Sequence[float] = 0.0) -> SimulatedDrop | Sequence[SimulatedDrop]:
 
         # Generate drop timestamp
         drop_timestamp = time()
 
-        # Query all device states
-        states = [d.state(timestamp) for d in self.devices]
+        _timestamps: Sequence[float] = [timestamps] if isinstance(timestamps, float) else timestamps
+        drops: list[SimulatedDrop] = []
 
-        # Generate device transmissions
-        device_transmissions = self.transmit_devices(states)
+        channel_realizations = self.realize_channels()
+        for t in _timestamps:
 
-        # Simulate channel propagation
-        channel_propagations, channel_realizations = self.propagate(device_transmissions, states)
+            # Query all device states
+            states = [d.state(t) for d in self.devices]
 
-        # Process receptions
-        trigger_realizations = [t.trigger_realization for t in device_transmissions]
-        leaking_signals = [t.leaking_signals for t in device_transmissions]
-        device_receptions = self.receive_devices(
-            channel_propagations, states, True, trigger_realizations, leaking_signals
-        )
+            # Generate device transmissions
+            device_transmissions = self.transmit_devices(states)
 
-        # Return finished drop
-        return SimulatedDrop(
-            drop_timestamp, device_transmissions, channel_realizations, device_receptions
-        )
+            # Simulate channel propagation
+            channel_propagations, _ = self.propagate(device_transmissions, states, channel_realizations, t)
+
+            # Process receptions
+            trigger_realizations = [t.trigger_realization for t in device_transmissions]
+            leaking_signals = [t.leaking_signals for t in device_transmissions]
+            device_receptions = self.receive_devices(
+                channel_propagations, states, True, trigger_realizations, leaking_signals
+            )
+
+            # Return finished drop
+            drops.append(SimulatedDrop(
+                drop_timestamp, device_transmissions, channel_realizations, device_receptions
+            ))
+
+        return drops[0] if len(drops) < 2 else drops
 
     @property
     def visualize(self) -> _ScenarioVisualizer:

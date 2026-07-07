@@ -458,6 +458,7 @@ class ChannelRealization(Serializable, Generic[CST]):
         self,
         transmitter: SimulatedDeviceState,
         receiver: SimulatedDeviceState,
+        timestamp: float = 0.0,
         carrier_frequency: float | None = None,
         bandwidth: float | None = None,
     ) -> CST:
@@ -472,6 +473,10 @@ class ChannelRealization(Serializable, Generic[CST]):
 
             receiver:
                 State of the receiving device at the time of sampling.
+
+            timestamp:
+                Time at which the channel is sampled in seconds.
+                Zero by default.
 
             carrier_frequency:
                 Carrier frequency of the channel in Hz.
@@ -508,6 +513,7 @@ class ChannelRealization(Serializable, Generic[CST]):
 
             timestamp:
                 Time at which the channel is sampled in seconds.
+                Zero by default.
 
             carrier_frequency:
                 Carrier frequency of the channel in Hz.
@@ -525,16 +531,16 @@ class ChannelRealization(Serializable, Generic[CST]):
         self,
         transmitter: SimulatedDevice | SimulatedDeviceState,
         receiver: SimulatedDevice | SimulatedDeviceState,
+        timestamp: float = 0.0,
         *args,
         **kwargs,
     ) -> CST:
+        carrier_frequency = float(args[0]) if len(args) > 0 else None
+        bandwidth = float(args[1]) if len(args) > 1 else None
+
         from hermespy.simulation import SimulatedDevice, SimulatedDeviceState
 
         if isinstance(transmitter, SimulatedDevice) and isinstance(receiver, SimulatedDevice):
-            timestamp = float(args[0]) if len(args) > 0 else 0.0
-            carrier_frequency = float(args[1]) if len(args) > 1 else None
-            bandwidth = float(args[2]) if len(args) > 2 else None
-
             transmitter_device = id(transmitter)
             receiver_device = id(receiver)
             transmitter_state = transmitter.state(timestamp)
@@ -543,10 +549,6 @@ class ChannelRealization(Serializable, Generic[CST]):
         elif isinstance(transmitter, SimulatedDeviceState) and isinstance(
             receiver, SimulatedDeviceState
         ):
-            timestamp = 0.0
-            carrier_frequency = float(args[0]) if len(args) > 0 else None
-            bandwidth = float(args[1]) if len(args) > 1 else None
-
             transmitter_device = transmitter.device_id
             receiver_device = receiver.device_id
             transmitter_state = transmitter
@@ -666,7 +668,7 @@ class ChannelRealization(Serializable, Generic[CST]):
         elif isinstance(transmitter, SimulatedDeviceState) and isinstance(
             receiver, SimulatedDeviceState
         ):
-            timestamp = 0.0
+            timestamp = sample.time
             carrier_frequency = float(args[0]) if len(args) > 0 else None
             bandwidth = float(args[1]) if len(args) > 1 else None
 

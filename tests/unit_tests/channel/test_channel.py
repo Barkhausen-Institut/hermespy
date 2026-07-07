@@ -126,13 +126,14 @@ class TestChannelSample(TestCase):
         self.rng = np.random.default_rng(42)
         self.transmitter = SimulatedDevice(antennas=SimulatedUniformArray(SimulatedIdealAntenna, 1e-3, (2, 1, 1)))
         self.receiver = SimulatedDevice()
+        self.timestamp = 789e-3
         self.carrier_frequency = 1.234e9
         self.bandwidth = 5.678e6
 
         self.sample = ChannelMock().realize().sample(
             self.transmitter,
             self.receiver,
-            0.0,
+            self.timestamp,
             self.carrier_frequency,
             self.bandwidth
         )
@@ -142,7 +143,7 @@ class TestChannelSample(TestCase):
 
         self.assertEqual(self.carrier_frequency, self.sample.carrier_frequency)
         self.assertEqual(self.bandwidth, self.sample.bandwidth)
-        self.assertEqual(0.0, self.sample.time)
+        self.assertEqual(self.timestamp, self.sample.time)
 
     def test_properties(self) -> None:
         """Properties should return the correct values"""

@@ -13,6 +13,8 @@ Radar cubes represent the raw image create after the base-band processing of rad
 
 .. autoclass:: hermespy.radar.cube._RangeVelocityPlot
 
+.. autoclass:: hermespy.radar.cube._VelocityPlot
+
 .. autoclass:: hermespy.radar.cube._AnglePlot
 
 .. footbibliography::

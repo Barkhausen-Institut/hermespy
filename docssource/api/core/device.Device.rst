@@ -9,6 +9,14 @@ Device Model
 
 .. autoclass:: hermespy.core.device.DeviceType
 
+.. autoclass:: hermespy.core.device.ReceiverSlot
+
+.. autoclass:: hermespy.core.device.TransmitterSlot
+
+.. autoclass:: hermespy.core.device.DSPSlot
+
+.. autoclass:: hermespy.core.device.DSPType
+
 .. toctree::
    :hidden:
    :glob:

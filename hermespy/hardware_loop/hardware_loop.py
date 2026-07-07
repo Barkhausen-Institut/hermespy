@@ -479,7 +479,7 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
     __evaluators: list[Evaluator]  # Evaluators further processing drop information
     __plots: list[HardwareLoopPlot]
     __pre_drop_hooks: list[Callable[[PhysicalScenarioType, Console], None]]
-    __post_drop_hooks: list[Callable[[PhysicalScenarioType, Console], None]]
+    __post_drop_hooks: list[Callable[[HardwareLoopSample, PhysicalScenarioType, Console], None]]
     __iteration_priority: IterationPriority
     __interrupt_run: bool
 
@@ -664,7 +664,7 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
         self.__pre_drop_hooks.append(hook)
 
     @property
-    def post_drop_hooks(self) -> list[Callable[[PhysicalScenarioType, Console], None]]:
+    def post_drop_hooks(self) -> list[Callable[[HardwareLoopSample, PhysicalScenarioType, Console], None]]:
         """List of post-drop hooks.
 
         Post-drop hooks are called after each drop is generated and can be used to
@@ -673,7 +673,7 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
 
         return self.__post_drop_hooks
 
-    def add_post_drop_hook(self, hook: Callable[[PhysicalScenarioType, Console], None]) -> None:
+    def add_post_drop_hook(self, hook: Callable[[HardwareLoopSample, PhysicalScenarioType, Console], None]) -> None:
         """Add a post-drop hook.
 
         Args:
@@ -958,8 +958,8 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
                 # Generate the next drop
                 try:
                     # Execute pre-drop hooks
-                    for hook in self.__pre_drop_hooks:
-                        hook(self.scenario, self.console)
+                    for pre_hook in self.__pre_drop_hooks:
+                        pre_hook(self.scenario, self.console)
 
                     # Generate a new samples
                     loop_sample = self.__generate_sample(section_indices, sample_index)
@@ -990,8 +990,8 @@ class HardwareLoop(Generic[PhysicalScenarioType, PDT], Pipeline[PhysicalScenario
                             thread.update_plot(loop_sample)
 
                     # Execute post-drop hooks
-                    for hook in self.__post_drop_hooks:
-                        hook(self.scenario, self.console)
+                    for post_hook in self.__post_drop_hooks:
+                        post_hook(loop_sample, self.scenario, self.console)
 
                 except Exception as e:
                     self._handle_exception(e, confirm=False)

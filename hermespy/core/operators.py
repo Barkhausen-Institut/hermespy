@@ -167,6 +167,7 @@ class SignalReceiver(StaticOperator, Receiver[Reception], Serializable):
     """Custom signal receiver."""
 
     __expected_power: float
+    __num_samples: int
 
     def __init__(
         self,
@@ -182,10 +183,22 @@ class SignalReceiver(StaticOperator, Receiver[Reception], Serializable):
         if expected_power < 0.0:
             raise ValueError(f"Expected power must be non-negative (not {expected_power})")
         self.__expected_power = expected_power
+        self.num_samples = num_samples
 
     @property
     def energy(self) -> float:
         return self.__expected_power * self.num_samples
+
+    @property
+    @override
+    def num_samples(self) -> int:
+        return self.__num_samples
+
+    @num_samples.setter
+    def num_samples(self, value: int) -> None:
+        if value < 0:
+            raise ValueError(f"Number of samples must be non-negative (not {value})")
+        self.__num_samples = value
 
     def frame_duration(self, bandwidth: float) -> float:
         return self.num_samples / bandwidth

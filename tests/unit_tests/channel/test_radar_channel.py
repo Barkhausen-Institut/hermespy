@@ -156,6 +156,7 @@ class _TestRadarPathRealization(Generic[RPT], unittest.TestCase):
         self.rng = default_rng(42)
         self.sampling_rate = 1e8
         self.carrier_frequency = 1e9
+        self.timestamp = 1.234e-3
 
         self.attenuate = True
         self.static = False
@@ -169,10 +170,10 @@ class _TestRadarPathRealization(Generic[RPT], unittest.TestCase):
 
         expected_sample_offset = int(self.path_realization.propagation_delay(self.transmitter, self.receiver) * self.sampling_rate)
         propagated_samples = np.zeros((self.receiver.antennas.num_receive_antennas, test_signal.num_samples + expected_sample_offset), dtype=np.complex128)
-        self.path_realization.add_propagation(self.transmitter.state(0), self.receiver.state(0), test_signal, test_signal.sampling_rate, test_signal.carrier_frequency, propagated_samples)
+        self.path_realization.add_propagation(self.transmitter.state(0), self.receiver.state(0), test_signal, test_signal.sampling_rate, test_signal.carrier_frequency, self.timestamp, propagated_samples)
 
         raw_state = np.zeros((self.receiver.antennas.num_receive_antennas, self.transmitter.antennas.num_transmit_antennas, test_signal.num_samples, 1 + expected_sample_offset), dtype=np.complex128)
-        self.path_realization.add_state(self.transmitter.state(0), self.receiver.state(0), self.sampling_rate, self.carrier_frequency, 0.0, raw_state)
+        self.path_realization.add_state(self.transmitter.state(0), self.receiver.state(0), self.sampling_rate, self.carrier_frequency, self.timestamp, 0.0, raw_state)
         channel_state = ChannelStateInformation(ChannelStateFormat.IMPULSE_RESPONSE, raw_state)
         state_propagated_samples = channel_state.propagate(test_signal).view(np.ndarray)
 
@@ -190,7 +191,7 @@ class _TestRadarPathRealization(Generic[RPT], unittest.TestCase):
         self.path_realization.static = False
         self.assertFalse(self.path_realization.static)
 
-    def test_propagtate_state(self) -> None:
+    def test_propagate_state(self) -> None:
         """Propagation and state should be equivalent"""
 
         self.path_realization.attenuate = False
@@ -206,11 +207,11 @@ class _TestRadarPathRealization(Generic[RPT], unittest.TestCase):
         """Adding a delayed state with a too high delay should do nothing"""
 
         state = np.zeros((1, 1, 5, 10), dtype=np.complex128)
-        self.path_realization.add_state(self.transmitter.state(0), self.receiver.state(0), self.sampling_rate, self.carrier_frequency, -1e10, state)
+        self.path_realization.add_state(self.transmitter.state(0), self.receiver.state(0), self.sampling_rate, self.carrier_frequency, self.timestamp, -1e10, state)
         assert_array_equal(np.zeros_like(state), state)
 
         state = np.zeros((1, 1, 5, 1), dtype=np.complex128)
-        self.path_realization.add_state(self.transmitter.state(0), self.receiver.state(0), self.sampling_rate, self.carrier_frequency, 0.0, state)
+        self.path_realization.add_state(self.transmitter.state(0), self.receiver.state(0), self.sampling_rate, self.carrier_frequency, self.timestamp, 0.0, state)
         assert_array_equal(np.zeros_like(state), state)
 
     def test_serialization(self) -> None:
