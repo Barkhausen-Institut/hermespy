@@ -6,6 +6,8 @@ from sys import maxsize
 from typing import Generic, Type, TypeVar
 from typing_extensions import override
 
+import numpy as np
+
 from hermespy.core import (
     RandomNode,
     RandomRealization,
@@ -14,6 +16,7 @@ from hermespy.core import (
     DeserializationProcess,
 )
 from hermespy.core.signal_model import ST
+from ..signal import RFSignal
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2026, Barkhausen Institut gGmbH"
@@ -62,9 +65,24 @@ class NoiseRealization(RandomRealization):
         """
         Args:
             signal: The signal to which the noise should be added.
+            power: The power of the added noise. If None, the realization's expected power will be used.
 
         Returns:
             Signal model with added noise.
+        """
+        ...  # pragma: no cover
+
+    @abstractmethod
+    def fill_to(self, signal: RFSignal) -> RFSignal:
+        """Fill the RF signal with remaining noise to match the realization's expected noise power.
+
+        Will add noise to the signal until the desired noise power is reached.
+        Cannot remove noise from the signal if the realization's expected noise power is lower than the signal's current noise power.
+
+        Args:
+            signal: The signal to which the noise should be added.
+
+        Returns: The filled signal.
         """
         ...  # pragma: no cover
 
@@ -140,6 +158,7 @@ class NoiseModel(Serializable, RandomNode, Generic[NRT]):
 class AWGNRealization(NoiseRealization):
     """Realization of additive white Gaussian noise"""
 
+    @override
     def add_to(self, signal: ST) -> ST:
         # Abort if the power is zero
         if self.power == 0.0:
@@ -157,6 +176,29 @@ class AWGNRealization(NoiseRealization):
             block += noise_samples  # type: ignore
         noisy_signal.noise_power = self.power
 
+        return noisy_signal
+
+    @override
+    def fill_to(self, signal: RFSignal) -> RFSignal:
+        # Abort if the signal's noise power is already at the desired level
+        if self.power <= 0.0 or np.all(signal.noise_powers >= self.power):
+            return signal
+
+        # Added powers
+        added_powers = np.clip(self.power - signal.noise_powers, 0, None)
+
+        # Create random number generator
+        rng = self.generator()
+
+        # Add noise to every dense block
+        noisy_signal = signal.copy()
+        for block in noisy_signal.blocks:
+            noise_samples = (0.5 * added_powers[:, None]) ** 0.5 * (
+                rng.standard_normal(block.shape) + 1j * rng.standard_normal(block.shape)
+            )
+            block += noise_samples  # type: ignore
+
+        noisy_signal.noise_powers = signal.noise_powers + added_powers
         return noisy_signal
 
 

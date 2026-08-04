@@ -25,8 +25,11 @@ class RFSignal(DenseSignal):
     It allows for diverging carrier frequencies and noise powers for each represented stream.
     """
 
+    _DEFAULT_REFERENCE_IMPEDANCE = 50.0
+
     __carrier_frequencies: np.ndarray[tuple[int], np.dtype[np.float64]]
     __noise_powers: np.ndarray[tuple[int], np.dtype[np.float64]]
+    __reference_impedance: float
 
     def __new__(
         cls,
@@ -35,6 +38,7 @@ class RFSignal(DenseSignal):
         sampling_rate: float,
         carrier_frequencies: np.ndarray | None = None,
         noise_powers: np.ndarray | None = None,
+        reference_impedance: float = _DEFAULT_REFERENCE_IMPEDANCE,
         delay: float = 0.0,
         buffer: Buffer | None = None,
     ):
@@ -49,6 +53,9 @@ class RFSignal(DenseSignal):
             noise_powers:
                 Noise power for each stream in Watts.
                 If specified, must be of size `num_streams`.
+            reference_impedance:
+                Reference impedance for the represented Voltage signal in Ohms.
+                :math:`50~\\Omega` by default.
             delay: Delay of the signal in seconds.
             buffer: Optional buffer to use for the signal data.
         """
@@ -79,6 +86,7 @@ class RFSignal(DenseSignal):
         # Initialize additional RFSignal attributes
         rf.carrier_frequencies = _carrier_frequencies
         rf.noise_powers = _noise_powers
+        rf.reference_impedance = reference_impedance
 
         return rf
 
@@ -116,6 +124,21 @@ class RFSignal(DenseSignal):
             )
         self.__noise_powers = value
 
+    @property
+    def reference_impedance(self) -> float:
+        """Reference impedance for the represented Voltage signal in Ohms.
+        Raises:
+            ValueError: For negative or zero reference impedance.
+        """
+
+        return self.__reference_impedance
+
+    @reference_impedance.setter
+    def reference_impedance(self, value: float) -> None:
+        if value <= 0:
+            raise ValueError("Reference impedance must be positive")
+        self.__reference_impedance = value
+
     @override
     def __array_finalize__(self, obj: np.ndarray | RFSignal | None) -> None:
         if obj is None:
@@ -135,6 +158,10 @@ class RFSignal(DenseSignal):
             self.noise_powers = obj.noise_powers[: self.num_streams].copy()  # type: ignore
         else:
             self.noise_powers = np.full((self.num_streams,), self.noise_power, np.float64)
+        if hasattr(obj, "reference_impedance"):
+            self.reference_impedance = obj.reference_impedance
+        else:
+            self.reference_impedance = self._DEFAULT_REFERENCE_IMPEDANCE
 
     @override
     def __getitem__(self, key) -> RFSignal:
@@ -164,6 +191,7 @@ class RFSignal(DenseSignal):
         carrier_frequency: float | np.ndarray[tuple[int], np.dtype[np.float64]] | None = None,
         noise_power: float | np.ndarray[tuple[int], np.dtype[np.float64]] | None = None,
         delay: float = 0.0,
+        reference_impedance: float = _DEFAULT_REFERENCE_IMPEDANCE,
     ) -> RFSignal:
         """Create a new RF signal from a given numpy ndarray.
 
@@ -178,6 +206,7 @@ class RFSignal(DenseSignal):
                 Noise power for each stream in Watts.
                 If specified, must be of size `num_streams`.
             delay: Delay of the signal in seconds.
+            reference_impedance: Reference impedance for the represented Voltage signal in Ohms.
 
         Returns:
             The created RF signal.
@@ -188,10 +217,11 @@ class RFSignal(DenseSignal):
             raise ValueError(f"Expected a 2D ndarray, but got {array.ndim}D")
 
         # Cast ndarray to RFSignal
-        rf_signal = array.astype(np.complex128).view(RFSignal)
+        rf_signal: RFSignal = array.astype(np.complex128).view(RFSignal)
 
         # Set additional attributes
         rf_signal.sampling_rate = sampling_rate
+        rf_signal.reference_impedance = reference_impedance
         rf_signal.delay = delay
 
         if carrier_frequency is not None:
@@ -265,6 +295,7 @@ class RFSignal(DenseSignal):
             sampling_rate,
             self.carrier_frequencies.copy(),
             self.noise_powers.copy(),
+            self.reference_impedance,
             self.delay,
             resampled_block.tobytes(),
         )
@@ -277,9 +308,19 @@ class RFSignal(DenseSignal):
             self.sampling_rate,
             self.carrier_frequencies.copy(),
             self.noise_powers.copy(),
+            self.reference_impedance,
             self.delay,
             bytearray(self),
         )
+
+    @property
+    def rf_power(self) -> np.ndarray[tuple[int], np.dtype[np.float64]]:
+        """Power of the represented RF signal.
+
+        Computed according to the formula: :math:`P = \\frac{U^2}{Z_{Ref}}`.
+        """
+
+        return DenseSignal.power.fget(self) / self.reference_impedance  # type: ignore[attr-defined]
 
     @override
     def serialize(self, process: SerializationProcess) -> None:
@@ -288,6 +329,8 @@ class RFSignal(DenseSignal):
         process.serialize_array(self.carrier_frequencies, "carrier_frequencies")
         process.serialize_array(self.noise_powers, "noise_powers")
         process.serialize_floating(self.delay, "delay")
+        if self.reference_impedance != self._DEFAULT_REFERENCE_IMPEDANCE:
+            process.serialize_floating(self.reference_impedance, "reference_impedance")
 
     @classmethod
     @override
@@ -297,6 +340,7 @@ class RFSignal(DenseSignal):
         carrier_frequencies = process.deserialize_array("carrier_frequencies", dtype=np.float64)
         noise_powers = process.deserialize_array("noise_powers", dtype=np.float64)
         delay = process.deserialize_floating("delay", 0.0)
+        reference_impedance = process.deserialize_floating("reference_impedance", cls._DEFAULT_REFERENCE_IMPEDANCE)
 
         return cls(
             samples.shape[0],
@@ -304,6 +348,7 @@ class RFSignal(DenseSignal):
             sampling_rate,
             carrier_frequencies,
             noise_powers,
+            reference_impedance,
             delay,
             buffer=samples.tobytes(),
         )

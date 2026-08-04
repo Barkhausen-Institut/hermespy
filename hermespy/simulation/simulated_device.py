@@ -47,6 +47,7 @@ from .rf import (
     MixerType,
     RFChain,
     RFChainRealization,
+    RFSignal,
     NoiseLevel,
     NoiseModel,
     N0,
@@ -1786,7 +1787,7 @@ class SimulatedDevice(Device[SimulatedDeviceState], Moveable):
     def _generate_receiver_input(
         self,
         receiver: Receiver,
-        baseband_signal: Signal,
+        baseband_signal: RFSignal,
         noise_realization: NoiseRealization,
         state: SimulatedDeviceState,
     ) -> Signal:
@@ -1813,7 +1814,7 @@ class SimulatedDevice(Device[SimulatedDeviceState], Moveable):
         # Add noise to the received signal
         # After the RF rework, this should already be included in the RF output
         # However, to keep the old behaviour, we keep this here for now
-        noisy_signal = noise_realization.add_to(baseband_signal)
+        noisy_signal = noise_realization.fill_to(baseband_signal)
 
         # Apply the receive stream decoding
         decoded_signal = (

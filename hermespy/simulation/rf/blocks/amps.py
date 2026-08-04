@@ -115,8 +115,11 @@ class PowerAmplifier(RFBlock, Serializable):
     @override
     def _propagate(self, realization: RFBlockRealization, input: RFSignal) -> RFSignal:
 
+        # Add noise to the input signal
+        noisy_input = realization.noise_realization.fill_to(input)
+
         # Amplify the input signal
-        amplified_signal: RFSignal = input * self.gain  # type: ignore
+        amplified_signal: RFSignal = noisy_input * self.gain  # type: ignore
 
         # Model amplification characteristics
         distorted_signal = self.model(amplified_signal)

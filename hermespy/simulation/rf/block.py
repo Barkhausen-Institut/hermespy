@@ -78,6 +78,13 @@ RFBRT = TypeVar("RFBRT", bound=RFBlockRealization)
 class RFBlock(ABC, Generic[RFBRT], RandomNode, Serializable):
     """Base class of a single block within physical models of radio-frequency chains."""
 
+    _DEFAULT_REFERENCE_IMPEDANCE: float = 50.0
+    """Default reference impedance in Ohm.
+
+    Typical RF systems are designed to operate with a reference impedance of 50 Ohm.
+    Some satellite communication systems may use different reference impedances, such as 75 Ohm.
+    """
+
     __noise_model: NoiseModel | None
     __noise_level: NoiseLevel
 
@@ -229,6 +236,7 @@ class RFBlock(ABC, Generic[RFBRT], RandomNode, Serializable):
                     propagated_signal.sampling_rate,
                     propagated_signal.carrier_frequencies,
                     propagated_signal.noise_powers,
+                    propagated_signal.reference_impedance,
                     propagated_signal.delay,
                     padded_samples.tobytes(),
                 )
@@ -245,6 +253,7 @@ class RFBlock(ABC, Generic[RFBRT], RandomNode, Serializable):
                 realization.sampling_rate,
                 noisy_propagated_signal.carrier_frequencies,
                 noisy_propagated_signal.noise_powers,
+                noisy_propagated_signal.reference_impedance,
                 noisy_propagated_signal.delay,
                 filtered_output.tobytes(),
             )
