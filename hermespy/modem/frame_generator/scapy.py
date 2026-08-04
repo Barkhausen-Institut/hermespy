@@ -1,10 +1,17 @@
+# -*- coding: utf-8 -*-
+
+from unittest import SkipTest
+
 from .frame_generator import FrameGenerator
 from ..bits_source import BitsSource
 
 import numpy as np
 from typing import Type
 
-from scapy.packet import Packet, raw  # type: ignore
+try:
+    from scapy.packet import Packet, raw  # type: ignore
+except ModuleNotFoundError:
+    raise SkipTest("Scapy not installed")
 
 __author__ = "Egor Achkasov"
 __copyright__ = "Copyright 2026, Barkhausen Institut gGmbH"

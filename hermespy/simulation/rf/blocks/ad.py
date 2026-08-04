@@ -71,6 +71,12 @@ class ConverterBase(RFBlock):
         return self.__num_ports
 
     @property
+    def num_ports(self) -> int:
+        """Number of input / output ports within this converter."""
+
+        return self.__num_ports
+
+    @property
     def num_quantization_bits(self) -> int | None:
         """Quantization resolution in bits
 
@@ -380,9 +386,16 @@ class ADC(ConverterBase, DSPOutputBlock):
     The quantizer can be configured to behave as either a mid-riser or mid-tread quantizer.
     """
 
-    NO_RESAMPlING: float = 0.0
+    NO_RESAMPLING: float = 0.0
     """Magic number of the ADC's sampling rate indicating no resampling is applied."""
 
+    _DEFAULT_MAX_INPUT_POWER = 1 / DSPInputBlock._DEFAULT_REFERENCE_IMPEDANCE
+    _DEFAULT_QUANTIZER_TYPE = QuantizerType.MID_RISER
+    _DEFAULT_NUM_PORTS = 1
+
+    __max_input_power: float
+    __reference_impedance: float
+    __max_input_amplitude: float
     gain: GainControlBase
     __quantizer_type: QuantizerType
     __i: RFBlockPort[ADC]
@@ -390,9 +403,11 @@ class ADC(ConverterBase, DSPOutputBlock):
     def __init__(
         self,
         num_quantization_bits: int | None = None,
+        max_input_power: float = _DEFAULT_MAX_INPUT_POWER,
+        reference_impedance: float = DSPInputBlock._DEFAULT_REFERENCE_IMPEDANCE,
         gain: GainControlBase | None = None,
-        quantizer_type: QuantizerType = QuantizerType.MID_RISER,
-        num_ports: int = 1,
+        quantizer_type: QuantizerType = _DEFAULT_QUANTIZER_TYPE,
+        num_ports: int = _DEFAULT_NUM_PORTS,
         noise_model: NoiseModel | None = None,
         noise_level: NoiseLevel | None = None,
         seed: int | None = None,
@@ -400,17 +415,24 @@ class ADC(ConverterBase, DSPOutputBlock):
         """
         Args:
             num_quantization_bits: ADC resolution in bits. Default is infinite resolution (no quantization)
+            max_amplitude: Maximum acceptable input voltage. Default is 1.0.
             gain: Amplitude gain control at ADC input. Default is Gain(1.0), i.e., no gain.
             quantizer_type: Determines quantizer behaviour at zero. Default is QuantizerType.MID_RISER.
             num_ports: Number of analog ports of the ADC.
             seed: Seed with which to initialize the block's random state.
         """
 
+        # Assert arguments
+        if reference_impedance <= 0.0:
+            raise ValueError("ADC reference impedance must be strictly positive")
+
         # Init base classes
         ConverterBase.__init__(self, num_quantization_bits, num_ports, seed)
         DSPOutputBlock.__init__(self, noise_model, noise_level, seed)
 
         # Initialize attributes
+        self.__reference_impedance = reference_impedance
+        self.max_input_power = max_input_power
         self.gain = Gain() if gain is None else gain
         self.quantizer_type = quantizer_type
         self.__i = RFBlockPort(self, [p for p in range(num_ports)], RFBlockPortType.IN)
@@ -430,6 +452,24 @@ class ADC(ConverterBase, DSPOutputBlock):
         """Input ports of the analog-digital converter."""
 
         return self.__i
+
+    @property
+    def max_input_power(self) -> float:
+        """Maximum acceptable input power in Watts.
+
+        Raises:
+            ValueError: For values smaller than zero.
+        """
+
+        return self.__max_input_power
+
+    @max_input_power.setter
+    def max_input_power(self, value: float) -> None:
+        if value < 0:
+            raise ValueError("Maximum input power must be non-negative")
+
+        self.__max_input_power = value
+        self.__max_input_amplitude = (value * self.__reference_impedance)**.5
 
     @property
     def quantizer_type(self) -> QuantizerType:
@@ -465,33 +505,32 @@ class ADC(ConverterBase, DSPOutputBlock):
             quantized_signal = input_signal
 
         else:
-            max_amplitude = 1.0
 
             # Mid-riser quantization
             if self.quantizer_type == QuantizerType.MID_RISER:
-                step = 2 * max_amplitude / self.num_quantization_levels
+                step = 2 * self.__max_input_amplitude / self.num_quantization_levels
 
                 quantized_signal.real = step * (np.floor(input_signal.real / step) + 0.5)
                 quantized_signal.imag = step * (np.floor(input_signal.imag / step) + 0.5)
 
                 quantized_signal.real = np.clip(
-                    quantized_signal.real, -max_amplitude + step / 2, max_amplitude - step / 2
+                    quantized_signal.real, -self.__max_input_amplitude + step / 2, self.__max_input_amplitude - step / 2
                 )
                 quantized_signal.imag = np.clip(
-                    quantized_signal.imag, -max_amplitude + step / 2, max_amplitude - step / 2
+                    quantized_signal.imag, -self.__max_input_amplitude + step / 2, self.__max_input_amplitude - step / 2
                 )
 
             # Mid-tread quantization
             # Note that mid-tread quantization generates an odd number of levels
             else:
-                step = 2 * max_amplitude / (self.num_quantization_levels + 1)
+                step = 2 * self.__max_input_amplitude / (self.num_quantization_levels + 1)
 
                 clipped_signal = np.empty_like(input_signal)
                 clipped_signal.real = np.clip(
-                    input_signal.real, -max_amplitude, max_amplitude - step
+                    input_signal.real, -self.__max_input_amplitude, self.__max_input_amplitude - step
                 )
                 clipped_signal.imag = np.clip(
-                    input_signal.imag, -max_amplitude, max_amplitude - step
+                    input_signal.imag, -self.__max_input_amplitude, self.__max_input_amplitude - step
                 )
 
                 quantized_signal.real = step * np.floor(clipped_signal.real / step + 0.5)
@@ -541,18 +580,22 @@ class ADC(ConverterBase, DSPOutputBlock):
         num_frames = (
             int(np.ceil(input.num_samples / num_frame_samples)) if num_frame_samples > 0 else 0
         )
+
+        # Add remaining noise before quantization
+        noisy_input = realization.noise_realization.fill_to(input)
+
         converted_signal = RFSignal(
-            input.num_streams,
+            noisy_input.num_streams,
             num_frames * num_frame_samples,
-            sampling_rate=input.sampling_rate,
-            carrier_frequencies=input.carrier_frequencies,
-            noise_powers=input.noise_powers,
-            delay=input.delay,
+            sampling_rate=noisy_input.sampling_rate,
+            carrier_frequencies=noisy_input.carrier_frequencies,
+            noise_powers=noisy_input.noise_powers,
+            delay=noisy_input.delay,
         )
 
-        # Iterate over each frame independtenly
+        # Iterate over each frame independently
         for f in range(num_frames):
-            frame_signal = input[:, f * num_frame_samples : (f + 1) * num_frame_samples]
+            frame_signal = noisy_input[:, f * num_frame_samples : (f + 1) * num_frame_samples]
             converted_frame_signal = self.__convert_frame(frame_signal)
             converted_signal[:, f * num_frame_samples : (f + 1) * num_frame_samples] = (
                 converted_frame_signal
@@ -611,37 +654,85 @@ class ADC(ConverterBase, DSPOutputBlock):
     def serialize(self, process: SerializationProcess) -> None:
         if self.num_quantization_bits is not None:
             process.serialize_integer(self.num_quantization_bits, "num_quantization_bits")
+        if self.max_input_power != self._DEFAULT_MAX_INPUT_POWER:
+            process.serialize_floating(self.max_input_power, "max_input_power")
+        if self.__reference_impedance != self._DEFAULT_REFERENCE_IMPEDANCE:
+            process.serialize_floating(self.__reference_impedance, "reference_impedance")
         process.serialize_object(self.gain, "gain")
-        process.serialize_object(self.quantizer_type, "quantizer_type")
+        if self.quantizer_type != self._DEFAULT_QUANTIZER_TYPE:
+            process.serialize_object(self.quantizer_type, "quantizer_type")
+        if self.num_ports != self._DEFAULT_NUM_PORTS:
+            process.serialize_integer(self.num_ports, "num_ports")
+        if self.noise_model is not None:
+            process.serialize_object(self.noise_model, "noise_model")
+        if self.noise_level is not None:
+            process.serialize_object(self.noise_level, "noise_level")
+        if self.seed is not None:
+            process.serialize_integer(self.seed, "seed")
 
     @override
     @classmethod
     def Deserialize(cls, process: DeserializationProcess) -> ADC:
         return ADC(
             process.deserialize_integer("num_quantization_bits", None),
+            process.deserialize_floating("max_input_power", cls._DEFAULT_MAX_INPUT_POWER),
+            process.deserialize_floating("reference_impedance", cls._DEFAULT_REFERENCE_IMPEDANCE),
             process.deserialize_object("gain", GainControlBase, None),
             process.deserialize_object("quantizer_type", QuantizerType, QuantizerType.MID_RISER),
+            process.deserialize_integer("num_ports", cls._DEFAULT_NUM_PORTS),
+            process.deserialize_object("noise_model", NoiseModel, None),
+            process.deserialize_object("noise_level", NoiseLevel, None),
+            process.deserialize_integer("seed", None),
         )
 
 
 class DAC(ConverterBase, DSPInputBlock):
 
+    _DEFAULT_NUM_PORTS: int = 1
+    _DEFAULT_MAX_OUTPUT_POWER: float = 1 / DSPInputBlock._DEFAULT_REFERENCE_IMPEDANCE
+
     __o: RFBlockPort[DAC]
+    __max_output_power: float
+    __reference_impedance: float
+    __max_output_amplitude: float
 
     def __init__(
         self,
         num_quantization_bits: int | None = None,
-        num_ports: int = 1,
+        num_ports: int = _DEFAULT_NUM_PORTS,
+        max_output_power: float = _DEFAULT_MAX_OUTPUT_POWER,
+        reference_impedance: float = DSPInputBlock._DEFAULT_REFERENCE_IMPEDANCE,
         noise_model: NoiseModel | None = None,
         noise_level: NoiseLevel | None = None,
         seed: int | None = None,
     ) -> None:
         """
         Args:
-            num_quantization_bits: DAC resolution in bits. Default is infinite resolution (no quantization)
-            num_ports: Number of analog ports of the DAC.
-            seed: Seed with which to initialize the block's random state.
+            num_quantization_bits:
+                DAC resolution in bits. Default is infinite resolution (no quantization)
+            num_ports:
+                Number of analog output ports of the DAC feeding into the RF chain.
+                Note that the output signal amplitude will be normalized and scaled to the max output power
+                across all output ports.
+            max_output_power:
+                Maximum instantaneous output power of the DAC in Watts.
+                :math:`1.0` by default.
+            reference_impedance:
+                Reference impedance of the DAC in Ohm.
+                :math:`50.0` by default.
+            noise_model:
+                Assumed noise model of the DAC.
+                If not specified, i.e. :py:obj:`None`, additive white Gaussian noise will be assumed.
+            noise_level:
+                Assumed noise level of the DAC.
+                If not specified, i.e. :py:obj:`None`, no noise is assumed.
+            seed:
+                Seed with which to initialize the block's random state.
         """
+
+        # Assert arguments
+        if reference_impedance <= 0.0:
+            raise ValueError("DAC reference impedance must be strictly positive")
 
         # Init base classes
         ConverterBase.__init__(self, num_quantization_bits, num_ports, seed)
@@ -649,6 +740,8 @@ class DAC(ConverterBase, DSPInputBlock):
 
         # Initialize attributes
         self.__o = RFBlockPort(self, [p for p in range(num_ports)], RFBlockPortType.OUT)
+        self.__reference_impedance = reference_impedance
+        self.max_output_power = max_output_power
 
     @override
     def realize(
@@ -662,7 +755,9 @@ class DAC(ConverterBase, DSPInputBlock):
 
     @override
     def _propagate(self, realization: RFBlockRealization, input: RFSignal) -> RFSignal:
-        return input
+        if self.__max_output_amplitude == 1.0 or input.num_samples < 1:
+            return input
+        return input / input.max() * self.__max_output_amplitude
 
     @property
     def o(self) -> RFBlockPort[DAC]:
@@ -670,11 +765,39 @@ class DAC(ConverterBase, DSPInputBlock):
 
         return self.__o
 
+    @property
+    def max_output_power(self) -> float:
+        """Maximum instantaneous output power of the digital-analog converter.
+
+        The actual observed maximum Voltage amplitude is thus
+
+        .. math::
+           V_{out} = \\sqrt{ P_{Max} \\Sigma_{Ref} }
+
+        Raises:
+            ValueError: If the output power is set to a negative value.
+        """
+
+        return self.__max_output_power
+
+    @max_output_power.setter
+    def max_output_power(self, value: float) -> None:
+        if value < 0:
+            raise ValueError("Output power must be non-negative.")
+
+        self.__max_output_power = value
+        self.__max_output_amplitude = (value * self.__reference_impedance)**.5
+
     @override
     def serialize(self, process: SerializationProcess) -> None:
         if self.num_quantization_bits is not None:
             process.serialize_integer(self.num_quantization_bits, "num_quantization_bits")
-        process.serialize_integer(self.num_input_ports, "num_ports")
+        if self.num_ports != self._DEFAULT_NUM_PORTS:
+            process.serialize_integer(self.num_ports, "num_ports")
+        if self.max_output_power != DAC._DEFAULT_MAX_OUTPUT_POWER:
+            process.serialize_floating(self.max_output_power, "max_output_power")
+        if self.__reference_impedance != DAC._DEFAULT_REFERENCE_IMPEDANCE:
+            process.serialize_floating(self.__reference_impedance, "reference_impedance")
         process.serialize_object(self.noise_model, "noise_model")
         process.serialize_object(self.noise_level, "noise_level")
         if self.seed is not None:
@@ -685,7 +808,9 @@ class DAC(ConverterBase, DSPInputBlock):
     def Deserialize(cls, process: DeserializationProcess) -> DAC:
         return DAC(
             process.deserialize_integer("num_quantization_bits", None),
-            process.deserialize_integer("num_ports", 1),
+            process.deserialize_integer("num_ports", cls._DEFAULT_NUM_PORTS),
+            process.deserialize_integer("max_output_power", cls._DEFAULT_MAX_OUTPUT_POWER),
+            process.deserialize_integer("reference_impedance", cls._DEFAULT_REFERENCE_IMPEDANCE),
             process.deserialize_object("noise_model", NoiseModel, None),
             process.deserialize_object("noise_level", NoiseLevel, None),
             process.deserialize_integer("seed", None),

@@ -834,6 +834,8 @@ class Signal(ABC, Iterable, Serializable):
     def power(self) -> np.ndarray:
         """Mean squared voltage of each modeled stream.
 
+        Equivalent of the signal's power given a reference impedance of :math:`50~\\Omega`.
+
         Note that, in case of sparse signals, the power is only computed over the non-zero regions.
         """
         ...  # pragma: no cover

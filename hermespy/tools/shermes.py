@@ -94,7 +94,7 @@ def sHermes(args: Sequence[str] | None = None) -> None:
     # Sanity check: Scan for the required sbash binary
     # If it doesn't exist, assume we are not in a SLURM environment
     if not parsed_args.skip_checks and which("sbatch") is None:
-        print("Synity check: sbash command not detected. Are you in a SLURM environment?")
+        print("Sanity check: sbash command not detected. Are you in a SLURM environment?")
         exit(-1)
 
     # Build sbatch
