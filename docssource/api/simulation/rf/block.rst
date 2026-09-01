@@ -2,10 +2,14 @@
 Radio-Frequency Block
 =====================
 
-.. inheritance-diagram:: hermespy.simulation.rf.block.RFBlock hermespy.simulation.rf.block.RFBlockRealization hermespy.simulation.RFBlockPort hermespy.simulation.rf.block.RFBlockPortType hermespy.simulation.rf.block.DSPInputBlock hermespy.simulation.rf.block.DSPOutputBlock 
+.. inheritance-diagram:: hermespy.simulation.rf.block.RFBlock hermespy.simulation.rf.block.RFBlockRealization hermespy.simulation.RFBlockPort hermespy.simulation.rf.block.RFBlockPortType hermespy.simulation.rf.block.DSPInputBlock hermespy.simulation.rf.block.DSPOutputBlock hermespy.simulation.rf.block.ActiveRFBlock hermespy.simulation.rf.block.PassiveRFBlock
    :parts: 1
 
 .. autoclass:: hermespy.simulation.rf.block.RFBlock
+
+.. autoclass:: hermespy.simulation.rf.block.ActiveRFBlock
+
+.. autoclass:: hermespy.simulation.rf.block.PassiveRFBlock
 
 .. autoclass:: hermespy.simulation.rf.block.DSPInputBlock
 

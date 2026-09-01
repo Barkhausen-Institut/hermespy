@@ -37,7 +37,22 @@ from .noise import (
     NoPhaseNoise,
     OscillatorPhaseNoise,
 )
-from .block import RFBlock, RFBlockRealization, RFBlockPort, RFBlockPortType
+
+from .power import (
+    DCPowerModel,
+    NoDCPowerModel,
+    ConstantDCPowerModel,
+    SampledDCPowerModel,
+)
+
+from .block import (
+    RFBlock,
+    RFBlockRealization,
+    RFBlockPort,
+    RFBlockPortType,
+    ActiveRFBlock,
+    PassiveRFBlock,
+)
 from .chain import RFChain, RFChainRealization, RFBlockReference
 from .signal import RFSignal
 
@@ -85,10 +100,16 @@ __all__ = [
     "PhaseNoiseRealization",
     "NoPhaseNoise",
     "OscillatorPhaseNoise",
+    "DCPowerModel",
+    "NoDCPowerModel",
+    "ConstantDCPowerModel",
+    "SampledDCPowerModel",
     "RFBlock",
     "RFBlockRealization",
     "RFBlockPort",
     "RFBlockPortType",
+    "ActiveRFBlock",
+    "PassiveRFBlock",
     "RFChain",
     "RFChainRealization",
     "RFBlockReference",

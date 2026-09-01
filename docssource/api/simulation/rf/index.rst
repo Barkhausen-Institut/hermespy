@@ -51,6 +51,7 @@ The following presets modeling commercially availabe hardware are currently avai
 
    chain
    block
+   power
    blocks/index
    presets/index
    noise/index

@@ -5,8 +5,24 @@ from unittest.mock import Mock
 from typing_extensions import override
 
 from hermespy.core import SerializationProcess, DeserializationProcess
-from hermespy.simulation.rf.block import RFBlock, RFBlockRealization, RFBlockPort, RFBlockPortType
-from hermespy.simulation import NoiseLevel, NoiseModel, RFSignal, AWGN, N0
+from hermespy.simulation.rf.block import (
+    RFBlock,
+    RFBlockRealization,
+    RFBlockPort,
+    RFBlockPortType,
+    ActiveRFBlock,
+    PassiveRFBlock,
+)
+from hermespy.simulation import (
+    NoiseLevel,
+    NoiseModel,
+    RFSignal,
+    AWGN,
+    N0,
+    DCPowerModel,
+    NoDCPowerModel,
+    ConstantDCPowerModel,
+)
 from ...core.test_factory import test_roundtrip_serialization
 
 __author__ = "Jan Adler"
@@ -104,10 +120,10 @@ class TestRFBlock(TestCase):
     """Test the base class of all RF blocks."""
 
     def setUp(self) -> None:
-        
+
         self.noise_model = AWGN(42)
         self.noise_level = N0(0.123)
-        
+
         self.block = MockRFBlock(
             num_input_ports=2,
             num_output_ports=3,
@@ -137,3 +153,122 @@ class TestRFBlock(TestCase):
         """Test serialization of RF blocks"""
 
         test_roundtrip_serialization(self, self.block)
+
+
+class MockActiveRFBlock(ActiveRFBlock):
+    """Mock active RF block for testing."""
+
+    @property
+    @override
+    def num_input_ports(self) -> int:
+        return 1
+
+    @property
+    @override
+    def num_output_ports(self) -> int:
+        return 1
+
+    @override
+    def realize(
+        self, bandwidth: float, oversampling_factor: int, carrier_frequency: float
+    ) -> RFBlockRealization:
+        return RFBlockRealization(
+            bandwidth,
+            oversampling_factor,
+            self.noise_model.realize(self.noise_level.get_power(bandwidth)),
+        )
+
+    @override
+    def _propagate(self, realization: RFBlockRealization, input: RFSignal) -> RFSignal:
+        return input
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_object(self.dc_power_model, "dc_power_model")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> "MockActiveRFBlock":
+        return cls(dc_power_model=process.deserialize_object("dc_power_model", DCPowerModel))
+
+
+class MockPassiveRFBlock(PassiveRFBlock):
+    """Mock passive RF block for testing."""
+
+    @property
+    @override
+    def num_input_ports(self) -> int:
+        return 1
+
+    @property
+    @override
+    def num_output_ports(self) -> int:
+        return 1
+
+    @override
+    def realize(
+        self, bandwidth: float, oversampling_factor: int, carrier_frequency: float
+    ) -> RFBlockRealization:
+        return RFBlockRealization(
+            bandwidth,
+            oversampling_factor,
+            self.noise_model.realize(self.noise_level.get_power(bandwidth)),
+        )
+
+    @override
+    def _propagate(self, realization: RFBlockRealization, input: RFSignal) -> RFSignal:
+        return input
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        return
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> "MockPassiveRFBlock":
+        return cls()
+
+
+class TestActiveRFBlock(TestCase):
+    """Test the base class of all power-consuming RF blocks."""
+
+    def setUp(self) -> None:
+        self.block = MockActiveRFBlock()
+
+    def test_default_dc_power_model(self) -> None:
+        """Blocks without a configured model should not consume any power"""
+
+        self.assertIsInstance(self.block.dc_power_model, NoDCPowerModel)
+
+    def test_dc_power_model_setget(self) -> None:
+        """Power model property getter should return setter argument"""
+
+        expected_model = ConstantDCPowerModel(2.5)
+        self.block.dc_power_model = expected_model
+        self.assertIs(expected_model, self.block.dc_power_model)
+
+    def test_dc_power_model_none(self) -> None:
+        """Setting None should fall back to the placeholder model"""
+
+        self.block.dc_power_model = ConstantDCPowerModel(2.5)
+        self.block.dc_power_model = None
+        self.assertIsInstance(self.block.dc_power_model, NoDCPowerModel)
+
+    def test_serialization(self) -> None:
+        """Test serialization of active RF blocks"""
+
+        test_roundtrip_serialization(
+            self, MockActiveRFBlock(dc_power_model=ConstantDCPowerModel(2.5))
+        )
+
+
+class TestPassiveRFBlock(TestCase):
+    """Test the base class of all supply-independent RF blocks."""
+
+    def setUp(self) -> None:
+        self.block = MockPassiveRFBlock()
+
+    def test_no_dc_power_model(self) -> None:
+        """Passive blocks should not expose a power consumption model"""
+
+        self.assertFalse(hasattr(self.block, "dc_power_model"))
