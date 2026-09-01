@@ -11,6 +11,7 @@ from scipy.signal import cheby2, cheb2ord, sosfiltfilt
 from hermespy.core import RandomNode, Serializable, SerializableEnum
 from .signal import RFSignal
 from .noise import AWGN, NoiseLevel, NoiseModel, NoiseRealization, N0
+from .power import DCPowerModel, NoDCPowerModel
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2026, Barkhausen Institut gGmbH"
@@ -276,6 +277,71 @@ class RFBlock(ABC, Generic[RFBRT], RandomNode, Serializable):
 
 RFBT = TypeVar("RFBT", bound=RFBlock)
 """Type variable for radio-frequency blocks."""
+
+
+class PassiveRFBlock(RFBlock[RFBRT], Generic[RFBRT]):
+    """Base class for radio-frequency blocks that do not require a power supply to operate.
+
+    Passive blocks such as splitters, combiners or filters shape the propagated signal
+    without drawing any direct current power. Consequently they cannot be configured with a
+    :class:`DCPowerModel<hermespy.simulation.rf.power.DCPowerModel>` and are ignored during
+    power consumption evaluations.
+
+    See :class:`ActiveRFBlock` for the counterpart modeling power-consuming blocks.
+    """
+
+    ...  # pragma: no cover
+
+
+class ActiveRFBlock(RFBlock[RFBRT], Generic[RFBRT]):
+    """Base class for radio-frequency blocks that require a power supply to operate.
+
+    Active blocks such as amplifiers, mixers, oscillators and data converters draw direct
+    current power from a supply while processing signals. The amount of consumed power is
+    described by a :class:`DCPowerModel<hermespy.simulation.rf.power.DCPowerModel>`
+    configured during initialization.
+
+    See :class:`PassiveRFBlock` for the counterpart modeling supply-independent blocks.
+    """
+
+    __dc_power_model: DCPowerModel
+
+    def __init__(
+        self,
+        noise_model: NoiseModel | None = None,
+        noise_level: NoiseLevel | None = None,
+        seed: int | None = None,
+        dc_power_model: DCPowerModel | None = None,
+    ) -> None:
+        """
+        Args:
+            noise_model:
+                Assumed noise model of the block.
+                If not specified, i.e. :py:obj:`None`, additive white Gaussian noise will be assumed.
+            noise_level:
+                Assumed noise level of the block.
+                If not specified, i.e. :py:obj:`None`, no noise is assumed.
+            seed: Seed with which to initialize the block's random state.
+            dc_power_model:
+                Assumed direct current power consumption model of the block.
+                If not specified, i.e. :py:obj:`None`, no power consumption is assumed.
+        """
+
+        # Init base class
+        RFBlock.__init__(self, noise_model, noise_level, seed)
+
+        # Initialize class attributes
+        self.dc_power_model = dc_power_model
+
+    @property
+    def dc_power_model(self) -> DCPowerModel:
+        """This block's assumed direct current power consumption model."""
+
+        return self.__dc_power_model
+
+    @dc_power_model.setter
+    def dc_power_model(self, value: DCPowerModel | None) -> None:
+        self.__dc_power_model = value if value is not None else NoDCPowerModel()
 
 
 class DSPInputBlock(RFBlock):
