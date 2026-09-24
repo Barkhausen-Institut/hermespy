@@ -7,9 +7,11 @@ from copy import deepcopy
 
 import numpy as np
 
-from hermespy.core import Signal
+from h5py import File
+from hermespy.core import Factory, Signal
 from hermespy.simulation.rf import RFSignal
 from hermespy.simulation.rf.blocks.ad import ConverterBase, GainControlBase, Gain, AutomaticGainControl, GainControlType, QuantizerType, ADC, DAC
+from hermespy.simulation import ConstantDCPowerModel, N0
 from hermespy.tools.math import rms_value
 from ....core.test_factory import test_roundtrip_serialization
 from ....utils import assert_signals_equal, random_rf_signal
@@ -68,6 +70,30 @@ class TestConverterBase(TestCase):
 
         test_roundtrip_serialization(self, self.converter)
 
+    def test_dc_power_model_serialization(self) -> None:
+        """Configured power consumption models should survive a serialization roundtrip"""
+
+        self.converter.dc_power_model = ConstantDCPowerModel(2.5)
+
+        file = File("test.h5", "w", driver="core", backing_store=False)
+        Factory().to_HDF(file, self.converter)
+        deserialization = Factory().from_HDF(file, type(self.converter))
+        file.close()
+
+        signal = np.zeros(1, dtype=np.complex128)
+        self.assertEqual(2.5, deserialization.dc_power_model.get_power(signal)[0])
+
+    def test_noise_level_serialization(self) -> None:
+        """Configured noise levels should survive a serialization roundtrip"""
+
+        converter = type(self.converter)(noise_level=N0(1e-9))
+
+        file = File("test.h5", "w", driver="core", backing_store=False)
+        Factory().to_HDF(file, converter)
+        deserialization = Factory().from_HDF(file, type(self.converter))
+        file.close()
+
+        self.assertEqual(1e-9, deserialization.noise_level.get_power(1.0))
 
 class TestGainControlBase(TestCase):
     """Test gain control base model"""

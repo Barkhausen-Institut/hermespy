@@ -3,7 +3,7 @@
 from __future__ import annotations
 from typing_extensions import override
 
-from ..block import RFBlock, RFBlockRealization, RFBlockPort, RFBlockPortType
+from ..block import PassiveRFBlock, RFBlockRealization, RFBlockPort, RFBlockPortType
 from ..signal import RFSignal
 
 __author__ = "Jan Adler"
@@ -16,7 +16,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class X4(RFBlock):
+class X4(PassiveRFBlock):
     """A radio-frequency block that multiplies the input signal's frequency by 4."""
 
     __i: RFBlockPort[X4]
@@ -29,7 +29,7 @@ class X4(RFBlock):
         """
 
         # Initialize base class
-        RFBlock.__init__(self, seed=seed)
+        PassiveRFBlock.__init__(self, seed=seed)
 
         # Initialize input and output ports
         self.__i = RFBlockPort(self, 0, RFBlockPortType.IN)

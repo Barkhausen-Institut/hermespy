@@ -7,7 +7,7 @@ from typing_extensions import override
 import numpy as np
 from scipy.signal import butter, filtfilt
 
-from ..block import RFBlock, RFBlockRealization, RFBlockPort, RFBlockPortType
+from ..block import PassiveRFBlock, RFBlockRealization, RFBlockPort, RFBlockPortType
 from ..signal import RFSignal
 from ..noise import NoiseModel, NoiseLevel, NoiseRealization
 
@@ -62,7 +62,7 @@ class FilterRealization(RFBlockRealization):
         return self.__denominator_coefficients
 
 
-class Filter(RFBlock):
+class Filter(PassiveRFBlock):
     """A radio-frequency block that applies an arbitrary filter during signal propagation."""
 
     __i: RFBlockPort[Filter]
@@ -88,7 +88,7 @@ class Filter(RFBlock):
         """
 
         # Initialize base class
-        RFBlock.__init__(self, noise_model, noise_level, seed)
+        PassiveRFBlock.__init__(self, noise_model, noise_level, seed)
 
         # Store attributes
         self.__i = RFBlockPort(self, 0, RFBlockPortType.IN)

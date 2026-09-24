@@ -18,7 +18,7 @@ from hermespy.core import (
 )
 from hermespy.tools.math import rms_value
 from ..block import (
-    RFBlock,
+    ActiveRFBlock,
     RFBlockPort,
     RFBlockPortType,
     DSPInputBlock,
@@ -27,6 +27,7 @@ from ..block import (
 )
 from ..signal import RFSignal
 from ..noise import NoiseModel, NoiseLevel
+from ..power import DCPowerModel
 
 __author__ = "André Noll Barreto"
 __copyright__ = "Copyright 2026, Barkhausen Institut gGmbH"
@@ -38,13 +39,17 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class ConverterBase(RFBlock):
+class ConverterBase(ActiveRFBlock):
     """Base class for analaog-digital and digital-analog converters."""
 
     __num_ports: int
 
     def __init__(
-        self, num_quantization_bits: int | None = None, num_ports: int = 1, seed: int | None = None
+        self,
+        num_quantization_bits: int | None = None,
+        num_ports: int = 1,
+        seed: int | None = None,
+        dc_power_model: DCPowerModel | None = None,
     ) -> None:
         """
         Args:
@@ -54,7 +59,7 @@ class ConverterBase(RFBlock):
         """
 
         # Init base class
-        RFBlock.__init__(self, seed=seed)
+        ActiveRFBlock.__init__(self, seed=seed, dc_power_model=dc_power_model)
 
         # Initialize attributes
         self.num_quantization_bits = num_quantization_bits
@@ -411,6 +416,7 @@ class ADC(ConverterBase, DSPOutputBlock):
         noise_model: NoiseModel | None = None,
         noise_level: NoiseLevel | None = None,
         seed: int | None = None,
+        dc_power_model: DCPowerModel | None = None,
     ) -> None:
         """
         Args:
@@ -420,6 +426,7 @@ class ADC(ConverterBase, DSPOutputBlock):
             quantizer_type: Determines quantizer behaviour at zero. Default is QuantizerType.MID_RISER.
             num_ports: Number of analog ports of the ADC.
             seed: Seed with which to initialize the block's random state.
+            dc_power_model: Direct current power consumption model of the converter.
         """
 
         # Assert arguments
@@ -427,7 +434,9 @@ class ADC(ConverterBase, DSPOutputBlock):
             raise ValueError("ADC reference impedance must be strictly positive")
 
         # Init base classes
-        ConverterBase.__init__(self, num_quantization_bits, num_ports, seed)
+        ConverterBase.__init__(
+            self, num_quantization_bits, num_ports, seed, dc_power_model=dc_power_model
+        )
         DSPOutputBlock.__init__(self, noise_model, noise_level, seed)
 
         # Initialize attributes
@@ -469,7 +478,7 @@ class ADC(ConverterBase, DSPOutputBlock):
             raise ValueError("Maximum input power must be non-negative")
 
         self.__max_input_power = value
-        self.__max_input_amplitude = (value * self.__reference_impedance)**.5
+        self.__max_input_amplitude = (value * self.__reference_impedance) ** 0.5
 
     @property
     def quantizer_type(self) -> QuantizerType:
@@ -514,10 +523,14 @@ class ADC(ConverterBase, DSPOutputBlock):
                 quantized_signal.imag = step * (np.floor(input_signal.imag / step) + 0.5)
 
                 quantized_signal.real = np.clip(
-                    quantized_signal.real, -self.__max_input_amplitude + step / 2, self.__max_input_amplitude - step / 2
+                    quantized_signal.real,
+                    -self.__max_input_amplitude + step / 2,
+                    self.__max_input_amplitude - step / 2,
                 )
                 quantized_signal.imag = np.clip(
-                    quantized_signal.imag, -self.__max_input_amplitude + step / 2, self.__max_input_amplitude - step / 2
+                    quantized_signal.imag,
+                    -self.__max_input_amplitude + step / 2,
+                    self.__max_input_amplitude - step / 2,
                 )
 
             # Mid-tread quantization
@@ -527,10 +540,14 @@ class ADC(ConverterBase, DSPOutputBlock):
 
                 clipped_signal = np.empty_like(input_signal)
                 clipped_signal.real = np.clip(
-                    input_signal.real, -self.__max_input_amplitude, self.__max_input_amplitude - step
+                    input_signal.real,
+                    -self.__max_input_amplitude,
+                    self.__max_input_amplitude - step,
                 )
                 clipped_signal.imag = np.clip(
-                    input_signal.imag, -self.__max_input_amplitude, self.__max_input_amplitude - step
+                    input_signal.imag,
+                    -self.__max_input_amplitude,
+                    self.__max_input_amplitude - step,
                 )
 
                 quantized_signal.real = step * np.floor(clipped_signal.real / step + 0.5)
@@ -667,6 +684,7 @@ class ADC(ConverterBase, DSPOutputBlock):
             process.serialize_object(self.noise_model, "noise_model")
         if self.noise_level is not None:
             process.serialize_object(self.noise_level, "noise_level")
+        process.serialize_object(self.dc_power_model, "dc_power_model")
         if self.seed is not None:
             process.serialize_integer(self.seed, "seed")
 
@@ -683,6 +701,7 @@ class ADC(ConverterBase, DSPOutputBlock):
             process.deserialize_object("noise_model", NoiseModel, None),
             process.deserialize_object("noise_level", NoiseLevel, None),
             process.deserialize_integer("seed", None),
+            process.deserialize_object("dc_power_model", DCPowerModel),
         )
 
 
@@ -705,6 +724,7 @@ class DAC(ConverterBase, DSPInputBlock):
         noise_model: NoiseModel | None = None,
         noise_level: NoiseLevel | None = None,
         seed: int | None = None,
+        dc_power_model: DCPowerModel | None = None,
     ) -> None:
         """
         Args:
@@ -728,6 +748,8 @@ class DAC(ConverterBase, DSPInputBlock):
                 If not specified, i.e. :py:obj:`None`, no noise is assumed.
             seed:
                 Seed with which to initialize the block's random state.
+            dc_power_model:
+                Direct current power consumption model of the converter.
         """
 
         # Assert arguments
@@ -735,7 +757,9 @@ class DAC(ConverterBase, DSPInputBlock):
             raise ValueError("DAC reference impedance must be strictly positive")
 
         # Init base classes
-        ConverterBase.__init__(self, num_quantization_bits, num_ports, seed)
+        ConverterBase.__init__(
+            self, num_quantization_bits, num_ports, seed, dc_power_model=dc_power_model
+        )
         DSPOutputBlock.__init__(self, noise_model, noise_level, seed)
 
         # Initialize attributes
@@ -786,7 +810,7 @@ class DAC(ConverterBase, DSPInputBlock):
             raise ValueError("Output power must be non-negative.")
 
         self.__max_output_power = value
-        self.__max_output_amplitude = (value * self.__reference_impedance)**.5
+        self.__max_output_amplitude = (value * self.__reference_impedance) ** 0.5
 
     @override
     def serialize(self, process: SerializationProcess) -> None:
@@ -800,6 +824,7 @@ class DAC(ConverterBase, DSPInputBlock):
             process.serialize_floating(self.__reference_impedance, "reference_impedance")
         process.serialize_object(self.noise_model, "noise_model")
         process.serialize_object(self.noise_level, "noise_level")
+        process.serialize_object(self.dc_power_model, "dc_power_model")
         if self.seed is not None:
             process.serialize_integer(self.seed, "seed")
 
@@ -814,4 +839,5 @@ class DAC(ConverterBase, DSPInputBlock):
             process.deserialize_object("noise_model", NoiseModel, None),
             process.deserialize_object("noise_level", NoiseLevel, None),
             process.deserialize_integer("seed", None),
+            dc_power_model=process.deserialize_object("dc_power_model", DCPowerModel),
         )

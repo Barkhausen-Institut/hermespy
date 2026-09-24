@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing_extensions import override
 
 from hermespy.core import SerializableEnum, SerializationProcess, DeserializationProcess
-from ..block import RFBlock, RFBlockPort, RFBlockPortType, RFBlockRealization
+from ..block import PassiveRFBlock, RFBlockPort, RFBlockPortType, RFBlockRealization
 from ..signal import RFSignal
 from ..noise import NoiseModel, NoiseLevel
 
@@ -61,7 +61,7 @@ class MixerRealization(RFBlockRealization):
         return self.__type
 
 
-class Mixer(RFBlock):
+class Mixer(PassiveRFBlock):
     """Customizable three-port mixer block model."""
 
     __type: MixerType
@@ -83,7 +83,7 @@ class Mixer(RFBlock):
         """
 
         # Initialize base class
-        RFBlock.__init__(self, noise_model, noise_level, seed)
+        PassiveRFBlock.__init__(self, noise_model, noise_level, seed)
 
         # Initialize class attributes
         self.__type = mixer_type
@@ -206,7 +206,7 @@ class IdealMixerRealization(MixerRealization):
         return self.__lo_frequency
 
 
-class IdealMixer(RFBlock):
+class IdealMixer(PassiveRFBlock):
     """An ideal mixer moving the input signal to a different center frequency."""
 
     __type: MixerType
@@ -234,7 +234,7 @@ class IdealMixer(RFBlock):
         """
 
         # Initialize base class
-        RFBlock.__init__(self, noise_model, noise_level, seed)
+        PassiveRFBlock.__init__(self, noise_model, noise_level, seed)
 
         # Store attributes
         self.mixer_type = mixer_type

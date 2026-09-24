@@ -5,7 +5,7 @@ from typing_extensions import override
 
 import numpy as np
 
-from ..block import RFBlock, RFBlockRealization, RFBlockPort, RFBlockPortType
+from ..block import PassiveRFBlock, RFBlockRealization, RFBlockPort, RFBlockPortType
 from ..signal import RFSignal
 
 __author__ = "Jan Adler"
@@ -18,7 +18,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class Sum(RFBlock):
+class Sum(PassiveRFBlock):
     """A simple radio-frequency block that sums all input signals."""
 
     __num_input_ports: int

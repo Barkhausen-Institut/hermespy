@@ -12,9 +12,10 @@ from matplotlib.figure import Figure
 from scipy.constants import pi
 
 from hermespy.core import Serializable, VAT, SerializationProcess, DeserializationProcess
-from ..block import RFBlock, RFBlockPort, RFBlockPortType, RFBlockRealization
+from ..block import ActiveRFBlock, RFBlockPort, RFBlockPortType, RFBlockRealization
 from ..signal import RFSignal
 from ..noise import NoiseModel, NoiseLevel
+from ..power import DCPowerModel
 
 __author__ = "Andre Noll Barreto"
 __copyright__ = "Copyright 2026, Barkhausen Institut gGmbH"
@@ -30,7 +31,7 @@ _PAT = TypeVar("_PAT", bound="PowerAmplifier")
 """Type of power amplifier."""
 
 
-class PowerAmplifier(RFBlock, Serializable):
+class PowerAmplifier(ActiveRFBlock, Serializable):
     """Base class of a distorionless power-amplifier model."""
 
     _DEFAULT_GAIN: float = 1.0  # Default linear voltage gain of the power amplifier.
@@ -45,6 +46,7 @@ class PowerAmplifier(RFBlock, Serializable):
         noise_model: NoiseModel | None = None,
         noise_level: NoiseLevel | None = None,
         seed: int | None = None,
+        dc_power_model: DCPowerModel | None = None,
     ) -> None:
         """
         Args:
@@ -62,6 +64,10 @@ class PowerAmplifier(RFBlock, Serializable):
 
             seed:
                 Seed to initialize the random number generator of the power amplifier model.
+
+            dc_power_model:
+                Direct current power consumption model of the power amplifier.
+                If not specified, no power consumption is assumed.
         """
 
         # Initialize class attributes
@@ -70,7 +76,7 @@ class PowerAmplifier(RFBlock, Serializable):
         self.__o = RFBlockPort(self, 0, RFBlockPortType.OUT)
 
         # Initialize base classes
-        RFBlock.__init__(self, noise_model, noise_level, seed)
+        ActiveRFBlock.__init__(self, noise_model, noise_level, seed, dc_power_model)
         Serializable.__init__(self)
 
     @property
@@ -216,6 +222,7 @@ class PowerAmplifier(RFBlock, Serializable):
         process.serialize_floating(self.gain, "gain")
         process.serialize_object(self.noise_model, "noise_model")
         process.serialize_object(self.noise_level, "noise_level")
+        process.serialize_object(self.dc_power_model, "dc_power_model")
         if self.seed is not None:
             process.serialize_integer(self.seed, "seed")
 
@@ -224,8 +231,9 @@ class PowerAmplifier(RFBlock, Serializable):
         gain = process.deserialize_floating("gain")
         noise_model = process.deserialize_object("noise_model", NoiseModel)
         noise_level = process.deserialize_object("noise_level", NoiseLevel)
+        dc_power_model = process.deserialize_object("dc_power_model", DCPowerModel)
         seed = process.deserialize_integer("seed", None)
-        return cls(gain, noise_model, noise_level, seed)
+        return cls(gain, noise_model, noise_level, seed, dc_power_model)
 
 
 class ClippingPowerAmplifier(PowerAmplifier):
@@ -242,6 +250,7 @@ class ClippingPowerAmplifier(PowerAmplifier):
         noise_model: NoiseModel | None = None,
         noise_level: NoiseLevel | None = None,
         seed: int | None = None,
+        dc_power_model: DCPowerModel | None = None,
     ) -> None:
         """
         Args:
@@ -265,7 +274,7 @@ class ClippingPowerAmplifier(PowerAmplifier):
         """
 
         # Initialize base class
-        PowerAmplifier.__init__(self, gain, noise_model, noise_level, seed)
+        PowerAmplifier.__init__(self, gain, noise_model, noise_level, seed, dc_power_model)
 
         # Initialize class attributes
         self.saturation_amplitude = saturation_amplitude
@@ -320,6 +329,7 @@ class ClippingPowerAmplifier(PowerAmplifier):
             process.deserialize_object("noise_model", NoiseModel, None),
             process.deserialize_object("noise_level", NoiseLevel, None),
             process.deserialize_integer("seed", None),
+            dc_power_model=process.deserialize_object("dc_power_model", DCPowerModel),
         )
 
 
@@ -338,6 +348,7 @@ class RappPowerAmplifier(PowerAmplifier):
         noise_model: NoiseModel | None = None,
         noise_level: NoiseLevel | None = None,
         seed: int | None = None,
+        dc_power_model: DCPowerModel | None = None,
     ) -> None:
         """
         Args:
@@ -363,7 +374,7 @@ class RappPowerAmplifier(PowerAmplifier):
         self.smoothness_factor = smoothness_factor
 
         # Initialize base class
-        PowerAmplifier.__init__(self, gain, noise_model, noise_level, seed)
+        PowerAmplifier.__init__(self, gain, noise_model, noise_level, seed, dc_power_model)
 
     @property
     def smoothness_factor(self) -> float:
@@ -409,6 +420,7 @@ class RappPowerAmplifier(PowerAmplifier):
             process.deserialize_object("noise_model", NoiseModel, None),
             process.deserialize_object("noise_level", NoiseLevel, None),
             process.deserialize_integer("seed", None),
+            dc_power_model=process.deserialize_object("dc_power_model", DCPowerModel)
         )
 
 
@@ -437,6 +449,7 @@ class SalehPowerAmplifier(PowerAmplifier):
         noise_model: NoiseModel | None = None,
         noise_level: NoiseLevel | None = None,
         seed: int | None = None,
+        dc_power_model: DCPowerModel | None = None,
     ) -> None:
         """
         Args:
@@ -475,7 +488,7 @@ class SalehPowerAmplifier(PowerAmplifier):
         self.phase_beta = phase_beta
 
         # Initialize base class
-        PowerAmplifier.__init__(self, gain, noise_model, noise_level, seed)
+        PowerAmplifier.__init__(self, gain, noise_model, noise_level, seed, dc_power_model)
 
     @property
     def amplitude_alpha(self) -> float:
@@ -548,6 +561,7 @@ class SalehPowerAmplifier(PowerAmplifier):
             process.deserialize_object("noise_model", NoiseModel, None),
             process.deserialize_object("noise_level", NoiseLevel, None),
             process.deserialize_integer("seed", None),
+            dc_power_model=process.deserialize_object("dc_power_model", DCPowerModel),
         )
 
 
@@ -567,6 +581,7 @@ class CustomPowerAmplifier(PowerAmplifier):
         noise_model: NoiseModel | None = None,
         noise_level: NoiseLevel | None = None,
         seed: int | None = None,
+        dc_power_model: DCPowerModel | None = None,
     ) -> None:
         """
         Args:
@@ -618,7 +633,7 @@ class CustomPowerAmplifier(PowerAmplifier):
         self.__phases = phases
 
         # Initialize base class
-        PowerAmplifier.__init__(self, gain, noise_model, noise_level, seed)
+        PowerAmplifier.__init__(self, gain, noise_model, noise_level, seed, dc_power_model)
 
     @override
     def model(self, input_signal: RFSignal) -> RFSignal:
@@ -658,6 +673,7 @@ class CustomPowerAmplifier(PowerAmplifier):
             process.deserialize_object("noise_model", NoiseModel, None),
             process.deserialize_object("noise_level", NoiseLevel, None),
             process.deserialize_integer("seed", None),
+            dc_power_model=process.deserialize_object("dc_power_model", DCPowerModel),
         )
 
 

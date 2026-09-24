@@ -5,6 +5,7 @@ from typing_extensions import override
 
 import numpy as np
 
+from hermespy.core import SerializationProcess, DeserializationProcess
 from ..noise import (
     NoiseRealization,
     NoiseLevel,
@@ -13,8 +14,9 @@ from ..noise import (
     PhaseNoise,
     PhaseNoiseRealization,
 )
-from ..block import RFBlock, RFBlockRealization, RFBlockPort, RFBlockPortType
+from ..block import ActiveRFBlock, RFBlockRealization, RFBlockPort, RFBlockPortType
 from ..signal import RFSignal
+from ..power import DCPowerModel
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2026, Barkhausen Institut gGmbH"
@@ -85,7 +87,7 @@ class SourceRealization(RFBlockRealization):
         return self.__amplitude
 
 
-class Source(RFBlock):
+class Source(ActiveRFBlock):
     """Model of an imperferct frequency source."""
 
     __carrier_frequency: float
@@ -101,6 +103,7 @@ class Source(RFBlock):
         noise_model: NoiseModel | None = None,
         noise_level: NoiseLevel | None = None,
         seed: int | None = None,
+        dc_power_model: DCPowerModel | None = None,
     ) -> None:
         """
         Args:
@@ -118,7 +121,7 @@ class Source(RFBlock):
         """
 
         # Initialize base class
-        RFBlock.__init__(self, noise_model, noise_level, seed)
+        ActiveRFBlock.__init__(self, noise_model, noise_level, seed, dc_power_model)
 
         # Initialize class attributes
         self.carrier_frequency = carrier_frequency
@@ -212,3 +215,24 @@ class Source(RFBlock):
         # Add phase noise to the output signal
         noisy_output = realization.phase_noise.add_noise(output)
         return noisy_output
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_floating(self.carrier_frequency, "carrier_frequency")
+        process.serialize_object(self.phase_noise, "phase_noise")
+        process.serialize_floating(self.amplitude, "amplitude")
+        process.serialize_object(self.noise_model, "noise_model")
+        process.serialize_object(self.noise_level, "noise_level")
+        process.serialize_object(self.dc_power_model, "dc_power_model")
+
+    @classmethod
+    @override
+    def Deserialize(cls, process: DeserializationProcess) -> Source:
+        return cls(
+            process.deserialize_floating("carrier_frequency"),
+            process.deserialize_object("phase_noise", PhaseNoise, None),
+            process.deserialize_floating("amplitude"),
+            process.deserialize_object("noise_model", NoiseModel, None),
+            process.deserialize_object("noise_level", NoiseLevel, None),
+            dc_power_model=process.deserialize_object("dc_power_model", DCPowerModel),
+        )

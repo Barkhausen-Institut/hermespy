@@ -7,9 +7,10 @@ from typing_extensions import override
 import numpy as np
 
 from hermespy.core import SerializationProcess, DeserializationProcess
-from ..block import RFBlock, RFBlockRealization, RFBlockPort, RFBlockPortType
+from ..block import ActiveRFBlock, RFBlockRealization, RFBlockPort, RFBlockPortType
 from ..signal import RFSignal
 from ..noise import NoiseModel, NoiseLevel
+from ..power import DCPowerModel
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2026, Barkhausen Institut gGmbH"
@@ -21,7 +22,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class RampGenerator(RFBlock):
+class RampGenerator(ActiveRFBlock):
     """FMCW ramp generator block model."""
 
     __num_chirps: int
@@ -39,6 +40,7 @@ class RampGenerator(RFBlock):
         noise_model: NoiseModel | None = None,
         noise_level: NoiseLevel | None = None,
         seed: int | None = None,
+        dc_power_model: DCPowerModel | None = None,
     ) -> None:
         """
         Args:
@@ -51,7 +53,7 @@ class RampGenerator(RFBlock):
         """
 
         # Initialize base class
-        RFBlock.__init__(self, noise_model, noise_level, seed)
+        ActiveRFBlock.__init__(self, noise_model, noise_level, seed, dc_power_model)
 
         # Initialize class attributes
         self.num_chirps = num_chirps
@@ -216,6 +218,9 @@ class RampGenerator(RFBlock):
         process.serialize_floating(self.chirp_slope, "chirp_slope")
         process.serialize_floating(self.chirp_interval, "chirp_interval")
         process.serialize_integer(self.num_chirps, "num_chirps")
+        process.serialize_object(self.noise_model, "noise_model")
+        process.serialize_object(self.noise_level, "noise_level")
+        process.serialize_object(self.dc_power_model, "dc_power_model")
         if self.seed is not None:
             process.serialize_integer(self.seed, "seed")
 
@@ -227,5 +232,8 @@ class RampGenerator(RFBlock):
             chirp_bandwidth=process.deserialize_floating("chirp_bandwidth"),
             chirp_slope=process.deserialize_floating("chirp_slope"),
             chirp_interval=process.deserialize_floating("chirp_interval"),
+            noise_model=process.deserialize_object("noise_model", NoiseModel, None),
+            noise_level=process.deserialize_object("noise_level", NoiseLevel, None),
+            dc_power_model=process.deserialize_object("dc_power_model", DCPowerModel),
             seed=process.deserialize_integer("seed", None),
         )
