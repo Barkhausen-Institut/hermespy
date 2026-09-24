@@ -5,7 +5,7 @@ from typing_extensions import override
 
 import numpy as np
 
-from ..block import RFBlock, RFBlockRealization, RFBlockPort, RFBlockPortType
+from ..block import PassiveRFBlock, RFBlockRealization, RFBlockPort, RFBlockPortType
 from ..signal import RFSignal
 from ..noise import NoiseModel, NoiseLevel
 
@@ -19,7 +19,7 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-class Shift(RFBlock):
+class Shift(PassiveRFBlock):
     """A radio-frequency block that applies a phase shift to the input signal."""
 
     __NO_QUANTIZATION = 0
@@ -42,7 +42,7 @@ class Shift(RFBlock):
     ) -> None:
 
         # Initialize base class
-        RFBlock.__init__(self, noise_model, noise_level, seed)
+        PassiveRFBlock.__init__(self, noise_model, noise_level, seed)
 
         # Store attributes
         self.phase = phase

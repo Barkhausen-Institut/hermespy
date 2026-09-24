@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import annotations
 from unittest import TestCase
 from unittest.mock import Mock
 from typing_extensions import override
@@ -22,6 +23,18 @@ from hermespy.simulation import (
     DCPowerModel,
     NoDCPowerModel,
     ConstantDCPowerModel,
+    PowerAmplifier,
+    Source,
+    ADC,
+    DAC,
+    RampGenerator,
+    Mixer,
+    IdealMixer,
+    Shift,
+    X4,
+    Split,
+    Sum,
+    HPF,
 )
 from ...core.test_factory import test_roundtrip_serialization
 
@@ -188,7 +201,7 @@ class MockActiveRFBlock(ActiveRFBlock):
 
     @classmethod
     @override
-    def Deserialize(cls, process: DeserializationProcess) -> "MockActiveRFBlock":
+    def Deserialize(cls, process: DeserializationProcess) -> MockActiveRFBlock:
         return cls(dc_power_model=process.deserialize_object("dc_power_model", DCPowerModel))
 
 
@@ -272,3 +285,33 @@ class TestPassiveRFBlock(TestCase):
         """Passive blocks should not expose a power consumption model"""
 
         self.assertFalse(hasattr(self.block, "dc_power_model"))
+
+class TestBlockClassification(TestCase):
+    """Test the active / passive classification of the shipped RF blocks."""
+
+    def test_active_blocks(self) -> None:
+        """Blocks drawing direct current power should derive from ActiveRFBlock"""
+
+        for block in (
+            PowerAmplifier,
+            Source,
+            ADC,
+            DAC,
+            RampGenerator,
+
+        ):
+            self.assertTrue(issubclass(block, ActiveRFBlock), f"{block.__name__} should be active")
+
+    def test_passive_blocks(self) -> None:
+        """Blocks operating without a power supply should derive from PassiveRFBlock"""
+
+        for block in (
+            Split,
+            Sum, 
+            HPF,
+            Mixer,
+            IdealMixer,
+            Shift,
+            X4,
+        ):
+                self.assertTrue(issubclass(block, PassiveRFBlock), f"{block.__name__} should be passive")

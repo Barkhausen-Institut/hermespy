@@ -8,8 +8,10 @@ from matplotlib.axes import Axes
 from matplotlib.figure import Figure
 from numpy.testing import assert_array_almost_equal, assert_array_equal, assert_array_less
 
-from hermespy.simulation import RFSignal
-from hermespy.simulation.rf.blocks.amps import PowerAmplifier, ClippingPowerAmplifier, RappPowerAmplifier, SalehPowerAmplifier, CustomPowerAmplifier, MemoryCTPolynomialPowerAmplifier, MemoryPolynomialPowerAmplifier, MemoryCTPolynomialPowerAmplifier, MemoryPolynomialPowerAmplifier
+from h5py import File
+from hermespy.core import Factory
+from hermespy.simulation import RFSignal, ConstantDCPowerModel
+from hermespy.simulation.rf.blocks.amps import PowerAmplifier, ClippingPowerAmplifier, RappPowerAmplifier, SalehPowerAmplifier, CustomPowerAmplifier, MemoryCTPolynomialPowerAmplifier, MemoryPolynomialPowerAmplifier
 from ....core.test_factory import test_roundtrip_serialization
 from ....utils import random_rf_signal, assert_signals_equal
 
@@ -68,6 +70,18 @@ class TestPowerAmplifier(unittest.TestCase):
 
         test_roundtrip_serialization(self, self.pa)
 
+    def test_dc_power_model_serialization(self) -> None:
+        """Configured power consumption models should survive a serialization roundtrip"""
+
+        self.pa.dc_power_model = ConstantDCPowerModel(2.5)
+
+        file = File("test.h5", "w", driver="core", backing_store=False)
+        Factory().to_HDF(file, self.pa)
+        deserialization = Factory().from_HDF(file, PowerAmplifier)
+        file.close()
+
+        signal = np.zeros(1, dtype=np.complex128)
+        self.assertEqual(2.5, deserialization.dc_power_model.get_power(signal)[0])
 
 class TestRappPowerAmplifier(unittest.TestCase):
     """Test the Rapp power amplifier model"""
