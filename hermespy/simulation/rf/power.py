@@ -243,3 +243,185 @@ class SampledDCPowerModel(DCPowerModel):
             process.deserialize_array("input_powers", np.float64),
             process.deserialize_array("consumed_powers", np.float64),
         )
+
+
+class WaldenADCPowerModel(DCPowerModel):
+    """Model of an analog-to-digital converter's direct current power consumption.
+
+    Converter power consumption is commonly characterized by the Walden figure of merit
+
+    .. math::
+
+        \\mathrm{FOM} = \\frac{P_\\mathrm{DC}}{f_\\mathrm{s} 2^{b}} \\ \\text{,}
+
+    relating the consumed power to the sampling rate :math:`f_\\mathrm{s}` and the
+    amplitude resolution :math:`b`. Surveys of published converters exhibit an empirical
+    lower bound on the figure of merit that is approximately constant at low bandwidths
+    and degrades quadratically beyond a corner frequency. Assuming Nyquist rate sampling,
+    so that the sampling rate equals the bandwidth :math:`B`, this bound implies
+
+    .. math::
+
+        P_\\mathrm{DC} = c \\, 2^{b} B \\sqrt{1 + \\left(\\frac{B}{f_\\mathrm{b}}\\right)^2}
+        \\ \\text{.}
+
+    The consumed power therefore grows exponentially with the amplitude resolution and,
+    in bandwidth, linearly at first and quadratically once the corner frequency is passed.
+
+    The model is independent of the processed signal, so that the consumed power is
+    fully determined by the converter's configuration. Note that the expression is a
+    lower bound rather than a prediction: a specific converter consumes more.
+
+    Default coefficients follow the survey reported in Florian Gast, *Optimizing
+    Transceiver Energy Efficiency with a Gearbox Physical Layer*, Dissertation,
+    Technische Universitaet Dresden, 2025, equations 4.6 to 4.8.
+    """
+
+    __num_quantization_bits: int
+    __bandwidth: float
+    __figure_of_merit: float
+    __corner_frequency: float
+
+    def __init__(
+        self,
+        num_quantization_bits: int,
+        bandwidth: float,
+        figure_of_merit: float = 0.67e-15,
+        corner_frequency: float = 560e6,
+    ) -> None:
+        """
+        Args:
+            num_quantization_bits:
+                Amplitude resolution of the converter in bits.
+                Should match the resolution configured at the modeled block.
+
+            bandwidth:
+                Bandwidth processed by the converter in Hz.
+                Nyquist rate sampling is assumed, so that the sampling rate equals
+                the bandwidth.
+
+            figure_of_merit:
+                Walden figure of merit in Joule per conversion step.
+                Defaults to the empirical lower bound of :math:`0.67 \\cdot 10^{-15}`.
+
+            corner_frequency:
+                Bandwidth in Hz beyond which the figure of merit degrades.
+                Defaults to :math:`560` MHz.
+
+        Raises:
+            ValueError:
+                If the resolution is not positive,
+                or if the bandwidth, figure of merit or corner frequency is not positive.
+        """
+
+        self.num_quantization_bits = num_quantization_bits
+        self.bandwidth = bandwidth
+        self.figure_of_merit = figure_of_merit
+        self.corner_frequency = corner_frequency
+
+    @property
+    def num_quantization_bits(self) -> int:
+        """Amplitude resolution of the converter in bits.
+
+        Raises:
+            ValueError: If the resolution is not positive.
+        """
+
+        return self.__num_quantization_bits
+
+    @num_quantization_bits.setter
+    def num_quantization_bits(self, value: int) -> None:
+        if value <= 0:
+            raise ValueError("Amplitude resolution must be positive")
+
+        self.__num_quantization_bits = int(value)
+
+    @property
+    def bandwidth(self) -> float:
+        """Bandwidth processed by the converter in Hz.
+
+        Raises:
+            ValueError: If the bandwidth is not positive.
+        """
+
+        return self.__bandwidth
+
+    @bandwidth.setter
+    def bandwidth(self, value: float) -> None:
+        if value <= 0.0:
+            raise ValueError("Converter bandwidth must be positive")
+
+        self.__bandwidth = float(value)
+
+    @property
+    def figure_of_merit(self) -> float:
+        """Walden figure of merit in Joule per conversion step.
+
+        Raises:
+            ValueError: If the figure of merit is not positive.
+        """
+
+        return self.__figure_of_merit
+
+    @figure_of_merit.setter
+    def figure_of_merit(self, value: float) -> None:
+        if value <= 0.0:
+            raise ValueError("Walden figure of merit must be positive")
+
+        self.__figure_of_merit = float(value)
+
+    @property
+    def corner_frequency(self) -> float:
+        """Bandwidth beyond which the figure of merit degrades in Hz.
+
+        Raises:
+            ValueError: If the corner frequency is not positive.
+        """
+
+        return self.__corner_frequency
+
+    @corner_frequency.setter
+    def corner_frequency(self, value: float) -> None:
+        if value <= 0.0:
+            raise ValueError("Corner frequency must be positive")
+
+        self.__corner_frequency = float(value)
+
+    @property
+    def power(self) -> float:
+        """Direct current power consumed by the converter in Watt.
+
+        Fully determined by the converter's configuration.
+        """
+
+        return float(
+            self.__figure_of_merit
+            * 2**self.__num_quantization_bits
+            * self.__bandwidth
+            * np.sqrt(1.0 + (self.__bandwidth / self.__corner_frequency) ** 2)
+        )
+
+    @override
+    def get_power(
+        self, input_signal: np.ndarray[tuple[int, ...], np.dtype[np.complex128]]
+    ) -> np.ndarray[tuple[int, ...], np.dtype[np.float64]]:
+        return np.full(input_signal.shape, self.power, dtype=np.float64)
+
+    @override
+    def serialize(self, process: SerializationProcess) -> None:
+        process.serialize_integer(self.__num_quantization_bits, "num_quantization_bits")
+        process.serialize_floating(self.__bandwidth, "bandwidth")
+        process.serialize_floating(self.__figure_of_merit, "figure_of_merit")
+        process.serialize_floating(self.__corner_frequency, "corner_frequency")
+
+    @classmethod
+    @override
+    def Deserialize(
+        cls: Type[WaldenADCPowerModel], process: DeserializationProcess
+    ) -> WaldenADCPowerModel:
+        return cls(
+            process.deserialize_integer("num_quantization_bits"),
+            process.deserialize_floating("bandwidth"),
+            process.deserialize_floating("figure_of_merit"),
+            process.deserialize_floating("corner_frequency"),
+        )

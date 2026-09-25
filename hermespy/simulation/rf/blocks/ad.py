@@ -343,17 +343,15 @@ class AutomaticGainControl(GainControlBase):
     @override
     def estimate_gain(self, input_signal: RFSignal) -> float:
         if self.agc_type == GainControlType.MAX_AMPLITUDE:
-            max_amplitude = 0
             max_amplitude = max(
                 np.abs(np.real(input_signal)).max(),
                 np.abs(np.imag(input_signal)).max(),
-                max_amplitude,
+                0.0,
             )
 
         elif self.agc_type == GainControlType.RMS_AMPLITUDE:
-            max_amplitude = 0
             max_amplitude = max(
-                rms_value(np.real(input_signal)), rms_value(np.imag(input_signal)), max_amplitude
+                rms_value(np.real(input_signal)), rms_value(np.imag(input_signal)), 0.0
             )
 
         else:

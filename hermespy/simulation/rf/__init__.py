@@ -43,6 +43,7 @@ from .power import (
     NoDCPowerModel,
     ConstantDCPowerModel,
     SampledDCPowerModel,
+    WaldenADCPowerModel,
 )
 
 from .block import (
@@ -52,6 +53,7 @@ from .block import (
     RFBlockPortType,
     ActiveRFBlock,
     PassiveRFBlock,
+    RFBlockPropagation,
 )
 from .chain import RFChain, RFChainRealization, RFBlockReference
 from .signal import RFSignal
@@ -104,12 +106,14 @@ __all__ = [
     "NoDCPowerModel",
     "ConstantDCPowerModel",
     "SampledDCPowerModel",
+    "WaldenADCPowerModel",
     "RFBlock",
     "RFBlockRealization",
     "RFBlockPort",
     "RFBlockPortType",
     "ActiveRFBlock",
     "PassiveRFBlock",
+    "RFBlockPropagation",
     "RFChain",
     "RFChainRealization",
     "RFBlockReference",

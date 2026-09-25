@@ -3,12 +3,12 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from functools import cache
-from typing import Generic, Iterable, SupportsInt, SupportsIndex, TypeVar
+from typing import Callable, Generic, Iterable, SupportsInt, SupportsIndex, TypeVar
 
 import numpy as np
 from scipy.signal import cheby2, cheb2ord, sosfiltfilt
 
-from hermespy.core import RandomNode, Serializable, SerializableEnum
+from hermespy.core import Hook, Hookable, RandomNode, Serializable, SerializableEnum
 from .signal import RFSignal
 from .noise import AWGN, NoiseLevel, NoiseModel, NoiseRealization, N0
 from .power import DCPowerModel, NoDCPowerModel
@@ -76,6 +76,39 @@ class RFBlockRealization(object):
 RFBRT = TypeVar("RFBRT", bound=RFBlockRealization)
 
 
+class RFBlockPropagation(object):
+    """Information about a single signal propagation through a radio-frequency block.
+
+    Passed to callbacks registered by
+    :meth:`add_propagate_callback<RFBlock.add_propagate_callback>`.
+    """
+
+    __input: RFSignal
+    __output: RFSignal
+
+    def __init__(self, input: RFSignal, output: RFSignal) -> None:
+        """
+        Args:
+            input: Signal fed into the block.
+            output: Signal emerging from the block.
+        """
+
+        self.__input = input
+        self.__output = output
+
+    @property
+    def input(self) -> RFSignal:
+        """Signal fed into the block."""
+
+        return self.__input
+
+    @property
+    def output(self) -> RFSignal:
+        """Signal emerging from the block."""
+
+        return self.__output
+
+
 class RFBlock(ABC, Generic[RFBRT], RandomNode, Serializable):
     """Base class of a single block within physical models of radio-frequency chains."""
 
@@ -88,6 +121,7 @@ class RFBlock(ABC, Generic[RFBRT], RandomNode, Serializable):
 
     __noise_model: NoiseModel | None
     __noise_level: NoiseLevel
+    __propagate_callbacks: Hookable[RFBlockPropagation]
 
     def __init__(
         self,
@@ -110,6 +144,7 @@ class RFBlock(ABC, Generic[RFBRT], RandomNode, Serializable):
         RandomNode.__init__(self, seed=seed)
 
         # Initialize class attributes
+        self.__propagate_callbacks = Hookable()
         self.__noise_model = noise_model if noise_model is not None else AWGN()
         self.__noise_model.random_mother = self
         self.__noise_level = noise_level if noise_level is not None else N0(0.0)
@@ -186,6 +221,22 @@ class RFBlock(ABC, Generic[RFBRT], RandomNode, Serializable):
         )
         return cheby2(order, stop_attenuation_dB, wn, output="sos")
 
+    def add_propagate_callback(
+        self, callback: Callable[[RFBlockPropagation], None]
+    ) -> Hook[RFBlockPropagation]:
+        """Add a callback to be notified after each propagation through this block.
+
+        Args:
+            callback:
+                Function to be called after each propagation.
+                An :class:`RFBlockPropagation` describing the propagation is passed
+                as the only argument.
+
+        Returns: Hook to be used for removal.
+        """
+
+        return self.__propagate_callbacks.add_callback(callback)
+
     def propagate(self, realization: RFBRT, input: RFSignal, filter: bool = True) -> RFSignal:
         """Propagate the input signals through the radio-frequency block.
 
@@ -259,7 +310,9 @@ class RFBlock(ABC, Generic[RFBRT], RandomNode, Serializable):
                 filtered_output.tobytes(),
             )
 
-        return noisy_propagated_signal[:, :num_propagated_samples]
+        output = noisy_propagated_signal[:, :num_propagated_samples]
+        self.__propagate_callbacks.notify(RFBlockPropagation(input, output))
+        return output
 
     @abstractmethod
     def _propagate(self, realization: RFBRT, input: RFSignal) -> RFSignal:
