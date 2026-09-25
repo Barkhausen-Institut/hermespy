@@ -17,6 +17,8 @@ Radio-Frequency Block
 
 .. autoclass:: hermespy.simulation.rf.block.RFBlockRealization
 
+.. autoclass:: hermespy.simulation.rf.block.RFBlockPropagation
+
 .. autoclass:: hermespy.simulation.rf.block.RFBlockPort
 
 .. autoclass:: hermespy.simulation.rf.block.RFBlockPortType

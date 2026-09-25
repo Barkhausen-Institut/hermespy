@@ -2,6 +2,12 @@
 
 from .beamforming import SidelobeEvaluator
 from .interference import SI, SSINR
+from .power import (
+    DCPowerConsumptionEvaluation,
+    DCPowerConsumptionEvaluator,
+    PowerConsumptionEvaluation,
+    PowerConsumptionEvaluator,
+)
 
 __author__ = "Jan Adler"
 __copyright__ = "Copyright 2026, Barkhausen Institut gGmbH"
@@ -13,4 +19,4 @@ __email__ = "jan.adler@barkhauseninstitut.org"
 __status__ = "Prototype"
 
 
-__all__ = ["SidelobeEvaluator", "SI", "SSINR"]
+__all__ = ["SidelobeEvaluator", "SI", "SSINR", "PowerConsumptionEvaluation", "PowerConsumptionEvaluator", "DCPowerConsumptionEvaluation", "DCPowerConsumptionEvaluator"]

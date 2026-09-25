@@ -12,7 +12,15 @@ from .antennas import (
 )
 from .beamforming import DeviceFocus
 from .drop import SimulatedDrop
-from .evaluators import SidelobeEvaluator, SI, SSINR
+from .evaluators import (
+    SidelobeEvaluator,
+    SI,
+    SSINR,
+    PowerConsumptionEvaluation,
+    PowerConsumptionEvaluator,
+    DCPowerConsumptionEvaluation,
+    DCPowerConsumptionEvaluator,
+)
 from .rf import (
     ADC,
     DAC,
@@ -51,12 +59,14 @@ from .rf import (
     NoDCPowerModel,
     ConstantDCPowerModel,
     SampledDCPowerModel,
+    WaldenADCPowerModel,
     RFBlock,
     RFBlockRealization,
     RFBlockPort,
     RFBlockPortType,
     ActiveRFBlock,
     PassiveRFBlock,
+    RFBlockPropagation,
     RFChain,
     RFChainRealization,
     RFBlockReference,
@@ -118,6 +128,10 @@ __all__ = [
     "SidelobeEvaluator",
     "SI",
     "SSINR",
+    "PowerConsumptionEvaluation",
+    "PowerConsumptionEvaluator",
+    "DCPowerConsumptionEvaluation",
+    "DCPowerConsumptionEvaluator",
     "ADC",
     "DAC",
     "Gain",
@@ -155,12 +169,14 @@ __all__ = [
     "NoDCPowerModel",
     "ConstantDCPowerModel",
     "SampledDCPowerModel",
+    "WaldenADCPowerModel",
     "RFBlock",
     "RFBlockRealization",
     "RFBlockPort",
     "RFBlockPortType",
     "ActiveRFBlock",
     "PassiveRFBlock",
+    "RFBlockPropagation",
     "RFChain",
     "RFChainRealization",
     "RFBlockReference",

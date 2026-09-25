@@ -1,0 +1,58 @@
+# Synthetic characteristics of a class-C power amplifier.
+#
+# This dataset is generated, not measured. It reproduces the qualitative
+# behaviour of a class-C stage - gain compressing toward saturation while the
+# supply draw rises from a quiescent floor - so that the example has realistic
+# numbers without depending on device data.
+#
+# Generated from a soft-limiter output characteristic and a logistic supply
+# characteristic, with the following parameters:
+#
+#   small-signal power gain      22.0 dB
+#   saturated output power       16.0 dBm
+#   knee sharpness               1.6
+#   quiescent supply draw        85.0 mW
+#   supply draw at full drive    215.0 mW
+#
+# input_power_dbm, output_power_dbm, consumed_power_mw
+-30,-8.000,85.03
+-29,-7.001,85.04
+-28,-6.001,85.06
+-27,-5.001,85.08
+-26,-4.002,85.11
+-25,-3.002,85.16
+-24,-2.004,85.22
+-23,-1.005,85.30
+-22,-0.007,85.41
+-21,0.989,85.56
+-20,1.984,85.77
+-19,2.978,86.06
+-18,3.968,86.46
+-17,4.953,87.00
+-16,5.933,87.74
+-15,6.903,88.74
+-14,7.861,90.09
+-13,8.802,91.91
+-12,9.718,94.33
+-11,10.601,97.51
+-10,11.440,101.62
+-9,12.224,106.84
+-8,12.938,113.28
+-7,13.573,120.99
+-6,14.119,129.88
+-5,14.573,139.69
+-4,14.938,150.00
+-3,15.224,160.31
+-2,15.440,170.12
+-1,15.601,179.01
+0,15.718,186.72
+1,15.802,193.16
+2,15.861,198.38
+3,15.903,202.49
+4,15.933,205.67
+5,15.953,208.09
+6,15.968,209.91
+7,15.978,211.26
+8,15.984,212.26
+9,15.989,213.00
+10,15.993,213.54

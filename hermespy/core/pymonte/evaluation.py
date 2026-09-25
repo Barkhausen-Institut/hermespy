@@ -173,7 +173,7 @@ class EvaluationResult(Generic[AT], Visualizable[PlotVisualization], ABC):
 
         if isinstance(value, (int, float, complex)):
             if self.evaluator.tick_format == ValueType.DB or self.evaluator.plot_scale == "log":
-                return f"{lin2db(value):.2g} dB"
+                return f"{lin2db(abs(value)):.2g} dB"
             return f"{value:.2g}"
         return str(value)
 
